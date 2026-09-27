@@ -23,7 +23,6 @@
 | **CA-07** | El sistema debe exponer un endpoint de solo lectura con las marcas activas, para ser consumido por otros módulos y canales de venta. |
 | **CA-08** | El sistema debe aceptar únicamente logos PNG, JPG/JPEG o WebP de hasta 5 MB; debe rechazar otros formatos o tamaños superiores indicando el motivo. |
 | **CA-09** | Si se registra país de origen, debe seleccionarse o validarse contra un código ISO 3166-1; no se admite texto libre no normalizado. |
-
 | **CA-10** | El nombre normalizado de una marca es globalmente único, incluso entre marcas inactivas; se rechazan renombres duplicados. |
 | **CA-11** | Una solicitud de desactivación solo concluye tras confirmación asíncrona `CLEAR` de Catálogo bajo barrera concurrente; rechazo o falta de respuesta no desactiva. |
 | **CA-12** | Una reactivación conserva el mismo ID y nombre, sin crear duplicados. |

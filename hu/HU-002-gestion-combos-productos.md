@@ -13,9 +13,8 @@ y compense transaccionalmente ante cancelaciones o devoluciones.
 
 ## Criterios de aceptación
 
-|  |  |
-| --- | --- |
 | **ID** | **Criterio** |
+| --- | --- |
 | **CA-01** | Solo un gestor comercial con los permisos correspondientes (Módulo Seguridad y Usuarios) puede crear, modificar, consultar y desactivar combos. |
 | **CA-02** | El registro de un combo debe incluir obligatoriamente: nombre, descripción, selección de 2 o más SKUs vendibles **distintos** (SKU de variante o `sku_base` de producto simple) con sus respectivas cantidades, y un precio único de paquete. |
 | **CA-03** | El sistema debe validar que el precio del paquete sea mayor a cero, menor que la suma de `precio_regular_vigente_sku × cantidad` y también menor que la suma de los **precios públicos efectivos vigentes** de los componentes (oferta propia de Pricing cuando exista, de lo contrario regular). No se incorporan promociones de carrito ni cupones contextuales a esta validación administrativa. |
@@ -26,7 +25,6 @@ y compense transaccionalmente ante cancelaciones o devoluciones.
 | **CA-08** | Si una venta ya confirmada se cancela antes del despacho (`order.cancelled`), el sistema compensa íntegramente el stock consumido. Un `order.created` que nunca llega a confirmarse no requiere compensación porque no afectó stock. |
 | **CA-09** | La política de si una devolución de combo puede ser total o parcial pertenece a Ventas/Postventa. Al recibir el contrato homologado de devolución aceptada, Inventario repone **exactamente los SKU y cantidades físicamente reintegrables informados**, de forma idempotente, sin que Combos decida la elegibilidad de la devolución. |
 | **CA-10** | Si un gestor comercial desactiva o da de baja un SKU o producto componente en el Catálogo, el combo debe inhabilitarse y ocultarse automáticamente en todos los canales de venta, emitiendo una notificación al gestor para su revisión. |
-
 | **CA-11** | No se repite un mismo SKU como dos componentes; cada uno requiere cantidad entera positiva. La validación comercial muestra tanto la suma regular como la suma efectiva vigente de los componentes para evitar publicar un combo más caro que comprarlos individualmente en ese momento. |
 | **CA-12** | Si un cambio de precios deja de cumplir el descuento real, el combo se vuelve no elegible para nuevas ventas y se notifica, sin alterar pedidos históricos. |
 | **CA-13** | El precio de combo es un beneficio comercial propio. Su combinabilidad con promociones/cupones se resuelve por la política configurada del motor de Promociones; por defecto el MVP puede marcar el combo como exclusivo. El pedido confirmado conserva snapshot de precio y composición. |
@@ -100,9 +98,8 @@ y compense transaccionalmente ante cancelaciones o devoluciones.
 
 ## Interacción con otros módulos
 
-|  |  |  |  |
-| --- | --- | --- | --- |
 | **Módulo** | **Necesidad de interacción** | **Información que esta funcionalidad recibe** | **Información que esta funcionalidad entrega** |
+| --- | --- | --- | --- |
 | **Canal Marketplace** | Mostrar combos en catálogo y permitir compra según stock dinámico. | Consultas de combos y peticiones de validación de carrito. | Detalles del combo, precio unificado, componentes y disponibilidad calculada. |
 | **Canal Chatbot / Retail** | Consulta y venta presencial o asistida por chat. | Solicitudes de cotización y disponibilidad informativa basada en proyecciones. | Información comercial del combo, precio final y existencia. |
 | **Ventas y Postventa** | Coordinar confirmación, cancelación previa al despacho y devolución mediante eventos de dominio. | Eventos `order.confirmed`, `order.cancelled` y `order.returned`. | Resultado del débito o compensación de stock de componentes. |

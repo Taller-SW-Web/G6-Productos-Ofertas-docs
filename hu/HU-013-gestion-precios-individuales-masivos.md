@@ -33,7 +33,6 @@
 | **CA-11** | Pricing devuelve precio regular y precio de oferta separadamente junto con moneda, canal efectivo y vigencia; Promociones y Cupones evalúan las combinaciones expresamente permitidas por su política comercial sin que Pricing decida exclusividad; Combos recibe precio regular y precio público efectivo vigente para validar que el combo no sea más costoso que la compra individual de sus componentes. |
 | **CA-12** | La importación exclusiva de Pricing aplica All-or-Nothing dentro de Pricing, sin prometer atomicidad global con Catálogo o Inventario; `pricing.price.changed` es un evento posterior al commit, no un comando. |
 | **CA-13** | Una carga asíncrona devuelve inicialmente HTTP 202 y `batch_id`; HTTP 422/207 solo corresponde a un resultado de validación o procesamiento devuelto sincrónicamente. |
-
 | CA-14 | La carga exclusiva de Pricing admite `accion_precio_oferta=CONSERVAR | ESTABLECER | ELIMINAR` y `price_version` para concurrencia optimista. Blanco no elimina oferta. Si el regular nuevo invalida una oferta conservada se rechaza la fila. El sistema calcula la variación porcentual respecto del precio vigente y muestra una advertencia reforzada cuando supera un umbral configurable de cambio extraordinario; la advertencia no sustituye reglas de aprobación externas si la empresa las incorpora. |
 | CA-15 | Una actualización con `price_version` obsoleta se rechaza con conflicto y devuelve la versión vigente; no se sobrescribe silenciosamente un precio modificado después de la lectura/exportación. |
 

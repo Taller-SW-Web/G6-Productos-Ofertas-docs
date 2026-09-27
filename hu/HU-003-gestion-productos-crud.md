@@ -28,7 +28,6 @@ Un producto pasa por tres estados: **borrador** (recién creado, aún no visible
 | CA-10 | El sistema genera y mantiene el **slug** del producto (a partir del nombre) como parte de este componente; no depende del componente de Taxonomía y SEO. |
 | CA-11 | El precio base ingresado en la creación se notifica al Motor de Precios para abrir su historial de auditoría; las actualizaciones posteriores del precio (individuales o masivas) son responsabilidad exclusiva de ese componente, no de Catálogo Core. |
 | CA-12 | Toda operación (registro, actualización, activación, desactivación, reactivación) debe quedar trazable con usuario, fecha/hora y resultado. |
-
 | CA-13 | Si se desactiva la última variante ACTIVA de un producto con variantes, Catálogo inactiva el producto padre en la misma transacción local; las demás entidades y pedidos históricos conservan sus datos. |
 | CA-14 | Una barrera de baja de categoría o marca impide crear, activar o reasignar productos a esa entidad durante la verificación asíncrona; Catálogo confirma el resultado por `operation_id`. |
 | CA-15 | El producto no se ofrece comercialmente hasta que Pricing confirme la preparación de su precio y, para el SKU vendible ofrecido, Inventario confirme la inicialización. |

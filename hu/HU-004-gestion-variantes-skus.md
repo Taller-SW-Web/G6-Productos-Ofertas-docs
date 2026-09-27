@@ -30,13 +30,10 @@ Esta funcionalidad solo aplica a productos con el atributo `tiene_variantes = tr
 | CA-12 | Pricing puede definir un precio específico para un SKU de variante; si no existe override, se usa el precio base vigente del producto. |
 | CA-13 | Los combos referencian componentes por SKU vendible; para una variante utilizan su SKU y para un producto simple su `sku_base`. |
 | CA-14 | Los pedidos confirmados conservan un snapshot del SKU vendido aunque la variante se desactive posteriormente. |
-
 | CA-15 | Una variante nueva inicia en BORRADOR; solo puede activarse si posee `variant_id`, SKU comercial único (suministrado o generado), atributos identificadores e imagen válidos, precio aplicable confirmado y registro inicializado en Inventario. |
 | CA-16 | Una variante INACTIVA puede reactivarse tras las mismas validaciones y conserva su SKU; el producto padre no se reactiva automáticamente. |
 | CA-17 | Una fila de carga masiva que crea variante identifica padre existente o creado como BORRADOR por grupo `sku_base`, `tipo_producto_id` y atributos. Catálogo genera `variant_id` y devuelve el SKU comercial validado o generado correlacionado por `batch_id`/`row_id`; un SKU informado se acepta solo si cumple las reglas de unicidad y formato. |
-
 | CA-18 | Una variante ACTIVA no es vendible mientras su producto padre esté BORRADOR o INACTIVO. La activación de una variante preparada no activa automáticamente el producto padre. |
-
 | CA-19 | Antes de la primera variante, el gestor configura por producto con `tiene_variantes=true` uno o más `caracteristica_id` LISTA activos y definidos por su **tipo de producto**; tras crear la primera variante el conjunto queda inmutable para el CRUD ordinario incluso si luego se desactiva. |
 | CA-20 | Cada variante proporciona exactamente un `valor_id` activo por característica identificadora configurada; la unicidad se valida por IDs de la combinación incluso frente a variantes inactivas. Renombrar etiquetas no cambia identidad ni SKU. Cambiar categorías de navegación no invalida esta configuración; un cambio incompatible de tipo de producto requiere migración. |
 

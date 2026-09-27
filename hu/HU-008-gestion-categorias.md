@@ -23,7 +23,6 @@
 | **CA-07** | El sistema debe permitir reactivar una categoría previamente desactivada, exigiendo que su categoría padre (si la tuviese) esté en estado activo. |
 | **CA-08** | El sistema NUNCA debe eliminar físicamente una categoría; toda baja es lógica. |
 | **CA-09** | La administración debe poder consultar el árbol jerárquico completo, incluidas categorías inactivas según permisos; Catálogo Core y los canales externos consumen únicamente el árbol de categorías activas. |
-
 | CA-10 | Al solicitar desactivación, Taxonomía deja la solicitud `PENDING_DEACTIVATION`; Catálogo bloquea altas/activaciones/reasignaciones concurrentes para esa categoría, responde por `operation_id` y solo un resultado `CLEAR` vigente permite confirmar la baja. Un rechazo, timeout o fallo conserva la categoría activa. |
 | CA-11 | Antes de cambiar `categoria_padre_id`, se revalidan ciclos, padre activo y `MAX_CATEGORY_DEPTH`. Las características del producto **no se recalculan por jerarquía de categorías**, porque el esquema de atributos pertenece al `tipo_producto_id`. |
 | CA-12 | El cambio confirmado de jerarquía y la baja lógica generan eventos versionados que actualizan las vistas de consumidores; no se promete actualización instantánea de todos los canales. |
