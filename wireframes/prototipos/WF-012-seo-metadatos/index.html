@@ -63,7 +63,7 @@
     .toast{position:fixed;right:24px;bottom:24px;border:1px solid var(--neutral-90);background:var(--surface);padding:14px 16px;max-width:360px;z-index:80;display:none}
     .toast.show{display:block}
 
-    .table-wrap{border:1px solid var(--neutral-30);overflow:hidden}
+    .table-wrap{border:1px solid var(--neutral-30);overflow-x:auto;-webkit-overflow-scrolling:touch}
     table{width:100%;border-collapse:collapse}
     th,td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--neutral-30);vertical-align:middle}
     th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-family:"Roboto Mono",ui-monospace,monospace;font-weight:600;color:var(--neutral-70);background:var(--neutral-10)}
@@ -426,7 +426,7 @@
     const c=catById(state.historyId);
     if(!c){ showToast('La categoría no existe.'); state.view='list'; state.historyId=null; render(); return; }
     const rows=c.history.map(h=>`
-      <tr><td class="slug-cell">${escapeHtml(h.old)}</td><td><span class="tag strong" title="Marketplace ejecuta HTTP 301">Resolución permanente (Marketplace → HTTP 301)</span></td><td class="slug-cell">→ ${escapeHtml(c.slug)}</td><td>${escapeHtml(h.date||'')}</td></tr>`).join('');
+      <tr><td class="slug-cell">${escapeHtml(h.old)}</td><td><span class="tag strong">Redirección permanente</span></td><td class="slug-cell">→ ${escapeHtml(c.slug)}</td><td>${escapeHtml(h.date||'')}</td></tr>`).join('');
     const histMarkup=c.configured
       ?(c.history.length
         ?`<div class="table-wrap"><table><thead><tr><th>Slug anterior</th><th>Redirección</th><th>Nuevo slug</th><th>Fecha</th></tr></thead><tbody>${rows}</tbody></table></div>`
@@ -437,66 +437,8 @@
       <div class="section" style="margin-top:0">
         <div class="kv" style="border-top:0"><span class="mono muted">Slug actual</span><div class="slug-cell" style="font-size:16px;margin-top:4px">${c.configured?escapeHtml(c.slug):'<span class="muted">Pendiente</span>'}</div></div>
         ${histMarkup}
-      </div>
-      <section class="section">
-        <h2>Resolución canónica de slugs y metadatos</h2>
-        <p class="muted">El servicio de SEO resuelve la redirección canónica <code>old_slug → new_slug</code>. La ejecución de la cabecera HTTP 301 al cliente es efectuada por el Gateway / Frontend de Marketplace.</p>
-        <div class="endpoint-bar">
-          <div class="mono" style="border:1px solid var(--neutral-30);background:var(--neutral-10);padding:11px 12px;color:var(--neutral-70)">GET /api/seo/resolve/</div>
-          <input type="text" id="endpointSlug" value="${c.configured?escapeHtml(c.slug):''}" placeholder="escribe un slug">
-          <button class="btn btn-primary" type="button" id="endpointBtn">Consultar</button>
-        </div>
-        <div id="endpointResult" style="margin-top:16px">
-          <div class="codebox" id="endpointJson">Esperando consulta…</div>
-        </div>
-      </section>`;
+      </div>`;
     bindPage();
-    document.getElementById('endpointBtn').addEventListener('click',()=>{
-      runEndpoint(c, document.getElementById('endpointSlug').value.trim());
-    });
-  }
-
-  function currentSlugHolder(slug){
-    return categories.find(x=>x.configured&&x.slug===slug)||null;
-  }
-  function oldSlugTo(target){
-    for(const cat of categories){
-      if(!cat.configured) continue;
-      const found=cat.history.find(h=>h.old===target);
-      if(found) return cat;
-    }
-    return null;
-  }
-
-  function runEndpoint(c, slug){
-    if(!slug){ document.getElementById('endpointJson').textContent='Indica un slug para consultar.'; return; }
-    document.getElementById('endpointJson').textContent='Consultando resolución…';
-    setTimeout(()=>{
-      const holder=currentSlugHolder(slug);
-      if(holder){
-        document.getElementById('endpointJson').innerHTML=
-`<span class="k">Resolución canónica activa:</span>\n{
-  "status": "CANONICAL_ACTIVE",
-  "slug": "${escapeHtml(holder.slug)}",
-  "meta_title": "${escapeHtml(holder.title||'')}",
-  "meta_description": "${escapeHtml(holder.desc||'')}"
-}`;
-        return;
-      }
-      const oldOwner=oldSlugTo(slug);
-      if(oldOwner){
-        document.getElementById('endpointJson').innerHTML=
-`<span class="k">Resolución de slug histórico (Marketplace ejecuta HTTP 301):</span>\n{
-  "status": "REDIRECT_PERMANENT",
-  "requested_slug": "${escapeHtml(slug)}",
-  "canonical_slug": "${escapeHtml(oldOwner.slug)}",
-  "target_path": "/categoria/${escapeHtml(oldOwner.slug)}",
-  "delegated_http_status": 301
-}`;
-        return;
-      }
-      document.getElementById('endpointJson').innerHTML=`<span class="k">No encontrado:</span>\n{\n  "status": "NOT_FOUND",\n  "error": "Slug no encontrado en el historial"\n}`;
-    },400);
   }
 
   function bindPage(){

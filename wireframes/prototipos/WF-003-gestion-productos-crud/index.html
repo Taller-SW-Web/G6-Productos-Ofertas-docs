@@ -121,7 +121,7 @@
     th, td { padding: 15px 14px; text-align: left; border-bottom: 1px solid var(--neutral-30); vertical-align: middle; }
     th { background: var(--neutral-10); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
     tbody tr:last-child td { border-bottom: 0; }
-    tbody tr:hover { background: #fafafa; }
+    tbody tr:hover { background: var(--neutral-10); }
     .product-link { border: 0; padding: 0; background: transparent; color: var(--neutral-90); font-weight: 750; cursor: pointer; text-align: left; text-decoration: underline; }
     .status {
       display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--neutral-90);
@@ -187,7 +187,7 @@
     .requirements li::before { position: absolute; left: 2px; top: 10px; font-weight: 900; }
     .requirements .met::before { content: "✓"; }
     .requirements .missing::before { content: "×"; }
-    .requirements .missing { font-weight: 700; color: #991b1b; }
+    .requirements .missing { font-weight: 700; color: var(--neutral-90); }
     .meta-list { margin: 0; padding: 0; list-style: none; }
     .meta-list li { padding: 10px 0; border-bottom: 1px solid var(--neutral-30); }
 
@@ -436,7 +436,7 @@
         const activeFilters = Object.values(state.filters).some(Boolean);
         main.innerHTML = `
           ${breadcrumbs([{ label: 'Productos' }])}
-          ${pageHeading('Productos', 'Administra el catálogo central: datos generales, categoría única, esquema de tipo de producto, precio y visibilidad.', '<button class="btn btn-primary" type="button" data-action="new-product">Nuevo producto</button>')}
+          ${pageHeading('Productos', 'Administra el catálogo central de productos, variantes y precios base.', '<button class="btn btn-primary" type="button" data-action="new-product">Nuevo producto</button>')}
           ${state.listMode === 'loading' ? renderLoadingList() : state.listMode === 'error' ? renderListError() : `
             <section class="filters" aria-label="Filtros de productos">
               <div class="field">
@@ -518,10 +518,10 @@
       function renderAttributesFields(pType, values, errors) {
         if (!pType) return `<p class="muted">Selecciona un tipo de producto para cargar sus atributos.</p>`;
         if (!pType.attrs || pType.attrs.length === 0) {
-          return `<div class="notice"><span class="notice-icon" aria-hidden="true">i</span><div><p class="notice-title">Sin características configuradas</p><p class="muted">Este tipo de producto no tiene características asociadas en WF-010.</p></div></div>`;
+          return `<p class="muted">Este tipo de producto no tiene características asociadas.</p>`;
         }
         const hasMandatory = pType.attrs.some(a => a.mandatory);
-        const noticeZeroMandatory = !hasMandatory ? `<div class="notice" style="margin-bottom:16px"><span class="notice-icon" aria-hidden="true">i</span><div><p class="notice-title">Sin atributos obligatorios requeridos</p><p class="muted">Este tipo de producto no exige atributos obligatorios. El producto podrá activarse sin valores de características si cuenta con imagen y confirmaciones de Pricing/Inventario.</p></div></div>` : '';
+        const noticeZeroMandatory = '';
 
         const fieldsHtml = pType.attrs.map(a => {
           const val = values.attributes?.[a.name] || '';
@@ -573,16 +573,15 @@
                 ${field('name','Nombre del producto','text',data.name,errors.name,'span-8',true)}
                 ${field('sku','SKU base','text',data.sku,errors.sku,'span-4',true, editing ? 'Identificador único del producto en el catálogo. Inmutable.' : 'Identificador único en todo el catálogo.', editing)}
                 <div class="field span-12"><label class="required" for="description">Descripción</label><textarea class="control" id="description" name="description" aria-invalid="${errors.description ? 'true' : 'false'}" ${errors.description ? 'aria-describedby="description-error"' : ''}>${escapeHtml(data.description)}</textarea>${errorText('description', errors.description)}</div>
-                ${field('price','Precio base referencial','number',data.price,errors.price,'span-4',true, editing ? 'Los cambios posteriores de precio se gestionan exclusivamente en Pricing.' : 'Este valor se solicita a Pricing de forma idempotente.', editing)}
+                ${field('price','Precio base referencial','number',data.price,errors.price,'span-4',true, editing ? 'Los cambios posteriores de precio se gestionan en el módulo de Precios.' : 'Precio base inicial para el catálogo.', editing)}
                 
                 <div class="field span-4">
-                  <label class="required" for="category">Categoría de navegación (categoria_id)</label>
+                  <label class="required" for="category">Categoría</label>
                   <select class="control" id="category" name="category" aria-invalid="${errors.category ? 'true' : 'false'}" ${errors.category ? 'aria-describedby="category-error"' : ''}>
                     <option value="">Selecciona categoría...</option>
                     ${['Calzado','Ropa deportiva','Accesorios','Equipamiento'].map(v => `<option ${data.category === v ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('')}
                     <option disabled>Outdoor — no disponible</option>
                   </select>
-                  <p class="field-help">Categoría única de clasificación y navegación comercial (MVP).</p>
                   ${errorText('category', errors.category)}
                 </div>
 
@@ -597,11 +596,10 @@
               </div>
             </section>
 
-            <!-- Sección de Tipo de Producto y Esquema Estructural -->
+            <!-- Sección de Tipo de Producto -->
             <section class="panel" aria-labelledby="type-scheme-title">
               <div class="panel-heading">
-                <h2 id="type-scheme-title">Tipo de producto (tipo_producto_id)</h2>
-                <p class="muted">Entidad normativa que define el esquema de atributos técnicos requeridos y opcionales. Desacoplado de la categoría de navegación.</p>
+                <h2 id="type-scheme-title">Tipo de producto</h2>
               </div>
               <div class="form-grid">
                 <div class="field span-12">
@@ -610,28 +608,27 @@
                     <div class="readonly-box">
                       <strong>${escapeHtml(pType?.name || data.productTypeId)}</strong> <span class="mono">(${escapeHtml(data.productTypeId)})</span>
                       <input type="hidden" id="productTypeId" name="productTypeId" value="${escapeHtml(data.productTypeId)}" />
-                      <p class="field-help">Inmutable en CRUD ordinario. La transformación estructural se gestiona según SPEC-010.</p>
+                      <p class="field-help">No modificable una vez creado el producto.</p>
                     </div>
                   ` : `
                     <select class="control" id="productTypeId" name="productTypeId" aria-invalid="${errors.productTypeId ? 'true' : 'false'}">
                       ${productTypes.map(t => `<option value="${t.id}" ${selectedTypeId === t.id ? 'selected' : ''}>${escapeHtml(t.name)} (${t.attrs.length} atributos asociados)</option>`).join('')}
                     </select>
-                    <p class="field-help">Determina qué atributos técnicos estarán disponibles y cuáles serán obligatorios para la activación.</p>
+                    <p class="field-help">Determina las características asociadas a este tipo de producto.</p>
                     ${errorText('productTypeId', errors.productTypeId)}
                   `}
                 </div>
               </div>
             </section>
 
-            <!-- Sección de Manejo de Variantes (tiene_variantes) -->
+            <!-- Sección de Manejo de Variantes -->
             <section class="panel" aria-labelledby="variants-model-title">
               <div class="panel-heading">
-                <h2 id="variants-model-title">Manejo de variantes (tiene_variantes)</h2>
-                <p class="muted">Define si el SKU base es vendible directamente o si se venderán combinaciones mediante variantes (WF-004).</p>
+                <h2 id="variants-model-title">Manejo de variantes</h2>
               </div>
               ${editing ? `
                 <div class="readonly-box">
-                  <strong>${data.variants ? 'Producto con variantes (tiene_variantes = true)' : 'Producto simple (tiene_variantes = false)'}</strong>
+                  <strong>${data.variants ? 'Producto con variantes' : 'Producto simple'}</strong>
                   <p class="field-help">Inmutable después de la creación.</p>
                 </div>
               ` : `
@@ -944,14 +941,13 @@
                   ${definition('Marca', p.brand)}
                   ${definition('Precio base referencial', `S/ ${Number(p.price).toFixed(2)}`)}
                   ${definition('Slug público', `/producto/${p.slug}`, true)}
-                  ${definition('Manejo de variantes', p.variants ? 'Con variantes (tiene_variantes=true)' : 'Producto simple')}
+                  ${definition('Manejo de variantes', p.variants ? 'Con variantes' : 'Producto simple')}
                 </div>
               </section>
 
               <section class="panel" aria-labelledby="configuration-title">
                 <div class="panel-heading">
-                  <h2 id="configuration-title">Atributos técnicos (Tipo: ${escapeHtml(pType?.name || '')})</h2>
-                  <p class="muted">Esquema normativo gobernado por Tipo de Producto (WF-010).</p>
+                  <h2 id="configuration-title">Características (${escapeHtml(pType?.name || '')})</h2>
                 </div>
                 <div class="table-wrap">
                   <table>
@@ -977,14 +973,13 @@
                     <h2 id="variants-title">Variantes del producto</h2>
                     <p class="muted">${p.activeVariants ? `${p.activeVariants} variantes activas registradas` : 'Todavía no hay variantes activas válidas.'}</p>
                   </div>
-                  <button class="btn" type="button" data-action="manage-variants">Gestionar variantes (WF-004)</button>
+                  <button class="btn" type="button" data-action="manage-variants">Gestionar variantes</button>
                 </section>` : ''}
             </div>
 
             <aside>
               <section class="panel" aria-labelledby="requirements-title">
-                <h2 id="requirements-title">Requisitos para estar ACTIVO</h2>
-                <p class="small muted">Condiciones exigidas por CA-05 y SPEC-003.</p>
+                <h2 id="requirements-title">Requisitos de activación</h2>
                 <ul class="requirements">
                   ${checks.map(c => `<li class="${c.met ? 'met' : 'missing'}">${escapeHtml(c.label)} — ${c.met ? 'Cumplido' : 'Pendiente'}</li>`).join('')}
                 </ul>
@@ -1165,7 +1160,7 @@
             executeProductPersist(values, editing, resultingImages);
           }
         }
-        else if (action === 'manage-variants') toast('Abriendo la gestión de variantes (WF-004) de este producto.');
+        else if (action === 'manage-variants') toast('Abriendo la gestión de variantes de este producto.');
         else if (action === 'simulate-confirmations') {
           const p = currentProduct();
           if (p) {

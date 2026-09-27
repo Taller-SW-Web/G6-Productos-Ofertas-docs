@@ -228,7 +228,7 @@
     </div>
     <div class="notice">
       <span class="notice-icon" aria-hidden="true">!</span>
-      <div><h3>El valor dejará de aparecer como opción activa.</h3><p>Los productos que lo usan conservan su vínculo por ID.</p></div>
+      <div><h3>El valor dejará de aparecer como opción activa.</h3><p>Los productos con este valor conservarán su configuración actual.</p></div>
     </div>
     <div class="button-row end">
       <button class="btn" type="button" data-close-confirm-value>Cancelar</button>
@@ -443,7 +443,6 @@
       <div class="counter-line"><div><span class="counter">${activeValues(c)}<span class="mono"> / ${MAX_VALUES}</span></span><div class="small muted">valores activos de tipo LISTA</div></div></div>
       <div class="add-value"><input id="newValueInput" type="text" placeholder="Nuevo valor (ej. Verde)" ${atLimit?'disabled':''} aria-label="Nuevo valor"><button id="addValueBtn" class="btn btn-primary" type="button" ${atLimit?'disabled':''}>Agregar valor</button></div>
       ${atLimit?`<div class="notice error"><span class="notice-icon" aria-hidden="true">!</span><div><h3>Alcanzaste el máximo de ${MAX_VALUES} valores activos.</h3><p>Desactiva un valor para poder agregar otro.</p></div></div>`:''}
-      <div class="notice"><span class="notice-icon" aria-hidden="true">i</span><div><h3>Renombrar un valor en uso lo propaga por ID.</h3><p>Los productos que usan este valor mostrarán el nuevo texto sin romper su vínculo.</p></div></div>
       <div class="value-table table-wrap"><table><thead><tr><th>Valor</th><th>Estado</th><th>Uso</th><th>Acciones</th></tr></thead><tbody>${rows||'<tr><td colspan="4" class="muted">Aún no hay valores.</td></tr>'}</tbody></table></div>`;
     const input=document.getElementById('newValueInput');
     document.getElementById('addValueBtn').addEventListener('click',()=>addValue(input));
@@ -472,7 +471,7 @@
     valuesBody.querySelectorAll('[data-value-rename]').forEach(btn=>btn.addEventListener('click',e=>{
       const c=charById(state.currentId); const i=Number(e.currentTarget.dataset.valueRename); const v=c.values[i];
       const nuevo=prompt('Nuevo nombre del valor:', v.name);
-      if(nuevo && nuevo.trim()){ v.name=nuevo.trim(); renderValueManager(c); bindValues(); showToast('Valor renombrado. Se propaga por ID a los productos.'); }
+      if(nuevo && nuevo.trim()){ v.name=nuevo.trim(); renderValueManager(c); bindValues(); showToast('Valor actualizado.'); }
     }));
     valuesBody.querySelectorAll('[data-value-deactivate]').forEach(btn=>btn.addEventListener('click',e=>{
       const c=charById(state.currentId); valueTargetId=Number(e.currentTarget.dataset.valueDeactivate);

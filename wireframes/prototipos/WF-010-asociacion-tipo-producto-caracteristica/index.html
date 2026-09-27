@@ -73,7 +73,7 @@
     th,td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--neutral-30);vertical-align:middle}
     th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-family:"Roboto Mono",ui-monospace,monospace;font-weight:600;color:var(--neutral-70);background:var(--neutral-10)}
     tbody tr:last-child td{border-bottom:0}
-    .table-wrap{border:1px solid var(--neutral-30);overflow:hidden}
+    .table-wrap{border:1px solid var(--neutral-30);overflow-x:auto;-webkit-overflow-scrolling:touch}
     .row-actions{display:flex;gap:8px;flex-wrap:wrap}
     .row-actions .btn{min-height:36px;padding:6px 12px;font-size:13px}
     .tag{border:1px solid var(--neutral-30);padding:2px 8px;font-size:12px;font-family:"Roboto Mono",monospace;font-weight:600;display:inline-block}
@@ -92,6 +92,16 @@
     .field{margin-bottom:16px}
     label{display:block;font-weight:600;margin-bottom:6px}
     select,input[type="text"]{width:100%;border:1px solid var(--neutral-30);background:var(--surface);padding:10px 12px;border-radius:var(--radius);min-height:44px}
+
+    @media (max-width: 900px){
+      .layout{grid-template-columns:1fr}
+    }
+    @media (max-width: 600px){
+      .page-header{flex-direction:column;align-items:flex-start;gap:16px}
+      .button-row{width:100%}
+      .button-row .btn{width:100%}
+      .dialog{padding:16px}
+    }
   </style>
 </head>
 <body>
@@ -99,7 +109,7 @@
     <header class="topbar">
       <div class="topbar-inner">
         <div class="brand"><div class="brand-mark" aria-hidden="true">PO</div><span class="brand-text">PO Productos y ofertas</span></div>
-        <span class="crumb">Catálogo / Esquemas de Producto</span>
+        <span class="crumb">Catálogo / Tipos de Producto</span>
       </div>
     </header>
 
@@ -107,19 +117,11 @@
       <div class="page-header">
         <div>
           <h1>Asociación entre Tipos de Producto y Características</h1>
-          <p>Define las características aplicables y su obligatoriedad por cada Tipo de Producto. Las categorías de navegación no alteran este esquema estructural.</p>
+          <p>Define las características aplicables y su obligatoriedad por cada Tipo de Producto.</p>
         </div>
         <div class="button-row">
           <button class="btn btn-quiet" id="btn-open-create-type">+ Nuevo tipo de producto</button>
           <button class="btn btn-primary" id="btn-open-associate">+ Asociar característica</button>
-        </div>
-      </div>
-
-      <div class="notice">
-        <div class="notice-icon" aria-hidden="true">i</div>
-        <div>
-          <h3>Desacoplamiento de Navegación y Esquema</h3>
-          <p>El esquema de atributos pertenece al <strong>Tipo de Producto</strong> (máx. <code>{MAX_PRODUCT_TYPE_ATTRIBUTES}</code> activas, valor inicial MVP: 20). Un producto puede cambiar de categoría de navegación sin alterar sus características técnicas.</p>
         </div>
       </div>
 
@@ -138,14 +140,13 @@
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
             <div>
               <h2 id="selected-type-title" style="margin:0 0 4px 0;">Calzado Deportivo</h2>
-              <span class="small muted mono" id="selected-type-id">tipo_producto_id: TP-01</span>
+              <span class="small muted mono" id="selected-type-id">Código: TP-01</span>
             </div>
             <div class="status active" id="type-status">Activo</div>
           </div>
 
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <span class="small" id="attr-count-label"><strong>3 / 20</strong> características activas asignadas</span>
-            <span class="small muted mono">{MAX_PRODUCT_TYPE_ATTRIBUTES} = 20 (Configurable)</span>
           </div>
 
           <div class="table-wrap">
@@ -203,7 +204,7 @@
         <div class="notice-icon">!</div>
         <div>
           <h3>Límite operativo alcanzado</h3>
-          <p>Este tipo de producto ya alcanzó el límite máximo permitido (<code>{MAX_PRODUCT_TYPE_ATTRIBUTES}</code> = 20) de características activas asignadas.</p>
+          <p>Este tipo de producto ya alcanzó el límite máximo permitido (20) de características activas asignadas.</p>
         </div>
       </div>
 
@@ -231,24 +232,16 @@
     <div class="dialog">
       <div class="dialog-header">
         <div>
-          <h2>Nuevo Tipo de Producto (Ligero)</h2>
-          <p class="small muted">El sistema asigna automáticamente el identificador (tipo_producto_id) y crea la entidad en estado ACTIVO.</p>
+          <h2>Nuevo Tipo de Producto</h2>
+          <p class="small muted">El sistema asigna automáticamente el código del tipo de producto y lo crea en estado activo.</p>
         </div>
         <button class="btn btn-quiet" id="btn-close-create-type">✕</button>
-      </div>
-
-      <div class="notice">
-        <div class="notice-icon" aria-hidden="true">i</div>
-        <div>
-          <h3>Entidad normativa de características</h3>
-          <p>Define el esquema técnico aplicable a productos de este tipo. Conforme a SPEC-010, solo se introduce el nombre y el sistema genera su ID.</p>
-        </div>
       </div>
 
       <div class="field">
         <label for="input-type-name">Nombre del tipo de producto: *</label>
         <input type="text" id="input-type-name" placeholder="Ej: Equipamiento Outdoor" required autofocus />
-        <p class="small muted" style="margin-top:6px">El identificador (ej. TP-04) será generado y asignado por el sistema.</p>
+        <p class="small muted" style="margin-top:6px">El código (ej. TP-04) será generado y asignado por el sistema.</p>
       </div>
 
       <div class="button-row end" style="margin-top:24px;">
@@ -327,7 +320,7 @@
       const cur = state.types.find(t => t.id === state.selectedTypeId);
       if(!cur) return;
       document.getElementById('selected-type-title').textContent = cur.name;
-      document.getElementById('selected-type-id').textContent = `tipo_producto_id: ${cur.id}`;
+      document.getElementById('selected-type-id').textContent = `Código: ${cur.id}`;
       const statusEl = document.getElementById('type-status');
       if (statusEl) {
         statusEl.className = 'status ' + (cur.status === 'active' ? 'active' : 'inactive');
@@ -468,7 +461,7 @@
       closeCreateTypeModal();
       renderTypes();
       renderDetail();
-      showToast(`Tipo de producto "${name}" creado exitosamente (tipo_producto_id: ${code}).`);
+      showToast(`Tipo de producto "${name}" creado exitosamente.`);
     };
 
     renderTypes();

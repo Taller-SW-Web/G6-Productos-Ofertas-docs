@@ -66,7 +66,7 @@
     .search{min-width:220px;flex:1}
     .filter{min-width:180px}
     .desktop-table,.mobile-list{width:100%}
-    .table-wrap{border:1px solid var(--neutral-30);overflow-x:auto}
+    .table-wrap{border:1px solid var(--neutral-30);overflow-x:auto;-webkit-overflow-scrolling:touch}
     table{width:100%;border-collapse:collapse}
     th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--neutral-30);vertical-align:middle}
     th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-family:"Roboto Mono",ui-monospace,monospace;font-weight:600;color:var(--neutral-70);background:var(--neutral-10);white-space:nowrap}
@@ -295,7 +295,7 @@
         <div class="page-header">
           <div>
             <h1>Control de stock y disponibilidad</h1>
-            <p>Consulta de saldos físicos (on_hand), reservados y disponibles por SKU y ubicación (location_id).</p>
+            <p>Consulta de existencias físicas, reservas y unidades disponibles por SKU y sede.</p>
           </div>
         </div>
         <div class="skeleton">
@@ -394,7 +394,7 @@
       <div class="page-header">
         <div>
           <h1>Control de stock y disponibilidad</h1>
-          <p class="muted">Consulta de saldos físicos (<code class="mono">on_hand</code>), reservados (<code class="mono">reserved</code>) y disponibles (<code class="mono">available = on_hand - reserved</code>) por SKU y ubicación (<code class="mono">location_id</code>).</p>
+          <p class="muted">Consulta de existencias físicas, reservas y unidades disponibles por SKU y sede.</p>
         </div>
       </div>
 
@@ -480,20 +480,20 @@
         <h2 style="font-size:18px; margin-top:0;">Desglose de existencias — ${escapeHtml(item.location_id)}</h2>
         <div class="kv-grid">
           <div class="kv-item">
-            <div class="kv-lbl">Stock físico (on_hand)</div>
+            <div class="kv-lbl">Stock físico</div>
             <div class="kv-val mono">${item.on_hand} unidades</div>
           </div>
           <div class="kv-item">
-            <div class="kv-lbl">Stock comprometido (reserved)</div>
+            <div class="kv-lbl">Stock reservado</div>
             <div class="kv-val mono">${item.reserved} unidades</div>
           </div>
           <div class="kv-item">
-            <div class="kv-lbl">Stock disponible vendible (available)</div>
+            <div class="kv-lbl">Stock disponible</div>
             <div class="kv-val mono" style="font-size:18px;"><strong>${item.available}</strong> unidades</div>
           </div>
           <div class="kv-item">
-            <div class="kv-lbl">Umbral de alerta configurado</div>
-            <div class="kv-val mono">${u} unidades ${item.use_default_umbral ? '<span class="muted small">(heredado global: 5)</span>' : '<span class="muted small">(personalizado SKU)</span>'}</div>
+            <div class="kv-lbl">Umbral de alerta</div>
+            <div class="kv-val mono">${u} unidades ${item.use_default_umbral ? '<span class="muted small">(global: 5)</span>' : '<span class="muted small">(personalizado)</span>'}</div>
           </div>
         </div>
 

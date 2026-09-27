@@ -232,13 +232,12 @@
             <label><input type="checkbox" id="ch-ret" ${(!p.canales || p.canales.includes('Retail'))?'checked':''} /> Retail</label>
           </div>
           <p class="field-help" style="margin:6px 0 0;font-size:12px;color:var(--n50)">
-            <strong>Regla SPEC-006:</strong> Si dejas todos los canales desmarcados (lista vacía), la promoción se interpreta y aplica automáticamente a <em>todos los canales soportados</em>.
+            Si dejas todos los canales desmarcados, la promoción aplicará automáticamente a todos los canales habilitados.
           </p>
         </div>
 
-        <!-- Política de combinación granular 3 vías según WF-006 -->
         <div style="border:1px solid var(--n30);padding:18px;border-radius:var(--r);margin-bottom:20px;background:var(--n10)">
-          <label style="font-weight:700;display:block;margin-bottom:4px;font-size:15px">Política de combinación (WF-006):</label>
+          <label style="font-weight:700;display:block;margin-bottom:4px;font-size:15px">Política de combinación:</label>
           <p class="small muted" style="margin:0 0 14px 0">Configura individualmente la compatibilidad con otros beneficios. Si todos los interruptores permanecen desmarcados, la promoción operará en régimen <strong>Exclusiva</strong>.</p>
           <div style="display:grid;gap:10px">
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
@@ -267,12 +266,11 @@
           <div class="field"><label for="status">Estado inicial *</label><select id="status" class="select"><option ${p.state==='ACTIVA'?'selected':''}>ACTIVA</option><option ${p.state==='INACTIVA'?'selected':''}>INACTIVA</option></select></div>
           <div class="field"><label for="start">Inicio vigencia *</label><input id="start" class="input" type="datetime-local" value="${p.start}"><span class="error" id="e-start" hidden></span></div><div class="field"><label for="end">Fin vigencia *</label><input id="end" class="input" type="datetime-local" value="${p.end}"><span class="error" id="e-end" hidden></span></div>
           
-          <!-- Alcance granular producto / SKU (SPEC-006) -->
           <div class="span2 product-picker">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
               <div>
                 <h3 style="margin:0">Alcance de la promoción (Productos y/o SKUs vendibles) *</h3>
-                <p class="small muted" style="margin:4px 0 0">Selecciona el producto completo para incluir todas sus variantes o marca SKUs específicos (SPEC-006).</p>
+                <p class="small muted" style="margin:4px 0 0">Selecciona el producto completo para incluir todas sus variantes o marca SKUs específicos.</p>
               </div>
               <span id="scope-count" class="small muted mono"></span>
             </div>
@@ -424,8 +422,7 @@
         </div>
 
         <div style="margin-top:24px;border:1px solid var(--n30);padding:18px;border-radius:var(--r);background:var(--n10)">
-          <h3 style="margin-bottom:8px">Matriz de combinabilidad (3 vías)</h3>
-          <p class="small muted" style="margin:0 0 14px 0">Configuración determinista conforme a SPEC-006 / WF-006.</p>
+          <h3 style="margin-bottom:8px">Matriz de combinabilidad</h3>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
             <div style="background:#fff;border:1px solid var(--n30);padding:12px;border-radius:var(--r)">
               <span class="small muted" style="display:block">Oferta de Pricing</span>
@@ -442,7 +439,7 @@
           </div>
           <div style="margin-top:14px;font-size:13px">
             <span class="muted">Régimen evaluado:</span> 
-            <strong>${isExcl ? 'Exclusiva (MVP por defecto: no coexiste con otro beneficio)' : 'Combinable granular'}</strong>
+            <strong>${isExcl ? 'Exclusiva' : 'Combinable'}</strong>
           </div>
         </div>
 
