@@ -762,7 +762,7 @@
 
           <div class="grid-2" style="margin-top:14px;">
             <div class="field">
-              <label for="input-channel">Ámbito de canal (channel_id) *</label>
+              <label for="input-channel">Canal *</label>
               <select id="input-channel" class="control" style="min-height:44px; padding:8px 12px; border:1px solid var(--neutral-30);">
                 <option value="GLOBAL" ${state.editForm.channel==='GLOBAL'?'selected':''}>GLOBAL (Todos los canales)</option>
                 <option value="ECOMMERCE" ${state.editForm.channel==='ECOMMERCE'?'selected':''}>ECOMMERCE (Tienda Online)</option>
@@ -773,7 +773,7 @@
             </div>
 
             <div class="field">
-              <label for="input-valid-until">Vigencia hasta (valid_until) <span class="muted">(Opcional)</span></label>
+              <label for="input-valid-until">Vigencia hasta <span class="muted">(Opcional)</span></label>
               <input type="datetime-local" id="input-valid-until" value="${escapeHtml(state.editForm.validUntil||'')}">
               <span class="hint">Dejar en blanco para vigencia indefinida.</span>
               ${err.validUntil ? `<div class="field-error" role="alert">${escapeHtml(err.validUntil)}</div>` : ''}
@@ -782,8 +782,8 @@
 
           <div class="field" style="margin-top:14px;">
             <label for="input-motivo">Motivo del cambio de precio *</label>
-            <textarea id="input-motivo" placeholder="Ej. Ajuste de campaña Cyber Days según orden comercial #4421..." required>${escapeHtml(state.editForm.motivo)}</textarea>
-            <span class="hint">El motivo es mandatorio para fines de auditoría y trazabilidad inmutable.</span>
+            <textarea id="input-motivo" placeholder="Ej. Ajuste de campaña Cyber Days según orden comercial 4421..." required>${escapeHtml(state.editForm.motivo)}</textarea>
+            <span class="hint">Indica el motivo del cambio para el registro de auditoría.</span>
             ${err.motivo ? `<div class="field-error" role="alert">${escapeHtml(err.motivo)}</div>` : ''}
           </div>
 
@@ -895,7 +895,7 @@
     if (validUntilVal) {
       const untilTime = new Date(validUntilVal).getTime();
       if (isNaN(untilTime) || untilTime <= startTime) {
-        errors.validUntil = 'La fecha de fin (valid_until) debe ser estrictamente posterior al inicio de vigencia.';
+        errors.validUntil = 'La fecha de fin debe ser posterior al inicio de vigencia.';
       } else {
         endTime = untilTime;
         endIso = validUntilVal;
@@ -972,7 +972,7 @@
               <td class="mono">${newOf != null ? '<strong>S/ ' + newOf.toFixed(2) + '</strong>' : '<span class="muted">Sin oferta</span>'}</td>
             </tr>
             <tr>
-              <td><strong>Canal (channel_id)</strong></td>
+              <td><strong>Canal</strong></td>
               <td class="mono">GLOBAL</td>
               <td class="mono"><strong>${escapeHtml(channelVal)}</strong></td>
             </tr>

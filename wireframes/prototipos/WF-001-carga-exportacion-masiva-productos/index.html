@@ -591,16 +591,6 @@
                 <button id="select-file" class="btn btn-primary" type="button">Seleccionar archivo</button>
                 <input id="file-input" class="sr-only" type="file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
               </div>
-
-              <div style="margin-top:24px">
-                <h3>Antes de importar</h3>
-                <ul class="rules">
-                  <li>El archivo debe conservar la estructura exacta de la plantilla oficial.</li>
-                  <li>En SKU existentes, las celdas vacías conservan el valor actual.</li>
-                  <li>Usa URLs válidas para imágenes; no adjuntes ni incrustes archivos.</li>
-                  <li>El procesamiento continúa en segundo plano y no bloquea la interfaz.</li>
-                </ul>
-              </div>
             </section>
 
             <aside class="col-4" aria-label="Descargas">
@@ -989,7 +979,7 @@
                 <div class="notice-icon" aria-hidden="true">i</div>
                 <div>
                   <p class="notice-title">Se conservan las ${metrics.ok.toLocaleString('es-PE')} filas ya aplicadas.</p>
-                  <p class="muted">Al reanudar, el procesamiento continuará a partir de la fila ${metrics.ok + 1} utilizando la misma referencia (${escapeHtml(state.batchId)}) de forma idempotente, sin duplicar registros ni crear un lote nuevo.</p>
+                  <p class="muted">Al reanudar, el procesamiento continuará a partir de la fila ${metrics.ok + 1} utilizando la misma referencia (${escapeHtml(state.batchId)}), sin duplicar registros ya procesados ni crear un lote nuevo.</p>
                   <button class="btn btn-primary" type="button" data-action="resume-batch" style="margin-top:12px">Reanudar operaciones pendientes</button>
                 </div>
               </div>` : partial ? `
@@ -1216,7 +1206,7 @@
           render();
           main.focus();
           announce('Reanudando procesamiento desde la última fila confirmada.');
-          toast('Reanudando lote de forma idempotente...');
+          toast('Reanudando lote...');
           startProcessingSimulation('success');
         } else if (action === 'download-errors') {
           downloadErrorsCsv();

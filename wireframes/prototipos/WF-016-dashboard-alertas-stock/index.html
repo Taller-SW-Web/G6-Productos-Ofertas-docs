@@ -75,7 +75,7 @@
     .status.low::before{background:var(--surface);border-width:2px}
     .status.out::before{background:transparent;border-style:dashed}
 
-    .table-wrap{border:1px solid var(--neutral-30);overflow-x:auto}
+    .table-wrap{border:1px solid var(--neutral-30);overflow-x:auto;-webkit-overflow-scrolling:touch}
     table{width:100%;border-collapse:collapse}
     th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--neutral-30);vertical-align:middle}
     th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-family:"Roboto Mono",ui-monospace,monospace;font-weight:600;color:var(--neutral-70);background:var(--neutral-10);white-space:nowrap}
@@ -333,14 +333,14 @@
       <div class="page-header">
         <div>
           <h1>Dashboard analítico y alertas de stock</h1>
-          <p class="muted">Monitoreo reactivo a nivel de SKU vendible, alertas por umbral efectivo (<code class="mono">override SKU ?? global</code>) y distribución operativa por sede (<code class="mono">location_id</code>).</p>
+          <p class="muted">Monitoreo de existencias por SKU, alertas de stock bajo y distribución por sede.</p>
         </div>
       </div>
 
       ${lastEvent ? `
         <div class="event-banner">
           <span class="live-dot" aria-hidden="true"></span>
-          <div><strong>Actualización reactiva:</strong> ${escapeHtml(lastEvent)}</div>
+          <div><strong>Actualización de inventario:</strong> ${escapeHtml(lastEvent)}</div>
         </div>
       ` : ''}
 
@@ -369,7 +369,7 @@
             <div class="kpi">
               <div class="kpi-label">Unidades disponibles</div>
               <div class="kpi-value">${kpis.units}</div>
-              <div class="kpi-sub">Suma total de <code class="mono">available</code></div>
+              <div class="kpi-sub">Total disponible</div>
             </div>
             <div class="kpi">
               <div class="kpi-label">SKUs disponibles</div>
@@ -379,12 +379,12 @@
             <div class="kpi">
               <div class="kpi-label">Stock bajo</div>
               <div class="kpi-value">${kpis.low}</div>
-              <div class="kpi-sub">0 &lt; available &le; umbral</div>
+              <div class="kpi-sub">Stock bajo</div>
             </div>
             <div class="kpi">
               <div class="kpi-label">Agotados</div>
               <div class="kpi-value">${kpis.out}</div>
-              <div class="kpi-sub">available = 0</div>
+              <div class="kpi-sub">Agotado</div>
             </div>
           </div>
         </div>
@@ -467,7 +467,7 @@
           <div class="section-head">
             <div>
               <h2>Distribución operativa por ubicación</h2>
-              <p class="small muted">Existencias consolidadas y SKUs en alerta desglosados por almacén/sede (<code class="mono">location_id</code>).</p>
+              <p class="small muted">Existencias consolidadas y SKUs en alerta desglosados por almacén o sede.</p>
             </div>
           </div>
 
@@ -477,9 +477,9 @@
                 <tr>
                   <th scope="col">Ubicación (Sede)</th>
                   <th scope="col" style="text-align:right">SKUs registrados</th>
-                  <th scope="col" style="text-align:right">Stock físico (on_hand)</th>
-                  <th scope="col" style="text-align:right">Reservado (reserved)</th>
-                  <th scope="col" style="text-align:right">Disponible (available)</th>
+                  <th scope="col" style="text-align:right">Stock físico</th>
+                  <th scope="col" style="text-align:right">Reservado</th>
+                  <th scope="col" style="text-align:right">Disponible</th>
                   <th scope="col" style="text-align:right">SKUs en alerta</th>
                   <th scope="col">Disponibilidad operativa</th>
                 </tr>
@@ -554,17 +554,17 @@
   }
 
   function simulateEvent(){
-    // Simula un evento reactivo inventory.stock.changed que actualiza un saldo
+    // Simula una actualización de inventario que actualiza un saldo
     const target = skus.find(s => s.sku === 'NK-AM-BLK-40');
     if (target){
       target.on_hand = Math.max(0, target.on_hand - 2);
       target.available = Math.max(0, target.on_hand - target.reserved);
-      lastEvent = `inventory.stock.changed · ${target.sku} (${target.location_id}) · on_hand: 12 → ${target.on_hand}, available: 10 → ${target.available} · v109`;
+      lastEvent = `Stock actualizado para SKU ${target.sku} (${target.location_id}): ${target.available} unidades disponibles.`;
     } else {
-      lastEvent = 'inventory.stock.changed · Panel recalculado ante actualización asíncrona de inventario.';
+      lastEvent = 'Panel recalculado ante actualización de inventario.';
     }
     render();
-    showToast('Evento inventory.stock.changed recibido. Indicadores actualizados.');
+    showToast('Inventario actualizado. Indicadores recalculados.');
   }
 
   function render(){

@@ -316,7 +316,7 @@
 
   function renderTree(){
     const forced=state.queryState;
-    const header=`<div class="page-header"><div><h1>Gestión de categorías</h1><p>Crea, organiza y mantiene la jerarquía de categorías y subcategorías (máximo {MAX_CATEGORY_DEPTH} niveles — valor configurado MVP: 2).</p></div><div class="button-row"><button class="btn btn-primary" data-action="create">Crear categoría</button></div></div>`;
+    const header=`<div class="page-header"><div><h1>Gestión de categorías</h1><p>Crea, organiza y mantiene la jerarquía de categorías y subcategorías.</p></div><div class="button-row"><button class="btn btn-primary" data-action="create">Crear categoría</button></div></div>`;
     if(state.listLoading && !forced){
       app.innerHTML=header+`<div class="skeleton" aria-label="Cargando categorías"><div class="sk-line w30"></div><div class="sk-line w80"></div><div class="sk-line w50"></div></div>`;
       setTimeout(()=>{state.listLoading=false;render();},450);
@@ -332,7 +332,7 @@
     }
     const rows=categories.map(treeRow).join('');
     const cards=categories.map(treeCard).join('');
-    app.innerHTML=header+`<div class="notice"><span class="notice-icon" aria-hidden="true">i</span><div><h3>Jerarquía configurable ({MAX_CATEGORY_DEPTH} niveles, valor configurado MVP: 2).</h3><p>Solo se puede crear una subcategoría sobre una categoría raíz. La desactivación requiere que la categoría no cuente con productos activos asociados.</p></div></div>
+    app.innerHTML=header+`
       <div class="desktop-tree tree"><div class="tree-head"><span>Categoría</span><span>Código</span><span>Subcategorías</span><span>Productos</span><span>Estado y acciones</span></div>${rows}</div>
       <div class="mobile-tree">${cards}</div>`;
   }
@@ -370,7 +370,7 @@
       const p=catById(f.parentId);
       if(!p) errors.push({key:'parent',msg:'Selecciona una categoría raíz válida.'});
       else if(p.status!=='active') errors.push({key:'parent',msg:'El padre debe estar activo para asignarlo.'});
-      else if(state.formMode==='create' && p.parentId!==null) errors.push({key:'parent',msg:'La jerarquía admite máximo {MAX_CATEGORY_DEPTH} niveles (valor configurado MVP: 2).'});
+      else if(state.formMode==='create' && p.parentId!==null) errors.push({key:'parent',msg:'La jerarquía admite hasta 2 niveles (categoría raíz y subcategoría).'});
     }
     return {errors,valid:errors.length===0};
   }
@@ -403,19 +403,19 @@
             <div class="field"><label for="catName">Nombre</label><input id="catName" type="text" value="${escapeHtml(state.form.name)}" aria-invalid="${nameErr?'true':'false'}"><div class="help">El nombre no necesita ser único: puede repetirse en distintas ramas.</div><div class="field-error ${nameErr?'show':''}">${escapeHtml(nameErr)}</div></div>
             
             <div class="field">
-              <label>Slug público resultante (Handoff SEO / Marketplace)</label>
+              <label>Slug público</label>
               <div style="margin-top:4px">
-                <div id="catSlugPreview" class="mono" style="background:#f1f5f9;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-weight:600;color:#0f172a">
+                <div id="catSlugPreview" class="mono" style="background:var(--neutral-10);padding:8px 12px;border:1px solid var(--neutral-30);border-radius:var(--radius);font-weight:600;color:var(--neutral-90)">
                   ${uniqueSlug ? `/categoria/${escapeHtml(uniqueSlug)}` : 'Se generará a partir del nombre...'}
                 </div>
-                <div id="catSlugCollisionAlert" class="notice" style="margin-top:8px;padding:8px 12px;background:#fef3c7;border-color:#f59e0b;display:${isCollision?'flex':'none'}">
-                  <span class="notice-icon" aria-hidden="true" style="color:#d97706">i</span>
-                  <div style="font-size:12px;color:#92400e">
+                <div id="catSlugCollisionAlert" class="notice" style="margin-top:8px;padding:8px 12px;background:var(--neutral-10);border-color:var(--neutral-90);display:${isCollision?'flex':'none'}">
+                  <span class="notice-icon" aria-hidden="true">i</span>
+                  <div style="font-size:12px;color:var(--neutral-90)">
                     <strong>Aviso de colisión:</strong> El slug base <code>${escapeHtml(baseSlug)}</code> ya existe. Se asignó automáticamente el sufijo <code>${escapeHtml(uniqueSlug)}</code> visible antes de confirmar la creación.
                   </div>
                 </div>
                 <div class="help" style="margin-top:4px">
-                  ${mode==='create'?'Generado en tiempo real según normas SEO. Se muestra el slug final antes de confirmar la creación.':'El slug no se edita en este flujo. La edición de slug y la resolución permanente (Marketplace → HTTP 301) corresponden a WF-012.'}
+                  ${mode==='create'?'Generado automáticamente a partir del nombre comercial.':'El slug no se puede modificar directamente una vez creada la categoría.'}
                 </div>
               </div>
             </div>
@@ -425,11 +425,11 @@
             <div class="field"><label for="catOrder">Orden</label><input id="catOrder" type="number" value="${escapeHtml(state.form.order)}" placeholder="Opcional"></div>
           </section>
           <section class="section"><h2>Jerarquía</h2>
-            <div class="field"><label for="catParent">Categoría padre</label>${parentOptions(state.currentId)}<div class="help">Se listan solo las categorías raíz activas. La jerarquía admite máximo {MAX_CATEGORY_DEPTH} niveles (valor configurado MVP: 2).</div><div class="field-error ${pen?'show':''}">${escapeHtml(pen)}</div></div>
+            <div class="field"><label for="catParent">Categoría padre</label>${parentOptions(state.currentId)}<div class="help">Se listan solo las categorías raíz activas.</div><div class="field-error ${pen?'show':''}">${escapeHtml(pen)}</div></div>
           </section>
         </div>
         <aside class="section summary" aria-live="polite"><h2>Resultado</h2>
-          <div class="metric"><span class="metric-label">Nivel</span><span class="metric-value">${state.form.parentId?'Subcategoría':'Raíz'}</span><span class="metric-detail">Máximo {MAX_CATEGORY_DEPTH} niveles (valor configurado MVP: 2).</span></div>
+          <div class="metric"><span class="metric-label">Nivel</span><span class="metric-value">${state.form.parentId?'Subcategoría':'Raíz'}</span><span class="metric-detail">Jerarquía de catálogo.</span></div>
           <div class="metric"><span class="metric-label">Slug asignado</span><span class="metric-value mono" style="font-size:13px">${uniqueSlug?`/${escapeHtml(uniqueSlug)}`:'—'}</span><span class="metric-detail">Resuelto antes de persistir.</span></div>
           <div class="metric"><span class="metric-label">Productos afectados</span><span class="metric-value">—</span><span class="metric-detail">Cambiar el padre no afecta productos ya asociados.</span></div>
         </aside>
@@ -455,7 +455,7 @@
         <section class="section"><div class="detail-intro"><div><span class="status ${c.status==='active'?'active':''}">${c.status==='active'?'Activo':'Inactivo'}</span><div class="small muted" style="margin-top:8px">Nivel: ${c.level===1?'Raíz':'Subcategoría'}</div></div>${c.img?`<div class="img-frame" aria-hidden="true">IMG</div>`:''}</div></section>
         <section class="section"><h2>Datos de la categoría</h2><dl class="definition-list">
           <dt>Nombre</dt><dd>${escapeHtml(c.name)}</dd>
-          <dt>Slug público</dt><dd><span class="mono" style="background:#f1f5f9;padding:2px 6px;border-radius:4px">/categoria/${escapeHtml(c.slug||normalizeSlug(c.name))}</span></dd>
+          <dt>Slug público</dt><dd><span class="mono" style="background:var(--neutral-10);padding:2px 6px;border-radius:var(--radius)">/categoria/${escapeHtml(c.slug||normalizeSlug(c.name))}</span></dd>
           <dt>Descripción</dt><dd>${escapeHtml(c.description)}</dd>
           <dt>Orden</dt><dd>${c.order}</dd>
           <dt>Código</dt><dd><span class="mono">${escapeHtml(c.hasCode)}</span></dd>
@@ -463,10 +463,8 @@
           <dt>Subcategorías</dt><dd>${childLabels}</dd>
           <dt>Productos activos</dt><dd>${c.products}</dd>
         </dl></section>
-      </div><aside class="section summary"><h2>Acciones disponibles</h2>
-        <div class="metric"><span class="metric-label">Editar</span><span class="metric-value">${'Sí'}</span><span class="metric-detail">Incluye reasignar la categoría padre.</span></div>
-        <div class="metric"><span class="metric-label">SEO y Redirección</span><span class="metric-value">WF-012</span><span class="metric-detail">Metadatos y resolución 301 en Taxonomía y SEO.</span></div>
-        <div class="metric"><span class="metric-label">${c.status==='active'?'Desactivar':'Reactivar'}</span><span class="metric-value">${c.status==='active'?'Sí':'Requisito: padre activo'}</span><span class="metric-detail">${c.status==='active'?'La baja valida productos activos.':'Si el padre está inactivo, debe reactivarse primero.'}</span></div>
+      </div><aside class="section summary"><h2>Estado</h2>
+        <div class="metric"><span class="metric-label">Estado</span><span class="metric-value">${c.status==='active'?'Activo':'Inactivo'}</span><span class="metric-detail">${c.status==='active'?'Visible en catálogo y canales.':'No visible en catálogo.'}</span></div>
       </aside></div>`;
   }
 
