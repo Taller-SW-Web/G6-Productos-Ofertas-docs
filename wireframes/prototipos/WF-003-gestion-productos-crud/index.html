@@ -986,33 +986,24 @@
               </section>
 
               <section class="panel" aria-labelledby="integrations-title">
-                <h2 id="integrations-title">Preparaciones externas</h2>
-                <p class="small muted">Confirmaciones asíncronas de otros componentes contractuales.</p>
+                <h2 id="integrations-title">Estado de preparación para publicación</h2>
                 <ul class="meta-list">
                   <li>
-                    <span class="muted small">Pricing (Precio preparado)</span><br>
-                    ${p.pricingReady ? '<span class="status active" style="margin-top:4px">Confirmado</span>' : '<span class="status draft" style="margin-top:4px">Pendiente</span>'}
+                    <span class="muted small">Precio</span><br>
+                    ${p.pricingReady ? '<span class="status active" style="margin-top:4px">Listo</span>' : '<span class="status draft" style="margin-top:4px">Pendiente</span>'}
                   </li>
                   <li>
-                    <span class="muted small">Inventario (Inicialización saldo)</span><br>
-                    ${p.inventoryReady ? '<span class="status active" style="margin-top:4px">Confirmado</span>' : '<span class="status draft" style="margin-top:4px">Pendiente</span>'}
+                    <span class="muted small">Inventario</span><br>
+                    ${p.inventoryReady ? '<span class="status active" style="margin-top:4px">Listo</span>' : '<span class="status draft" style="margin-top:4px">Pendiente</span>'}
                   </li>
                 </ul>
-                ${(!p.pricingReady || !p.inventoryReady) ? `
-                  <div style="margin-top:14px">
-                    <button class="btn btn-quiet" type="button" data-action="simulate-confirmations" style="width:100%;font-size:13px;border:1px dashed var(--neutral-50)">
-                      Simular confirmación Pricing / Inventario
-                    </button>
-                    <p class="field-help" style="font-size:11px">Simula la recepción de los eventos asíncronos para habilitar la activación del borrador.</p>
-                  </div>
-                ` : ''}
               </section>
 
               <section class="panel" aria-labelledby="metadata-title">
                 <h2 id="metadata-title">Información administrativa</h2>
                 <ul class="meta-list">
                   <li><span class="muted small">Identificador de producto</span><br><span class="mono">${escapeHtml(p.id.toUpperCase())}</span></li>
-                  <li><span class="muted small">Tipo de producto ID</span><br><span class="mono">${escapeHtml(p.productTypeId)}</span></li>
+                  <li><span class="muted small">Tipo de producto</span><br><span class="mono">${escapeHtml(p.productTypeId)}</span></li>
                   <li><span class="muted small">Última modificación</span><br>${escapeHtml(p.updated)}</li>
                 </ul>
               </section>
