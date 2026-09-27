@@ -24,7 +24,6 @@
 | **CA-08** | El número máximo de características asociables a un tipo de producto es un **límite técnico configurable**. Para el MVP se usa 20 como valor inicial, sin presentarlo como una restricción empresarial permanente. |
 | **CA-09** | Si una característica cambia de opcional a obligatoria, los productos existentes no se invalidan inmediatamente; la obligatoriedad se exige en la siguiente edición/guardado o proceso explícito de validación/migración. |
 | **CA-10** | La consulta debe indicar las características efectivas del tipo de producto, su obligatoriedad y su estado. No existe origen «heredado por categoría» porque las asociaciones son directas al tipo de producto. |
-
 | **CA-11** | Asociar o reactivar una característica verifica el límite técnico configurado del tipo de producto y la compatibilidad con productos/variantes activos; un incumplimiento rechaza la operación sin alterar las asociaciones existentes. |
 | **CA-12** | Modificar la clasificación de un producto en el árbol de categorías no recalcula sus características. Cambiar `tipo_producto_id`, cuando se habilite mediante migración, sí debe revalidar atributos obligatorios e identidad de variantes antes de confirmarse. |
 

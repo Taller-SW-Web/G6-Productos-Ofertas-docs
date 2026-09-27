@@ -23,6 +23,7 @@ El sistema DEBE permitir crear características. Si es `TEXTO`, se aplica `MAX_T
 
 ### Requisito 2: Gestión de valores para tipo LISTA
 El sistema DEBE aplicar `MAX_ACTIVE_LIST_VALUES` a los valores activos de una característica `LISTA` (valor inicial del MVP: 50). El límite se configura para proteger usabilidad y rendimiento y puede evolucionar sin migrar el modelo de datos.
+
 *Impacto al renombrar:* Al renombrar un valor en uso, el nuevo nombre se refleja en las consultas actuales de productos asociados por su ID estable cuando sus proyecciones se actualizan; no se reescriben snapshots de pedidos ni los códigos SKU existentes.
 
 ### Requisito 3: Contratos de consulta y cambios

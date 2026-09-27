@@ -47,7 +47,6 @@ Gestión de ofertas y promociones — Obligatoria.
 | CA-09 | Modificar o desactivar una promoción no altera los descuentos ya registrados en pedidos confirmados. |
 | CA-10 | Promociones, cupones y la oferta propia de Pricing se combinan únicamente cuando sus políticas lo permiten. Una promoción puede declararse `EXCLUSIVE` o compatible con clases de beneficio específicas; el motor no aplica una regla global de no-stacking. |
 | CA-11 | Una promoción puede configurarse a nivel producto (aplica a sus SKUs vendibles activos) o a nivel SKU específico. |
-
 | CA-12 | La modalidad `AUTOMATICA` o `CUPON` es obligatoria y visible en consulta. Una promoción CUPON nunca se aplica sin código asociado validado. |
 | CA-13 | La modalidad solo puede editarse en promoción inactiva nunca activada y sin cupones asociados ni usos históricos; en otros casos se crea otra promoción. |
 | CA-14 | Pricing devuelve regular/oferta por SKU separadamente. La evaluación usa bases monetarias explícitas y la oferta de Pricing participa como beneficio según la política de combinabilidad, evitando descuentos duplicados o bases ambiguas. |

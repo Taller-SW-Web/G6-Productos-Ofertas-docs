@@ -59,7 +59,6 @@ El cupón posee como datos propios:
 | CA-11 | Si varias compras intentan consumir simultáneamente los últimos usos, el sistema no debe superar el límite configurado. |
 | CA-12 | Una cancelación homologada restituye o conserva el uso de acuerdo con `politica_cancelacion`. La restitución es idempotente y nunca duplica capacidad. |
 | CA-13 | La promoción asociada declara su política de combinabilidad. El cupón puede ser exclusivo o combinarse con beneficios compatibles; el evaluador compara únicamente combinaciones permitidas y el cupón consume uso solo si forma parte del beneficio finalmente elegido. |
-
 | CA-14 | Pricing entrega regular/oferta separadamente. La oferta puede participar como alternativa o como beneficio compatible únicamente si la política comercial lo permite; los porcentajes/montos se calculan sobre bases definidas explícitamente y no se reaplica accidentalmente el mismo descuento. |
 | CA-15 | Una confirmación provisional `order.confirmed` produce resultado idempotente de consumo aceptado o rechazo con `order_id` y `operation_id`; Ventas/Postventa gestiona las consecuencias comerciales y de pago de un rechazo. |
 
