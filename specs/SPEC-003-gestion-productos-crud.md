@@ -1116,27 +1116,26 @@ sin ejecutar la mutación y sin necesidad de revelar el permiso exacto faltante.
 # 37. Criterio de completitud
 
 La capacidad se considera implementada cuando:
-
-- [ ] creación BORRADOR funciona;
-- [ ] `sku_base` es único;
-- [ ] nombre+marca produce advertencia y no falsa unicidad bloqueante;
-- [ ] categoría, marca y tipo se validan;
-- [ ] características obligatorias se validan al activar;
-- [ ] imágenes se validan al activar;
-- [ ] Pricing e Inventario participan conforme a ownership;
-- [ ] activación, desactivación y reactivación funcionan;
-- [ ] productos con variantes delegan a SPEC-004;
-- [ ] productos simples usan `sku_base` como SKU vendible;
-- [ ] productos simples pueden registrar perfil físico;
-- [ ] perfil físico utiliza kg/cm;
-- [ ] peso y dimensiones se validan;
-- [ ] perfil físico no cambia identidad;
-- [ ] no existe perfil físico autoritativo en el padre con variantes;
-- [ ] consulta física en lote resuelve SKU simples y variantes;
-- [ ] Productos no define empaque;
-- [ ] stock no se persiste en Catálogo;
-- [ ] trazabilidad incluye cambios físicos;
-- [ ] respuestas protegidas usan `TOKEN_INVALIDO` para 401;
-- [ ] respuestas protegidas usan `SCOPE_INSUFICIENTE` para 403;
-- [ ] `SIN_AUTORIZACION` no se emite en contratos nuevos;
-- [ ] contratos implementados coinciden con OpenAPI y `api/catalogo-errores.md`.
+- creación BORRADOR funciona;
+- `sku_base` es único;
+- nombre+marca produce advertencia y no falsa unicidad bloqueante;
+- categoría, marca y tipo se validan;
+- características obligatorias se validan al activar;
+- imágenes se validan al activar;
+- Pricing e Inventario participan conforme a ownership;
+- activación, desactivación y reactivación funcionan;
+- productos con variantes delegan a SPEC-004;
+- productos simples usan `sku_base` como SKU vendible;
+- productos simples pueden registrar perfil físico;
+- perfil físico utiliza kg/cm;
+- peso y dimensiones se validan;
+- perfil físico no cambia identidad;
+- no existe perfil físico autoritativo en el padre con variantes;
+- consulta física en lote resuelve SKU simples y variantes;
+- Productos no define empaque;
+- stock no se persiste en Catálogo;
+- trazabilidad incluye cambios físicos;
+- respuestas protegidas usan `TOKEN_INVALIDO` para 401;
+- respuestas protegidas usan `SCOPE_INSUFICIENTE` para 403;
+- `SIN_AUTORIZACION` no se emite en contratos nuevos;
+- contratos implementados coinciden con OpenAPI y `api/catalogo-errores.md`.

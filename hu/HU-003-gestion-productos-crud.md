@@ -301,24 +301,23 @@ Un producto con variantes administra sus unidades vendibles en HU-004; el produc
 ---
 
 # Criterio de completitud
-
-- [ ] creación y edición funcionan;
-- [ ] borrador no exige requisitos de publicación;
-- [ ] activación valida requisitos;
-- [ ] desactivación/reactivación funcionan;
-- [ ] `sku_base` es único;
-- [ ] posible duplicado nombre+marca es advertencia;
-- [ ] producto simple usa `sku_base` como SKU vendible;
-- [ ] producto con variantes delega a HU-004;
-- [ ] producto simple permite registrar peso y dimensiones;
-- [ ] valores físicos inválidos se rechazan;
-- [ ] valores desconocidos no se sustituyen por cero;
-- [ ] editar físico conserva SKU;
-- [ ] la UI no ofrece físico del padre con variantes;
-- [ ] Despacho puede consumir físico de SKU simples y variantes;
-- [ ] Productos no administra empaque;
-- [ ] stock y precio mantienen ownership correcto;
-- [ ] trazabilidad incluye cambios físicos;
-- [ ] 401 usa `TOKEN_INVALIDO`;
-- [ ] 403 usa `SCOPE_INSUFICIENTE`;
-- [ ] `SIN_AUTORIZACION` no se utiliza en nuevos contratos.
+- creación y edición funcionan;
+- borrador no exige requisitos de publicación;
+- activación valida requisitos;
+- desactivación/reactivación funcionan;
+- `sku_base` es único;
+- posible duplicado nombre+marca es advertencia;
+- producto simple usa `sku_base` como SKU vendible;
+- producto con variantes delega a HU-004;
+- producto simple permite registrar peso y dimensiones;
+- valores físicos inválidos se rechazan;
+- valores desconocidos no se sustituyen por cero;
+- editar físico conserva SKU;
+- la UI no ofrece físico del padre con variantes;
+- Despacho puede consumir físico de SKU simples y variantes;
+- Productos no administra empaque;
+- stock y precio mantienen ownership correcto;
+- trazabilidad incluye cambios físicos;
+- 401 usa `TOKEN_INVALIDO`;
+- 403 usa `SCOPE_INSUFICIENTE`;
+- `SIN_AUTORIZACION` no se utiliza en nuevos contratos.

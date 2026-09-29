@@ -1169,31 +1169,30 @@ No usar `float` de manera que introduzca errores de negocio en persistencia.
 ---
 
 # 33. Criterios de aceptación del wireframe
-
-- [x] conserva contexto del producto;
-- [x] impide creación en productos simples;
-- [x] permite listar/filtrar variantes;
-- [x] creación usa atributos identificadores;
-- [x] permite SKU opcional/autogenerado;
-- [x] no muestra el identificador interno al usuario;
-- [x] exige imagen;
-- [x] distingue combinación duplicada de SKU duplicado;
-- [x] mantiene identidad inmutable en edición;
-- [x] permite editar imagen y atributos no identificadores;
-- [x] incorpora Peso/Largo/Ancho/Alto;
-- [x] muestra kg y cm;
-- [x] valida valores mayores a cero;
-- [x] contempla datos físicos incompletos sin inventar cero;
-- [x] no convierte perfil físico en requisito automático de activación;
-- [x] no contiene campos de empaque;
-- [x] no permite editar stock ni precio;
-- [x] contempla activar/reactivar/desactivar;
-- [x] contempla errores, permisos y conflictos;
-- [x] diferencia sesión inválida de permisos insuficientes;
-- [x] no muestra códigos técnicos de Seguridad al usuario;
-- [x] cumple responsive;
-- [x] cumple DESIGN.md;
-- [x] no filtra términos técnicos en la interfaz.
+- conserva contexto del producto;
+- impide creación en productos simples;
+- permite listar/filtrar variantes;
+- creación usa atributos identificadores;
+- permite SKU opcional/autogenerado;
+- no muestra el identificador interno al usuario;
+- exige imagen;
+- distingue combinación duplicada de SKU duplicado;
+- mantiene identidad inmutable en edición;
+- permite editar imagen y atributos no identificadores;
+- incorpora Peso/Largo/Ancho/Alto;
+- muestra kg y cm;
+- valida valores mayores a cero;
+- contempla datos físicos incompletos sin inventar cero;
+- no convierte perfil físico en requisito automático de activación;
+- no contiene campos de empaque;
+- no permite editar stock ni precio;
+- contempla activar/reactivar/desactivar;
+- contempla errores, permisos y conflictos;
+- diferencia sesión inválida de permisos insuficientes;
+- no muestra códigos técnicos de Seguridad al usuario;
+- cumple responsive;
+- cumple DESIGN.md;
+- no filtra términos técnicos en la interfaz.
 
 ---
 
@@ -1207,5 +1206,3 @@ No usar `float` de manera que introduzca errores de negocio en persistencia.
 | SUP-04 | Perfil físico no bloquea activación por sí mismo | Confirmado en SPEC-004 actual |
 | SUP-05 | Los datos físicos son por SKU y no por producto padre | Confirmado |
 | SUP-06 | Despacho define el empaque | Confirmado |
-
-
