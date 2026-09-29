@@ -2,7 +2,7 @@
 
 **Fuente HTTP canónica:** [`openapi.yaml`](openapi.yaml)  
 **Fuente asíncrona canónica:** [`./asyncapi/asyncapi.yaml`](./asyncapi/asyncapi.yaml)  
-**Catálogo humano de eventos:** [`catalogo-eventos.md`](catalogo-eventos.md)  
+**Catálogo de eventos:** [`catalogo-eventos.md`](catalogo-eventos.md)  
 **Contrato general:** [`./Contrato_Api.md`](./Contrato_Api.md)  
 **Reglas de negocio:** `./specs/`
 

@@ -2,12 +2,12 @@
 
 **Fecha de actualización:** 2026-09-28  
 **Módulo propietario:** Productos y Ofertas  
-**Documento humano canónico:** `Contrato_Api.md`  
+**Documento de integración:** `Contrato_Api.md`  
 **Contrato HTTP canónico:** `api/openapi.yaml` (`0.3.5-p0`)  
 **Contrato asíncrono canónico:** `asyncapi/asyncapi.yaml` (`0.2.1-p0`)  
 **Catálogo de eventos:** `api/catalogo-eventos.md` (`0.2.1-p0`)  
 **Catálogo de errores:** `api/catalogo-errores.md` (`0.2.4-p0`)  
-**Versión contractual P0:** `0.3.5-p0`  
+**Versión contractual:** `0.3.5-p0`  
 **Estado:** alineado con AsyncAPI `0.2.1-p0`, errores `0.2.4-p0` y eventos `0.2.1-p0`.
 
 ## Fuentes utilizadas
@@ -1384,7 +1384,7 @@ inventory.consumption.rejected
 operation_type = RESERVAR
 ```
 
-Esta reutilización del nombre se conserva por compatibilidad P0 y está documentada como deuda semántica; una versión futura puede introducir `inventory.reservation.rejected` mediante cambio versionado.
+Esta reutilización del nombre se conserva por compatibilidad contractual y está documentada como deuda semántica; una versión futura puede introducir `inventory.reservation.rejected` mediante cambio versionado.
 
 ## Confirmación de consumo
 
@@ -1698,15 +1698,15 @@ Cambios rompientes requieren nueva versión del schema o del canal contractual.
 | Contraparte | Estado | Definición vigente |
 |---|---|---|
 | Seguridad y Usuarios | Alineado con pendientes granulares | Contrato publicado; `modulo-productos`, JWKS, introspección, `tokens:introspeccion` y `roles:leer`; permisos propios de Inventario/Datos físicos todavía pendientes de registro |
-| Ventas/Postventa | Flujo P0 cerrado | Reserva en `CREADO`, consumo en `PAGADO`, liberación ante pago no completado/anulación |
+| Ventas/Postventa | Flujo cerrado | Reserva en `CREADO`, consumo en `PAGADO`, liberación ante pago no completado/anulación |
 | Chatbot | Alineado | Solo consulta disponibilidad; Ventas orquesta inventario |
 | Retail | Requiere corrección documental | Debe eliminar consumo directo de stock desde el canal |
-| Marketplace | Sin bloqueo P0 | Canal de lectura; inventario mutado mediante Ventas |
+| Marketplace | Sin bloqueo | Canal de lectura; inventario mutado mediante Ventas |
 | Despacho | Ownership cerrado | Despacho define empaque; Productos entrega peso/dimensiones por SKU |
 
 ---
 
-# 38. Pendientes reales después de P0
+# 38. Pendientes de integración externa
 
 Ya no son pendientes:
 

@@ -258,20 +258,19 @@ Cuando exista contradicción entre la historia y la SPEC sobre una regla funcion
 # Criterio de completitud de la HU
 
 La historia se considera cubierta cuando existe evidencia de que:
-
-- [ ] los canales consultan disponibilidad por SKU;
-- [ ] el estado se calcula sobre `available`;
-- [ ] Ventas puede crear una reserva al entrar el pedido en `CREADO`;
-- [ ] Ventas puede confirmar la reserva al pasar a `PAGADO`;
-- [ ] Ventas puede liberar la reserva ante pago no completado/anulación;
-- [ ] existe expiración por TTL;
-- [ ] las operaciones son idempotentes;
-- [ ] un retry legítimo no duplica efectos;
-- [ ] una reutilización conflictiva de identidad devuelve `IDEMPOTENCY_CONFLICT`;
-- [ ] la concurrencia no permite doble compromiso de unidades;
-- [ ] existe Kardex;
-- [ ] `stock_version` protege ajustes masivos;
-- [ ] existe `inventory.stock.changed`;
-- [ ] Despacho no descuenta inventario;
-- [ ] las rutas implementadas coinciden con OpenAPI;
-- [ ] las pruebas cubren los escenarios críticos de SPEC-015.
+- los canales consultan disponibilidad por SKU;
+- el estado se calcula sobre `available`;
+- Ventas puede crear una reserva al entrar el pedido en `CREADO`;
+- Ventas puede confirmar la reserva al pasar a `PAGADO`;
+- Ventas puede liberar la reserva ante pago no completado/anulación;
+- existe expiración por TTL;
+- las operaciones son idempotentes;
+- un retry legítimo no duplica efectos;
+- una reutilización conflictiva de identidad devuelve `IDEMPOTENCY_CONFLICT`;
+- la concurrencia no permite doble compromiso de unidades;
+- existe Kardex;
+- `stock_version` protege ajustes masivos;
+- existe `inventory.stock.changed`;
+- Despacho no descuenta inventario;
+- las rutas implementadas coinciden con OpenAPI;
+- las pruebas cubren los escenarios críticos de SPEC-015.
