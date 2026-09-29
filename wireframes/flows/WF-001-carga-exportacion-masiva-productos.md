@@ -264,15 +264,14 @@ La inicialización específica Catálogo → Pricing/Inventario de un SKU recié
 - No depender del color.
 
 ## 19. Criterios de aceptación del wireframe
-
-- [x] reglas visibles antes de archivo;
-- [x] plantilla inmediata;
-- [x] exportación asíncrona;
-- [x] importación asíncrona;
-- [x] Batch ID visible;
-- [x] reporte CSV;
-- [x] fallo parcial sin rollback ficticio;
-- [x] reanudación del mismo lote;
-- [x] rutas OpenAPI cerradas;
-- [x] no canal mutando stock;
-- [x] no contratos de inicialización inventados.
+- reglas visibles antes de archivo;
+- plantilla inmediata;
+- exportación asíncrona;
+- importación asíncrona;
+- Batch ID visible;
+- reporte CSV;
+- fallo parcial sin rollback ficticio;
+- reanudación del mismo lote;
+- rutas OpenAPI cerradas;
+- no canal mutando stock;
+- no contratos de inicialización inventados.

@@ -230,7 +230,7 @@ Hasta que ese contrato se formalice:
 
 ### HTTP administrativo
 
-El OpenAPI administrativo P0 cubre:
+El OpenAPI administrativo cubre:
 
 ```text
 GET   /api/v1/combos
@@ -245,7 +245,7 @@ La forma de rutas derivadas de capacidad permanece marcada como interna/provisio
 
 ### Inventario
 
-El ciclo P0 de stock usa:
+El ciclo de stock usa:
 
 ```text
 POST /api/v1/inventario/reservas
