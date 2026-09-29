@@ -1330,22 +1330,21 @@ Al completarse esta funcionalidad:
 # 38. Criterio de completitud
 
 SPEC-015 se considera implementada cuando:
-
-- [ ] existe consulta autoritativa por SKU/ubicación;
-- [ ] `on_hand`, `reserved` y `available` cumplen sus invariantes;
-- [ ] existe creación idempotente de reserva;
-- [ ] existe confirmación idempotente;
-- [ ] existe liberación idempotente;
-- [ ] un retry con misma identidad + mismo payload reutiliza el resultado sin duplicar efectos;
-- [ ] misma identidad + payload semánticamente distinto produce `IDEMPOTENCY_CONFLICT`;
-- [ ] `OPERACION_DUPLICADA` no se emite en contratos nuevos;
-- [ ] existe expiración de reservas;
-- [ ] existe Kardex;
-- [ ] existe Outbox/Inbox para los flujos asíncronos;
-- [ ] la concurrencia está cubierta por pruebas;
-- [ ] los ajustes absolutos respetan `stock_version`;
-- [ ] los eventos están versionados;
-- [ ] las rutas coinciden con `api/openapi.yaml`;
-- [ ] los contratos asíncronos coinciden con `asyncapi/asyncapi.yaml`;
-- [ ] Ventas/Postventa tiene pruebas de contrato sobre reserva/consumo/liberación;
-- [ ] los canales no poseen permisos de mutación de inventario.
+- existe consulta autoritativa por SKU/ubicación;
+- `on_hand`, `reserved` y `available` cumplen sus invariantes;
+- existe creación idempotente de reserva;
+- existe confirmación idempotente;
+- existe liberación idempotente;
+- un retry con misma identidad + mismo payload reutiliza el resultado sin duplicar efectos;
+- misma identidad + payload semánticamente distinto produce `IDEMPOTENCY_CONFLICT`;
+- `OPERACION_DUPLICADA` no se emite en contratos nuevos;
+- existe expiración de reservas;
+- existe Kardex;
+- existe Outbox/Inbox para los flujos asíncronos;
+- la concurrencia está cubierta por pruebas;
+- los ajustes absolutos respetan `stock_version`;
+- los eventos están versionados;
+- las rutas coinciden con `api/openapi.yaml`;
+- los contratos asíncronos coinciden con `asyncapi/asyncapi.yaml`;
+- Ventas/Postventa tiene pruebas de contrato sobre reserva/consumo/liberación;
+- los canales no poseen permisos de mutación de inventario.

@@ -879,23 +879,22 @@ No todos los CA implican un control visible. El wireframe diferencia cobertura v
 ---
 
 # 23. Criterios de aceptación del wireframe
-
-- [x] Muestra inventario por SKU y ubicación.
-- [x] Distingue Físico, Reservado y Disponible.
-- [x] No expone nombres técnicos internos al usuario final.
-- [x] Muestra Disponible / Stock bajo / Agotado.
-- [x] Permite filtrar por SKU/producto, ubicación y estado.
-- [x] Permite configurar umbral global.
-- [x] Permite configurar override por SKU.
-- [x] Permite eliminar override.
-- [x] Explica el significado de “Reservado”.
-- [x] Refleja cambios externos sin controles manuales de reserva.
-- [x] No permite que canales o gestor ejecuten consumo desde esta interfaz.
-- [x] Contempla carga, vacío, sin resultados, error y permisos.
-- [x] Es responsive.
-- [x] Cumple DESIGN.md.
-- [x] No usa colores fuera de paleta ni sombras.
-- [x] No renderiza anotaciones técnicas.
+- Muestra inventario por SKU y ubicación.
+- Distingue Físico, Reservado y Disponible.
+- No expone nombres técnicos internos al usuario final.
+- Muestra Disponible / Stock bajo / Agotado.
+- Permite filtrar por SKU/producto, ubicación y estado.
+- Permite configurar umbral global.
+- Permite configurar override por SKU.
+- Permite eliminar override.
+- Explica el significado de “Reservado”.
+- Refleja cambios externos sin controles manuales de reserva.
+- No permite que canales o gestor ejecuten consumo desde esta interfaz.
+- Contempla carga, vacío, sin resultados, error y permisos.
+- Es responsive.
+- Cumple DESIGN.md.
+- No usa colores fuera de paleta ni sombras.
+- No renderiza anotaciones técnicas.
 
 ---
 
@@ -907,5 +906,3 @@ No todos los CA implican un control visible. El wireframe diferencia cobertura v
 | SUP-02 | `/inventario` es la ruta de interfaz propuesta | Propuesta de frontend, no contrato REST |
 | SUP-03 | Puede existir `DEFAULT` en despliegue monoalmacén | Permitido por SPEC |
 | SUP-04 | La interfaz no necesita mostrar pedidos individuales asociados a reservas | Sustentado por el alcance actual; no existe HU que solicite esa trazabilidad visual |
-
-
