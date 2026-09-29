@@ -2,110 +2,129 @@
 
 **Responsable:** Leonardo Lopez  
 **Rama:** lopez  
-**Trazabilidad:** Spec [SPEC-010](../specs/SPEC-010-asociacion-tipo-producto-caracteristica.md) | Flow [WF-010](../wireframes/flows/WF-010-asociacion-tipo-producto-caracteristica.md)
+**Trazabilidad:** Spec [SPEC-010](./specs/SPEC-010-asociacion-tipo-producto-caracteristica.md) | Flow [WF-010](./wireframes/flows/WF-010-asociacion-tipo-producto-caracteristica.md)
 
-**Como** **gestor comercial**,
-
-**quiero** definir qué características son aplicables a cada tipo de producto, indicando si son obligatorias u opcionales
-
-**para** que el módulo de Catálogo Core pueda construir formularios de producto dinámicos y consistentes según el esquema del producto, sin acoplar dicho esquema a las categorías de navegación.
+**Como** gestor comercial,  
+**quiero** definir qué características son aplicables a cada tipo de producto e indicar si son obligatorias u opcionales,  
+**para** que Catálogo construya formularios y valide productos mediante un esquema versionado independiente de las categorías de navegación.
 
 ## Criterios de aceptación
 
-| **ID** | **Criterio** |
-| --- | --- |
-| **CA-01** | El sistema debe permitir asociar una característica existente a un tipo de producto existente, indicando si es obligatoria u opcional. El tipo de producto es la entidad que define el esquema de atributos del producto. |
-| **CA-02** | El sistema no debe permitir asociar una misma característica dos veces al mismo tipo de producto. |
-| **CA-03** | El sistema debe permitir eliminar la asociación entre una característica y un tipo de producto cuando ya no sea aplicable, respetando las verificaciones de uso necesarias para no dejar productos activos en un estado inválido. |
-| **CA-04** | El sistema debe exponer, para un tipo de producto dado, el listado de características aplicables junto con su condición de obligatoriedad, vía API de solo lectura. |
-| **CA-05** | Si un tipo de producto o una característica se desactiva, sus asociaciones dejan de estar disponibles para nuevas altas o activaciones, sin necesidad de eliminarlas físicamente ni reescribir el histórico. |
-| **CA-06** | Las categorías y subcategorías son exclusivamente de navegación/clasificación y no determinan ni heredan el esquema de características. En el MVP cada producto conserva una única `categoria_id`, que puede modificarse sin alterar automáticamente su `tipo_producto_id` ni sus atributos. |
-| **CA-07** | Cada producto referencia un único `tipo_producto_id` para definir su esquema. Cambiar el tipo de producto de un producto existente no es una edición trivial: requiere validar compatibilidad de atributos obligatorios e identificadores y, si afecta identidad de variantes, debe tratarse como una migración controlada fuera del CRUD ordinario. |
-| **CA-08** | El número máximo de características asociables a un tipo de producto es un **límite técnico configurable**. Para el MVP se usa 20 como valor inicial, sin presentarlo como una restricción empresarial permanente. |
-| **CA-09** | Si una característica cambia de opcional a obligatoria, los productos existentes no se invalidan inmediatamente; la obligatoriedad se exige en la siguiente edición/guardado o proceso explícito de validación/migración. |
-| **CA-10** | La consulta debe indicar las características efectivas del tipo de producto, su obligatoriedad y su estado. No existe origen «heredado por categoría» porque las asociaciones son directas al tipo de producto. |
-| **CA-11** | Asociar o reactivar una característica verifica el límite técnico configurado del tipo de producto y la compatibilidad con productos/variantes activos; un incumplimiento rechaza la operación sin alterar las asociaciones existentes. |
-| **CA-12** | Modificar la clasificación de un producto en el árbol de categorías no recalcula sus características. Cambiar `tipo_producto_id`, cuando se habilite mediante migración, sí debe revalidar atributos obligatorios e identidad de variantes antes de confirmarse. |
+| ID | Criterio |
+|---|---|
+| **CA-01** | El sistema permite asociar una característica activa a un tipo de producto activo, indicando `OBLIGATORIA` u `OPCIONAL`. |
+| **CA-02** | No permite asociar dos veces la misma característica al mismo tipo. |
+| **CA-03** | La cantidad de asociaciones activas no supera `MAX_PRODUCT_TYPE_ATTRIBUTES`; el valor inicial del MVP es 20 y sigue siendo configurable. |
+| **CA-04** | La consulta de un tipo devuelve sus características aplicables, obligatoriedad, metadatos y `schema_version`. Sin asociaciones devuelve lista vacía. |
+| **CA-05** | Las categorías solo clasifican para navegación; mover un producto de categoría no cambia `tipo_producto_id` ni recalcula su esquema. |
+| **CA-06** | Cambiar una característica de opcional a obligatoria no desactiva productos existentes; la nueva obligación se exige en la siguiente edición/guardado o activación conforme a Catálogo. |
+| **CA-07** | Cada modificación confirmada de asociaciones incrementa `schema_version`. |
+| **CA-08** | Una desasociación que pueda afectar productos/variantes activos se procesa mediante verificación segura; `202 Accepted` no significa que la asociación ya se eliminó. |
+| **CA-09** | Si una característica identifica variantes activas o su retiro dejaría productos activos incompatibles, se rechaza la desasociación y se conserva la asociación. |
+| **CA-10** | Error, timeout o ausencia de resultado de la verificación no autorizan la baja. |
+| **CA-11** | Un tipo de producto con productos activos no se desactiva sin verificación segura confirmada. |
+| **CA-12** | Un tipo inactivo o una característica inactiva no pueden usarse en nuevas altas/activaciones; el histórico no se borra. |
+| **CA-13** | Reactivar un tipo conserva su identidad y permite volver a utilizarlo sujeto a las reglas vigentes. |
+| **CA-14** | Todo cambio confirmado del esquema publica `taxonomy.product-type-schema.changed` hacia Catálogo con `tipo_producto_id`, versión vigente y naturaleza del cambio. |
+| **CA-15** | La baja segura de `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC` usa el flujo transversal publicado en AsyncAPI 0.2.1-p0; la UI continúa tratando `202 Accepted` solo como admisión. |
+| **CA-16** | Cambiar `tipo_producto_id` de un producto publicado o con variantes es una migración controlada fuera del CRUD ordinario. |
+| **CA-17** | Las escrituras requieren usuario autenticado/autorizado; los nombres exactos de permisos granulares pertenecen a Seguridad. |
 
 ## Escenarios dado-cuando-entonces
 
-**Escenario 1: Asociación exitosa de una característica obligatoria**
+### Escenario 1: Asociación exitosa
 
-* **DADO** que existen el tipo de producto "Zapatilla" (id 10) y la característica "Talla" (id 3), ambos activos,
-* **CUANDO** el gestor comercial asocia la característica 3 al tipo de producto 10 marcándola como obligatoria,
-* **ENTONCES** el sistema registra la asociación y la característica "Talla" aparece como obligatoria al consultar el esquema de "Zapatilla".
+- **DADO** un tipo "Zapatilla" activo
+- **Y** una característica "Talla" activa
+- **CUANDO** el gestor la asocia como obligatoria
+- **ENTONCES** se registra una única asociación y aumenta la versión del esquema.
 
-**Escenario 2: Intento de asociar una característica ya asociada al mismo tipo**
+### Escenario 2: Asociación duplicada
 
-* **DADO** que la característica "Talla" ya está asociada al tipo de producto "Zapatilla",
-* **CUANDO** el gestor comercial intenta asociar nuevamente "Talla" a "Zapatilla",
-* **ENTONCES** el sistema rechaza la operación e indica que la asociación ya existe.
+- **DADO** que "Talla" ya pertenece al esquema
+- **CUANDO** se intenta asociar nuevamente
+- **ENTONCES** se rechaza sin alterar la versión confirmada.
 
-**Escenario 3: Consulta exitosa de características de un tipo de producto**
+### Escenario 3: Consulta sin asociaciones
 
-* **DADO** que el tipo de producto "Zapatilla" tiene asociadas las características "Talla" (obligatoria) y "Color" (opcional),
-* **CUANDO** Catálogo Core solicita las características del tipo de producto "Zapatilla",
-* **ENTONCES** el sistema devuelve ambas características indicando correctamente cuál es obligatoria y cuál opcional.
+- **DADO** un tipo "Accesorio genérico" sin características
+- **CUANDO** Catálogo consulta el esquema
+- **ENTONCES** obtiene una lista vacía y la versión vigente.
 
-**Escenario 4: Consulta de tipo de producto sin asociaciones**
+### Escenario 4: Cambio de categoría
 
-* **DADO** que el tipo de producto "Accesorio genérico" no tiene ninguna característica asociada,
-* **CUANDO** se solicita su listado de características,
-* **ENTONCES** el sistema devuelve una lista vacía sin generar error.
+- **DADO** un producto de tipo "Zapatilla"
+- **CUANDO** cambia de "Running" a "Ofertas"
+- **ENTONCES** conserva su tipo y esquema.
 
-**Escenario 5: Desasociación exitosa**
+### Escenario 5: Opcional a obligatoria
 
-* **DADO** que la característica "Material" está asociada al tipo de producto "Balón" y la verificación de uso permite retirarla,
-* **CUANDO** el gestor comercial elimina esa asociación,
-* **ENTONCES** el sistema deja de listar "Material" como característica aplicable para nuevas ediciones de productos de tipo "Balón" y conserva el histórico existente.
+- **DADO** productos legados sin "Color"
+- **CUANDO** "Color" pasa a obligatoria
+- **ENTONCES** los productos no se desactivan automáticamente y la obligación se exige al volver a guardarlos/activarlos.
 
-**Escenario 6: Intento de desasociar una relación inexistente**
+### Escenario 6: Desasociación segura admitida
 
-* **DADO** que la característica "Talla" nunca fue asociada al tipo de producto "Balón",
-* **CUANDO** el gestor comercial intenta eliminar esa asociación inexistente,
-* **ENTONCES** el sistema devuelve un error indicando que la asociación no existe.
+- **DADO** una asociación cuya baja requiere verificación
+- **CUANDO** el gestor confirma
+- **ENTONCES** la UI muestra «Verificando uso» y no la elimina al recibir únicamente la admisión HTTP.
 
-**Escenario 7: Categoría de navegación no modifica el esquema**
+### Escenario 7: Desasociación confirmada
 
-* **DADO** un producto de tipo "Zapatilla" con "Talla" obligatoria y `categoria_id=Running`,
-* **CUANDO** el gestor cambia su categoría de navegación a "Ofertas",
-* **ENTONCES** el producto conserva el mismo `tipo_producto_id` y el mismo esquema de características; únicamente cambia su clasificación de navegación.
+- **DADO** una solicitud pendiente
+- **CUANDO** Catálogo confirma que no existe uso incompatible
+- **ENTONCES** se desasocia lógicamente, aumenta `schema_version` y se actualiza la vista.
 
-**Escenario 8: Cambio de opcional a obligatoria**
+### Escenario 8: Desasociación rechazada
 
-* **DADO** que existen productos antiguos de un tipo sin valor para "Color",
-* **CUANDO** "Color" pasa de opcional a obligatoria en ese tipo,
-* **ENTONCES** los productos conservan su estado hasta su próxima edición o migración; al guardarlos, se exige completar "Color".
+- **DADO** que "Talla" identifica variantes activas
+- **CUANDO** se solicita su baja
+- **ENTONCES** el resultado se rechaza y "Talla" permanece en el esquema.
 
-**Escenario 9: Límite técnico configurable de características**
+### Escenario 9: Verificación no concluyente
 
-* **DADO** que un tipo de producto alcanzó el límite técnico configurado, cuyo valor MVP es 20 características activas,
-* **CUANDO** el gestor intenta agregar una adicional,
-* **ENTONCES** el sistema rechaza la asociación e informa el límite configurado, sin tratar el número 20 como una regla empresarial inmutable.
+- **DADO** una solicitud de baja
+- **CUANDO** la verificación falla o no produce resultado confiable
+- **ENTONCES** se conserva el estado anterior y se informa que no pudo completarse.
 
-**Escenario 10: Cambio de tipo que afectaría identidad de variantes**
-* **DADO** un producto con variantes cuyo tipo actual define características identificadoras ya utilizadas por sus SKU,
-* **CUANDO** se intenta cambiar a otro tipo de producto incompatible,
-* **ENTONCES** el CRUD ordinario no modifica la identidad existente y deriva el cambio a una migración controlada o lo rechaza según el alcance habilitado.
+### Escenario 10: Desactivar tipo con productos activos
+
+- **DADO** un tipo utilizado por productos activos
+- **CUANDO** se solicita desactivarlo
+- **ENTONCES** la operación entra en verificación y se rechaza si Catálogo informa uso activo.
+
+### Escenario 11: Desactivar tipo no utilizado
+
+- **DADO** un tipo sin productos activos
+- **CUANDO** la verificación devuelve resultado seguro
+- **ENTONCES** el tipo pasa a inactivo y deja de estar disponible para nuevas altas.
+
+### Escenario 12: Cambio de tipo incompatible
+
+- **DADO** un producto con variantes publicadas
+- **CUANDO** se intenta cambiar su tipo mediante edición ordinaria
+- **ENTONCES** se rechaza o deriva a una migración controlada; no se reescriben las identidades existentes.
 
 ## Interacción con otros módulos
 
-| **Módulo** | **Necesidad de interacción** | **Información que esta funcionalidad recibe** | **Información que esta funcionalidad entrega** |
-| --- | --- | --- | --- |
-| **Seguridad y Usuarios** | Verificar permisos de administración de esquemas de producto; la definición de roles concretos pertenece al módulo de Seguridad. | Identidad del usuario, token de sesión y permisos. | Solicitudes de validación de permisos para las operaciones de escritura. |
-| **Catálogo Core (Productos)** | Consultar, al crear o editar un producto, qué características debe solicitar según su `tipo_producto_id`. | Identificador del tipo de producto del producto a crear/editar. | Listado de características aplicables a ese tipo, con su condición de obligatoriedad. |
+| Módulo | Necesidad | Recibe | Entrega |
+|---|---|---|---|
+| Seguridad y Usuarios | Autorizar escrituras | Token/claims/permisos | Autorización o 401/403 |
+| Catálogo Core | Construir/validar formularios | `tipo_producto_id`, versión y verificaciones de uso | Esquema efectivo; solicitudes/resultados de baja segura |
+| Carga Masiva | Validar filas por tipo | `tipo_producto_id` | Esquema versionado |
 
-## Dependencias dentro de Productos y Ofertas
+## Dependencias internas
 
-| **Funcionalidad interna** | **Información necesaria** |
-| --- | --- |
-| **Gestión de categorías y subcategorías** | Árbol de navegación independiente; no define el esquema de características del producto. |
-| **Gestión de características y sus valores** | Identificador, tipo, valores y estado de la característica a asociar. |
-| **Gestión de productos y variantes** | `tipo_producto_id`, atributos actuales y uso de características identificadoras para validar cambios incompatibles. |
+- Gestión de categorías: navegación, sin herencia de características.
+- Gestión de características: IDs, tipo, valores y estado.
+- Gestión de productos/variantes: uso real de las características e identidad SKU.
 
-## Reglas de negocio consolidadas
+## Estado contractual relevante
 
-* **Separación de responsabilidades:** las categorías clasifican para navegación; el tipo de producto define el esquema de atributos.
-* **Límite:** máximo configurable de características por tipo; el MVP parte de 20 como guardrail técnico.
-* **Obligatoriedad:** el cambio de opcional a obligatoria no invalida productos preexistentes de inmediato; se exige al siguiente guardado o migración.
-* **Identidad:** un cambio de tipo que altere características identificadoras no reescribe SKU existentes y requiere una migración controlada.
+AsyncAPI `0.2.1-p0` publica los contratos requeridos por esta HU:
+
+- `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC` forman parte del flujo transversal de baja segura;
+- `taxonomy.product-type-schema.changed` propaga cada modificación confirmada del esquema a Catálogo;
+- `202 Accepted` continúa significando **solicitud admitida**, no baja finalizada.
+
+La integración asíncrona de esta HU queda cerrada sin modificar la regla funcional de fallo seguro.
