@@ -142,11 +142,10 @@
 - Auditoría: consume hechos confirmados.
 
 ## 6. Reglas resueltas
-
-- [x] Ruta REST en español: `/api/v1/precios`.
-- [x] Canal opcional y scope global expresable con `null`.
-- [x] Consulta histórica con `vigencia_id`.
-- [x] Resultado parcial únicamente mediante el estado final del proceso asíncrono.
-- [x] Flujo masivo: prevalidación 200 → admisión 202 → estado final.
-- [x] Oferta vacía conserva; eliminación solo explícita.
-- [x] Permisos `PRICING_*` no se presentan como oficiales.
+- Ruta REST en español: `/api/v1/precios`.
+- Canal opcional y scope global expresable con `null`.
+- Consulta histórica con `vigencia_id`.
+- Resultado parcial únicamente mediante el estado final del proceso asíncrono.
+- Flujo masivo: prevalidación 200 → admisión 202 → estado final.
+- Oferta vacía conserva; eliminación solo explícita.
+- Permisos `PRICING_*` no se presentan como oficiales.
