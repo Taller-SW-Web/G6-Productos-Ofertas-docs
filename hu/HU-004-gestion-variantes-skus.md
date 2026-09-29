@@ -367,26 +367,25 @@ Si existe una contradicción funcional, la HU debe corregirse para alinearse con
 # Criterio de completitud de la HU
 
 La historia se considera cubierta cuando existe evidencia de que:
-
-- [ ] solo productos con variantes usan este flujo;
-- [ ] `variant_id` es estable;
-- [ ] SKU puede ser informado o autogenerado;
-- [ ] SKU es único;
-- [ ] la combinación identificadora es única;
-- [ ] atributos identificadores son inmutables;
-- [ ] imagen propia está soportada;
-- [ ] BORRADOR / ACTIVA / INACTIVA funcionan;
-- [ ] desactivar última variante afecta al padre según regla;
-- [ ] Catálogo no persiste precio ni stock;
-- [ ] el perfil físico puede registrarse;
-- [ ] peso y dimensiones se validan;
-- [ ] se usan kg y cm;
-- [ ] editar perfil físico no cambia identidad;
-- [ ] Despacho puede consultar varios SKU en lote;
-- [ ] la consulta física no expone stock;
-- [ ] Productos no define empaque;
-- [ ] existen pruebas para validaciones físicas y consulta en lote;
-- [ ] los cambios relevantes quedan auditados;
-- [ ] 401 usa `TOKEN_INVALIDO`;
-- [ ] 403 usa `SCOPE_INSUFICIENTE`;
-- [ ] `SIN_AUTORIZACION` no se utiliza en nuevos contratos.
+- solo productos con variantes usan este flujo;
+- `variant_id` es estable;
+- SKU puede ser informado o autogenerado;
+- SKU es único;
+- la combinación identificadora es única;
+- atributos identificadores son inmutables;
+- imagen propia está soportada;
+- BORRADOR / ACTIVA / INACTIVA funcionan;
+- desactivar última variante afecta al padre según regla;
+- Catálogo no persiste precio ni stock;
+- el perfil físico puede registrarse;
+- peso y dimensiones se validan;
+- se usan kg y cm;
+- editar perfil físico no cambia identidad;
+- Despacho puede consultar varios SKU en lote;
+- la consulta física no expone stock;
+- Productos no define empaque;
+- existen pruebas para validaciones físicas y consulta en lote;
+- los cambios relevantes quedan auditados;
+- 401 usa `TOKEN_INVALIDO`;
+- 403 usa `SCOPE_INSUFICIENTE`;
+- `SIN_AUTORIZACION` no se utiliza en nuevos contratos.

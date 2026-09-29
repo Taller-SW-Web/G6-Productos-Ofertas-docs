@@ -721,28 +721,25 @@ Seguir DESIGN.md:
 ---
 
 # 30. Criterios de aceptación del wireframe
-
-- [x] crear siempre como borrador;
-- [x] diferenciar guardar de activar;
-- [x] SKU duplicado es bloqueante;
-- [x] nombre+marca es advertencia;
-- [x] muestra categoría/tipo/marca sin IDs técnicos;
-- [x] distingue simple y con variantes;
-- [x] simple muestra Peso/Largo/Ancho/Alto;
-- [x] muestra kg y cm;
-- [x] no precarga cero;
-- [x] permite perfil incompleto en borrador;
-- [x] perfil físico no bloquea activación por sí solo;
-- [x] con variantes no muestra físico del padre;
-- [x] enlaza WF-004;
-- [x] no permite editar stock;
-- [x] no permite editar precio posterior;
-- [x] no incluye empaque;
-- [x] incluye activación/desactivación/reactivación;
-- [x] incluye estados alternativos;
-- [x] diferencia sesión inválida de permisos insuficientes;
-- [x] no muestra códigos técnicos de Seguridad al usuario;
-- [x] cumple DESIGN.md;
-- [x] es responsive y accesible.
-
-
+- crear siempre como borrador;
+- diferenciar guardar de activar;
+- SKU duplicado es bloqueante;
+- nombre+marca es advertencia;
+- muestra categoría/tipo/marca sin IDs técnicos;
+- distingue simple y con variantes;
+- simple muestra Peso/Largo/Ancho/Alto;
+- muestra kg y cm;
+- no precarga cero;
+- permite perfil incompleto en borrador;
+- perfil físico no bloquea activación por sí solo;
+- con variantes no muestra físico del padre;
+- enlaza WF-004;
+- no permite editar stock;
+- no permite editar precio posterior;
+- no incluye empaque;
+- incluye activación/desactivación/reactivación;
+- incluye estados alternativos;
+- diferencia sesión inválida de permisos insuficientes;
+- no muestra códigos técnicos de Seguridad al usuario;
+- cumple DESIGN.md;
+- es responsive y accesible.

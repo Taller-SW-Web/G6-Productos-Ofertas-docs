@@ -1177,27 +1177,26 @@ Queda fuera de esta SPEC:
 # 38. Criterio de completitud
 
 La funcionalidad se considera correctamente implementada cuando:
-
-- [ ] solo productos `tiene_variantes=true` crean variantes mediante esta capacidad;
-- [ ] cada variante tiene `variant_id` estable;
-- [ ] SKU es único;
-- [ ] puede informarse o autogenerarse;
-- [ ] la combinación identificadora es única;
-- [ ] atributos identificadores son inmutables;
-- [ ] imagen propia está soportada;
-- [ ] estados BORRADOR/ACTIVA/INACTIVA funcionan;
-- [ ] desactivar última variante activa aplica la regla del padre;
-- [ ] Catálogo no persiste stock ni precio;
-- [ ] se puede registrar y editar perfil físico;
-- [ ] `pesoKg`, `largoCm`, `anchoCm` y `altoCm` se validan;
-- [ ] kg/cm son las unidades contractuales;
-- [ ] modificar perfil físico no cambia SKU ni `variant_id`;
-- [ ] la consulta física en lote coincide con `api/openapi.yaml`;
-- [ ] Despacho no obtiene ownership de los datos;
-- [ ] Productos no modela `tipoEmpaque`;
-- [ ] existen pruebas de validación y contrato para la consulta física;
-- [ ] los cambios de perfil físico quedan auditados;
-- [ ] respuestas protegidas usan `TOKEN_INVALIDO` para 401;
-- [ ] respuestas protegidas usan `SCOPE_INSUFICIENTE` para 403;
-- [ ] `SIN_AUTORIZACION` no se emite en contratos nuevos;
-- [ ] códigos HTTP coinciden con OpenAPI y `api/catalogo-errores.md`.
+- solo productos `tiene_variantes=true` crean variantes mediante esta capacidad;
+- cada variante tiene `variant_id` estable;
+- SKU es único;
+- puede informarse o autogenerarse;
+- la combinación identificadora es única;
+- atributos identificadores son inmutables;
+- imagen propia está soportada;
+- estados BORRADOR/ACTIVA/INACTIVA funcionan;
+- desactivar última variante activa aplica la regla del padre;
+- Catálogo no persiste stock ni precio;
+- se puede registrar y editar perfil físico;
+- `pesoKg`, `largoCm`, `anchoCm` y `altoCm` se validan;
+- kg/cm son las unidades contractuales;
+- modificar perfil físico no cambia SKU ni `variant_id`;
+- la consulta física en lote coincide con `api/openapi.yaml`;
+- Despacho no obtiene ownership de los datos;
+- Productos no modela `tipoEmpaque`;
+- existen pruebas de validación y contrato para la consulta física;
+- los cambios de perfil físico quedan auditados;
+- respuestas protegidas usan `TOKEN_INVALIDO` para 401;
+- respuestas protegidas usan `SCOPE_INSUFICIENTE` para 403;
+- `SIN_AUTORIZACION` no se emite en contratos nuevos;
+- códigos HTTP coinciden con OpenAPI y `api/catalogo-errores.md`.
