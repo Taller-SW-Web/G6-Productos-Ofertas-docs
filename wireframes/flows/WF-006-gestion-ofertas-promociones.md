@@ -303,16 +303,15 @@ La UI interpreta:
 sin mostrar los códigos internos al usuario.
 
 ## 19. Criterios del wireframe
-
-- [x] Administración CRUD lógico.
-- [x] Modalidad.
-- [x] Descuento.
-- [x] Vigencia.
-- [x] Alcance.
-- [x] Prioridad.
-- [x] Canales.
-- [x] Combinabilidad.
-- [x] Estado.
-- [x] Sin simulador de evaluación.
-- [x] Sin carga/histórico/programación de Pricing.
-- [x] Diseño responsive y accesible.
+- Administración CRUD lógico.
+- Modalidad.
+- Descuento.
+- Vigencia.
+- Alcance.
+- Prioridad.
+- Canales.
+- Combinabilidad.
+- Estado.
+- Sin simulador de evaluación.
+- Sin carga/histórico/programación de Pricing.
+- Diseño responsive y accesible.
