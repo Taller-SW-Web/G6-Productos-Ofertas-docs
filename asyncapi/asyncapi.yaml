@@ -1,0 +1,2997 @@
+asyncapi: 3.0.0
+id: urn:taller-sw-web:productos-y-ofertas:asyncapi
+info:
+  title: Productos y Ofertas — Contrato asíncrono
+  version: 0.2.1-p0
+  description: Contrato canónico de mensajería del módulo Productos y Ofertas. Formaliza los nombres, envelopes y 
+    payloads P0 documentados en Arquitectura.md, Contrato_Api.md y las SPECs. Los comandos HTTP 202 de Inventario se 
+    documentan en OpenAPI; este archivo documenta sus resultados/eventos asíncronos. No fija exchanges, queues, DLQ ni 
+    nombres físicos de infraestructura.
+defaultContentType: application/json
+servers:
+  rabbitmq:
+    host: '{host}:{port}'
+    protocol: amqp
+    protocolVersion: 0-9-1
+    description: Broker RabbitMQ. Host/puerto y topología física dependen del entorno.
+    variables:
+      host:
+        default: localhost
+        description: Host del broker por entorno.
+      port:
+        default: '5672'
+        description: Puerto AMQP por entorno.
+    tags:
+      - name: RabbitMQ
+    x-topology-status: pending-deployment-decision
+tags:
+  - name: Inventario
+    description: Disponibilidad, reservas, consumo y ajustes.
+  - name: Pricing
+    description: Cambios de precio y coordinación Bulk.
+  - name: Catálogo
+    description: Productos, SKU y barreras de escritura.
+  - name: Taxonomía
+    description: Entidades maestras y baja segura.
+  - name: Bulk
+    description: Coordinación asíncrona por lote/fila.
+  - name: Promociones
+    description: Resultados de consumo de cupones.
+channels:
+  taxonomyCategoryUpdated:
+    address: taxonomy.category.updated
+    description: Canal lógico para `taxonomy.category.updated`. La topología física de exchanges/queues se mantiene 
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      TaxonomyCategoryUpdated:
+        $ref: '#/components/messages/TaxonomyCategoryUpdated'
+    x-routing-key: taxonomy.category.updated
+    x-binding-status: logical-address-only
+    x-status: stable
+  taxonomyProductTypeSchemaChanged:
+    address: taxonomy.product-type-schema.changed
+    description: Canal lógico para `taxonomy.product-type-schema.changed`. Publica cambios confirmados del esquema de un
+      tipo de producto para invalidar o refrescar proyecciones de Catálogo.
+    messages:
+      TaxonomyProductTypeSchemaChanged:
+        $ref: '#/components/messages/TaxonomyProductTypeSchemaChanged'
+    x-routing-key: taxonomy.product-type-schema.changed
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  taxonomyCharacteristicValueUpdated:
+    address: taxonomy.characteristic-value.updated
+    description: Canal lógico para `taxonomy.characteristic-value.updated`. Propaga a Catálogo cambios confirmados de un
+      valor de característica conservando sus IDs estables.
+    messages:
+      TaxonomyCharacteristicValueUpdated:
+        $ref: '#/components/messages/TaxonomyCharacteristicValueUpdated'
+    x-routing-key: taxonomy.characteristic-value.updated
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  catalogProductDeactivated:
+    address: catalog.product.deactivated
+    description: Canal lógico para `catalog.product.deactivated`. La topología física de exchanges/queues se mantiene 
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      CatalogProductDeactivated:
+        $ref: '#/components/messages/CatalogProductDeactivated'
+    x-routing-key: catalog.product.deactivated
+    x-binding-status: logical-address-only
+    x-status: stable
+  catalogSkuDeactivated:
+    address: catalog.sku.deactivated
+    description: Canal lógico para `catalog.sku.deactivated`. La topología física de exchanges/queues se mantiene 
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      CatalogSkuDeactivated:
+        $ref: '#/components/messages/CatalogSkuDeactivated'
+    x-routing-key: catalog.sku.deactivated
+    x-binding-status: logical-address-only
+    x-status: stable
+  pricingPriceChanged:
+    address: pricing.price.changed
+    description: Canal lógico para `pricing.price.changed`. La topología física de exchanges/queues se mantiene 
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      PricingPriceChanged:
+        $ref: '#/components/messages/PricingPriceChanged'
+    x-routing-key: pricing.price.changed
+    x-binding-status: logical-address-only
+    x-status: stable
+  inventoryStockChanged:
+    address: inventory.stock.changed
+    description: Canal lógico para `inventory.stock.changed`. La topología física de exchanges/queues se mantiene 
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      InventoryStockChanged:
+        $ref: '#/components/messages/InventoryStockChanged'
+    x-routing-key: inventory.stock.changed
+    x-binding-status: logical-address-only
+    x-status: stable
+  inventoryStockAdjusted:
+    address: inventory.stock.adjusted
+    description: Canal lógico para `inventory.stock.adjusted`. La topología física de exchanges/queues se mantiene 
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      InventoryStockAdjusted:
+        $ref: '#/components/messages/InventoryStockAdjusted'
+    x-routing-key: inventory.stock.adjusted
+    x-binding-status: logical-address-only
+    x-status: stable
+  inventoryReservationCreated:
+    address: inventory.reservation.created
+    description: Canal lógico para `inventory.reservation.created`. La topología física de exchanges/queues se mantiene 
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      InventoryReservationCreated:
+        $ref: '#/components/messages/InventoryReservationCreated'
+    x-routing-key: inventory.reservation.created
+    x-binding-status: logical-address-only
+    x-status: provisional
+  inventoryReservationConsumed:
+    address: inventory.reservation.consumed
+    description: Canal lógico para `inventory.reservation.consumed`. La topología física de exchanges/queues se mantiene
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      InventoryReservationConsumed:
+        $ref: '#/components/messages/InventoryReservationConsumed'
+    x-routing-key: inventory.reservation.consumed
+    x-binding-status: logical-address-only
+    x-status: provisional
+  inventoryReservationReleased:
+    address: inventory.reservation.released
+    description: Canal lógico para `inventory.reservation.released`. La topología física de exchanges/queues se mantiene
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      InventoryReservationReleased:
+        $ref: '#/components/messages/InventoryReservationReleased'
+    x-routing-key: inventory.reservation.released
+    x-binding-status: logical-address-only
+    x-status: provisional
+  inventoryReservationExpired:
+    address: inventory.reservation.expired
+    description: Canal lógico para `inventory.reservation.expired`. La topología física de exchanges/queues se mantiene 
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      InventoryReservationExpired:
+        $ref: '#/components/messages/InventoryReservationExpired'
+    x-routing-key: inventory.reservation.expired
+    x-binding-status: logical-address-only
+    x-status: provisional
+  inventoryConsumptionCompleted:
+    address: inventory.consumption.completed
+    description: Canal lógico para `inventory.consumption.completed`. La topología física de exchanges/queues se 
+      mantiene deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      InventoryConsumptionCompleted:
+        $ref: '#/components/messages/InventoryConsumptionCompleted'
+    x-routing-key: inventory.consumption.completed
+    x-binding-status: logical-address-only
+    x-status: provisional
+  inventoryConsumptionRejected:
+    address: inventory.consumption.rejected
+    description: Canal lógico para `inventory.consumption.rejected`. La topología física de exchanges/queues se mantiene
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      InventoryConsumptionRejected:
+        $ref: '#/components/messages/InventoryConsumptionRejected'
+    x-routing-key: inventory.consumption.rejected
+    x-binding-status: logical-address-only
+    x-status: provisional
+  taxonomyMasterDeactivationCheckRequested:
+    address: taxonomy.master.deactivation.check.requested
+    description: Canal lógico para `taxonomy.master.deactivation.check.requested`. La topología física de 
+      exchanges/queues se mantiene deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      TaxonomyMasterDeactivationCheckRequested:
+        $ref: '#/components/messages/TaxonomyMasterDeactivationCheckRequested'
+    x-routing-key: taxonomy.master.deactivation.check.requested
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  catalogMasterDeactivationChecked:
+    address: catalog.master.deactivation.checked
+    description: Canal lógico para `catalog.master.deactivation.checked`. La topología física de exchanges/queues se 
+      mantiene deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      CatalogMasterDeactivationChecked:
+        $ref: '#/components/messages/CatalogMasterDeactivationChecked'
+    x-routing-key: catalog.master.deactivation.checked
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  taxonomyMasterDeactivated:
+    address: taxonomy.master.deactivated
+    description: Canal lógico para `taxonomy.master.deactivated`. La topología física de exchanges/queues se mantiene 
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      TaxonomyMasterDeactivated:
+        $ref: '#/components/messages/TaxonomyMasterDeactivated'
+    x-routing-key: taxonomy.master.deactivated
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  taxonomyMasterDeactivationRejected:
+    address: taxonomy.master.deactivation.rejected
+    description: Canal lógico para `taxonomy.master.deactivation.rejected`. La topología física de exchanges/queues se 
+      mantiene deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      TaxonomyMasterDeactivationRejected:
+        $ref: '#/components/messages/TaxonomyMasterDeactivationRejected'
+    x-routing-key: taxonomy.master.deactivation.rejected
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  catalogBulkUpsertRequested:
+    address: catalog.bulk.upsert.requested
+    description: Canal lógico para `catalog.bulk.upsert.requested`. La topología física de exchanges/queues se mantiene 
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      CatalogBulkUpsertRequested:
+        $ref: '#/components/messages/CatalogBulkUpsertRequested'
+    x-routing-key: catalog.bulk.upsert.requested
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  catalogBulkUpsertCompleted:
+    address: catalog.bulk.upsert.completed
+    description: Canal lógico para `catalog.bulk.upsert.completed`. La topología física de exchanges/queues se mantiene 
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      CatalogBulkUpsertCompleted:
+        $ref: '#/components/messages/CatalogBulkUpsertCompleted'
+    x-routing-key: catalog.bulk.upsert.completed
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  catalogBulkUpsertRejected:
+    address: catalog.bulk.upsert.rejected
+    description: Canal lógico para `catalog.bulk.upsert.rejected`. La topología física de exchanges/queues se mantiene 
+      deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      CatalogBulkUpsertRejected:
+        $ref: '#/components/messages/CatalogBulkUpsertRejected'
+    x-routing-key: catalog.bulk.upsert.rejected
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  pricingBulkPriceApplyRequested:
+    address: pricing.bulk.price.apply.requested
+    description: Canal lógico para `pricing.bulk.price.apply.requested`. La topología física de exchanges/queues se 
+      mantiene deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      PricingBulkPriceApplyRequested:
+        $ref: '#/components/messages/PricingBulkPriceApplyRequested'
+    x-routing-key: pricing.bulk.price.apply.requested
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  pricingBulkPriceApplyCompleted:
+    address: pricing.bulk.price.apply.completed
+    description: Canal lógico para `pricing.bulk.price.apply.completed`. La topología física de exchanges/queues se 
+      mantiene deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      PricingBulkPriceApplyCompleted:
+        $ref: '#/components/messages/PricingBulkPriceApplyCompleted'
+    x-routing-key: pricing.bulk.price.apply.completed
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  pricingBulkPriceApplyRejected:
+    address: pricing.bulk.price.apply.rejected
+    description: Canal lógico para `pricing.bulk.price.apply.rejected`. La topología física de exchanges/queues se 
+      mantiene deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      PricingBulkPriceApplyRejected:
+        $ref: '#/components/messages/PricingBulkPriceApplyRejected'
+    x-routing-key: pricing.bulk.price.apply.rejected
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  inventoryBulkStockAdjustRequested:
+    address: inventory.bulk.stock.adjust.requested
+    description: Canal lógico para `inventory.bulk.stock.adjust.requested`. La topología física de exchanges/queues se 
+      mantiene deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      InventoryBulkStockAdjustRequested:
+        $ref: '#/components/messages/InventoryBulkStockAdjustRequested'
+    x-routing-key: inventory.bulk.stock.adjust.requested
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  inventoryBulkStockAdjustCompleted:
+    address: inventory.bulk.stock.adjust.completed
+    description: Canal lógico para `inventory.bulk.stock.adjust.completed`. La topología física de exchanges/queues se 
+      mantiene deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      InventoryBulkStockAdjustCompleted:
+        $ref: '#/components/messages/InventoryBulkStockAdjustCompleted'
+    x-routing-key: inventory.bulk.stock.adjust.completed
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  inventoryBulkStockAdjustRejected:
+    address: inventory.bulk.stock.adjust.rejected
+    description: Canal lógico para `inventory.bulk.stock.adjust.rejected`. La topología física de exchanges/queues se 
+      mantiene deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      InventoryBulkStockAdjustRejected:
+        $ref: '#/components/messages/InventoryBulkStockAdjustRejected'
+    x-routing-key: inventory.bulk.stock.adjust.rejected
+    x-binding-status: logical-address-only
+    x-status: internal-provisional
+  promotionsCouponConsumptionCompleted:
+    address: promotions.coupon.consumption.completed
+    description: Canal lógico para `promotions.coupon.consumption.completed`. La topología física de exchanges/queues se
+      mantiene deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      PromotionsCouponConsumptionCompleted:
+        $ref: '#/components/messages/PromotionsCouponConsumptionCompleted'
+    x-routing-key: promotions.coupon.consumption.completed
+    x-binding-status: logical-address-only
+    x-status: provisional-external
+  promotionsCouponConsumptionRejected:
+    address: promotions.coupon.consumption.rejected
+    description: Canal lógico para `promotions.coupon.consumption.rejected`. La topología física de exchanges/queues se 
+      mantiene deliberadamente fuera del contrato hasta cerrar despliegue.
+    messages:
+      PromotionsCouponConsumptionRejected:
+        $ref: '#/components/messages/PromotionsCouponConsumptionRejected'
+    x-routing-key: promotions.coupon.consumption.rejected
+    x-binding-status: logical-address-only
+    x-status: provisional-external
+operations:
+  sendTaxonomyCategoryUpdated:
+    action: send
+    summary: taxonomy-svc publica taxonomy.category.updated.
+    channel:
+      $ref: '#/channels/taxonomyCategoryUpdated'
+    messages:
+      - $ref: '#/channels/taxonomyCategoryUpdated/messages/TaxonomyCategoryUpdated'
+    x-service: taxonomy-svc
+  receiveTaxonomyCategoryUpdated:
+    action: receive
+    summary: Consumidores previstos procesan taxonomy.category.updated.
+    channel:
+      $ref: '#/channels/taxonomyCategoryUpdated'
+    messages:
+      - $ref: '#/channels/taxonomyCategoryUpdated/messages/TaxonomyCategoryUpdated'
+    x-consumers: &id001
+      - catalog-svc
+      - api-gateway/bff
+      - canales autorizados
+  sendTaxonomyProductTypeSchemaChanged:
+    action: send
+    summary: taxonomy-svc publica taxonomy.product-type-schema.changed.
+    channel:
+      $ref: '#/channels/taxonomyProductTypeSchemaChanged'
+    messages:
+      - $ref: '#/channels/taxonomyProductTypeSchemaChanged/messages/TaxonomyProductTypeSchemaChanged'
+    x-service: taxonomy-svc
+  receiveTaxonomyProductTypeSchemaChanged:
+    action: receive
+    summary: Consumidores previstos procesan taxonomy.product-type-schema.changed.
+    channel:
+      $ref: '#/channels/taxonomyProductTypeSchemaChanged'
+    messages:
+      - $ref: '#/channels/taxonomyProductTypeSchemaChanged/messages/TaxonomyProductTypeSchemaChanged'
+    x-consumers:
+      - catalog-svc
+  sendTaxonomyCharacteristicValueUpdated:
+    action: send
+    summary: taxonomy-svc publica taxonomy.characteristic-value.updated.
+    channel:
+      $ref: '#/channels/taxonomyCharacteristicValueUpdated'
+    messages:
+      - $ref: '#/channels/taxonomyCharacteristicValueUpdated/messages/TaxonomyCharacteristicValueUpdated'
+    x-service: taxonomy-svc
+  receiveTaxonomyCharacteristicValueUpdated:
+    action: receive
+    summary: Consumidores previstos procesan taxonomy.characteristic-value.updated.
+    channel:
+      $ref: '#/channels/taxonomyCharacteristicValueUpdated'
+    messages:
+      - $ref: '#/channels/taxonomyCharacteristicValueUpdated/messages/TaxonomyCharacteristicValueUpdated'
+    x-consumers:
+      - catalog-svc
+  sendCatalogProductDeactivated:
+    action: send
+    summary: catalog-svc publica catalog.product.deactivated.
+    channel:
+      $ref: '#/channels/catalogProductDeactivated'
+    messages:
+      - $ref: '#/channels/catalogProductDeactivated/messages/CatalogProductDeactivated'
+    x-service: catalog-svc
+  receiveCatalogProductDeactivated:
+    action: receive
+    summary: Consumidores previstos procesan catalog.product.deactivated.
+    channel:
+      $ref: '#/channels/catalogProductDeactivated'
+    messages:
+      - $ref: '#/channels/catalogProductDeactivated/messages/CatalogProductDeactivated'
+    x-consumers: &id002
+      - promotions-svc
+      - combos-svc
+      - api-gateway/bff
+  sendCatalogSkuDeactivated:
+    action: send
+    summary: catalog-svc publica catalog.sku.deactivated.
+    channel:
+      $ref: '#/channels/catalogSkuDeactivated'
+    messages:
+      - $ref: '#/channels/catalogSkuDeactivated/messages/CatalogSkuDeactivated'
+    x-service: catalog-svc
+  receiveCatalogSkuDeactivated:
+    action: receive
+    summary: Consumidores previstos procesan catalog.sku.deactivated.
+    channel:
+      $ref: '#/channels/catalogSkuDeactivated'
+    messages:
+      - $ref: '#/channels/catalogSkuDeactivated/messages/CatalogSkuDeactivated'
+    x-consumers: &id003
+      - inventory-svc
+      - pricing-svc
+      - promotions-svc
+      - combos-svc
+  sendPricingPriceChanged:
+    action: send
+    summary: pricing-svc publica pricing.price.changed.
+    channel:
+      $ref: '#/channels/pricingPriceChanged'
+    messages:
+      - $ref: '#/channels/pricingPriceChanged/messages/PricingPriceChanged'
+    x-service: pricing-svc
+  receivePricingPriceChanged:
+    action: receive
+    summary: Consumidores previstos procesan pricing.price.changed.
+    channel:
+      $ref: '#/channels/pricingPriceChanged'
+    messages:
+      - $ref: '#/channels/pricingPriceChanged/messages/PricingPriceChanged'
+    x-consumers: &id004
+      - price-audit-svc
+      - promotions-svc
+      - api-gateway/bff
+  sendInventoryStockChanged:
+    action: send
+    summary: inventory-svc publica inventory.stock.changed.
+    channel:
+      $ref: '#/channels/inventoryStockChanged'
+    messages:
+      - $ref: '#/channels/inventoryStockChanged/messages/InventoryStockChanged'
+    x-service: inventory-svc
+  receiveInventoryStockChanged:
+    action: receive
+    summary: Consumidores previstos procesan inventory.stock.changed.
+    channel:
+      $ref: '#/channels/inventoryStockChanged'
+    messages:
+      - $ref: '#/channels/inventoryStockChanged/messages/InventoryStockChanged'
+    x-consumers: &id005
+      - combos-svc
+      - promotions-svc
+      - api-gateway/bff
+  sendInventoryStockAdjusted:
+    action: send
+    summary: inventory-svc publica inventory.stock.adjusted.
+    channel:
+      $ref: '#/channels/inventoryStockAdjusted'
+    messages:
+      - $ref: '#/channels/inventoryStockAdjusted/messages/InventoryStockAdjusted'
+    x-service: inventory-svc
+  receiveInventoryStockAdjusted:
+    action: receive
+    summary: Consumidores previstos procesan inventory.stock.adjusted.
+    channel:
+      $ref: '#/channels/inventoryStockAdjusted'
+    messages:
+      - $ref: '#/channels/inventoryStockAdjusted/messages/InventoryStockAdjusted'
+    x-consumers: &id006
+      - bulk-svc
+      - api-gateway/bff
+  sendInventoryReservationCreated:
+    action: send
+    summary: inventory-svc publica inventory.reservation.created.
+    channel:
+      $ref: '#/channels/inventoryReservationCreated'
+    messages:
+      - $ref: '#/channels/inventoryReservationCreated/messages/InventoryReservationCreated'
+    x-service: inventory-svc
+  receiveInventoryReservationCreated:
+    action: receive
+    summary: Consumidores previstos procesan inventory.reservation.created.
+    channel:
+      $ref: '#/channels/inventoryReservationCreated'
+    messages:
+      - $ref: '#/channels/inventoryReservationCreated/messages/InventoryReservationCreated'
+    x-consumers: &id007
+      - modulo-ventas
+      - api-gateway/bff
+  sendInventoryReservationConsumed:
+    action: send
+    summary: inventory-svc publica inventory.reservation.consumed.
+    channel:
+      $ref: '#/channels/inventoryReservationConsumed'
+    messages:
+      - $ref: '#/channels/inventoryReservationConsumed/messages/InventoryReservationConsumed'
+    x-service: inventory-svc
+  receiveInventoryReservationConsumed:
+    action: receive
+    summary: Consumidores previstos procesan inventory.reservation.consumed.
+    channel:
+      $ref: '#/channels/inventoryReservationConsumed'
+    messages:
+      - $ref: '#/channels/inventoryReservationConsumed/messages/InventoryReservationConsumed'
+    x-consumers: &id008
+      - modulo-ventas
+      - api-gateway/bff
+  sendInventoryReservationReleased:
+    action: send
+    summary: inventory-svc publica inventory.reservation.released.
+    channel:
+      $ref: '#/channels/inventoryReservationReleased'
+    messages:
+      - $ref: '#/channels/inventoryReservationReleased/messages/InventoryReservationReleased'
+    x-service: inventory-svc
+  receiveInventoryReservationReleased:
+    action: receive
+    summary: Consumidores previstos procesan inventory.reservation.released.
+    channel:
+      $ref: '#/channels/inventoryReservationReleased'
+    messages:
+      - $ref: '#/channels/inventoryReservationReleased/messages/InventoryReservationReleased'
+    x-consumers: &id009
+      - modulo-ventas
+      - api-gateway/bff
+  sendInventoryReservationExpired:
+    action: send
+    summary: inventory-svc publica inventory.reservation.expired.
+    channel:
+      $ref: '#/channels/inventoryReservationExpired'
+    messages:
+      - $ref: '#/channels/inventoryReservationExpired/messages/InventoryReservationExpired'
+    x-service: inventory-svc
+  receiveInventoryReservationExpired:
+    action: receive
+    summary: Consumidores previstos procesan inventory.reservation.expired.
+    channel:
+      $ref: '#/channels/inventoryReservationExpired'
+    messages:
+      - $ref: '#/channels/inventoryReservationExpired/messages/InventoryReservationExpired'
+    x-consumers: &id010
+      - modulo-ventas
+      - api-gateway/bff
+  sendInventoryConsumptionCompleted:
+    action: send
+    summary: inventory-svc publica inventory.consumption.completed.
+    channel:
+      $ref: '#/channels/inventoryConsumptionCompleted'
+    messages:
+      - $ref: '#/channels/inventoryConsumptionCompleted/messages/InventoryConsumptionCompleted'
+    x-service: inventory-svc
+  receiveInventoryConsumptionCompleted:
+    action: receive
+    summary: Consumidores previstos procesan inventory.consumption.completed.
+    channel:
+      $ref: '#/channels/inventoryConsumptionCompleted'
+    messages:
+      - $ref: '#/channels/inventoryConsumptionCompleted/messages/InventoryConsumptionCompleted'
+    x-consumers: &id011
+      - modulo-ventas
+  sendInventoryConsumptionRejected:
+    action: send
+    summary: inventory-svc publica inventory.consumption.rejected.
+    channel:
+      $ref: '#/channels/inventoryConsumptionRejected'
+    messages:
+      - $ref: '#/channels/inventoryConsumptionRejected/messages/InventoryConsumptionRejected'
+    x-service: inventory-svc
+  receiveInventoryConsumptionRejected:
+    action: receive
+    summary: Consumidores previstos procesan inventory.consumption.rejected.
+    channel:
+      $ref: '#/channels/inventoryConsumptionRejected'
+    messages:
+      - $ref: '#/channels/inventoryConsumptionRejected/messages/InventoryConsumptionRejected'
+    x-consumers: &id012
+      - modulo-ventas
+  sendTaxonomyMasterDeactivationCheckRequested:
+    action: send
+    summary: taxonomy-svc publica taxonomy.master.deactivation.check.requested.
+    channel:
+      $ref: '#/channels/taxonomyMasterDeactivationCheckRequested'
+    messages:
+      - $ref: '#/channels/taxonomyMasterDeactivationCheckRequested/messages/TaxonomyMasterDeactivationCheckRequested'
+    x-service: taxonomy-svc
+  receiveTaxonomyMasterDeactivationCheckRequested:
+    action: receive
+    summary: Consumidores previstos procesan taxonomy.master.deactivation.check.requested.
+    channel:
+      $ref: '#/channels/taxonomyMasterDeactivationCheckRequested'
+    messages:
+      - $ref: '#/channels/taxonomyMasterDeactivationCheckRequested/messages/TaxonomyMasterDeactivationCheckRequested'
+    x-consumers: &id013
+      - catalog-svc
+  sendCatalogMasterDeactivationChecked:
+    action: send
+    summary: catalog-svc publica catalog.master.deactivation.checked.
+    channel:
+      $ref: '#/channels/catalogMasterDeactivationChecked'
+    messages:
+      - $ref: '#/channels/catalogMasterDeactivationChecked/messages/CatalogMasterDeactivationChecked'
+    x-service: catalog-svc
+  receiveCatalogMasterDeactivationChecked:
+    action: receive
+    summary: Consumidores previstos procesan catalog.master.deactivation.checked.
+    channel:
+      $ref: '#/channels/catalogMasterDeactivationChecked'
+    messages:
+      - $ref: '#/channels/catalogMasterDeactivationChecked/messages/CatalogMasterDeactivationChecked'
+    x-consumers: &id014
+      - taxonomy-svc
+  sendTaxonomyMasterDeactivated:
+    action: send
+    summary: taxonomy-svc publica taxonomy.master.deactivated.
+    channel:
+      $ref: '#/channels/taxonomyMasterDeactivated'
+    messages:
+      - $ref: '#/channels/taxonomyMasterDeactivated/messages/TaxonomyMasterDeactivated'
+    x-service: taxonomy-svc
+  receiveTaxonomyMasterDeactivated:
+    action: receive
+    summary: Consumidores previstos procesan taxonomy.master.deactivated.
+    channel:
+      $ref: '#/channels/taxonomyMasterDeactivated'
+    messages:
+      - $ref: '#/channels/taxonomyMasterDeactivated/messages/TaxonomyMasterDeactivated'
+    x-consumers: &id015
+      - catalog-svc
+      - api-gateway/bff
+  sendTaxonomyMasterDeactivationRejected:
+    action: send
+    summary: taxonomy-svc publica taxonomy.master.deactivation.rejected.
+    channel:
+      $ref: '#/channels/taxonomyMasterDeactivationRejected'
+    messages:
+      - $ref: '#/channels/taxonomyMasterDeactivationRejected/messages/TaxonomyMasterDeactivationRejected'
+    x-service: taxonomy-svc
+  receiveTaxonomyMasterDeactivationRejected:
+    action: receive
+    summary: Consumidores previstos procesan taxonomy.master.deactivation.rejected.
+    channel:
+      $ref: '#/channels/taxonomyMasterDeactivationRejected'
+    messages:
+      - $ref: '#/channels/taxonomyMasterDeactivationRejected/messages/TaxonomyMasterDeactivationRejected'
+    x-consumers: &id016
+      - catalog-svc
+  sendCatalogBulkUpsertRequested:
+    action: send
+    summary: bulk-svc publica catalog.bulk.upsert.requested.
+    channel:
+      $ref: '#/channels/catalogBulkUpsertRequested'
+    messages:
+      - $ref: '#/channels/catalogBulkUpsertRequested/messages/CatalogBulkUpsertRequested'
+    x-service: bulk-svc
+  receiveCatalogBulkUpsertRequested:
+    action: receive
+    summary: Consumidores previstos procesan catalog.bulk.upsert.requested.
+    channel:
+      $ref: '#/channels/catalogBulkUpsertRequested'
+    messages:
+      - $ref: '#/channels/catalogBulkUpsertRequested/messages/CatalogBulkUpsertRequested'
+    x-consumers: &id017
+      - catalog-svc
+  sendCatalogBulkUpsertCompleted:
+    action: send
+    summary: catalog-svc publica catalog.bulk.upsert.completed.
+    channel:
+      $ref: '#/channels/catalogBulkUpsertCompleted'
+    messages:
+      - $ref: '#/channels/catalogBulkUpsertCompleted/messages/CatalogBulkUpsertCompleted'
+    x-service: catalog-svc
+  receiveCatalogBulkUpsertCompleted:
+    action: receive
+    summary: Consumidores previstos procesan catalog.bulk.upsert.completed.
+    channel:
+      $ref: '#/channels/catalogBulkUpsertCompleted'
+    messages:
+      - $ref: '#/channels/catalogBulkUpsertCompleted/messages/CatalogBulkUpsertCompleted'
+    x-consumers: &id018
+      - bulk-svc
+  sendCatalogBulkUpsertRejected:
+    action: send
+    summary: catalog-svc publica catalog.bulk.upsert.rejected.
+    channel:
+      $ref: '#/channels/catalogBulkUpsertRejected'
+    messages:
+      - $ref: '#/channels/catalogBulkUpsertRejected/messages/CatalogBulkUpsertRejected'
+    x-service: catalog-svc
+  receiveCatalogBulkUpsertRejected:
+    action: receive
+    summary: Consumidores previstos procesan catalog.bulk.upsert.rejected.
+    channel:
+      $ref: '#/channels/catalogBulkUpsertRejected'
+    messages:
+      - $ref: '#/channels/catalogBulkUpsertRejected/messages/CatalogBulkUpsertRejected'
+    x-consumers: &id019
+      - bulk-svc
+  sendPricingBulkPriceApplyRequested:
+    action: send
+    summary: bulk-svc publica pricing.bulk.price.apply.requested.
+    channel:
+      $ref: '#/channels/pricingBulkPriceApplyRequested'
+    messages:
+      - $ref: '#/channels/pricingBulkPriceApplyRequested/messages/PricingBulkPriceApplyRequested'
+    x-service: bulk-svc
+  receivePricingBulkPriceApplyRequested:
+    action: receive
+    summary: Consumidores previstos procesan pricing.bulk.price.apply.requested.
+    channel:
+      $ref: '#/channels/pricingBulkPriceApplyRequested'
+    messages:
+      - $ref: '#/channels/pricingBulkPriceApplyRequested/messages/PricingBulkPriceApplyRequested'
+    x-consumers: &id020
+      - pricing-svc
+  sendPricingBulkPriceApplyCompleted:
+    action: send
+    summary: pricing-svc publica pricing.bulk.price.apply.completed.
+    channel:
+      $ref: '#/channels/pricingBulkPriceApplyCompleted'
+    messages:
+      - $ref: '#/channels/pricingBulkPriceApplyCompleted/messages/PricingBulkPriceApplyCompleted'
+    x-service: pricing-svc
+  receivePricingBulkPriceApplyCompleted:
+    action: receive
+    summary: Consumidores previstos procesan pricing.bulk.price.apply.completed.
+    channel:
+      $ref: '#/channels/pricingBulkPriceApplyCompleted'
+    messages:
+      - $ref: '#/channels/pricingBulkPriceApplyCompleted/messages/PricingBulkPriceApplyCompleted'
+    x-consumers: &id021
+      - bulk-svc
+  sendPricingBulkPriceApplyRejected:
+    action: send
+    summary: pricing-svc publica pricing.bulk.price.apply.rejected.
+    channel:
+      $ref: '#/channels/pricingBulkPriceApplyRejected'
+    messages:
+      - $ref: '#/channels/pricingBulkPriceApplyRejected/messages/PricingBulkPriceApplyRejected'
+    x-service: pricing-svc
+  receivePricingBulkPriceApplyRejected:
+    action: receive
+    summary: Consumidores previstos procesan pricing.bulk.price.apply.rejected.
+    channel:
+      $ref: '#/channels/pricingBulkPriceApplyRejected'
+    messages:
+      - $ref: '#/channels/pricingBulkPriceApplyRejected/messages/PricingBulkPriceApplyRejected'
+    x-consumers: &id022
+      - bulk-svc
+  sendInventoryBulkStockAdjustRequested:
+    action: send
+    summary: bulk-svc publica inventory.bulk.stock.adjust.requested.
+    channel:
+      $ref: '#/channels/inventoryBulkStockAdjustRequested'
+    messages:
+      - $ref: '#/channels/inventoryBulkStockAdjustRequested/messages/InventoryBulkStockAdjustRequested'
+    x-service: bulk-svc
+  receiveInventoryBulkStockAdjustRequested:
+    action: receive
+    summary: Consumidores previstos procesan inventory.bulk.stock.adjust.requested.
+    channel:
+      $ref: '#/channels/inventoryBulkStockAdjustRequested'
+    messages:
+      - $ref: '#/channels/inventoryBulkStockAdjustRequested/messages/InventoryBulkStockAdjustRequested'
+    x-consumers: &id023
+      - inventory-svc
+  sendInventoryBulkStockAdjustCompleted:
+    action: send
+    summary: inventory-svc publica inventory.bulk.stock.adjust.completed.
+    channel:
+      $ref: '#/channels/inventoryBulkStockAdjustCompleted'
+    messages:
+      - $ref: '#/channels/inventoryBulkStockAdjustCompleted/messages/InventoryBulkStockAdjustCompleted'
+    x-service: inventory-svc
+  receiveInventoryBulkStockAdjustCompleted:
+    action: receive
+    summary: Consumidores previstos procesan inventory.bulk.stock.adjust.completed.
+    channel:
+      $ref: '#/channels/inventoryBulkStockAdjustCompleted'
+    messages:
+      - $ref: '#/channels/inventoryBulkStockAdjustCompleted/messages/InventoryBulkStockAdjustCompleted'
+    x-consumers: &id024
+      - bulk-svc
+  sendInventoryBulkStockAdjustRejected:
+    action: send
+    summary: inventory-svc publica inventory.bulk.stock.adjust.rejected.
+    channel:
+      $ref: '#/channels/inventoryBulkStockAdjustRejected'
+    messages:
+      - $ref: '#/channels/inventoryBulkStockAdjustRejected/messages/InventoryBulkStockAdjustRejected'
+    x-service: inventory-svc
+  receiveInventoryBulkStockAdjustRejected:
+    action: receive
+    summary: Consumidores previstos procesan inventory.bulk.stock.adjust.rejected.
+    channel:
+      $ref: '#/channels/inventoryBulkStockAdjustRejected'
+    messages:
+      - $ref: '#/channels/inventoryBulkStockAdjustRejected/messages/InventoryBulkStockAdjustRejected'
+    x-consumers: &id025
+      - bulk-svc
+  sendPromotionsCouponConsumptionCompleted:
+    action: send
+    summary: promotions-svc publica promotions.coupon.consumption.completed.
+    channel:
+      $ref: '#/channels/promotionsCouponConsumptionCompleted'
+    messages:
+      - $ref: '#/channels/promotionsCouponConsumptionCompleted/messages/PromotionsCouponConsumptionCompleted'
+    x-service: promotions-svc
+  receivePromotionsCouponConsumptionCompleted:
+    action: receive
+    summary: Consumidores previstos procesan promotions.coupon.consumption.completed.
+    channel:
+      $ref: '#/channels/promotionsCouponConsumptionCompleted'
+    messages:
+      - $ref: '#/channels/promotionsCouponConsumptionCompleted/messages/PromotionsCouponConsumptionCompleted'
+    x-consumers: &id026
+      - modulo-ventas
+  sendPromotionsCouponConsumptionRejected:
+    action: send
+    summary: promotions-svc publica promotions.coupon.consumption.rejected.
+    channel:
+      $ref: '#/channels/promotionsCouponConsumptionRejected'
+    messages:
+      - $ref: '#/channels/promotionsCouponConsumptionRejected/messages/PromotionsCouponConsumptionRejected'
+    x-service: promotions-svc
+  receivePromotionsCouponConsumptionRejected:
+    action: receive
+    summary: Consumidores previstos procesan promotions.coupon.consumption.rejected.
+    channel:
+      $ref: '#/channels/promotionsCouponConsumptionRejected'
+    messages:
+      - $ref: '#/channels/promotionsCouponConsumptionRejected/messages/PromotionsCouponConsumptionRejected'
+    x-consumers: &id027
+      - modulo-ventas
+components:
+  messages:
+    TaxonomyCategoryUpdated:
+      name: taxonomy.category.updated
+      title: taxonomy.category.updated
+      summary: Categoría actualizada.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/TaxonomyCategoryUpdatedEnvelope'
+      tags:
+        - name: Taxonomía
+      x-kind: event
+      x-status: stable
+      x-producer: taxonomy-svc
+      x-consumers: *id001
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    TaxonomyProductTypeSchemaChanged:
+      name: taxonomy.product-type-schema.changed
+      title: taxonomy.product-type-schema.changed
+      summary: Esquema de características de un tipo de producto modificado de forma confirmada.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/TaxonomyProductTypeSchemaChangedEnvelope'
+      tags:
+        - name: Taxonomía
+      x-kind: event
+      x-status: internal-provisional
+      x-producer: taxonomy-svc
+      x-consumers:
+        - catalog-svc
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    TaxonomyCharacteristicValueUpdated:
+      name: taxonomy.characteristic-value.updated
+      title: taxonomy.characteristic-value.updated
+      summary: Valor de característica actualizado conservando sus identificadores estables.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/TaxonomyCharacteristicValueUpdatedEnvelope'
+      tags:
+        - name: Taxonomía
+      x-kind: event
+      x-status: internal-provisional
+      x-producer: taxonomy-svc
+      x-consumers:
+        - catalog-svc
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    CatalogProductDeactivated:
+      name: catalog.product.deactivated
+      title: catalog.product.deactivated
+      summary: Producto desactivado lógicamente.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CatalogProductDeactivatedEnvelope'
+      tags:
+        - name: Catálogo
+      x-kind: event
+      x-status: stable
+      x-producer: catalog-svc
+      x-consumers: *id002
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    CatalogSkuDeactivated:
+      name: catalog.sku.deactivated
+      title: catalog.sku.deactivated
+      summary: SKU desactivado lógicamente.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CatalogSkuDeactivatedEnvelope'
+      tags:
+        - name: Catálogo
+      x-kind: event
+      x-status: stable
+      x-producer: catalog-svc
+      x-consumers: *id003
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    PricingPriceChanged:
+      name: pricing.price.changed
+      title: pricing.price.changed
+      summary: Cambio de precio persistido.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PricingPriceChangedEnvelope'
+      tags:
+        - name: Pricing
+      x-kind: event
+      x-status: stable
+      x-producer: pricing-svc
+      x-consumers: *id004
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+      examples:
+        - name: example
+          payload:
+            message_id: 87643ac0-2513-4bc7-ad2f-e45bfe50fe0b
+            kind: event
+            name: pricing.price.changed
+            schema_version: 1
+            operation_id: c8c0a9a3-b7a9-4959-858f-c71e94bc8d22
+            correlation_id: 5f3df0bb-89f7-4c56-bbd2-0a977aa2bb58
+            causation_id:
+            occurred_at: '2026-09-28T16:20:00Z'
+            producer: pricing-svc
+            actor:
+              user_id: usr_204
+              service_id:
+              channel: BACKOFFICE
+            data:
+              sku: BOT-750
+              product_id: p-002
+              channel_id:
+              valid_from:
+              valid_until:
+              price_version: 7
+              batch_id:
+              timestamp: '2026-09-28T16:20:00Z'
+              tipo_precio: REGULAR
+              precio_anterior: 79.9
+              precio_nuevo: 84.9
+              variacion_porcentual: 6.26
+              tipo_operacion: MODIFICACION
+              moneda: PEN
+              canal_origen: BACKOFFICE
+              motivo_cambio: Actualización comercial
+              usuario_id: usr_204
+              usuario_email: gestor@tienda.com
+              ip_origen: 200.48.85.10
+    InventoryStockChanged:
+      name: inventory.stock.changed
+      title: inventory.stock.changed
+      summary: Snapshot autoritativo de saldo después de un cambio.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InventoryStockChangedEnvelope'
+      tags:
+        - name: Inventario
+      x-kind: event
+      x-status: stable
+      x-producer: inventory-svc
+      x-consumers: *id005
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+      examples:
+        - name: example
+          payload:
+            message_id: 3f1ea77c-dde1-4e71-b3da-6167ac182cef
+            kind: event
+            name: inventory.stock.changed
+            schema_version: 1
+            operation_id: 2e12d74a-26c9-47e3-aaec-71910cd84511
+            correlation_id: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+            causation_id: aa7aaf4e-4e65-43a6-b4a3-070e54f95f7f
+            occurred_at: '2026-09-28T16:10:00Z'
+            producer: inventory-svc
+            actor:
+              user_id:
+              service_id: inventory-svc
+              channel: MARKETPLACE
+            data:
+              sku: ZAP-PSX-42-NEG
+              location_id: DEFAULT
+              on_hand: 10
+              reserved: 1
+              available: 9
+              stock_version: 14
+              updated_at: '2026-09-28T16:10:00Z'
+              estado: DISPONIBLE
+    InventoryStockAdjusted:
+      name: inventory.stock.adjusted
+      title: inventory.stock.adjusted
+      summary: Ajuste de stock confirmado y registrado en Kardex.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InventoryStockAdjustedEnvelope'
+      tags:
+        - name: Inventario
+      x-kind: event
+      x-status: stable
+      x-producer: inventory-svc
+      x-consumers: *id006
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    InventoryReservationCreated:
+      name: inventory.reservation.created
+      title: inventory.reservation.created
+      summary: Reserva creada para un pedido CREADO.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InventoryReservationCreatedEnvelope'
+      tags:
+        - name: Inventario
+      x-kind: event
+      x-status: provisional
+      x-producer: inventory-svc
+      x-consumers: *id007
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+      examples:
+        - name: example
+          payload:
+            message_id: aa7aaf4e-4e65-43a6-b4a3-070e54f95f7f
+            kind: event
+            name: inventory.reservation.created
+            schema_version: 1
+            operation_id: e8463fc0-c4ac-4d27-b707-58495a3a20c6
+            correlation_id: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+            causation_id:
+            occurred_at: '2026-09-28T16:10:00Z'
+            producer: inventory-svc
+            actor:
+              user_id:
+              service_id: modulo-ventas
+              channel: MARKETPLACE
+            data:
+              reservation_id: res-01JXYZ
+              order_id: PED-001
+              channel_id: MARKETPLACE
+              expires_at: '2026-09-28T16:25:00Z'
+              lines:
+                - sku: ZAP-PSX-42-NEG
+                  location_id: DEFAULT
+                  quantity: 1
+              estado: ACTIVA
+      x-business-flow-status: closed-with-sales
+    InventoryReservationConsumed:
+      name: inventory.reservation.consumed
+      title: inventory.reservation.consumed
+      summary: Reserva consumida definitivamente.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InventoryReservationConsumedEnvelope'
+      tags:
+        - name: Inventario
+      x-kind: event
+      x-status: provisional
+      x-producer: inventory-svc
+      x-consumers: *id008
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+      x-business-flow-status: closed-with-sales
+    InventoryReservationReleased:
+      name: inventory.reservation.released
+      title: inventory.reservation.released
+      summary: Reserva liberada.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InventoryReservationReleasedEnvelope'
+      tags:
+        - name: Inventario
+      x-kind: event
+      x-status: provisional
+      x-producer: inventory-svc
+      x-consumers: *id009
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+      x-business-flow-status: closed-with-sales
+    InventoryReservationExpired:
+      name: inventory.reservation.expired
+      title: inventory.reservation.expired
+      summary: Reserva expirada automáticamente.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InventoryReservationExpiredEnvelope'
+      tags:
+        - name: Inventario
+      x-kind: event
+      x-status: provisional
+      x-producer: inventory-svc
+      x-consumers: *id010
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+      x-business-flow-status: closed-with-sales
+    InventoryConsumptionCompleted:
+      name: inventory.consumption.completed
+      title: inventory.consumption.completed
+      summary: Resultado exitoso de confirmación de consumo.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InventoryConsumptionCompletedEnvelope'
+      tags:
+        - name: Inventario
+      x-kind: result
+      x-status: provisional
+      x-producer: inventory-svc
+      x-consumers: *id011
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+      x-business-flow-status: closed-with-sales
+    InventoryConsumptionRejected:
+      name: inventory.consumption.rejected
+      title: inventory.consumption.rejected
+      summary: Resultado rechazado para reserva/confirmación según operation_type.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InventoryConsumptionRejectedEnvelope'
+      tags:
+        - name: Inventario
+      x-kind: result
+      x-status: provisional
+      x-producer: inventory-svc
+      x-consumers: *id012
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+      x-business-flow-status: closed-with-sales
+    TaxonomyMasterDeactivationCheckRequested:
+      name: taxonomy.master.deactivation.check.requested
+      title: taxonomy.master.deactivation.check.requested
+      summary: Solicita comprobación y barrera para baja segura.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/TaxonomyMasterDeactivationCheckRequestedEnvelope'
+      tags:
+        - name: Taxonomía
+      x-kind: command
+      x-status: internal-provisional
+      x-producer: taxonomy-svc
+      x-consumers: *id013
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    CatalogMasterDeactivationChecked:
+      name: catalog.master.deactivation.checked
+      title: catalog.master.deactivation.checked
+      summary: Resultado de comprobación de dependencias de entidad maestra.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CatalogMasterDeactivationCheckedEnvelope'
+      tags:
+        - name: Catálogo
+      x-kind: result
+      x-status: internal-provisional
+      x-producer: catalog-svc
+      x-consumers: *id014
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    TaxonomyMasterDeactivated:
+      name: taxonomy.master.deactivated
+      title: taxonomy.master.deactivated
+      summary: Baja lógica de entidad maestra confirmada.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/TaxonomyMasterDeactivatedEnvelope'
+      tags:
+        - name: Taxonomía
+      x-kind: event
+      x-status: internal-provisional
+      x-producer: taxonomy-svc
+      x-consumers: *id015
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    TaxonomyMasterDeactivationRejected:
+      name: taxonomy.master.deactivation.rejected
+      title: taxonomy.master.deactivation.rejected
+      summary: Baja de entidad maestra rechazada.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/TaxonomyMasterDeactivationRejectedEnvelope'
+      tags:
+        - name: Taxonomía
+      x-kind: result
+      x-status: internal-provisional
+      x-producer: taxonomy-svc
+      x-consumers: *id016
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    CatalogBulkUpsertRequested:
+      name: catalog.bulk.upsert.requested
+      title: catalog.bulk.upsert.requested
+      summary: Solicita alta/actualización de Catálogo por fila.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CatalogBulkUpsertRequestedEnvelope'
+      tags:
+        - name: Bulk
+      x-kind: command
+      x-status: internal-provisional
+      x-producer: bulk-svc
+      x-consumers: *id017
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    CatalogBulkUpsertCompleted:
+      name: catalog.bulk.upsert.completed
+      title: catalog.bulk.upsert.completed
+      summary: Aplicación de Catálogo completada para una fila.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CatalogBulkUpsertCompletedEnvelope'
+      tags:
+        - name: Bulk
+      x-kind: result
+      x-status: internal-provisional
+      x-producer: catalog-svc
+      x-consumers: *id018
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    CatalogBulkUpsertRejected:
+      name: catalog.bulk.upsert.rejected
+      title: catalog.bulk.upsert.rejected
+      summary: Aplicación de Catálogo rechazada para una fila.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CatalogBulkUpsertRejectedEnvelope'
+      tags:
+        - name: Bulk
+      x-kind: result
+      x-status: internal-provisional
+      x-producer: catalog-svc
+      x-consumers: *id019
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    PricingBulkPriceApplyRequested:
+      name: pricing.bulk.price.apply.requested
+      title: pricing.bulk.price.apply.requested
+      summary: Solicita aplicar un cambio de precio de la importación general.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PricingBulkPriceApplyRequestedEnvelope'
+      tags:
+        - name: Bulk
+      x-kind: command
+      x-status: internal-provisional
+      x-producer: bulk-svc
+      x-consumers: *id020
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    PricingBulkPriceApplyCompleted:
+      name: pricing.bulk.price.apply.completed
+      title: pricing.bulk.price.apply.completed
+      summary: Aplicación de Pricing completada para una fila.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PricingBulkPriceApplyCompletedEnvelope'
+      tags:
+        - name: Bulk
+      x-kind: result
+      x-status: internal-provisional
+      x-producer: pricing-svc
+      x-consumers: *id021
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    PricingBulkPriceApplyRejected:
+      name: pricing.bulk.price.apply.rejected
+      title: pricing.bulk.price.apply.rejected
+      summary: Aplicación de Pricing rechazada para una fila.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PricingBulkPriceApplyRejectedEnvelope'
+      tags:
+        - name: Bulk
+      x-kind: result
+      x-status: internal-provisional
+      x-producer: pricing-svc
+      x-consumers: *id022
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    InventoryBulkStockAdjustRequested:
+      name: inventory.bulk.stock.adjust.requested
+      title: inventory.bulk.stock.adjust.requested
+      summary: Solicita un ajuste absoluto de stock condicionado por versión.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InventoryBulkStockAdjustRequestedEnvelope'
+      tags:
+        - name: Bulk
+      x-kind: command
+      x-status: internal-provisional
+      x-producer: bulk-svc
+      x-consumers: *id023
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+      examples:
+        - name: example
+          payload:
+            message_id: 6c44311f-83fb-4737-b12a-26378d285230
+            kind: command
+            name: inventory.bulk.stock.adjust.requested
+            schema_version: 1
+            operation_id: ef8fa0fd-287f-4a70-8d35-0406cf0feeb8
+            correlation_id: b726aab5-e4c8-4c64-94db-b579577f3ab1
+            causation_id:
+            occurred_at: '2026-09-28T16:30:00Z'
+            producer: bulk-svc
+            actor:
+              user_id: usr_204
+              service_id: bulk-svc
+              channel: BACKOFFICE
+            data:
+              batch_id: batch-20260928-001
+              row_id: '42'
+              sku: BOT-750
+              location_id: DEFAULT
+              stock: 25
+              stock_version: 6
+              motivo: BULK_IMPORT
+    InventoryBulkStockAdjustCompleted:
+      name: inventory.bulk.stock.adjust.completed
+      title: inventory.bulk.stock.adjust.completed
+      summary: Ajuste de Inventario completado para una fila.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InventoryBulkStockAdjustCompletedEnvelope'
+      tags:
+        - name: Bulk
+      x-kind: result
+      x-status: internal-provisional
+      x-producer: inventory-svc
+      x-consumers: *id024
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    InventoryBulkStockAdjustRejected:
+      name: inventory.bulk.stock.adjust.rejected
+      title: inventory.bulk.stock.adjust.rejected
+      summary: Ajuste de Inventario rechazado para una fila.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InventoryBulkStockAdjustRejectedEnvelope'
+      tags:
+        - name: Bulk
+      x-kind: result
+      x-status: internal-provisional
+      x-producer: inventory-svc
+      x-consumers: *id025
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+    PromotionsCouponConsumptionCompleted:
+      name: promotions.coupon.consumption.completed
+      title: promotions.coupon.consumption.completed
+      summary: Consumo idempotente de cupón completado.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PromotionsCouponConsumptionCompletedEnvelope'
+      tags:
+        - name: Promociones
+      x-kind: result
+      x-status: provisional-external
+      x-producer: promotions-svc
+      x-consumers: *id026
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+      x-external-homologation: pending-with-sales
+    PromotionsCouponConsumptionRejected:
+      name: promotions.coupon.consumption.rejected
+      title: promotions.coupon.consumption.rejected
+      summary: Consumo de cupón rechazado.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PromotionsCouponConsumptionRejectedEnvelope'
+      tags:
+        - name: Promociones
+      x-kind: result
+      x-status: provisional-external
+      x-producer: promotions-svc
+      x-consumers: *id027
+      x-delivery-semantics: at-least-once
+      x-deduplication-key: message_id
+      x-external-homologation: pending-with-sales
+  schemas:
+    ActorContext:
+      type: object
+      description: Contexto mínimo del actor que originó la operación. No sustituye al token ni debe contener secretos.
+      properties:
+        user_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Identificador opaco de usuario cuando la acción proviene de una persona.
+        service_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Identificador del servicio originador, por ejemplo modulo-ventas o bulk-svc.
+        channel:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Canal de negocio cuando aplique, por ejemplo BACKOFFICE, MARKETPLACE, CHATBOT o RETAIL.
+      additionalProperties: true
+    EnvelopeBase:
+      type: object
+      description: Envelope canónico de mensajería. message_id es la identidad de deduplicación y reemplaza 
+        semánticamente los antiguos event_id/command_id cuando se use este contrato.
+      properties:
+        message_id:
+          type: string
+          description: Identificador global del mensaje.
+          format: uuid
+        kind:
+          type: string
+          description: Semántica del mensaje.
+          enum:
+            - command
+            - event
+            - result
+        name:
+          type: string
+          description: Nombre contractual domain.entity.action.
+        schema_version:
+          type: integer
+          description: Versión del payload del mensaje.
+          minimum: 1
+        operation_id:
+          type: string
+          description: Identificador idempotente de la operación de negocio.
+          format: uuid
+        correlation_id:
+          type: string
+          description: Identificador para correlacionar un flujo extremo a extremo.
+          format: uuid
+        causation_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: message_id que causó este mensaje cuando exista.
+        occurred_at:
+          type: string
+          description: Fecha/hora UTC de emisión del hecho, comando o resultado.
+          format: date-time
+        producer:
+          type: string
+          description: Servicio productor.
+        actor:
+          $ref: '#/components/schemas/ActorContext'
+        data:
+          type: object
+          description: Payload específico del contrato.
+      required:
+        - message_id
+        - kind
+        - name
+        - schema_version
+        - operation_id
+        - correlation_id
+        - occurred_at
+        - producer
+        - data
+      additionalProperties: true
+    ReservationLine:
+      type: object
+      properties:
+        sku:
+          type: string
+          description: SKU vendible.
+        location_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Ubicación de inventario. Puede ser nula si la asignación ya fue resuelta por el dominio.
+        quantity:
+          type: integer
+          description: Cantidad afectada.
+          minimum: 1
+      required:
+        - sku
+        - quantity
+      additionalProperties: true
+    StockSnapshot:
+      type: object
+      properties:
+        sku:
+          type: string
+          description: SKU vendible.
+        location_id:
+          type: string
+          description: Ubicación autoritativa del saldo.
+        on_hand:
+          type: integer
+          description: Cantidad física registrada.
+          minimum: 0
+        reserved:
+          type: integer
+          description: Cantidad reservada.
+          minimum: 0
+        available:
+          type: integer
+          description: Cantidad disponible para nuevas operaciones.
+          minimum: 0
+        stock_version:
+          type: integer
+          description: Versión del saldo.
+          minimum: 0
+        updated_at:
+          type: string
+          description: Fecha/hora UTC de la versión publicada.
+          format: date-time
+        estado:
+          type: string
+          description: Estado derivado de disponibilidad.
+          enum:
+            - DISPONIBLE
+            - STOCK_BAJO
+            - AGOTADO
+      required:
+        - sku
+        - location_id
+        - on_hand
+        - reserved
+        - available
+        - estado
+        - stock_version
+        - updated_at
+      additionalProperties: true
+    InventoryStockChangedData:
+      type: object
+      description: Hecho canónico para actualizar proyecciones de disponibilidad.
+      allOf:
+        - $ref: '#/components/schemas/StockSnapshot'
+    InventoryStockAdjustedData:
+      type: object
+      properties:
+        sku:
+          type: string
+        location_id:
+          type: string
+        previous_on_hand:
+          type: integer
+          minimum: 0
+        new_on_hand:
+          type: integer
+          minimum: 0
+        delta:
+          type: integer
+        previous_stock_version:
+          type: integer
+          minimum: 0
+        stock_version:
+          type: integer
+          minimum: 0
+        batch_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Lote que originó el ajuste cuando aplica.
+        row_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Fila del lote cuando aplica.
+        adjusted_at:
+          type: string
+          format: date-time
+        motivo:
+          type: string
+          description: Motivo del ajuste, por ejemplo BULK_IMPORT.
+      required:
+        - sku
+        - location_id
+        - previous_on_hand
+        - new_on_hand
+        - delta
+        - previous_stock_version
+        - stock_version
+        - motivo
+        - adjusted_at
+      additionalProperties: true
+    ReservationCreatedData:
+      type: object
+      properties:
+        reservation_id:
+          type: string
+          description: Identificador de la reserva.
+        order_id:
+          type: string
+          description: Pedido de Ventas/Postventa.
+        channel_id:
+          type: string
+          description: Canal de origen del pedido.
+        expires_at:
+          type: string
+          description: Vencimiento de la reserva.
+          format: date-time
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ReservationLine'
+        estado:
+          type: string
+          enum:
+            - ACTIVA
+      required:
+        - reservation_id
+        - order_id
+        - channel_id
+        - estado
+        - expires_at
+        - lines
+      additionalProperties: true
+    ReservationTerminalData:
+      type: object
+      properties:
+        reservation_id:
+          type: string
+        order_id:
+          type: string
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ReservationLine'
+        resolved_at:
+          type: string
+          format: date-time
+        estado:
+          type: string
+          enum:
+            - CONSUMIDA
+            - LIBERADA
+            - EXPIRADA
+        motivo:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Motivo cuando aplique.
+      required:
+        - reservation_id
+        - order_id
+        - estado
+        - lines
+        - resolved_at
+      additionalProperties: true
+    InventoryConsumptionCompletedData:
+      type: object
+      description: Resultado dirigido a Ventas/Postventa para confirmar la aplicación definitiva del consumo.
+      properties:
+        order_id:
+          type: string
+        reservation_id:
+          type: string
+        operation_type:
+          type: string
+          enum:
+            - CONFIRMAR_CONSUMO
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ReservationLine'
+        completed_at:
+          type: string
+          format: date-time
+      required:
+        - order_id
+        - reservation_id
+        - operation_type
+        - lines
+        - completed_at
+      additionalProperties: true
+    InventoryConsumptionRejectedData:
+      type: object
+      description: Resultado asíncrono de rechazo de negocio para una reserva o confirmación ya admitida. operation_type
+        distingue RESERVAR de CONFIRMAR_CONSUMO. Conflictos de idempotencia detectados durante la admisión HTTP se 
+        responden como 409 IDEMPOTENCY_CONFLICT y no se publican como un segundo resultado asíncrono.
+      properties:
+        order_id:
+          type: string
+        reservation_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+        operation_type:
+          type: string
+          enum:
+            - RESERVAR
+            - CONFIRMAR_CONSUMO
+        detail:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Detalle humano no estable; no usar para branching.
+        rejected_at:
+          type: string
+          format: date-time
+        code:
+          type: string
+          description: Código estable para lógica del consumidor.
+          enum:
+            - STOCK_INSUFICIENTE
+            - SKU_NO_ENCONTRADO
+            - SKU_INACTIVO
+            - UBICACION_NO_ENCONTRADA
+            - RESERVA_NO_ENCONTRADA
+            - RESERVA_NO_ACTIVA
+            - RESERVA_EXPIRADA
+            - CANTIDAD_INVALIDA
+      required:
+        - order_id
+        - operation_type
+        - code
+        - rejected_at
+      additionalProperties: true
+    PriceChangedData:
+      type: object
+      description: Contrato de auditoría de Pricing emitido exclusivamente después del commit.
+      properties:
+        sku:
+          type: string
+        product_id:
+          type: string
+        channel_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Nulo significa precio global.
+        valid_from:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Inicio de vigencia cuando aplique.
+        valid_until:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Fin de vigencia cuando aplique.
+        price_version:
+          type: integer
+          minimum: 0
+        batch_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+        timestamp:
+          type: string
+          description: Timestamp UTC del contrato de auditoría.
+          format: date-time
+        tipo_precio:
+          type: string
+          description: Tipo de precio.
+          enum:
+            - REGULAR
+            - OFERTA
+        precio_anterior:
+          oneOf:
+            - type: number
+              minimum: 0
+            - type: 'null'
+          description: Nulo para CREACION.
+        precio_nuevo:
+          oneOf:
+            - type: number
+              minimum: 0
+            - type: 'null'
+          description: Nulo para RETIRO_OFERTA.
+        variacion_porcentual:
+          oneOf:
+            - type: number
+            - type: 'null'
+          description: Nulo para CREACION y RETIRO_OFERTA.
+        tipo_operacion:
+          type: string
+          enum:
+            - CREACION
+            - MODIFICACION
+            - RETIRO_OFERTA
+        moneda:
+          type: string
+          description: Moneda ISO 4217.
+          minLength: 3
+        canal_origen:
+          type: string
+          description: Canal/origen de la mutación, por ejemplo BACKOFFICE o BULK_IMPORT.
+        motivo_cambio:
+          type: string
+          description: Motivo obligatorio del cambio.
+        usuario_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+        usuario_email:
+          oneOf:
+            - type: string
+            - type: 'null'
+        ip_origen:
+          oneOf:
+            - type: string
+            - type: 'null'
+      required:
+        - sku
+        - product_id
+        - tipo_precio
+        - precio_anterior
+        - precio_nuevo
+        - variacion_porcentual
+        - tipo_operacion
+        - moneda
+        - price_version
+        - canal_origen
+        - motivo_cambio
+        - timestamp
+      additionalProperties: true
+    CategoryUpdatedData:
+      type: object
+      properties:
+        category_id:
+          type: string
+        category_version:
+          type: integer
+          minimum: 0
+        changed_fields:
+          type: array
+          items:
+            type: string
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - category_id
+        - category_version
+        - updated_at
+      additionalProperties: true
+    ProductTypeSchemaChangedData:
+      type: object
+      description: Hecho mínimo para que Catálogo invalide o refresque el esquema efectivo de un tipo de producto. 
+        `schema_version` aquí es la versión de negocio del esquema del tipo y es distinta del `schema_version` del 
+        envelope.
+      properties:
+        tipo_producto_id:
+          type: string
+          description: Identidad estable del tipo de producto cuyo esquema cambió.
+        schema_version:
+          type: integer
+          minimum: 0
+          description: Versión vigente del esquema de características del tipo de producto.
+        change_type:
+          type: string
+          description: Naturaleza del cambio confirmado, suficiente para invalidar o refrescar la proyección.
+          enum:
+            - ASSOCIATION_ADDED
+            - OBLIGATION_CHANGED
+            - ASSOCIATION_REMOVED
+            - ASSOCIATION_REACTIVATED
+        caracteristica_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Característica afectada cuando aplica.
+        updated_at:
+          type: string
+          format: date-time
+          description: Fecha/hora UTC del cambio confirmado.
+      required:
+        - tipo_producto_id
+        - schema_version
+        - change_type
+        - updated_at
+      additionalProperties: true
+    CharacteristicValueUpdatedData:
+      type: object
+      description: Propagación versionada de un cambio confirmado sobre un valor LISTA. El ID del valor se conserva; 
+        Catálogo actualiza su proyección por identidad, no por etiqueta.
+      properties:
+        caracteristica_id:
+          type: string
+          description: Identidad estable de la característica LISTA.
+        valor_id:
+          type: string
+          description: Identidad estable del valor de característica.
+        change_type:
+          type: string
+          enum:
+            - RENAMED
+          description: Tipo de cambio publicado en esta versión del contrato.
+        nombre:
+          type: string
+          minLength: 1
+          description: Etiqueta vigente del valor tras el cambio confirmado.
+        updated_at:
+          type: string
+          format: date-time
+          description: Fecha/hora UTC del cambio confirmado.
+      required:
+        - caracteristica_id
+        - valor_id
+        - change_type
+        - nombre
+        - updated_at
+      additionalProperties: true
+    ProductDeactivatedData:
+      type: object
+      properties:
+        product_id:
+          type: string
+        sku_base:
+          type: string
+        catalog_version:
+          type: integer
+          minimum: 0
+        reason:
+          oneOf:
+            - type: string
+            - type: 'null'
+        deactivated_at:
+          type: string
+          format: date-time
+      required:
+        - product_id
+        - sku_base
+        - catalog_version
+        - deactivated_at
+      additionalProperties: true
+    SkuDeactivatedData:
+      type: object
+      properties:
+        sku:
+          type: string
+        product_id:
+          type: string
+        variant_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+        catalog_version:
+          type: integer
+          minimum: 0
+        reason:
+          oneOf:
+            - type: string
+            - type: 'null'
+        deactivated_at:
+          type: string
+          format: date-time
+      required:
+        - sku
+        - product_id
+        - catalog_version
+        - deactivated_at
+      additionalProperties: true
+    MasterDeactivationCheckRequestedData:
+      type: object
+      properties:
+        entity_type:
+          type: string
+          enum:
+            - CATEGORY
+            - BRAND
+            - CHARACTERISTIC_VALUE
+            - PRODUCT_TYPE
+            - PRODUCT_TYPE_CHARACTERISTIC
+        entity_id:
+          type: string
+        version:
+          type: integer
+          minimum: 0
+      required:
+        - entity_type
+        - entity_id
+        - version
+      additionalProperties: true
+    MasterDeactivationCheckedData:
+      type: object
+      properties:
+        entity_type:
+          type: string
+          enum:
+            - CATEGORY
+            - BRAND
+            - CHARACTERISTIC_VALUE
+            - PRODUCT_TYPE
+            - PRODUCT_TYPE_CHARACTERISTIC
+        entity_id:
+          type: string
+        result:
+          type: string
+          enum:
+            - CLEAR
+            - HAS_ACTIVE_PRODUCTS
+        active_references_count:
+          type: integer
+          minimum: 0
+        version:
+          type: integer
+          minimum: 0
+      required:
+        - entity_type
+        - entity_id
+        - version
+        - result
+      additionalProperties: true
+    MasterDeactivatedData:
+      type: object
+      properties:
+        entity_type:
+          type: string
+          enum:
+            - CATEGORY
+            - BRAND
+            - CHARACTERISTIC_VALUE
+            - PRODUCT_TYPE
+            - PRODUCT_TYPE_CHARACTERISTIC
+        entity_id:
+          type: string
+        deactivated_at:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          minimum: 0
+      required:
+        - entity_type
+        - entity_id
+        - version
+        - deactivated_at
+      additionalProperties: true
+    MasterDeactivationRejectedData:
+      type: object
+      properties:
+        entity_type:
+          type: string
+          enum:
+            - CATEGORY
+            - BRAND
+            - CHARACTERISTIC_VALUE
+            - PRODUCT_TYPE
+            - PRODUCT_TYPE_CHARACTERISTIC
+        entity_id:
+          type: string
+        reason_code:
+          type: string
+        detail:
+          oneOf:
+            - type: string
+            - type: 'null'
+        rejected_at:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          minimum: 0
+      required:
+        - entity_type
+        - entity_id
+        - version
+        - reason_code
+        - rejected_at
+      additionalProperties: true
+    CatalogBulkRow:
+      type: object
+      description: Subconjunto de columnas pertenecientes a Catálogo en la plantilla general v2.
+      properties:
+        product_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+        variant_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+        sku_base:
+          oneOf:
+            - type: string
+            - type: 'null'
+        sku:
+          oneOf:
+            - type: string
+            - type: 'null'
+        nombre:
+          oneOf:
+            - type: string
+            - type: 'null'
+        descripcion:
+          oneOf:
+            - type: string
+            - type: 'null'
+        categoria_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+        tipo_producto_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+        marca_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+        tiene_variantes:
+          oneOf:
+            - type: boolean
+            - type: 'null'
+        caracteristicas_identificadoras:
+          oneOf:
+            - type: object
+            - type: 'null'
+        atributos_identificadores:
+          oneOf:
+            - type: object
+            - type: 'null'
+        atributos_no_identificadores:
+          oneOf:
+            - type: object
+            - type: 'null'
+        imagen_url:
+          oneOf:
+            - type: string
+            - type: 'null'
+        estado:
+          oneOf:
+            - type: string
+            - type: 'null'
+      additionalProperties: true
+    CatalogBulkUpsertRequestedData:
+      type: object
+      properties:
+        batch_id:
+          type: string
+        row_id:
+          type: string
+        catalog_version:
+          oneOf:
+            - type: integer
+              minimum: 0
+            - type: 'null'
+        row:
+          $ref: '#/components/schemas/CatalogBulkRow'
+        operacion:
+          type: string
+          enum:
+            - CREAR_PRODUCTO_SIMPLE
+            - CREAR_VARIANTE
+            - ACTUALIZAR
+      required:
+        - batch_id
+        - row_id
+        - operacion
+        - row
+      additionalProperties: true
+    CatalogBulkUpsertCompletedData:
+      type: object
+      properties:
+        batch_id:
+          type: string
+        row_id:
+          type: string
+        product_id:
+          type: string
+        variant_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+        sku:
+          type: string
+        catalog_version:
+          type: integer
+          minimum: 0
+        status:
+          type: string
+          enum:
+            - COMPLETED
+      required:
+        - batch_id
+        - row_id
+        - product_id
+        - sku
+        - catalog_version
+        - status
+      additionalProperties: true
+    BulkRejectedData:
+      type: object
+      properties:
+        batch_id:
+          type: string
+        row_id:
+          type: string
+        status:
+          type: string
+          enum:
+            - REJECTED
+        reason_code:
+          type: string
+        detail:
+          oneOf:
+            - type: string
+            - type: 'null'
+      required:
+        - batch_id
+        - row_id
+        - status
+        - reason_code
+      additionalProperties: true
+    PricingBulkPriceApplyRequestedData:
+      type: object
+      properties:
+        batch_id:
+          type: string
+        row_id:
+          type: string
+        sku:
+          type: string
+        channel_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+        precio_regular:
+          oneOf:
+            - type: number
+              exclusiveMinimum: 0
+            - type: 'null'
+        precio_oferta:
+          oneOf:
+            - type: number
+              exclusiveMinimum: 0
+            - type: 'null'
+        accion_precio_oferta:
+          type: string
+          enum:
+            - CONSERVAR
+            - ESTABLECER
+            - ELIMINAR
+        moneda:
+          type: string
+          minLength: 3
+        motivo_cambio:
+          type: string
+        price_version:
+          oneOf:
+            - type: integer
+              minimum: 0
+            - type: 'null'
+      required:
+        - batch_id
+        - row_id
+        - sku
+        - accion_precio_oferta
+        - moneda
+        - motivo_cambio
+      additionalProperties: true
+    PricingBulkPriceApplyCompletedData:
+      type: object
+      properties:
+        batch_id:
+          type: string
+        row_id:
+          type: string
+        sku:
+          type: string
+        price_version:
+          type: integer
+          minimum: 0
+        status:
+          type: string
+          enum:
+            - COMPLETED
+      required:
+        - batch_id
+        - row_id
+        - sku
+        - price_version
+        - status
+      additionalProperties: true
+    InventoryBulkStockAdjustRequestedData:
+      type: object
+      properties:
+        batch_id:
+          type: string
+        row_id:
+          type: string
+        sku:
+          type: string
+        location_id:
+          type: string
+        stock:
+          type: integer
+          minimum: 0
+        stock_version:
+          type: integer
+          minimum: 0
+        motivo:
+          type: string
+          enum:
+            - BULK_IMPORT
+      required:
+        - batch_id
+        - row_id
+        - sku
+        - location_id
+        - stock
+        - stock_version
+        - motivo
+      additionalProperties: true
+    InventoryBulkStockAdjustCompletedData:
+      type: object
+      properties:
+        batch_id:
+          type: string
+        row_id:
+          type: string
+        sku:
+          type: string
+        location_id:
+          type: string
+        previous_on_hand:
+          type: integer
+          minimum: 0
+        new_on_hand:
+          type: integer
+          minimum: 0
+        delta:
+          type: integer
+        stock_version:
+          type: integer
+          minimum: 0
+        status:
+          type: string
+          enum:
+            - COMPLETED
+      required:
+        - batch_id
+        - row_id
+        - sku
+        - location_id
+        - previous_on_hand
+        - new_on_hand
+        - delta
+        - stock_version
+        - status
+      additionalProperties: true
+    CouponConsumptionCompletedData:
+      type: object
+      description: Resultado provisional de consumo idempotente de cupón.
+      properties:
+        order_id:
+          type: string
+        customer_ref:
+          oneOf:
+            - type: string
+            - type: 'null'
+        consumed_at:
+          type: string
+          format: date-time
+        cupon_id:
+          type: string
+      required:
+        - order_id
+        - cupon_id
+        - consumed_at
+      additionalProperties: true
+    CouponConsumptionRejectedData:
+      type: object
+      description: Resultado provisional de rechazo de consumo de cupón.
+      properties:
+        order_id:
+          type: string
+        customer_ref:
+          oneOf:
+            - type: string
+            - type: 'null'
+        detail:
+          oneOf:
+            - type: string
+            - type: 'null'
+        rejected_at:
+          type: string
+          format: date-time
+        cupon_id:
+          type: string
+        code:
+          type: string
+      required:
+        - order_id
+        - cupon_id
+        - code
+        - rejected_at
+      additionalProperties: true
+    TaxonomyCategoryUpdatedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - event
+            name:
+              type: string
+              enum:
+                - taxonomy.category.updated
+            data:
+              $ref: '#/components/schemas/CategoryUpdatedData'
+          required:
+            - kind
+            - name
+            - data
+    TaxonomyProductTypeSchemaChangedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - event
+            name:
+              type: string
+              enum:
+                - taxonomy.product-type-schema.changed
+            data:
+              $ref: '#/components/schemas/ProductTypeSchemaChangedData'
+          required:
+            - kind
+            - name
+            - data
+    TaxonomyCharacteristicValueUpdatedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - event
+            name:
+              type: string
+              enum:
+                - taxonomy.characteristic-value.updated
+            data:
+              $ref: '#/components/schemas/CharacteristicValueUpdatedData'
+          required:
+            - kind
+            - name
+            - data
+    CatalogProductDeactivatedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - event
+            name:
+              type: string
+              enum:
+                - catalog.product.deactivated
+            data:
+              $ref: '#/components/schemas/ProductDeactivatedData'
+          required:
+            - kind
+            - name
+            - data
+    CatalogSkuDeactivatedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - event
+            name:
+              type: string
+              enum:
+                - catalog.sku.deactivated
+            data:
+              $ref: '#/components/schemas/SkuDeactivatedData'
+          required:
+            - kind
+            - name
+            - data
+    PricingPriceChangedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - event
+            name:
+              type: string
+              enum:
+                - pricing.price.changed
+            data:
+              $ref: '#/components/schemas/PriceChangedData'
+          required:
+            - kind
+            - name
+            - data
+    InventoryStockChangedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - event
+            name:
+              type: string
+              enum:
+                - inventory.stock.changed
+            data:
+              $ref: '#/components/schemas/InventoryStockChangedData'
+          required:
+            - kind
+            - name
+            - data
+    InventoryStockAdjustedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - event
+            name:
+              type: string
+              enum:
+                - inventory.stock.adjusted
+            data:
+              $ref: '#/components/schemas/InventoryStockAdjustedData'
+          required:
+            - kind
+            - name
+            - data
+    InventoryReservationCreatedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - event
+            name:
+              type: string
+              enum:
+                - inventory.reservation.created
+            data:
+              $ref: '#/components/schemas/ReservationCreatedData'
+          required:
+            - kind
+            - name
+            - data
+    InventoryReservationConsumedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - event
+            name:
+              type: string
+              enum:
+                - inventory.reservation.consumed
+            data:
+              $ref: '#/components/schemas/ReservationTerminalData'
+          required:
+            - kind
+            - name
+            - data
+    InventoryReservationReleasedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - event
+            name:
+              type: string
+              enum:
+                - inventory.reservation.released
+            data:
+              $ref: '#/components/schemas/ReservationTerminalData'
+          required:
+            - kind
+            - name
+            - data
+    InventoryReservationExpiredEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - event
+            name:
+              type: string
+              enum:
+                - inventory.reservation.expired
+            data:
+              $ref: '#/components/schemas/ReservationTerminalData'
+          required:
+            - kind
+            - name
+            - data
+    InventoryConsumptionCompletedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - result
+            name:
+              type: string
+              enum:
+                - inventory.consumption.completed
+            data:
+              $ref: '#/components/schemas/InventoryConsumptionCompletedData'
+          required:
+            - kind
+            - name
+            - data
+    InventoryConsumptionRejectedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - result
+            name:
+              type: string
+              enum:
+                - inventory.consumption.rejected
+            data:
+              $ref: '#/components/schemas/InventoryConsumptionRejectedData'
+          required:
+            - kind
+            - name
+            - data
+    TaxonomyMasterDeactivationCheckRequestedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - command
+            name:
+              type: string
+              enum:
+                - taxonomy.master.deactivation.check.requested
+            data:
+              $ref: '#/components/schemas/MasterDeactivationCheckRequestedData'
+          required:
+            - kind
+            - name
+            - data
+    CatalogMasterDeactivationCheckedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - result
+            name:
+              type: string
+              enum:
+                - catalog.master.deactivation.checked
+            data:
+              $ref: '#/components/schemas/MasterDeactivationCheckedData'
+          required:
+            - kind
+            - name
+            - data
+    TaxonomyMasterDeactivatedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - event
+            name:
+              type: string
+              enum:
+                - taxonomy.master.deactivated
+            data:
+              $ref: '#/components/schemas/MasterDeactivatedData'
+          required:
+            - kind
+            - name
+            - data
+    TaxonomyMasterDeactivationRejectedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - result
+            name:
+              type: string
+              enum:
+                - taxonomy.master.deactivation.rejected
+            data:
+              $ref: '#/components/schemas/MasterDeactivationRejectedData'
+          required:
+            - kind
+            - name
+            - data
+    CatalogBulkUpsertRequestedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - command
+            name:
+              type: string
+              enum:
+                - catalog.bulk.upsert.requested
+            data:
+              $ref: '#/components/schemas/CatalogBulkUpsertRequestedData'
+          required:
+            - kind
+            - name
+            - data
+    CatalogBulkUpsertCompletedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - result
+            name:
+              type: string
+              enum:
+                - catalog.bulk.upsert.completed
+            data:
+              $ref: '#/components/schemas/CatalogBulkUpsertCompletedData'
+          required:
+            - kind
+            - name
+            - data
+    CatalogBulkUpsertRejectedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - result
+            name:
+              type: string
+              enum:
+                - catalog.bulk.upsert.rejected
+            data:
+              $ref: '#/components/schemas/BulkRejectedData'
+          required:
+            - kind
+            - name
+            - data
+    PricingBulkPriceApplyRequestedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - command
+            name:
+              type: string
+              enum:
+                - pricing.bulk.price.apply.requested
+            data:
+              $ref: '#/components/schemas/PricingBulkPriceApplyRequestedData'
+          required:
+            - kind
+            - name
+            - data
+    PricingBulkPriceApplyCompletedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - result
+            name:
+              type: string
+              enum:
+                - pricing.bulk.price.apply.completed
+            data:
+              $ref: '#/components/schemas/PricingBulkPriceApplyCompletedData'
+          required:
+            - kind
+            - name
+            - data
+    PricingBulkPriceApplyRejectedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - result
+            name:
+              type: string
+              enum:
+                - pricing.bulk.price.apply.rejected
+            data:
+              $ref: '#/components/schemas/BulkRejectedData'
+          required:
+            - kind
+            - name
+            - data
+    InventoryBulkStockAdjustRequestedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - command
+            name:
+              type: string
+              enum:
+                - inventory.bulk.stock.adjust.requested
+            data:
+              $ref: '#/components/schemas/InventoryBulkStockAdjustRequestedData'
+          required:
+            - kind
+            - name
+            - data
+    InventoryBulkStockAdjustCompletedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - result
+            name:
+              type: string
+              enum:
+                - inventory.bulk.stock.adjust.completed
+            data:
+              $ref: '#/components/schemas/InventoryBulkStockAdjustCompletedData'
+          required:
+            - kind
+            - name
+            - data
+    InventoryBulkStockAdjustRejectedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - result
+            name:
+              type: string
+              enum:
+                - inventory.bulk.stock.adjust.rejected
+            data:
+              $ref: '#/components/schemas/BulkRejectedData'
+          required:
+            - kind
+            - name
+            - data
+    PromotionsCouponConsumptionCompletedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - result
+            name:
+              type: string
+              enum:
+                - promotions.coupon.consumption.completed
+            data:
+              $ref: '#/components/schemas/CouponConsumptionCompletedData'
+          required:
+            - kind
+            - name
+            - data
+    PromotionsCouponConsumptionRejectedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - result
+            name:
+              type: string
+              enum:
+                - promotions.coupon.consumption.rejected
+            data:
+              $ref: '#/components/schemas/CouponConsumptionRejectedData'
+          required:
+            - kind
+            - name
+            - data
+x-contract-authority:
+  http: api/openapi.yaml
+  async: asyncapi/asyncapi.yaml
+  business_rules: specs/
+  human_integration_contract: Contrato_Api.md
+x-delivery-policy:
+  delivery: at-least-once
+  global_ordering: false
+  producer_pattern: transactional-outbox
+  consumer_pattern: inbox-deduplication
+  deduplication_key: message_id
+  business_rejection_is_dlq: false
+  ack_means_business_success: false
+x-versioning:
+  message_field: schema_version
+  compatible_change: nuevo campo opcional sin cambiar semántica
+  breaking_change: nueva versión de schema/mensaje antes de retirar la anterior
+x-known-semantic-debt:
+  - contract: inventory.consumption.rejected
+    issue: OpenAPI P0 lo usa también como rechazo de RESERVAR. Se conserva para no romper el contrato actual; 
+      operation_type distingue el caso.
+    decision_needed: Evaluar en versión futura un resultado de rechazo específico para reserva.
+x-deferred-contracts:
+  - Nombres/payloads de la preparación inicial de precio desde Catálogo hacia Pricing.
+  - Nombres/payloads de inicialización de SKU desde Catálogo hacia Inventario.
+  - Comando externo homologado de consumo de cupón desde Ventas/Postventa.
+  - Contrato asíncrono de reintegro de stock por devolución aceptada.
+  - Exchanges, queues, binding keys físicos, retry queues y DLQ.
+  - Permisos/scopes definitivos de los contratos externos aún marcados como provisionales.
+x-payload-naming:
+  envelope: Campos técnicos transversales definidos por Arquitectura.md conservan snake_case en inglés.
+  data: Cuando una SPEC ya define nombres de negocio/campos, el payload conserva esa terminología (por ejemplo 
+    tipo_precio, precio_anterior, cupon_id, operacion).
+x-idempotency:
+  http_identity:
+    - Idempotency-Key
+    - operation_id
+  same_identity_same_semantics: replay-known-result-without-new-effects
+  same_identity_different_semantics: HTTP 409 IDEMPOTENCY_CONFLICT
+  deprecated_code: OPERACION_DUPLICADA
+  correlation_id_is_not_idempotency_key: true
