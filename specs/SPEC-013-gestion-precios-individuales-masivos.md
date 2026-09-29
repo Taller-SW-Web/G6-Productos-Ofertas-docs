@@ -5,7 +5,7 @@
 **Trazabilidad:** HU [HU-013](./hu/HU-013-gestion-precios-individuales-masivos.md) | Wireframe [WF-013](./wireframes/flows/WF-013-gestion-precios-individuales-masivos.md)
 **Contrato HTTP canónico:** [`./api/openapi.yaml`](./api/openapi.yaml) — `0.3.5-p0`  
 **Contrato asíncrono canónico:** [`./asyncapi/asyncapi.yaml`](./asyncapi/asyncapi.yaml) — `0.2.1-p0`  
-**Versión documental:** v1.1 — alineación con baseline contractual P0
+**Versión documental:** v1.1
 
 ## 1. Contexto
 
@@ -361,7 +361,7 @@ La advertencia:
 
 ## 7. Estado contractual vigente
 
-El baseline HTTP canónico de esta capacidad es OpenAPI `0.3.5-p0`. La semántica definida por esta SPEC ya está reflejada en el contrato vigente:
+El contrato HTTP canónico de esta capacidad es OpenAPI `0.3.5`. La semántica definida por esta SPEC ya está reflejada en el contrato vigente:
 
 1. `canal` es opcional en `GET /precios/skus/{sku}`;
 2. el alcance global se representa con canal ausente y `channel_id=null`;
@@ -376,7 +376,7 @@ Permanecen deliberadamente fuera de este cierre únicamente las dependencias ya 
 
 ## Criterio de completitud
 
-Para el baseline P0, esta capacidad se considera documentada cuando se mantiene la siguiente coherencia:
+Esta capacidad se considera documentada cuando se mantiene la siguiente coherencia:
 
 - recurso HTTP `/precios`;
 - alcance global con canal ausente/`channel_id=null`;
@@ -386,4 +386,4 @@ Para el baseline P0, esta capacidad se considera documentada cuando se mantiene 
 - permisos `PRICING_*` tratados como nombres propuestos hasta homologación con Seguridad;
 - versionado, vigencias, auditoría y publicación por Outbox preservados.
 
-**Estado del baseline actual:** cumplido por OpenAPI `0.3.5-p0` y los contratos asociados.
+**Estado:** Cumplido por OpenAPI `0.3.5-p0` y los contratos asociados.
