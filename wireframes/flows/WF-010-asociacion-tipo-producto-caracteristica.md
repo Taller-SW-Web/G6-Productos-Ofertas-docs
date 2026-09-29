@@ -304,12 +304,3 @@ La interfaz continúa mostrando únicamente estados operativos como **Verificand
 | pendiente | `Estamos comprobando si el cambio puede realizarse de forma segura.` |
 | rechazo | `No se puede completar porque existen productos o variantes activos que dependen de esta configuración.` |
 | no concluyente | `No pudimos confirmar que el cambio sea seguro. No se realizó ninguna modificación.` |
-
-## 20. Registro de revisión
-
-| Versión | Fecha | Cambio |
-|---|---|---|
-| 0.9 | 2026-09-28 | Actualización de la referencia contractual vigente a OpenAPI 0.3.5-p0, sin cambios funcionales en el flujo. |
-| 0.8 | 2026-09-28 | Se cierra Q-03 separando `TIPO_PRODUCTO_NO_ENCONTRADO` (404) de `TIPO_PRODUCTO_INVALIDO` (422), alineado con catálogo de errores y OpenAPI 0.3.3-p0. |
-| 0.7 | 2026-09-28 | Se cierran Q-01/Q-02 con AsyncAPI 0.2.1-p0: baja segura de tipo/asociación y evento versionado de cambio de esquema. |
-| 0.6 | 2026-09-28 | Se hace explícita la semántica asíncrona de bajas seguras, se eliminan bajas inmediatas/reordenamiento e IDs técnicos de UI y se documenta la dependencia real de AsyncAPI. |
