@@ -2,149 +2,391 @@
 
 **Responsable:** Gabriel Poma Gutierrez  
 **Rama:** poma  
-**Trazabilidad:** Spec [SPEC-004](../specs/SPEC-004-gestion-variantes-skus.md) | Flow [WF-004](../wireframes/flows/WF-004-gestion-variantes-skus.md)
+**Trazabilidad:** Spec [SPEC-004](./specs/SPEC-004-gestion-variantes-skus.md) | Flow [WF-004](./wireframes/flows/WF-004-gestion-variantes-skus.md)  
+**Contrato HTTP:** [`./api/openapi.yaml`](./api/openapi.yaml)  
+**Catálogo de errores:** [`./api/catalogo-errores.md`](./api/catalogo-errores.md)
+
+**Versión:** v1.1 — seguridad y errores armonizados
+
+---
 
 ## Historia de usuario principal
 
-Como gestor comercial,
-quiero definir y administrar variantes (SKU) de un producto según sus características distintivas —por ejemplo, talla y color—, cada una con su propia imagen, identificador interno inmutable (`variant_id`) y SKU comercial único (suministrado o autogenerado),
-para que el catálogo permita vender exactamente la versión que el cliente elige, y que cada canal pueda mostrarla y consultar su disponibilidad de forma independiente.
+**Como** gestor comercial,
 
-Esta funcionalidad solo aplica a productos con el atributo `tiene_variantes = true`. Una variante hereda del producto padre los datos generales (nombre, descripción, categoría, marca), pero tiene su propio SKU (inmutable) y su propia imagen. **El stock nunca lo almacena ni lo calcula este componente**: siempre es propiedad del componente de Inventario, tanto para variantes como para productos simples sin variantes.
+**quiero** definir y administrar variantes SKU de un producto según sus características distintivas, imagen y datos físicos propios,
 
-## Criterios de aceptación
+**para** que el catálogo pueda identificar exactamente cada unidad vendible, integrarla con Pricing, Inventario y Despacho, y permitir que los canales comercialicen la variante correcta.
+
+Esta funcionalidad aplica a productos con:
+
+```text
+tiene_variantes = true
+```
+
+Cada variante:
+
+- pertenece a un producto padre;
+- tiene `variant_id` interno e inmutable;
+- tiene SKU comercial único;
+- tiene atributos identificadores;
+- puede tener atributos no identificadores;
+- tiene imagen propia;
+- puede disponer de un perfil físico asociado al SKU;
+- no almacena precio ni stock como datos propios.
+
+El perfil físico del SKU pertenece a Catálogo y contiene:
+
+```text
+pesoKg
+largoCm
+anchoCm
+altoCm
+```
+
+Despacho consume estos datos para tomar decisiones logísticas, pero **el empaque no pertenece a Productos y Ofertas**.
+
+---
+
+# Criterios de aceptación
 
 | ID | Criterio |
 |---|---|
-| CA-01 | Solo un gestor comercial con los permisos correspondientes puede crear, modificar o desactivar variantes de un producto. |
-| CA-02 | Una variante debe asociarse a un producto existente con `tiene_variantes = true` y definir valores de las características identificadoras permitidas por el `tipo_producto_id` del padre (ej. talla, color), heredando los demás datos del producto cuando corresponda. |
-| CA-03 | El sistema genera siempre un `variant_id` interno, inmutable y no significativo. El **SKU comercial** de la variante puede ser proporcionado por el gestor/importación si cumple unicidad global y formato, o puede dejarse vacío para generación automática a partir de `sku_base` y atributos. El SKU no funciona como clave primaria interna. |
-| CA-04 | Cada variante debe tener al menos una imagen propia que la represente. |
-| CA-05 | El sistema debe impedir el registro de dos variantes de un mismo producto con exactamente la misma combinación de características identificadoras (ej. dos variantes "Talla 42 – Negro"). |
-| CA-06 | El gestor comercial puede consultar todas las variantes de un producto, filtrando por característica o por estado. |
-| CA-07 | Al crear una variante, el sistema debe **notificar** al componente de Inventario para que este inicialice su stock en 0; Variantes no almacena ni calcula esa cantidad, solo consulta disponibilidad cuando lo necesita. |
-| CA-08 | Un producto con `tiene_variantes = true` no puede pasar a estado "activo" ni mostrarse en los canales de venta si no tiene al menos una variante activa con SKU e imagen válidos. Un producto con `tiene_variantes = false` se activa directamente según las reglas de Gestión de Productos, sin pasar por esta funcionalidad. |
-| CA-09 | Al desactivar una variante, esta deja de mostrarse en canales y conserva su registro histórico; las demás variantes mantienen sus stocks. Si era la última variante ACTIVA, el producto padre pasa también a INACTIVO en la misma transacción de Catálogo. |
-| CA-10 | Las características identificadoras que definen la identidad comercial de una variante (ej. talla, color) son **inmutables** una vez creada, aunque el SKU haya sido suministrado externamente. Para cambiarlas se desactiva la variante y se crea otra. Atributos no identificadores e imagen sí son editables. |
-| CA-11 | Toda operación de registro, actualización o desactivación de una variante debe quedar trazable con usuario, fecha/hora y resultado. |
-| CA-12 | Pricing puede definir un precio específico para un SKU de variante; si no existe override, se usa el precio base vigente del producto. |
-| CA-13 | Los combos referencian componentes por SKU vendible; para una variante utilizan su SKU y para un producto simple su `sku_base`. |
-| CA-14 | Los pedidos confirmados conservan un snapshot del SKU vendido aunque la variante se desactive posteriormente. |
-| CA-15 | Una variante nueva inicia en BORRADOR; solo puede activarse si posee `variant_id`, SKU comercial único (suministrado o generado), atributos identificadores e imagen válidos, precio aplicable confirmado y registro inicializado en Inventario. |
-| CA-16 | Una variante INACTIVA puede reactivarse tras las mismas validaciones y conserva su SKU; el producto padre no se reactiva automáticamente. |
-| CA-17 | Una fila de carga masiva que crea variante identifica padre existente o creado como BORRADOR por grupo `sku_base`, `tipo_producto_id` y atributos. Catálogo genera `variant_id` y devuelve el SKU comercial validado o generado correlacionado por `batch_id`/`row_id`; un SKU informado se acepta solo si cumple las reglas de unicidad y formato. |
-| CA-18 | Una variante ACTIVA no es vendible mientras su producto padre esté BORRADOR o INACTIVO. La activación de una variante preparada no activa automáticamente el producto padre. |
-| CA-19 | Antes de la primera variante, el gestor configura por producto con `tiene_variantes=true` uno o más `caracteristica_id` LISTA activos y definidos por su **tipo de producto**; tras crear la primera variante el conjunto queda inmutable para el CRUD ordinario incluso si luego se desactiva. |
-| CA-20 | Cada variante proporciona exactamente un `valor_id` activo por característica identificadora configurada; la unicidad se valida por IDs de la combinación incluso frente a variantes inactivas. Renombrar etiquetas no cambia identidad ni SKU. Cambiar categorías de navegación no invalida esta configuración; un cambio incompatible de tipo de producto requiere migración. |
+| **CA-01** | Solo un gestor comercial autorizado puede crear, editar, activar, reactivar o desactivar variantes. |
+| **CA-02** | Una variante solo puede asociarse a un producto existente con `tiene_variantes=true`. |
+| **CA-03** | Antes de crear la primera variante, el producto debe tener configurado un conjunto no vacío de características identificadoras `LISTA`, activas y permitidas por su `tipo_producto_id`. |
+| **CA-04** | Después de crear la primera variante, el conjunto de características identificadoras queda inmutable para el CRUD ordinario. |
+| **CA-05** | Cada variante debe proporcionar exactamente un `valor_id` válido por cada característica identificadora configurada. |
+| **CA-06** | El sistema impide registrar dos variantes del mismo producto con la misma combinación de valores identificadores, incluso si una combinación anterior está inactiva. |
+| **CA-07** | El sistema genera siempre un `variant_id` interno, estable, inmutable y separado del SKU comercial. |
+| **CA-08** | El SKU comercial puede ser informado por el gestor/importación o generado automáticamente si se omite. En ambos casos debe ser único globalmente. |
+| **CA-09** | Una vez publicada la identidad comercial, el SKU no puede cambiarse mediante edición ordinaria. |
+| **CA-10** | Cada variante debe tener al menos una imagen propia válida. |
+| **CA-11** | La imagen puede reemplazarse sin cambiar `variant_id`, SKU ni atributos identificadores. |
+| **CA-12** | Los atributos identificadores son inmutables. Para corregirlos se debe desactivar la variante y crear una nueva. |
+| **CA-13** | Los atributos no identificadores pueden editarse sin cambiar la identidad comercial de la variante. |
+| **CA-14** | Una variante nueva inicia en estado `BORRADOR`. |
+| **CA-15** | Una variante puede pasar de `BORRADOR` a `ACTIVA` cuando cumple SKU válido, atributos identificadores válidos, imagen válida, producto padre compatible, Pricing preparado e Inventario inicializado. |
+| **CA-16** | Una variante `INACTIVA` puede reactivarse si vuelve a cumplir las condiciones de activación; conserva `variant_id` y SKU. |
+| **CA-17** | Reactivar una variante no reactiva automáticamente al producto padre. |
+| **CA-18** | Al desactivar una variante, esta deja de participar en nuevas ventas y nuevos combos, pero conserva histórico. |
+| **CA-19** | Si se desactiva la última variante `ACTIVA`, el producto padre pasa a `INACTIVO` según la regla definida en Catálogo. |
+| **CA-20** | Catálogo notifica o coordina la inicialización del SKU en Inventario, pero no almacena ni calcula `on_hand`, `reserved`, `available` ni `stock_version`. |
+| **CA-21** | Pricing puede definir un precio específico por SKU; si no existe, aplica el fallback vigente definido por Pricing. Catálogo no persiste el precio autoritativo. |
+| **CA-22** | Cada variante puede disponer de un perfil físico asociado a su SKU con `pesoKg`, `largoCm`, `anchoCm` y `altoCm`. |
+| **CA-23** | Los datos físicos usan unidades contractuales fijas: peso en kilogramos y dimensiones en centímetros. |
+| **CA-24** | `pesoKg`, `largoCm`, `anchoCm` y `altoCm` deben ser valores numéricos mayores que cero cuando se informen como perfil completo. |
+| **CA-25** | Modificar peso o dimensiones no modifica `variant_id`, SKU ni atributos identificadores. |
+| **CA-26** | El perfil físico puede editarse de forma independiente de la identidad de la variante. |
+| **CA-27** | El sistema no debe inventar valores físicos faltantes ni sustituirlos por cero. |
+| **CA-28** | La ausencia de perfil físico no amplía automáticamente las reglas de activación de la variante; cualquier cambio de esa regla requiere una decisión funcional explícita posterior. |
+| **CA-29** | Despacho puede consultar en lote los datos físicos de varios SKU mediante el contrato publicado. |
+| **CA-30** | La consulta física de Despacho devuelve únicamente información física y estado del SKU; no devuelve stock, reservas ni datos de pedido. |
+| **CA-31** | Productos y Ofertas no define `tipoEmpaque`, cantidad de paquetes, dimensiones finales del paquete ni volumen logístico final. |
+| **CA-32** | Despacho conserva ownership de empaque, agrupación y cálculo logístico final. |
+| **CA-33** | Toda creación, edición de atributos, cambio de imagen, cambio de perfil físico y cambio de estado debe quedar trazable con actor, fecha/hora y resultado. |
+| **CA-34** | Los pedidos confirmados conservan un snapshot de la variante vendida aunque esta se desactive posteriormente. |
+| **CA-35** | Una variante `ACTIVA` no es vendible si su producto padre permanece `BORRADOR` o `INACTIVO`. |
+| **CA-36** | Una creación masiva utiliza las mismas reglas de identidad, unicidad de SKU y atributos identificadores que una creación individual. |
+| **CA-37** | Si la carga masiva incorpora perfil físico, debe utilizar los mismos campos, unidades y validaciones que esta HU; no puede crear un modelo físico alternativo. |
+| **CA-38** | Una operación protegida sin token utilizable responde `401 TOKEN_INVALIDO` y no modifica la variante. |
+| **CA-39** | Una identidad autenticada sin autorización suficiente responde `403 SCOPE_INSUFICIENTE` y no modifica la variante. |
+| **CA-40** | `SIN_AUTORIZACION` no se utiliza en nuevos contratos ni como código de branching del frontend. |
 
-## Escenarios dado-cuando-entonces
+---
 
-**Escenario 1: Registrar una variante válida**
-● DADO que existe el producto "Zapatillas Running ProSpeed X" con `tiene_variantes = true`, en estado borrador o activo,
-● CUANDO el gestor comercial registra una variante con talla "42", color "Negro", una imagen propia y no suministra un SKU comercial manual,
-● ENTONCES el sistema genera un identificador interno inmutable (`variant_id`), genera automáticamente un SKU comercial único para la variante según la regla de nomenclatura, la guarda en estado "borrador" y notifica al componente de Inventario para que inicialice su stock en 0.
+# Escenarios dado-cuando-entonces
 
-**Escenario 2: Rechazar una combinación de características duplicada**
-● DADO que ya existe la variante "Talla 42 – Negro" para el producto,
-● CUANDO el gestor comercial intenta registrar otra variante con la misma combinación de talla y color,
-● ENTONCES el sistema rechaza el registro e indica que esa combinación ya existe para el producto.
+## Escenario 1 — Registrar una variante válida
 
-**Escenario 3: Rechazar una variante sin imagen propia**
-● DADO que el gestor comercial completa las características de la variante pero no adjunta ninguna imagen,
-● CUANDO intenta guardar la variante,
-● ENTONCES el sistema impide guardar y solicita al menos una imagen para esa variante.
+- **DADO** un producto con `tiene_variantes=true` y características identificadoras Talla y Color,
+- **CUANDO** el gestor registra Talla 42, Color Negro, una imagen válida y deja vacío el SKU,
+- **ENTONCES** el sistema genera `variant_id`, genera un SKU comercial único, crea la variante en `BORRADOR` y conserva la asociación con el producto padre.
 
-**Escenario 4: Impedir la activación de un producto con variantes sin ninguna variante válida**
-● DADO que un producto con `tiene_variantes = true` no tiene ninguna variante registrada o todas están desactivadas,
-● CUANDO el gestor comercial intenta activar el producto para que sea visible en los canales de venta,
-● ENTONCES el sistema impide la activación e indica que debe existir al menos una variante activa con SKU e imagen válidos.
+---
 
-**Escenario 5: Actualizar los atributos no identificadores de una variante**
-● DADO que existe una variante registrada,
-● CUANDO el gestor comercial modifica su imagen o un atributo que no forma parte del SKU (ej. material),
-● ENTONCES el sistema guarda los cambios, conserva el historial de la modificación y actualiza la información disponible para los canales, sin alterar el SKU existente.
+## Escenario 2 — SKU comercial proporcionado
 
-**Escenario 6: Rechazar el cambio de un atributo que forma parte del SKU**
-● DADO que existe la variante con SKU "ZAP-PSX-42-NEG" (talla 42, color negro),
-● CUANDO el gestor comercial intenta modificar el color a "blanco" en esa misma variante,
-● ENTONCES el sistema rechaza el cambio e indica que debe desactivar la variante actual y registrar una nueva con el atributo correcto, ya que el color forma parte del SKU y es inmutable.
+- **DADO** una nueva variante válida,
+- **CUANDO** el gestor informa el SKU `NKE-PEG-42-BLK`,
+- **ENTONCES** el sistema valida formato y unicidad y conserva ese SKU si no existe colisión.
 
-**Escenario 7: Consultar las variantes de un producto**
-● DADO que un producto tiene varias variantes registradas en distintos estados,
-● CUANDO el gestor comercial consulta las variantes filtrando por característica o por estado,
-● ENTONCES el sistema devuelve la lista de variantes que cumplen los filtros, con su SKU, imagen y estado.
+---
 
-**Escenario 8: Desactivar una variante**
-● DADO que existe una variante activa,
-● CUANDO el gestor comercial la desactiva,
-● ENTONCES el sistema conserva su registro, deja de mostrarla en los canales de venta y la marca como no disponible para nuevos pedidos, sin afectar a las demás variantes del producto.
+## Escenario 3 — Colisión de SKU
 
-**Escenario 9: Producto simple sin variantes**
-● DADO que un producto tiene `tiene_variantes = false`,
-● CUANDO el gestor comercial intenta acceder a la gestión de variantes de ese producto,
-● ENTONCES el sistema indica que el producto no maneja variantes y que su activación se administra en Gestión de Productos y su stock exclusivamente en Inventario.
+- **DADO** que `NKE-PEG-42-BLK` ya pertenece a otra unidad vendible,
+- **CUANDO** se intenta registrar otra variante con ese SKU,
+- **ENTONCES** el sistema rechaza la operación y no expone una variante incompleta.
 
-**Escenario 10: Usuario sin permisos intenta modificar una variante**
-● DADO que un usuario autenticado no tiene el rol de gestor comercial ni el permiso correspondiente,
-● CUANDO intenta registrar, actualizar o desactivar una variante,
-● ENTONCES el sistema rechaza la solicitud con un error de autorización y no aplica ningún cambio.
+---
 
-**Escenario 11: Activar una variante preparada**
-* **DADO** una variante BORRADOR con SKU, imagen válida y stock inicializado a 0 en Inventario,
-* **CUANDO** el gestor solicita activarla y se valida precio base del padre y entidades maestras,
-* **ENTONCES** pasa a ACTIVA sin modificar su SKU.
+## Escenario 4 — Rechazar combinación duplicada
 
-**Escenario 12: Desactivar la última variante activa**
-* **DADO** un producto activo con una sola variante activa,
-* **CUANDO** esta se desactiva,
-* **ENTONCES** el producto padre también pasa a INACTIVO y ambos dejan de ofrecerse para nuevas ventas.
+- **DADO** que el producto ya tiene una variante Talla 42 + Negro,
+- **CUANDO** se intenta crear otra con exactamente la misma combinación,
+- **ENTONCES** el sistema rechaza el registro.
 
-**Escenario 13: Creación masiva e individual con SKU comercial o autogenerado**
-* **DADO** una fila o solicitud de registro con producto padre y atributos identificadores,
-* **CUANDO** se envía con un SKU comercial informado (ej. de ERP/proveedor), el sistema valida formato y unicidad global y lo conserva; si el campo SKU se omite o viene vacío, el sistema genera automáticamente el SKU comercial a partir de la regla configurada,
-* **ENTONCES** Catálogo asigna un `variant_id` interno inmutable, registra la variante asociada a la fila/solicitud y notifica a Inventario.
+---
 
-**Escenario 14: Variante activa con padre borrador**
-* **DADO** una variante preparada y ACTIVA, cuyo producto padre continúa BORRADOR,
-* **CUANDO** un canal consulta artículos disponibles para comprar,
-* **ENTONCES** no se ofrece esa variante hasta que el producto padre sea activado satisfactoriamente.
+## Escenario 5 — Rechazar variante sin imagen propia
 
-**Escenario 15: Configurar y congelar identificadores**
-* **DADO** un producto con variantes aún sin variantes y características LISTA efectivas «Talla» y «Color»,
-* **CUANDO** el gestor selecciona ambas y crea su primera variante con un `valor_id` de cada una,
-* **ENTONCES** se genera su SKU y ya no se permite cambiar el conjunto identificador del producto.
+- **DADO** una combinación válida,
+- **CUANDO** el gestor intenta crear la variante sin una imagen válida,
+- **ENTONCES** el sistema impide completar el alta.
 
-**Escenario 16: Rechazar característica o valor inválido**
-* **DADO** un producto con identificadores LISTA configurados,
-* **CUANDO** se intenta crear una variante con valor desactivado, tipo TEXTO o una combinación repetida aunque esté inactiva,
-* **ENTONCES** se rechaza sin generar un nuevo SKU.
+---
 
-## Interacción con otros módulos
+## Escenario 6 — Editar atributo no identificador
 
-| Módulo | Necesidad de interacción | Información que esta funcionalidad recibe | Información que esta funcionalidad entrega |
+- **DADO** una variante existente,
+- **CUANDO** el gestor modifica un atributo no identificador como material,
+- **ENTONCES** el sistema guarda el cambio y conserva SKU, `variant_id` y atributos identificadores.
+
+---
+
+## Escenario 7 — Rechazar cambio de atributo identificador
+
+- **DADO** una variante Talla 42 + Negro,
+- **CUANDO** el gestor intenta cambiar Color a Blanco,
+- **ENTONCES** el sistema rechaza la edición e indica que debe crear una nueva variante.
+
+---
+
+## Escenario 8 — Activar variante preparada
+
+- **DADO** una variante `BORRADOR` con SKU, atributos, imagen, Pricing e Inventario preparados,
+- **CUANDO** el gestor solicita activarla,
+- **ENTONCES** la variante pasa a `ACTIVA` sin cambiar su identidad.
+
+---
+
+## Escenario 9 — Reactivar variante
+
+- **DADO** una variante `INACTIVA` que vuelve a cumplir las condiciones,
+- **CUANDO** el gestor solicita reactivarla,
+- **ENTONCES** pasa a `ACTIVA`, conserva SKU y `variant_id`, y no reactiva automáticamente al padre.
+
+---
+
+## Escenario 10 — Desactivar última variante activa
+
+- **DADO** un producto con una sola variante `ACTIVA`,
+- **CUANDO** esa variante se desactiva,
+- **ENTONCES** la variante pasa a `INACTIVA` y el producto padre también pasa a `INACTIVO`.
+
+---
+
+## Escenario 11 — Variante activa con padre borrador
+
+- **DADO** una variante `ACTIVA` cuyo producto padre está `BORRADOR`,
+- **CUANDO** un canal consulta productos elegibles para venta,
+- **ENTONCES** la variante no se ofrece comercialmente.
+
+---
+
+## Escenario 12 — Registrar perfil físico válido
+
+- **DADO** una variante con SKU `ZAP-RUN-42`,
+- **CUANDO** el gestor registra:
+  - peso: `1.4 kg`,
+  - largo: `35 cm`,
+  - ancho: `22 cm`,
+  - alto: `13 cm`,
+- **ENTONCES** el sistema guarda el perfil físico asociado a ese SKU.
+
+---
+
+## Escenario 13 — Editar perfil físico sin alterar identidad
+
+- **DADO** una variante `ZAP-RUN-42` con peso `1.4 kg`,
+- **CUANDO** el gestor corrige el peso a `1.35 kg`,
+- **ENTONCES** se actualiza el perfil físico y se conservan el mismo SKU y `variant_id`.
+
+---
+
+## Escenario 14 — Rechazar peso inválido
+
+- **DADO** una variante existente,
+- **CUANDO** se intenta registrar `pesoKg=0`,
+- **ENTONCES** el sistema rechaza la actualización y conserva el perfil anterior.
+
+---
+
+## Escenario 15 — Rechazar dimensión inválida
+
+- **DADO** una variante existente,
+- **CUANDO** se intenta registrar `altoCm=-2`,
+- **ENTONCES** el sistema rechaza la actualización.
+
+---
+
+## Escenario 16 — Perfil físico incompleto
+
+- **DADO** una variante sin todas sus dimensiones físicas,
+- **CUANDO** Despacho consulta sus datos físicos,
+- **ENTONCES** el sistema no inventa datos faltantes y reporta la condición de incompletitud según el contrato.
+
+---
+
+## Escenario 17 — Consulta física en lote
+
+- **DADO** varios SKU con perfil físico completo,
+- **CUANDO** `modulo-despacho` realiza una consulta en lote,
+- **ENTONCES** Catálogo devuelve para cada SKU encontrado su estado, peso, dimensiones y fecha de actualización.
+
+---
+
+## Escenario 18 — SKU inexistente en lote
+
+- **DADO** una consulta con un SKU válido y otro inexistente,
+- **CUANDO** Despacho realiza la consulta,
+- **ENTONCES** la respuesta distingue los SKU encontrados de los no encontrados.
+
+---
+
+## Escenario 19 — Despacho no recibe stock
+
+- **DADO** una consulta física de Despacho,
+- **CUANDO** Catálogo responde,
+- **ENTONCES** la respuesta no incluye stock físico, reservado, disponible ni datos de reserva.
+
+---
+
+## Escenario 20 — Productos no define empaque
+
+- **DADO** un SKU con peso y dimensiones válidos,
+- **CUANDO** Despacho necesita preparar el envío,
+- **ENTONCES** Despacho utiliza esos datos para decidir el empaque y Catálogo no determina caja, bolsa, cantidad de paquetes ni volumen logístico final.
+
+---
+
+## Escenario 21 — Creación masiva
+
+- **DADO** una fila válida de carga masiva con producto padre y combinación identificadora,
+- **CUANDO** Bulk solicita crear la variante,
+- **ENTONCES** Catálogo aplica las mismas reglas de SKU, `variant_id`, combinación e identidad que en el alta individual.
+
+---
+
+## Escenario 22 — Token inválido
+
+- **DADO** una operación protegida de variantes,
+- **CUANDO** la petición no puede autenticarse mediante un token utilizable,
+- **ENTONCES** responde `401 TOKEN_INVALIDO` y no aplica cambios.
+
+---
+
+## Escenario 23 — Permisos insuficientes
+
+- **DADO** una identidad autenticada,
+- **CUANDO** intenta crear, editar, activar, reactivar o desactivar sin autorización suficiente,
+- **ENTONCES** responde `403 SCOPE_INSUFICIENTE`, no aplica cambios y no necesita revelar el permiso exacto faltante.
+
+---
+
+# Interacción con otros módulos
+
+| Módulo | Necesidad | Información que recibe Catálogo/Variantes | Información que entrega |
 |---|---|---|---|
-| Canal Marketplace | Mostrar al cliente las variantes disponibles de un producto para que elija la versión exacta a comprar. | Identificador del producto consultado. | Lista de variantes con SKU, característica distintiva (talla/color), imagen propia y estado (la disponibilidad de stock la entrega Inventario, no este componente). |
-| Canal Chatbot | Permitir que el cliente indique conversacionalmente la variante deseada (ej. "talla 42, negro") y validar que exista. | Producto y características mencionadas en la conversación. | SKU de la variante encontrada, su imagen y estado. |
-| Canal Retail | Permitir que el vendedor seleccione o escanee la variante exacta durante la venta asistida. | Identificador de producto o SKU escaneado. | Detalle de la variante: SKU, imagen, características y estado. |
-| Ventas y Postventa | Registrar en el pedido el SKU exacto de la variante vendida, no solo el producto genérico. | SKU de la variante incluida en el pedido. | Nombre, características, imagen y estado de esa variante, como snapshot del pedido. |
-| Seguridad y Usuarios | Verificar quién puede crear, actualizar o desactivar variantes. | Identidad autenticada, roles y permisos mediante el mecanismo de autenticación acordado. | Solicitudes de validación de identidad o permisos, cuando el mecanismo de integración lo requiera. |
+| **Marketplace** | Mostrar la variante exacta elegible para compra. | Producto o filtros de selección. | SKU, atributos, imagen y estado; disponibilidad viene de Inventario. |
+| **Chatbot** | Resolver una variante a partir de atributos mencionados. | Producto y valores como talla/color. | Variante/SKU encontrada e información comercial de Catálogo. |
+| **Retail** | Seleccionar o escanear la variante correcta. | Producto o SKU. | Detalle de variante, identidad y estado. |
+| **Ventas/Postventa** | Registrar el SKU exacto del pedido. | SKU del pedido. | Datos descriptivos/snapshot de la variante cuando corresponda. |
+| **Despacho** | Obtener peso y dimensiones de varios SKU para preparar el despacho. | Lista de SKU. | Estado, `pesoKg`, dimensiones en cm y fecha de actualización. |
+| **Seguridad y Usuarios** | Autenticar y autorizar gestión y acceso servicio-a-servicio. | Identidad, roles y permisos según contrato. | `401 TOKEN_INVALIDO` o `403 SCOPE_INSUFICIENTE` cuando corresponde. |
 
-## Dependencias dentro de Productos y Ofertas
+---
 
-Estas son coordinaciones internas con otras funcionalidades del mismo módulo.
+# Dependencias dentro de Productos y Ofertas
 
-| Funcionalidad interna | Información necesaria |
+| Funcionalidad interna | Dependencia |
 |---|---|
-| Gestión de productos (misma persona) | Identificador, `sku_base`, nombre, categoría, marca, estado y bandera `tiene_variantes` del producto padre, del cual la variante hereda los datos generales. |
-| Marcas y características — Persona 1 | Catálogo de características disponibles (ej. talla, color) para asociarlas a cada variante como identificador del SKU. |
-| Inventario y stock — Persona 6 | Notificación de variante creada o desactivada, para que Inventario inicialice y gestione su stock de forma independiente por SKU. Variantes nunca almacena ni calcula cantidades; solo consulta disponibilidad cuando el canal lo requiere. |
-| Gestión de precios — Persona 3 | Una variante puede tener precio específico por SKU; si no existe, hereda el precio base vigente del producto. |
-| Agrupaciones y combos — Persona 5 | Los combos referencian componentes por SKU vendible. |
+| **Gestión de Productos** | Producto padre, `sku_base`, `tiene_variantes`, categoría, marca y estado. |
+| **Características** | Catálogo de características y valores. |
+| **Tipo de Producto–Característica** | Define qué atributos aplican al producto. |
+| **Inventario** | Inicializa y administra stock por SKU; Catálogo no guarda cantidades. |
+| **Pricing** | Administra precio por producto/SKU. |
+| **Combos** | Referencia componentes mediante SKU vendible. |
+| **Bulk** | Puede crear variantes respetando las mismas reglas de identidad. |
 
-## Reglas de negocio consolidadas
+---
 
-1. Una variante puede tener precio específico en Pricing; si no lo tiene, hereda el precio base del producto.
-2. `tiene_variantes` es inmutable después de crear el producto.
-3. Combos trabaja con SKUs vendibles.
-4. Promociones pueden tener alcance a nivel producto o SKU según su configuración.
-5. Los pedidos confirmados conservan snapshot de la variante aunque después sea desactivada.
+# Reglas consolidadas
+
+1. `variant_id` y SKU son identidades diferentes.
+2. El SKU es comercial; `variant_id` es interno.
+3. Una variante pertenece a un producto `tiene_variantes=true`.
+4. Las características identificadoras se congelan desde la primera variante.
+5. La combinación identificadora es única dentro del producto.
+6. El SKU es único globalmente.
+7. Imagen y atributos no identificadores son editables.
+8. SKU y atributos identificadores no se editan ordinariamente.
+9. Inventario es owner de stock.
+10. Pricing es owner de precio.
+11. Catálogo es owner del perfil físico del SKU.
+12. El perfil físico utiliza kg y cm.
+13. El perfil físico puede cambiar sin alterar identidad.
+14. Despacho consume el perfil físico, pero es owner del empaque.
+15. Catálogo no almacena ni calcula stock para Despacho.
+16. La ausencia de perfil físico no se cubre con valores inventados.
+17. La consulta física debe soportar múltiples SKU.
+18. Los cambios relevantes deben quedar trazables.
+19. `401` utiliza `TOKEN_INVALIDO`.
+20. `403` utiliza `SCOPE_INSUFICIENTE`.
+21. `SIN_AUTORIZACION` queda retirado de nuevos contratos.
+
+---
+
+# Autoridad documental
+
+La regla funcional detallada pertenece a:
+
+```text
+SPEC-004-gestion-variantes-skus.md
+```
+
+Las rutas y schemas HTTP pertenecen a:
+
+```text
+api/openapi.yaml
+```
+
+Las decisiones de ownership y estructura pertenecen a:
+
+```text
+Arquitectura.md
+Modelo_Conceptual.md
+Contrato_Api.md
+```
+
+Si existe una contradicción funcional, la HU debe corregirse para alinearse con la SPEC y no mantener dos reglas distintas.
+
+---
+
+# Criterio de completitud de la HU
+
+La historia se considera cubierta cuando existe evidencia de que:
+
+- [ ] solo productos con variantes usan este flujo;
+- [ ] `variant_id` es estable;
+- [ ] SKU puede ser informado o autogenerado;
+- [ ] SKU es único;
+- [ ] la combinación identificadora es única;
+- [ ] atributos identificadores son inmutables;
+- [ ] imagen propia está soportada;
+- [ ] BORRADOR / ACTIVA / INACTIVA funcionan;
+- [ ] desactivar última variante afecta al padre según regla;
+- [ ] Catálogo no persiste precio ni stock;
+- [ ] el perfil físico puede registrarse;
+- [ ] peso y dimensiones se validan;
+- [ ] se usan kg y cm;
+- [ ] editar perfil físico no cambia identidad;
+- [ ] Despacho puede consultar varios SKU en lote;
+- [ ] la consulta física no expone stock;
+- [ ] Productos no define empaque;
+- [ ] existen pruebas para validaciones físicas y consulta en lote;
+- [ ] los cambios relevantes quedan auditados;
+- [ ] 401 usa `TOKEN_INVALIDO`;
+- [ ] 403 usa `SCOPE_INSUFICIENTE`;
+- [ ] `SIN_AUTORIZACION` no se utiliza en nuevos contratos.

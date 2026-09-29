@@ -1,664 +1,748 @@
 # WF-003 — Gestión de productos (CRUD principal)
 
-> **Fuentes normativas:** SPEC individual de esta funcionalidad (`../../specs/SPEC-003-gestion-productos-crud.md`), HU individual de esta funcionalidad (`../../hu/HU-003-gestion-productos-crud.md`), `../DESIGN.md` y `../INDEX.md`. Ante contradicción, prevalece SPEC → HU → WF. Los nombres/eventos de Ventas y Postventa son contratos **provisionales no homologados**; el prototipo no debe simular pagos realizados ni confirmaciones externas como si estuvieran implementadas. Las anotaciones, supuestos, preguntas y referencias técnicas permanecen en este documento y no se muestran como elementos de la interfaz simulada.
-
-## 0. Instrucciones para el agente
-
-Genera un wireframe detallado, anotado y navegable para la gestión del ciclo de
-vida de productos descrita en este archivo.
-
-Antes de diseñar:
-
-1. Consulta `../../specs/SPEC-003-gestion-productos-crud.md`.
-2. Consulta `../../hu/HU-003-gestion-productos-crud.md`.
-3. Consulta `../DESIGN.md`.
-4. Consulta `../INDEX.md` para conservar el ID `WF-003`, el nombre del flujo y
-   las rutas reservadas de sus artefactos.
-5. Usa este documento como definición específica de composición, navegación,
-   interacción y estados de interfaz.
-6. Consulta `WF-004-gestion-variantes-skus.md` únicamente para representar el
-   enlace y la condición de activación de productos con variantes; no mezcles
-   ambos alcances en una sola interfaz.
-
-Prioridad de fuentes:
-
-1. La especificación define las reglas de negocio, restricciones globales y
-   límites de responsabilidad del CRUD de productos.
-2. La historia de usuario define los criterios de aceptación, escenarios y
-   necesidades del gestor comercial.
-3. Este documento define la composición, navegación y comportamiento visible
-   del flujo.
-4. `DESIGN.md` define la representación visual compartida.
-5. `INDEX.md` define el identificador y la ubicación de los artefactos.
-
-Si las fuentes se contradicen, un contrato no está definido o una decisión no
-puede deducirse de forma inequívoca, no inventes una resolución. Registra la
-cuestión en **Preguntas y decisiones pendientes**, identifica las pantallas
-afectadas y conserva en el prototipo el comportamiento más neutral que no
-contradiga las fuentes.
-
-Reglas de producción:
-
-- No agregues campos, permisos, endpoints, transiciones de estado ni reglas de
-  validación que no estén documentadas.
-- Diferenciar claramente **Guardar borrador** de **Activar producto**.
-- Para crear un producto en BORRADOR se requieren:
-  - nombre;
-  - descripción;
-  - `categoria_id`;
-  - `tipo_producto_id`;
-  - `marca_id`;
-  - precio base referencial;
-  - `sku_base`;
-  - `tiene_variantes`.
-- No se exige imagen ni completar todavía valores de características para guardar el borrador.
-- `categoria_id` representa navegación/clasificación.
-- `tipo_producto_id` define el esquema de atributos.
-- Las categorías no aportan ni heredan características.
-- Para activar o reactivar se valida:
-  - categoría activa;
-  - tipo de producto activo;
-  - marca activa;
-  - todos los valores obligatorios definidos por el `tipo_producto_id`;
-  - al menos una imagen;
-  - preparación confirmada en Pricing;
-  - inicialización confirmada en Inventario para los SKU vendibles.
-- Si el tipo de producto no define ninguna característica obligatoria, **no se exige inventar una característica**.
-- Si `tiene_variantes=true`, además debe existir al menos una variante ACTIVA válida con SKU, atributos, imagen, precio aplicable e inventario inicializado (su gestión pertenece a `WF-004`).
-- `tiene_variantes` no se modifica mediante edición ordinaria cuando ya existe identidad comercial.
-- `tipo_producto_id` puede corregirse únicamente mientras el producto permanezca en un estado compatible con la regla de SPEC-010; si ya existen variantes o identidad publicada, el cambio requiere migración controlada.
-- El slug del producto pertenece a Catálogo Core.
-- El stock pertenece exclusivamente a Inventario.
-- Los cambios posteriores de precio pertenecen exclusivamente a Pricing.
-- Valida la unicidad global y bloqueante de `sku_base`. La combinación de nombre + marca
-  se evalúa como una advertencia no bloqueante de posible duplicado, permitiendo continuar tras confirmación.
-- Los cambios válidos de un producto activo se publican inmediatamente. Si una
-  edición rompe una condición de activación, representa el rechazo completo
-  del guardado y conserva la última versión válida.
-- La desactivación es una baja lógica. No incluyas eliminación física y no
-  sugieras que se borran pedidos, referencias ni historial.
-- La reactivación debe volver a validar todas las condiciones de activación;
-  no la representes como un cambio de estado incondicional.
-- No incorpores dentro de este flujo la administración de variantes, ofertas,
-  promociones, cupones, categorías, marcas, características ni metadatos SEO.
-- El evento `catalog.product.deactivated` es contexto técnico. No lo conviertas
-  en una acción manual ni expongas su nombre técnico como microcopy para el
-  usuario.
-- No elijas una librería de UI ni una estrategia CSS.
-- No consumas APIs reales ni uses datos personales o comerciales reales.
-- Usa datos ficticios coherentes entre listado, detalle, formulario y diálogos.
-- Representa todos los estados obligatorios de este documento: carga, datos,
-  vacío inicial, filtros sin resultados, validación, error recuperable, sin
-  conexión, permisos, sesión expirada, éxito y conflicto de datos.
-- Numera las anotaciones como `A-01`, `A-02`, `A-03`, etc. Las anotaciones son
-  documentación del wireframe y no deben renderizarse dentro de la interfaz
-  del prototipo HTML.
-- Los supuestos y preguntas abiertas pertenecen a este documento y no deben
-  aparecer como contenido de la interfaz simulada.
-- El comportamiento responsivo debe verificarse redimensionando el viewport;
-  no agregues controles internos para simular escritorio, tablet o móvil.
-- Las rutas, permisos, límites y contratos marcados como propuestos o
-  pendientes no deben presentarse como decisiones técnicas confirmadas.
-
-### Formato del entregable
-
-Genera un prototipo navegable con HTML, CSS y JavaScript estáticos:
-
-- Guarda el prototipo en
-  `../prototipos/WF-003-gestion-productos-crud/index.html`.
-- El punto de entrada debe ser `index.html` y funcionar sin proceso de
-  compilación.
-- Usa rutas y recursos relativos.
-- No uses React ni dependencias del frontend productivo.
-- No requieras conexión a servicios externos ni consumas APIs reales.
-- Usa datos ficticios representativos y consistentes durante toda la
-  navegación.
-- Simula únicamente las interacciones necesarias para validar este flujo.
-- Implementa navegación funcional entre listado, creación/edición, detalle,
-  confirmaciones y estados alternativos.
-- Implementa comportamiento responsivo real mediante HTML/CSS para escritorio,
-  tablet y móvil; no incluyas un selector de dispositivo.
-- Aplica el estilo monocromático, sin sombras y de baja fidelidad definido en
-  `DESIGN.md`.
-- No muestres anotaciones `A-xx`, supuestos, preguntas abiertas, endpoints,
-  eventos ni otra documentación interna dentro de la interfaz simulada.
-- El prototipo debe poder recorrerse con teclado y no depender exclusivamente
-  del color, de un icono o de una imagen para comunicar estado o acción.
-
-### Entregables esperados
-
-1. Listado administrativo de productos con filtros por categoría, marca y
-   estado.
-2. Estados diferenciados de catálogo vacío, filtros sin resultados y error de
-   carga.
-3. Formulario de creación que guarde un producto en borrador con los campos
-   mínimos documentados.
-4. Formulario de edición con `tiene_variantes` de solo lectura y precio sin
-   edición posterior.
-5. Detalle del producto con estado, datos generales, requisitos de activación
-   y acceso contextual a `WF-004` cuando corresponda.
-6. Activación de borrador con validación de requisitos y variante de rechazo
-   por información incompleta.
-7. Desactivación mediante confirmación de baja lógica.
-8. Reactivación con revalidación y variante de rechazo por relaciones o datos
-   que dejaron de ser válidos.
-9. Error de unicidad bloqueante de `sku_base`, advertencia no bloqueante de posible duplicado por nombre + marca, error de relación y
-   conflicto de datos desactualizados.
-10. Estados de carga, error, sin conexión, permisos, sesión expirada y éxito.
-11. Navegación funcional con conservación simulada de filtros y retorno de
-    foco/contexto.
-12. Comportamiento responsivo verificable al redimensionar el viewport.
+> **Fuentes normativas:** `././specs/SPEC-003-gestion-productos-crud.md`, `././hu/HU-003-gestion-productos-crud.md`, `././api/openapi.yaml`, `././api/catalogo-errores.md`, `./DESIGN.md`, `./INDEX.md` y `WF-004-gestion-variantes-skus.md`.
+>
+> Ante contradicción funcional prevalece **SPEC → HU → WF**. Para rutas y schemas HTTP prevalece OpenAPI.
+>
+> Esta versión incorpora los **datos físicos del SKU vendible de productos simples**. Si el producto maneja variantes, el perfil físico se administra por variante en WF-004.
 
 ---
 
-## 1. Metadatos
+# 0. Instrucciones para el agente
+
+Genera un wireframe detallado y navegable para el CRUD principal de productos.
+
+Antes de producir el HTML:
+
+1. consultar SPEC-003;
+2. consultar HU-003;
+3. consultar OpenAPI;
+4. consultar DESIGN.md;
+5. consultar INDEX.md;
+6. consultar WF-004 únicamente para la separación del producto padre y sus variantes.
+
+---
+
+## 0.1. Reglas de producción
+
+- Crear siempre en `BORRADOR`.
+- Diferenciar **Guardar borrador** de **Activar producto**.
+- Mantener visibles:
+  - nombre;
+  - SKU base;
+  - categoría;
+  - tipo;
+  - marca;
+  - manejo de variantes;
+  - estado.
+- No mostrar nombres técnicos de campos al usuario como:
+  - `categoria_id`;
+  - `tipo_producto_id`;
+  - `marca_id`;
+  - `product_id`;
+  - `pesoKg`;
+  - `largoCm`;
+  - `on_hand`;
+  - `stock_version`.
+- SKU es un término operacional permitido.
+- Para producto simple, mostrar:
+  - Peso (kg);
+  - Largo (cm);
+  - Ancho (cm);
+  - Alto (cm).
+- Para producto con variantes:
+  - no mostrar campos físicos del padre;
+  - mostrar texto explicativo;
+  - ofrecer **Gestionar variantes** en detalle.
+- No agregar:
+  - tipo de empaque;
+  - cantidad de paquetes;
+  - volumen logístico final;
+  - controles de stock;
+  - controles de reserva;
+  - edición de precio posterior.
+- El perfil físico puede estar:
+  - Completo;
+  - Incompleto;
+  - Sin registrar.
+- No usar cero para representar “sin dato”.
+- Datos físicos no bloquean por sí solos activación en esta versión.
+- `tiene_variantes` se define al crear.
+- En edición se representa como información de solo lectura.
+- SKU base se representa como inmutable en edición.
+- El precio base se captura en creación y es informativo posteriormente.
+- No mostrar endpoints, eventos, scopes ni códigos técnicos como `TOKEN_INVALIDO`/`SCOPE_INSUFICIENTE` en el HTML.
+- Traducir 401/403 a estados operativos de sesión/acceso, conservando el código solo para lógica interna.
+- Cumplir DESIGN.md:
+  - blanco/grises;
+  - sin sombras;
+  - bordes;
+  - responsive;
+  - mínimo 44×44;
+  - accesibilidad.
+
+---
+
+## 0.2. Entregable HTML
+
+Ruta:
+
+```text
+./prototipos/WF-003-gestion-productos-crud/index.html
+```
+
+Debe:
+
+- funcionar sin compilación;
+- usar HTML/CSS/JS estáticos;
+- no consumir APIs;
+- ser navegable;
+- representar carga, vacío, error, validación, permisos, sesión y conflicto;
+- conservar datos ante errores;
+- poder recorrerse con teclado.
+
+---
+
+# 1. Metadatos
 
 | Campo | Valor |
 |---|---|
-| ID del wireframe | `WF-003` |
-| Nombre del flujo | Gestión de productos (CRUD principal) |
-| Versión | 0.1 |
-| Estado | Borrador |
+| ID | WF-003 |
+| Nombre | Gestión de productos (CRUD principal) |
+| Versión | **0.7** |
+| Estado | Actualizado |
 | Responsable | Gabriel Poma Gutierrez |
 | Rama | `poma` |
-| Fecha | 2026-09-17 |
-| Última actualización | 2026-09-18 |
+| Fecha inicial | 2026-09-17 |
+| Última actualización | 2026-09-28 |
 
-## 2. Trazabilidad
+---
 
-| Fuente | Identificador o sección | Qué aporta al flujo |
-|---|---|---|
-| [`SPEC-003-gestion-productos-crud.md`](../../specs/SPEC-003-gestion-productos-crud.md) | Requisitos 1–4; secciones 5 y 6 | Ciclo de vida, reglas de integridad, seguridad y fuera de alcance |
-| [`HU-003-gestion-productos-crud.md`](../../hu/HU-003-gestion-productos-crud.md) | MDPYO-6; CA-01–CA-12; escenarios 1–10 | Necesidad del gestor y resultados verificables |
-| [`DESIGN.md`](../DESIGN.md) | Layout, componentes, contraste y accesibilidad | Lenguaje visual neutral de baja fidelidad |
-| [`INDEX.md`](../INDEX.md) | Fila WF-003 | ID, nombre, responsable y rutas reservadas |
+# 2. Objetivo
 
-### Funcionalidades incluidas
+Permitir al gestor:
 
-- Crear un producto en estado borrador con sus datos mínimos.
-- Consultar el listado con filtros por categoría, marca y estado, y acceder al detalle.
-- Editar atributos permitidos conservando las reglas del estado actual.
-- Activar, desactivar y reactivar un producto mediante baja lógica.
-- Mostrar slug generado, estado y trazabilidad administrativa relevante.
-- Comunicar las notificaciones iniciales a Pricing e Inventario como resultados del guardado, sin ofrecer controles sobre esos módulos.
+1. consultar productos;
+2. crear borradores;
+3. editar datos permitidos;
+4. completar información de publicación;
+5. administrar datos físicos del SKU cuando el producto sea simple;
+6. activar;
+7. desactivar;
+8. reactivar.
 
-### Fuera de alcance
+---
 
-- Gestión de variantes o SKU derivados; corresponde a `WF-004`.
-- Cambios de precio posteriores a la creación, stock, ofertas, promociones o cupones.
-- Creación o mantenimiento de categorías, marcas y características.
-- Metadatos SEO adicionales; este flujo solo muestra el slug generado.
-- Eliminación física, edición de eventos o acceso a detalles técnicos de auditoría.
-
-## 3. Usuario objetivo
+# 3. Usuario objetivo
 
 | Aspecto | Definición |
 |---|---|
 | Persona | Gestor comercial |
-| Rol en el sistema | Administrador operativo del catálogo |
-| Nivel técnico | Intermedio |
-| Contexto de uso | Backoffice web, uso frecuente y orientado a escritorio |
-| Necesidad principal | Mantener productos íntegros y controlar cuándo son visibles para venta |
-| Permisos relevantes | Consultar según autorización; crear, editar y cambiar estado solo con permisos correspondientes |
-| Dispositivo principal | Escritorio; tablet y móvil como soporte |
+| Contexto | Backoffice |
+| Nivel | Intermedio |
+| Dispositivo | Escritorio, con soporte tablet/móvil |
+| Administra | Información de Catálogo |
+| No administra | Stock, reservas, empaque, precios posteriores |
 
-## 4. Objetivo del flujo
+---
 
-**El usuario debe poder** crear, localizar, revisar, editar y cambiar el estado de un producto **para** mantener el catálogo central consistente y publicar únicamente productos válidos.
+# 4. Precondiciones
 
-### Resultado exitoso
+- sesión válida;
+- permisos;
+- catálogos maestros disponibles;
+- para activar, dependencias funcionales preparadas.
 
-El producto queda creado en borrador, actualizado o en el estado solicitado; la interfaz muestra el estado vigente y confirma la operación. Al crear, se generan identificador y slug. Los cambios válidos sobre un producto activo se publican inmediatamente.
+---
 
-### Indicadores de finalización
+# 5. Pantallas
 
-- Confirmación no bloqueante con el nombre y la operación realizada.
-- Redirección al detalle o actualización del detalle/listado conservando el contexto.
-- Estado textual actualizado: `Borrador`, `Activo` o `Inactivo`.
-- Si la operación falla, no se presenta un estado nuevo ni se pierden datos editados.
+| ID | Pantalla | Propósito |
+|---|---|---|
+| S-01 | Productos | Listar y filtrar |
+| S-01-L | Cargando | Estado inicial |
+| S-01-V | Vacío | Sin productos |
+| S-01-F | Sin resultados | Filtros |
+| S-01-E | Error | Recuperación |
+| S-02 | Nuevo producto | Crear BORRADOR |
+| S-02-E | Errores | Validación |
+| S-03 | Detalle | Consultar y cambiar estado |
+| S-04 | Editar | Modificar campos permitidos |
+| S-05 | Activar/reactivar/desactivar | Confirmación |
+| S-06 | Sin permisos/sesión | Seguridad |
+| S-07 | Conflicto | Dato desactualizado |
 
-## 5. Precondiciones y disparador
+---
 
-### Precondiciones
-
-- Sesión autenticada y autorización.
-- Catálogo de categorías disponible.
-- Catálogo de tipos de producto disponible.
-- Catálogo de marcas disponible.
-- Para activar/reactivar:
-  - categoría, tipo y marca activos;
-  - valores obligatorios del tipo completos;
-  - al menos una imagen;
-  - Pricing preparado;
-  - Inventario inicializado.
-- No exigir "al menos una característica" cuando el tipo no tenga características obligatorias.
-
-### Puntos de entrada
-
-- Ruta propuesta del listado: `/productos`.
-- Creación: botón **Nuevo producto**; ruta propuesta `/productos/nuevo`.
-- Detalle: selección de una fila; ruta propuesta `/productos/:id`.
-- Edición: acción **Editar**; ruta propuesta `/productos/:id/editar`.
-- Se conservan filtros, orden y página al volver al listado.
-
-### Salidas del flujo
-
-| Resultado | Destino o comportamiento |
-|---|---|
-| Éxito de creación | Detalle del nuevo borrador con confirmación |
-| Éxito de edición | Detalle actualizado; conserva estado vigente |
-| Éxito de cambio de estado | Detalle y fila del listado reflejan el nuevo estado |
-| Cancelación | Regresa al origen; si había cambios, solicita confirmar descarte |
-| Error recuperable | Permanece en pantalla, conserva datos y permite corregir o reintentar |
-| Sin permisos | Explicación segura y retorno a una ubicación permitida |
-| Sesión expirada | Solicita autenticación y procura retornar al contexto anterior |
-
-## 6. Secuencia principal
-
-### Flujo A — Consultar productos
-
-1. El usuario entra al listado.
-2. El sistema carga productos administrativos y filtros disponibles.
-3. El usuario filtra por categoría, marca o estado.
-4. El sistema actualiza resultados y cantidad encontrada.
-5. El usuario abre el detalle de un producto y puede volver sin perder contexto.
-
-### Flujo B — Crear producto en borrador
-
-1. El usuario selecciona **Nuevo producto**.
-2. Completa nombre, descripción, categoría, **tipo de producto**, marca, precio base referencial, `sku_base` y `tiene_variantes`.
-3. El sistema valida existencia/estado de categoría, tipo y marca, unicidad de `sku_base` y posible duplicado nombre+marca.
-4. El usuario selecciona **Guardar borrador**.
-5. Catálogo genera identificador y slug, guarda el producto como BORRADOR e inicia de forma idempotente la preparación correspondiente en Pricing y, cuando aplique, Inventario.
-6. La interfaz informa el resultado sin asumir que la creación del borrador equivale a publicación comercial.
-
-### Flujo C — Editar producto
-
-1. Cargar `categoria_id`, `tipo_producto_id`, marca, datos generales, características, imágenes y estado.
-2. Mostrar `tiene_variantes` como solo lectura cuando su modificación ordinaria no esté permitida.
-3. Si el producto ya posee identidad publicada o variantes, no ofrecer cambio ordinario de `tipo_producto_id`.
-4. Si el producto está ACTIVO, rechazar de forma completa cualquier edición que rompa las condiciones de activación.
-
-### Flujo D — Activar o reactivar
-
-1. Solicitar activación/reactivación.
-2. Revalidar categoría, tipo de producto y marca.
-3. Obtener el esquema vigente del `tipo_producto_id`.
-4. Exigir únicamente los valores marcados como obligatorios.
-5. Verificar imagen.
-6. Si `tiene_variantes=true`, verificar al menos una variante ACTIVA válida.
-7. Verificar preparación de Pricing e Inventario.
-8. Solo entonces cambiar el producto a ACTIVO.
-
-### Flujo E — Desactivar
-
-1. El usuario selecciona **Desactivar** sobre un producto activo.
-2. Un diálogo explica que dejará de estar disponible para nuevas ventas sin eliminar historial.
-3. El usuario confirma.
-4. El sistema cambia a `Inactivo`, emite `catalog.product.deactivated` y actualiza la interfaz.
-
-### Flujos alternativos
-
-| ID | Condición | Comportamiento esperado | Retorno |
-|---|---|---|---|
-| `ALT-01` | `sku_base` duplicado | Error bloqueante asociado al campo; conserva el formulario | Flujo B, paso 2 |
-| `ALT-02` | Nombre + marca coincidentes | Advertencia no bloqueante de posible duplicado con productos coincidentes; permite continuar tras confirmación | Flujo B, paso 2 |
-| `ALT-03` | Categoría o marca inactiva | Bloquea guardado e indica relación inválida | Flujo B/C |
-| `ALT-04` | Activación incompleta | Lista requisitos faltantes y conserva el estado | Flujo D, paso 1 |
-| `ALT-05` | Edición invalida un producto activo | Rechaza el guardado y conserva última versión válida | Flujo C, paso 3 |
-| `ALT-06` | Producto ya inactivo | Informa que no hay cambios por aplicar | Detalle |
-| `ALT-07` | Producto no encontrado o dato desactualizado | Ofrece recargar o volver al listado | Origen seguro |
-| `ALT-08` | Filtros sin coincidencias | Estado contextual con **Limpiar filtros** | Listado |
-
-## 7. Inventario de pantallas y variantes
-
-| ID | Pantalla o variante | Propósito | Presentación | Obligatoria |
-|---|---|---|---|---|
-| `S-01` | Listado de productos | Consultar, filtrar y acceder a acciones | `/productos` propuesta | Sí |
-| `S-01-E` | Vacío, sin resultados o error | Diferenciar ausencia de datos, filtros y fallo | Variante de S-01 | Sí |
-| `S-02` | Crear o editar producto | Capturar y validar datos | Ruta dedicada propuesta | Sí |
-| `S-02-V` | Validación o conflicto | Corregir relaciones, duplicados o datos obsoletos | Variante de S-02 | Sí |
-| `S-03` | Detalle de producto | Comprender datos, estado y acciones disponibles | `/productos/:id` propuesta | Sí |
-| `S-03-B` | Borrador incompleto | Orientar requisitos para activar | Variante de S-03 | Sí |
-| `S-04` | Confirmar cambio de estado | Evitar activación/desactivación accidental | Diálogo modal | Sí |
-| `S-04-E` | Cambio de estado rechazado | Explicar requisitos faltantes o conflicto | Diálogo/alerta | Sí |
-
-## 8. Mapa de navegación
+# 6. Mapa de navegación
 
 ```mermaid
 flowchart LR
-  L[S-01 Listado] -->|Nuevo producto| F[S-02 Formulario]
-  L -->|Abrir| D[S-03 Detalle]
-  F -->|Guardar borrador| D
-  F -->|Cancelar| L
-  D -->|Editar| F
-  D -->|Activar / Reactivar / Desactivar| C[S-04 Confirmación]
-  C -->|Confirmar| D
-  C -->|Cancelar| D
-  D -->|Gestionar variantes si aplica| V[WF-004]
-  D -->|Volver| L
+    L["S-01 Productos"]
+    C["S-02 Nuevo"]
+    D["S-03 Detalle"]
+    E["S-04 Editar"]
+    M["S-05 Cambio de estado"]
+    V["WF-004 Variantes"]
+
+    L -->|"Nuevo producto"| C
+    C -->|"Guardar borrador"| D
+    C -->|"Cancelar"| L
+    L -->|"Abrir"| D
+    D -->|"Editar"| E
+    E -->|"Guardar"| D
+    E -->|"Cancelar"| D
+    D -->|"Activar / Reactivar / Desactivar"| M
+    M --> D
+    D -->|"Gestionar variantes"| V
+    D -->|"Volver"| L
 ```
 
-## 9. Especificación por pantalla
+---
 
-### `S-01` — Listado de productos
+# 7. S-01 — Listado
 
-#### Propósito y jerarquía
+## Columnas escritorio
 
-1. **Primario:** título, cantidad de resultados y **Nuevo producto**.
-2. **Secundario:** filtros por categoría, marca y estado; tabla de productos.
-3. **Terciario:** paginación, actualización y acciones por fila.
-
-#### Regiones y componentes
-
-| Región | Componente | Contenido | Comportamiento |
-|---|---|---|---|
-| Encabezado | Título + botón | Productos; Nuevo producto | Botón condicionado por permiso |
-| Filtros | Selectores | Categoría, marca, estado | Actualizan listado y son limpiables |
-| Resultados | Tabla/listado | Producto, `sku_base`, categoría, marca, estado, tipo | Fila abre detalle; encabezados claros |
-| Acciones | Menú por fila | Ver, editar, activar/reactivar/desactivar según estado | No incluye eliminar |
-| Pie | Paginación | Página y total | Conserva filtros |
-
-#### Datos mostrados
-
-| Dato | Fuente | Formato | Ausencia |
-|---|---|---|---|
-| Nombre | Producto | Texto | No aplica |
-| `sku_base` | Producto | Código monoespaciado | No aplica |
-| Categoría y marca | Relaciones de catálogo | Nombre | “No disponible” si falla referencia |
-| Estado | Producto | Texto + indicador no basado solo en color | No aplica |
-| Tipo | `tiene_variantes` | “Simple” / “Con variantes” | No aplica |
-
-#### Navegación y foco
-
-- Foco inicial en el título; acción principal a continuación.
-- Al aplicar filtros, anunciar cantidad de resultados sin mover foco.
-- Al regresar del detalle, restaurar fila, filtros y página.
-
-#### Anotaciones
-
-| ID | Elemento | Anotación |
-|---|---|---|
-| `A-01` | Nuevo producto | Visible solo para quien puede crear |
-| `A-02` | Estado | Siempre textual: Borrador, Activo o Inactivo |
-| `A-03` | Tipo | Deriva de `tiene_variantes`; no se modifica desde el listado |
-| `A-04` | Acciones | Cambian por estado y permiso; nunca incluyen borrado físico |
-| `A-05` | Filtros | Solo categoría, marca y estado están confirmados |
-
-### `S-01-E` — Vacío, sin resultados o error
-
-| Variante | Mensaje | Acción primaria |
-|---|---|---|
-| Catálogo vacío | “Aún no hay productos registrados.” | Nuevo producto, si tiene permiso |
-| Sin resultados | “No hay productos que coincidan con estos filtros.” | Limpiar filtros |
-| Error de carga | “No pudimos cargar los productos.” | Reintentar |
-
-### `S-02` — Crear o editar producto
-
-#### Jerarquía y regiones
-
-1. Título contextual: **Nuevo producto** o **Editar producto**.
-2. Datos generales y relaciones del catálogo.
-3. Características e imágenes; su obligatoriedad depende del objetivo de activación.
-4. Acciones persistentes **Guardar borrador/Guardar cambios** y **Cancelar**.
-
-| Región | Componente | Contenido | Comportamiento |
-|---|---|---|---|
-| Datos generales | Formulario | Nombre, descripción, `sku_base`, precio base referencial | Precio editable solo durante creación dentro de este flujo |
-| Clasificación | Selectores | Categoría y marca | Solo opciones existentes y activas |
-| Tipo | Control binario | Tiene variantes | Obligatorio al crear; solo lectura al editar |
-| Complementos | Selectores/carga | Características e imágenes | Pueden faltar en borrador; requeridos para activar |
-| Ayuda | Texto contextual | Diferencia entre guardar y activar | No promete publicación al guardar borrador |
-
-#### Formulario y validaciones
-
-| Campo | Tipo | Obligatorio al crear | Valor inicial | Validación | Mensaje propuesto |
-|---|---|---|---|---|---|
-| Nombre | Texto | Sí | Vacío | Requerido; advertencia si coincide con marca | “Existe un producto con este nombre y marca. Confirma si es una referencia distinta.” |
-| Descripción | Área de texto | Sí | Vacío | Requerida | “Ingresa una descripción.” |
-| Categoría | Selector | Sí | Sin selección | Debe existir y estar activa | “Selecciona una categoría activa.” |
-| Marca | Selector | Sí | Sin selección | Debe existir y estar activa | “Selecciona una marca activa.” |
-| Precio base referencial | Decimal/moneda | Sí | Vacío | Contrato numérico por confirmar | “Ingresa un precio base válido.” |
-| `sku_base` | Texto | Sí | Vacío | Requerido y único globalmente | “Este SKU base ya está en uso.” |
-| Tiene variantes | Control binario | Sí | Sin selección | Selección obligatoria e inmutable | “Indica si el producto tendrá variantes.” |
-| Características | Selector múltiple | No para borrador | Ninguna | Al menos una para activar | “Agrega al menos una característica para activar.” |
-| Imágenes | Carga | No para borrador | Ninguna | Al menos una para activar; formato/límite pendientes | “Agrega al menos una imagen para activar.” |
-
-- Validar al salir del campo y al enviar; las reglas remotas de unicidad se confirman al guardar.
-- Conservar todos los datos ante errores recuperables.
-- Deshabilitar el envío durante la solicitud para prevenir duplicados.
-- Si hay cambios sin guardar, confirmar antes de salir.
-- En edición, `tiene_variantes` se muestra bloqueado con explicación; el precio vigente puede mostrarse, pero no editarse aquí.
-
-#### Anotaciones
-
-| ID | Elemento | Anotación |
-|---|---|---|
-| `A-06` | Guardar borrador | No exige imagen ni característica |
-| `A-07` | Precio base | Solo captura el valor inicial; cambios futuros pertenecen a Pricing |
-| `A-08` | `sku_base` | Es único; para producto simple también identifica el SKU vendible |
-| `A-09` | Tiene variantes | Su elección es irreversible en el alcance actual |
-| `A-10` | Imágenes/características | Indicar que la imagen y las características obligatorias efectivas son necesarias para activar, no para crear; si no hay obligatorias, no exigir una característica solo por activar |
-| `A-11` | Slug | Se genera por el sistema; no agregar edición manual sin contrato |
-
-### `S-02-V` — Validación o conflicto
-
-- Mostrar resumen superior enlazado a cada campo inválido.
-- Ante unicidad remota, asociar el error bloqueante a `sku_base` y la advertencia no bloqueante a nombre/marca (permitiendo confirmación explícita).
-- Ante dato desactualizado, explicar que el producto cambió y ofrecer **Recargar datos**; no sobrescribir silenciosamente.
-- Foco en el resumen y luego en el primer campo inválido.
-
-### `S-03` — Detalle de producto
-
-#### Regiones y componentes
-
-| Región | Contenido | Comportamiento |
-|---|---|---|
-| Encabezado | Nombre, estado, `sku_base`, acciones | Acción primaria depende del estado |
-| Datos generales | Descripción, categoría, marca, precio base, slug | Solo lectura |
-| Configuración | Tipo, características e imágenes | Expone faltantes con texto |
-| Variantes | Resumen y acceso a WF-004 | Solo si `tiene_variantes = true` |
-| Metadatos | Identificador y última modificación | Prioridad visual baja |
-
-#### Acciones por estado
-
-| Estado | Primaria | Secundarias | Destructiva |
-|---|---|---|---|
-| Borrador | Activar, si cumple requisitos | Editar; gestionar variantes si aplica | N/A |
-| Activo | Editar | N/A | Desactivar |
-| Inactivo | Reactivar | Editar | N/A |
-
-#### Anotaciones
-
-| ID | Elemento | Anotación |
-|---|---|---|
-| `A-12` | Requisitos de activación | Enumera faltantes verificables sin ocultarlos tras un botón deshabilitado |
-| `A-13` | Producto activo | Los cambios válidos se publican inmediatamente |
-| `A-14` | Gestionar variantes | Solo aparece para productos configurados con variantes |
-| `A-15` | Precio | Es informativo en detalle; no agregar acción de edición |
-| `A-16` | Historial | Mostrar metadatos disponibles, sin inventar una pantalla de auditoría |
-
-### `S-04` — Confirmar cambio de estado
-
-| Operación | Título | Mensaje esencial | Confirmación |
-|---|---|---|---|
-| Activar | Activar producto | Será visible para los canales de venta | Activar producto |
-| Desactivar | Desactivar producto | Dejará de admitirse en nuevas ventas; se conserva el historial | Desactivar producto |
-| Reactivar | Reactivar producto | Se volverán a validar todos los requisitos | Reactivar producto |
-
-- Foco inicial en el título; luego descripción, cancelar y confirmar.
-- Al cerrar, devolver foco al control que abrió el diálogo.
-- Durante el envío, bloquear repetición y anunciar el resultado.
-
-## 10. Estados de interfaz
-
-| Estado | ¿Aplica? | Representación | Recuperación |
-|---|---|---|---|
-| Inicial | Sí | Listado o formulario listo | N/A |
-| Cargando inicial | Sí | Estructura reservada sin datos ficticios | Esperar/reintentar |
-| Actualizando en segundo plano | Sí | Indicador no bloqueante | Mantener contenido previo |
-| Con datos | Sí | Tabla, detalle o formulario | N/A |
-| Vacío inicial | Sí | Mensaje + CTA autorizado | Crear producto |
-| Sin resultados por filtros | Sí | Mensaje contextual | Limpiar filtros |
-| Error recuperable | Sí | Mensaje seguro | Reintentar |
-| Error de validación | Sí | Resumen + campos | Corregir sin perder datos |
-| Sin conexión | Sí | Aviso; no asumir guardado | Reintentar |
-| Sin permisos | Sí | Explicación y navegación segura | Volver |
-| Sesión expirada | Sí | Solicitud de inicio de sesión | Retornar al contexto |
-| Éxito | Sí | Confirmación y estado actualizado | N/A |
-| Conflicto/dato desactualizado | Sí | Aviso explícito | Recargar y conciliar |
-
-### Reglas para datos remotos
-
-- El listado previo puede mantenerse durante revalidación, marcándolo como actualizando.
-- Refrescar detalle y listado después de crear, editar o cambiar estado.
-- No aplicar optimismo a activación, desactivación, reactivación ni creación.
-- Preservar filtros, página y datos de formulario tras errores recuperables.
-
-## 11. Comportamiento responsivo
-
-| Aspecto | Escritorio | Tablet | Móvil |
-|---|---|---|---|
-| Navegación | Encabezado y retorno visibles | Igual, con acciones compactas | Acción principal visible; secundarias en menú etiquetado |
-| Distribución | Cuadrícula de 12 columnas | Secciones reducidas | Cuadrícula de 4 columnas y apilado |
-| Listado | Tabla completa | Priorizar nombre, SKU y estado | Tarjetas o tabla desplazable con encabezado accesible |
-| Formulario | Una o dos columnas lógicas | Dos/una según espacio | Una columna |
-| Acciones | Pie de formulario | Pie | Controles de mínimo 44×44 px; sin tapar errores |
-| Contenido omitido | Ninguno | Metadatos contraíbles | Metadatos secundarios contraíbles, nunca requisitos |
-
-### Condiciones críticas
-
-- Nombres, descripciones, SKU y mensajes largos a 200 % de zoom.
-- Teclado móvil no debe ocultar el campo ni las acciones.
-- El diálogo debe tener reflow sin desplazamiento horizontal.
-
-## 12. Accesibilidad
-
-- Objetivo **WCAG 2.2 AA**; contraste de `DESIGN.md` y foco visible.
-- Un único `h1` por pantalla; regiones de navegación, principal, filtros y resultados.
-- Etiquetas persistentes para todos los campos; no depender del placeholder.
-- Errores asociados programáticamente y resumen enlazado a campos.
-- Cambios de resultados, carga, éxito y error anunciados en región viva adecuada.
-- Estado y validación no dependen solo del color ni de iconos.
-- Diálogos con foco contenido, cierre por Escape cuando no se procesa y retorno de foco.
-- Imágenes informativas con alternativa; placeholders/decoraciones ignorados por tecnologías de asistencia.
-
-## 13. Tono visual y contenido
-
-- Densidad: media-alta en listado; media en formularios y detalle.
-- Sensación: confiable, clara y operativa.
-- Dominante: estado del producto y acción válida siguiente.
-- Discretos: ID interno, timestamps y metadatos técnicos.
-- Escala de grises, bordes de 1 px, sin sombras ni fotografías reales; controles móviles de mínimo 44×44 px.
-
-| Contexto | Texto propuesto | Observación |
-|---|---|---|
-| Creación | “Guardar borrador” | No promete publicación |
-| Activación incompleta | “Este producto aún no puede activarse. Revisa los requisitos pendientes.” | Orienta recuperación |
-| Desactivación | “El producto dejará de estar disponible para nuevas ventas. Su historial se conservará.” | Explica impacto |
-| Duplicado | “Este SKU base ya está en uso.” | Identifica regla violada bloqueante |
-| Posible duplicado | “Existe un producto con este nombre y marca. Confirma si deseas crearlo.” | Advertencia no bloqueante |
-| Vacío | “Aún no hay productos registrados.” | Ofrece el siguiente paso permitido |
-
-## 14. Restricciones técnicas relevantes
-
-- SPA con React, TypeScript, Vite y React Router; preservar contexto de navegación.
-- TanStack Query debe representar carga, revalidación, error y conflicto visibles.
-- Formularios con React Hook Form y Zod; el wireframe no define esquemas no documentados.
-- No prescribir librería de componentes ni estrategia CSS.
-- Las interacciones críticas deben ser comprobables con React Testing Library y Playwright.
-
-### Dependencias o contratos
-
-| Tipo | Referencia | Impacto visible |
-|---|---|---|
-| API | CRUD/listado de productos; rutas por confirmar en OpenAPI | Carga, guardado, validación y errores |
-| API | Catálogos de categorías, marcas y características | Opciones y validación de estado activo |
-| Evento | `catalog.product.deactivated` | Confirmación de baja; no es un control editable |
-| Integración | Pricing: precio inicial | Resultado de creación; no edición posterior |
-| Integración | Inventario: inicialización en 0 para producto simple | Resultado de creación; no muestra ni edita stock |
-| Permiso | Gestor comercial / permiso específico por confirmar | Visibilidad y disponibilidad de acciones |
-
-## 15. Privacidad, seguridad y acciones sensibles
-
-- No se muestran datos personales; la trazabilidad puede mostrar usuario responsable si el contrato lo permite.
-- Activar, desactivar y reactivar requieren confirmación y autorización en servidor.
-- Los errores no exponen tokens, consultas, trazas ni nombres internos de servicios.
-- No confiar solo en ocultar botones: el backend valida permisos y reglas.
-- La baja es lógica y recuperable mediante reactivación; no existe eliminación física.
-
-## 16. Criterios de aceptación del wireframe
-
-- [ ] Permite crear un borrador con los siete datos mínimos sin exigir imagen ni característica.
-- [ ] Representa unicidad bloqueante de `sku_base` y advertencia no bloqueante de posible duplicado de nombre + marca.
-- [ ] Valida categoría y marca activas al crear, editar y reactivar.
-- [ ] Representa listado, filtros y detalle administrativo.
-- [ ] `tiene_variantes` es obligatorio al crear e inmutable después.
-- [ ] Activación exige al menos una imagen y todos los valores de las características obligatorias efectivas del tipo de producto; si el tipo no define características obligatorias, no se exige inventar una característica para activar. Para productos con variantes integra la condición de WF-004.
-- [ ] Los cambios inválidos sobre un producto activo no sustituyen la última versión válida.
-- [ ] Desactivar es baja lógica, conserva historial y no ofrece eliminación.
-- [ ] Reactivar vuelve a validar las condiciones de activación.
-- [ ] El slug es generado por el sistema.
-- [ ] El precio solo se captura al crear; stock y precio posterior no se editan aquí.
-- [ ] Incluye carga, vacío, error, permisos, sesión, éxito y conflicto.
-- [ ] Funciona con teclado, zoom y sin depender del color.
-- [ ] No selecciona una librería de UI y es consistente con `DESIGN.md`.
-
-### Cobertura de la historia de usuario
-
-| Criterio HU | Cobertura |
+| Columna | Contenido |
 |---|---|
-| CA-01 | Permisos en S-01–S-04 y estado sin permisos |
-| CA-02–CA-05 | S-02, S-02-V y activación en S-04 |
-| CA-06 | S-01 y S-03 |
-| CA-07 | Edición y conflicto en S-02/S-02-V |
-| CA-08–CA-09 | Cambio de estado en S-03/S-04 |
-| CA-10–CA-11 | Slug y límites de precio en S-02/S-03 |
-| CA-12 | Confirmación y metadatos de trazabilidad |
+| Producto | Nombre |
+| SKU base | Código |
+| Categoría | Nombre |
+| Tipo de producto | Nombre |
+| Marca | Nombre |
+| Modelo | Simple / Con variantes |
+| Estado | Borrador / Activo / Inactivo |
+| Acción | Ver / Editar |
 
-## 17. Supuestos
+No mostrar IDs internos.
 
-| ID | Supuesto | Motivo | Impacto si es incorrecto | Validar |
-|---|---|---|---|---|
-| `SUP-01` | El backoffice usa rutas dedicadas para listado, detalle y formulario | Coherencia con SPA | Cambia navegación, no reglas | Sí |
-| `SUP-02` | Las características e imágenes se asocian dentro del formulario de producto | La HU permite modificarlas | Puede requerir subflujo separado | Sí |
-| `SUP-03` | Se muestra el precio base vigente como solo lectura al editar | El CRUD no posee cambios posteriores | Ajustar fuente y copy | Sí |
+Filtros:
 
-## 18. Preguntas y decisiones pendientes
+- categoría;
+- marca;
+- estado.
 
-| ID | Pregunta o decisión | Responsable | Bloquea wireframe | Estado |
-|---|---|---|---|---|
-| `Q-01` | ¿Cuáles son rutas y métodos exactos de OpenAPI? | Backend / Arquitectura | No; sí implementación | Abierta |
-| `Q-02` | ¿Cuáles son límites y formatos de nombre, descripción, SKU, precio e imágenes? | Producto / Backend | No; sí validación final | Abierta |
-| `Q-03` | ¿Qué permisos granulares corresponden a consultar, crear, editar y cambiar estado? | Seguridad | No; sí implementación | Abierta |
-| `Q-04` | ¿El slug cambia al editar el nombre y cómo se preservan enlaces anteriores? | Producto / Backend | No | Abierta |
-| `Q-05` | ¿Cuál es la estrategia de concurrencia para evitar sobrescritura? | Backend | No; sí conflicto final | Abierta |
-| `D-01` | Selección de librería UI y estrategia CSS | Equipo frontend | No para wireframe; sí implementación | Pendiente |
+Estados:
 
-### Alineación definitiva de Productos CRUD
-
-- El producto simple utiliza su `sku_base` como único SKU vendible; Inventario es propietario de stock y lo inicializa en **0**, con `stock_version` inicial. Productos no modifica stock mediante su CRUD.
-- Si `tiene_variantes=true`, el producto padre no tiene stock y necesita al menos una variante `ACTIVA` para poder activarse. Una variante activa con padre `BORRADOR` **no** es comercialmente vendible; desactivar la última variante activa inactiva al padre.
-- La activación comercial requiere que los dominios propietarios hayan confirmado la preparación mínima de precio y registro de inventario. Mientras tanto, mostrar «Pendiente de preparación», no «Producto activo/disponible» por asumir que los eventos se entregaron al instante.
-- Al mover una categoría, Taxonomía revalida las características efectivas; un nuevo atributo obligatorio no desactiva productos existentes, pero se exige al próximo guardado según Spec de Asociación.
-
-### Selección de características identificadoras antes de crear variantes
-Si el gestor elige «Con variantes» (`tiene_variantes=true`), la pantalla permite elegir uno o más `caracteristica_id` LISTA activos y efectivos de la categoría antes de crear la primera variante; los valores específicos se eligen después en WF-004. El conjunto queda solo lectura desde la primera variante, incluso si esta termina inactiva. Cambiar categoría revalida la aplicabilidad sin regenerar ni alterar SKU históricos. Un producto simple no presenta el selector.
-
-## 19. Registro de revisiones
-
-| Versión | Fecha | Autor | Cambio | Aprobado por |
-|---|---|---|---|---|
-| 0.1 | 2026-09-17 | Gabriel Poma Gutierrez | Borrador inicial del flow WF-003 | — |
-| 0.3 | 2026-09-18 | Asistente | Alineación de wireframe con Specs/HU definitivos y contratos externos provisionales; ver registro de cambios. | Pendiente de revisión del equipo |
-
-## Lista de control antes de generar el HTML
-
-- [x] ID y responsable confirmados contra `INDEX.md`.
-- [x] Spec, HU y diseño están trazados.
-- [x] Alcance, pantallas, estados, navegación y responsividad están definidos.
-- [x] Los criterios CA-01–CA-12 tienen cobertura.
-- [x] Supuestos y preguntas están separados de los datos confirmados.
-- [ ] Resolver contratos, límites, permisos y concurrencia antes de implementar.
+- carga;
+- vacío;
+- sin resultados;
+- error.
 
 ---
+
+# 8. Flujo de creación
+
+1. pulsar **Nuevo producto**;
+2. completar datos mínimos;
+3. elegir si es simple o con variantes;
+4. completar opcionalmente características e imágenes;
+5. si es simple, poder completar datos físicos;
+6. guardar;
+7. validar SKU duplicado;
+8. advertir nombre+marca duplicados;
+9. crear BORRADOR;
+10. mostrar detalle.
+
+---
+
+# 9. S-02 — Nuevo producto
+
+## 9.1. Secciones
+
+```text
+1. Datos generales
+2. Clasificación
+3. Modelo de venta
+4. Características
+5. Imágenes
+6. Datos físicos (solo simple)
+7. Acciones
+```
+
+---
+
+## 9.2. Datos generales
+
+Campos:
+
+- Nombre del producto;
+- Descripción;
+- SKU base;
+- Precio base inicial.
+
+Ayuda de SKU:
+
+> Para un producto simple, este SKU identifica directamente la unidad vendible.
+
+No mostrar “clave primaria” ni IDs.
+
+---
+
+## 9.3. Clasificación
+
+Campos:
+
+- Categoría;
+- Tipo de producto;
+- Marca.
+
+Copy:
+
+> El tipo de producto define las características que podrás completar.
+
+No usar “tipo_producto_id”.
+
+---
+
+## 9.4. Modelo de venta
+
+Opciones:
+
+### Producto simple
+
+> Se vende directamente mediante su SKU base.
+
+### Producto con variantes
+
+> Las unidades vendibles se crean como variantes, por ejemplo talla o color.
+
+La elección es obligatoria.
+
+---
+
+# 10. Datos físicos en producto simple
+
+Cuando el usuario elige **Producto simple**, mostrar una sección:
+
+```text
+Datos físicos para despacho
+```
+
+Ayuda:
+
+> Registra el peso y las dimensiones propias de esta unidad. El empaque se define durante el despacho.
+
+Campos:
+
+| Campo | Unidad | Regla |
+|---|---|---|
+| Peso | kg | > 0 cuando se informa |
+| Largo | cm | > 0 cuando se informa |
+| Ancho | cm | > 0 cuando se informa |
+| Alto | cm | > 0 cuando se informa |
+
+Reglas UI:
+
+- no selector de unidad;
+- unidades fijas visibles;
+- aceptar decimales;
+- vacío significa “sin registrar”;
+- no precargar cero;
+- si hay algunos valores pero faltan otros:
+  - mostrar **Datos físicos incompletos**;
+  - permitir guardar BORRADOR;
+- no bloquear activación automáticamente por este motivo.
+
+---
+
+# 11. Producto con variantes en formulario
+
+Cuando se elige **Producto con variantes**:
+
+- ocultar campos físicos del producto padre;
+- mostrar:
+
+> Los datos físicos se registran para cada variante, porque cada SKU puede tener medidas diferentes.
+
+No ofrecer “peso general” como fallback del padre.
+
+---
+
+# 12. Características
+
+El formulario carga las características asociadas al tipo.
+
+- obligatorias se identifican como tales;
+- opcionales permanecen opcionales;
+- para guardar BORRADOR pueden faltar;
+- para activar se validan las obligatorias.
+
+Evitar el título “Atributos técnicos”.
+
+Usar:
+
+```text
+Características del producto
+```
+
+---
+
+# 13. Imágenes
+
+- opcionales para guardar BORRADOR;
+- al menos una para activar;
+- selector accesible;
+- no mostrar ruta local completa;
+- conservar imagen anterior hasta guardar una sustitución.
+
+---
+
+# 14. Posible duplicado
+
+## SKU
+
+Error bloqueante:
+
+> Este SKU base ya está en uso.
+
+## Nombre + marca
+
+Advertencia:
+
+> Ya existe un producto con este nombre y marca. Confirma si se trata de una referencia diferente.
+
+Permitir continuar.
+
+---
+
+# 15. S-03 — Detalle
+
+Encabezado:
+
+- nombre;
+- SKU;
+- estado;
+- activar/reactivar;
+- editar;
+- desactivar.
+
+Secciones:
+
+1. Información del producto.
+2. Características.
+3. Imágenes.
+4. Datos físicos o Variantes.
+5. Requisitos de activación.
+6. Estado de preparación de Pricing e Inventario.
+7. Información administrativa no técnica.
+
+---
+
+# 16. Detalle de producto simple
+
+Mostrar:
+
+```text
+Datos físicos para despacho
+```
+
+Ejemplo:
+
+```text
+Peso    0.42 kg
+Largo   8 cm
+Ancho   8 cm
+Alto    27 cm
+```
+
+Estado:
+
+```text
+Completo
+Incompleto
+Sin registrar
+```
+
+Ayuda:
+
+> Estas medidas describen el producto. El empaque final se define durante el despacho.
+
+Si falta un valor, mostrar:
+
+```text
+No registrado
+```
+
+No mostrar `0`.
+
+---
+
+# 17. Detalle de producto con variantes
+
+No mostrar perfil físico del padre.
+
+Mostrar:
+
+```text
+Variantes del producto
+```
+
+con:
+
+- número de variantes activas;
+- acción **Gestionar variantes**;
+- ayuda:
+
+> El peso y las dimensiones se mantienen por variante.
+
+---
+
+# 18. S-04 — Editar
+
+## Datos inmutables como información
+
+- SKU base;
+- modelo simple/con variantes;
+- tipo si ya no puede migrarse ordinariamente.
+
+No usar controles deshabilitados ambiguos cuando convenga texto de solo lectura.
+
+## Producto simple
+
+Permite editar:
+
+- datos generales autorizados;
+- características;
+- imágenes;
+- Peso;
+- Largo;
+- Ancho;
+- Alto.
+
+## Producto con variantes
+
+No muestra perfil físico del padre.
+
+---
+
+# 19. Validaciones físicas
+
+| Caso | Mensaje |
+|---|---|
+| Peso <= 0 | Ingresa un peso mayor que 0. |
+| Largo <= 0 | Ingresa un largo mayor que 0. |
+| Ancho <= 0 | Ingresa un ancho mayor que 0. |
+| Alto <= 0 | Ingresa un alto mayor que 0. |
+| Perfil parcial | Los datos físicos están incompletos. Puedes completarlos después. |
+
+---
+
+# 20. Activación/reactivación
+
+Lista de requisitos:
+
+- categoría disponible;
+- tipo disponible;
+- marca disponible;
+- características obligatorias;
+- imagen;
+- Pricing preparado;
+- Inventario inicializado;
+- variante activa si aplica.
+
+Para producto simple, la UI puede informar:
+
+```text
+Datos físicos: completos / pendientes
+```
+
+pero no incluirlos dentro de la lista bloqueante de activación.
+
+---
+
+# 21. Desactivación
+
+Copy:
+
+> El producto dejará de estar disponible para nuevas ventas. Su información y los pedidos históricos se conservarán.
+
+No sugerir borrado físico.
+
+---
+
+# 22. Datos físicos y Despacho
+
+WF-003 no agrega botones como:
+
+```text
+Enviar a despacho
+Calcular empaque
+Generar paquete
+Calcular volumen logístico
+```
+
+Mantener peso y dimensiones es suficiente desde Catálogo.
+
+La consulta sistema-a-sistema ocurre fuera de esta interfaz.
+
+---
+
+# 23. Estados
+
+| Estado | Representación |
+|---|---|
+| Cargando | Skeleton |
+| Vacío | Mensaje + Nuevo producto |
+| Sin resultados | Mensaje + Limpiar filtros |
+| Error | Mensaje + Reintentar |
+| Validación | Resumen + campo |
+| Posible duplicado | Diálogo de advertencia |
+| Físico incompleto | Aviso no bloqueante |
+| Sin permisos | Acceso restringido |
+| Sesión expirada | Reautenticación |
+| Conflicto | Recargar |
+| Éxito | Confirmación |
+
+---
+
+# 23.1. S-06 — Sesión y permisos
+
+La interfaz distingue dos casos sin exponer códigos técnicos al usuario:
+
+| Respuesta de integración | Estado visual | Copy recomendado |
+|---|---|---|
+| `401 TOKEN_INVALIDO` | Sesión no utilizable / expirada | **Tu sesión expiró. Inicia sesión nuevamente para continuar.** |
+| `403 SCOPE_INSUFICIENTE` | Acceso restringido | **No tienes permiso para realizar esta acción.** |
+
+Reglas:
+
+- no mostrar `TOKEN_INVALIDO`;
+- no mostrar `SCOPE_INSUFICIENTE`;
+- no revelar el scope/permiso exacto faltante;
+- no perder silenciosamente cambios locales sin avisar;
+- una respuesta 403 no debe presentarse como “sesión expirada”;
+- una respuesta 401 no debe presentarse como un problema de rol;
+- no ejecutar ni simular como exitosa una mutación rechazada.
+
+Estos estados ya existen en el prototipo actual como:
+
+```text
+#session-expired
+#no-permission
+```
+
+por lo que la normalización de códigos no exige un rediseño visual del HTML.
+
+---
+
+# 24. Responsive
+
+| Elemento | Escritorio | Tablet | Móvil |
+|---|---|---|---|
+| Listado | Tabla | Tabla compacta | Tarjetas |
+| Formulario | 2–3 columnas | 2 columnas | 1 columna |
+| Datos físicos | 4 columnas | 2×2 | Apilados |
+| Acciones | Inline | Compactas | Ancho completo |
+| Modal | Centrado | Centrado | Casi pantalla completa |
+
+Mínimo:
+
+```text
+320 px
+```
+
+Sin scroll horizontal del body.
+
+---
+
+# 25. Accesibilidad
+
+- WCAG 2.2 AA.
+- Un `h1`.
+- focus visible.
+- labels persistentes.
+- unidades visibles.
+- errores asociados al campo.
+- estados no dependen solo de color.
+- modales con focus trap, Escape y retorno de foco.
+- mensajes anunciados.
+- selector de archivo accesible.
+
+---
+
+# 26. Tono visual
+
+Seguir DESIGN.md:
+
+- fondo blanco;
+- neutrales;
+- sin sombras;
+- bordes 1 px;
+- SKU monoespaciado;
+- densidad operativa;
+- evitar jerga de arquitectura.
+
+---
+
+# 27. Microcopy
+
+| Contexto | Texto |
+|---|---|
+| Crear | Nuevo producto |
+| Guardar | Guardar borrador |
+| Simple | Se vende directamente mediante su SKU base. |
+| Con variantes | Las unidades vendibles se administran como variantes. |
+| Físico | Registra el peso y las dimensiones propias de esta unidad. |
+| Empaque | El empaque se define durante el despacho. |
+| Físico incompleto | Los datos físicos están incompletos. Puedes completarlos después. |
+| SKU duplicado | Este SKU base ya está en uso. |
+| Duplicado posible | Ya existe un producto con este nombre y marca. |
+| Activación bloqueada | Revisa los requisitos pendientes antes de activar. |
+
+---
+
+# 28. Integraciones
+
+| Componente | Impacto visible |
+|---|---|
+| Taxonomía | Selectores de clasificación y características |
+| Pricing | Estado de preparación; sin edición posterior |
+| Inventario | Estado de inicialización; sin editar cantidades |
+| WF-004 | Gestionar variantes |
+| Despacho | Ningún control manual; consume datos físicos por contrato |
+| Seguridad | 401 `TOKEN_INVALIDO` → sesión; 403 `SCOPE_INSUFICIENTE` → acceso restringido; los códigos no se muestran al usuario |
+
+---
+
+# 29. Cobertura HU-003
+
+| Criterios | Pantallas |
+|---|---|
+| CA-01–CA-08 | S-01/S-02/S-04 |
+| CA-09–CA-13 | Modelo simple/variantes y activación |
+| CA-14–CA-21 | Edición y ciclo de vida |
+| CA-22–CA-28 | Datos físicos simples y separación con variantes |
+| CA-29–CA-32 | Límite con Despacho |
+| CA-33–CA-35 | Trazabilidad, barreras y exposición comercial |
+| CA-36–CA-38 | Autenticación/autorización y retiro de `SIN_AUTORIZACION` |
+
+---
+
+# 30. Criterios de aceptación del wireframe
+
+- [x] crear siempre como borrador;
+- [x] diferenciar guardar de activar;
+- [x] SKU duplicado es bloqueante;
+- [x] nombre+marca es advertencia;
+- [x] muestra categoría/tipo/marca sin IDs técnicos;
+- [x] distingue simple y con variantes;
+- [x] simple muestra Peso/Largo/Ancho/Alto;
+- [x] muestra kg y cm;
+- [x] no precarga cero;
+- [x] permite perfil incompleto en borrador;
+- [x] perfil físico no bloquea activación por sí solo;
+- [x] con variantes no muestra físico del padre;
+- [x] enlaza WF-004;
+- [x] no permite editar stock;
+- [x] no permite editar precio posterior;
+- [x] no incluye empaque;
+- [x] incluye activación/desactivación/reactivación;
+- [x] incluye estados alternativos;
+- [x] diferencia sesión inválida de permisos insuficientes;
+- [x] no muestra códigos técnicos de Seguridad al usuario;
+- [x] cumple DESIGN.md;
+- [x] es responsive y accesible.
+
+
