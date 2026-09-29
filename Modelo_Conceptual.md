@@ -15,9 +15,9 @@
 
 ---
 
-# 1. Cambios P0 incorporados
+# 1. Decisiones del modelo conceptual
 
-Esta versión incorpora las decisiones cerradas durante la homologación P0:
+Esta versión incorpora las decisiones de diseño del modelo de datos:
 
 1. **Inventario pertenece a Productos y Ofertas**.
 2. Los canales Marketplace, Chatbot y Retail **solo consultan disponibilidad**.
@@ -1258,8 +1258,8 @@ Las decisiones conceptuales principales ya fueron propagadas.
 | `SPEC/HU/WF-003` | Actualizados: perfil físico de producto simple y Seguridad |
 | `SPEC/HU/WF-004` | Actualizados: perfil físico de variante/SKU y Seguridad |
 | `SPEC/HU/WF-015` | Actualizados: reserva/consumo/liberación, TTL e idempotencia |
-| `api/openapi.yaml` | `0.3.5-p0`: cobertura P0 vigente de las 16 funcionalidades y operaciones administrativas |
-| `asyncapi/asyncapi.yaml` | `0.2.1-p0`: mensajería P0 vigente, incluidos cambios de esquema de tipo de producto y valores de característica |
+| `api/openapi.yaml` | `0.3.5-p0`: cobertura vigente de las 16 funcionalidades y operaciones administrativas |
+| `asyncapi/asyncapi.yaml` | `0.2.1-p0`: mensajería vigente, incluidos cambios de esquema de tipo de producto y valores de característica |
 | `api/catalogo-eventos.md` | `0.2.1-p0`: referencia humana alineada 29/29 con AsyncAPI |
 | `api/catalogo-errores.md` | `0.2.4-p0`: catálogo vigente, incluidos errores de operación maestra y auditoría |
 | Operación de baja maestra | Incorporada conceptualmente en Taxonomía y observable por `GET /api/v1/taxonomia/operaciones/{operationId}` |
