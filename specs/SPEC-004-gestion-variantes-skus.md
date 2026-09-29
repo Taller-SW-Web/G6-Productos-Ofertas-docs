@@ -2,159 +2,1202 @@
 
 **Responsable:** Gabriel Poma Gutierrez  
 **Rama:** poma  
-**Trazabilidad:** HU [HU-004](../hu/HU-004-gestion-variantes-skus.md) | Wireframe [WF-004](../wireframes/flows/WF-004-gestion-variantes-skus.md)
+**Trazabilidad:** HU [HU-004](./hu/HU-004-gestion-variantes-skus.md) | Wireframe [WF-004](./wireframes/flows/WF-004-gestion-variantes-skus.md)  
+**Contrato HTTP:** [`./api/openapi.yaml`](./api/openapi.yaml)  
+**Contrato de integración:** [`./Contrato_Api.md`](./Contrato_Api.md)  
+**Arquitectura:** [`./Arquitectura.md`](./Arquitectura.md)  
+**Modelo conceptual:** [`./Modelo_Conceptual.md`](./Modelo_Conceptual.md)  
+**Catálogo de errores:** [`./api/catalogo-errores.md`](./api/catalogo-errores.md)
 
-**Versión:** v2 — corregida para eliminar discrepancias con `hu_gestion_variantes_skus.md`
+**Versión:** v3.1 — seguridad y códigos de error armonizados
 
-> **Cambios consolidados:** se separa el identificador interno inmutable `variant_id` del SKU comercial; el SKU puede suministrarse desde un sistema externo o generarse automáticamente cuando se omite, siempre con unicidad global; la capacidad aplica exclusivamente a productos con `tiene_variantes = true`; Inventario continúa siendo el único dueño del stock; los atributos identificadores de la variante permanecen inmutables mediante edición ordinaria.
+> **Cambios principales de esta versión**
+>
+> - se mantiene la separación entre `variant_id` interno y SKU comercial;
+> - se incorpora el **perfil físico del SKU vendible** como responsabilidad de Catálogo;
+> - se definen `pesoKg`, `largoCm`, `anchoCm` y `altoCm`;
+> - se fija kg/cm como unidad contractual;
+> - se permite editar el perfil físico sin cambiar la identidad de la variante;
+> - se formaliza la consulta física en lote para Despacho;
+> - se deja explícito que **Despacho es dueño del empaque**, no Productos;
+> - se evita duplicar stock, precio o lógica logística dentro de Catálogo;
+- la autenticación/autorización HTTP se alinea con el contrato oficial de Seguridad mediante `TOKEN_INVALIDO` y `SCOPE_INSUFICIENTE`.
 
-## 1. Contexto
+---
 
-Dentro del catálogo de productos deportivos (camisetas, zapatillas, accesorios, etc.), es común que un mismo producto base tenga múltiples versiones comerciales que se diferencian por características como talla, color u otro atributo específico del deporte o tipo de artículo. La capacidad obligatoria de CRUD de productos (`SPEC-003-gestion-productos-crud.md`) introduce el atributo `tiene_variantes` en el producto: cuando es `false`, el producto se vende utilizando su `sku_base` como SKU vendible, cuyo stock pertenece exclusivamente a Inventario; cuando es `true`, el producto no se vende directamente y esta capacidad extiende el modelo de catálogo para representar cada combinación concreta (por ejemplo, "zapatilla X, talla 42, color negro") como una variante independiente, con su propio código de identificación e imagen, y con su stock gestionado también por Inventario, pero a nivel de variante.
+# 1. Contexto
 
-## 2. Propósito
+Dentro del catálogo de productos deportivos es común que un mismo producto base tenga múltiples versiones comerciales diferenciadas por características como talla, color u otros atributos.
 
-Permitir que un producto con `tiene_variantes = true` tenga una o más variantes diferenciadas por características identificadoras como talla y color, cada una con `variant_id` interno inmutable, SKU comercial único —aportado o generado— e imagen, de modo que los canales de venta y futuras integraciones con ERP/proveedores puedan identificar exactamente la combinación comercial.
+La capacidad de Gestión de Productos (`SPEC-003`) define:
 
-## 3. Alcance
+```text
+tiene_variantes = false
+```
 
-Aplica exclusivamente a productos con `tiene_variantes = true`. Los productos simples (`tiene_variantes = false`) no utilizan esta funcionalidad; se activan mediante Gestión de Productos y su `sku_base` funciona como SKU vendible para Pricing e Inventario.
+para productos simples, cuyo `sku_base` funciona como SKU vendible;
+
+y:
+
+```text
+tiene_variantes = true
+```
+
+para productos cuya venta se realiza mediante variantes.
+
+Cada variante representa una combinación comercial concreta, por ejemplo:
+
+```text
+Nike Air Max
+Talla 42
+Color Negro
+SKU NKE-AM-42-BLK
+```
+
+El SKU es utilizado como identidad de integración por:
+
+- Pricing;
+- Inventario;
+- Promociones;
+- Combos;
+- Ventas/Postventa;
+- Despacho.
+
+Catálogo es responsable de la **identidad y descripción del SKU**, pero no de:
+
+- su precio autoritativo;
+- su stock;
+- sus reservas;
+- el empaque;
+- el despacho.
+
+---
+
+# 2. Propósito
+
+Permitir crear y administrar variantes de productos con:
+
+- identidad interna estable;
+- SKU comercial único;
+- combinación de atributos identificadores;
+- imagen propia;
+- atributos no identificadores;
+- estado de ciclo de vida;
+- perfil físico del SKU para integración logística.
+
+El objetivo es que cualquier consumidor pueda identificar de forma inequívoca qué unidad vendible está utilizando, sin mezclar responsabilidades de Catálogo con Pricing, Inventario o Despacho.
+
+---
+
+# 3. Alcance
+
+Esta SPEC aplica principalmente a productos con:
+
+```text
+tiene_variantes = true
+```
 
 Incluye:
-- Configuración previa por producto de características identificadoras LISTA permitidas por su `tipo_producto_id`, inmutable desde la primera variante; sus valores referencian IDs estables.
-- Creación de una o más variantes (SKUs) asociadas a un producto base, cada una con su combinación única de atributos identificadores (ej. talla + color).
-- Asignación de un `variant_id` interno generado por Catálogo e inmutable, separado del SKU comercial. El SKU comercial puede ser informado por el gestor/importación —por ejemplo, si proviene de ERP o proveedor— o generado por el sistema si se omite; en ambos casos debe ser único globalmente y no puede cambiarse después de publicar la variante mediante edición ordinaria.
-- Asociación de una imagen propia a cada variante (por ejemplo, para reflejar el color específico).
-- Posibilidad de definir un precio propio para una variante en Pricing; si no existe, hereda el precio base vigente del producto. La persistencia y vigencia del precio pertenece a Pricing.
-- Actualización de los atributos no identificadores, la imagen o el estado de una variante existente. Los atributos identificadores (los que componen el SKU) son inmutables una vez creada la variante.
-- Consulta de variantes de un producto, tanto de forma individual como listadas junto con el producto base, incluyendo su estado (la disponibilidad de stock se consulta al componente de Inventario, no se replica aquí).
-- Desactivación (baja lógica) de una variante específica; si era la última variante activa, también se inactiva el producto padre para no dejar un producto activo sin unidades vendibles.
-- Exposición de la información de variantes mediante API para su consumo por los demás módulos (Marketplace Cliente, Chatbot Cliente, Retail Vendedor, Ventas y Postventa, Despacho y Entrega).
 
-## 4. Requisitos
+1. configuración de características identificadoras;
+2. creación de variantes;
+3. generación de `variant_id`;
+4. SKU comercial informado o autogenerado;
+5. imagen propia;
+6. edición de atributos no identificadores;
+7. activación/reactivación/desactivación;
+8. consulta de variantes;
+9. perfil físico por SKU;
+10. exposición de datos físicos para Despacho;
+11. integración con Inventario al inicializar el SKU;
+12. integración con Pricing mediante la identidad SKU.
 
-### Requisito 0: Configuración de características identificadoras por producto
-El gestor configura **en Catálogo, para cada producto `tiene_variantes=true` y antes de crear su primera variante**, un conjunto no vacío de `caracteristica_id` distintos seleccionados entre las características LISTA activas y aplicables a su `tipo_producto_id`; las características NUMERO/TEXTO no identifican variantes en este alcance. El conjunto queda **inmutable desde la primera variante registrada**, incluso si después queda inactiva, para impedir cambios retroactivos de identidad. Para cada variante se exige exactamente un `valor_id` activo y perteneciente a cada LISTA identificadora configurada; no pueden faltar atributos ni aparecer atributos identificadores extra. Los valores y características se referencian por ID estable. Una combinación de IDs no puede reutilizarse aunque una variante anterior esté inactiva. Un cambio de categoría de navegación no altera esta identidad; un cambio de tipo de producto que la invalide requiere una migración explícita fuera del CRUD ordinario.
+## 3.1. Productos simples
 
-### Requisito 1: Creación de variantes de un producto
+Los productos simples siguen perteneciendo funcionalmente a `SPEC-003`.
 
-El sistema DEBE permitir registrar una o más variantes para un producto existente con `tiene_variantes = true`, cada una con una combinación única de atributos identificadores (ej. talla, color).
+Sin embargo, como `sku_base` también es un SKU vendible, el modelo conceptual establece que **todo SKU vendible puede disponer de perfil físico**.
 
-#### Escenario: Registro exitoso de una nueva variante
-- DADO un producto base activo o en borrador, con `tiene_variantes = true`, registrado en el catálogo
-- CUANDO el gestor comercial registra una nueva variante indicando sus atributos identificadores (ej. talla "M", color "azul") y una imagen
-- ENTONCES el sistema crea la variante asociada al producto en estado BORRADOR, genera un `variant_id` interno, valida el SKU comercial informado o genera uno si se dejó vacío, y la deja disponible únicamente para consulta administrativa mientras no se active
+Por tanto:
 
-#### Escenario: Intento de registro de una variante con combinación de atributos duplicada
-- DADO un producto que ya tiene registrada una variante con una combinación específica de atributos identificadores (ej. talla "M", color "azul")
-- CUANDO el gestor comercial intenta registrar otra variante con exactamente la misma combinación de atributos para el mismo producto
-- ENTONCES el sistema rechaza la operación e informa que ya existe una variante con esa combinación
+- esta SPEC define la regla para variantes;
+- `SPEC-003` deberá aplicar la misma semántica al `sku_base` de productos simples;
+- la API de consulta física de Despacho debe tratar ambos tipos de SKU de forma uniforme.
 
-### Requisito 2: Identidad interna y SKU comercial único
-Cada variante DEBE recibir un `variant_id` interno generado por Catálogo, estable e inmutable. Separadamente, debe disponer de un `sku` comercial único a nivel de catálogo. Al crear la variante, el gestor o una importación puede informar un SKU comercial válido; si lo omite, el sistema genera uno a partir del `sku_base` y la combinación identificadora. El SKU comercial aceptado no se modifica mediante la edición ordinaria de una variante ya publicada; una recodificación exige un proceso explícito de migración para no romper referencias de Pricing, Inventario, pedidos e integraciones externas.
+---
 
-#### Escenario: SKU comercial proporcionado
-- DADO el registro de una variante válida y un SKU comercial externo `NKE-PEG-42-BLK`
-- CUANDO Catálogo valida formato y comprueba que no existe otro producto o variante con el mismo código
-- ENTONCES conserva ese SKU como código comercial de la variante y genera independientemente su `variant_id` interno.
+# 4. Identidad de variante
 
-#### Escenario: Generación automática cuando no se informa SKU
-- DADO el registro de una nueva variante válida sin SKU comercial
-- CUANDO Catálogo procesa el alta
-- ENTONCES genera un SKU determinista/único según la convención vigente, valida la ausencia de colisión y lo devuelve junto con el `variant_id`.
+## 4.1. `variant_id`
 
-#### Escenario: Colisión de SKU
-- DADO que el SKU informado o generado coincide con uno ya existente
-- CUANDO el sistema intenta confirmar el registro
-- ENTONCES rechaza la operación sin exponer la variante y permite corregir el SKU solicitado o reintentar la generación según corresponda.
+Cada variante DEBE tener un:
 
-### Requisito 3: Imagen propia por variante
+```text
+variant_id
+```
 
-El sistema DEBE permitir asociar una imagen específica a cada variante, independiente de la imagen general del producto base.
+generado por Catálogo.
 
-#### Escenario: Carga exitosa de imagen para una variante
-- DADO una variante existente sin imagen o con una imagen previa
-- CUANDO el gestor comercial carga un archivo de imagen válido (formato y tamaño permitidos) para esa variante
-- ENTONCES el sistema almacena la imagen, la asocia a la variante correspondiente y la expone junto con los demás datos de la variante vía API
+Debe ser:
 
-#### Escenario: Intento de carga de un archivo de imagen inválido
-- DADO que el gestor comercial intenta subir un archivo con un formato no soportado o que excede el tamaño máximo permitido
-- CUANDO se ejecuta la carga del archivo
-- ENTONCES el sistema rechaza la carga y muestra un mensaje indicando el motivo (formato no válido o tamaño excedido), sin afectar la imagen previamente asociada a la variante
+- interno;
+- estable;
+- inmutable;
+- no significativo;
+- independiente del SKU.
 
-### Requisito 4: Actualización y desactivación de variantes
+No debe utilizarse como código comercial visible.
 
-El sistema DEBE permitir actualizar la imagen y los atributos **no identificadores** de una variante, así como desactivarla de forma independiente al producto base. Los atributos identificadores (los que componen el SKU, ej. talla y color) son **inmutables**: no pueden modificarse una vez creada la variante.
+---
 
-#### Escenario: Actualización exitosa de atributos no identificadores
-- DADO una variante existente y activa
-- CUANDO el gestor comercial modifica su imagen o un atributo que no forma parte del SKU
-- ENTONCES el sistema guarda los cambios y refleja la información actualizada en las consultas posteriores vía API, sin alterar el SKU
+## 4.2. SKU comercial
 
-#### Escenario: Intento de modificar un atributo que forma parte del SKU
-- DADO una variante existente cuyo SKU codifica talla y color
-- CUANDO el gestor comercial intenta modificar el valor de talla o color de esa misma variante
-- ENTONCES el sistema rechaza el cambio e indica que debe desactivar la variante actual y registrar una nueva con el atributo correcto
+Cada variante DEBE disponer de un:
 
-#### Escenario: Desactivación de una variante cuando quedan otras variantes activas
-- DADO un producto con varias variantes activas
-- CUANDO el gestor comercial desactiva una de esas variantes (por ejemplo, por descontinuación de una talla)
-- ENTONCES el sistema marca únicamente esa variante como "inactiva", manteniendo el producto base y las demás variantes sin cambios en su estado ni disponibilidad. Los pedidos ya confirmados conservan el snapshot de la variante vendida
+```text
+sku
+```
 
-### Requisito 4.1: Ciclo de vida y activación de variante
-La variante se crea BORRADOR y puede pasar a ACTIVA mediante una acción autorizada si dispone de SKU único, atributos identificadores válidos e imagen válida; su producto padre tiene categoría y marca activas, precio base confirmado en Pricing y registro de SKU inicializado en Inventario. Una variante activa puede pasar a INACTIVA por baja lógica. La reactivación de una variante inactiva requiere las mismas validaciones que la activación y no genera SKU nuevo. Un SKU inactivo o borrador no participa en nuevas ventas ni en nuevos combos. Si se desactiva la última variante activa, Catálogo pone INACTIVO al producto padre en la misma transacción local; los pedidos confirmados conservan su snapshot. La reactivación del padre vuelve a comprobar sus condiciones de activación.
+comercial único a nivel del catálogo.
 
-#### Escenario: Activar variante preparada
-- DADO una variante BORRADOR con SKU, atributos e imagen válidos, precio base del padre confirmado y SKU inicializado en Inventario
-- CUANDO el gestor la activa
-- ENTONCES queda ACTIVA y, si el producto padre está INACTIVO, este no se reactiva automáticamente.
+Puede ser:
 
-#### Escenario: Rechazar variante sin preparación
-- DADO una variante BORRADOR cuyo registro de Inventario aún no está confirmado
-- CUANDO se solicita activarla
-- ENTONCES se rechaza sin convertirla en ACTIVA.
+- informado por el gestor/importación;
+- generado automáticamente por Catálogo.
 
-### Requisito 4.2: Creación masiva con SKU opcional
-Cuando Carga Masiva crea una variante, identifica el producto padre (existente o creado como BORRADOR una sola vez por grupo `sku_base` en el mismo lote) y la combinación de características por sus IDs/valores. Catálogo siempre genera `variant_id`; si la fila aporta `sku`, lo valida como código comercial solicitado, y si la celda está vacía genera el SKU según la convención vigente. Devuelve `product_id`, `variant_id`, `sku` y la correlación `batch_id`/`row_id`. Si la fila señala un SKU existente, se trata como actualización y se rechaza todo intento de cambiar los atributos identificadores o recodificar el SKU desde este flujo.
+Una vez publicada la identidad comercial, el SKU no puede cambiarse mediante edición ordinaria.
 
-### Requisito 5: Consulta de variantes por producto
+Una recodificación requiere un proceso explícito de migración.
 
-El sistema DEBE permitir consultar todas las variantes asociadas a un producto, incluyendo sus atributos, imagen, código SKU y estado.
+---
 
-#### Escenario: Consulta exitosa de variantes de un producto
-- DADO un producto con `tiene_variantes = true` y una o más variantes registradas
-- CUANDO se solicita la información del producto junto con sus variantes
-- ENTONCES el sistema retorna el producto base junto con el listado completo de sus variantes activas e inactivas, indicando el estado de cada una
+# 5. Configuración de características identificadoras
 
-#### Escenario: Consulta de variantes de un producto sin variantes registradas
-- DADO un producto con `tiene_variantes = true` que aún no tiene ninguna variante registrada
-- CUANDO se solicita la información de variantes de ese producto
-- ENTONCES el sistema retorna una lista vacía de variantes, sin generar error, e indica que el producto no puede activarse hasta registrar al menos una
+Para un producto con variantes, antes de crear la primera variante se selecciona un conjunto no vacío de características identificadoras.
 
-### Regla transversal: elegibilidad comercial de la variante
-Una variante con estado ACTIVA no es vendible si su producto padre está BORRADOR o INACTIVO; la elegibilidad comercial requiere simultáneamente padre ACTIVO, variante ACTIVA, precio preparado y SKU inicializado. La activación de variante preparada puede ocurrir antes de la activación del padre y no activa al padre implícitamente.
+Reglas:
 
-## 5. Requisitos no funcionales
+- solo características `LISTA`;
+- activas;
+- permitidas por `tipo_producto_id`;
+- sin duplicados;
+- una vez creada la primera variante, la selección queda inmutable.
 
-- **Rendimiento:** La carga y almacenamiento de imágenes por variante debe procesarse de forma eficiente para no degradar los tiempos de respuesta de las operaciones de catálogo, considerando que puede haber múltiples variantes por producto con imágenes independientes.
-- **Seguridad:** Las operaciones de creación, actualización, carga de imagen y desactivación de variantes deben estar restringidas a usuarios autenticados con el rol de gestor comercial, validando credenciales/token emitidos por el módulo de Seguridad y Usuarios. La carga de archivos debe validar tipo y contenido del archivo para evitar cargas maliciosas.
-- **Disponibilidad:** La API de consulta de variantes debe estar disponible de forma continua, dado que los canales de venta (Marketplace, Chatbot, Retail) dependen de ella para mostrar la variante exacta por talla/color antes de una compra.
-- **Auditoría:** Toda creación, actualización, cambio de imagen o cambio de estado de una variante debe quedar registrada (usuario responsable, fecha/hora, cambio realizado) para trazabilidad.
-- **Escalabilidad:** El modelo de datos debe soportar un número creciente de variantes por producto sin degradar el rendimiento de las consultas, considerando el crecimiento del catálogo deportivo (múltiples tallas, colores y combinaciones por artículo).
+Cada variante debe indicar exactamente un `valor_id` para cada característica identificadora.
 
-## 6. Fuera de alcance
+Ejemplo:
 
-- **Persistencia y actualización de precios por variante** — corresponde a Pricing. Esta capacidad solo expone la identidad SKU necesaria para que Pricing aplique un precio específico o la herencia del precio del producto.
-- **Gestión y cálculo del stock, tanto por variante como por producto simple** — es responsabilidad exclusiva del componente de Inventario. Esta capacidad se limita a la definición y mantenimiento de la variante como entidad (atributos, imagen, código); solo notifica su creación o desactivación para que Inventario inicialice o retire el registro correspondiente.
-- **Definición de nuevos tipos de atributos genéricos de configuración de variantes distintos a talla y color** — se contempla el mecanismo, pero la parametrización avanzada de nuevos tipos de atributos para todo el catálogo se considera una evolución futura.
-- **Edición o procesamiento avanzado de imágenes (recorte, filtros, optimización automática)** — solo se contempla la carga y asociación de la imagen, no su edición dentro del sistema.
-- **Gestión de ofertas, promociones o combos que incluyan variantes específicas** — corresponde a otras funcionalidades del módulo de Productos y Ofertas.
-- **Activación y venta de productos simples (`tiene_variantes = false`)** — corresponde íntegramente a `SPEC-003-gestion-productos-crud.md`; esta especificación no aplica a esos productos.
+```text
+Características identificadoras:
+- Talla
+- Color
 
-## Criterio de completitud
+Variante:
+- Talla = 42
+- Color = Negro
+```
 
-La capacidad se considera correctamente implementada cuando:
-- Todos los requisitos (Creación de variantes, `variant_id` interno, SKU comercial aportado o generado con unicidad, imagen propia, actualización/desactivación con identidad estable y consulta) están implementados.
-- Todos los escenarios definidos se cumplen, incluyendo los casos borde y de error.
-- Los requisitos no funcionales aplicables (rendimiento, seguridad, disponibilidad, auditoría, escalabilidad) se cumplen.
-- No se han incorporado funcionalidades fuera del alcance, como gestión de precios, cálculo de stock u ofertas asociadas a variantes.
+Una combinación no puede repetirse dentro del mismo producto aunque la variante anterior esté inactiva.
+
+---
+
+# 6. Requisito 1 — Crear variante
+
+El sistema DEBE permitir crear una variante para un producto con:
+
+```text
+tiene_variantes = true
+```
+
+## Datos mínimos conceptuales
+
+- producto padre;
+- atributos identificadores;
+- imagen propia;
+- SKU comercial opcional;
+- atributos no identificadores opcionales.
+
+## Resultado
+
+La variante:
+
+- recibe `variant_id`;
+- recibe o conserva un SKU único;
+- se crea inicialmente en `BORRADOR`;
+- queda asociada al producto padre.
+
+---
+
+## Escenario — Creación exitosa
+
+**DADO** un producto con variantes y configuración identificadora válida
+
+**CUANDO** el gestor registra una combinación no utilizada
+
+**ENTONCES** Catálogo:
+
+1. genera `variant_id`;
+2. valida o genera SKU;
+3. registra atributos;
+4. registra imagen;
+5. crea la variante en `BORRADOR`.
+
+---
+
+## Escenario — Combinación duplicada
+
+**DADO** una variante existente con:
+
+```text
+Talla 42 + Negro
+```
+
+**CUANDO** se intenta crear otra variante del mismo producto con la misma combinación
+
+**ENTONCES** se rechaza la operación.
+
+---
+
+# 7. Requisito 2 — SKU proporcionado o autogenerado
+
+## SKU proporcionado
+
+Si se informa un SKU:
+
+- debe cumplir formato;
+- debe ser globalmente único;
+- no debe pertenecer a otro producto o variante.
+
+## SKU omitido
+
+Si no se informa:
+
+- Catálogo genera uno;
+- comprueba unicidad;
+- devuelve el valor definitivo.
+
+## Colisión
+
+Una colisión:
+
+- no crea la variante;
+- no expone una identidad incompleta;
+- devuelve un error recuperable.
+
+---
+
+# 8. Requisito 3 — Imagen propia
+
+Cada variante debe poder asociar una imagen propia.
+
+La imagen:
+
+- representa la combinación específica;
+- no sustituye la imagen general del producto;
+- puede actualizarse sin cambiar identidad.
+
+Un archivo inválido:
+
+- se rechaza;
+- no elimina la imagen vigente.
+
+---
+
+# 9. Requisito 4 — Perfil físico del SKU
+
+Catálogo es owner del **perfil físico intrínseco** del SKU.
+
+Para una variante, el perfil físico se identifica por su SKU comercial.
+
+Campos contractuales:
+
+```text
+pesoKg
+largoCm
+anchoCm
+altoCm
+actualizadoEn
+```
+
+La representación HTTP agrupa las dimensiones como:
+
+```json
+{
+  "pesoKg": 1.4,
+  "dimensionesCm": {
+    "largo": 35,
+    "ancho": 22,
+    "alto": 13
+  }
+}
+```
+
+---
+
+# 10. Requisito 4.1 — Unidades
+
+Las unidades contractuales son:
+
+```text
+peso -> kilogramos
+dimensiones -> centímetros
+```
+
+No se admiten unidades ambiguas.
+
+El consumidor no debe inferir si un valor está en gramos, metros, pulgadas u otra unidad.
+
+---
+
+# 11. Requisito 4.2 — Validación del perfil físico
+
+Los valores informados deben cumplir:
+
+```text
+pesoKg > 0
+largoCm > 0
+anchoCm > 0
+altoCm > 0
+```
+
+No se aceptan:
+
+- valores negativos;
+- cero;
+- texto no numérico;
+- dimensiones sin unidad conocida.
+
+La precisión decimal deberá conservarse de forma suficiente para productos pequeños.
+
+Ejemplos válidos:
+
+```text
+pesoKg = 0.25
+altoCm = 3
+```
+
+---
+
+# 12. Requisito 4.3 — Semántica de las dimensiones
+
+Las dimensiones representan las dimensiones físicas del SKU tal como Catálogo las registra para integración.
+
+No representan:
+
+- caja de despacho;
+- bolsa;
+- pallet;
+- agrupación de varios productos;
+- volumen final del envío.
+
+Productos y Ofertas NO define:
+
+```text
+tipoEmpaque
+cantidadPaquetes
+dimensionesPaqueteFinal
+volumenLogisticoFinal
+```
+
+Estos conceptos pertenecen a **Despacho y Entrega**.
+
+---
+
+# 13. Requisito 4.4 — Perfil físico e identidad
+
+Modificar:
+
+```text
+pesoKg
+largoCm
+anchoCm
+altoCm
+```
+
+NO cambia:
+
+- `variant_id`;
+- SKU;
+- atributos identificadores;
+- combinación de variante.
+
+El perfil físico es información editable de la variante y no forma parte de su identidad comercial.
+
+---
+
+# 14. Requisito 4.5 — Edición del perfil físico
+
+El gestor autorizado puede actualizar el perfil físico.
+
+## Escenario — Actualización válida
+
+**DADO** una variante existente
+
+**CUANDO** el gestor modifica peso o dimensiones con valores válidos
+
+**ENTONCES**:
+
+- se guarda el nuevo perfil;
+- se conserva `variant_id`;
+- se conserva SKU;
+- se actualiza `actualizadoEn`;
+- futuras consultas de Despacho reciben los nuevos valores.
+
+## Escenario — Valor inválido
+
+**DADO** una variante existente
+
+**CUANDO** se informa:
+
+```text
+pesoKg = -1
+```
+
+o una dimensión `<= 0`
+
+**ENTONCES** se rechaza la actualización y se conserva el perfil anterior.
+
+---
+
+# 15. Requisito 4.6 — Completitud del perfil físico
+
+Una variante puede existir en `BORRADOR` mientras se completa su información.
+
+Sin embargo, cuando otro módulo solicite datos físicos, Catálogo solo puede entregar como perfil utilizable aquel que contenga:
+
+```text
+pesoKg
+largoCm
+anchoCm
+altoCm
+```
+
+válidos.
+
+La ausencia o incompletitud debe manejarse explícitamente; no se deben inventar valores por defecto.
+
+La regla de activación general de la variante no se amplía automáticamente con nuevos bloqueos no definidos en esta SPEC.
+
+Si en una iteración posterior se decide que el perfil físico será requisito obligatorio de activación, dicha decisión deberá reflejarse explícitamente en SPEC/HU/WF.
+
+---
+
+# 16. Requisito 5 — Consulta física en lote para Despacho
+
+Catálogo debe exponer los datos físicos de varios SKU en una sola consulta.
+
+Contrato HTTP canónico:
+
+```http
+POST /api/v1/productos/datos-fisicos/consulta
+```
+
+Consumidor previsto:
+
+```text
+modulo-despacho
+```
+
+Scope propuesto:
+
+```text
+productos:fisicos:leer
+```
+
+Estado contractual actual:
+
+```text
+provisional
+```
+
+---
+
+# 17. Requisito 5.1 — Request en lote
+
+La consulta recibe:
+
+```json
+{
+  "skus": [
+    "POL-NEG-M",
+    "ZAP-RUN-42"
+  ]
+}
+```
+
+El contrato actual admite hasta:
+
+```text
+100 SKU
+```
+
+por solicitud.
+
+El límite técnico exacto pertenece a OpenAPI.
+
+---
+
+# 18. Requisito 5.2 — Respuesta física
+
+Respuesta conceptual:
+
+```json
+{
+  "productos": [
+    {
+      "sku": "ZAP-RUN-42",
+      "estado": "ACTIVO",
+      "pesoKg": 1.4,
+      "dimensionesCm": {
+        "largo": 35,
+        "ancho": 22,
+        "alto": 13
+      },
+      "actualizadoEn": "2026-09-28T12:00:00Z"
+    }
+  ],
+  "noEncontrados": []
+}
+```
+
+La forma exacta pertenece a `api/openapi.yaml`.
+
+---
+
+# 19. Requisito 5.3 — Despacho no recibe ownership
+
+La consulta física NO transfiere ownership.
+
+Despacho puede utilizar peso y dimensiones para:
+
+- decidir empaque;
+- agrupar unidades;
+- calcular volumen;
+- estimar capacidad.
+
+Catálogo continúa siendo owner de los datos físicos propios del SKU.
+
+---
+
+# 20. Requisito 5.4 — Despacho no consulta stock mediante esta API
+
+La consulta:
+
+```http
+POST /api/v1/productos/datos-fisicos/consulta
+```
+
+NO debe devolver:
+
+- `on_hand`;
+- `reserved`;
+- `available`;
+- reservas;
+- pedidos.
+
+Disponibilidad pertenece al contrato de Inventario.
+
+---
+
+# 21. Requisito 6 — Actualización ordinaria de variante
+
+El sistema debe permitir editar:
+
+- imagen;
+- atributos no identificadores;
+- perfil físico.
+
+No debe permitir editar ordinariamente:
+
+- `variant_id`;
+- SKU comercial publicado;
+- atributos identificadores.
+
+---
+
+# 22. Requisito 7 — Activación
+
+La variante se crea:
+
+```text
+BORRADOR
+```
+
+y puede pasar a:
+
+```text
+ACTIVA
+```
+
+cuando cumple las condiciones funcionales ya establecidas:
+
+- SKU válido;
+- atributos identificadores válidos;
+- imagen válida;
+- producto padre válido;
+- precio preparado;
+- SKU inicializado en Inventario.
+
+Esta versión no añade el perfil físico como bloqueo universal de activación salvo decisión funcional posterior.
+
+---
+
+# 23. Requisito 8 — Reactivación
+
+Una variante:
+
+```text
+INACTIVA
+```
+
+puede reactivarse si vuelve a cumplir las mismas condiciones de activación.
+
+La reactivación:
+
+- conserva SKU;
+- conserva `variant_id`;
+- no reactiva automáticamente al producto padre.
+
+---
+
+# 24. Requisito 9 — Desactivación
+
+El gestor puede desactivar una variante.
+
+La baja es lógica.
+
+Efectos:
+
+- no participa en nuevas ventas;
+- no participa en nuevos combos;
+- conserva identidad e histórico;
+- pedidos anteriores mantienen snapshot.
+
+Si era la última variante activa, el producto padre se inactiva conforme a la regla existente.
+
+---
+
+# 25. Requisito 10 — Consulta de variantes
+
+El sistema debe permitir consultar las variantes de un producto.
+
+Información conceptual:
+
+```text
+variant_id
+sku
+atributos identificadores
+atributos no identificadores
+imagen
+estado
+perfil físico cuando esté disponible
+```
+
+La disponibilidad de stock NO se almacena en la variante.
+
+Puede obtenerse desde Inventario cuando una vista agregada la necesite.
+
+---
+
+# 26. Requisito 11 — Integración con Inventario
+
+Al crear un SKU vendible, Catálogo solicita/informa la inicialización correspondiente en Inventario.
+
+Inventario es owner de:
+
+```text
+on_hand
+reserved
+available
+stock_version
+```
+
+Catálogo no persiste ni modifica estos valores.
+
+Una variante no debe exponer stock como si fuera un atributo propio.
+
+---
+
+# 27. Requisito 12 — Integración con Pricing
+
+Pricing puede definir un precio específico por SKU.
+
+Si no existe override, puede aplicar fallback al precio del producto padre según SPEC-013.
+
+Catálogo:
+
+- no persiste el precio vigente;
+- no calcula vigencias;
+- no decide promociones.
+
+---
+
+# 28. Requisito 13 — Carga masiva
+
+Cuando Bulk crea una variante:
+
+- identifica el producto;
+- identifica la combinación;
+- Catálogo genera `variant_id`;
+- valida o genera SKU;
+- devuelve correlación de resultado.
+
+La carga masiva no puede:
+
+- recodificar SKU mediante actualización ordinaria;
+- cambiar atributos identificadores históricos.
+
+Si el formato Bulk incorpora en el futuro perfil físico, deberá usar los mismos campos y validaciones contractuales de esta SPEC.
+
+No se deben crear reglas físicas alternativas solo para Bulk.
+
+---
+
+# 29. Elegibilidad comercial
+
+Una variante `ACTIVA` solo es comercialmente utilizable cuando su producto padre también se encuentra en estado permitido.
+
+Conceptualmente:
+
+```text
+Padre ACTIVO
++
+Variante ACTIVA
++
+Pricing preparado
++
+Inventario inicializado
+=
+SKU elegible
+```
+
+El perfil físico no modifica por sí mismo el ownership o el saldo.
+
+---
+
+# 30. Datos que pertenecen a Catálogo
+
+Catálogo es owner de:
+
+```text
+product_id
+variant_id
+sku_base
+sku
+atributos
+imagen
+estado
+slug
+perfil físico
+```
+
+Para el perfil físico:
+
+```text
+pesoKg
+largoCm
+anchoCm
+altoCm
+actualizadoEn
+```
+
+---
+
+# 31. Datos que NO pertenecen a Catálogo
+
+## Pricing
+
+```text
+precio_regular
+precio_oferta
+vigencias
+price_version
+```
+
+## Inventario
+
+```text
+on_hand
+reserved
+available
+stock_version
+reservas
+Kardex
+```
+
+## Despacho
+
+```text
+tipoEmpaque
+cantidadPaquetes
+dimensiones finales del paquete
+volumen logístico final
+ruta
+vehículo
+repartidor
+```
+
+## Ventas
+
+```text
+pedido
+pago
+estado del pedido
+reembolso
+```
+
+---
+
+# 32. Modelo conceptual del perfil físico
+
+Relación:
+
+```text
+SKU VENDIBLE
+    |
+    | puede tener
+    v
+PERFIL FÍSICO
+```
+
+Cardinalidad conceptual:
+
+```text
+SKU 1 -> 0.1 PERFIL FÍSICO
+```
+
+En el modelo lógico puede materializarse como:
+
+```text
+sku_physical_profiles
+```
+
+o estructura equivalente dentro de `catalog`.
+
+No se comparte tabla con Despacho.
+
+---
+
+# 33. Requisitos no funcionales
+
+## 33.1. Rendimiento
+
+- consulta individual de variantes eficiente;
+- listado paginable cuando corresponda;
+- consulta física de Despacho en lote;
+- evitar una llamada HTTP por cada SKU del pedido.
+
+## 33.2. Seguridad
+
+Crear, editar, activar, reactivar y desactivar requiere una identidad autenticada y autorización suficiente conforme al contrato vigente de Seguridad.
+
+Las respuestas HTTP protegidas se normalizan como:
+
+```text
+401 -> TOKEN_INVALIDO
+403 -> SCOPE_INSUFICIENTE
+```
+
+`TOKEN_INVALIDO` aplica cuando la petición no puede autenticarse mediante un token utilizable.
+
+`SCOPE_INSUFICIENTE` aplica cuando la identidad está autenticada pero no posee autorización suficiente para la operación.
+
+El código no obliga a exponer al consumidor el permiso o scope exacto faltante.
+
+La consulta física para Despacho requiere identidad técnica de servicio.
+
+Para:
+
+```text
+POST /api/v1/productos/datos-fisicos/consulta
+```
+
+el scope propuesto continúa siendo:
+
+```text
+productos:fisicos:leer
+```
+
+hasta que Seguridad lo registre/homologue definitivamente. Esa provisionalidad no modifica la semántica estable de `401` y `403`.
+
+## 33.3. Auditoría
+
+Registrar:
+
+- creación;
+- edición;
+- cambio de imagen;
+- cambio de perfil físico;
+- cambio de estado.
+
+Como mínimo:
+
+```text
+actor
+fecha/hora
+variante
+tipo de cambio
+```
+
+## 33.4. Disponibilidad
+
+Las lecturas de variantes y la consulta física deben ser suficientemente disponibles para los consumidores del catálogo.
+
+## 33.5. Escalabilidad
+
+La implementación debe soportar:
+
+- crecimiento del número de variantes;
+- múltiples consumidores;
+- consultas en lote.
+
+---
+
+# 34. Errores y códigos de aplicación
+
+El catálogo canónico pertenece a:
+
+```text
+api/catalogo-errores.md
+```
+
+Códigos relevantes para esta capacidad:
+
+```text
+VALIDACION
+TOKEN_INVALIDO
+SCOPE_INSUFICIENTE
+PRODUCTO_NO_ENCONTRADO
+PRODUCTO_NO_ADMITE_VARIANTES
+VARIANTE_NO_ENCONTRADA
+COMBINACION_DUPLICADA
+SKU_DUPLICADO
+SKU_INVALIDO
+ATRIBUTO_IDENTIFICADOR_INVALIDO
+IMAGEN_INVALIDA
+PERFIL_FISICO_INVALIDO
+DATOS_FISICOS_INCOMPLETOS
+VERSION_CONFLICT
+ERROR_INTERNO
+SERVICIO_NO_DISPONIBLE
+```
+
+La representación HTTP exacta pertenece a OpenAPI y utiliza:
+
+```text
+application/problem+json
+```
+
+Los consumidores deben ramificar por `code`, no por `title` ni `detail`.
+
+El código histórico:
+
+```text
+SIN_AUTORIZACION
+```
+
+queda retirado de nuevos contratos. Cuando la identidad está autenticada pero no cuenta con autorización suficiente se utiliza:
+
+```text
+SCOPE_INSUFICIENTE
+```
+
+---
+
+# 35. Escenarios adicionales del perfil físico
+
+## Escenario A — Registrar perfil físico
+
+**DADO** una variante `ZAP-RUN-42`
+
+**CUANDO** el gestor registra:
+
+```text
+peso = 1.4 kg
+largo = 35 cm
+ancho = 22 cm
+alto = 13 cm
+```
+
+**ENTONCES** Catálogo conserva esos valores asociados al SKU.
+
+---
+
+## Escenario B — Editar perfil sin cambiar SKU
+
+**DADO** una variante existente
+
+**CUANDO** se corrige el peso de:
+
+```text
+1.4 kg
+```
+
+a:
+
+```text
+1.35 kg
+```
+
+**ENTONCES**:
+
+- el SKU no cambia;
+- `variant_id` no cambia;
+- el perfil queda actualizado.
+
+---
+
+## Escenario C — Peso inválido
+
+**DADO** una variante
+
+**CUANDO** se intenta registrar:
+
+```text
+peso = 0
+```
+
+**ENTONCES** se rechaza el perfil.
+
+---
+
+## Escenario D — Dimensión inválida
+
+**DADO** una variante
+
+**CUANDO** se intenta registrar:
+
+```text
+alto = -2 cm
+```
+
+**ENTONCES** se rechaza la actualización.
+
+---
+
+## Escenario E — Consulta física de Despacho
+
+**DADO** dos SKU válidos con perfil completo
+
+**CUANDO** `modulo-despacho` realiza la consulta en lote
+
+**ENTONCES** Catálogo devuelve peso y dimensiones de ambos.
+
+---
+
+## Escenario F — SKU no encontrado en consulta física
+
+**DADO** una consulta con:
+
+```text
+SKU-VALIDO
+SKU-INEXISTENTE
+```
+
+**CUANDO** se procesa la solicitud
+
+**ENTONCES** la respuesta distingue los SKU encontrados de los no encontrados sin fallar necesariamente todo el lote.
+
+La representación exacta sigue OpenAPI.
+
+---
+
+## Escenario G — Token no válido
+
+**DADO** una operación protegida sobre variantes
+
+**CUANDO** la petición no contiene un token utilizable según el contrato de Seguridad
+
+**ENTONCES** la API responde:
+
+```text
+401
+TOKEN_INVALIDO
+```
+
+sin crear, editar ni cambiar el estado de la variante.
+
+---
+
+## Escenario H — Identidad sin autorización suficiente
+
+**DADO** una identidad autenticada
+
+**CUANDO** intenta crear, editar, activar, reactivar o desactivar una variante sin autorización suficiente
+
+**ENTONCES** la API responde:
+
+```text
+403
+SCOPE_INSUFICIENTE
+```
+
+sin ejecutar la mutación y sin necesidad de revelar el permiso exacto faltante.
+
+---
+
+# 36. Fuera de alcance
+
+Queda fuera de esta SPEC:
+
+- persistencia de precios;
+- gestión de stock;
+- reservas;
+- consumo de inventario;
+- promociones;
+- combos;
+- checkout;
+- pedidos;
+- definición del empaque;
+- cantidad de paquetes;
+- optimización logística;
+- cálculo de rutas;
+- capacidad de vehículos;
+- edición avanzada de imágenes;
+- recodificación ordinaria de SKU;
+- perfil físico de producto simple como formulario propio, que debe alinearse en SPEC-003.
+
+---
+
+# 37. Dependencias
+
+| Dependencia | Uso |
+|---|---|
+| SPEC-003 | Producto padre, `sku_base`, `tiene_variantes` |
+| SPEC-009 | Características |
+| SPEC-010 | Tipo de Producto–Característica |
+| SPEC-013 | Pricing |
+| SPEC-015 | Inicialización/consulta de Inventario |
+| Despacho | Consumo de datos físicos |
+| Seguridad | Autenticación/autorización; `401 TOKEN_INVALIDO` y `403 SCOPE_INSUFICIENTE` en operaciones protegidas |
+| OpenAPI | Contrato técnico HTTP |
+
+---
+
+# 38. Criterio de completitud
+
+La funcionalidad se considera correctamente implementada cuando:
+
+- [ ] solo productos `tiene_variantes=true` crean variantes mediante esta capacidad;
+- [ ] cada variante tiene `variant_id` estable;
+- [ ] SKU es único;
+- [ ] puede informarse o autogenerarse;
+- [ ] la combinación identificadora es única;
+- [ ] atributos identificadores son inmutables;
+- [ ] imagen propia está soportada;
+- [ ] estados BORRADOR/ACTIVA/INACTIVA funcionan;
+- [ ] desactivar última variante activa aplica la regla del padre;
+- [ ] Catálogo no persiste stock ni precio;
+- [ ] se puede registrar y editar perfil físico;
+- [ ] `pesoKg`, `largoCm`, `anchoCm` y `altoCm` se validan;
+- [ ] kg/cm son las unidades contractuales;
+- [ ] modificar perfil físico no cambia SKU ni `variant_id`;
+- [ ] la consulta física en lote coincide con `api/openapi.yaml`;
+- [ ] Despacho no obtiene ownership de los datos;
+- [ ] Productos no modela `tipoEmpaque`;
+- [ ] existen pruebas de validación y contrato para la consulta física;
+- [ ] los cambios de perfil físico quedan auditados;
+- [ ] respuestas protegidas usan `TOKEN_INVALIDO` para 401;
+- [ ] respuestas protegidas usan `SCOPE_INSUFICIENTE` para 403;
+- [ ] `SIN_AUTORIZACION` no se emite en contratos nuevos;
+- [ ] códigos HTTP coinciden con OpenAPI y `api/catalogo-errores.md`.

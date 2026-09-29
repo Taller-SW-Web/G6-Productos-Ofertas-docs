@@ -1,397 +1,1858 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WF-004 — Gestión avanzada de variantes (SKUs)</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestión avanzada de variantes (SKUs)</title>
   <style>
-    :root {
-      --surface:#fff; --neutral-10:#f3f4f6; --neutral-20:#e5e7eb; --neutral-30:#d1d5db;
-      --neutral-50:#6b7280; --neutral-70:#374151; --neutral-90:#111827; --gutter:24px;
-      --radius-sm:4px; --radius-md:8px; --content:1200px;
+    :root{
+      --surface:#FFFFFF;
+      --neutral-10:#F3F4F6;
+      --neutral-20:#D1D5DB;
+      --neutral-30:#D1D5DB;
+      --neutral-50:#6B7280;
+      --neutral-70:#6B7280;
+      --neutral-90:#111827;
+      --radius-sm:4px;
+      --radius-md:8px;
+      --content:1200px;
+      --gutter:24px;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--neutral-90);
+      background:var(--surface);
     }
-    * { box-sizing:border-box; }
-    input[type="checkbox"], input[type="radio"] { accent-color:var(--neutral-90); }
-    html { color-scheme:light; }
-    body { margin:0; background:var(--surface); color:var(--neutral-90); font:16px/1.5 Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-    button,input,select,textarea { font:inherit; }
-    button,select,a,input { -webkit-tap-highlight-color:transparent; }
-    button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible,[tabindex]:focus-visible { outline:3px solid var(--neutral-90); outline-offset:2px; }
-    [hidden] { display:none !important; }
-    h1,h2,h3,p { margin-top:0; }
-    h1 { margin-bottom:0; font-size:clamp(30px,4vw,48px); line-height:1.1; letter-spacing:-.025em; }
-    h2 { margin-bottom:0; font-size:24px; line-height:1.2; }
-    h3 { margin-bottom:0; font-size:18px; line-height:1.3; }
 
-    .app-header { border-bottom:1px solid var(--neutral-30); }
-    .header-inner { max-width:var(--content); margin:auto; padding:14px var(--gutter); display:flex; align-items:center; justify-content:space-between; gap:20px; }
-    .brand { display:flex; align-items:center; gap:12px; min-width:0; font-weight:750; }
-    .brand-mark { width:34px; height:34px; border:2px solid var(--neutral-90); display:grid; place-items:center; flex:0 0 auto; font-size:12px; }
-    .brand-text { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .header-nav { display:flex; gap:20px; color:var(--neutral-50); font-size:14px; }
-    .header-nav [aria-current="page"] { color:var(--neutral-90); font-weight:750; }
-    .user-chip { border:1px solid var(--neutral-30); border-radius:999px; padding:6px 12px; white-space:nowrap; }
-    .offline-banner { border-bottom:1px solid var(--neutral-90); background:var(--neutral-10); padding:10px var(--gutter); text-align:center; font-weight:700; }
-    main { max-width:var(--content); margin:auto; padding:40px var(--gutter) 72px; outline:none; }
-    .breadcrumbs { margin:0 0 24px; color:var(--neutral-50); font-size:14px; }
-    .breadcrumb-button { border:0; padding:0; color:inherit; background:transparent; cursor:pointer; text-decoration:underline; }
-    .page-heading { margin-bottom:32px; }
-    .heading-row { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }
-    .lede { margin:14px 0 0; max-width:780px; color:var(--neutral-50); font-size:18px; }
-    .muted { color:var(--neutral-50); }
-    .small { font-size:14px; }
-    .mono { font-family:"Roboto Mono",ui-monospace,SFMono-Regular,Consolas,monospace; }
-
-    .btn { min-height:44px; border:1px solid var(--neutral-90); border-radius:var(--radius-sm); padding:10px 16px; background:var(--surface); color:var(--neutral-90); cursor:pointer; font-weight:650; display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; }
-    .btn:hover:not(:disabled) { background:var(--neutral-10); }
-    .btn-primary { background:var(--neutral-90); color:var(--surface); }
-    .btn-primary:hover:not(:disabled) { background:#000; }
-    .btn-danger { border-width:2px; }
-    .btn:disabled { color:var(--neutral-50); border-color:var(--neutral-30); background:var(--neutral-10); cursor:not-allowed; }
-    .button-row { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
-
-    .product-context { border:1px solid var(--neutral-90); padding:18px 20px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; gap:20px; }
-    .context-label { margin:0 0 4px; color:var(--neutral-50); font-size:12px; font-weight:750; text-transform:uppercase; letter-spacing:.06em; }
-    .context-name { margin:0; font-size:18px; font-weight:750; }
-    .context-meta { display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:4px; color:var(--neutral-50); font-size:14px; }
-
-    .filters { border:1px solid var(--neutral-30); padding:20px; margin-bottom:20px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)) auto; gap:16px; align-items:end; }
-    .field { min-width:0; }
-    .field label,.field-label { display:block; margin-bottom:7px; font-size:14px; font-weight:750; }
-    .required::after { content:" *"; }
-    .control { width:100%; min-height:44px; border:1px solid var(--neutral-30); border-radius:var(--radius-sm); background:var(--surface); color:var(--neutral-90); padding:10px 12px; }
-    textarea.control { min-height:110px; resize:vertical; }
-    .control[aria-invalid="true"] { border:2px solid var(--neutral-90); }
-    .control[readonly] { background:var(--neutral-10); color:var(--neutral-50); }
-    .field-help { margin:6px 0 0; color:var(--neutral-50); font-size:13px; }
-    .field-error { margin:6px 0 0; font-size:14px; font-weight:750; }
-
-    .results-head { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:12px; }
-    .table-wrap { border:1px solid var(--neutral-30); overflow-x:auto; }
-    table { width:100%; min-width:900px; border-collapse:collapse; }
-    th,td { padding:14px; border-bottom:1px solid var(--neutral-30); text-align:left; vertical-align:middle; }
-    th { background:var(--neutral-10); font-size:13px; text-transform:uppercase; letter-spacing:.04em; }
-    tbody tr:last-child td { border-bottom:0; }
-    tbody tr:hover { background:var(--neutral-10); }
-    .variant-link { border:0; padding:0; background:transparent; color:var(--neutral-90); cursor:pointer; font-weight:750; text-align:left; text-decoration:underline; }
-    .thumb,.image-placeholder { width:76px; height:58px; border:1px solid var(--neutral-50); background:var(--neutral-10); position:relative; display:block; flex:0 0 auto; }
-    .thumb::before,.thumb::after,.image-placeholder::before,.image-placeholder::after { content:""; position:absolute; left:8px; right:8px; top:50%; height:1px; background:var(--neutral-50); }
-    .thumb::before,.image-placeholder::before { transform:rotate(31deg); }
-    .thumb::after,.image-placeholder::after { transform:rotate(-31deg); }
-    .status { display:inline-flex; align-items:center; gap:7px; border:1px solid var(--neutral-90); border-radius:999px; padding:4px 9px; font-size:13px; font-weight:750; white-space:nowrap; }
-    .status::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--neutral-90); }
-    .status.draft::before { background:var(--neutral-50); }
-    .status.inactive { border-style:dashed; }
-    .row-actions { display:flex; justify-content:flex-end; gap:8px; }
-    .row-actions .btn { min-height:36px; padding:6px 10px; font-size:14px; }
-
-    .panel { border:1px solid var(--neutral-30); padding:24px; background:var(--surface); }
-    .panel + .panel { margin-top:16px; }
-    .panel-heading { margin-bottom:20px; }
-    .panel-heading p { margin:6px 0 0; }
-    .form-grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:20px 24px; }
-    .span-12 { grid-column:span 12; } .span-8 { grid-column:span 8; } .span-6 { grid-column:span 6; } .span-4 { grid-column:span 4; }
-    .readonly-group { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
-    .readonly-box { min-height:72px; border:1px solid var(--neutral-30); background:var(--neutral-10); padding:12px; }
-    .readonly-label { display:block; color:var(--neutral-50); font-size:12px; font-weight:750; text-transform:uppercase; letter-spacing:.04em; }
-    .readonly-value { display:block; margin-top:5px; font-weight:750; overflow-wrap:anywhere; }
-    .upload-box { border:1px dashed var(--neutral-50); background:var(--neutral-10); padding:22px; }
-    .upload-box input { margin-top:12px; max-width:100%; }
-    .image-preview { margin-top:14px; display:flex; align-items:center; gap:12px; }
-    .actions-bar { margin-top:24px; border-top:1px solid var(--neutral-30); padding-top:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-
-    .notice { border:1px solid var(--neutral-90); padding:16px; display:flex; align-items:flex-start; gap:12px; }
-    .notice + .notice { margin-top:12px; }
-    .notice-icon { width:26px; height:26px; border:1px solid var(--neutral-90); border-radius:50%; display:grid; place-items:center; flex:0 0 auto; font-weight:850; }
-    .notice-title { margin:0; font-weight:800; }
-    .notice p + p { margin-top:4px; }
-    .error-summary { border:2px solid var(--neutral-90); padding:18px; margin-bottom:20px; }
-    .error-summary h2 { font-size:20px; }
-    .error-summary ul { margin-bottom:0; }
-    .error-summary a { color:inherit; font-weight:750; }
-
-    .detail-header { padding-bottom:24px; margin-bottom:24px; border-bottom:1px solid var(--neutral-30); }
-    .title-with-status { display:flex; align-items:center; flex-wrap:wrap; gap:14px; }
-    .detail-grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(280px,1fr); gap:24px; align-items:start; }
-    .definition-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; }
-    .definition { padding:16px 0; border-bottom:1px solid var(--neutral-30); }
-    .definition-label { color:var(--neutral-50); font-size:13px; font-weight:750; text-transform:uppercase; letter-spacing:.04em; }
-    .definition-value { margin-top:5px; font-weight:650; overflow-wrap:anywhere; }
-    .hero-image { min-height:250px; border:1px solid var(--neutral-50); background:var(--neutral-10); position:relative; display:grid; place-items:center; }
-    .hero-image::before,.hero-image::after { content:""; position:absolute; left:18%; right:18%; top:50%; height:1px; background:var(--neutral-50); }
-    .hero-image::before { transform:rotate(22deg); } .hero-image::after { transform:rotate(-22deg); }
-    .hero-image span { position:relative; z-index:1; padding:6px 10px; background:var(--surface); font-weight:700; }
-    .meta-list { margin:0; padding:0; list-style:none; }
-    .meta-list li { padding:10px 0; border-bottom:1px solid var(--neutral-30); }
-
-    .empty-state,.global-state { border:1px solid var(--neutral-30); padding:56px 24px; text-align:center; }
-    .empty-symbol { width:52px; height:52px; margin:0 auto 18px; border:2px solid var(--neutral-90); display:grid; place-items:center; font-weight:850; }
-    .empty-state p,.global-state p { max-width:620px; margin:12px auto 22px; color:var(--neutral-50); }
-    .skeleton { min-height:18px; background:var(--neutral-10); animation:pulse 1.3s ease-in-out infinite; }
-    .skeleton + .skeleton { margin-top:14px; }
-    @keyframes pulse { 50% { opacity:.45; } }
-
-    .modal-backdrop { position:fixed; inset:0; z-index:30; display:grid; place-items:center; padding:20px; background:rgb(17 24 39 / 50%); }
-    .modal { width:min(580px,100%); max-height:calc(100vh - 40px); overflow:auto; border:2px solid var(--neutral-90); background:var(--surface); padding:28px; }
-    .modal p { margin:12px 0 0; }
-    .modal-actions { margin-top:24px; display:flex; justify-content:flex-end; flex-wrap:wrap; gap:12px; }
-    .toast { position:fixed; right:24px; bottom:24px; z-index:40; max-width:430px; border:2px solid var(--neutral-90); background:var(--surface); padding:14px 18px; font-weight:750; }
-    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-
-    @media (max-width:900px) {
-      .header-nav { display:none; }
-      .filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
-      .filters .button-row { grid-column:span 2; }
-      .detail-grid { grid-template-columns:1fr; }
-      .span-8,.span-6,.span-4 { grid-column:span 12; }
-      .readonly-group { grid-template-columns:1fr; }
+    *{box-sizing:border-box}
+    html{min-width:320px;color-scheme:light}
+    body{margin:0;background:var(--surface);color:var(--neutral-90);font-size:16px;line-height:1.5}
+    button,input,select,textarea{font:inherit;color:inherit}
+    button{cursor:pointer}
+    button,input,select,textarea,a{outline-offset:2px}
+    button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{
+      outline:3px solid var(--neutral-90);
+      outline-offset:2px;
     }
-    @media (max-width:600px) {
-      :root { --gutter:16px; }
-      main { padding-top:28px; }
-      .user-chip { display:none; }
-      .heading-row,.product-context,.actions-bar { flex-direction:column; align-items:stretch; }
-      .heading-row .btn,.actions-bar .btn { width:100%; }
-      .filters { grid-template-columns:1fr; }
-      .filters .button-row { grid-column:auto; }
-      .definition-grid { grid-template-columns:1fr; }
-      .panel { padding:18px; }
-      .modal { padding:22px; }
-      .modal-actions { flex-direction:column-reverse; }
-      .modal-actions .btn { width:100%; }
-      .toast { left:16px; right:16px; bottom:16px; }
+    [hidden]{display:none!important}
+    h1,h2,h3,p{margin-top:0}
+    h1{font-size:clamp(28px,4vw,40px);line-height:1.15;margin-bottom:8px}
+    h2{font-size:24px;line-height:1.2;margin-bottom:12px}
+    h3{font-size:18px;line-height:1.3;margin-bottom:8px}
+    .muted{color:var(--neutral-50)}
+    .small{font-size:14px}
+    .mono{font-family:"Roboto Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+    .app-header{border-bottom:1px solid var(--neutral-30);background:var(--surface)}
+    .header-inner{
+      max-width:var(--content);
+      margin:auto;
+      padding:14px var(--gutter);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
     }
-    @media (prefers-reduced-motion:reduce) { .skeleton { animation:none; } }
+    .brand{display:flex;align-items:center;gap:12px;font-weight:700;min-width:0}
+    .brand-mark{
+      width:34px;height:34px;border:2px solid var(--neutral-90);
+      display:grid;place-items:center;flex:0 0 auto;
+      font-family:"Roboto Mono",ui-monospace,monospace;font-size:12px;
+    }
+    .brand-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .header-nav{display:flex;gap:18px;color:var(--neutral-50);font-size:14px}
+    .header-nav [aria-current="page"]{color:var(--neutral-90);font-weight:700}
+    .user-chip{border:1px solid var(--neutral-30);border-radius:999px;padding:6px 12px;white-space:nowrap}
+    .offline-banner{
+      border-bottom:1px solid var(--neutral-90);
+      background:var(--neutral-10);
+      padding:10px var(--gutter);
+      text-align:center;
+      font-weight:700;
+    }
+
+    main{max-width:var(--content);margin:auto;padding:32px var(--gutter) 64px;outline:none}
+    .breadcrumbs{margin-bottom:22px;color:var(--neutral-50);font-size:14px}
+    .breadcrumb-button{
+      border:0;padding:0;background:transparent;color:inherit;cursor:pointer;text-decoration:underline;
+    }
+    .page-heading{margin-bottom:24px}
+    .heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+    .lede{margin:0;color:var(--neutral-50);max-width:780px}
+
+    .btn{
+      min-height:44px;
+      border:1px solid var(--neutral-90);
+      border-radius:var(--radius-sm);
+      padding:10px 16px;
+      background:var(--surface);
+      color:var(--neutral-90);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-weight:650;
+      text-decoration:none;
+    }
+    .btn:hover:not(:disabled){background:var(--neutral-10)}
+    .btn-primary{background:var(--neutral-90);color:var(--surface)}
+    .btn-primary:hover:not(:disabled){background:var(--neutral-70)}
+    .btn-quiet{border-color:var(--neutral-30);font-weight:500}
+    .btn-danger{border-width:2px}
+    .btn:disabled{cursor:not-allowed;color:var(--neutral-50);border-color:var(--neutral-30);background:var(--neutral-10)}
+    .button-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+    .button-row.end{justify-content:flex-end}
+
+    .product-context{
+      border:1px solid var(--neutral-90);
+      padding:18px 20px;
+      margin-bottom:24px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:20px;
+    }
+    .context-label{margin:0 0 4px;color:var(--neutral-50);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+    .context-name{margin:0;font-size:18px;font-weight:700}
+    .context-meta{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:4px;color:var(--neutral-50);font-size:14px}
+
+    .notice{
+      border:1px solid var(--neutral-90);
+      padding:16px;
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+      background:var(--surface);
+      margin-bottom:16px;
+    }
+    .notice.error{border-width:2px}
+    .notice-icon{
+      width:26px;height:26px;min-width:26px;
+      border:1px solid var(--neutral-90);border-radius:50%;
+      display:grid;place-items:center;font-weight:800;
+    }
+    .notice-title{margin:0 0 4px;font-weight:800}
+    .notice p{margin-bottom:0}
+
+    .filters{
+      border:1px solid var(--neutral-30);
+      padding:18px;
+      margin-bottom:18px;
+      display:grid;
+      grid-template-columns:minmax(200px,1fr) repeat(3,minmax(150px,220px));
+      gap:14px;
+      align-items:end;
+    }
+
+    .field{min-width:0}
+    .field label,.field-label{display:block;margin-bottom:6px;font-size:14px;font-weight:700}
+    .control{
+      width:100%;
+      min-height:44px;
+      border:1px solid var(--neutral-30);
+      border-radius:var(--radius-sm);
+      background:var(--surface);
+      padding:10px 12px;
+    }
+    .control[readonly]{background:var(--neutral-10);color:var(--neutral-70)}
+    .control[aria-invalid="true"]{border:2px solid var(--neutral-90)}
+    .field-help{margin:6px 0 0;color:var(--neutral-50);font-size:13px}
+    .field-error{margin:6px 0 0;font-size:13px;font-weight:700}
+    .unit-wrap{position:relative}
+    .unit-wrap .control{padding-right:54px}
+    .unit-label{
+      position:absolute;right:12px;top:50%;transform:translateY(-50%);
+      color:var(--neutral-50);font-weight:700;font-size:13px;pointer-events:none;
+    }
+
+    .results-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:12px}
+    .table-wrap{border:1px solid var(--neutral-30);overflow-x:auto;-webkit-overflow-scrolling:touch}
+    table{width:100%;border-collapse:collapse}
+    th,td{text-align:left;padding:13px 14px;border-bottom:1px solid var(--neutral-30);vertical-align:middle}
+    th{
+      background:var(--neutral-10);color:var(--neutral-70);
+      font-family:"Roboto Mono",ui-monospace,monospace;font-size:12px;
+      text-transform:uppercase;letter-spacing:.04em;font-weight:600;white-space:nowrap;
+    }
+    tbody tr:last-child td{border-bottom:0}
+    .variant-link{
+      border:0;padding:0;background:transparent;color:var(--neutral-90);
+      text-decoration:underline;font-weight:700;text-align:left;cursor:pointer;
+    }
+    .sku-code{font-family:"Roboto Mono",ui-monospace,monospace;font-size:13px;font-weight:700}
+    .thumb,.image-placeholder{
+      width:76px;height:58px;border:1px solid var(--neutral-50);
+      background:var(--neutral-10);position:relative;display:block;flex:0 0 auto;
+    }
+    .thumb::before,.thumb::after,.image-placeholder::before,.image-placeholder::after{
+      content:"";position:absolute;left:8px;right:8px;top:50%;height:1px;background:var(--neutral-50);
+    }
+    .thumb::before,.image-placeholder::before{transform:rotate(31deg)}
+    .thumb::after,.image-placeholder::after{transform:rotate(-31deg)}
+    .variant-cell{display:flex;align-items:center;gap:12px}
+    .status{
+      display:inline-flex;align-items:center;gap:7px;
+      border:1px solid var(--neutral-90);border-radius:999px;
+      padding:4px 9px;font-size:13px;font-weight:700;white-space:nowrap;
+    }
+    .status::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--neutral-90)}
+    .status.draft::before{background:var(--neutral-50)}
+    .status.inactive{border-style:dashed}
+    .physical-state{
+      display:inline-flex;align-items:center;gap:7px;
+      border:1px solid var(--neutral-30);padding:4px 8px;font-size:13px;font-weight:650;
+    }
+    .physical-state::before{content:"";width:8px;height:8px;border:1px solid var(--neutral-90)}
+    .physical-state.complete::before{background:var(--neutral-90)}
+    .physical-state.partial::before{background:var(--neutral-30)}
+    .physical-state.none::before{background:var(--surface)}
+    .row-actions{display:flex;justify-content:flex-end;gap:8px}
+    .row-actions .btn{min-height:36px;padding:6px 10px;font-size:13px}
+    .mobile-list{display:none}
+    .variant-card{
+      border:1px solid var(--neutral-30);
+      padding:16px;margin-bottom:12px;background:var(--surface);
+    }
+    .variant-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .variant-card-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+    .compact-box{border:1px solid var(--neutral-30);background:var(--neutral-10);padding:10px}
+    .compact-label{display:block;color:var(--neutral-50);font-size:12px;margin-bottom:2px}
+    .compact-value{font-weight:700}
+
+    .panel{border:1px solid var(--neutral-30);padding:22px;background:var(--surface)}
+    .panel+.panel{margin-top:16px}
+    .panel-heading{margin-bottom:18px}
+    .panel-heading p{margin:6px 0 0;color:var(--neutral-50)}
+    .form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px 22px}
+    .span-12{grid-column:span 12}
+    .span-8{grid-column:span 8}
+    .span-6{grid-column:span 6}
+    .span-4{grid-column:span 4}
+    .span-3{grid-column:span 3}
+    .readonly-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .readonly-box{border:1px solid var(--neutral-30);background:var(--neutral-10);padding:12px;min-height:72px}
+    .readonly-label{display:block;color:var(--neutral-50);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+    .readonly-value{display:block;margin-top:5px;font-weight:700;overflow-wrap:anywhere}
+
+    .upload-box{border:1px dashed var(--neutral-50);background:var(--neutral-10);padding:18px}
+    .upload-box input{margin-top:12px;max-width:100%}
+    .image-preview{margin-top:14px;display:flex;align-items:center;gap:12px}
+
+    .actions-bar{
+      margin-top:22px;padding-top:18px;border-top:1px solid var(--neutral-30);
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+    }
+
+    .detail-header{padding-bottom:22px;margin-bottom:22px;border-bottom:1px solid var(--neutral-30)}
+    .title-with-status{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+    .detail-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:22px;align-items:start}
+    .definition-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px}
+    .definition{padding:14px 0;border-bottom:1px solid var(--neutral-30)}
+    .definition-label{color:var(--neutral-50);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+    .definition-value{margin-top:5px;font-weight:650;overflow-wrap:anywhere}
+    .hero-image{
+      min-height:240px;border:1px solid var(--neutral-50);background:var(--neutral-10);
+      position:relative;display:grid;place-items:center;
+    }
+    .hero-image::before,.hero-image::after{
+      content:"";position:absolute;left:18%;right:18%;top:50%;height:1px;background:var(--neutral-50)
+    }
+    .hero-image::before{transform:rotate(22deg)}
+    .hero-image::after{transform:rotate(-22deg)}
+    .hero-image span{position:relative;z-index:1;background:var(--surface);padding:6px 10px;font-weight:700}
+    .meta-list{margin:0;padding:0;list-style:none}
+    .meta-list li{padding:10px 0;border-bottom:1px solid var(--neutral-30)}
+
+    .physical-grid{
+      display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;
+    }
+    .physical-card{
+      border:1px solid var(--neutral-30);background:var(--neutral-10);padding:12px;
+    }
+    .physical-card span{display:block}
+    .physical-label{color:var(--neutral-50);font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+    .physical-value{font-family:"Roboto Mono",ui-monospace,monospace;font-size:17px;font-weight:700}
+
+    .empty-state,.global-state{
+      border:1px solid var(--neutral-30);padding:50px 24px;text-align:center;background:var(--surface)
+    }
+    .empty-symbol{
+      width:52px;height:52px;margin:0 auto 18px;border:2px solid var(--neutral-90);
+      display:grid;place-items:center;font-weight:800
+    }
+    .empty-state p,.global-state p{max-width:620px;margin:12px auto 20px;color:var(--neutral-50)}
+
+    .skeleton{height:16px;background:var(--neutral-10);margin:10px 0}
+    .w30{width:30%}.w50{width:50%}.w80{width:80%}
+
+    .error-summary{border:2px solid var(--neutral-90);padding:16px;margin-bottom:18px}
+    .error-summary h2{font-size:20px}
+    .error-summary ul{margin-bottom:0}
+
+    .modal-backdrop{
+      position:fixed;inset:0;z-index:50;display:grid;place-items:center;
+      padding:20px;background:rgba(17,24,39,.5);
+    }
+    .modal{
+      width:min(620px,100%);max-height:calc(100vh - 40px);overflow:auto;
+      border:2px solid var(--neutral-90);background:var(--surface);padding:24px;
+    }
+    .modal-actions{margin-top:22px;display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px}
+    .toast{
+      position:fixed;right:24px;bottom:24px;z-index:70;
+      max-width:420px;border:1px solid var(--neutral-90);background:var(--surface);padding:14px 16px;
+    }
+    .sr-only{
+      position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+      clip:rect(0,0,0,0);white-space:nowrap;border:0;
+    }
+
+    @media (max-width:900px){
+      .header-nav{display:none}
+      .filters{grid-template-columns:1fr 1fr}
+      .filters .field:first-child{grid-column:1/-1}
+      .desktop-table{display:none}
+      .mobile-list{display:block}
+      .detail-grid{grid-template-columns:1fr}
+      .span-8,.span-6,.span-4,.span-3{grid-column:span 12}
+      .readonly-grid{grid-template-columns:1fr}
+      .physical-grid{grid-template-columns:1fr 1fr}
+    }
+
+    @media (max-width:600px){
+      :root{--gutter:16px}
+      main{padding-top:24px}
+      .user-chip{display:none}
+      .heading-row,.product-context,.actions-bar{flex-direction:column;align-items:stretch}
+      .heading-row .btn,.product-context .btn,.actions-bar .btn{width:100%}
+      .filters{grid-template-columns:1fr}
+      .filters .field:first-child{grid-column:auto}
+      .definition-grid{grid-template-columns:1fr}
+      .physical-grid{grid-template-columns:1fr}
+      .variant-card-meta{grid-template-columns:1fr}
+      .button-row,.row-actions{display:grid;grid-template-columns:1fr;width:100%}
+      .button-row .btn,.row-actions .btn{width:100%;min-height:44px}
+      .panel{padding:16px}
+      .modal{padding:18px}
+      .modal-actions{flex-direction:column-reverse}
+      .modal-actions .btn{width:100%}
+      .toast{left:16px;right:16px;bottom:16px}
+    }
   </style>
 </head>
 <body>
   <header class="app-header">
     <div class="header-inner">
-      <div class="brand"><div class="brand-mark" aria-hidden="true">PO</div><span class="brand-text">PO Productos y ofertas</span></div><nav class="header-nav" aria-label="Navegación principal"><span>Inicio</span><span aria-current="page">Productos</span><span>Ofertas</span></nav>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">PO</div>
+        <span class="brand-text">PO Productos y ofertas</span>
+      </div>
+      <nav class="header-nav" aria-label="Navegación principal">
+        <span>Inicio</span>
+        <span aria-current="page">Productos</span>
+        <span>Ofertas</span>
+      </nav>
       <span class="user-chip">Gestor comercial</span>
     </div>
   </header>
-  <div id="offline-banner" class="offline-banner" role="status" hidden>Sin conexión. Los cambios no se guardarán hasta recuperar la conexión.</div>
+
+  <div id="offline-banner" class="offline-banner" role="status" hidden>
+    Sin conexión. Los cambios no se guardarán hasta recuperar la conexión.
+  </div>
+
   <main id="main" tabindex="-1"></main>
   <div id="modal-root"></div>
-  <div id="toast" class="toast" role="status" hidden></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
   <script>
-    (() => {
-      'use strict';
+  (() => {
+    'use strict';
 
-      const products = {
-        variants: { id:'p-001', name:'Zapatillas Running ProSpeed X', skuBase:'ZAP-PSX', status:'Activo', category:'Calzado', brand:'ProSpeed', hasVariants:true },
-        simple: { id:'p-003', name:'Botella térmica 750 ml', skuBase:'BOT-750', status:'Activo', category:'Accesorios', brand:'UrbanFit', hasVariants:false }
+    const products = {
+      variants:{
+        id:'p-001',
+        name:'Zapatillas Running ProSpeed X',
+        skuBase:'ZAP-PSX',
+        status:'Activo',
+        category:'Calzado',
+        brand:'ProSpeed',
+        hasVariants:true
+      },
+      simple:{
+        id:'p-003',
+        name:'Botella térmica 750 ml',
+        skuBase:'BOT-750',
+        status:'Activo',
+        category:'Accesorios',
+        brand:'UrbanFit',
+        hasVariants:false
+      }
+    };
+
+    const initialVariants = [
+      {
+        id:'v-001',
+        size:'42',
+        color:'Negro',
+        sku:'ZAP-PSX-42-NEG',
+        status:'Activa',
+        material:'Malla técnica',
+        image:'zapatilla-negra-42.jpg',
+        price:'S/ 329.90',
+        priceSource:'Precio base del producto',
+        availability:'12 unidades disponibles',
+        updated:'28/09/2026, 15:40',
+        physical:{weight:1.35,length:35,width:22,height:13}
+      },
+      {
+        id:'v-002',
+        size:'41',
+        color:'Negro',
+        sku:'ZAP-PSX-41-NEG',
+        status:'Activa',
+        material:'Malla técnica',
+        image:'zapatilla-negra-41.jpg',
+        price:'S/ 329.90',
+        priceSource:'Precio base del producto',
+        availability:'8 unidades disponibles',
+        updated:'28/09/2026, 15:34',
+        physical:{weight:1.31,length:34.5,width:21.8,height:12.8}
+      },
+      {
+        id:'v-003',
+        size:'42',
+        color:'Blanco',
+        sku:'ZAP-PSX-42-BLA',
+        status:'Activa',
+        material:'Malla técnica',
+        image:'zapatilla-blanca-42.jpg',
+        price:'S/ 349.90',
+        priceSource:'Precio específico de la variante',
+        availability:'5 unidades disponibles',
+        updated:'28/09/2026, 15:22',
+        physical:{weight:1.36,length:35,width:22,height:null}
+      },
+      {
+        id:'v-004',
+        size:'40',
+        color:'Azul',
+        sku:'ZAP-PSX-40-AZU',
+        status:'Borrador',
+        material:'Malla técnica',
+        image:'zapatilla-azul-40.jpg',
+        price:'S/ 329.90',
+        priceSource:'Precio base del producto',
+        availability:'Inicialización pendiente',
+        updated:'28/09/2026, 14:58',
+        physical:{weight:null,length:null,width:null,height:null}
+      },
+      {
+        id:'v-005',
+        size:'39',
+        color:'Negro',
+        sku:'ZAP-PSX-39-NEG',
+        status:'Inactiva',
+        material:'Malla técnica',
+        image:'zapatilla-negra-39.jpg',
+        price:'S/ 329.90',
+        priceSource:'Precio base del producto',
+        availability:'No disponible para nuevas ventas',
+        updated:'27/09/2026, 17:05',
+        physical:{weight:1.22,length:33,width:21,height:12}
+      }
+    ];
+
+    const state = {
+      product:products.variants,
+      variants:initialVariants.map(v => ({
+        ...v,
+        physical:{...v.physical}
+      })),
+      screen:'list',
+      selectedId:null,
+      filters:{search:'',size:'',color:'',status:''},
+      listMode:'normal',
+      errors:{},
+      formDirty:false,
+      saving:false,
+      modal:null,
+      modalReturn:null,
+      toastTimer:null,
+      simulatedImageError:'',
+      formDraft:null
+    };
+
+    const main = document.getElementById('main');
+    const modalRoot = document.getElementById('modal-root');
+    const toastEl = document.getElementById('toast');
+    const announcer = document.getElementById('announcer');
+    const offlineBanner = document.getElementById('offline-banner');
+
+    const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
+    }[ch]));
+
+    function announce(message){
+      announcer.textContent = '';
+      setTimeout(() => announcer.textContent = message, 20);
+    }
+
+    function toast(message){
+      clearTimeout(state.toastTimer);
+      toastEl.textContent = message;
+      toastEl.hidden = false;
+      state.toastTimer = setTimeout(() => toastEl.hidden = true, 3400);
+    }
+
+    function currentVariant(){
+      return state.variants.find(v => v.id === state.selectedId) || null;
+    }
+
+    function statusClass(status){
+      if(status === 'Borrador') return 'draft';
+      if(status === 'Inactiva') return 'inactive';
+      return 'active';
+    }
+
+    function statusBadge(status){
+      return `<span class="status ${statusClass(status)}">${escapeHtml(status)}</span>`;
+    }
+
+    function physicalState(v){
+      const values = Object.values(v.physical || {});
+      const filled = values.filter(value => value !== null && value !== '' && value !== undefined).length;
+      if(filled === 0) return {key:'none',label:'Sin registrar'};
+      if(filled === values.length) return {key:'complete',label:'Completo'};
+      return {key:'partial',label:'Incompleto'};
+    }
+
+    function physicalBadge(v){
+      const s = physicalState(v);
+      return `<span class="physical-state ${s.key}">${s.label}</span>`;
+    }
+
+    function breadcrumbs(items){
+      return `<nav class="breadcrumbs" aria-label="Ruta de navegación">${
+        items.map((item,index) => index === items.length - 1
+          ? `<span aria-current="page">${escapeHtml(item.label)}</span>`
+          : `<button class="breadcrumb-button" type="button" data-action="${escapeHtml(item.action)}">${escapeHtml(item.label)}</button><span aria-hidden="true"> / </span>`
+        ).join('')
+      }</nav>`;
+    }
+
+    function pageHeading(title,description,action=''){
+      return `<div class="page-heading">
+        <div class="heading-row">
+          <div>
+            <h1>${escapeHtml(title)}</h1>
+            <p class="lede">${escapeHtml(description)}</p>
+          </div>
+          ${action}
+        </div>
+      </div>`;
+    }
+
+    function productContext(){
+      const p = state.product;
+      return `<section class="product-context" aria-label="Producto seleccionado">
+        <div>
+          <p class="context-label">Producto</p>
+          <p class="context-name">${escapeHtml(p.name)}</p>
+          <div class="context-meta">
+            <span class="mono">SKU base ${escapeHtml(p.skuBase)}</span>
+            <span>${escapeHtml(p.category)}</span>
+            <span>${escapeHtml(p.brand)}</span>
+            <span>${escapeHtml(p.status)}</span>
+          </div>
+        </div>
+        <button class="btn btn-quiet" type="button" data-action="back-product">Volver al producto</button>
+      </section>`;
+    }
+
+    function navigate(screen,id=null){
+      state.screen = screen;
+      if(id !== null) state.selectedId = id;
+      state.errors = {};
+      state.simulatedImageError = '';
+      closeModal(false);
+      render();
+      main.focus();
+    }
+
+    function filteredVariants(){
+      const q = state.filters.search.trim().toLowerCase();
+
+      return state.variants.filter(v => {
+        const searchOk = !q ||
+          v.sku.toLowerCase().includes(q) ||
+          `${v.size} ${v.color}`.toLowerCase().includes(q);
+
+        return searchOk &&
+          (!state.filters.size || v.size === state.filters.size) &&
+          (!state.filters.color || v.color === state.filters.color) &&
+          (!state.filters.status || v.status === state.filters.status);
+      });
+    }
+
+    function render(){
+      modalRoot.innerHTML = '';
+
+      if(state.screen === 'list') renderList();
+      else if(state.screen === 'create') renderForm('create');
+      else if(state.screen === 'edit') renderForm('edit');
+      else if(state.screen === 'detail') renderDetail();
+      else if(state.screen === 'no-permission') renderNoPermission();
+      else if(state.screen === 'session-expired') renderSessionExpired();
+      else if(state.screen === 'conflict') renderConflict();
+      else renderNotFound();
+    }
+
+    function renderList(){
+      if(!state.product.hasVariants){
+        renderIncompatibleProduct();
+        return;
+      }
+
+      const variants = filteredVariants();
+      const activeCount = state.variants.filter(v => v.status === 'Activa').length;
+      const sizes = [...new Set(state.variants.map(v => v.size))];
+      const colors = [...new Set(state.variants.map(v => v.color))];
+
+      main.innerHTML = `
+        ${breadcrumbs([
+          {label:'Productos',action:'back-product'},
+          {label:state.product.name,action:'back-product'},
+          {label:'Variantes'}
+        ])}
+
+        ${productContext()}
+
+        ${pageHeading(
+          'Variantes del producto',
+          'Administra las combinaciones vendibles, su imagen y sus datos físicos.',
+          '<button class="btn btn-primary" type="button" data-action="new-variant">Nueva variante</button>'
+        )}
+
+        ${!activeCount ? `
+          <div class="notice" role="status">
+            <span class="notice-icon" aria-hidden="true">!</span>
+            <div>
+              <p class="notice-title">Este producto no tiene variantes activas</p>
+              <p class="muted">Necesita al menos una variante activa para ofrecerse mediante sus variantes.</p>
+            </div>
+          </div>
+        ` : ''}
+
+        ${state.listMode === 'loading' ? renderLoading() :
+          state.listMode === 'error' ? renderListError() :
+          `
+            <section class="filters" aria-label="Filtros de variantes">
+              <div class="field">
+                <label for="searchFilter">Buscar</label>
+                <input class="control" id="searchFilter" type="text" data-filter="search" placeholder="SKU o combinación" value="${escapeHtml(state.filters.search)}">
+              </div>
+
+              <div class="field">
+                <label for="sizeFilter">Talla</label>
+                <select class="control" id="sizeFilter" data-filter="size">
+                  <option value="">Todas</option>
+                  ${sizes.map(v => `<option value="${escapeHtml(v)}" ${state.filters.size===v?'selected':''}>${escapeHtml(v)}</option>`).join('')}
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="colorFilter">Color</label>
+                <select class="control" id="colorFilter" data-filter="color">
+                  <option value="">Todos</option>
+                  ${colors.map(v => `<option value="${escapeHtml(v)}" ${state.filters.color===v?'selected':''}>${escapeHtml(v)}</option>`).join('')}
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="statusFilter">Estado</label>
+                <select class="control" id="statusFilter" data-filter="status">
+                  <option value="">Todos</option>
+                  <option ${state.filters.status==='Borrador'?'selected':''}>Borrador</option>
+                  <option ${state.filters.status==='Activa'?'selected':''}>Activa</option>
+                  <option ${state.filters.status==='Inactiva'?'selected':''}>Inactiva</option>
+                </select>
+              </div>
+            </section>
+
+            <div class="results-head">
+              <span class="small muted">${variants.length} ${variants.length===1?'variante':'variantes'}</span>
+              ${Object.values(state.filters).some(Boolean)
+                ? '<button class="btn btn-quiet" type="button" data-action="clear-filters">Limpiar filtros</button>'
+                : ''
+              }
+            </div>
+
+            ${state.variants.length === 0 ? renderEmptyInitial() :
+              variants.length === 0 ? renderNoResults() :
+              renderVariantList(variants)
+            }
+          `
+        }
+      `;
+
+      bindFilters();
+    }
+
+    function renderLoading(){
+      return `<section class="panel" aria-label="Cargando variantes">
+        <div class="skeleton w30"></div>
+        <div class="skeleton w80"></div>
+        <div class="skeleton w50"></div>
+        <div class="skeleton w80"></div>
+      </section>`;
+    }
+
+    function renderListError(){
+      return `<section class="notice error" role="alert">
+        <span class="notice-icon" aria-hidden="true">!</span>
+        <div>
+          <p class="notice-title">No pudimos cargar las variantes</p>
+          <p class="muted">Intenta nuevamente.</p>
+          <div class="button-row" style="margin-top:12px">
+            <button class="btn btn-primary" type="button" data-action="retry-list">Reintentar</button>
+          </div>
+        </div>
+      </section>`;
+    }
+
+    function renderEmptyInitial(){
+      return `<section class="empty-state">
+        <div class="empty-symbol" aria-hidden="true">+</div>
+        <h2>Este producto todavía no tiene variantes</h2>
+        <p>Crea la primera combinación para comenzar a preparar sus unidades vendibles.</p>
+        <button class="btn btn-primary" type="button" data-action="new-variant">Crear primera variante</button>
+      </section>`;
+    }
+
+    function renderNoResults(){
+      return `<section class="empty-state">
+        <div class="empty-symbol" aria-hidden="true">0</div>
+        <h2>No se encontraron variantes</h2>
+        <p>No hay resultados con los filtros aplicados.</p>
+        <button class="btn" type="button" data-action="clear-filters">Limpiar filtros</button>
+      </section>`;
+    }
+
+    function renderVariantList(variants){
+      const desktopRows = variants.map(v => `
+        <tr>
+          <td>
+            <div class="variant-cell">
+              <span class="thumb" aria-hidden="true"></span>
+              <div>
+                <button class="variant-link" type="button" data-action="view-variant" data-id="${v.id}">
+                  Talla ${escapeHtml(v.size)} · ${escapeHtml(v.color)}
+                </button>
+                <div class="small muted">${escapeHtml(v.material)}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="sku-code">${escapeHtml(v.sku)}</span></td>
+          <td>${statusBadge(v.status)}</td>
+          <td>${physicalBadge(v)}</td>
+          <td>
+            <div class="row-actions">
+              <button class="btn btn-quiet" type="button" data-action="view-variant" data-id="${v.id}">Ver detalle</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      const mobileCards = variants.map(v => `
+        <article class="variant-card">
+          <div class="variant-card-head">
+            <div>
+              <strong>Talla ${escapeHtml(v.size)} · ${escapeHtml(v.color)}</strong>
+              <div class="sku-code">${escapeHtml(v.sku)}</div>
+            </div>
+            ${statusBadge(v.status)}
+          </div>
+
+          <div class="variant-card-meta">
+            <div class="compact-box">
+              <span class="compact-label">Material</span>
+              <span class="compact-value">${escapeHtml(v.material)}</span>
+            </div>
+            <div class="compact-box">
+              <span class="compact-label">Datos físicos</span>
+              <span class="compact-value">${physicalState(v).label}</span>
+            </div>
+          </div>
+
+          <div class="row-actions">
+            <button class="btn btn-quiet" type="button" data-action="view-variant" data-id="${v.id}">Ver detalle</button>
+          </div>
+        </article>
+      `).join('');
+
+      return `
+        <div class="desktop-table table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Variante</th>
+                <th scope="col">SKU</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Datos físicos</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>${desktopRows}</tbody>
+          </table>
+        </div>
+
+        <div class="mobile-list">${mobileCards}</div>
+      `;
+    }
+
+    function bindFilters(){
+      main.querySelectorAll('[data-filter]').forEach(control => {
+        control.addEventListener(control.tagName === 'INPUT' ? 'input' : 'change', () => {
+          state.filters[control.dataset.filter] = control.value;
+          renderList();
+
+          if(control.dataset.filter === 'search'){
+            const next = document.getElementById('searchFilter');
+            if(next){
+              next.focus();
+              next.setSelectionRange(next.value.length,next.value.length);
+            }
+          }
+        });
+      });
+    }
+
+    function renderIncompatibleProduct(){
+      main.innerHTML = `
+        ${breadcrumbs([
+          {label:'Productos',action:'back-product'},
+          {label:state.product.name,action:'back-product'},
+          {label:'Variantes'}
+        ])}
+
+        ${productContext()}
+
+        <section class="global-state">
+          <div class="empty-symbol" aria-hidden="true">i</div>
+          <h1>Este producto no maneja variantes</h1>
+          <p>Se vende directamente mediante su SKU principal. Vuelve al producto para administrar su información.</p>
+          <button class="btn btn-primary" type="button" data-action="back-product">Volver al producto</button>
+        </section>
+      `;
+    }
+
+    function blankPhysical(){
+      return {weight:'',length:'',width:'',height:''};
+    }
+
+    function physicalFormSection(values,editing){
+      const p = values.physical || blankPhysical();
+
+      return `<section class="panel" aria-labelledby="physical-title">
+        <div class="panel-heading">
+          <h2 id="physical-title">Datos físicos para despacho</h2>
+          <p>Registra el peso y las dimensiones propias de esta unidad. El empaque se define posteriormente durante el despacho.</p>
+        </div>
+
+        <div class="form-grid">
+          ${physicalField('physicalWeight','Peso','kg',p.weight,state.errors.physicalWeight)}
+          ${physicalField('physicalLength','Largo','cm',p.length,state.errors.physicalLength)}
+          ${physicalField('physicalWidth','Ancho','cm',p.width,state.errors.physicalWidth)}
+          ${physicalField('physicalHeight','Alto','cm',p.height,state.errors.physicalHeight)}
+        </div>
+
+        <div id="physical-warning" class="notice" style="margin-top:16px" ${physicalCompletion(values)==='partial'?'':'hidden'}>
+          <span class="notice-icon" aria-hidden="true">i</span>
+          <div>
+            <p class="notice-title">Datos físicos incompletos</p>
+            <p class="muted">Puedes completar esta información después. No se inventarán valores faltantes.</p>
+          </div>
+        </div>
+
+        ${editing ? `
+          <p class="field-help" style="margin-top:12px">Modificar estas medidas no cambia el SKU ni la identidad de la variante.</p>
+        ` : ''}
+      </section>`;
+    }
+
+    function physicalField(id,label,unit,value,error){
+      const display = value === null || value === undefined ? '' : value;
+      return `<div class="field span-3">
+        <label for="${id}">${label}</label>
+        <div class="unit-wrap">
+          <input class="control" id="${id}" name="${id}" type="number" inputmode="decimal" min="0" step="0.01"
+            value="${escapeHtml(display)}" ${error?'aria-invalid="true"':''}>
+          <span class="unit-label">${unit}</span>
+        </div>
+        ${error ? `<p class="field-error">${escapeHtml(error)}</p>` : ''}
+      </div>`;
+    }
+
+    function physicalCompletion(values){
+      const p = values.physical || blankPhysical();
+      const arr = [p.weight,p.length,p.width,p.height];
+      const filled = arr.filter(v => v !== '' && v !== null && v !== undefined).length;
+      if(filled === 0) return 'none';
+      if(filled === 4) return 'complete';
+      return 'partial';
+    }
+
+    function getFormValues(form,mode){
+      const editing = mode === 'edit';
+      const current = editing ? currentVariant() : null;
+      const formData = new FormData(form);
+      const file = formData.get('image');
+
+      return {
+        size:editing ? current.size : String(formData.get('size') || '').trim(),
+        color:editing ? current.color : String(formData.get('color') || '').trim(),
+        material:String(formData.get('material') || '').trim(),
+        commercialSku:editing ? current.sku : String(formData.get('commercialSku') || '').trim(),
+        file:file && file.name ? file : null,
+        physical:{
+          weight:String(formData.get('physicalWeight') || '').trim(),
+          length:String(formData.get('physicalLength') || '').trim(),
+          width:String(formData.get('physicalWidth') || '').trim(),
+          height:String(formData.get('physicalHeight') || '').trim()
+        }
       };
+    }
 
-      const initialVariants = [
-        { id:'v-001', variantId:'var_8f9a1b2c', size:'42', color:'Negro', sku:'ZAP-PSX-42-NEG', status:'Activa', material:'Malla técnica', image:'zapatilla-negra-42.jpg', price:'S/ 329.90', priceSource:'Precio base del producto', availability:'12 unidades disponibles', updated:'17/09/2026, 10:12' },
-        { id:'v-002', variantId:'var_7d8e9f0a', size:'41', color:'Negro', sku:'ZAP-PSX-41-NEG', status:'Activa', material:'Malla técnica', image:'zapatilla-negra-41.jpg', price:'S/ 329.90', priceSource:'Precio base del producto', availability:'8 unidades disponibles', updated:'16/09/2026, 15:32' },
-        { id:'v-003', variantId:'var_6c7b8a9d', size:'42', color:'Blanco', sku:'ZAP-PSX-42-BLA', status:'Activa', material:'Malla técnica', image:'zapatilla-blanca-42.jpg', price:'S/ 349.90', priceSource:'Precio específico de la variante', availability:'5 unidades disponibles', updated:'15/09/2026, 12:08' },
-        { id:'v-004', variantId:'var_5b6a7c8e', size:'40', color:'Azul', sku:'ZAP-PSX-40-AZU', status:'Borrador', material:'Malla técnica', image:'zapatilla-azul-40.jpg', price:'S/ 329.90', priceSource:'Precio base del producto', availability:'Stock inicial pendiente', updated:'14/09/2026, 09:41' },
-        { id:'v-005', variantId:'var_4a5b6c7d', size:'39', color:'Negro', sku:'ZAP-PSX-39-NEG', status:'Inactiva', material:'Malla técnica', image:'zapatilla-negra-39.jpg', price:'S/ 329.90', priceSource:'Precio base del producto', availability:'No disponible para nuevas ventas', updated:'10/09/2026, 17:05' }
+    function renderForm(mode){
+      const editing = mode === 'edit';
+      const current = editing ? currentVariant() : null;
+
+      if(editing && !current){
+        renderNotFound();
+        return;
+      }
+
+      const draft = state.formDraft || (editing ? {
+        size:current.size,
+        color:current.color,
+        material:current.material,
+        commercialSku:current.sku,
+        physical:{
+          weight:current.physical.weight ?? '',
+          length:current.physical.length ?? '',
+          width:current.physical.width ?? '',
+          height:current.physical.height ?? ''
+        }
+      } : {
+        size:'',
+        color:'',
+        material:'',
+        commercialSku:'',
+        physical:blankPhysical()
+      });
+
+      state.formDraft = draft;
+
+      main.innerHTML = `
+        ${breadcrumbs([
+          {label:'Productos',action:'back-product'},
+          {label:state.product.name,action:'back-product'},
+          {label:'Variantes',action:'back-list'},
+          {label:editing?'Editar variante':'Nueva variante'}
+        ])}
+
+        ${productContext()}
+
+        ${pageHeading(
+          editing ? 'Editar variante' : 'Crear variante',
+          editing
+            ? 'Actualiza la imagen, los datos adicionales y el perfil físico sin cambiar la identidad comercial.'
+            : 'Define una nueva combinación vendible para este producto.'
+        )}
+
+        ${Object.keys(state.errors).length ? renderErrorSummary() : ''}
+
+        <form id="variant-form" novalidate>
+          <section class="panel" aria-labelledby="identity-title">
+            <div class="panel-heading">
+              <h2 id="identity-title">Identidad de la variante</h2>
+              <p>${editing
+                ? 'Estos datos identifican la variante y no pueden modificarse desde esta edición.'
+                : 'Selecciona exactamente un valor para cada característica identificadora.'
+              }</p>
+            </div>
+
+            ${editing ? `
+              <div class="readonly-grid">
+                <div class="readonly-box">
+                  <span class="readonly-label">SKU</span>
+                  <span class="readonly-value mono">${escapeHtml(current.sku)}</span>
+                </div>
+                <div class="readonly-box">
+                  <span class="readonly-label">Talla</span>
+                  <span class="readonly-value">${escapeHtml(current.size)}</span>
+                </div>
+                <div class="readonly-box">
+                  <span class="readonly-label">Color</span>
+                  <span class="readonly-value">${escapeHtml(current.color)}</span>
+                </div>
+              </div>
+              <p class="field-help" style="margin-top:12px">Para cambiar estos valores, desactiva esta variante y crea una nueva.</p>
+            ` : `<div class="form-grid">
+                <div class="field span-6">
+                  <label for="size">Talla *</label>
+                  <select class="control" id="size" name="size" ${state.errors.size?'aria-invalid="true"':''}>
+                    <option value="">Selecciona</option>
+                    ${['39','40','41','42','43'].map(v => `<option value="${v}" ${draft.size===v?'selected':''}>${v}</option>`).join('')}
+                  </select>
+                  ${state.errors.size ? `<p class="field-error">${escapeHtml(state.errors.size)}</p>` : ''}
+                </div>
+
+                <div class="field span-6">
+                  <label for="color">Color *</label>
+                  <select class="control" id="color" name="color" ${state.errors.color?'aria-invalid="true"':''}>
+                    <option value="">Selecciona</option>
+                    ${['Negro','Blanco','Azul','Gris'].map(v => `<option value="${v}" ${draft.color===v?'selected':''}>${v}</option>`).join('')}
+                  </select>
+                  ${state.errors.color ? `<p class="field-error">${escapeHtml(state.errors.color)}</p>` : ''}
+                </div>
+
+                <div class="field span-12">
+                  <label for="commercialSku">SKU comercial</label>
+                  <input class="control mono" id="commercialSku" name="commercialSku" type="text"
+                    placeholder="Opcional" value="${escapeHtml(draft.commercialSku)}"
+                    ${state.errors.commercialSku?'aria-invalid="true"':''}>
+                  <p class="field-help">Ingresa un SKU comercial o déjalo vacío para que el sistema genere uno.</p>
+                  ${state.errors.commercialSku ? `<p class="field-error">${escapeHtml(state.errors.commercialSku)}</p>` : ''}
+                </div>
+              </div>
+            `}
+          </section>
+
+          <section class="panel" aria-labelledby="image-title">
+            <div class="panel-heading">
+              <h2 id="image-title">Imagen de la variante</h2>
+              <p>La imagen representa esta combinación específica.</p>
+            </div>
+
+            <div class="upload-box">
+              <div class="image-preview">
+                <span class="image-placeholder" aria-hidden="true"></span>
+                <div>
+                  <strong id="image-name">${editing ? escapeHtml(current.image) : 'Sin imagen seleccionada'}</strong>
+                  <p class="field-help">${editing ? 'La imagen actual se conservará hasta que el cambio se guarde.' : 'Selecciona una imagen para continuar.'}</p>
+                </div>
+              </div>
+
+              <input id="image-input" name="image" type="file" accept="image/*" aria-describedby="image-help">
+              <p id="image-help" class="field-help">El archivo se valida antes de reemplazar la imagen existente.</p>
+
+              ${state.simulatedImageError ? `
+                <p class="field-error">${escapeHtml(state.simulatedImageError)}</p>
+              ` : ''}
+
+              ${state.errors.image ? `
+                <p class="field-error">${escapeHtml(state.errors.image)}</p>
+              ` : ''}
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="additional-title">
+            <div class="panel-heading">
+              <h2 id="additional-title">Datos adicionales</h2>
+              <p>Estos datos pueden modificarse sin cambiar la identidad de la variante.</p>
+            </div>
+
+            <div class="form-grid">
+              <div class="field span-12">
+                <label for="material">Material</label>
+                <input class="control" id="material" name="material" type="text" value="${escapeHtml(draft.material)}">
+              </div>
+            </div>
+          </section>
+
+          ${physicalFormSection(draft,editing)}
+
+          <div class="actions-bar">
+            <button class="btn" type="button" data-action="cancel-form">Cancelar</button>
+            <button class="btn btn-primary" type="submit" ${state.saving?'disabled':''}>
+              ${state.saving ? 'Guardando…' : editing ? 'Guardar cambios' : 'Crear variante'}
+            </button>
+          </div>
+        </form>
+      `;
+
+      bindPhysicalWarning();
+    }
+
+    function bindPhysicalWarning(){
+      const ids = ['physicalWeight','physicalLength','physicalWidth','physicalHeight'];
+      const warning = document.getElementById('physical-warning');
+
+      function update(){
+        if(!warning) return;
+        const values = ids.map(id => document.getElementById(id)?.value.trim() || '');
+        const filled = values.filter(Boolean).length;
+        warning.hidden = filled === 0 || filled === 4;
+      }
+
+      ids.forEach(id => document.getElementById(id)?.addEventListener('input',update));
+      update();
+    }
+
+    function renderErrorSummary(){
+      const entries = Object.values(state.errors);
+      return `<section class="error-summary" role="alert">
+        <h2>Revisa los datos ingresados</h2>
+        <ul>${entries.map(error => `<li>${escapeHtml(error)}</li>`).join('')}</ul>
+      </section>`;
+    }
+
+    function validateForm(values,mode){
+      const errors = {};
+      const editing = mode === 'edit';
+
+      if(!editing){
+        if(!values.size) errors.size = 'Selecciona una talla.';
+        if(!values.color) errors.color = 'Selecciona un color.';
+
+        const duplicate = state.variants.some(v =>
+          v.size === values.size && v.color === values.color
+        );
+        if(values.size && values.color && duplicate){
+          errors.duplicate = 'Ya existe una variante con esta combinación.';
+        }
+
+        if(values.commercialSku){
+          const collision = state.variants.some(v =>
+            v.sku.toLowerCase() === values.commercialSku.toLowerCase()
+          );
+          if(collision) errors.commercialSku = 'El SKU ingresado ya está en uso.';
+        }
+
+        if(!values.file) errors.image = 'Agrega una imagen para esta variante.';
+      }
+
+      const physicalEntries = [
+        ['physicalWeight','weight','Ingresa un peso mayor que 0.'],
+        ['physicalLength','length','Ingresa un largo mayor que 0.'],
+        ['physicalWidth','width','Ingresa un ancho mayor que 0.'],
+        ['physicalHeight','height','Ingresa un alto mayor que 0.']
       ];
 
-      const state = {
-        product:products.variants,
-        variants:initialVariants.map(v=>({...v})),
-        screen:'list', selectedId:null, filters:{size:'',color:'',status:''}, listMode:'normal',
-        errors:{}, formDirty:false, saving:false, modal:null, modalReturn:null, toastTimer:null,
-        simulatedImageError:'', formDraft:{size:'',color:'',material:'',commercialSku:''}
+      physicalEntries.forEach(([errorKey,key,message]) => {
+        const raw = values.physical[key];
+        if(raw !== ''){
+          const num = Number(raw);
+          if(!Number.isFinite(num) || num <= 0) errors[errorKey] = message;
+        }
+      });
+
+      return errors;
+    }
+
+    function saveForm(form){
+      const mode = state.screen === 'edit' ? 'edit' : 'create';
+      const values = getFormValues(form,mode);
+
+      state.formDraft = {
+        size:values.size,
+        color:values.color,
+        material:values.material,
+        commercialSku:values.commercialSku,
+        physical:{...values.physical}
       };
 
-      const main=document.getElementById('main');
-      const modalRoot=document.getElementById('modal-root');
-      const toastEl=document.getElementById('toast');
-      const announcer=document.getElementById('announcer');
-      const offlineBanner=document.getElementById('offline-banner');
+      state.errors = validateForm(values,mode);
 
-      const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
-      function announce(message){announcer.textContent='';window.setTimeout(()=>{announcer.textContent=message;},20);}
-      function toast(message){window.clearTimeout(state.toastTimer);toastEl.textContent=message;toastEl.hidden=false;state.toastTimer=window.setTimeout(()=>toastEl.hidden=true,3400);}
-      function currentVariant(){return state.variants.find(v=>v.id===state.selectedId)||null;}
-      function statusClass(status){return status==='Borrador'?'draft':status==='Inactiva'?'inactive':'active';}
-      function statusBadge(status){return `<span class="status ${statusClass(status)}">${escapeHtml(status)}</span>`;}
-      function breadcrumbs(items){return `<nav class="breadcrumbs" aria-label="Ruta de navegación">${items.map((item,index)=>index===items.length-1?`<span aria-current="page">${escapeHtml(item.label)}</span>`:`<button class="breadcrumb-button" type="button" data-action="${escapeHtml(item.action)}">${escapeHtml(item.label)}</button><span aria-hidden="true"> / </span>`).join('')}</nav>`;}
-      function pageHeading(title,description,action=''){return `<div class="page-heading"><div class="heading-row"><div><h1>${escapeHtml(title)}</h1><p class="lede">${escapeHtml(description)}</p></div>${action}</div></div>`;}
-      function productContext(){const p=state.product;return `<section class="product-context" aria-label="Producto seleccionado"><div><p class="context-label">Producto</p><p class="context-name">${escapeHtml(p.name)}</p><div class="context-meta"><span class="mono">${escapeHtml(p.skuBase)}</span><span>${escapeHtml(p.category)}</span><span>${escapeHtml(p.brand)}</span><span>${escapeHtml(p.status)}</span></div></div><button class="btn" type="button" data-action="back-product">Volver al producto</button></section>`;}
-
-      function navigate(screen,id=null,hash=''){
-        state.screen=screen;if(id)state.selectedId=id;state.errors={};state.simulatedImageError='';state.modal=null;modalRoot.innerHTML='';
-        const target=hash||(screen==='list'?'#variantes':screen==='create'?'#variante-nueva':`#variante-${state.selectedId||''}-${screen}`);
-        history.replaceState(null,'',target);render();main.focus();
+      if(Object.keys(state.errors).length){
+        renderForm(mode);
+        announce('Revisa los errores del formulario.');
+        return;
       }
 
-      function filteredVariants(){return state.variants.filter(v=>(!state.filters.size||v.size===state.filters.size)&&(!state.filters.color||v.color===state.filters.color)&&(!state.filters.status||v.status===state.filters.status));}
-
-      function renderList(){
-        if(!state.product.hasVariants){renderIncompatibleProduct();return;}
-        const variants=filteredVariants();const hasFilters=Object.values(state.filters).some(Boolean);const activeCount=state.variants.filter(v=>v.status==='Activa').length;
-        main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:state.product.name,action:'back-product'},{label:'Variantes'}])}${productContext()}
-          ${pageHeading('Variantes del producto','Administra las combinaciones vendibles, sus identificadores y su estado.','<button class="btn btn-primary" type="button" data-action="new-variant">Nueva variante</button>')}
-          ${!activeCount?`<div class="notice" role="status" style="margin-bottom:20px"><span class="notice-icon" aria-hidden="true">!</span><div><p class="notice-title">Este producto no tiene variantes activas</p><p class="muted">Necesita al menos una variante activa con SKU e imagen válidos para poder estar disponible en los canales de venta.</p></div></div>`:''}
-          ${state.listMode==='loading'?renderLoading():state.listMode==='error'?renderListError():`<section class="filters" aria-label="Filtros de variantes">
-            ${selectFilter('filter-size','Talla','size',['39','40','41','42'])}${selectFilter('filter-color','Color','color',['Negro','Blanco','Azul'])}${selectFilter('filter-status','Estado','status',['Borrador','Activa','Inactiva'])}
-            <div class="button-row"><button class="btn" type="button" data-action="clear-filters" ${hasFilters?'':'disabled'}>Limpiar filtros</button></div>
-          </section>${variants.length?renderTable(variants):renderEmpty(hasFilters)}`}`;
+      if(!navigator.onLine){
+        toast('No pudimos guardar los cambios. Revisa tu conexión e intenta nuevamente.');
+        return;
       }
 
-      function selectFilter(id,label,key,values){return `<div class="field"><label for="${id}">${label}</label><select id="${id}" class="control" data-filter="${key}"><option value="">Todos</option>${values.map(v=>`<option ${state.filters[key]===v?'selected':''}>${escapeHtml(v)}</option>`).join('')}</select></div>`;}
-      function renderLoading(){return `<section class="panel" aria-label="Cargando variantes" aria-busy="true"><div class="skeleton" style="width:35%"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton" style="width:70%"></div></section>`;}
-      function renderListError(){return `<section class="global-state" aria-labelledby="load-error-title"><div class="empty-symbol" aria-hidden="true">!</div><h2 id="load-error-title">No pudimos cargar las variantes</h2><p>La información no está disponible en este momento. Intenta nuevamente.</p><button class="btn btn-primary" type="button" data-action="retry-list">Reintentar</button></section>`;}
-      function renderEmpty(filtered){return `<section class="empty-state" aria-labelledby="empty-title"><div class="empty-symbol" aria-hidden="true">${filtered?'0':'+'}</div><h2 id="empty-title">${filtered?'Ninguna variante coincide con estos filtros':'Este producto todavía no tiene variantes'}</h2><p>${filtered?'Prueba otra combinación o limpia los filtros aplicados.':'Crea la primera combinación con su imagen propia y SKU comercial suministrado o generado.'}</p><button class="btn btn-primary" type="button" data-action="${filtered?'clear-filters':'new-variant'}">${filtered?'Limpiar filtros':'Crear primera variante'}</button></section>`;}
-      function renderTable(variants){return `<section aria-labelledby="results-title"><div class="results-head"><h2 id="results-title">Variantes registradas</h2><span class="muted" aria-live="polite">${variants.length} ${variants.length===1?'variante':'variantes'}</span></div><div class="table-wrap"><table><thead><tr><th>Imagen</th><th>Combinación</th><th>Variant ID</th><th>SKU Comercial</th><th>Estado</th><th>Disponibilidad</th><th><span class="sr-only">Acciones</span></th></tr></thead><tbody>${variants.map(v=>`<tr><td><span class="thumb" role="img" aria-label="Imagen de ${escapeHtml(v.color)}, talla ${escapeHtml(v.size)}"></span></td><td><button class="variant-link" type="button" data-action="view-variant" data-id="${v.id}">Talla ${escapeHtml(v.size)} · ${escapeHtml(v.color)}</button></td><td class="mono small muted">${escapeHtml(v.variantId||v.id)}</td><td class="mono">${escapeHtml(v.sku)}</td><td>${statusBadge(v.status)}</td><td>${escapeHtml(v.availability)}</td><td><div class="row-actions"><button class="btn" type="button" data-action="view-variant" data-id="${v.id}">Ver</button><button class="btn" type="button" data-action="edit-variant" data-id="${v.id}">Editar</button></div></td></tr>`).join('')}</tbody></table></div></section>`;}
+      state.saving = true;
+      renderForm(mode);
 
-      function renderIncompatibleProduct(){main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:state.product.name,action:'back-product'},{label:'Variantes'}])}${productContext()}<section class="global-state" aria-labelledby="incompatible-title"><div class="empty-symbol" aria-hidden="true">!</div><h1 id="incompatible-title">Este producto no maneja variantes</h1><p>Se configuró como producto simple. Su SKU base identifica directamente la unidad vendible y esta configuración no puede modificarse.</p><button class="btn btn-primary" type="button" data-action="back-product">Volver al producto</button></section>`;}
+      setTimeout(() => {
+        if(mode === 'edit'){
+          const v = currentVariant();
+          v.material = values.material || 'No especificado';
+          if(values.file) v.image = values.file.name;
+          v.physical = normalizePhysical(values.physical);
+          v.updated = nowText();
 
-      function renderForm(mode){
-        const editing=mode==='edit';const v=editing?currentVariant():null;if(editing&&!v){renderNotFound();return;}const e=state.errors;
-        const draft=editing?{size:v.size,color:v.color,material:v.material,commercialSku:v.sku}:state.formDraft;
-        main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:state.product.name,action:'back-product'},{label:'Variantes',action:'back-list'},{label:editing?'Editar variante':'Nueva variante'}])}${productContext()}
-          ${pageHeading(editing?'Editar variante':'Nueva variante',editing?'Puedes cambiar la imagen y los atributos no identificadores. La identidad de la variante no se modifica.':'Define la combinación exacta, ingresa o autogenera el SKU comercial y agrega una imagen propia.')}
-          ${Object.keys(e).length?renderErrorSummary(e):''}
-          ${state.simulatedImageError?`<div class="notice" role="alert" style="margin-bottom:20px"><span class="notice-icon" aria-hidden="true">!</span><div><p class="notice-title">No pudimos usar esa imagen</p><p class="muted">${escapeHtml(state.simulatedImageError)}</p></div></div>`:''}
-          <form id="variant-form" novalidate>
-            <section class="panel" aria-labelledby="identity-title"><div class="panel-heading"><h2 id="identity-title">Identidad de la variante</h2><p class="muted">${editing?'Estos datos son inmutables. Para corregirlos, desactiva esta variante y crea una nueva.':'Selecciona un valor para cada característica identificadora.'}</p></div>
-              ${editing?`<div class="readonly-group"><div class="readonly-box"><span class="readonly-label">Variant ID</span><span class="readonly-value mono">${escapeHtml(v.variantId||v.id)}</span></div><div class="readonly-box"><span class="readonly-label">SKU Comercial</span><span class="readonly-value mono">${escapeHtml(v.sku)}</span></div><div class="readonly-box"><span class="readonly-label">Talla</span><span class="readonly-value">${escapeHtml(v.size)}</span></div><div class="readonly-box"><span class="readonly-label">Color</span><span class="readonly-value">${escapeHtml(v.color)}</span></div></div>`:`<div class="form-grid"><div class="field span-6"><label class="required" for="size">Talla</label><select id="size" name="size" class="control" aria-invalid="${e.size?'true':'false'}" ${e.size?'aria-describedby="size-error"':''}><option value="">Selecciona una talla</option>${['39','40','41','42','43'].map(x=>`<option ${draft.size===x?'selected':''}>${x}</option>`).join('')}</select>${errorText('size',e.size)}</div><div class="field span-6"><label class="required" for="color">Color</label><select id="color" name="color" class="control" aria-invalid="${e.color?'true':'false'}" ${e.color?'aria-describedby="color-error"':''}><option value="">Selecciona un color</option>${['Negro','Blanco','Azul'].map(x=>`<option ${draft.color===x?'selected':''}>${x}</option>`).join('')}</select>${errorText('color',e.color)}</div><div class="field span-12"><label for="commercialSku">SKU comercial (opcional)</label><input id="commercialSku" name="commercialSku" class="control mono" type="text" value="${escapeHtml(draft.commercialSku||'')}" placeholder="Ejemplo: PRO-ZAP-42-BLK (deja vacío para autogenerar)" aria-invalid="${e.commercialSku?'true':'false'}" ${e.commercialSku?'aria-describedby="commercialSku-error"':''}><p class="field-help">Puedes ingresar un código de proveedor/ERP o dejarlo en blanco para que el sistema lo genere automáticamente.</p>${errorText('commercialSku',e.commercialSku)}</div></div>`}
+          state.saving = false;
+          state.formDirty = false;
+          state.formDraft = null;
+          navigate('detail',v.id);
+          toast('Los cambios fueron guardados. El SKU no cambió.');
+        }else{
+          const id = `v-${String(state.variants.length + 1).padStart(3,'0')}`;
+          const sku = values.commercialSku || generateSku(values.size,values.color);
+
+          const v = {
+            id,
+            size:values.size,
+            color:values.color,
+            sku,
+            status:'Borrador',
+            material:values.material || 'No especificado',
+            image:values.file.name,
+            price:'S/ 329.90',
+            priceSource:'Precio base del producto',
+            availability:'Inicialización pendiente',
+            updated:nowText(),
+            physical:normalizePhysical(values.physical)
+          };
+
+          state.variants.unshift(v);
+          state.saving = false;
+          state.formDirty = false;
+          state.formDraft = null;
+          state.selectedId = id;
+          navigate('detail',id);
+
+          const pState = physicalState(v).label;
+          toast(`Variante creada. SKU: ${sku}. Datos físicos: ${pState}.`);
+        }
+      },550);
+    }
+
+    function normalizePhysical(p){
+      const conv = value => value === '' ? null : Number(value);
+      return {
+        weight:conv(p.weight),
+        length:conv(p.length),
+        width:conv(p.width),
+        height:conv(p.height)
+      };
+    }
+
+    function generateSku(size,color){
+      const codeMap = {Negro:'NEG',Blanco:'BLA',Azul:'AZU',Gris:'GRI'};
+      return `${state.product.skuBase}-${size}-${codeMap[color] || color.slice(0,3).toUpperCase()}`;
+    }
+
+    function nowText(){
+      return new Date().toLocaleString('es-PE',{
+        day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'
+      });
+    }
+
+    function renderDetail(){
+      const v = currentVariant();
+      if(!v){
+        renderNotFound();
+        return;
+      }
+
+      const pState = physicalState(v);
+
+      main.innerHTML = `
+        ${breadcrumbs([
+          {label:'Productos',action:'back-product'},
+          {label:state.product.name,action:'back-product'},
+          {label:'Variantes',action:'back-list'},
+          {label:v.sku}
+        ])}
+
+        ${productContext()}
+
+        <section class="detail-header">
+          <div class="heading-row">
+            <div>
+              <div class="title-with-status">
+                <h1>Talla ${escapeHtml(v.size)} · ${escapeHtml(v.color)}</h1>
+                ${statusBadge(v.status)}
+              </div>
+              <p class="lede mono">${escapeHtml(v.sku)}</p>
+            </div>
+
+            <div class="button-row">
+              <button class="btn" type="button" data-action="edit-current">Editar</button>
+              ${v.status === 'Activa'
+                ? '<button class="btn btn-danger" type="button" data-action="request-deactivate">Desactivar variante</button>'
+                : `<button class="btn btn-primary" type="button" data-action="request-activate">${v.status==='Inactiva'?'Reactivar variante':'Activar variante'}</button>`
+              }
+            </div>
+          </div>
+        </section>
+
+        ${v.status === 'Inactiva' ? `
+          <div class="notice" role="status">
+            <span class="notice-icon" aria-hidden="true">i</span>
+            <div>
+              <p class="notice-title">Esta variante está inactiva</p>
+              <p class="muted">No está disponible para nuevas ventas, pero su información se conserva.</p>
+            </div>
+          </div>
+        ` : ''}
+
+        ${v.status === 'Borrador' ? `
+          <div class="notice" role="status">
+            <span class="notice-icon" aria-hidden="true">i</span>
+            <div>
+              <p class="notice-title">Esta variante todavía es un borrador</p>
+              <p class="muted">Revisa su información antes de activarla.</p>
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="detail-grid">
+          <div>
+            <section class="panel" aria-labelledby="image-detail-title">
+              <div class="panel-heading">
+                <h2 id="image-detail-title">Imagen de la variante</h2>
+              </div>
+              <div class="hero-image" role="img" aria-label="Imagen de ${escapeHtml(state.product.name)}, talla ${escapeHtml(v.size)}, color ${escapeHtml(v.color)}">
+                <span>Imagen de la variante</span>
+              </div>
             </section>
-            <section class="panel" aria-labelledby="details-title"><div class="panel-heading"><h2 id="details-title">Datos propios de la variante</h2></div><div class="form-grid"><div class="field span-12"><label for="material">Material</label><input id="material" name="material" class="control" type="text" value="${escapeHtml(draft.material||'')}" placeholder="Ejemplo: Malla técnica"><p class="field-help">Atributo no identificador; puede modificarse sin alterar el SKU.</p></div><div id="image" class="field span-12"><span class="field-label ${editing?'':'required'}">Imagen propia</span><div class="upload-box"><strong>${editing?'Imagen actual de la variante':'Selecciona una imagen para esta variante'}</strong><p class="field-help">La imagen general del producto no sustituye este requisito.</p><input id="image-input" name="image" type="file" accept="image/*" ${e.image?'aria-describedby="image-error"':''}><div id="image-preview" class="image-preview" ${editing?'':'hidden'}><span class="image-placeholder" aria-hidden="true"></span><span>${editing?escapeHtml(v.image):''}</span></div>${errorText('image',e.image)}</div></div></div></section>
-            <div class="actions-bar"><button class="btn" type="button" data-action="cancel-form">Cancelar</button><button class="btn btn-primary" type="submit" ${state.saving?'disabled':''}>${state.saving?'Guardando…':editing?'Guardar cambios':'Crear variante'}</button></div>
-          </form>`;
+
+            <section class="panel" aria-labelledby="identity-detail-title">
+              <div class="panel-heading">
+                <h2 id="identity-detail-title">Identidad y atributos</h2>
+              </div>
+
+              <div class="definition-grid">
+                ${definition('SKU',v.sku,true)}
+                ${definition('Estado',v.status)}
+                ${definition('Talla',v.size)}
+                ${definition('Color',v.color)}
+                ${definition('Material',v.material)}
+                ${definition('Imagen asociada',v.image)}
+              </div>
+            </section>
+
+            <section class="panel" aria-labelledby="physical-detail-title">
+              <div class="panel-heading">
+                <h2 id="physical-detail-title">Datos físicos para despacho</h2>
+                <p>Estas medidas describen el producto. El empaque y las dimensiones finales del envío se definen durante el despacho.</p>
+              </div>
+
+              ${pState.key === 'none' ? `
+                <div class="notice">
+                  <span class="notice-icon" aria-hidden="true">i</span>
+                  <div>
+                    <p class="notice-title">Datos físicos sin registrar</p>
+                    <p class="muted">Puedes agregarlos desde Editar.</p>
+                  </div>
+                </div>
+              ` : `
+                ${pState.key === 'partial' ? `
+                  <div class="notice">
+                    <span class="notice-icon" aria-hidden="true">i</span>
+                    <div>
+                      <p class="notice-title">Datos físicos incompletos</p>
+                      <p class="muted">Solo se muestran los valores realmente registrados.</p>
+                    </div>
+                  </div>
+                ` : ''}
+
+                <div class="physical-grid">
+                  ${physicalValue('Peso',v.physical.weight,'kg')}
+                  ${physicalValue('Largo',v.physical.length,'cm')}
+                  ${physicalValue('Ancho',v.physical.width,'cm')}
+                  ${physicalValue('Alto',v.physical.height,'cm')}
+                </div>
+              `}
+            </section>
+
+            <section class="panel" aria-labelledby="inherited-title">
+              <div class="panel-heading">
+                <h2 id="inherited-title">Datos heredados del producto</h2>
+                <p>Estos valores se administran desde el producto padre.</p>
+              </div>
+
+              <div class="definition-grid">
+                ${definition('Producto',state.product.name)}
+                ${definition('Categoría',state.product.category)}
+                ${definition('Marca',state.product.brand)}
+                ${definition('SKU base',state.product.skuBase,true)}
+              </div>
+            </section>
+          </div>
+
+          <aside>
+            <section class="panel" aria-labelledby="commercial-title">
+              <h2 id="commercial-title">Información comercial</h2>
+
+              <div class="definition">
+                ${definitionInner('Precio vigente',v.price)}
+                <p class="field-help">${escapeHtml(v.priceSource)}. Se administra fuera de esta pantalla.</p>
+              </div>
+
+              <div class="definition">
+                ${definitionInner('Disponibilidad',v.availability)}
+                <p class="field-help">Información consultada al inventario. No se edita aquí.</p>
+              </div>
+            </section>
+
+            <section class="panel" aria-labelledby="admin-title">
+              <h2 id="admin-title">Información administrativa</h2>
+              <ul class="meta-list">
+                <li>
+                  <span class="muted small">Última modificación</span><br>
+                  ${escapeHtml(v.updated)}
+                </li>
+                <li>
+                  <span class="muted small">Datos físicos</span><br>
+                  ${escapeHtml(pState.label)}
+                </li>
+              </ul>
+            </section>
+          </aside>
+        </div>
+      `;
+    }
+
+    function physicalValue(label,value,unit){
+      const display = value === null || value === undefined ? 'No registrado' : `${value} ${unit}`;
+      return `<div class="physical-card">
+        <span class="physical-label">${escapeHtml(label)}</span>
+        <span class="physical-value">${escapeHtml(display)}</span>
+      </div>`;
+    }
+
+    function definition(label,value,mono=false){
+      return `<div class="definition">${definitionInner(label,value,mono)}</div>`;
+    }
+
+    function definitionInner(label,value,mono=false){
+      return `<div class="definition-label">${escapeHtml(label)}</div>
+        <div class="definition-value ${mono?'mono':''}">${escapeHtml(value)}</div>`;
+    }
+
+    function activationIssues(v){
+      const issues = [];
+      if(!state.product.hasVariants) issues.push('El producto no está configurado para manejar variantes.');
+      if(!v.sku) issues.push('La variante no tiene un SKU válido.');
+      if(!v.image) issues.push('La variante no tiene una imagen válida.');
+      return issues;
+    }
+
+    function requestActivate(trigger){
+      const v = currentVariant();
+      if(!v || v.status === 'Activa') return;
+
+      const issues = activationIssues(v);
+      const reactivating = v.status === 'Inactiva';
+      const pState = physicalState(v);
+
+      state.modalReturn = trigger;
+
+      modalRoot.innerHTML = `
+        <div class="modal-backdrop">
+          <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <h2 id="modal-title" tabindex="-1">${reactivating?'Reactivar':'Activar'} variante ${escapeHtml(v.sku)}</h2>
+
+            <p>${reactivating
+              ? 'La variante volverá a estar disponible para nuevas ventas cuando el producto padre también sea elegible.'
+              : 'La variante dejará de ser borrador.'
+            }</p>
+
+            <div class="readonly-box" style="margin-top:16px">
+              <span class="readonly-label">Combinación</span>
+              <span class="readonly-value">Talla ${escapeHtml(v.size)} · ${escapeHtml(v.color)}</span>
+            </div>
+
+            ${issues.length ? `
+              <div class="notice error" role="alert" style="margin-top:16px">
+                <span class="notice-icon" aria-hidden="true">!</span>
+                <div>
+                  <p class="notice-title">No se puede continuar todavía</p>
+                  <ul>${issues.map(issue => `<li>${escapeHtml(issue)}</li>`).join('')}</ul>
+                </div>
+              </div>
+            ` : `
+              <div class="notice" role="status" style="margin-top:16px">
+                <span class="notice-icon" aria-hidden="true">✓</span>
+                <div>
+                  <p class="notice-title">Condiciones principales verificadas</p>
+                  <p class="muted">SKU, imagen e identidad están preparados.</p>
+                </div>
+              </div>
+            `}
+
+            ${pState.key !== 'complete' ? `
+              <div class="notice" style="margin-top:16px">
+                <span class="notice-icon" aria-hidden="true">i</span>
+                <div>
+                  <p class="notice-title">Datos físicos ${pState.key==='none'?'sin registrar':'incompletos'}</p>
+                  <p class="muted">Puedes completarlos después. En esta versión no bloquean la activación por sí solos.</p>
+                </div>
+              </div>
+            ` : ''}
+
+            <div class="modal-actions">
+              <button class="btn" type="button" data-action="close-modal">Cancelar</button>
+              ${issues.length ? '' : `
+                <button class="btn btn-primary" type="button" data-action="confirm-activate">
+                  ${reactivating?'Reactivar variante':'Activar variante'}
+                </button>
+              `}
+            </div>
+          </section>
+        </div>
+      `;
+
+      setTimeout(() => document.getElementById('modal-title')?.focus(),0);
+    }
+
+    function confirmActivate(){
+      const v = currentVariant();
+      if(!v || activationIssues(v).length) return;
+
+      const reactivating = v.status === 'Inactiva';
+      v.status = 'Activa';
+
+      if(v.availability === 'No disponible para nuevas ventas' || v.availability === 'Inicialización pendiente'){
+        v.availability = 'Disponibilidad pendiente de actualización';
       }
 
-      function renderErrorSummary(errors){return `<section class="error-summary" role="alert" aria-labelledby="error-title" tabindex="-1"><h2 id="error-title">Revisa los datos antes de continuar</h2><ul>${Object.entries(errors).map(([key,value])=>`<li><a href="#${escapeHtml(key)}">${escapeHtml(value)}</a></li>`).join('')}</ul></section>`;}
-      function errorText(name,error){return error?`<p class="field-error" id="${name}-error">${escapeHtml(error)}</p>`:'';}
+      v.updated = nowText();
+      closeModal();
+      renderDetail();
+      main.focus();
+      toast(reactivating ? 'Variante reactivada correctamente.' : 'Variante activada correctamente.');
+    }
 
-      function validateForm(form,editing){
-        const data=new FormData(form);const size=editing?currentVariant().size:String(data.get('size')||'');const color=editing?currentVariant().color:String(data.get('color')||'');const material=String(data.get('material')||'').trim();const commercialSku=String(data.get('commercialSku')||'').trim().toUpperCase();const file=document.getElementById('image-input')?.files?.[0]||null;const errors={};
-        if(!editing)state.formDraft={size,color,material,commercialSku};
-        if(!editing&&!size)errors.size='Selecciona una talla.';if(!editing&&!color)errors.color='Selecciona un color.';if(!editing&&!file)errors.image='Agrega una imagen propia para la variante.';
-        if(file&&!String(file.type).startsWith('image/'))errors.image='Selecciona un archivo de imagen válido.';
-        if(!editing&&size&&color&&state.variants.some(v=>v.size===size&&v.color===color))errors.size='Ya existe una variante con esta combinación de talla y color.';
-        if(!editing&&commercialSku&&state.variants.some(v=>v.sku.toUpperCase()===commercialSku))errors.commercialSku='Este SKU comercial ya está registrado en otra variante.';
-        return {values:{size,color,material,commercialSku,file},errors};
-      }
+    function requestDeactivate(trigger){
+      const v = currentVariant();
+      if(!v) return;
 
-      function saveForm(form){
-        const editing=state.screen==='edit';const {values,errors}=validateForm(form,editing);state.errors=errors;
-        if(Object.keys(errors).length){renderForm(editing?'edit':'create');document.querySelector('.error-summary')?.focus();announce('El formulario contiene errores.');return;}
-        if(!navigator.onLine){toast('No se pudo guardar. Revisa tu conexión e intenta nuevamente.');return;}
-        state.saving=true;renderForm(editing?'edit':'create');window.setTimeout(()=>{
-          if(editing){const v=currentVariant();v.material=values.material;if(values.file)v.image=values.file.name;v.updated='17/09/2026, 15:04';state.saving=false;state.formDirty=false;navigate('detail',v.id);toast('Los cambios de la variante fueron guardados. El SKU no cambió.');}
-          else {
-            const id=`v-${String(state.variants.length+1).padStart(3,'0')}`;
-            const variantId=`var_${Math.random().toString(36).substr(2,8)}`;
-            const sku=values.commercialSku || `${state.product.skuBase}-${values.size}-${values.color.slice(0,3).toUpperCase()}`;
-            const v={id,variantId,size:values.size,color:values.color,sku,status:'Borrador',material:values.material||'No especificado',image:values.file.name,price:'S/ 329.90',priceSource:'Precio base del producto',availability:'Stock inicial pendiente',updated:'17/09/2026, 15:04'};
-            state.variants.unshift(v);state.saving=false;state.formDirty=false;state.formDraft={size:'',color:'',material:'',commercialSku:''};navigate('detail',id);toast(`Variante creada con Variant ID ${variantId}. SKU: ${sku}.`);
-          }
+      const activeCount = state.variants.filter(x => x.status === 'Activa').length;
+      const lastActive = activeCount === 1;
+      state.modalReturn = trigger;
+
+      modalRoot.innerHTML = `
+        <div class="modal-backdrop">
+          <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <h2 id="modal-title" tabindex="-1">Desactivar variante ${escapeHtml(v.sku)}</h2>
+            <p>La variante dejará de estar disponible para nuevas ventas. Su información e historial se conservarán.</p>
+
+            ${lastActive ? `
+              <div class="notice" style="margin-top:16px">
+                <span class="notice-icon" aria-hidden="true">!</span>
+                <div>
+                  <p class="notice-title">Esta es la última variante activa</p>
+                  <p class="muted">Al desactivarla, el producto también quedará inactivo.</p>
+                </div>
+              </div>
+            ` : ''}
+
+            <div class="readonly-box" style="margin-top:16px">
+              <span class="readonly-label">Combinación</span>
+              <span class="readonly-value">Talla ${escapeHtml(v.size)} · ${escapeHtml(v.color)}</span>
+            </div>
+
+            <div class="modal-actions">
+              <button class="btn" type="button" data-action="close-modal">Cancelar</button>
+              <button class="btn btn-danger" type="button" data-action="confirm-deactivate">Desactivar variante</button>
+            </div>
+          </section>
+        </div>
+      `;
+
+      setTimeout(() => document.getElementById('modal-title')?.focus(),0);
+    }
+
+    function confirmDeactivate(){
+      const v = currentVariant();
+      if(!v) return;
+
+      const wasLast = state.variants.filter(x => x.status === 'Activa').length === 1;
+
+      v.status = 'Inactiva';
+      v.availability = 'No disponible para nuevas ventas';
+      v.updated = nowText();
+
+      if(wasLast) state.product.status = 'Inactivo';
+
+      closeModal();
+      renderDetail();
+      main.focus();
+      toast(wasLast
+        ? 'Variante desactivada. El producto también quedó inactivo.'
+        : 'Variante desactivada.'
+      );
+    }
+
+    function renderNoPermission(){
+      main.innerHTML = `<section class="global-state">
+        <div class="empty-symbol" aria-hidden="true">!</div>
+        <h1>No tienes permiso para realizar esta acción</h1>
+        <p>Tu sesión no permite crear, modificar ni cambiar el estado de variantes.</p>
+        <button class="btn btn-primary" type="button" data-action="back-list">Volver a variantes</button>
+      </section>`;
+    }
+
+    function renderSessionExpired(){
+      main.innerHTML = `<section class="global-state">
+        <div class="empty-symbol" aria-hidden="true">!</div>
+        <h1>Tu sesión expiró</h1>
+        <p>Inicia sesión nuevamente para continuar.</p>
+        <button class="btn btn-primary" type="button" data-action="login">Iniciar sesión</button>
+      </section>`;
+    }
+
+    function renderConflict(){
+      main.innerHTML = `
+        ${breadcrumbs([
+          {label:'Productos',action:'back-product'},
+          {label:'Variantes',action:'back-list'},
+          {label:'Datos actualizados'}
+        ])}
+
+        ${productContext()}
+
+        ${pageHeading(
+          'La variante cambió mientras la editabas',
+          'Recarga la información vigente antes de volver a guardar.'
+        )}
+
+        <section class="panel">
+          <div class="notice error">
+            <span class="notice-icon" aria-hidden="true">!</span>
+            <div>
+              <p class="notice-title">Tus cambios no se guardaron</p>
+              <p class="muted">Otra actualización modificó esta variante.</p>
+            </div>
+          </div>
+
+          <div class="actions-bar">
+            <button class="btn" type="button" data-action="back-list">Volver a variantes</button>
+            <button class="btn btn-primary" type="button" data-action="reload-variant">Recargar variante</button>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderNotFound(){
+      main.innerHTML = `
+        ${breadcrumbs([
+          {label:'Productos',action:'back-product'},
+          {label:'Variantes',action:'back-list'},
+          {label:'Variante no encontrada'}
+        ])}
+
+        ${productContext()}
+
+        <section class="global-state">
+          <div class="empty-symbol" aria-hidden="true">?</div>
+          <h1>Variante no encontrada</h1>
+          <p>La variante pudo haber cambiado o ya no estar disponible.</p>
+          <button class="btn btn-primary" type="button" data-action="back-list">Volver a variantes</button>
+        </section>
+      `;
+    }
+
+    function closeModal(restoreFocus=true){
+      if(!modalRoot.innerHTML) return;
+      modalRoot.innerHTML = '';
+      if(restoreFocus && state.modalReturn?.focus) state.modalReturn.focus();
+    }
+
+    document.addEventListener('click',event => {
+      const el = event.target.closest('[data-action]');
+      if(!el) return;
+
+      const action = el.dataset.action;
+
+      if(action === 'new-variant'){
+        state.formDirty = false;
+        state.formDraft = null;
+        navigate('create');
+      }else if(action === 'view-variant'){
+        navigate('detail',el.dataset.id);
+      }else if(action === 'edit-current'){
+        state.formDirty = false;
+        state.formDraft = null;
+        navigate('edit',state.selectedId);
+      }else if(action === 'back-list'){
+        navigate('list');
+      }else if(action === 'back-product'){
+        toast('Volviendo al detalle del producto.');
+      }else if(action === 'clear-filters'){
+        state.filters = {search:'',size:'',color:'',status:''};
+        renderList();
+        announce(`${state.variants.length} variantes.`);
+      }else if(action === 'retry-list'){
+        state.listMode = 'loading';
+        renderList();
+        setTimeout(() => {
+          state.listMode = 'normal';
+          renderList();
+          announce('Variantes cargadas.');
         },550);
+      }else if(action === 'cancel-form'){
+        if(state.formDirty){
+          state.modalReturn = el;
+          modalRoot.innerHTML = `
+            <div class="modal-backdrop">
+              <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+                <h2 id="modal-title" tabindex="-1">¿Descartar cambios?</h2>
+                <p>Los datos que ingresaste no se guardarán.</p>
+                <div class="modal-actions">
+                  <button class="btn" type="button" data-action="close-modal">Seguir editando</button>
+                  <button class="btn btn-primary" type="button" data-action="discard-form">Descartar cambios</button>
+                </div>
+              </section>
+            </div>
+          `;
+          setTimeout(() => document.getElementById('modal-title')?.focus(),0);
+        }else{
+          navigate(state.screen === 'edit' ? 'detail' : 'list',state.selectedId);
+        }
+      }else if(action === 'discard-form'){
+        const target = state.screen === 'edit' ? 'detail' : 'list';
+        state.formDirty = false;
+        state.formDraft = null;
+        closeModal(false);
+        navigate(target,state.selectedId);
+      }else if(action === 'request-activate'){
+        requestActivate(el);
+      }else if(action === 'confirm-activate'){
+        confirmActivate();
+      }else if(action === 'request-deactivate'){
+        requestDeactivate(el);
+      }else if(action === 'confirm-deactivate'){
+        confirmDeactivate();
+      }else if(action === 'close-modal'){
+        closeModal();
+      }else if(action === 'reload-variant'){
+        navigate('detail',state.selectedId || state.variants[0]?.id);
+      }else if(action === 'login'){
+        toast('Redirigiendo al inicio de sesión.');
+      }
+    });
+
+    document.addEventListener('change',event => {
+      if(event.target.id === 'image-input'){
+        const file = event.target.files?.[0];
+        state.simulatedImageError = '';
+
+        if(file && !String(file.type).startsWith('image/')){
+          state.simulatedImageError = 'El archivo seleccionado no es una imagen válida. La imagen anterior se conserva.';
+          state.formDirty = true;
+          const mode = state.screen === 'edit' ? 'edit' : 'create';
+          state.formDraft = getFormValues(document.getElementById('variant-form'),mode);
+          renderForm(mode);
+          return;
+        }
+
+        if(file){
+          document.getElementById('image-name').textContent = file.name;
+        }
+
+        state.formDirty = true;
+      }else if(event.target.closest('#variant-form')){
+        state.formDirty = true;
+      }
+    });
+
+    document.addEventListener('input',event => {
+      if(event.target.closest('#variant-form')) state.formDirty = true;
+    });
+
+    document.addEventListener('submit',event => {
+      if(event.target.id !== 'variant-form') return;
+      event.preventDefault();
+      saveForm(event.target);
+    });
+
+    document.addEventListener('keydown',event => {
+      const modal = modalRoot.querySelector('.modal');
+      if(!modal) return;
+
+      if(event.key === 'Escape'){
+        event.preventDefault();
+        closeModal();
+        return;
       }
 
-      function renderDetail(){
-        const v=currentVariant();if(!v){renderNotFound();return;}
-        main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:state.product.name,action:'back-product'},{label:'Variantes',action:'back-list'},{label:v.sku}])}${productContext()}
-          <section class="detail-header"><div class="heading-row"><div><div class="title-with-status"><h1>Talla ${escapeHtml(v.size)} · ${escapeHtml(v.color)}</h1>${statusBadge(v.status)}</div><p class="lede mono">${escapeHtml(v.sku)}</p></div><div class="button-row"><button class="btn" type="button" data-action="edit-current">Editar</button>${v.status==='Activa'?'<button class="btn btn-danger" type="button" data-action="request-deactivate">Desactivar variante</button>':`<button class="btn btn-primary" type="button" data-action="request-activate">${v.status==='Inactiva'?'Reactivar variante':'Activar variante'}</button>`}</div></div></section>
-          ${v.status==='Inactiva'?`<div class="notice" role="status" style="margin-bottom:20px"><span class="notice-icon" aria-hidden="true">i</span><div><p class="notice-title">Esta variante está inactiva</p><p class="muted">No está disponible para nuevas ventas, pero su registro se conserva para pedidos históricos. Puedes reactivarla si mantiene sus condiciones válidas.</p></div></div>`:''}
-          ${v.status==='Borrador'?`<div class="notice" role="status" style="margin-bottom:20px"><span class="notice-icon" aria-hidden="true">i</span><div><p class="notice-title">Esta variante todavía es un borrador</p><p class="muted">Revisa su identidad e imagen propia antes de activarla para nuevas ventas.</p></div></div>`:''}
-          <div class="detail-grid"><div><section class="panel" aria-labelledby="image-title"><div class="panel-heading"><h2 id="image-title">Imagen propia</h2></div><div class="hero-image" role="img" aria-label="Imagen de ${escapeHtml(state.product.name)}, talla ${escapeHtml(v.size)}, color ${escapeHtml(v.color)}"><span>Imagen de la variante</span></div></section>
-            <section class="panel" aria-labelledby="variant-data-title"><div class="panel-heading"><h2 id="variant-data-title">Información de la variante</h2></div><div class="definition-grid">${definition('Variant ID (inmutable)',v.variantId||v.id,true)}${definition('SKU Comercial',v.sku,true)}${definition('Estado',v.status)}${definition('Talla',v.size)}${definition('Color',v.color)}${definition('Material',v.material)}${definition('Imagen asociada',v.image)}</div></section>
-            <section class="panel" aria-labelledby="inherited-title"><div class="panel-heading"><h2 id="inherited-title">Datos heredados del producto</h2><p class="muted">Estos valores se administran desde el producto padre.</p></div><div class="definition-grid">${definition('Producto',state.product.name)}${definition('Categoría',state.product.category)}${definition('Marca',state.product.brand)}${definition('SKU base',state.product.skuBase,true)}</div></section></div>
-            <aside><section class="panel" aria-labelledby="commercial-title"><h2 id="commercial-title">Información comercial</h2><div class="definition">${definitionInner('Precio vigente',v.price)}<p class="field-help">${escapeHtml(v.priceSource)}. El precio se administra fuera de esta pantalla.</p></div><div class="definition">${definitionInner('Disponibilidad',v.availability)}<p class="field-help">Información consultada a Inventario. No se edita aquí.</p></div></section><section class="panel" aria-labelledby="meta-title"><h2 id="meta-title">Información administrativa</h2><ul class="meta-list"><li><span class="muted small">Variant ID</span><br><span class="mono">${escapeHtml(v.variantId||v.id)}</span></li><li><span class="muted small">Identificador de fila</span><br><span class="mono">${escapeHtml(v.id.toUpperCase())}</span></li><li><span class="muted small">Última modificación</span><br>${escapeHtml(v.updated)}</li></ul></section></aside></div>`;
+      if(event.key === 'Tab'){
+        const items = [...modal.querySelectorAll(
+          'button:not(:disabled),input:not(:disabled),select:not(:disabled),a[href],[tabindex]:not([tabindex="-1"])'
+        )].filter(node => node.offsetParent !== null);
+
+        if(!items.length) return;
+
+        const first = items[0];
+        const last = items[items.length - 1];
+
+        if(event.shiftKey && document.activeElement === first){
+          event.preventDefault();
+          last.focus();
+        }else if(!event.shiftKey && document.activeElement === last){
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    });
+
+    window.addEventListener('online',() => {
+      offlineBanner.hidden = true;
+      announce('Conexión recuperada.');
+    });
+
+    window.addEventListener('offline',() => {
+      offlineBanner.hidden = false;
+      announce('Sin conexión.');
+    });
+
+    function parseHash(){
+      const hash = location.hash.replace('#','');
+      state.product = products.variants;
+      state.listMode = 'normal';
+
+      if(hash === 'producto-simple'){
+        state.product = products.simple;
+        state.screen = 'list';
+      }else if(hash === 'no-permission'){
+        state.screen = 'no-permission';
+      }else if(hash === 'session-expired'){
+        state.screen = 'session-expired';
+      }else if(hash === 'list-loading'){
+        state.screen = 'list';
+        state.listMode = 'loading';
+      }else if(hash === 'list-error'){
+        state.screen = 'list';
+        state.listMode = 'error';
+      }else if(hash === 'conflict'){
+        state.screen = 'conflict';
+        state.selectedId = 'v-001';
+      }else if(hash === 'imagen-invalida'){
+        state.screen = 'edit';
+        state.selectedId = 'v-001';
+        state.simulatedImageError = 'El archivo no cumple el formato permitido. La imagen anterior se conserva.';
+      }else if(hash === 'variante-nueva'){
+        state.screen = 'create';
+        state.formDraft = null;
+      }else{
+        const match = hash.match(/^variante-(v-\d+)-(detail|edit)$/);
+
+        if(match){
+          state.selectedId = match[1];
+          state.screen = match[2];
+          state.formDraft = null;
+        }else{
+          state.screen = 'list';
+        }
       }
 
-      function definition(label,value,mono=false){return `<div class="definition">${definitionInner(label,value,mono)}</div>`;}
-      function definitionInner(label,value,mono=false){return `<div class="definition-label">${escapeHtml(label)}</div><div class="definition-value ${mono?'mono':''}">${escapeHtml(value)}</div>`;}
+      render();
+    }
 
-      function activationIssues(v){
-        const issues=[];
-        if(!state.product.hasVariants)issues.push('El producto no está configurado para manejar variantes.');
-        if(!v.sku)issues.push('La variante no tiene un SKU generado.');
-        if(!v.image)issues.push('La variante no tiene una imagen propia válida.');
-        return issues;
-      }
-
-      function requestActivate(trigger){
-        const v=currentVariant();if(!v||v.status==='Activa')return;
-        const issues=activationIssues(v);const reactivating=v.status==='Inactiva';
-        state.modal={type:'activate',reactivating,issues};state.modalReturn=trigger;
-        modalRoot.innerHTML=`<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description"><h2 id="modal-title" tabindex="-1">${reactivating?'Reactivar':'Activar'} variante ${escapeHtml(v.sku)}</h2><p id="modal-description">${reactivating?'La variante volverá a estar disponible para nuevas ventas.':'La variante dejará de ser borrador y podrá estar disponible para nuevas ventas.'}</p><div class="readonly-box" style="margin-top:18px"><span class="readonly-label">Combinación</span><span class="readonly-value">Talla ${escapeHtml(v.size)} · ${escapeHtml(v.color)}</span></div>${issues.length?`<div class="notice" role="alert" style="margin-top:18px"><span class="notice-icon" aria-hidden="true">!</span><div><p class="notice-title">No se puede ${reactivating?'reactivar':'activar'} todavía</p><ul>${issues.map(issue=>`<li>${escapeHtml(issue)}</li>`).join('')}</ul></div></div>`:`<div class="notice" role="status" style="margin-top:18px"><span class="notice-icon" aria-hidden="true">✓</span><div><p class="notice-title">Condiciones verificadas</p><p class="muted">La variante tiene SKU, imagen propia y pertenece a un producto configurado para manejar variantes.</p></div></div>`}<div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Cancelar</button>${issues.length?'':`<button class="btn btn-primary" type="button" data-action="confirm-activate">${reactivating?'Reactivar variante':'Activar variante'}</button>`}</div></section></div>`;
-        window.setTimeout(()=>document.getElementById('modal-title')?.focus(),0);
-      }
-
-      function confirmActivate(){
-        const v=currentVariant();if(!v||activationIssues(v).length)return;
-        const reactivating=v.status==='Inactiva';
-        v.status='Activa';
-        if(v.availability==='No disponible para nuevas ventas'||v.availability==='Stock inicial pendiente')v.availability='Disponibilidad pendiente de actualización';
-        v.updated=new Date().toLocaleString('es-PE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-        closeModal();renderDetail();main.focus();toast(reactivating?'Variante reactivada correctamente.':'Variante activada correctamente.');
-      }
-
-      function requestDeactivate(trigger){const v=currentVariant();if(!v)return;const activeCount=state.variants.filter(x=>x.status==='Activa').length;state.modal={type:'deactivate',lastActive:activeCount===1};state.modalReturn=trigger;modalRoot.innerHTML=`<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description"><h2 id="modal-title" tabindex="-1">Desactivar variante ${escapeHtml(v.sku)}</h2><p id="modal-description">Dejará de estar disponible para nuevas ventas. El producto, las demás variantes y los pedidos confirmados no se modificarán.</p>${state.modal.lastActive?'<div class="notice" style="margin-top:18px"><span class="notice-icon" aria-hidden="true">!</span><div><p class="notice-title">Es la última variante activa</p><p class="muted">El producto dejará de cumplir la condición necesaria para estar disponible en los canales de venta.</p></div></div>':''}<div class="readonly-box" style="margin-top:18px"><span class="readonly-label">Combinación</span><span class="readonly-value">Talla ${escapeHtml(v.size)} · ${escapeHtml(v.color)}</span></div><div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Cancelar</button><button class="btn btn-danger" type="button" data-action="confirm-deactivate">Desactivar variante</button></div></section></div>`;window.setTimeout(()=>document.getElementById('modal-title')?.focus(),0);}
-      function closeModal(){state.modal=null;modalRoot.innerHTML='';state.modalReturn?.focus?.();}
-      function confirmDeactivate(){const v=currentVariant();if(!v)return;v.status='Inactiva';v.availability='No disponible para nuevas ventas';v.updated=new Date().toLocaleString('es-PE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});closeModal();renderDetail();main.focus();toast('Variante desactivada. El producto y las demás variantes no cambiaron.');}
-
-      function renderNotFound(){main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:'Variantes',action:'back-list'},{label:'Variante no encontrada'}])}${productContext()}<section class="global-state"><div class="empty-symbol" aria-hidden="true">?</div><h1>Variante no encontrada</h1><p>La variante pudo haber cambiado o ya no estar disponible.</p><button class="btn btn-primary" type="button" data-action="back-list">Volver a variantes</button></section>`;}
-      function renderNoPermission(){main.innerHTML=`<section class="global-state" aria-labelledby="permission-title"><div class="empty-symbol" aria-hidden="true">!</div><h1 id="permission-title">No tienes permiso para realizar esta acción</h1><p>Tu sesión no permite crear, modificar ni cambiar el estado de variantes.</p><button class="btn btn-primary" type="button" data-action="back-list">Volver a variantes</button></section>`;}
-      function renderSessionExpired(){main.innerHTML=`<section class="global-state" aria-labelledby="session-title"><div class="empty-symbol" aria-hidden="true">!</div><h1 id="session-title">Tu sesión expiró</h1><p>Inicia sesión nuevamente para continuar. Intentaremos devolverte al producto seleccionado.</p><button class="btn btn-primary" type="button" data-action="login">Iniciar sesión</button></section>`;}
-      function renderConflict(){const v=currentVariant()||state.variants[0];main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:'Variantes',action:'back-list'},{label:v.sku,action:'view-current'},{label:'Datos actualizados'}])}${productContext()}${pageHeading('La variante cambió mientras la editabas','Recarga la información vigente antes de volver a guardar.')}<section class="panel"><div class="notice"><span class="notice-icon" aria-hidden="true">!</span><div><p class="notice-title">Tus cambios no se guardaron</p><p class="muted">Otra actualización modificó esta variante. El SKU y la versión vigente se conservan.</p></div></div><div class="actions-bar"><button class="btn" type="button" data-action="back-list">Volver a variantes</button><button class="btn btn-primary" type="button" data-action="reload-variant">Recargar variante</button></div></section>`;}
-      function renderCollision(){main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:'Variantes',action:'back-list'},{label:'No se pudo crear'}])}${productContext()}${pageHeading('No pudimos crear la variante','El código generado coincidió con un SKU existente y la variante no fue guardada.')}<section class="panel"><div class="notice" role="alert"><span class="notice-icon" aria-hidden="true">!</span><div><p class="notice-title">La operación fue rechazada de forma segura</p><p class="muted">Intenta nuevamente más tarde. Si el problema continúa, solicita soporte e indica la referencia VAR-20260917-01.</p></div></div><div class="actions-bar"><button class="btn" type="button" data-action="back-list">Volver a variantes</button><button class="btn btn-primary" type="button" data-action="new-variant">Intentar otra vez</button></div></section>`;}
-
-      function render(){modalRoot.innerHTML='';if(state.screen==='list')renderList();else if(state.screen==='create')renderForm('create');else if(state.screen==='edit')renderForm('edit');else if(state.screen==='detail')renderDetail();else if(state.screen==='no-permission')renderNoPermission();else if(state.screen==='session-expired')renderSessionExpired();else if(state.screen==='conflict')renderConflict();else if(state.screen==='collision')renderCollision();else renderNotFound();}
-
-      function parseHash(){const hash=location.hash.replace('#','');state.product=products.variants;
-        if(hash==='producto-simple'){state.product=products.simple;state.screen='list';}
-        else if(hash==='no-permission')state.screen='no-permission';
-        else if(hash==='session-expired')state.screen='session-expired';
-        else if(hash==='list-loading'){state.screen='list';state.listMode='loading';}
-        else if(hash==='list-error'){state.screen='list';state.listMode='error';}
-        else if(hash==='list-empty'){state.screen='list';state.variants=[];state.listMode='normal';}
-        else if(hash==='conflict'){state.screen='conflict';state.selectedId='v-001';}
-        else if(hash==='sku-collision')state.screen='collision';
-        else if(hash==='imagen-invalida'){state.screen='edit';state.selectedId='v-001';state.simulatedImageError='El archivo no cumple el formato permitido. La imagen anterior se conserva.';}
-        else if(hash==='variante-nueva')state.screen='create';
-        else {const match=hash.match(/^variante-(v-\d+)-(detail|edit)$/);if(match){state.selectedId=match[1];state.screen=match[2];}else{state.screen='list';state.listMode='normal';}}
-        render();
-      }
-
-      document.addEventListener('click',event=>{const el=event.target.closest('[data-action]');if(!el)return;const action=el.dataset.action;
-        if(action==='new-variant'){state.formDirty=false;state.formDraft={size:'',color:'',material:''};navigate('create');}
-        else if(action==='view-variant')navigate('detail',el.dataset.id);
-        else if(action==='edit-variant'){state.formDirty=false;navigate('edit',el.dataset.id);}
-        else if(action==='edit-current'){state.formDirty=false;navigate('edit',state.selectedId);}
-        else if(action==='back-list')navigate('list');
-        else if(action==='view-current')navigate('detail',state.selectedId);
-        else if(action==='back-product')toast('Volviendo al detalle del producto.');
-        else if(action==='clear-filters'){state.filters={size:'',color:'',status:''};renderList();announce(`${state.variants.length} variantes.`);}
-        else if(action==='retry-list'){state.listMode='loading';renderList();window.setTimeout(()=>{state.listMode='normal';renderList();announce('Variantes cargadas.');},600);}
-        else if(action==='cancel-form'){if(state.formDirty){state.modal={type:'discard'};state.modalReturn=el;modalRoot.innerHTML=`<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><h2 id="modal-title" tabindex="-1">¿Descartar cambios?</h2><p>Los datos que ingresaste no se guardarán.</p><div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Seguir editando</button><button class="btn btn-primary" type="button" data-action="discard-form">Descartar cambios</button></div></section></div>`;window.setTimeout(()=>document.getElementById('modal-title')?.focus(),0);}else navigate(state.screen==='edit'?'detail':'list',state.selectedId);}
-        else if(action==='discard-form'){const target=state.screen==='edit'?'detail':'list';state.formDirty=false;navigate(target,state.selectedId);}
-        else if(action==='request-activate')requestActivate(el);
-        else if(action==='request-deactivate')requestDeactivate(el);
-        else if(action==='close-modal')closeModal();
-        else if(action==='confirm-activate')confirmActivate();
-        else if(action==='confirm-deactivate')confirmDeactivate();
-        else if(action==='reload-variant')navigate('detail',state.selectedId);
-        else if(action==='login')toast('Redirigiendo al inicio de sesión.');
-      });
-
-      document.addEventListener('change',event=>{
-        if(event.target.matches('[data-filter]')){state.filters[event.target.dataset.filter]=event.target.value;renderList();announce(`${filteredVariants().length} variantes encontradas.`);}
-        else if(event.target.id==='image-input'){const file=event.target.files?.[0];const preview=document.getElementById('image-preview');state.simulatedImageError='';if(state.screen==='create'){state.formDraft={size:document.getElementById('size')?.value||'',color:document.getElementById('color')?.value||'',material:document.getElementById('material')?.value||''};}if(file&&preview){if(!String(file.type).startsWith('image/')){state.simulatedImageError='El archivo seleccionado no es una imagen válida. La imagen anterior se conserva.';renderForm(state.screen==='edit'?'edit':'create');return;}preview.hidden=false;preview.lastElementChild.textContent=file.name;}state.formDirty=true;}
-        else if(event.target.closest('#variant-form'))state.formDirty=true;
-      });
-      document.addEventListener('input',event=>{if(event.target.closest('#variant-form'))state.formDirty=true;});
-      document.addEventListener('submit',event=>{if(event.target.id!=='variant-form')return;event.preventDefault();saveForm(event.target);});
-      document.addEventListener('keydown',event=>{const modal=modalRoot.querySelector('.modal');if(!modal)return;if(event.key==='Escape'){event.preventDefault();closeModal();return;}if(event.key==='Tab'){const items=[...modal.querySelectorAll('button:not(:disabled),a[href],[tabindex]:not([tabindex="-1"])')];if(!items.length)return;const first=items[0],last=items[items.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
-      window.addEventListener('online',()=>{offlineBanner.hidden=true;announce('Conexión recuperada.');});
-      window.addEventListener('offline',()=>{offlineBanner.hidden=false;announce('Sin conexión.');});
-      window.addEventListener('hashchange',parseHash);
-      offlineBanner.hidden=navigator.onLine;parseHash();
-    })();
+    offlineBanner.hidden = navigator.onLine;
+    window.addEventListener('hashchange',parseHash);
+    parseHash();
+  })();
   </script>
 </body>
 </html>

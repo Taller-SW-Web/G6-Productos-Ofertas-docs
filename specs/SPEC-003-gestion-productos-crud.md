@@ -1,159 +1,1142 @@
 # SPEC-003 — Especificación: Gestión de productos (CRUD principal)
 
 **Responsable:** Gabriel Poma Gutierrez  
-**Rama:** poma  
-**Trazabilidad:** HU [HU-003](../hu/HU-003-gestion-productos-crud.md) | Wireframe [WF-003](../wireframes/flows/WF-003-gestion-productos-crud.md)
+**Rama:** `poma`  
+**Trazabilidad:** HU [HU-003](./hu/HU-003-gestion-productos-crud.md) | Wireframe [WF-003](./wireframes/flows/WF-003-gestion-productos-crud.md)  
+**Contrato HTTP:** [`./api/openapi.yaml`](./api/openapi.yaml)  
+**Contrato de integración:** [`./Contrato_Api.md`](./Contrato_Api.md)  
+**Arquitectura:** [`./Arquitectura.md`](./Arquitectura.md)  
+**Modelo conceptual:** [`./Modelo_Conceptual.md`](./Modelo_Conceptual.md)  
+**Catálogo de errores:** [`./api/catalogo-errores.md`](./api/catalogo-errores.md)
 
-**Versión:** v2 — corregida para eliminar discrepancias con `hu_gestion_productos_crud.md`
+**Versión:** v3.1 — seguridad y códigos de error armonizados
 
-> **Cambios consolidados:** estado inicial en "borrador"; activación explícita; `sku_base` como identificador único bloqueante; `(nombre, marca_id)` como advertencia de posible duplicado y no como clave empresarial; separación entre categoría de navegación y `tipo_producto_id` que define el esquema de características; slug como propiedad de Catálogo; reactivación con re-validación; precio base con responsabilidad resuelta.
+> **Cambios principales de esta versión**
+>
+> - se conserva el ciclo `BORRADOR → ACTIVO → INACTIVO`;
+> - `sku_base` sigue siendo identificador único del producto y, en productos simples, también el SKU vendible;
+> - se incorpora el **perfil físico del SKU vendible de productos simples**;
+> - se definen peso en kg y dimensiones en cm;
+> - los productos con variantes delegan su perfil físico a cada SKU de variante en `SPEC-004`;
+> - se explicita que Productos y Ofertas no es dueño del empaque;
+> - la consulta física en lote para Despacho trata uniformemente SKU simples y SKU de variantes;
+> - el perfil físico no se convierte automáticamente en una nueva condición de activación mientras no exista una decisión funcional que así lo establezca;
+- la autenticación/autorización HTTP se alinea con el contrato oficial de Seguridad: `TOKEN_INVALIDO` y `SCOPE_INSUFICIENTE`.
 
-## 1. Contexto
+---
 
-El módulo de Productos y Ofertas es el dueño de la entidad "producto" dentro de la arquitectura de microservicios del Marketplace Multicanal, y define los productos simples y sus SKU vendibles, pero el stock de todos los SKU pertenece exclusivamente a Inventario. Todos los demás módulos (Marketplace Cliente, Chatbot Cliente, Retail Vendedor, Ventas y Postventa, Despacho y Entrega) consumen la información de productos mediante APIs, sin acceso directo a la base de datos de este módulo. Esto significa que este módulo es la única fuente de verdad del catálogo, y cualquier error, inconsistencia o demora en sus operaciones CRUD repercute directamente en la disponibilidad y confiabilidad de todos los canales de venta. Como parte del equipo del gestor comercial, esta capacidad constituye la base sobre la cual se construirán posteriormente las funcionalidades de precios, ofertas, combos y variantes.
+# 1. Contexto
 
-## 2. Propósito
+Productos y Ofertas es la fuente de verdad de la información de catálogo del Marketplace Multicanal. Los demás módulos consumen esta información mediante contratos de integración y no acceden directamente a las tablas del módulo.
 
-Permitir al gestor comercial administrar el ciclo de vida completo de los productos del catálogo (creación, activación, actualización, consulta, desactivación y reactivación), garantizando integridad en sus datos propios y propagación asíncrona consistente eventualmente hacia otros módulos mediante contratos versionados.
+El CRUD principal administra la entidad **Producto** y su ciclo de vida. Un producto puede ser:
 
-## 3. Alcance
+```text
+Producto simple
+tiene_variantes = false
+```
+
+o:
+
+```text
+Producto con variantes
+tiene_variantes = true
+```
+
+La diferencia es relevante para la identidad vendible:
+
+### Producto simple
+
+```text
+sku_base = SKU vendible
+```
+
+El propio producto representa la unidad comercial que consumen Pricing, Inventario, Ventas y Despacho.
+
+### Producto con variantes
+
+```text
+sku_base = identidad base/agregadora
+```
+
+El producto padre no posee stock propio. Cada variante tiene un SKU comercial y su información física se administra en `SPEC-004`.
+
+El stock continúa siendo propiedad exclusiva de Inventario.
+
+---
+
+# 2. Propósito
+
+Permitir al gestor comercial administrar el ciclo de vida completo de los productos:
+
+- creación;
+- consulta;
+- edición;
+- activación;
+- desactivación;
+- reactivación;
+
+manteniendo integridad de catálogo, trazabilidad y separación clara de ownership entre:
+
+- Catálogo;
+- Pricing;
+- Inventario;
+- Variantes;
+- Despacho.
+
+Para productos simples, Catálogo también mantiene las propiedades físicas intrínsecas de su SKU vendible.
+
+---
+
+# 3. Alcance
 
 Incluye:
-- Registro (creación) de nuevos productos, en estado **borrador**, con sus atributos mínimos (nombre, descripción, categoría de navegación, `tipo_producto_id`, marca, precio base referencial, `sku_base` y bandera `tiene_variantes`).
-- Activación de un producto en borrador a estado **activo**, sujeta a validaciones adicionales (características, imágenes).
-- Actualización de los datos de un producto existente, en cualquiera de sus estados.
-- Consulta de productos, tanto individual (por identificador/slug) como en listado, con filtros básicos (categoría, marca, estado).
-- Desactivación (baja lógica) de un producto, sin eliminarlo físicamente de la base de datos.
-- Reactivación de un producto previamente desactivado, con re-validación de las condiciones de activación.
-- Generación y mantenimiento del slug del producto (identificador amigable de URL).
-- Exposición de estas operaciones mediante API para su consumo por parte de otros módulos (Marketplace Cliente, Chatbot Cliente, Retail Vendedor, Ventas y Postventa, Despacho y Entrega, Seguridad y Usuarios).
-- Validaciones de integridad de datos y de reglas de negocio propias del producto: unicidad bloqueante de `sku_base`, campos obligatorios según estado y detección no bloqueante de posibles duplicados por `(nombre, marca_id)`.
 
-## 4. Requisitos
+1. creación de productos en estado `BORRADOR`;
+2. nombre y descripción;
+3. categoría de navegación;
+4. tipo de producto;
+5. marca;
+6. precio base inicial para preparación en Pricing;
+7. `sku_base`;
+8. bandera `tiene_variantes`;
+9. características y valores del producto;
+10. imágenes;
+11. slug;
+12. activación;
+13. desactivación lógica;
+14. reactivación;
+15. perfil físico del SKU vendible cuando el producto es simple;
+16. exposición de datos físicos de SKU para Despacho;
+17. coordinación con Inventario y Pricing;
+18. barreras de baja segura de entidades maestras.
 
-### Requisito 1: Creación de productos (estado borrador)
+---
 
-El sistema DEBE permitir registrar un nuevo producto con sus atributos mínimos (nombre, categoría de navegación, `tipo_producto_id`, marca, precio base, descripción, `sku_base` y `tiene_variantes`), asignarle un identificador interno único y un slug, y guardarlo en estado **"borrador"**. No se exige imagen ni valores concretos de características en este punto. El `tipo_producto_id` referencia el esquema de atributos administrado por la funcionalidad de asociación de tipos de producto y características; la categoría se utiliza para navegación/clasificación y no define por sí sola el esquema de datos del producto.
+# 4. Modelo de producto y SKU vendible
 
-La bandera `tiene_variantes` se define al crear el producto y no es editable mediante el CRUD ordinario una vez que existe identidad comercial publicada o variantes registradas. Una conversión posterior entre producto simple y producto con variantes se considera una **migración de modelo** fuera de este flujo, porque afecta SKU, Pricing, Inventario y referencias externas. Si es `false`, `sku_base` identifica también el SKU vendible; si es `true`, el producto padre no posee stock propio y sus variantes son las unidades vendibles.
+## 4.1. Producto simple
 
-#### Escenario: Registro exitoso de un producto nuevo (borrador)
-- DADO que el gestor comercial ha ingresado todos los campos mínimos con datos válidos
-- CUANDO el gestor comercial confirma el registro del producto
-- ENTONCES el sistema crea el producto en estado "borrador", le asigna un identificador único y un slug, y lo deja disponible para su consulta administrativa vía API (no visible aún para los canales de venta)
+Para:
 
-#### Escenario: Intento de registro con sku_base duplicado
-- DADO que ya existe un producto (activo, inactivo o en borrador) con el mismo `sku_base`
-- CUANDO el gestor comercial intenta registrar un nuevo producto con ese `sku_base`
-- ENTONCES el sistema rechaza la operación y muestra un mensaje indicando que el `sku_base` ya está en uso
+```text
+tiene_variantes = false
+```
 
-#### Escenario: Advertencia por posible duplicado de nombre y marca
-- DADO que ya existe un producto con el mismo nombre normalizado y la misma marca (`nombre` + `marca_id`)
-- CUANDO el gestor comercial intenta registrar un nuevo producto con esa misma combinación pero con `sku_base` distinto
-- ENTONCES el sistema muestra una advertencia de posible duplicado y los productos coincidentes, pero permite continuar si el gestor confirma que se trata de una referencia comercial distinta; `sku_base` continúa siendo la restricción de unicidad bloqueante
+se cumple:
 
-**Configuración de variantes:** si `tiene_variantes=true`, el formulario de producto configura antes de la primera variante las características identificadoras LISTA permitidas por su `tipo_producto_id`, según `SPEC-004-gestion-variantes-skus.md`. El conjunto queda fijo desde la primera variante, incluso inactiva. Cambiar la categoría de navegación no altera el esquema de atributos ni las identidades existentes; cambiar el tipo de producto después de existir identidad publicada requiere un flujo de migración explícito y no se realiza silenciosamente desde este CRUD.
+```text
+sku_base = SKU vendible
+```
 
-### Requisito 1.1: Activación de productos
+Por tanto:
 
-El sistema DEBE permitir cambiar un producto de "borrador" a "activo" únicamente cuando, además de los campos mínimos de creación, cuente con categoría y marca activas, `tipo_producto_id` activo, tenga informados **todos los valores de las características obligatorias efectivas de su tipo de producto** y al menos una imagen. Si el tipo no posee características obligatorias, no se exige inventar una. Si `tiene_variantes = true`, también requiere una variante ACTIVA con SKU e imagen válidos; si es simple, su `sku_base` es el SKU vendible. No se publica como vendible hasta que Pricing confirme precio inicial y, para cada SKU publicable, Inventario confirme inicialización; la consulta comercial verifica su disponibilidad vigente.
+- Pricing puede asociar precio al producto/SKU según su contrato;
+- Inventario mantiene saldo para `sku_base`;
+- Despacho puede consultar su perfil físico;
+- no se crea una variante artificial para representar el producto simple.
 
-#### Escenario: Activación exitosa
-- DADO un producto en borrador que cuenta con categoría y marca activas, todos los valores de sus características obligatorias efectivas completos y al menos una imagen
-- CUANDO el gestor comercial solicita su activación
-- ENTONCES el sistema cambia su estado a "activo" y lo pone disponible para su consulta vía API por parte de los canales de venta
+---
 
-#### Escenario: Activación rechazada por datos incompletos
-- DADO un producto en borrador sin ninguna imagen o con una o más características obligatorias efectivas sin valor
-- CUANDO el gestor comercial solicita su activación
-- ENTONCES el sistema rechaza la activación, indica el requisito faltante y mantiene el producto en "borrador"
+## 4.2. Producto con variantes
 
-### Requisito 2: Actualización de productos
+Para:
 
-El sistema DEBE permitir modificar los atributos editables de un producto existente, en cualquiera de sus estados, preservando la trazabilidad del cambio. `tiene_variantes` no es editable.
+```text
+tiene_variantes = true
+```
 
-Los cambios válidos sobre un producto activo se confirman inmediatamente en Catálogo y se propagan a otros consumidores por eventos (consistencia eventual, sin promesa de visibilidad instantánea global). Si el cambio provoca que deje de cumplir una condición de activación, la operación se rechaza y se conserva la última versión válida.
+el producto padre no constituye una unidad física vendible.
 
-#### Escenario: Actualización exitosa de atributos de un producto
-- DADO un producto existente en el catálogo
-- CUANDO el gestor comercial modifica uno o más de sus atributos (por ejemplo, descripción o categoría) y confirma los cambios
-- ENTONCES el sistema guarda los cambios, actualiza la fecha/hora de última modificación y refleja los nuevos datos en las consultas posteriores vía API
+Las unidades vendibles son sus variantes.
 
-#### Escenario: Intento de actualización de un producto inexistente
-- DADO un identificador de producto que no existe en el catálogo
-- CUANDO se envía una solicitud de actualización con ese identificador
-- ENTONCES el sistema rechaza la operación y retorna un error indicando que el producto no fue encontrado
+Por tanto:
 
-### Requisito 3: Consulta de productos
+- el producto padre no posee stock;
+- el producto padre no posee un perfil físico autoritativo único;
+- peso y dimensiones se registran por variante en `SPEC-004`;
+- Despacho consulta los SKU de variante.
 
-El sistema DEBE permitir consultar productos de forma individual y en listados filtrables, exponiendo esta información mediante API para los demás módulos. Los canales de venta (Marketplace, Chatbot, Retail) solo deben recibir productos en estado "activo" en sus consultas de catálogo público.
+---
 
-#### Escenario: Consulta de un producto por su identificador
-- DADO un producto existente y activo en el catálogo
-- CUANDO se solicita la información del producto mediante su identificador, slug o código
-- ENTONCES el sistema retorna todos los atributos vigentes del producto, incluyendo su estado
+# 5. Requisito 1 — Crear producto en borrador
 
-#### Escenario: Consulta de listado filtrado sin resultados
-- DADO un filtro de búsqueda (por ejemplo, categoría o marca) que no coincide con ningún producto registrado
-- CUANDO se ejecuta la consulta con dicho filtro
-- ENTONCES el sistema retorna una lista vacía junto con un código de respuesta exitoso, sin generar error
+El sistema DEBE permitir registrar un producto con:
 
-### Requisito 4: Desactivación y reactivación de productos
+- nombre;
+- descripción;
+- categoría de navegación;
+- tipo de producto;
+- marca;
+- precio base inicial;
+- `sku_base`;
+- `tiene_variantes`.
 
-El sistema DEBE permitir cambiar el estado de un producto entre "activo" e "inactivo" (baja lógica), sin eliminarlo de forma permanente. La reactivación DEBE volver a validar las condiciones del Requisito 1.1 antes de marcar el producto nuevamente como "activo".
+El producto se crea en:
 
-#### Escenario: Desactivación exitosa de un producto
-- DADO un producto activo en el catálogo
-- CUANDO el gestor comercial solicita su desactivación
-- ENTONCES el sistema cambia el estado del producto a "inactivo" y este deja de estar disponible para su venta en los canales, aunque sigue siendo consultable para fines administrativos e históricos; además emite `catalog.product.deactivated` para que Promociones, Combos y otros consumidores dejen de utilizarlo en nuevas operaciones. Los pedidos ya confirmados conservan su snapshot histórico
+```text
+BORRADOR
+```
 
-#### Escenario: Intento de desactivar un producto que ya está inactivo
-- DADO un producto que ya se encuentra en estado "inactivo"
-- CUANDO el gestor comercial solicita nuevamente su desactivación
-- ENTONCES el sistema informa que el producto ya se encuentra inactivo y no realiza cambios adicionales
+y recibe:
 
-#### Escenario: Reactivación exitosa de un producto
-- DADO un producto inactivo cuya categoría, marca, características e imágenes siguen siendo válidas
-- CUANDO el gestor comercial solicita su reactivación
-- ENTONCES el sistema revalida las condiciones del Requisito 1.1 y, si se cumplen, cambia el estado del producto a "activo"
+- identificador interno;
+- slug;
+- fecha de creación.
 
-#### Escenario: Reactivación rechazada por datos ya no válidos
-- DADO un producto inactivo cuya categoría fue desactivada mientras tanto
-- CUANDO el gestor comercial solicita su reactivación
-- ENTONCES el sistema rechaza la reactivación, indica qué condición ya no se cumple y mantiene el producto en "inactivo"
+No se exige para guardar el borrador:
 
-### Requisito 5: Elegibilidad y barreras de entidades maestras
-Catálogo no debe crear, activar ni reasignar productos a una categoría o marca sujeta a una barrera de desactivación instalada según `SPEC-008-gestion-categorias.md` y `SPEC-011-gestion-marcas.md`. La comprobación y la escritura de producto deben coordinarse transaccionalmente con la barrera local; una proyección conocida como obsoleta no permite autorizar una operación comercial. El servicio publica la confirmación o rechazo de verificación asíncrona de bajas de entidades maestras con `operation_id` y conserva la barrera hasta reconciliar la finalización.
+- imagen;
+- completar características obligatorias;
+- completar perfil físico.
 
-**Valores identificadores bajo baja segura:** Catálogo aplica las mismas barreras locales de escritura al recibir solicitud de baja de un valor LISTA desde Taxonomía (`SPEC-009-gestion-caracteristicas.md`), y confirma asíncronamente si algún SKU ACTIVO lo usa como identidad o algún producto ACTIVO lo usa como valor requerido. Mientras dure la verificación no crea, activa ni reasigna nuevos artículos al valor; un fallo de confirmación nunca autoriza la baja. La regla no altera snapshots de pedidos.
+---
 
-### Requisito 6: Última variante activa
-Si se desactiva la última variante ACTIVA de un producto con `tiene_variantes = true`, Catálogo desactiva también el producto padre en la misma transacción local y emite los eventos correspondientes; conserva el snapshot de pedidos confirmados. Para volver a activar el producto se debe activar una variante elegible y validar íntegramente los requisitos de activación.
+## 5.1. `tiene_variantes`
 
-### Requisito 7: Alta de precio inicial
-Catálogo entrega a Pricing un comando idempotente de inicialización con `product_id`, `sku_base`, precio base, motivo `ALTA_PRODUCTO` y contexto de actor; Pricing persiste y confirma su resultado, y emite `pricing.price.changed` solo después del commit. La creación del borrador no equivale a precio inicial ya disponible; un fallo en Pricing se registra como pendiente de preparación y no habilita activación.
+La elección se realiza al crear.
 
-## 5. Requisitos no funcionales
+No se modifica mediante el CRUD ordinario cuando exista identidad comercial publicada o variantes registradas.
 
-- **Rendimiento:** Las operaciones de consulta de producto (individual y listado) deben responder en un tiempo adecuado para no degradar la experiencia de los canales que las consumen (Marketplace, Chatbot, Retail), dado que son invocadas de forma frecuente.
-- **Seguridad:** Las operaciones de creación, activación, actualización, desactivación y reactivación deben estar restringidas a usuarios autenticados con el rol de gestor comercial, validando el token/credenciales emitidos por el módulo de Seguridad y Usuarios. Las operaciones de consulta pueden ser expuestas con permisos más amplios según el canal consumidor.
-- **Disponibilidad:** La API de consulta de productos debe estar disponible de forma continua, ya que es un recurso crítico consumido de forma asíncrona por múltiples módulos (Marketplace Cliente, Chatbot Cliente, Retail Vendedor, Ventas y Postventa, Despacho y Entrega).
-- **Auditoría:** Cada creación, activación, actualización, desactivación y reactivación de un producto debe quedar registrada (usuario responsable, fecha/hora, cambio realizado) para trazabilidad.
-- **Escalabilidad:** El diseño de la persistencia y las consultas debe soportar el crecimiento del catálogo sin degradar el rendimiento, considerando que este módulo es la fuente central de datos de producto para todo el sistema.
+Cambiar entre producto simple y producto con variantes es una migración estructural porque afecta:
 
-## 6. Fuera de alcance
+- SKU;
+- Inventario;
+- Pricing;
+- perfiles físicos;
+- referencias externas.
 
-- **Gestión de variantes/SKUs (tallas, colores, imágenes por variante)** — corresponde a la capacidad de valor agregado "Gestión avanzada de Variantes (SKUs)", especificada de forma independiente. Un producto con `tiene_variantes = true` no gestiona su propio stock aquí; ver esa especificación.
-- **Gestión de precios individuales y masivos, ofertas, promociones y cupones** — corresponde a otras funcionalidades del módulo de Productos y Ofertas, fuera del alcance del CRUD principal. Este componente solo entrega el precio base inicial al crear el producto.
-- **Gestión de categorías, subcategorías, marcas y características** — se asume que estas entidades maestras existen o son gestionadas por una funcionalidad complementaria dentro del mismo módulo.
-- **Gestión de metadatos SEO adicionales (meta-título, meta-descripción, palabras clave)** — corresponde al componente de Taxonomía y SEO; este componente solo genera y mantiene el slug del producto.
-- **Actualización de stock por consumo desde los canales** — corresponde a la funcionalidad de "Consulta y actualización de disponibilidad de stock" (Inventario), no al CRUD de producto en sí. Este componente notifica la creación de un producto simple para que Inventario inicialice en 0 el SKU vendible identificado por `sku_base`.
-- **Eliminación física (borrado permanente) de productos** — no contemplada; solo se maneja baja lógica (desactivación/reactivación), para preservar integridad referencial e historial.
+---
 
-## Criterio de completitud
+## 5.2. SKU base
 
-La capacidad se considera correctamente implementada cuando:
-- Todos los requisitos (Creación, Activación, Actualización, Consulta y Desactivación/Reactivación) están implementados.
-- Todos los escenarios definidos se cumplen, incluyendo los casos borde y de error.
-- Los requisitos no funcionales aplicables (rendimiento, seguridad, disponibilidad, auditoría, escalabilidad) se cumplen.
-- No se han incorporado funcionalidades fuera del alcance, como gestión de variantes, precios, metadatos SEO u ofertas.
+`sku_base` debe:
+
+- existir al crear;
+- cumplir el formato contractual;
+- ser único globalmente;
+- permanecer estable mediante edición ordinaria.
+
+Para un producto simple es, además, el SKU vendible.
+
+---
+
+## Escenario — Crear producto simple
+
+**DADO** un gestor autorizado
+
+**CUANDO** registra un producto válido con:
+
+```text
+tiene_variantes = false
+```
+
+**ENTONCES** el sistema:
+
+1. crea el producto en `BORRADOR`;
+2. genera identificador y slug;
+3. conserva `sku_base` como SKU vendible;
+4. inicia la preparación de Pricing;
+5. coordina la inicialización del SKU en Inventario.
+
+---
+
+## Escenario — Crear producto con variantes
+
+**DADO** un gestor autorizado
+
+**CUANDO** registra:
+
+```text
+tiene_variantes = true
+```
+
+**ENTONCES** se crea el producto padre en `BORRADOR`, pero no se crea un saldo físico del producto padre como si fuera una unidad vendible.
+
+Las variantes se administran en `SPEC-004`.
+
+---
+
+# 6. Requisito 2 — Duplicados
+
+## 6.1. SKU duplicado
+
+Si otro producto utiliza el mismo `sku_base`, la creación se rechaza.
+
+Código conceptual:
+
+```text
+SKU_DUPLICADO
+```
+
+---
+
+## 6.2. Posible duplicado por nombre y marca
+
+La combinación normalizada:
+
+```text
+(nombre, marca)
+```
+
+es una advertencia, no una clave empresarial bloqueante.
+
+El gestor puede continuar si confirma que es una referencia distinta y el SKU es diferente.
+
+---
+
+# 7. Requisito 3 — Categoría y tipo de producto
+
+La categoría se utiliza para:
+
+```text
+navegación / clasificación
+```
+
+El tipo de producto define:
+
+```text
+esquema de características
+```
+
+La categoría no hereda ni define características.
+
+Un cambio de categoría no debe alterar automáticamente:
+
+- características identificadoras;
+- SKU;
+- variantes.
+
+Un cambio incompatible de tipo de producto después de publicar identidad requiere una migración explícita.
+
+---
+
+# 8. Requisito 4 — Características
+
+Para activar un producto deben estar completos todos los valores marcados como obligatorios por su tipo de producto.
+
+Si el tipo no tiene características obligatorias:
+
+```text
+no se inventa una característica para activar
+```
+
+Los atributos opcionales continúan siendo opcionales.
+
+---
+
+# 9. Requisito 5 — Imágenes
+
+Un producto puede guardarse en `BORRADOR` sin imagen.
+
+Para activar:
+
+```text
+al menos una imagen válida
+```
+
+La sustitución de una imagen debe mantener la anterior hasta confirmar correctamente el nuevo guardado.
+
+---
+
+# 10. Requisito 6 — Precio base inicial
+
+Durante la creación, Catálogo recibe un precio base inicial para preparar Pricing.
+
+Catálogo envía una operación idempotente a Pricing con contexto suficiente.
+
+La creación del borrador no implica que el precio ya esté listo.
+
+Pricing es owner de:
+
+- precio;
+- vigencia;
+- historial;
+- posteriores modificaciones.
+
+El evento de cambio de precio lo publica Pricing después de persistir.
+
+---
+
+# 11. Requisito 7 — Inicialización de Inventario
+
+## Producto simple
+
+Al crear el SKU vendible:
+
+```text
+sku_base
+```
+
+Inventario puede inicializarlo idempotentemente con su estado inicial definido en `SPEC-015`.
+
+Catálogo no almacena:
+
+```text
+on_hand
+reserved
+available
+stock_version
+```
+
+## Producto con variantes
+
+La inicialización ocurre por cada SKU de variante.
+
+No se inicializa un saldo vendible independiente para el producto padre.
+
+---
+
+# 12. Requisito 8 — Perfil físico del producto simple
+
+Para:
+
+```text
+tiene_variantes = false
+```
+
+Catálogo puede mantener un perfil físico asociado al `sku_base`.
+
+Campos contractuales:
+
+```text
+pesoKg
+largoCm
+anchoCm
+altoCm
+actualizadoEn
+```
+
+Representación HTTP conceptual:
+
+```json
+{
+  "sku": "BOT-750",
+  "estado": "ACTIVO",
+  "pesoKg": 0.42,
+  "dimensionesCm": {
+    "largo": 8,
+    "ancho": 8,
+    "alto": 27
+  },
+  "actualizadoEn": "2026-09-28T16:00:00Z"
+}
+```
+
+La forma HTTP exacta pertenece a OpenAPI.
+
+---
+
+# 13. Requisito 8.1 — Unidades
+
+Las unidades contractuales son:
+
+```text
+peso       -> kilogramos
+dimensiones -> centímetros
+```
+
+No se utiliza selector de unidad en el contrato.
+
+Los consumidores no deben inferir unidades.
+
+---
+
+# 14. Requisito 8.2 — Validaciones físicas
+
+Cuando se registra un perfil completo:
+
+```text
+pesoKg > 0
+largoCm > 0
+anchoCm > 0
+altoCm > 0
+```
+
+No se aceptan como valores físicos válidos:
+
+- cero;
+- negativos;
+- texto no numérico.
+
+Los decimales son válidos.
+
+Ejemplo:
+
+```text
+pesoKg = 0.25
+altoCm = 3.5
+```
+
+---
+
+# 15. Requisito 8.3 — Perfil físico incompleto
+
+Un producto puede permanecer en `BORRADOR` mientras se completan sus datos físicos.
+
+No se deben inventar:
+
+```text
+0 kg
+0 cm
+```
+
+para representar datos desconocidos.
+
+La ausencia o incompletitud debe conservarse explícitamente.
+
+En esta versión, el perfil físico **no se añade automáticamente como bloqueo general de activación**, porque esa regla no ha sido definida como condición funcional de publicación.
+
+Si posteriormente se exige perfil físico obligatorio para activar, SPEC/HU/WF deberán actualizarse de forma explícita.
+
+---
+
+# 16. Requisito 8.4 — Edición de perfil físico
+
+Modificar:
+
+- peso;
+- largo;
+- ancho;
+- alto;
+
+NO modifica:
+
+- `product_id`;
+- `sku_base`;
+- slug;
+- identidad comercial;
+- estado por sí mismo.
+
+La edición debe registrar trazabilidad.
+
+---
+
+## Escenario — Corregir peso
+
+**DADO** un producto simple con:
+
+```text
+peso = 0.45 kg
+```
+
+**CUANDO** el gestor corrige a:
+
+```text
+0.42 kg
+```
+
+**ENTONCES**:
+
+- el perfil se actualiza;
+- el SKU permanece igual;
+- `actualizadoEn` cambia;
+- futuras consultas físicas reciben el nuevo valor.
+
+---
+
+# 17. Requisito 8.5 — Producto con variantes
+
+Si:
+
+```text
+tiene_variantes = true
+```
+
+el CRUD principal NO presenta un perfil físico del producto padre como si representara todas las variantes.
+
+Debe indicar que los datos físicos se gestionan por variante.
+
+La administración corresponde a:
+
+```text
+SPEC-004 / WF-004
+```
+
+---
+
+# 18. Requisito 9 — Ownership del empaque
+
+Los datos físicos de Productos representan propiedades propias de la unidad vendible.
+
+NO representan:
+
+- caja;
+- bolsa;
+- pallet;
+- agrupación;
+- cantidad de paquetes;
+- dimensiones finales del paquete;
+- volumen logístico final.
+
+Estos conceptos pertenecen a **Despacho y Entrega**.
+
+Productos no debe persistir:
+
+```text
+tipoEmpaque
+cantidadPaquetes
+volumenLogisticoFinal
+```
+
+como datos propios del SKU.
+
+---
+
+# 19. Requisito 10 — Consulta física para Despacho
+
+Despacho puede consultar varios SKU en una sola solicitud.
+
+Contrato:
+
+```http
+POST /api/v1/productos/datos-fisicos/consulta
+```
+
+La consulta trata de forma uniforme:
+
+- `sku_base` de productos simples;
+- SKU de variantes.
+
+Consumidor previsto:
+
+```text
+modulo-despacho
+```
+
+Scope propuesto:
+
+```text
+productos:fisicos:leer
+```
+
+Su registro definitivo corresponde al acuerdo con Seguridad.
+
+---
+
+# 20. Requisito 10.1 — Respuesta de datos físicos
+
+La respuesta debe permitir distinguir:
+
+- SKU encontrados;
+- SKU no encontrados.
+
+Para un SKU con perfil utilizable puede incluir:
+
+```text
+sku
+estado
+pesoKg
+dimensionesCm
+actualizadoEn
+```
+
+La representación de un SKU existente pero con perfil incompleto debe seguir el contrato técnico publicado; la SPEC no debe inventar una forma incompatible con OpenAPI.
+
+---
+
+# 21. Requisito 10.2 — Sin stock ni pedidos
+
+La consulta física NO expone:
+
+```text
+stock
+reservas
+on_hand
+reserved
+available
+pedido
+pago
+cliente
+```
+
+Despacho consulta Inventario o los módulos correspondientes cuando otra información esté dentro de su flujo.
+
+---
+
+# 22. Requisito 11 — Activación
+
+Un producto `BORRADOR` pasa a `ACTIVO` únicamente cuando se validan las condiciones funcionales vigentes:
+
+1. datos mínimos;
+2. categoría activa;
+3. tipo de producto activo;
+4. marca activa;
+5. características obligatorias completas;
+6. al menos una imagen;
+7. Pricing preparado;
+8. Inventario inicializado para los SKU vendibles;
+9. si maneja variantes, al menos una variante `ACTIVA` válida.
+
+El perfil físico no se agrega como condición adicional automática en esta versión.
+
+---
+
+# 23. Requisito 12 — Edición
+
+El gestor puede editar los campos permitidos del producto.
+
+Para productos simples también puede editar el perfil físico.
+
+No se permite mediante edición ordinaria:
+
+- cambiar `tiene_variantes` después de publicar identidad;
+- recodificar `sku_base`;
+- transformar estructuralmente el tipo cuando afecta identidad;
+- modificar precio posterior como si Catálogo fuera owner.
+
+Si una edición sobre un producto activo rompe una condición de activación, se rechaza la operación completa y se conserva la última versión válida.
+
+---
+
+# 24. Requisito 13 — Consulta
+
+El sistema permite:
+
+- listado administrativo;
+- detalle administrativo;
+- consulta por identificador;
+- consulta por slug;
+- filtros básicos por categoría, marca y estado.
+
+Los canales comerciales solo reciben productos elegibles según los contratos correspondientes.
+
+Para un producto con variantes, el detalle puede incluir las variantes/SKU según el contrato publicado.
+
+---
+
+# 25. Requisito 14 — Desactivación
+
+La baja es lógica.
+
+Al desactivar:
+
+```text
+ACTIVO -> INACTIVO
+```
+
+el producto:
+
+- deja de ofrecerse para nuevas ventas;
+- conserva su información;
+- conserva referencias históricas;
+- publica `catalog.product.deactivated` después del commit.
+
+Los pedidos confirmados mantienen snapshot.
+
+---
+
+# 26. Requisito 15 — Reactivación
+
+Para:
+
+```text
+INACTIVO -> ACTIVO
+```
+
+se revalidan todas las condiciones de activación.
+
+La reactivación no es un cambio de estado incondicional.
+
+---
+
+# 27. Requisito 16 — Última variante activa
+
+Si se desactiva la última variante `ACTIVA` de un producto con variantes:
+
+- Catálogo inactiva el producto padre en la misma transacción local;
+- se conservan snapshots históricos.
+
+Para reactivar el padre debe volver a existir una variante elegible y cumplirse las demás condiciones.
+
+---
+
+# 28. Requisito 17 — Barreras de entidades maestras
+
+Durante una baja segura de:
+
+- categoría;
+- marca;
+- valor LISTA requerido/identificador;
+
+Catálogo instala o respeta barreras locales.
+
+Mientras la verificación está en curso no debe crear, activar ni reasignar nuevos productos hacia una entidad bloqueada.
+
+Un fallo de comunicación no autoriza silenciosamente la operación.
+
+---
+
+# 29. Slug
+
+Catálogo es owner del slug del producto.
+
+El slug:
+
+- se genera y mantiene en Catálogo;
+- sirve como identidad amigable de navegación;
+- no es reemplazado por Taxonomía.
+
+Los metadatos SEO adicionales pertenecen al componente correspondiente.
+
+---
+
+# 30. Datos que pertenecen a Catálogo
+
+Para Producto:
+
+```text
+product_id
+nombre
+descripcion
+categoria_ref
+tipo_producto_ref
+marca_ref
+sku_base
+tiene_variantes
+slug
+estado
+atributos
+imagenes
+```
+
+Para un SKU simple:
+
+```text
+pesoKg
+largoCm
+anchoCm
+altoCm
+actualizadoEn
+```
+
+---
+
+# 31. Datos que NO pertenecen a Catálogo
+
+## Pricing
+
+```text
+precio vigente
+precio oferta
+vigencias
+price_version
+```
+
+## Inventario
+
+```text
+on_hand
+reserved
+available
+stock_version
+reservas
+Kardex
+```
+
+## Despacho
+
+```text
+tipoEmpaque
+cantidadPaquetes
+dimensiones finales del paquete
+volumen logístico final
+ruta
+vehículo
+repartidor
+```
+
+## Ventas/Postventa
+
+```text
+pedido
+pago
+reembolso
+estado comercial del pedido
+```
+
+---
+
+# 32. Integración con productos simples y variantes
+
+La consulta física se resuelve conceptualmente así:
+
+```text
+SKU recibido
+   |
+   +-- corresponde a producto simple
+   |      -> perfil físico del sku_base
+   |
+   +-- corresponde a variante
+          -> perfil físico de la variante
+```
+
+El consumidor no necesita conocer internamente cuál tabla/responsabilidad local resolvió el SKU.
+
+---
+
+# 33. Requisitos no funcionales
+
+## Rendimiento
+
+- listados paginables;
+- detalle eficiente;
+- consulta física de Despacho en lote;
+- evitar una llamada por SKU.
+
+## Seguridad
+
+Las mutaciones requieren una identidad autenticada y autorización de gestor comercial conforme al contrato vigente de Seguridad.
+
+Las respuestas HTTP de autenticación/autorización se normalizan como:
+
+```text
+401 -> TOKEN_INVALIDO
+403 -> SCOPE_INSUFICIENTE
+```
+
+`TOKEN_INVALIDO` se utiliza cuando la petición no puede autenticarse mediante un token utilizable.
+
+`SCOPE_INSUFICIENTE` se utiliza cuando la identidad está autenticada pero no posee la autorización requerida para la operación.
+
+El nombre del código `SCOPE_INSUFICIENTE` pertenece al contrato adoptado de Seguridad y no obliga a exponer en la respuesta pública el permiso/scope concreto faltante.
+
+La consulta física servicio-a-servicio requiere identidad técnica autorizada.
+
+Para:
+
+```text
+POST /api/v1/productos/datos-fisicos/consulta
+```
+
+el permiso propuesto continúa siendo:
+
+```text
+productos:fisicos:leer
+```
+
+hasta que Seguridad registre/homologue definitivamente ese permiso. La provisionalidad del nombre del permiso no cambia los códigos HTTP `401` y `403`.
+
+## Auditoría
+
+Registrar:
+
+- creación;
+- edición;
+- cambio de estado;
+- cambio de imágenes;
+- cambio de perfil físico.
+
+## Disponibilidad
+
+Las APIs de lectura de catálogo son críticas para los canales.
+
+## Escalabilidad
+
+La implementación debe soportar crecimiento de:
+
+- productos;
+- variantes;
+- SKU;
+- consumidores.
+
+---
+
+# 34. Errores y códigos de aplicación
+
+El catálogo canónico de códigos pertenece a:
+
+```text
+api/catalogo-errores.md
+```
+
+Códigos relevantes para esta capacidad:
+
+```text
+VALIDACION
+TOKEN_INVALIDO
+SCOPE_INSUFICIENTE
+PRODUCTO_NO_ENCONTRADO
+SKU_DUPLICADO
+CATEGORIA_INVALIDA
+TIPO_PRODUCTO_INVALIDO
+MARCA_INVALIDA
+DATOS_INCOMPLETOS
+PERFIL_FISICO_INVALIDO
+DATOS_FISICOS_INCOMPLETOS
+CAMBIO_ESTRUCTURAL_NO_PERMITIDO
+VERSION_CONFLICT
+ERROR_INTERNO
+SERVICIO_NO_DISPONIBLE
+```
+
+La representación HTTP pertenece a OpenAPI y utiliza:
+
+```text
+application/problem+json
+```
+
+Los consumidores deben ramificar por `code`, no por `title` ni `detail`.
+
+El código histórico:
+
+```text
+SIN_AUTORIZACION
+```
+
+queda retirado de nuevos contratos. Su reemplazo es:
+
+```text
+SCOPE_INSUFICIENTE
+```
+
+cuando la identidad está autenticada pero carece de autorización suficiente.
+
+---
+
+# 35. Escenarios de perfil físico
+
+## Escenario A — Registrar físico en producto simple
+
+**DADO** un producto simple `BOT-750`
+
+**CUANDO** el gestor registra:
+
+```text
+peso = 0.42 kg
+largo = 8 cm
+ancho = 8 cm
+alto = 27 cm
+```
+
+**ENTONCES** Catálogo asocia esos valores al SKU `BOT-750`.
+
+---
+
+## Escenario B — Producto simple sin físico
+
+**DADO** un borrador simple
+
+**CUANDO** todavía no se conocen sus medidas
+
+**ENTONCES** el sistema permite conservar el perfil sin registrar y no inventa valores cero.
+
+---
+
+## Escenario C — Producto con variantes
+
+**DADO** un producto con variantes
+
+**CUANDO** el gestor abre el CRUD del producto padre
+
+**ENTONCES** no se muestran campos físicos del padre y se indica que se gestionan por variante.
+
+---
+
+## Escenario D — Peso inválido
+
+**DADO** un producto simple
+
+**CUANDO** se intenta registrar:
+
+```text
+peso = -0.5 kg
+```
+
+**ENTONCES** el sistema rechaza el dato físico.
+
+---
+
+## Escenario E — Consulta física de Despacho
+
+**DADO** una consulta con:
+
+```text
+BOT-750
+ZAP-PSX-42-NEG
+```
+
+donde el primero es producto simple y el segundo variante,
+
+**CUANDO** Despacho consulta el lote
+
+**ENTONCES** Catálogo resuelve ambos SKU mediante el mismo contrato externo.
+
+---
+
+## Escenario F — Token no válido
+
+**DADO** una operación protegida del CRUD
+
+**CUANDO** la petición no contiene un token utilizable según el contrato de Seguridad
+
+**ENTONCES** la API responde:
+
+```text
+401
+TOKEN_INVALIDO
+```
+
+sin ejecutar la mutación.
+
+---
+
+## Escenario G — Identidad sin autorización suficiente
+
+**DADO** una identidad autenticada
+
+**CUANDO** intenta ejecutar una operación para la que no está autorizada
+
+**ENTONCES** la API responde:
+
+```text
+403
+SCOPE_INSUFICIENTE
+```
+
+sin ejecutar la mutación y sin necesidad de revelar el permiso exacto faltante.
+
+---
+
+# 36. Fuera de alcance
+
+- Gestión de variantes: `SPEC-004`.
+- Stock y reservas: `SPEC-015`.
+- Cambios posteriores de precio: Pricing.
+- Promociones y cupones.
+- Combos.
+- Metadatos SEO adicionales.
+- Empaque y optimización logística.
+- Pedidos y pagos.
+- Eliminación física.
+- Conversión ordinaria entre producto simple y producto con variantes.
+
+---
+
+# 37. Criterio de completitud
+
+La capacidad se considera implementada cuando:
+
+- [ ] creación BORRADOR funciona;
+- [ ] `sku_base` es único;
+- [ ] nombre+marca produce advertencia y no falsa unicidad bloqueante;
+- [ ] categoría, marca y tipo se validan;
+- [ ] características obligatorias se validan al activar;
+- [ ] imágenes se validan al activar;
+- [ ] Pricing e Inventario participan conforme a ownership;
+- [ ] activación, desactivación y reactivación funcionan;
+- [ ] productos con variantes delegan a SPEC-004;
+- [ ] productos simples usan `sku_base` como SKU vendible;
+- [ ] productos simples pueden registrar perfil físico;
+- [ ] perfil físico utiliza kg/cm;
+- [ ] peso y dimensiones se validan;
+- [ ] perfil físico no cambia identidad;
+- [ ] no existe perfil físico autoritativo en el padre con variantes;
+- [ ] consulta física en lote resuelve SKU simples y variantes;
+- [ ] Productos no define empaque;
+- [ ] stock no se persiste en Catálogo;
+- [ ] trazabilidad incluye cambios físicos;
+- [ ] respuestas protegidas usan `TOKEN_INVALIDO` para 401;
+- [ ] respuestas protegidas usan `SCOPE_INSUFICIENTE` para 403;
+- [ ] `SIN_AUTORIZACION` no se emite en contratos nuevos;
+- [ ] contratos implementados coinciden con OpenAPI y `api/catalogo-errores.md`.
