@@ -2,61 +2,49 @@
 
 **Responsable:** Leonardo Lopez  
 **Rama:** lopez  
-**Trazabilidad:** Spec [SPEC-008](../specs/SPEC-008-gestion-categorias.md) | Flow [WF-008](../wireframes/flows/WF-008-gestion-categorias.md)
+**Trazabilidad:** Spec [SPEC-008](./specs/SPEC-008-gestion-categorias.md) | Flow [WF-008](./wireframes/flows/WF-008-gestion-categorias.md)
 
-**Como** **gestor comercial**,
-
-**quiero** crear, organizar y mantener las categorías y subcategorías del catálogo
-
-**para** que los clientes y canales de venta puedan navegar y filtrar los productos correctamente.
+**Como** gestor comercial, **quiero** crear, organizar y mantener categorías/subcategorías, **para** que clientes y canales naveguen y filtren correctamente.
 
 ## Criterios de aceptación
+| ID | Criterio |
+|---|---|
+| CA-01 | Crear categoría con nombre, descripción y padre opcional; nombre no único. |
+| CA-02 | Modelo recursivo; `MAX_CATEGORY_DEPTH=2` en MVP. |
+| CA-03 | No autorreferencia/ciclos. |
+| CA-04 | `categoria_padre_id` editable junto con datos de categoría. |
+| CA-05 | Reubicar valida padre activo, ciclos y profundidad. |
+| CA-06 | Baja lógica solo tras verificación asíncrona segura de productos. |
+| CA-07 | Reactivar exige padre activo. |
+| CA-08 | Nunca eliminación física. |
+| CA-09 | Administración puede ver árbol completo; consumidores externos solo activas. |
+| CA-10 | Baja queda `PENDING_DEACTIVATION`; solo `CLEAR` vigente confirma. |
+| CA-11 | Categorías no recalculan características; estas dependen del tipo de producto. |
+| CA-12 | Reubicación confirmada propaga `taxonomy.category.updated` de forma eventual. |
+| CA-13 | En creación, el slug final resuelto por SEO se muestra antes de confirmar la publicación administrativa; una colisión con sufijo no se aplica silenciosamente. |
+| CA-14 | La creación usa `POST /api/v1/seo/categorias/slug/resolver` y envía el resultado como `slugConfirmado`; si la propuesta dejó de estar libre, `POST /api/v1/categorias` responde `409 SLUG_DUPLICADO` y se solicita una nueva resolución sin cambiar el slug silenciosamente. |
 
-| **ID** | **Criterio** |
-| --- | --- |
-| **CA-01** | El sistema debe permitir crear una categoría con nombre y descripción, indicando opcionalmente una categoría padre. El nombre NO necesita ser único. |
-| **CA-02** | El modelo de categorías es jerárquico y recursivo mediante `categoria_padre_id`. Para el alcance del MVP se configura `MAX_CATEGORY_DEPTH=2` (categoría raíz y subcategoría), sin codificar dos niveles como limitación permanente del modelo. |
-| **CA-03** | El sistema no debe permitir que una categoría se asigne como su propia categoría padre (referencia circular). |
-| **CA-04** | El sistema debe incluir explícitamente el campo `categoria_padre_id` entre los campos editables al actualizar (junto con nombre, descripción, orden e imagen), sin afectar productos ya asociados. |
-| **CA-05** | Al cambiar el `categoria_padre_id`, el sistema debe validar que el nuevo padre esté activo, que no exista ciclo y que no se supere `MAX_CATEGORY_DEPTH`; para el MVP dicho máximo es 2. |
-| **CA-06** | El sistema debe permitir desactivar (baja lógica) una categoría, mediante verificación asíncrona confirmada por Catálogo y sin productos activos asociados; no confirma la baja ante timeout, error ni verificación pendiente. |
-| **CA-07** | El sistema debe permitir reactivar una categoría previamente desactivada, exigiendo que su categoría padre (si la tuviese) esté en estado activo. |
-| **CA-08** | El sistema NUNCA debe eliminar físicamente una categoría; toda baja es lógica. |
-| **CA-09** | La administración debe poder consultar el árbol jerárquico completo, incluidas categorías inactivas según permisos; Catálogo Core y los canales externos consumen únicamente el árbol de categorías activas. |
-| CA-10 | Al solicitar desactivación, Taxonomía deja la solicitud `PENDING_DEACTIVATION`; Catálogo bloquea altas/activaciones/reasignaciones concurrentes para esa categoría, responde por `operation_id` y solo un resultado `CLEAR` vigente permite confirmar la baja. Un rechazo, timeout o fallo conserva la categoría activa. |
-| CA-11 | Antes de cambiar `categoria_padre_id`, se revalidan ciclos, padre activo y `MAX_CATEGORY_DEPTH`. Las características del producto **no se recalculan por jerarquía de categorías**, porque el esquema de atributos pertenece al `tipo_producto_id`. |
-| CA-12 | El cambio confirmado de jerarquía y la baja lógica generan eventos versionados que actualizan las vistas de consumidores; no se promete actualización instantánea de todos los canales. |
+## Escenarios
+### 1. Reubicar
+DADO una subcategoría y un padre activo, CUANDO se cambia el padre, ENTONCES se valida profundidad/ciclo y se actualiza sin modificar atributos de productos.
 
-## Escenarios dado-cuando-entonces
+### 2. Reactivar con padre inactivo
+DADO hija y padre inactivos, CUANDO se reactiva la hija, ENTONCES se exige reactivar primero el padre.
 
-**Escenario 1: Actualización del campo `categoria_padre_id`**
-* **DADO** que existe una subcategoría "Accesorios" y una categoría raíz "Fútbol",
-* **CUANDO** el gestor actualiza la subcategoría asignando el `categoria_padre_id` de "Fútbol",
-* **ENTONCES** el sistema cambia su ubicación en el árbol respetando `MAX_CATEGORY_DEPTH=2` configurado para el MVP.
+### 3. Baja con productos
+DADO productos activos, CUANDO se solicita baja, ENTONCES se rechaza.
 
-**Escenario 2: Reactivación de categoría con padre inactivo**
-* **DADO** que la categoría "Running" (hija) y "Zapatillas" (padre) están inactivas,
-* **CUANDO** el gestor solicita reactivar "Running",
-* **ENTONCES** el sistema arroja un error requiriendo reactivar primero la categoría padre.
+### 4. Baja pendiente
+DADO categoría sin productos, CUANDO inicia la comprobación, ENTONCES Catálogo aplica barrera y Taxonomía espera `CLEAR`.
 
-**Escenario 3: Baja lógica y productos**
-* **DADO** que una categoría tiene al menos un producto activo,
-* **CUANDO** se intenta desactivar,
-* **ENTONCES** se bloquea la acción para no dejar productos huérfanos en canales de venta.
+### 5. Profundidad
+DADO que la nueva ubicación produciría un tercer nivel, CUANDO se reubica, ENTONCES se rechaza.
 
-## Reglas resueltas (formalizadas)
-* **Categoría padre editable:** Se confirma que `categoria_padre_id` se mantiene como campo editable en CA-04.
-* **Reactivación:** Alineado completamente con la especificación (Escenario 2).
-* **Reglas abiertas:** Para el MVP se configura una profundidad máxima de 2 niveles sobre un modelo jerárquico recursivo; se mantiene la verificación asíncrona con barrera de escrituras en Catálogo y la prohibición absoluta de eliminación física.
+### 6. Colisión de slug al crear
+DADO que `futbol` existe, CUANDO se crea otra categoría con nombre Fútbol, ENTONCES el gestor ve `/categoria/futbol-2` y debe confirmar ese slug antes de completar el alta.
 
----
+### 7. Colisión concurrente después de confirmar propuesta
+DADO que el gestor confirmó `futbol-2`, Y otro proceso ocupa ese slug antes de persistir, CUANDO se envía el alta, ENTONCES el sistema responde `409 SLUG_DUPLICADO`, no crea la categoría con otro sufijo y vuelve a resolver una propuesta para que el gestor la confirme.
 
-**Escenario 4: Baja pendiente y creación concurrente**
-* **DADO** una categoría sin productos activos,
-* **CUANDO** se solicita su baja y Catálogo acepta verificarla,
-* **ENTONCES** Catálogo bloquea la activación o reasignación concurrente a esa categoría y Taxonomía solo confirma la baja al recibir `CLEAR` para la operación vigente.
-
-**Escenario 5: Reubicación que excede la profundidad configurada**
-* **DADO** una categoría cuya nueva ubicación produciría una profundidad mayor que `MAX_CATEGORY_DEPTH=2` en el MVP,
-* **CUANDO** se modifica `categoria_padre_id`,
-* **ENTONCES** se rechaza sin cambiar la jerarquía ni alterar el esquema de atributos de los productos existentes.
+## Regla resuelta
+WF-008 consume la generación automática de SPEC-012 únicamente para la creación. La edición posterior de slug/metadatos se realiza en WF-012.

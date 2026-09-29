@@ -2,140 +2,388 @@
 
 **Responsable:** Leonardo Vera Rodríguez  
 **Rama:** vera  
-**Trazabilidad:** HU [HU-013](../hu/HU-013-gestion-precios-individuales-masivos.md) | Wireframe [WF-013](../wireframes/flows/WF-013-gestion-precios-individuales-masivos.md)
+**Trazabilidad:** HU [HU-013](./hu/HU-013-gestion-precios-individuales-masivos.md) | Wireframe [WF-013](./wireframes/flows/WF-013-gestion-precios-individuales-masivos.md)
+**Contrato HTTP canónico:** [`./api/openapi.yaml`](./api/openapi.yaml) — `0.3.5-p0`  
+**Contrato asíncrono canónico:** [`./asyncapi/asyncapi.yaml`](./asyncapi/asyncapi.yaml) — `0.2.1-p0`  
+**Versión documental:** v1.1 — alineación con baseline contractual P0
 
 ## 1. Contexto
-En un marketplace multicanal de artículos deportivos (que abastece canales web, chatbot y ventas retail en tienda física), los precios de los productos fluctúan constantemente por campañas comerciales, tipo de cambio, liquidaciones de temporada deportiva o acuerdos con proveedores. El gestor comercial requiere una interfaz y mecanismos backend confiables para actualizar precios tanto de manera puntual (producto por producto) como en lote mediante archivos tabulares (CSV/Excel) para cientos de SKUs, garantizando consistencia, trazabilidad temporal y prevención de errores operativos que deriven en pérdidas económicas o infracciones de protección al consumidor.
+
+En el Marketplace Multicanal de artículos deportivos, los precios pueden variar por campañas comerciales, tipo de cambio, liquidaciones o acuerdos con proveedores. El gestor comercial necesita actualizar y programar precios de forma individual o masiva, consultar el precio oficial en un instante histórico y mantener trazabilidad temporal.
+
+Pricing es propietario del precio regular, de la oferta propia de Pricing, moneda, vigencias, alcance por canal y versión.
+
+Esta capacidad **no administra costos ni márgenes contables**, por lo que no afirma prevenir márgenes negativos.
 
 ## 2. Propósito
-Permitir al gestor comercial actualizar, programar y calibrar precios regulares y de oferta de productos/SKUs individuales o catálogos masivos de forma ágil y validada, con soporte de vigencias temporales, consulta histórica, scopes por canal y controles contra errores operativos extraordinarios. Esta capacidad **no afirma prevenir márgenes negativos** mientras el dominio no disponga de costos o márgenes objetivo.
+
+Permitir al gestor comercial:
+
+- consultar precios vigentes;
+- modificar precio regular y oferta;
+- programar vigencias futuras;
+- consultar precios históricos mediante `as-of`;
+- procesar archivos CSV/XLSX;
+- operar con concurrencia optimista;
+- registrar el motivo de cambio;
+- propagar cambios confirmados mediante `pricing.price.changed`.
 
 ## 3. Alcance
+
 Incluye:
-- Consulta y actualización manual del precio regular y precio de oferta, exigiendo motivo obligatorio.
-- Modelo jerárquico: el producto define precio base; un SKU de variante puede definir un override específico. Si no existe override, hereda el precio vigente del producto. Para un producto simple, su `sku_base` es el SKU vendible y usa el precio del producto.
-- Validación de rangos comerciales permitidos (precios estrictamente mayores a cero y precio de oferta menor al precio regular).
-- Programación de precios con `valid_from`, `valid_until` opcional, moneda y `channel_id` opcional (`null` = precio global).
-- Consulta de precios en un punto específico en el tiempo (*as-of query*) mediante parámetro temporal.
-- Carga masiva de precios mediante archivo estructurado (.csv o .xlsx) con transaccionalidad atómica por defecto (*All-or-Nothing*) y modo tolerante a fallos opcional.
-- Previsualización, procesamiento por lotes y reporte detallado de errores fila por fila en cargas masivas, incluyendo conflictos de versión y vigencias superpuestas.
-- Emisión de eventos de cambio de precio (`pricing.price.changed`) **solo por Pricing tras confirmar el cambio**, incluyendo la inicialización del primer precio, hacia auditoría y sincronización multicanal.
+
+- precio base a nivel de producto;
+- override opcional por SKU de variante;
+- producto simple usando el precio de su producto asociado al `sku_base`;
+- `precio_regular > 0`;
+- `0 < precio_oferta < precio_regular` cuando exista;
+- `valid_from`;
+- `valid_until` opcional;
+- moneda;
+- `channel_id` opcional, donde `null` representa precio global;
+- consulta histórica por timestamp;
+- programación sin intervalos superpuestos;
+- importación CSV/XLSX exclusiva de Pricing;
+- modo `All-or-Nothing` por defecto;
+- `allow_partial=true` como alternativa;
+- prevalidación;
+- procesamiento asíncrono;
+- reporte de errores;
+- `price_version`;
+- `accion_precio_oferta = CONSERVAR | ESTABLECER | ELIMINAR`;
+- evento `pricing.price.changed` posterior al commit.
 
 ## 4. Requisitos
 
 ### Requisito 1: Actualización de precio individual y motivo obligatorio
-El sistema DEBE permitir a un usuario autenticado con permisos de Pricing modificar el precio regular y/o de oferta de un SKU, exigiendo `motivo_cambio`, `price_version` cuando la operación parte de una lectura previa y validando las reglas antes de persistir. La asignación de permisos a roles concretos corresponde a Seguridad y Usuarios.
 
-#### Escenario: Actualización exitosa de precio individual
-- DADO que un gestor autenticado con `PRICING_WRITE` visualiza el SKU "NK-DEP-001" con precio regular actual S/ 120.00 y `price_version=8`
-- CUANDO ingresa S/ 150.00, especifica el motivo "Ajuste inflacionario Q3", envía `price_version=8` y confirma
-- ENTONCES Pricing persiste S/ 150.00, incrementa `price_version`, actualiza la fecha, emite `pricing.price.changed` después del commit y responde HTTP 200. Si la versión ya cambió, rechaza con conflicto y devuelve la versión vigente sin sobrescribir silenciosamente.
+El sistema DEBE permitir modificar el precio regular y/o la oferta propia de Pricing de un SKU, exigiendo:
 
-#### Escenario: Rechazo por ausencia de motivo de cambio
-- DADO que el gestor comercial edita el precio de un producto e ingresa un nuevo valor válido
-- CUANDO omite ingresar el campo obligatorio `motivo_cambio` (campo vacío, nulo o de solo espacios)
-- ENTONCES el sistema rechaza la solicitud con código HTTP 400 (Bad Request), mantiene intactos los valores en la base de datos y muestra el mensaje de error "El motivo del cambio de precio es mandatorio".
+- `motivo_cambio`;
+- `price_version` cuando la escritura parte de una lectura previa;
+- validaciones comerciales antes de persistir.
 
-#### Escenario: Rechazo por precio negativo o cero
-- DADO que el gestor comercial edita el precio de un producto
-- CUANDO ingresa un valor menor o igual a 0.00 (por ejemplo, -15.00 o 0.00) en el precio regular e intenta guardar
-- ENTONCES el sistema rechaza la solicitud con código HTTP 400 (Bad Request), mantiene intactos los valores en la base de datos y muestra el mensaje de error "El precio regular debe ser un valor numérico estrictamente mayor a 0".
+La operación debe rechazar:
 
-#### Escenario: Rechazo de precio de oferta superior al precio regular
-- DADO que un producto tiene un precio regular de S/ 80.00
-- CUANDO el gestor comercial intenta registrar un precio de oferta de S/ 95.00
-- ENTONCES el sistema bloquea la persistencia y retorna un error de validación indicando "El precio de oferta no puede ser mayor o igual al precio regular".
+```text
+precio_regular <= 0
+precio_oferta <= 0
+precio_oferta >= precio_regular
+motivo_cambio vacío
+price_version obsoleto
+```
 
-#### Escenario: Advertencia por variación extraordinaria
-- DADO un SKU con precio vigente S/ 999.00
-- CUANDO el gestor propone S/ 9.99 con motivo válido
-- ENTONCES el sistema calcula la variación porcentual y muestra una advertencia reforzada antes de confirmar cuando supera el umbral configurable; no afirma que exista margen positivo porque Pricing no administra costos.
+Una modificación confirmada:
 
+1. persiste en Pricing;
+2. incrementa la versión;
+3. registra auditoría;
+4. publica `pricing.price.changed` después del commit.
 
-### Requisito 1.1: Resolver precio efectivo por SKU y canal
-El sistema DEBE resolver el precio vigente de cualquier SKU vendible considerando la fecha/hora, moneda y `channel_id` solicitados.
+Los nombres `PRICING_READ`, `PRICING_WRITE` y `PRICING_BULK` pueden utilizarse como **propuesta interna de capacidades**, pero no se consideran permisos oficiales hasta que Seguridad y Usuarios los publique.
 
-- Producto simple: usa el precio del producto asociado a su `sku_base`.
-- Variante con override: usa el precio específico del SKU.
-- Variante sin override: hereda el precio vigente del producto padre.
-- Scope de canal: si existe una vigencia específica para `channel_id`, se utiliza conforme a su prioridad sobre el precio global; si no existe, se usa `channel_id=null` como fallback global.
-- La respuesta identifica precio regular, oferta opcional, moneda, `channel_id` efectivo, `valid_from`, `valid_until` y versión.
+#### Escenario: Actualización exitosa
 
-Promociones/Cupones reciben regular y oferta como valores separados y deciden combinabilidad en su propio dominio. Combos recibe tanto el regular como el precio público efectivo vigente para verificar que el precio agrupado no sea más caro que adquirir los componentes individualmente en ese momento. Ninguna de estas capacidades modifica el precio maestro de Pricing.
+- **DADO** un SKU con regular S/ 120 y `price_version=8`
+- **CUANDO** un gestor autorizado solicita S/ 150 con motivo válido y versión 8
+- **ENTONCES** Pricing persiste el cambio, incrementa versión, publica el hecho después del commit y responde HTTP 200.
+
+#### Escenario: Conflicto de versión
+
+- **DADO** que el gestor leyó la versión 8
+- **Y** otra operación ya produjo la versión 9
+- **CUANDO** intenta guardar usando versión 8
+- **ENTONCES** se rechaza con conflicto y no se sobrescribe el valor vigente.
+
+### Requisito 1.1: Resolver precio efectivo por SKU, tiempo y canal
+
+El sistema DEBE resolver el precio vigente de cualquier **SKU vendible** considerando:
+
+- fecha/hora;
+- moneda;
+- `channel_id` cuando se solicite.
+
+Reglas:
+
+- producto simple → usa el precio del producto asociado a `sku_base`;
+- variante con override → usa el precio del SKU;
+- variante sin override → hereda el precio vigente del producto padre;
+- si existe una vigencia específica para el canal solicitado, se usa conforme a su prioridad;
+- si no existe, se usa el precio global (`channel_id=null`);
+- si no se indica canal, la consulta resuelve el precio global.
+
+La respuesta identifica como mínimo:
+
+```text
+precio_regular
+precio_oferta opcional
+moneda
+channel_id efectivo o null
+valid_from
+valid_until
+price_version
+vigencia_id
+origen del precio: PRODUCTO | SKU_OVERRIDE
+```
+
+`vigencia_id` identifica la vigencia temporal que respalda el resultado, especialmente en consultas históricas.
 
 ### Requisito 2: Programación de precios futuros
-El sistema DEBE permitir programar vigencias mediante `valid_from` y `valid_until` opcional, con `channel_id` y moneda. Para un mismo SKU + tipo de precio + canal + moneda no se permiten intervalos temporales superpuestos; el sistema rechaza el conflicto antes de activarlo.
 
-#### Escenario: Programación de precio para campaña futura
-- DADO que la fecha actual es "2026-10-01T10:00:00Z" y el gestor programa para "NK-DEP-001" una oferta S/ 89.90 para `MARKETPLACE`, desde "2026-11-27T00:00:00Z" hasta "2026-11-30T23:59:59Z", con motivo "Campaña Black Friday"
-- CUANDO el gestor confirma la programación
-- ENTONCES almacena la programación `SCHEDULED` sin alterar el precio actual, después de verificar que no se superpone con otra vigencia del mismo scope.
-- Y CUANDO un worker programado verifica que el timestamp actual alcanza la fecha de vigencia, actualiza la tabla operativa `product_prices`, marca la programación como `ACTIVE` y emite el evento `pricing.price.changed`.
+El sistema DEBE permitir programar un precio con:
 
-#### Escenario: Rechazo de vigencia superpuesta
-- DADO que ya existe una vigencia para el SKU "NK-DEP-001" en `MARKETPLACE` del 1 al 30 de noviembre
-- CUANDO el gestor intenta registrar otra vigencia del mismo tipo de precio, moneda y canal del 15 al 25 de noviembre
-- ENTONCES Pricing rechaza la programación indicando el intervalo en conflicto y conserva las vigencias existentes.
+- tipo de precio;
+- importe;
+- moneda;
+- `channel_id` opcional;
+- `valid_from`;
+- `valid_until` opcional;
+- `motivo_cambio`.
 
-### Requisito 3: Consulta de precio histórico oficial (As-Of Query)
-El sistema DEBE proveer un mecanismo y una pantalla administrativa para consultar el precio oficial que un SKU tenía en una fecha y hora determinada del pasado. La pantalla consume el mismo contrato `as-of` y no modifica el histórico.
+Para el mismo objetivo, tipo de precio, moneda y canal no se admiten intervalos superpuestos.
 
-#### Escenario: Consulta de precio en una fecha histórica específica
-- DADO que el SKU "BALON-FUT-N5" tuvo un precio regular de S/ 80.00 en agosto de 2026 y de S/ 100.00 a partir del 1 de septiembre de 2026
-- CUANDO un servicio o auditor invoca `GET /api/v1/pricing/skus/BALON-FUT-N5/price?at=2026-08-15T12:00:00Z`
-- ENTONCES el sistema consulta el histórico de vigencias y retorna HTTP 200 con el precio de S/ 80.00, la moneda oficial y el identificador de vigencia correspondiente a esa fecha exacta.
+Una vigencia futura:
 
-### Requisito 4: Carga y actualización masiva de precios vía archivo
-El sistema DEBE permitir CSV/XLSX con columnas obligatorias `sku`, `precio_regular`, `motivo_cambio` y opcionales `precio_oferta`, `accion_precio_oferta`, `channel_id`, `valid_from`, `valid_until` y `price_version`. Una versión obsoleta, scope inválido o intervalo superpuesto se reporta como error de fila. La política sigue siendo atómica por defecto y tolerante a fallos solo con `allow_partial=true`.
+```text
+estado = SCHEDULED
+```
 
-#### Escenario: Procesamiento masivo atómico por defecto (All-or-Nothing)
-- DADO que el gestor comercial carga un archivo `precios_lote.csv` de 200 filas con el modo por defecto (`allow_partial=false`), donde la fila 50 contiene un SKU inexistente
-- CUANDO se ejecuta la carga masiva
-- ENTONCES el sistema aborta la aplicación completa dentro de Pricing, no modifica ninguno de los 199 SKUs restantes y genera un reporte con la fila 50. Si el error se detecta antes de encolar, responde HTTP 422; si se detecta en el Worker, la API ya respondió HTTP 202 y el lote concluye `FAILED` con el reporte.
+y no altera el precio actual hasta alcanzar `valid_from`.
 
-#### Escenario: Carga masiva en modo tolerante a fallos (`allow_partial=true`)
-- DADO que el gestor comercial carga un archivo de 100 filas con el flag explícito `allow_partial=true`, conteniendo 95 filas correctas y 5 filas con errores de validación
-- CUANDO se confirma el procesamiento masivo
-- ENTONCES el sistema aplica los cambios de las 95 filas válidas dentro de una transacción local de Pricing, genera eventos de cambios confirmados con `batch_id` y un reporte de las 5 rechazadas. Una solicitud síncrona ya validada puede responder HTTP 207; si se procesa asíncronamente, la admisión es HTTP 202 y el estado final reporta éxito parcial.
+Cuando entra en vigor, Pricing actualiza su lectura operativa y publica `pricing.price.changed` después del commit.
 
-### Requisito 4.1: Semántica de oferta opcional en archivo de precios
-La plantilla exclusiva de Pricing agrega la columna opcional `accion_precio_oferta` con valores `CONSERVAR`, `ESTABLECER` o `ELIMINAR`; su ausencia o celda vacía equivale a `CONSERVAR`. `ESTABLECER` exige `precio_oferta` positivo y menor al precio regular final; `ELIMINAR` exige `precio_oferta` vacío y retira solamente la oferta propia de Pricing tras persistir un cambio auditable `tipo_precio=OFERTA`, `tipo_operacion=RETIRO_OFERTA`, `precio_anterior` con la oferta retirada y `precio_nuevo=null`, variación `null`. `CONSERVAR` exige `precio_oferta` vacío y mantiene el valor vigente; si el nuevo precio regular resulta incompatible con la oferta conservada, la fila se rechaza sin eliminarla silenciosamente. Una celda de oferta vacía por sí sola **nunca borra** el valor existente. El modo `allow_partial=false` aplica estas validaciones antes de confirmar cualquier fila y mantiene atomicidad local de Pricing.
+### Requisito 3: Consulta histórica oficial — As-Of
 
-#### Escenario: Eliminar oferta expresamente
-- DADO un SKU con regular S/ 200 y oferta vigente S/ 170
-- CUANDO se importa `precio_regular=200`, `precio_oferta` vacío y `accion_precio_oferta=ELIMINAR` con motivo válido
-- ENTONCES Pricing retira su oferta, conserva el regular, registra auditoría y publica `pricing.price.changed` tras el commit.
+El sistema DEBE permitir consultar el precio oficial que un SKU tenía en un instante determinado.
 
-#### Escenario: Conservar oferta con celda vacía
-- DADO un SKU con oferta S/ 170 y regular S/ 200
-- CUANDO se importa una fila válida con `accion_precio_oferta` vacío y `precio_oferta` vacío
-- ENTONCES se conserva la oferta S/ 170; si el nuevo regular fuera S/ 160, se rechaza la fila por incompatibilidad.
+Contrato REST en español:
 
-### Política comercial compartida de precios y descuentos (decisión interna)
-Pricing es propietario de `precio_regular`, `precio_oferta`, sus vigencias y scopes. Para cada SKU entrega ambos valores separados junto con moneda, canal efectivo y vigencia. **Pricing no decide por sí mismo si todos los beneficios son excluyentes.** Promociones/Cupones define la política de combinabilidad y evalúa solo combinaciones permitidas, manteniendo una base monetaria explícita y evitando aplicar dos veces el mismo descuento. Combos recibe regular y precio público efectivo como referencias distintas para validar su conveniencia. Los importes usan decimal exacto y redondeo monetario definido por la moneda.
+```http
+GET /api/v1/precios/skus/{sku}?at={timestamp}
+```
 
-Esta política es una **decisión interna provisional de comercialización** y los contratos con Ventas/Postventa deben homologarse. Un pedido confirmado conserva snapshot del precio y beneficios efectivamente aceptados; cambios posteriores de Pricing no reescriben el pedido histórico.
+El parámetro de canal es opcional:
 
-### Requisito 5: Inicialización de precio y contrato de auditoría
-La creación del precio base se solicita a Pricing mediante comando idempotente con `product_id`, `sku_base`, `precio_regular`, moneda, `channel_id=null`, `motivo_cambio=ALTA_PRODUCTO`, identidad del actor y correlación. Pricing registra el primer precio con `tipo_operacion=CREACION`, `precio_anterior=null` y `variacion_porcentual=null`, emite `pricing.price.changed` con ese contrato **solo después del commit** y confirma la preparación a Catálogo. Las modificaciones posteriores usan `tipo_operacion=MODIFICACION`, precio anterior y variación calculada. El evento es un hecho ocurrido; nunca sirve como orden para realizar el cambio.
+```text
+canal omitido -> resolución global
+canal informado -> scope específico con fallback global
+```
 
-### Requisito 6: Distinguir importaciones
-La carga exclusiva de precios de esta funcionalidad garantiza All-or-Nothing **solo dentro de Pricing** cuando `allow_partial=false`; el modo parcial permite persistir filas válidas en transacción local. La importación general de `SPEC-001-carga-exportacion-masiva-productos.md` coordina Catálogo, Pricing e Inventario y **no promete atomicidad entre dominios**. El Worker recibe comandos idempotentes por dominio y retorna resultados correlacionados; no consume `pricing.price.changed` como instrucción. La respuesta inicial de una importación asíncrona es HTTP 202 con `batch_id`, y su éxito/fallo se consulta por estado.
+La respuesta devuelve el precio vigente para ese instante y su `vigencia_id`.
+
+La consulta es solo lectura y no modifica el histórico.
+
+#### Escenario: Consulta histórica
+
+- **DADO** un SKU cuyo regular fue S/ 80 en agosto y S/ 100 desde septiembre
+- **CUANDO** se consulta `GET /api/v1/precios/skus/{sku}?at=2026-08-15T12:00:00Z`
+- **ENTONCES** se devuelve S/ 80, moneda, scope efectivo, vigencia y `vigencia_id`.
+
+### Requisito 4: Carga masiva exclusiva de Pricing
+
+Se admite CSV/XLSX con columnas obligatorias:
+
+```text
+sku
+precio_regular
+motivo_cambio
+```
+
+y opcionales:
+
+```text
+precio_oferta
+accion_precio_oferta
+channel_id
+valid_from
+valid_until
+price_version
+```
+
+Una fila puede fallar por:
+
+- SKU inexistente;
+- precio inválido;
+- acción de oferta inválida;
+- versión obsoleta;
+- scope inválido;
+- vigencia superpuesta;
+- motivo ausente.
+
+### Requisito 4.1: Semántica de la oferta opcional
+
+`accion_precio_oferta` acepta:
+
+```text
+CONSERVAR
+ESTABLECER
+ELIMINAR
+```
+
+Reglas:
+
+- acción ausente o vacía = `CONSERVAR`;
+- `CONSERVAR` exige `precio_oferta` vacío y mantiene el valor actual;
+- `ESTABLECER` exige oferta >0 y menor que el regular final;
+- `ELIMINAR` exige `precio_oferta` vacío y retira expresamente la oferta;
+- una celda vacía por sí sola **nunca elimina** la oferta;
+- si el nuevo regular es incompatible con la oferta que se conservaría, la fila se rechaza.
+
+### Requisito 4.2: Prevalidación y procesamiento asíncrono
+
+El flujo HTTP canónico es:
+
+```text
+POST /api/v1/precios/importaciones/prevalidar
+-> 200 con resultado de prevalidación
+
+POST /api/v1/precios/importaciones
+-> 202 Accepted + batch_id
+
+GET /api/v1/precios/importaciones/{batchId}
+-> estado final o en progreso
+
+GET /api/v1/precios/importaciones/{batchId}/reporte
+-> reporte CSV cuando corresponda
+```
+
+El modo tolerante se expresa únicamente en el **estado final del lote**; la solicitud de admisión sigue siendo asíncrona.
+
+### Requisito 4.3: Atomicidad del lote
+
+#### `allow_partial=false` — predeterminado
+
+La operación es All-or-Nothing **dentro de Pricing**.
+
+Si una fila es inválida, el lote finaliza rechazado y no se aplica ninguna fila.
+
+#### `allow_partial=true`
+
+Pricing aplica las filas válidas y reporta las inválidas.
+
+Esto no promete atomicidad con Catálogo o Inventario.
+
+### Requisito 5: Precio base del producto y override de SKU
+
+El producto posee su precio base.
+
+Una variante puede:
+
+- no tener override → hereda el precio del producto;
+- tener override → Pricing resuelve el precio específico del SKU.
+
+El contrato administrativo cubre tanto producto como SKU.
+
+Una actualización de precio no modifica identidad de producto ni SKU.
+
+### Requisito 6: Inicialización de precio y auditoría
+
+Al crear un producto, Catálogo necesita preparar su precio base en Pricing mediante una coordinación idempotente.
+
+La operación conceptual contiene:
+
+- `product_id`;
+- `sku_base`;
+- `precio_regular`;
+- moneda;
+- `channel_id=null`;
+- `motivo_cambio=ALTA_PRODUCTO`;
+- actor;
+- correlación.
+
+Pricing registra el primer precio con:
+
+```text
+tipo_operacion = CREACION
+precio_anterior = null
+variacion_porcentual = null
+```
+
+y publica `pricing.price.changed` después de persistir.
+
+**Estado contractual:** la necesidad está definida; el nombre/payload definitivo del comando Catálogo → Pricing inicial sigue pendiente de formalización en AsyncAPI.
+
+### Requisito 7: Diferenciar importaciones
+
+La importación de esta SPEC:
+
+```text
+solo Pricing
+```
+
+La importación general de SPEC-001:
+
+```text
+Catálogo + Pricing + Inventario
+```
+
+Por tanto:
+
+- la carga exclusiva de Pricing puede garantizar atomicidad local;
+- SPEC-001 usa consistencia eventual entre dominios;
+- `pricing.price.changed` es un hecho posterior al commit, no un comando de Bulk.
+
+### Requisito 8: Guardrail de variación extraordinaria
+
+El sistema puede calcular el porcentaje de variación respecto del precio vigente y mostrar una advertencia reforzada cuando supera un umbral configurable.
+
+La advertencia:
+
+- no sustituye una validación obligatoria;
+- no afirma conocer costo o margen;
+- no bloquea por sí sola salvo que una política adicional sea formalizada.
 
 ## 5. Requisitos no funcionales
-- Rendimiento objetivo: actualización individual < 300 ms; consulta histórica/vigente < 100 ms bajo carga de referencia. Para 5,000 registros, procesamiento asíncrono medible y no bloqueante; 10 segundos es una meta a validar con benchmark del entorno, no un plazo garantizado ante caídas, reintentos o cuotas Free Tier.
-- Seguridad: endpoints protegidos por token JWT y permisos `PRICING_READ`, `PRICING_WRITE` y/o `PRICING_BULK`; Seguridad y Usuarios asigna esos permisos a roles. Validación rigurosa de MIME y tamaño máximo de archivo (10 MB).
-- Integración y Persistencia: Desacoplamiento del precio vigente (tabla operativa para lectura ultrarrápida) e histórico de vigencias (SCD Tipo 2). Emisión obligatoria del evento `pricing.price.changed` al broker asíncrono acordado tras cada mutación persistida, mediante Outbox; la selección RabbitMQ/Kafka queda fuera del contrato funcional.
+
+- actualización individual: objetivo de referencia `< 300 ms`;
+- consulta vigente/histórica: objetivo de referencia `< 100 ms`;
+- 5,000 registros se mantiene como **benchmark de rendimiento**, no como límite de rechazo de filas mientras no exista una regla explícita;
+- tamaño máximo del archivo de Pricing: 10 MB conforme a la fuente actual;
+- validación de extensión/MIME en backend;
+- operaciones protegidas por token emitido por Seguridad;
+- `401 -> TOKEN_INVALIDO`;
+- `403 -> SCOPE_INSUFICIENTE`;
+- permisos granulares de Pricing pendientes de publicación oficial por Seguridad;
+- histórico temporal separado de la tabla operativa;
+- `pricing.price.changed` mediante Outbox después del commit;
+- importes con decimal exacto.
 
 ## 6. Fuera de alcance
-- Configuración de reglas complejas de cupones de descuento, combos y promociones 2x1 — corresponde al módulo de ofertas y promociones.
-- Procesamiento de cobros y checkout — responsabilidad del canal de ventas transaccional.
-- Determinación de costos logísticos y tarifas por zona — responsabilidad del módulo de despacho y entrega.
-- Costeo de producto, margen contable y reglas de margen mínimo — no existe un dominio de costos definido en el alcance; por ello Pricing no afirma prevenir márgenes negativos.
+
+- Promociones, cupones y combos.
+- Checkout/cobro.
+- Costos logísticos.
+- Costeo y margen contable.
+- Descarga de plantilla propia de Pricing si no está definida por la fuente.
+- Exportación general de precios.
+- Mapeo dinámico de columnas.
+- Cancelación de una programación mientras no exista regla aprobada.
+
+## 7. Estado contractual vigente
+
+El baseline HTTP canónico de esta capacidad es OpenAPI `0.3.5-p0`. La semántica definida por esta SPEC ya está reflejada en el contrato vigente:
+
+1. `canal` es opcional en `GET /precios/skus/{sku}`;
+2. el alcance global se representa con canal ausente y `channel_id=null`;
+3. la respuesta vigente/histórica identifica `vigencia_id` cuando corresponde;
+4. las rutas de esta capacidad utilizan el recurso `/precios`;
+5. el flujo masivo es asíncrono: prevalidación `200`, admisión `202` y consulta posterior del estado/resultado del lote;
+6. el resultado parcial se expresa como estado final del proceso y no mediante una variante síncrona paralela.
+
+Por tanto, estos puntos **ya no son pendientes de OpenAPI**. Cualquier evolución posterior debe modificar primero la regla funcional correspondiente y después actualizar el contrato canónico, evitando mantener variantes documentales paralelas.
+
+Permanecen deliberadamente fuera de este cierre únicamente las dependencias ya identificadas con otros módulos, como la publicación oficial de permisos granulares por Seguridad y la formalización del comando Catálogo → Pricing para la preparación inicial.
 
 ## Criterio de completitud
-La capacidad se considera correctamente implementada cuando:
-- Todos los requisitos funcionales (incluyendo programación y consultas históricas) están implementados.
-- Todos los escenarios definidos se cumplen satisfactoriamente.
-- Los requisitos no funcionales de tiempo de respuesta y seguridad se cumplen.
-- No se incorporan funcionalidades fuera de alcance.
+
+Para el baseline P0, esta capacidad se considera documentada cuando se mantiene la siguiente coherencia:
+
+- recurso HTTP `/precios`;
+- alcance global con canal ausente/`channel_id=null`;
+- consulta histórica con identificación de vigencia;
+- procesamiento masivo `200` prevalidación → `202` admisión → consulta de estado;
+- ausencia de una variante síncrona adicional para el resultado parcial;
+- permisos `PRICING_*` tratados como nombres propuestos hasta homologación con Seguridad;
+- versionado, vigencias, auditoría y publicación por Outbox preservados.
+
+**Estado del baseline actual:** cumplido por OpenAPI `0.3.5-p0` y los contratos asociados.

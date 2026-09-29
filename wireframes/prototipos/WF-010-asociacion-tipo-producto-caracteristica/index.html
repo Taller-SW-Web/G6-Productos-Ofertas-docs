@@ -1,477 +1,113 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WF-010 — Asociación entre tipos de producto y características</title>
-  <style>
-    :root{
-      --surface:#fff;
-      --neutral-10:#f3f4f6;
-      --neutral-20:#e5e7eb;
-      --neutral-30:#d1d5db;
-      --neutral-50:#6b7280;
-      --neutral-70:#374151;
-      --neutral-90:#111827;
-      --radius:4px;
-      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      color:var(--neutral-90);
-      background:var(--surface);
-    }
-    *{box-sizing:border-box}
-    html{min-width:320px}
-    body{margin:0;background:var(--surface);font-size:16px;line-height:1.5}
-    button,input,select{font:inherit;color:inherit}
-    button{min-height:44px;cursor:pointer}
-    button:disabled{cursor:not-allowed;color:var(--neutral-50);border-color:var(--neutral-30);background:var(--neutral-10)}
-    a,button,input,select{outline-offset:3px}
-    a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--neutral-90);outline-offset:2px}
-    input[type="checkbox"],input[type="radio"]{accent-color:var(--neutral-90)}
-    .app-shell{min-height:100vh}
-    .topbar{border-bottom:1px solid var(--neutral-30);background:var(--surface)}
-    .topbar-inner{max-width:1200px;margin:auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-    .brand{display:flex;align-items:center;gap:12px;font-weight:700}
-    .brand-mark{width:32px;height:32px;border:1px solid var(--neutral-90);display:grid;place-items:center;font-family:"Roboto Mono",monospace;font-size:11px}
-    .brand-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .crumb{color:var(--neutral-50);font-size:14px}
-    .page{max-width:1200px;margin:auto;padding:32px 24px 64px}
-    .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:32px}
-    .page-header h1{font-size:32px;line-height:1.15;margin:0 0 8px;font-weight:700}
-    .page-header p{margin:0;color:var(--neutral-50);max-width:760px}
-    h2{font-size:24px;line-height:1.2;margin:0 0 16px}
-    h3{font-size:18px;line-height:1.3;margin:0 0 12px}
-    .mono{font-family:"Roboto Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;letter-spacing:.02em}
-    .btn{border:1px solid var(--neutral-90);background:var(--surface);padding:10px 14px;border-radius:var(--radius);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;white-space:nowrap}
-    .btn-primary{background:var(--neutral-90);color:var(--surface)}
-    .btn-danger{background:var(--surface);border-style:double;border-width:3px}
-    .btn-quiet{border-color:var(--neutral-30);font-weight:500}
-    .button-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .button-row.end{justify-content:flex-end}
-    .card{border:1px solid var(--neutral-30);background:var(--surface);padding:24px}
-    .muted{color:var(--neutral-50)}
-    .small{font-size:14px}
-    .status{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;border:1px solid var(--neutral-30);padding:4px 8px;border-radius:999px;background:var(--surface)}
-    .status::before{content:"";width:8px;height:8px;border:1px solid var(--neutral-90);border-radius:50%;background:var(--surface)}
-    .status.active::before{background:var(--neutral-90)}
-    .notice{border:1px solid var(--neutral-90);padding:16px;display:flex;gap:12px;align-items:flex-start;background:var(--surface);margin-bottom:16px}
-    .notice-icon{width:24px;height:24px;min-width:24px;border:1px solid var(--neutral-90);border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px}
-    .notice h3{font-size:16px;margin:0 0 4px}
-    .notice p{margin:0;color:var(--neutral-70)}
-    .notice.error{border-width:2px;background:var(--neutral-10)}
-    .toast{position:fixed;right:24px;bottom:24px;border:1px solid var(--neutral-90);background:var(--surface);padding:14px 16px;max-width:360px;z-index:80;display:none}
-    .toast.show{display:block}
-
-    .layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
-    .type-nav{border:1px solid var(--neutral-30)}
-    .type-nav h2{padding:16px;margin:0;border-bottom:1px solid var(--neutral-30);font-size:16px}
-    .type-item{padding:14px 16px;border-bottom:1px solid var(--neutral-30);cursor:pointer;display:flex;justify-content:space-between;align-items:center}
-    .type-item:last-child{border-bottom:0}
-    .type-item.selected{background:var(--neutral-90);color:var(--surface)}
-    .type-item.selected .muted{color:var(--neutral-30)}
-
-    table{width:100%;border-collapse:collapse}
-    th,td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--neutral-30);vertical-align:middle}
-    th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-family:"Roboto Mono",ui-monospace,monospace;font-weight:600;color:var(--neutral-70);background:var(--neutral-10)}
-    tbody tr:last-child td{border-bottom:0}
-    .table-wrap{border:1px solid var(--neutral-30);overflow-x:auto;-webkit-overflow-scrolling:touch}
-    .row-actions{display:flex;gap:8px;flex-wrap:wrap}
-    .row-actions .btn{min-height:36px;padding:6px 12px;font-size:13px}
-    .tag{border:1px solid var(--neutral-30);padding:2px 8px;font-size:12px;font-family:"Roboto Mono",monospace;font-weight:600;display:inline-block}
-    .tag.mandatory{border-color:var(--neutral-90);background:var(--neutral-90);color:var(--surface)}
-    .tag.optional{border-color:var(--neutral-50);color:var(--neutral-70)}
-
-    .overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);z-index:90;display:none;align-items:center;justify-content:center;padding:24px}
-    .overlay.open{display:flex}
-    .dialog{width:min(680px,100%);max-height:calc(100vh - 48px);overflow:auto;background:var(--surface);border:1px solid var(--neutral-90);padding:24px}
-    .dialog-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}
-    .dialog-header h2{margin:0}
-    .results{border:1px solid var(--neutral-30);margin-top:16px;max-height:280px;overflow-y:auto}
-    .result-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--neutral-30);cursor:pointer}
-    .result-item:last-child{border-bottom:0}
-    .result-item:hover{background:var(--neutral-10)}
-    .field{margin-bottom:16px}
-    label{display:block;font-weight:600;margin-bottom:6px}
-    select,input[type="text"]{width:100%;border:1px solid var(--neutral-30);background:var(--surface);padding:10px 12px;border-radius:var(--radius);min-height:44px}
-
-    @media (max-width: 900px){
-      .layout{grid-template-columns:1fr}
-    }
-    @media (max-width: 600px){
-      .page-header{flex-direction:column;align-items:flex-start;gap:16px}
-      .button-row{width:100%}
-      .button-row .btn{width:100%}
-      .dialog{padding:16px}
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Asociación entre tipos de producto y características</title>
+<style>
+:root{--s:#fff;--n10:#f3f4f6;--n20:#D1D5DB;--n30:#d1d5db;--n50:#6b7280;--n70:#6B7280;--n90:#111827}
+*{box-sizing:border-box}html{min-width:320px}body{margin:0;background:#fff;color:var(--n90);font:16px/1.5 Inter,system-ui,sans-serif}
+button,input,select{font:inherit;color:inherit;min-height:44px}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--n90);outline-offset:2px}
+button{cursor:pointer}.top{border-bottom:1px solid var(--n30)}.topin,.page{max-width:1200px;margin:auto;padding:16px 24px}.topin{display:flex;justify-content:space-between;gap:16px}.brand{font-weight:700}.crumb,.muted{color:var(--n50)}.small{font-size:13px}
+.page{padding-top:32px;padding-bottom:64px}.pagehead{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:24px}.pagehead h1{font-size:clamp(26px,4vw,36px);line-height:1.15;margin:0 0 8px}.pagehead p{margin:0;color:var(--n50)}
+h2{font-size:24px;margin:0 0 12px}h3{margin:0 0 6px}.btn{border:1px solid var(--n90);background:#fff;border-radius:4px;padding:10px 14px;font-weight:600}.btn.primary{background:var(--n90);color:#fff}.btn[disabled]{border-color:var(--n30);color:var(--n50);background:var(--n10);cursor:not-allowed}.row{display:flex;gap:8px;flex-wrap:wrap}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px}.nav,.card{border:1px solid var(--n30)}.navhead,.card{padding:16px}.navhead{border-bottom:1px solid var(--n30);font-weight:700}.type{width:100%;text-align:left;border:0;border-bottom:1px solid var(--n30);background:#fff;padding:14px 16px}.type.selected{background:var(--n90);color:#fff}.type.selected .muted{color:var(--n30)}
+.cardhead{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.status{display:inline-block;border:1px solid var(--n70);border-radius:999px;padding:3px 9px;font-size:13px}.counter{border:1px solid var(--n30);padding:8px 10px;display:inline-block;margin-bottom:12px}
+.tablewrap{overflow-x:auto;border:1px solid var(--n30)}table{width:100%;border-collapse:collapse;min-width:650px}th,td{padding:12px;border-bottom:1px solid var(--n20);text-align:left;vertical-align:middle}th{background:var(--n10);font-size:13px;color:var(--n70)}tr:last-child td{border-bottom:0}.badge{display:inline-block;border:1px solid var(--n70);padding:2px 8px;font-size:13px}.badge.strong{background:var(--n90);color:#fff}
+.notice{border:2px solid var(--n90);padding:14px;margin-bottom:16px}.notice p{margin:4px 0 0}.empty{padding:28px;text-align:center;color:var(--n50)}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}.overlay.open{display:flex}.dialog{background:#fff;border:2px solid var(--n90);width:min(640px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:20px}
+.field{margin-bottom:16px}label{display:block;font-weight:600;margin-bottom:6px}.input,select{width:100%;border:1px solid var(--n30);border-radius:4px;padding:10px 12px;background:#fff}.choice{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--n30);padding:10px;margin-bottom:8px}.choice input{min-height:auto;margin-top:4px;accent-color:var(--n90)}
+.toast{position:fixed;right:16px;bottom:16px;border:2px solid var(--n90);background:#fff;padding:12px 16px;display:none;z-index:30}.toast.show{display:block}
+.mobilecards{display:none}.mobilecard{border:1px solid var(--n30);padding:14px;margin-bottom:10px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.desktop{display:none}.mobilecards{display:block}}
+@media(max-width:600px){.topin,.page{padding-left:16px;padding-right:16px}.topin,.pagehead,.cardhead{display:block}.pagehead .row,.cardhead .row{margin-top:12px}.row>.btn{flex:1 1 100%}.dialog .row{flex-direction:column}.dialog .btn{width:100%}}
+</style>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="topbar-inner">
-        <div class="brand"><div class="brand-mark" aria-hidden="true">PO</div><span class="brand-text">PO Productos y ofertas</span></div>
-        <span class="crumb">Catálogo / Tipos de Producto</span>
-      </div>
-    </header>
+<header class="top"><div class="topin"><div class="brand">PO Productos y ofertas</div><div class="crumb">Catálogo / Tipos de producto</div></div></header>
+<main class="page" id="app"></main>
 
-    <main class="page">
-      <div class="page-header">
-        <div>
-          <h1>Asociación entre Tipos de Producto y Características</h1>
-          <p>Define las características aplicables y su obligatoriedad por cada Tipo de Producto.</p>
-        </div>
-        <div class="button-row">
-          <button class="btn btn-quiet" id="btn-open-create-type">+ Nuevo tipo de producto</button>
-          <button class="btn btn-primary" id="btn-open-associate">+ Asociar característica</button>
-        </div>
-      </div>
+<div class="overlay" id="modalCreate" aria-hidden="true"><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="createTitle"><h2 id="createTitle">Nuevo tipo de producto</h2><p class="muted">Crea un tipo para definir su esquema de características.</p><div class="field"><label for="newType">Nombre</label><input class="input" id="newType" placeholder="Ej. Equipamiento outdoor"></div><div class="row" style="justify-content:flex-end"><button class="btn" data-close="modalCreate">Cancelar</button><button class="btn primary" id="saveType">Crear tipo</button></div></section></div>
 
-      <div class="layout">
-        <aside class="type-nav">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--neutral-30)">
-            <h2 style="padding:0;margin:0;border:0;font-size:16px">Tipos de Producto</h2>
-            <button class="btn btn-quiet" id="btn-add-type-nav" style="min-height:30px;padding:2px 8px;font-size:12px" title="Crear tipo de producto ligero">+ Nuevo</button>
-          </div>
-          <div id="type-list">
-            <!-- Rendered by JS -->
-          </div>
-        </aside>
+<div class="overlay" id="modalAssociate" aria-hidden="true"><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="assocTitle"><h2 id="assocTitle">Asociar característica</h2><div class="field"><label for="charSelect">Característica activa</label><select id="charSelect"></select></div><fieldset style="border:0;padding:0;margin:0 0 16px"><legend style="font-weight:600;margin-bottom:8px">Condición</legend><label class="choice"><input type="radio" name="cond" value="mandatory" checked><span><strong>Obligatoria</strong><br><span class="small muted">Se exige para los productos que correspondan.</span></span></label><label class="choice"><input type="radio" name="cond" value="optional"><span><strong>Opcional</strong></span></label></fieldset><div class="row" style="justify-content:flex-end"><button class="btn" data-close="modalAssociate">Cancelar</button><button class="btn primary" id="saveAssoc">Asociar</button></div></section></div>
 
-        <section class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <div>
-              <h2 id="selected-type-title" style="margin:0 0 4px 0;">Calzado Deportivo</h2>
-              <span class="small muted mono" id="selected-type-id">Código: TP-01</span>
-            </div>
-            <div class="status active" id="type-status">Activo</div>
-          </div>
+<div class="overlay" id="modalRemove" aria-hidden="true"><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="removeTitle"><h2 id="removeTitle">Desasociar característica</h2><p>Antes de retirarla debemos comprobar que el cambio no deje productos o variantes activos en un estado incompatible.</p><div class="row" style="justify-content:flex-end"><button class="btn" data-close="modalRemove">Cancelar</button><button class="btn primary" id="confirmRemove">Continuar</button></div></section></div>
 
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <span class="small" id="attr-count-label"><strong>3 / 20</strong> características activas asignadas</span>
-          </div>
+<div class="overlay" id="modalDeactivate" aria-hidden="true"><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="deactivateTitle"><h2 id="deactivateTitle">Desactivar tipo de producto</h2><p>Antes de desactivarlo debemos comprobar que no tenga productos activos que dependan de él.</p><div class="row" style="justify-content:flex-end"><button class="btn" data-close="modalDeactivate">Cancelar</button><button class="btn primary" id="confirmDeactivate">Continuar</button></div></section></div>
 
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Característica</th>
-                  <th>Tipo de Dato</th>
-                  <th>Condición</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="attr-table-body">
-                <!-- Rendered by JS -->
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-    </main>
-  </div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <!-- Modal Asociar Característica -->
-  <div class="overlay" id="modal-associate">
-    <div class="dialog">
-      <div class="dialog-header">
-        <div>
-          <h2>Asociar Característica a Tipo de Producto</h2>
-          <p class="small muted" id="modal-type-subtitle">Tipo de producto seleccionado: Calzado Deportivo</p>
-        </div>
-        <button class="btn btn-quiet" id="btn-close-modal">✕</button>
-      </div>
-
-      <div class="field">
-        <label for="select-char">Selecciona una característica activa del catálogo:</label>
-        <select id="select-char">
-          <option value="Talla">Talla (LISTA: 38, 39, 40, 41, 42, 43, 44)</option>
-          <option value="Color">Color (LISTA: Negro, Blanco, Azul, Rojo)</option>
-          <option value="Material de Capellada">Material de Capellada (TEXTO)</option>
-          <option value="Tipo de Suela">Tipo de Suela (LISTA: Sintética, Goma, TPU)</option>
-          <option value="Peso">Peso (NUMERO: gramos)</option>
-          <option value="Tecnología de Amortiguación">Tecnología de Amortiguación (TEXTO)</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>Condición en formularios de producto:</label>
-        <div style="display:flex;gap:16px;margin-top:8px;">
-          <label style="font-weight:normal;"><input type="radio" name="req-cond" value="mandatory" checked /> <strong>Obligatoria</strong> (Exigida para publicar/guardar)</label>
-          <label style="font-weight:normal;"><input type="radio" name="req-cond" value="optional" /> <strong>Opcional</strong> (Informativa)</label>
-        </div>
-      </div>
-
-      <div class="notice error" id="limit-error" style="display:none;margin-top:16px;">
-        <div class="notice-icon">!</div>
-        <div>
-          <h3>Límite operativo alcanzado</h3>
-          <p>Este tipo de producto ya alcanzó el límite máximo permitido (20) de características activas asignadas.</p>
-        </div>
-      </div>
-
-      <div class="notice error" id="persist-error" style="display:none;margin-top:16px;" role="alert">
-        <div class="notice-icon" aria-hidden="true">!</div>
-        <div>
-          <h3>No pudimos guardar la asociación</h3>
-          <p>Ocurrió un error al persistir la asociación en el servidor. Tus cambios y selecciones se conservaron.</p>
-          <div class="button-row" style="margin-top:10px;">
-            <button class="btn btn-primary" id="btn-retry-persist" type="button">Reintentar guardado</button>
-            <button class="btn btn-quiet" id="btn-cancel-persist" type="button">Cancelar</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="button-row end" style="margin-top:24px;">
-        <button class="btn btn-quiet" id="btn-cancel-modal">Cancelar</button>
-        <button class="btn btn-primary" id="btn-save-assoc">Guardar asociación</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Crear Tipo de Producto Ligero -->
-  <div class="overlay" id="modal-create-type">
-    <div class="dialog">
-      <div class="dialog-header">
-        <div>
-          <h2>Nuevo Tipo de Producto</h2>
-          <p class="small muted">El sistema asigna automáticamente el código del tipo de producto y lo crea en estado activo.</p>
-        </div>
-        <button class="btn btn-quiet" id="btn-close-create-type">✕</button>
-      </div>
-
-      <div class="field">
-        <label for="input-type-name">Nombre del tipo de producto: *</label>
-        <input type="text" id="input-type-name" placeholder="Ej: Equipamiento Outdoor" required autofocus />
-        <p class="small muted" style="margin-top:6px">El código (ej. TP-04) será generado y asignado por el sistema.</p>
-      </div>
-
-      <div class="button-row end" style="margin-top:24px;">
-        <button class="btn btn-quiet" id="btn-cancel-create-type">Cancelar</button>
-        <button class="btn btn-primary" id="btn-save-type">Crear tipo de producto</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
-
-  <script>
-    const MAX_PRODUCT_TYPE_ATTRIBUTES = 20;
-
-    const state = {
-      types: [
-        {
-          id: 'TP-01',
-          name: 'Calzado Deportivo',
-          status: 'active',
-          attrs: [
-            { id: 'C-01', name: 'Talla', type: 'LISTA', mandatory: true },
-            { id: 'C-02', name: 'Color', type: 'LISTA', mandatory: true },
-            { id: 'C-03', name: 'Material de Capellada', type: 'TEXTO', mandatory: false }
-          ]
-        },
-        {
-          id: 'TP-02',
-          name: 'Ropa de Entrenamiento',
-          status: 'active',
-          attrs: [
-            { id: 'C-01', name: 'Talla', type: 'LISTA', mandatory: true },
-            { id: 'C-02', name: 'Color', type: 'LISTA', mandatory: true },
-            { id: 'C-04', name: 'Género', type: 'LISTA', mandatory: true },
-            { id: 'C-05', name: 'Composición Textil', type: 'TEXTO', mandatory: false }
-          ]
-        },
-        {
-          id: 'TP-03',
-          name: 'Balones y Accesorios',
-          status: 'active',
-          attrs: [
-            { id: 'C-06', name: 'Tamaño / Número', type: 'LISTA', mandatory: true },
-            { id: 'C-07', name: 'Material de Cubierta', type: 'TEXTO', mandatory: false }
-          ]
-        }
-      ],
-      selectedTypeId: 'TP-01',
-      queryState: new URLSearchParams(location.search).get('state') || ''
-    };
-
-    function showToast(msg){
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 3000);
-    }
-
-    function renderTypes(){
-      const list = document.getElementById('type-list');
-      list.innerHTML = '';
-      state.types.forEach(t => {
-        const item = document.createElement('div');
-        item.className = 'type-item' + (t.id === state.selectedTypeId ? ' selected' : '');
-        item.innerHTML = `<div><strong>${t.name}</strong> <span class="mono muted small" style="margin-left:4px">(${t.id})</span><br><span class="small muted mono">${t.attrs.length} características · ${t.status === 'active' ? 'Activo' : 'Inactivo'}</span></div>`;
-        item.onclick = () => {
-          state.selectedTypeId = t.id;
-          renderTypes();
-          renderDetail();
-        };
-        list.appendChild(item);
-      });
-    }
-
-    function renderDetail(){
-      const cur = state.types.find(t => t.id === state.selectedTypeId);
-      if(!cur) return;
-      document.getElementById('selected-type-title').textContent = cur.name;
-      document.getElementById('selected-type-id').textContent = `Código: ${cur.id}`;
-      const statusEl = document.getElementById('type-status');
-      if (statusEl) {
-        statusEl.className = 'status ' + (cur.status === 'active' ? 'active' : 'inactive');
-        statusEl.textContent = cur.status === 'active' ? 'Activo' : 'Inactivo';
-      }
-      document.getElementById('attr-count-label').innerHTML = `<strong>${cur.attrs.length} / ${MAX_PRODUCT_TYPE_ATTRIBUTES}</strong> características activas asignadas`;
-
-      const tbody = document.getElementById('attr-table-body');
-      tbody.innerHTML = '';
-      if(cur.attrs.length === 0){
-        tbody.innerHTML = '<tr><td colspan="4" class="muted" style="text-align:center;padding:24px;">No hay características asociadas a este tipo de producto. Haz clic en "+ Asociar característica" para añadir la primera.</td></tr>';
-        return;
-      }
-      cur.attrs.forEach((a, idx) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><strong>${a.name}</strong></td>
-          <td><span class="mono">${a.type}</span></td>
-          <td>
-            <span class="tag ${a.mandatory ? 'mandatory' : 'optional'}">
-              ${a.mandatory ? 'Obligatoria' : 'Opcional'}
-            </span>
-          </td>
-          <td>
-            <div class="row-actions">
-              <button class="btn btn-quiet" onclick="toggleMandatory(${idx})">
-                ${a.mandatory ? 'Hacer opcional' : 'Hacer obligatoria'}
-              </button>
-              <button class="btn btn-danger" onclick="removeAttribute(${idx})">Desasociar</button>
-            </div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    window.toggleMandatory = function(idx){
-      const cur = state.types.find(t => t.id === state.selectedTypeId);
-      cur.attrs[idx].mandatory = !cur.attrs[idx].mandatory;
-      renderDetail();
-      showToast('Obligatoriedad actualizada. Se exigirá en el próximo guardado de productos.');
-    };
-
-    window.removeAttribute = function(idx){
-      const cur = state.types.find(t => t.id === state.selectedTypeId);
-      const name = cur.attrs[idx].name;
-      if(confirm(`¿Deseas desasociar la característica "${name}" de ${cur.name}?`)){
-        cur.attrs.splice(idx, 1);
-        renderTypes();
-        renderDetail();
-        showToast(`Característica "${name}" desasociada exitosamente.`);
-      }
-    };
-
-    function openModal(){
-      const cur = state.types.find(t => t.id === state.selectedTypeId);
-      document.getElementById('modal-type-subtitle').textContent = `Tipo de producto: ${cur.name}`;
-      document.getElementById('limit-error').style.display = 'none';
-      document.getElementById('persist-error').style.display = 'none';
-      document.getElementById('modal-associate').classList.add('open');
-    }
-
-    document.getElementById('btn-open-associate').onclick = openModal;
-
-    function closeModal(){
-      document.getElementById('modal-associate').classList.remove('open');
-      document.getElementById('persist-error').style.display = 'none';
-      if(state.queryState === 's02-e') state.queryState = '';
-    }
-    document.getElementById('btn-close-modal').onclick = closeModal;
-    document.getElementById('btn-cancel-modal').onclick = closeModal;
-    document.getElementById('btn-cancel-persist').onclick = closeModal;
-
-    function executeSave(){
-      const cur = state.types.find(t => t.id === state.selectedTypeId);
-      if(cur.attrs.length >= MAX_PRODUCT_TYPE_ATTRIBUTES){
-        document.getElementById('limit-error').style.display = 'flex';
-        return;
-      }
-      const select = document.getElementById('select-char');
-      const name = select.value;
-      const isMandatory = document.querySelector('input[name="req-cond"]:checked').value === 'mandatory';
-
-      if(cur.attrs.some(a => a.name === name)){
-        alert('Esta característica ya se encuentra asociada a este tipo de producto.');
-        return;
-      }
-
-      cur.attrs.push({
-        id: 'C-' + Math.floor(Math.random()*1000),
-        name: name,
-        type: name.includes('Talla') || name.includes('Color') || name.includes('Suela') || name.includes('Género') || name.includes('Número') ? 'LISTA' : (name.includes('Peso') ? 'NUMERO' : 'TEXTO'),
-        mandatory: isMandatory
-      });
-
-      state.queryState = '';
-      closeModal();
-      renderTypes();
-      renderDetail();
-      showToast(`Característica "${name}" asociada exitosamente.`);
-    }
-
-    document.getElementById('btn-save-assoc').onclick = executeSave;
-    document.getElementById('btn-retry-persist').onclick = executeSave;
-
-    // Crear Tipo de Producto Ligero
-    const modalCreateType = document.getElementById('modal-create-type');
-    function openCreateTypeModal(){
-      document.getElementById('input-type-name').value = '';
-      modalCreateType.classList.add('open');
-      setTimeout(() => document.getElementById('input-type-name').focus(), 50);
-    }
-    function closeCreateTypeModal(){
-      modalCreateType.classList.remove('open');
-    }
-    document.getElementById('btn-open-create-type').onclick = openCreateTypeModal;
-    document.getElementById('btn-add-type-nav').onclick = openCreateTypeModal;
-    document.getElementById('btn-close-create-type').onclick = closeCreateTypeModal;
-    document.getElementById('btn-cancel-create-type').onclick = closeCreateTypeModal;
-
-    document.getElementById('btn-save-type').onclick = function(){
-      const name = document.getElementById('input-type-name').value.trim();
-      if(!name){
-        alert('Por favor ingresa un nombre para el tipo de producto.');
-        document.getElementById('input-type-name').focus();
-        return;
-      }
-      // Conforme a SPEC-010 y WF-010: el sistema crea y asigna tipo_producto_id
-      const code = 'TP-0' + (state.types.length + 1);
-      const newType = {
-        id: code,
-        name: name,
-        status: 'active',
-        attrs: []
-      };
-      state.types.push(newType);
-      state.selectedTypeId = code;
-      closeCreateTypeModal();
-      renderTypes();
-      renderDetail();
-      showToast(`Tipo de producto "${name}" creado exitosamente.`);
-    };
-
-    renderTypes();
-    renderDetail();
-
-    // Estado S-02-E configurable vía URL ?state=s02-e
-    if(state.queryState === 's02-e'){
-      openModal();
-      document.getElementById('persist-error').style.display = 'flex';
-    }
-  </script>
+<script>
+const LIMIT=20;
+const chars=[
+ {key:'talla',name:'Talla',type:'Lista'},
+ {key:'color',name:'Color',type:'Lista'},
+ {key:'material',name:'Material',type:'Texto'},
+ {key:'peso',name:'Peso',type:'Número'},
+ {key:'suela',name:'Tipo de suela',type:'Lista'},
+ {key:'amortiguacion',name:'Tecnología de amortiguación',type:'Texto'}
+];
+let types=[
+ {key:'calzado',name:'Calzado deportivo',active:true,hasActiveProducts:true,version:4,attrs:[{key:'talla',mandatory:true},{key:'color',mandatory:true},{key:'material',mandatory:false}]},
+ {key:'ropa',name:'Ropa de entrenamiento',active:true,hasActiveProducts:true,version:3,attrs:[{key:'talla',mandatory:true},{key:'color',mandatory:true}]},
+ {key:'accesorios',name:'Accesorios genéricos',active:true,hasActiveProducts:false,version:1,attrs:[]}
+];
+const state={selected:'calzado',removeIndex:null,pending:null};
+const app=document.getElementById('app'),toast=document.getElementById('toast');
+const current=()=>types.find(t=>t.key===state.selected);
+const chr=k=>chars.find(c=>c.key===k);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function notify(m){toast.textContent=m;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2300)}
+function openModal(id){const o=document.getElementById(id);o.classList.add('open');o.setAttribute('aria-hidden','false');o.querySelector('button,input,select')?.focus()}
+function closeModal(id){const o=document.getElementById(id);o.classList.remove('open');o.setAttribute('aria-hidden','true')}
+function pendingNotice(){
+ if(!state.pending)return'';
+ if(state.pending.status==='checking')return `<div class="notice" role="status"><h3>Verificando uso…</h3><p>Estamos comprobando si el cambio puede realizarse de forma segura. No se ha modificado el esquema todavía.</p></div>`;
+ if(state.pending.status==='rejected')return `<div class="notice" role="alert"><h3>No se pudo completar</h3><p>${esc(state.pending.message)}</p><button class="btn" data-a="clear-pending" style="margin-top:10px">Cerrar</button></div>`;
+ if(state.pending.status==='unknown')return `<div class="notice" role="alert"><h3>No pudimos confirmar que el cambio sea seguro</h3><p>No se realizó ninguna modificación. Puedes intentarlo nuevamente.</p><button class="btn" data-a="clear-pending" style="margin-top:10px">Cerrar</button></div>`;
+ return'';
+}
+function render(){
+ if(location.hash==='#no-permission'){app.innerHTML=`<div class="pagehead"><div><h1>Tipos de producto y características</h1><p>Administra los esquemas del catálogo.</p></div></div><div class="notice"><h3>Acceso restringido</h3><p>No tienes permiso para administrar esta configuración.</p></div>`;return}
+ if(location.hash==='#session-expired'){app.innerHTML=`<div class="pagehead"><div><h1>Tipos de producto y características</h1><p>Administra los esquemas del catálogo.</p></div></div><div class="notice"><h3>Sesión finalizada</h3><p>Ingresa nuevamente para continuar.</p></div>`;return}
+ const t=current();
+ const nav=types.map(x=>`<button class="type ${x.key===t.key?'selected':''}" data-type="${x.key}"><strong>${esc(x.name)}</strong><br><span class="small muted">${x.attrs.length} de ${LIMIT} características · ${x.active?'Activo':'Inactivo'}</span></button>`).join('');
+ const rows=t.attrs.map((a,i)=>{const c=chr(a.key);return `<tr><td><strong>${esc(c.name)}</strong></td><td>${esc(c.type)}</td><td><span class="badge ${a.mandatory?'strong':''}">${a.mandatory?'Obligatoria':'Opcional'}</span></td><td><div class="row">${t.active?`<button class="btn" data-a="toggle" data-i="${i}">${a.mandatory?'Hacer opcional':'Hacer obligatoria'}</button><button class="btn" data-a="remove" data-i="${i}">Desasociar</button>`:'<span class="muted small">Solo lectura</span>'}</div></td></tr>`}).join('');
+ const cards=t.attrs.map((a,i)=>{const c=chr(a.key);return `<article class="mobilecard"><strong>${esc(c.name)}</strong><div class="small muted">${esc(c.type)} · ${a.mandatory?'Obligatoria':'Opcional'}</div>${t.active?`<div class="row" style="margin-top:10px"><button class="btn" data-a="toggle" data-i="${i}">Cambiar condición</button><button class="btn" data-a="remove" data-i="${i}">Desasociar</button></div>`:''}</article>`}).join('');
+ app.innerHTML=`<div class="pagehead"><div><h1>Tipos de producto y características</h1><p>Define el esquema de atributos de cada tipo de producto.</p></div><div class="row"><button class="btn primary" data-a="new-type">Nuevo tipo de producto</button></div></div>${pendingNotice()}
+ <div class="layout"><aside class="nav"><div class="navhead">Tipos de producto</div>${nav}</aside><section class="card"><div class="cardhead"><div><h2>${esc(t.name)}</h2><span class="status">${t.active?'Activo':'Inactivo'}</span></div><div class="row">${t.active?`<button class="btn primary" data-a="associate" ${t.attrs.length>=LIMIT?'disabled':''}>Asociar característica</button><button class="btn" data-a="deactivate">Desactivar tipo</button>`:`<button class="btn primary" data-a="reactivate">Reactivar tipo</button>`}</div></div>
+ <div class="counter"><strong>${t.attrs.length} de ${LIMIT}</strong> características asignadas</div>
+ ${t.attrs.length?`<div class="desktop tablewrap"><table><thead><tr><th>Característica</th><th>Tipo de dato</th><th>Condición</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table></div><div class="mobilecards">${cards}</div>`:`<div class="empty">Este tipo de producto aún no tiene características asignadas.${t.active?'<br>Usa “Asociar característica” para añadir la primera.':''}</div>`}
+ ${t.attrs.length>=LIMIT?`<div class="notice" style="margin-top:16px"><h3>Límite alcanzado</h3><p>Has alcanzado el límite configurado de características para este tipo.</p></div>`:''}
+ </section></div>`;
+ bind();
+}
+function bind(){
+ document.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{state.selected=b.dataset.type;state.pending=null;render()});
+ document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{
+  const a=b.dataset.a,i=Number(b.dataset.i);
+  if(a==='new-type')openModal('modalCreate');
+  if(a==='associate'){fillChars();openModal('modalAssociate')}
+  if(a==='toggle'){const t=current();t.attrs[i].mandatory=!t.attrs[i].mandatory;t.version++;notify(t.attrs[i].mandatory?'Condición actualizada. Se exigirá al volver a guardar o activar los productos que correspondan.':'Condición actualizada.');render()}
+  if(a==='remove'){state.removeIndex=i;openModal('modalRemove')}
+  if(a==='deactivate')openModal('modalDeactivate');
+  if(a==='reactivate'){current().active=true;current().version++;notify('Tipo de producto reactivado.');render()}
+  if(a==='clear-pending'){state.pending=null;render()}
+ });
+}
+function fillChars(){
+ const t=current(),used=new Set(t.attrs.map(a=>a.key));
+ const options=chars.filter(c=>!used.has(c.key));
+ document.getElementById('charSelect').innerHTML=options.map(c=>`<option value="${c.key}">${esc(c.name)} — ${esc(c.type)}</option>`).join('');
+}
+document.getElementById('saveType').onclick=()=>{const name=document.getElementById('newType').value.trim();if(!name){notify('Ingresa un nombre.');return}const key='tipo'+Date.now();types.push({key,name,active:true,hasActiveProducts:false,version:0,attrs:[]});state.selected=key;document.getElementById('newType').value='';closeModal('modalCreate');notify('Tipo de producto creado.');render()}
+document.getElementById('saveAssoc').onclick=()=>{const t=current();if(t.attrs.length>=LIMIT){notify('Has alcanzado el límite configurado.');return}const key=document.getElementById('charSelect').value;if(!key)return;const mandatory=document.querySelector('input[name="cond"]:checked').value==='mandatory';if(!t.attrs.some(a=>a.key===key)){t.attrs.push({key,mandatory});t.version++}closeModal('modalAssociate');notify('Característica asociada.');render()}
+document.getElementById('confirmRemove').onclick=()=>{const t=current(),i=state.removeIndex,a=t.attrs[i];if(!a)return;closeModal('modalRemove');state.pending={status:'checking'};render();setTimeout(()=>{if(a.key==='talla'){state.pending={status:'rejected',message:'No se puede retirar esta característica porque identifica variantes activas.'};render()}else{t.attrs.splice(i,1);t.version++;state.pending=null;notify('Característica desasociada.');render()}},1000)}
+document.getElementById('confirmDeactivate').onclick=()=>{const t=current();closeModal('modalDeactivate');state.pending={status:'checking'};render();setTimeout(()=>{if(t.hasActiveProducts){state.pending={status:'rejected',message:'Este tipo todavía tiene productos activos asociados. No se realizó la desactivación.'};render()}else{t.active=false;t.version++;state.pending=null;notify('Tipo de producto desactivado.');render()}},1000)}
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.overlay.open').forEach(o=>closeModal(o.id))});
+window.addEventListener('hashchange',render);
+render();
+</script>
 </body>
 </html>

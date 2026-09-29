@@ -1,655 +1,201 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WF-002 — Gestión de combos de productos</title>
-  <style>
-    :root{
-      --surface:#fff;
-      --neutral-10:#f3f4f6;
-      --neutral-20:#e5e7eb;
-      --neutral-30:#d1d5db;
-      --neutral-50:#6b7280;
-      --neutral-70:#374151;
-      --neutral-90:#111827;
-      --space-xs:4px;
-      --space-sm:8px;
-      --space-md:16px;
-      --space-lg:32px;
-      --space-xl:64px;
-      --radius:4px;
-      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      color:var(--neutral-90);
-      background:var(--surface);
-    }
-    *{box-sizing:border-box}
-    html{min-width:320px}
-    body{margin:0;background:var(--surface);font-size:16px;line-height:1.5}
-    button,input,textarea{font:inherit;color:inherit}
-    button{min-height:44px;cursor:pointer}
-    button:disabled{cursor:not-allowed;color:var(--neutral-50);border-color:var(--neutral-30);background:var(--neutral-10)}
-    a,button,input,textarea{outline-offset:3px}
-    a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--neutral-90);outline-offset:2px}
-    input[type="checkbox"],input[type="radio"]{accent-color:var(--neutral-90)}
-    .app-shell{min-height:100vh}
-    .topbar{border-bottom:1px solid var(--neutral-30);background:var(--surface)}
-    .topbar-inner{max-width:1200px;margin:auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-    .brand{display:flex;align-items:center;gap:12px;font-weight:700}
-    .brand-mark{width:32px;height:32px;border:1px solid var(--neutral-90);display:grid;place-items:center;font-family:"Roboto Mono",monospace;font-size:11px}
-    .brand-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .crumb{color:var(--neutral-50);font-size:14px}
-    .page{max-width:1200px;margin:auto;padding:32px 24px 64px}
-    .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:32px}
-    .page-header h1{font-size:32px;line-height:1.15;margin:0 0 8px;font-weight:700}
-    .page-header p{margin:0;color:var(--neutral-50);max-width:760px}
-    h2{font-size:24px;line-height:1.2;margin:0 0 16px}
-    h3{font-size:18px;line-height:1.3;margin:0 0 12px}
-    .mono{font-family:"Roboto Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;letter-spacing:.02em}
-    .btn{border:1px solid var(--neutral-90);background:var(--surface);padding:10px 14px;border-radius:var(--radius);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;white-space:nowrap}
-    .btn-primary{background:var(--neutral-90);color:var(--surface)}
-    .btn-danger{background:var(--surface);border-style:double;border-width:3px}
-    .btn-quiet{border-color:var(--neutral-30);font-weight:500}
-    .btn-link{border:0;background:transparent;padding:8px 4px;min-height:40px;text-decoration:underline}
-    .button-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .button-row.end{justify-content:flex-end}
-    .card{border:1px solid var(--neutral-30);background:var(--surface);padding:24px}
-    .card + .card{margin-top:16px}
-    .muted{color:var(--neutral-50)}
-    .small{font-size:14px}
-    .status{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;border:1px solid var(--neutral-30);padding:4px 8px;border-radius:999px;background:var(--surface)}
-    .status::before{content:"";width:8px;height:8px;border:1px solid var(--neutral-90);border-radius:50%;background:var(--surface)}
-    .status.active::before{background:var(--neutral-90)}
-    .status.review::before{background:linear-gradient(45deg,var(--neutral-90) 50%,var(--surface) 50%)}
-    .notice{border:1px solid var(--neutral-90);padding:16px;display:flex;gap:12px;align-items:flex-start;background:var(--surface);margin-bottom:16px}
-    .notice-icon{width:24px;height:24px;min-width:24px;border:1px solid var(--neutral-90);border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px}
-    .notice h3{font-size:16px;margin:0 0 4px}
-    .notice p{margin:0;color:var(--neutral-70)}
-    .notice.error{border-width:2px}
-    .toast{position:fixed;right:24px;bottom:24px;border:1px solid var(--neutral-90);background:var(--surface);padding:14px 16px;max-width:360px;z-index:80;display:none}
-    .toast.show{display:block}
-
-    table{width:100%;border-collapse:collapse}
-    th,td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--neutral-30);vertical-align:top}
-    th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-family:"Roboto Mono",ui-monospace,monospace;font-weight:600;color:var(--neutral-70);background:var(--neutral-10)}
-    tbody tr:last-child td{border-bottom:0}
-    .table-wrap{border:1px solid var(--neutral-30);overflow:hidden}
-    .row-actions{display:flex;gap:4px;flex-wrap:wrap}
-    .row-actions .btn{min-height:36px;padding:6px 9px;font-size:14px}
-    .name-cell strong{display:block}
-    .name-cell span{display:block;color:var(--neutral-50);font-size:13px;margin-top:2px;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .mobile-list{display:none}
-    .combo-card{border:1px solid var(--neutral-30);padding:16px}
-    .combo-card + .combo-card{margin-top:12px}
-    .combo-card-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:12px}
-    .combo-card dl{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:0 0 16px}
-    .combo-card dt{color:var(--neutral-50);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
-    .combo-card dd{margin:2px 0 0;font-weight:600}
-
-    .form-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:24px;align-items:start}
-    .section{border:1px solid var(--neutral-30);padding:24px;margin-bottom:16px}
-    .section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
-    .field{margin-bottom:16px}
-    .field:last-child{margin-bottom:0}
-    label{display:block;font-weight:600;margin-bottom:6px}
-    input[type="text"],input[type="search"],input[type="number"],textarea{width:100%;border:1px solid var(--neutral-30);background:var(--surface);padding:11px 12px;border-radius:var(--radius);min-height:44px}
-    textarea{min-height:104px;resize:vertical}
-    input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--neutral-90);border-width:2px}
-    .field-error{font-size:13px;font-weight:600;margin-top:6px;display:none}
-    .field-error.show{display:block}
-    .help{font-size:13px;color:var(--neutral-50);margin-top:6px}
-    .error-summary{border:2px solid var(--neutral-90);padding:16px;margin-bottom:16px;display:none}
-    .error-summary.show{display:block}
-    .error-summary h3{margin-bottom:8px;font-size:16px}
-    .error-summary ul{margin:0;padding-left:20px}
-    .component-table input[type="number"]{width:90px}
-    .component-table .btn{min-height:36px;padding:6px 9px}
-    .component-mobile{display:none}
-    .component-mobile .component-card{border:1px solid var(--neutral-30);padding:16px;margin-bottom:12px}
-    .component-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .component-card-grid .full{grid-column:1/-1}
-    .summary{position:sticky;top:16px}
-    .metric{border-bottom:1px solid var(--neutral-30);padding:14px 0}
-    .metric:first-of-type{padding-top:0}
-    .metric:last-of-type{border-bottom:0;padding-bottom:0}
-    .metric-label{display:block;font-size:13px;color:var(--neutral-50);margin-bottom:4px}
-    .metric-value{font-size:22px;font-weight:700;line-height:1.2}
-    .metric-detail{display:block;font-size:13px;color:var(--neutral-50);margin-top:4px}
-    .form-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:24px}
-
-    .detail-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:24px}
-    .detail-intro{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:24px}
-    .detail-intro p{margin:8px 0 0;color:var(--neutral-50)}
-    .price-line{display:flex;align-items:baseline;gap:12px;margin:12px 0 0}
-    .price-main{font-size:32px;font-weight:700}
-    .price-old{font-size:16px;color:var(--neutral-50);text-decoration:line-through}
-    .availability-box{border:1px solid var(--neutral-90);padding:24px}
-    .availability-box .big{font-size:36px;line-height:1;font-weight:700;margin:8px 0}
-    .definition-list{display:grid;grid-template-columns:160px 1fr;gap:10px 16px;margin:0}
-    .definition-list dt{color:var(--neutral-50)}
-    .definition-list dd{margin:0;font-weight:600}
-
-    .overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);z-index:90;display:none;align-items:center;justify-content:center;padding:24px}
-    .overlay.open{display:flex}
-    .dialog{width:min(820px,100%);max-height:calc(100vh - 48px);overflow:auto;background:var(--surface);border:1px solid var(--neutral-90);padding:24px}
-    .dialog.small-dialog{width:min(520px,100%)}
-    .dialog-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}
-    .dialog-header h2{margin:0}
-    .icon-button{width:44px;height:44px;border:1px solid var(--neutral-90);background:var(--surface);font-size:20px;line-height:1}
-    .results{border:1px solid var(--neutral-30);margin-top:16px}
-    .result-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px;border-bottom:1px solid var(--neutral-30)}
-    .result-item:last-child{border-bottom:0}
-    .result-item.disabled{background:var(--neutral-10);color:var(--neutral-50)}
-    .result-title{font-weight:600}
-    .result-meta{font-size:13px;color:var(--neutral-50);margin-top:2px}
-    .selector-footer{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:20px}
-    .checkbox{width:20px;height:20px}
-
-    .empty-state{border:1px solid var(--neutral-30);padding:48px 24px;text-align:center}
-    .empty-state .placeholder{width:64px;height:64px;border:1px solid var(--neutral-30);margin:0 auto 16px;position:relative;background:var(--neutral-10)}
-    .empty-state .placeholder::before,.empty-state .placeholder::after{content:"";position:absolute;left:5px;right:5px;top:31px;border-top:1px solid var(--neutral-50);transform:rotate(45deg)}
-    .empty-state .placeholder::after{transform:rotate(-45deg)}
-    .empty-state h2{margin-bottom:8px}
-    .empty-state p{color:var(--neutral-50);margin:0 auto 20px;max-width:520px}
-
-    .skeleton{border:1px solid var(--neutral-30);padding:16px}
-    .sk-line{height:14px;background:var(--neutral-10);margin:8px 0}
-    .sk-line.w30{width:30%}.sk-line.w50{width:50%}.sk-line.w80{width:80%}
-
-    @media (max-width:900px){
-      .form-layout,.detail-grid{grid-template-columns:1fr}
-      .summary{position:static}
-      .desktop-table{display:none}
-      .mobile-list{display:block}
-      .component-table{display:none}
-      .component-mobile{display:block}
-      .page-header{align-items:stretch}
-      .page-header .button-row{justify-content:flex-start}
-    }
-    @media (max-width:600px){
-      .topbar-inner{padding:12px 16px}
-      .crumb{display:none}
-      .page{padding:24px 16px 48px}
-      .page-header{display:block;margin-bottom:24px}
-      .page-header h1{font-size:28px}
-      .page-header .button-row{margin-top:16px}
-      .page-header .btn{width:100%}
-      .section,.card{padding:16px}
-      .section-head{display:block}
-      .section-head .btn{width:100%;margin-top:12px}
-      .combo-card-top{display:block}
-      .combo-card-top .status{margin-top:8px}
-      .combo-card dl{grid-template-columns:1fr}
-      .row-actions,.button-row,.form-actions{display:grid;grid-template-columns:1fr;width:100%}
-      .row-actions .btn,.button-row .btn,.form-actions .btn{width:100%;min-height:44px}
-      .component-card-grid{grid-template-columns:1fr}
-      .component-card-grid .full{grid-column:auto}
-      .detail-intro{display:block}
-      .detail-intro .button-row{margin-top:16px}
-      .definition-list{grid-template-columns:1fr;gap:2px}
-      .definition-list dd{margin-bottom:10px}
-      .overlay{padding:12px;align-items:flex-end}
-      .dialog{max-height:92vh;padding:16px}
-      .selector-footer{display:block}
-      .selector-footer .button-row{margin-top:16px}
-      .result-item{grid-template-columns:auto minmax(0,1fr)}
-      .result-item > .btn{grid-column:1/-1;width:100%}
-      .toast{left:16px;right:16px;bottom:16px}
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestión de combos de productos</title>
+<style>
+:root{--s:#fff;--n10:#f3f4f6;--n20:#D1D5DB;--n30:#d1d5db;--n50:#6b7280;--n70:#6B7280;--n90:#111827}
+*{box-sizing:border-box}body{margin:0;background:var(--s);color:var(--n90);font:16px/1.5 Inter,system-ui,sans-serif}
+button,input,textarea,select{font:inherit;color:inherit}button,input,textarea,select{min-height:44px}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--n90);outline-offset:2px}
+.top{border-bottom:1px solid var(--n30)}.topin,.wrap{max-width:1200px;margin:auto;padding:16px 24px}.topin{display:flex;justify-content:space-between;gap:16px;align-items:center}
+.brand{font-weight:700}.crumb{color:var(--n50);font-size:14px}.wrap{padding-top:32px;padding-bottom:64px}
+h1{font-size:clamp(26px,4vw,36px);line-height:1.15;margin:0 0 8px}h2{font-size:24px;margin:0 0 12px}h3{margin:0 0 6px}
+.pagehead{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;margin-bottom:24px}.pagehead p{margin:0;color:var(--n50)}
+.btn{border:1px solid var(--n90);background:#fff;border-radius:4px;padding:10px 14px;cursor:pointer}.btn.primary{background:var(--n90);color:#fff}.btn.danger{border-width:2px}.btn[disabled]{color:var(--n50);border-color:var(--n30);cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap}.panel{border:1px solid var(--n30);padding:16px;margin-bottom:16px}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}.main{grid-column:span 8}.side{grid-column:span 4}
+label{display:block;font-weight:600;margin-bottom:6px}.field{margin-bottom:16px}.input,textarea,select{width:100%;border:1px solid var(--n30);border-radius:4px;background:#fff;padding:10px 12px}textarea{min-height:100px;resize:vertical}
+.help,.muted{color:var(--n50)}.small{font-size:13px}.mono{font-family:"Roboto Mono",monospace}
+.tablewrap{overflow-x:auto}.desktop table{width:100%;border-collapse:collapse;min-width:760px}th,td{padding:12px;text-align:left;border-bottom:1px solid var(--n20);vertical-align:top}th{background:var(--n10);color:var(--n70);font-size:13px}
+.status{display:inline-block;border:1px solid var(--n70);padding:2px 8px;border-radius:999px;font-size:13px}.notice{border:2px solid var(--n90);padding:14px;margin-bottom:16px}.notice p{margin:4px 0 0}
+.metric{border-top:1px solid var(--n20);padding:12px 0}.metric:first-child{border-top:0}.metric strong{display:block;font-size:24px}
+.error{font-size:13px;font-weight:600;margin-top:6px}.invalid{border:2px solid var(--n90)}
+.cards{display:none}.card{border:1px solid var(--n30);padding:16px;margin-bottom:12px}.card dl{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}.card dt{font-size:12px;color:var(--n50)}.card dd{margin:0;font-weight:600}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}.overlay.open{display:flex}.dialog{background:#fff;border:2px solid var(--n90);width:min(680px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:20px}
+.results{border:1px solid var(--n30);max-height:360px;overflow:auto}.result{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:12px;border-bottom:1px solid var(--n20)}.result:last-child{border-bottom:0}
+.toast{position:fixed;right:16px;bottom:16px;border:2px solid var(--n90);background:#fff;padding:12px 16px;display:none;z-index:30}.toast.show{display:block}
+.empty{border:1px dashed var(--n50);padding:32px;text-align:center}.summary{position:sticky;top:16px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(8,1fr)}.main,.side{grid-column:1/-1}.summary{position:static}.desktop{display:none}.cards{display:block}}
+@media(max-width:600px){.topin,.wrap{padding-left:16px;padding-right:16px}.topin,.pagehead{display:block}.pagehead .row{margin-top:16px}.grid{grid-template-columns:repeat(4,1fr)}.row>.btn{flex:1 1 100%}.card dl{grid-template-columns:1fr}.dialog .row{flex-direction:column}.dialog .btn{width:100%}}
+</style>
 </head>
 <body>
-<div class="app-shell">
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand"><div class="brand-mark" aria-hidden="true">PO</div><span class="brand-text">PO Productos y ofertas</span></div><div class="crumb">Productos / Combos</div>
-    </div>
-  </header>
-  <main id="app" class="page" tabindex="-1"></main>
-</div>
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<header class="top"><div class="topin"><div class="brand">PO Productos y ofertas</div><div class="crumb">Productos / Combos</div></div></header>
+<main class="wrap" id="app" tabindex="-1"></main>
 
-<div id="selectorOverlay" class="overlay" aria-hidden="true">
+<div class="overlay" id="selector" aria-hidden="true">
   <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="selectorTitle">
-    <div class="dialog-header">
-      <div>
-        <h2 id="selectorTitle">Añadir componentes</h2>
-        <p class="muted small">Selecciona SKUs vendibles directos (variantes o productos simples con SKU base). No se permiten combos dentro de combos.</p>
-      </div>
-      <button class="icon-button" type="button" data-close-selector aria-label="Cerrar">×</button>
-    </div>
-    <div class="field">
-      <label for="componentSearch">Buscar por nombre o SKU</label>
-      <input id="componentSearch" type="search" autocomplete="off" placeholder="Ej. camiseta o SKU-CAM-M" />
-    </div>
-    <div id="selectorResults" class="results"></div>
-    <div class="selector-footer">
-      <div id="selectorCount" class="small muted">0 seleccionados</div>
-      <div class="button-row end">
-        <button class="btn" type="button" data-close-selector>Cancelar</button>
-        <button id="addSelectedBtn" class="btn btn-primary" type="button">Añadir seleccionados</button>
-      </div>
-    </div>
+    <h2 id="selectorTitle">Añadir componentes</h2>
+    <p class="muted">Selecciona SKU vendibles directos. No se permiten combos dentro de otros combos.</p>
+    <div class="field"><label for="search">Buscar por nombre o SKU</label><input class="input" id="search" type="search"></div>
+    <div class="results" id="results"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn" data-close="selector">Cancelar</button><button class="btn primary" id="addSelected">Añadir seleccionados</button></div>
   </section>
 </div>
 
-<div id="deactivateOverlay" class="overlay" aria-hidden="true">
-  <section class="dialog small-dialog" role="dialog" aria-modal="true" aria-labelledby="deactivateTitle">
-    <div class="dialog-header">
-      <div>
-        <h2 id="deactivateTitle">Desactivar combo</h2>
-        <p id="deactivateName" class="muted small"></p>
-      </div>
-      <button class="icon-button" type="button" data-close-deactivate aria-label="Cerrar">×</button>
-    </div>
-    <div class="notice">
-      <span class="notice-icon" aria-hidden="true">!</span>
-      <div><h3>El combo dejará de estar disponible en los canales de venta.</h3><p>Los SKU que lo componen no serán desactivados ni eliminados.</p></div>
-    </div>
-    <div class="button-row end">
-      <button class="btn" type="button" data-close-deactivate>Cancelar</button>
-      <button id="confirmDeactivateBtn" class="btn btn-danger" type="button">Desactivar combo</button>
-    </div>
+<div class="overlay" id="deactivate" aria-hidden="true">
+  <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="deTitle">
+    <h2 id="deTitle">Desactivar combo</h2>
+    <p>El combo dejará de estar disponible para nuevas ventas. Los productos que lo componen no serán desactivados.</p>
+    <div class="row" style="justify-content:flex-end"><button class="btn" data-close="deactivate">Cancelar</button><button class="btn danger" id="doDeactivate">Desactivar combo</button></div>
   </section>
 </div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-(() => {
-  'use strict';
-
-  /*
-    Estados documentales de WF-002 que pueden inspeccionarse sin contaminar la UI:
-      ?state=empty
-      ?state=list-error
-      ?state=save-error       -> fallo al guardar combo (S-02-E), conserva datos y permite reintento
-      ?state=no-permission
-      ?state=session-expired
-    No se muestran controles de prototipo para cambiar de estado o tamaño de pantalla.
-  */
-
-  const catalog = [
-    {id:'sku-cam-m', type:'SKU / variante', sku:'SKU-CAM-M', name:'Camiseta deportiva', variant:'Talla M', price:59.90, offerPrice:49.90, stock:10, active:true},
-    {id:'sku-med-w', type:'SKU / variante', sku:'SKU-MED-W', name:'Medias blancas', variant:'Única', price:29.90, offerPrice:24.90, stock:15, active:true},
-    {id:'sku-raq', type:'Producto simple', sku:'SKU-RAQ', name:'Raqueta de entrenamiento', variant:'Sin variantes', price:180.00, offerPrice:160.00, stock:5, active:true},
-    {id:'sku-pel', type:'Producto simple', sku:'SKU-PEL', name:'Pelotas de tenis', variant:'Pack individual', price:30.00, offerPrice:25.00, stock:20, active:true},
-    {id:'sku-bot-42', type:'SKU / variante', sku:'SKU-BOT-42', name:'Zapatillas running', variant:'Talla 42', price:210.00, offerPrice:189.90, stock:8, active:true},
-    {id:'sku-bot-43', type:'SKU / variante', sku:'SKU-BOT-43', name:'Zapatillas running', variant:'Talla 43', price:210.00, offerPrice:189.90, stock:0, active:true},
-    {id:'combo-demo', type:'Combo', sku:'COMBO-DEMO', name:'Combo recuperación', variant:'Combo', price:99.00, offerPrice:99.00, stock:null, active:true, isCombo:true},
-    {id:'sku-old', type:'SKU / variante', sku:'SKU-OLD', name:'Zapatilla edición anterior', variant:'Talla 41', price:145.00, offerPrice:145.00, stock:4, active:false}
-  ];
-
-  let combos = [
-    {
-      id:'combo-1', name:'Kit entrenamiento básico', description:'Camiseta y medias para entrenamiento diario.', price:89.90,
-      status:'active', availabilityStatus:'ok',
-      components:[
-        {catalogId:'sku-cam-m', qty:1},
-        {catalogId:'sku-med-w', qty:2}
-      ]
-    },
-    {
-      id:'combo-2', name:'Pack tenis inicial', description:'Raqueta y pelotas para comenzar a entrenar.', price:199.90,
-      status:'active', availabilityStatus:'ok',
-      components:[
-        {catalogId:'sku-raq', qty:1},
-        {catalogId:'sku-pel', qty:2}
-      ]
-    },
-    {
-      id:'combo-3', name:'Set running fin de temporada', description:'Combo retirado al desactivarse uno de sus componentes.', price:299.90,
-      status:'inactive-auto', availabilityStatus:'ok', inactiveCause:'sku-old',
-      components:[
-        {catalogId:'sku-old', qty:1},
-        {catalogId:'sku-med-w', qty:2}
-      ]
-    },
-    {
-      id:'combo-4', name:'Dúo running', description:'Dos tallas de running agrupadas como oferta.', price:349.90,
-      status:'active', availabilityStatus:'error',
-      components:[
-        {catalogId:'sku-bot-42', qty:1},
-        {catalogId:'sku-bot-43', qty:1}
-      ]
-    }
-  ];
-
-  const state = {
-    view:'list',
-    formMode:'create',
-    currentComboId:null,
-    form:{name:'',description:'',price:'',components:[]},
-    dirty:false,
-    selectedIds:new Set(),
-    returnFocus:null,
-    saving:false,
-    saveErrorShown:false,
-    listLoading:true,
-    queryState:new URLSearchParams(location.search).get('state') || ''
-  };
-  state.saveError = state.queryState === 'save-error';
-
-  const app = document.getElementById('app');
-  const toast = document.getElementById('toast');
-  const selectorOverlay = document.getElementById('selectorOverlay');
-  const deactivateOverlay = document.getElementById('deactivateOverlay');
-  const selectorResults = document.getElementById('selectorResults');
-  const componentSearch = document.getElementById('componentSearch');
-  const selectorCount = document.getElementById('selectorCount');
-  const addSelectedBtn = document.getElementById('addSelectedBtn');
-  const confirmDeactivateBtn = document.getElementById('confirmDeactivateBtn');
-  let deactivateTargetId = null;
-  let toastTimer = null;
-
-  function money(n){ return new Intl.NumberFormat('es-PE',{style:'currency',currency:'PEN'}).format(Number(n)||0); }
-  function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch])); }
-  function catalogItem(id){ return catalog.find(x=>x.id===id); }
-  function comboById(id){ return combos.find(x=>x.id===id); }
-  function enrichedComponents(comboOrForm){
-    return (comboOrForm.components||[]).map(c=>{
-      const it = catalogItem(c.catalogId) || {};
-      const publicPrice = Math.min(it.price || 0, it.offerPrice ?? it.price ?? 0);
-      return { ...it, publicPrice, qty:Number(c.qty), catalogId:c.catalogId };
-    });
+const catalog=[
+ {id:'cam-m',sku:'SKU-CAM-M',name:'Camiseta deportiva',detail:'Talla M',regular:59.90,public:49.90,available:10,active:true},
+ {id:'med-w',sku:'SKU-MED-W',name:'Medias blancas',detail:'Talla única',regular:29.90,public:24.90,available:15,active:true},
+ {id:'raq',sku:'SKU-RAQ',name:'Raqueta de entrenamiento',detail:'Producto simple',regular:180,public:160,available:5,active:true},
+ {id:'pel',sku:'SKU-PEL',name:'Pelotas de tenis',detail:'Producto simple',regular:30,public:25,available:20,active:true},
+ {id:'run42',sku:'SKU-RUN-42',name:'Zapatillas running',detail:'Talla 42',regular:210,public:189.90,available:8,active:true},
+ {id:'run43',sku:'SKU-RUN-43',name:'Zapatillas running',detail:'Talla 43',regular:210,public:189.90,available:0,active:true},
+ {id:'old',sku:'SKU-OLD-41',name:'Zapatilla edición anterior',detail:'Talla 41',regular:145,public:145,available:4,active:false},
+ {id:'nested',sku:'COMBO-DEMO',name:'Combo recuperación',detail:'Combo',regular:99,public:99,available:null,active:true,isCombo:true}
+];
+let combos=[
+ {id:'c1',name:'Kit entrenamiento básico',description:'Camiseta y medias para entrenamiento diario.',price:89.90,status:'active',availability:'fresh',calculated:'28/09/2026 18:05',components:[{id:'cam-m',qty:1},{id:'med-w',qty:2}]},
+ {id:'c2',name:'Pack tenis inicial',description:'Raqueta y pelotas para comenzar a entrenar.',price:199.90,status:'active',availability:'fresh',calculated:'28/09/2026 18:04',components:[{id:'raq',qty:1},{id:'pel',qty:3}]},
+ {id:'c3',name:'Set running fin de temporada',description:'Requiere revisión por componente inactivo.',price:299.90,status:'review',availability:'unknown',calculated:'28/09/2026 17:58',cause:'old',components:[{id:'run42',qty:1},{id:'old',qty:1}]}
+];
+const state={view:'list',current:null,mode:'create',form:null,selected:new Set(),simulate:'',dirty:false};
+const app=document.getElementById('app'), toast=document.getElementById('toast');
+const money=n=>`S/ ${Number(n||0).toFixed(2)}`;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const item=id=>catalog.find(x=>x.id===id);
+const combo=id=>combos.find(x=>x.id===id);
+function calc(obj){
+ const xs=(obj.components||[]).map(c=>({...item(c.id),qty:Number(c.qty)})).filter(x=>x.id);
+ const sumRegular=xs.reduce((a,x)=>a+x.regular*x.qty,0);
+ const sumPublic=xs.reduce((a,x)=>a+x.public*x.qty,0);
+ if(!xs.length)return{xs,sumRegular,sumPublic,availability:null,limiter:null};
+ if(xs.some(x=>!Number.isInteger(x.qty)||x.qty<=0))return{xs,sumRegular,sumPublic,availability:null,limiter:null};
+ const ratios=xs.map(x=>({x,v:Math.floor(x.available/x.qty)}));
+ const min=Math.min(...ratios.map(r=>r.v));
+ return{xs,sumRegular,sumPublic,availability:min,limiter:ratios.find(r=>r.v===min)?.x||null};
+}
+function status(c){return c.status==='active'?'Activo':c.status==='review'?'Requiere revisión':'Inactivo'}
+function availability(c){
+ if(c.availability==='unknown')return 'No verificable';
+ const x=calc(c).availability; return x==null?'No verificable':`${x}`;
+}
+function notify(msg){toast.textContent=msg;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2200)}
+function head(title,copy,actions=''){return `<div class="pagehead"><div><h1>${title}</h1><p>${copy}</p></div><div class="row">${actions}</div></div>`}
+function render(){
+ if(location.hash==='#no-permission'){app.innerHTML=head('Gestión de combos','Administra ofertas agrupadas.')+`<div class="notice"><h3>Acceso restringido</h3><p>No tienes permiso para realizar esta acción.</p></div>`;return}
+ if(location.hash==='#session-expired'){app.innerHTML=head('Gestión de combos','Administra ofertas agrupadas.')+`<div class="notice"><h3>Sesión finalizada</h3><p>Ingresa nuevamente para continuar.</p></div>`;return}
+ if(state.view==='list')renderList();
+ if(state.view==='form')renderForm();
+ if(state.view==='detail')renderDetail();
+ bind();
+}
+function renderList(){
+ const actions=`<button class="btn primary" data-action="create">Crear combo</button>`;
+ if(location.hash==='#list-loading'){app.innerHTML=head('Gestión de combos','Administra ofertas agrupadas.',actions)+`<div class="panel">Cargando combos…</div>`;return}
+ if(location.hash==='#list-error'){app.innerHTML=head('Gestión de combos','Administra ofertas agrupadas.',actions)+`<div class="notice"><h3>No pudimos cargar los combos.</h3><p>Inténtalo nuevamente.</p></div><button class="btn" data-action="retry">Reintentar</button>`;return}
+ const data=location.hash==='#list-empty'?[]:combos;
+ if(!data.length){app.innerHTML=head('Gestión de combos','Administra ofertas agrupadas.',actions)+`<div class="empty"><h2>Aún no hay combos</h2><p class="muted">Crea el primer combo para agrupar productos complementarios.</p><button class="btn primary" data-action="create">Crear primer combo</button></div>`;return}
+ const rows=data.map(c=>`<tr><td><strong>${esc(c.name)}</strong><div class="small muted">${esc(c.description)}</div></td><td>${money(c.price)}</td><td>${c.components.length}</td><td>${esc(availability(c))}<div class="small muted">Estimación</div></td><td><span class="status">${status(c)}</span></td><td><div class="row"><button class="btn" data-action="view" data-id="${c.id}">Ver detalle</button>${c.status==='active'?`<button class="btn" data-action="edit" data-id="${c.id}">Editar</button><button class="btn" data-action="deactivate" data-id="${c.id}">Desactivar</button>`:''}</div></td></tr>`).join('');
+ const cards=data.map(c=>`<article class="card"><strong>${esc(c.name)}</strong><p class="small muted">${esc(c.description)}</p><dl><div><dt>Precio</dt><dd>${money(c.price)}</dd></div><div><dt>Componentes</dt><dd>${c.components.length}</dd></div><div><dt>Disponibilidad</dt><dd>${esc(availability(c))} <span class="small">estimada</span></dd></div><div><dt>Estado</dt><dd>${status(c)}</dd></div></dl><div class="row"><button class="btn" data-action="view" data-id="${c.id}">Ver detalle</button>${c.status==='active'?`<button class="btn" data-action="edit" data-id="${c.id}">Editar</button>`:''}</div></article>`).join('');
+ app.innerHTML=head('Gestión de combos','Crea y administra paquetes formados por SKUs vendibles directos.',actions)+`<div class="desktop tablewrap"><table><thead><tr><th>Combo</th><th>Precio</th><th>Componentes</th><th>Disponibilidad</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table></div><div class="cards">${cards}</div>`;
+}
+function resetForm(mode,c){
+ state.mode=mode;state.current=c?.id||null;state.dirty=false;
+ state.form=c?{name:c.name,description:c.description,price:String(c.price),components:c.components.map(x=>({...x}))}:{name:'',description:'',price:'',components:[]};
+}
+function validate(){
+ const f=state.form,x=calc(f),e={};
+ if(!f.name.trim())e.name='Ingresa un nombre.';
+ if(!f.description.trim())e.description='Ingresa una descripción.';
+ if(f.components.length<2)e.components='Añade al menos 2 SKUs distintos.';
+ f.components.forEach((c,i)=>{if(!Number.isInteger(Number(c.qty))||Number(c.qty)<=0)e['q'+i]='Ingresa una cantidad entera mayor que cero.'});
+ const p=Number(f.price);
+ if(!(p>0) || !(p<x.sumRegular) || !(p<x.sumPublic))e.price='El precio debe ser mayor que cero y menor que comprar los componentes por separado.';
+ return{e,x,ok:Object.keys(e).length===0};
+}
+function renderForm(conflict=''){
+ const v=validate(),f=state.form;
+ const rows=v.x.xs.map((x,i)=>`<tr><td class="mono">${esc(x.sku)}</td><td><strong>${esc(x.name)}</strong><div class="small muted">${esc(x.detail)}</div></td><td>${money(x.regular)}<div class="small muted">Vigente: ${money(x.public)}</div></td><td>${x.available}</td><td><input class="input ${v.e['q'+i]?'invalid':''}" style="width:90px" type="number" min="1" step="1" data-q="${i}" value="${esc(x.qty)}"><div class="error">${esc(v.e['q'+i]||'')}</div></td><td>${Number.isInteger(x.qty)&&x.qty>0?Math.floor(x.available/x.qty):'—'}</td><td><button class="btn" data-remove="${i}">Quitar</button></td></tr>`).join('');
+ app.innerHTML=head(state.mode==='create'?'Crear combo':'Editar combo','Configura componentes, cantidades y un precio comercial válido.')+
+ `${conflict?`<div class="notice"><h3>Los datos vigentes cambiaron</h3><p>${conflict}</p></div>`:''}
+ <div class="grid"><div class="main">
+ <section class="panel"><h2>Datos generales</h2>
+ <div class="field"><label for="name">Nombre</label><input class="input ${v.e.name?'invalid':''}" id="name" value="${esc(f.name)}"><div class="error">${esc(v.e.name||'')}</div></div>
+ <div class="field"><label for="description">Descripción</label><textarea class="${v.e.description?'invalid':''}" id="description">${esc(f.description)}</textarea><div class="error">${esc(v.e.description||'')}</div></div></section>
+ <section class="panel"><div class="pagehead" style="margin-bottom:12px"><div><h2>Componentes</h2><p>Solo SKU vendibles directos.</p></div><button class="btn" type="button" data-action="add">Añadir componentes</button></div>
+ ${v.e.components?`<div class="error">${esc(v.e.components)}</div>`:''}
+ <div class="tablewrap desktop"><table><thead><tr><th>SKU</th><th>Producto / variante</th><th>Precios</th><th>Disponible</th><th>Cantidad</th><th>Aporte</th><th></th></tr></thead><tbody>${rows||`<tr><td colspan="7" class="muted">Aún no has añadido componentes.</td></tr>`}</tbody></table></div>
+ <div class="cards">${v.x.xs.map((x,i)=>`<article class="card"><strong>${esc(x.name)}</strong><div class="small mono">${esc(x.sku)}</div><p class="small">Regular ${money(x.regular)} · Vigente ${money(x.public)} · Disponible ${x.available}</p><label>Cantidad<input class="input" data-q="${i}" type="number" min="1" step="1" value="${x.qty}"></label><button class="btn" data-remove="${i}">Quitar</button></article>`).join('')||'<p class="muted">Aún no has añadido componentes.</p>'}</div></section>
+ <section class="panel"><h2>Precio del combo</h2><label for="price">Precio promocional</label><input class="input ${v.e.price?'invalid':''}" id="price" type="number" step="0.01" value="${esc(f.price)}"><div class="error">${esc(v.e.price||'')}</div></section>
+ </div><aside class="side"><div class="panel summary"><h2>Resumen</h2>
+ <div class="metric"><span class="muted small">Suma regular</span><strong>${money(v.x.sumRegular)}</strong></div>
+ <div class="metric"><span class="muted small">Suma pública vigente</span><strong>${money(v.x.sumPublic)}</strong></div>
+ <div class="metric"><span class="muted small">Disponibilidad estimada</span><strong>${v.x.availability==null?'—':v.x.availability}</strong><span class="small muted">${v.x.limiter?`Limitada por ${esc(v.x.limiter.name)}.`:'Añade componentes válidos.'}</span></div>
+ <p class="small muted">La compra verifica y reserva existencias durante el pedido. Este valor es informativo.</p></div></aside></div>
+ <div class="row" style="justify-content:flex-end"><button class="btn" data-action="back">Cancelar</button><button class="btn primary" data-action="save" ${v.ok?'':'disabled'}>${state.mode==='create'?'Crear combo':'Guardar cambios'}</button></div>`;
+}
+function renderDetail(){
+ const c=combo(state.current);if(!c){state.view='list';render();return}
+ const x=calc(c);
+ const notice=c.status==='review'?`<div class="notice"><h3>Este combo requiere revisión</h3><p>Uno de sus componentes dejó de estar activo. Ya no participa en nuevas ventas.</p></div>`:c.status==='inactive'?`<div class="notice"><h3>Combo inactivo</h3><p>Ya no participa en nuevas ventas.</p></div>`:'';
+ const av=c.availability==='unknown'?'No verificable':x.availability;
+ app.innerHTML=head(esc(c.name),esc(c.description),`<button class="btn" data-action="back">Volver</button>${c.status==='active'?`<button class="btn" data-action="edit" data-id="${c.id}">Editar</button><button class="btn danger" data-action="deactivate" data-id="${c.id}">Desactivar</button>`:''}`)+notice+
+ `<div class="grid"><div class="main"><section class="panel"><h2>Composición</h2><div class="tablewrap"><table><thead><tr><th>SKU</th><th>Producto</th><th>Cantidad</th><th>Regular</th><th>Vigente</th></tr></thead><tbody>${x.xs.map(y=>`<tr><td class="mono">${esc(y.sku)}</td><td>${esc(y.name)}</td><td>${y.qty}</td><td>${money(y.regular)}</td><td>${money(y.public)}</td></tr>`).join('')}</tbody></table></div></section></div>
+ <aside class="side"><section class="panel"><span class="status">${status(c)}</span><div class="metric"><span class="muted small">Precio del combo</span><strong>${money(c.price)}</strong></div><div class="metric"><span class="muted small">Disponibilidad estimada</span><strong>${av}</strong><span class="small muted">${c.availability==='unknown'?'No pudimos verificarla con la última información.':`Calculada ${esc(c.calculated)}.`}</span></div><p class="small muted">La existencia definitiva se verifica durante el pedido.</p></section></aside></div>`;
+}
+function openOverlay(id){const o=document.getElementById(id);o.classList.add('open');o.setAttribute('aria-hidden','false');o.querySelector('button,input')?.focus()}
+function closeOverlay(id){const o=document.getElementById(id);o.classList.remove('open');o.setAttribute('aria-hidden','true')}
+function renderResults(q=''){
+ const chosen=new Set(state.form.components.map(x=>x.id));const s=q.toLowerCase();
+ document.getElementById('results').innerHTML=catalog.filter(x=>!s||x.name.toLowerCase().includes(s)||x.sku.toLowerCase().includes(s)).map(x=>{
+  const blocked=x.isCombo||!x.active||chosen.has(x.id);const why=x.isCombo?'No se permiten combos dentro de otros combos.':!x.active?'Este SKU no está activo.':chosen.has(x.id)?'Ya está añadido.':'';
+  return `<label class="result"><input type="checkbox" data-pick="${x.id}" ${blocked?'disabled':''} ${state.selected.has(x.id)?'checked':''}><span><strong>${esc(x.name)}</strong><br><span class="small mono">${esc(x.sku)}</span><br><span class="small muted">${esc(x.detail)} · Vigente ${money(x.public)} · Disponible ${x.available??'—'}</span>${why?`<br><span class="small"><strong>${esc(why)}</strong></span>`:''}</span><span class="status">${x.isCombo?'Combo':x.active?'Activo':'Inactivo'}</span></label>`;
+ }).join('');
+ document.querySelectorAll('[data-pick]').forEach(cb=>cb.onchange=e=>{e.target.checked?state.selected.add(e.target.dataset.pick):state.selected.delete(e.target.dataset.pick)});
+}
+function bind(){
+ app.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{
+  const a=b.dataset.action,id=b.dataset.id;
+  if(a==='create'){resetForm('create');state.view='form';render()}
+  if(a==='view'){state.current=id;state.view='detail';render()}
+  if(a==='edit'){resetForm('edit',combo(id||state.current));state.view='form';render()}
+  if(a==='back'){state.view=state.current?'detail':'list';render()}
+  if(a==='retry'){location.hash='';render()}
+  if(a==='add'){state.selected.clear();renderResults();openOverlay('selector')}
+  if(a==='deactivate'){state.current=id||state.current;openOverlay('deactivate')}
+  if(a==='save'){
+   const v=validate();if(!v.ok)return;
+   if(state.mode==='edit'&&state.current==='c2'&&!state.form._reviewed){state.form._reviewed=true;catalog.find(x=>x.id==='pel').public=27;renderForm('El precio vigente de Pelotas de tenis cambió. Revisa el nuevo límite antes de guardar.');return}
+   if(state.mode==='create'){const id='c'+Date.now();combos.unshift({id,name:state.form.name.trim(),description:state.form.description.trim(),price:Number(state.form.price),status:'active',availability:'fresh',calculated:'Ahora',components:state.form.components.map(x=>({id:x.id,qty:Number(x.qty)}))});state.current=id}else{Object.assign(combo(state.current),{name:state.form.name.trim(),description:state.form.description.trim(),price:Number(state.form.price),components:state.form.components.map(x=>({id:x.id,qty:Number(x.qty)}))})}
+   state.view='detail';notify(state.mode==='create'?'Combo creado.':'Cambios guardados.');render()
   }
-  function calculations(comboOrForm){
-    const cs=enrichedComponents(comboOrForm);
-    const validQty=cs.length>0 && cs.every(c=>Number.isInteger(c.qty)&&c.qty>0);
-    const sumRegular=cs.reduce((a,c)=>a+(c.price||0)*(Number.isFinite(c.qty)?c.qty:0),0);
-    const sumPublic=cs.reduce((a,c)=>a+(c.publicPrice||0)*(Number.isFinite(c.qty)?c.qty:0),0);
-    if(!cs.length || !validQty) return {sumRegular, sumPublic, sum:sumRegular, availability:null, limiter:null};
-    const proportional=cs.map(c=>({id:c.catalogId,value:Math.floor((c.stock||0)/c.qty)}));
-    const min=Math.min(...proportional.map(x=>x.value));
-    const lim=proportional.find(x=>x.value===min);
-    return {sumRegular, sumPublic, sum:sumPublic, availability:min, limiter:lim ? catalogItem(lim.id) : null};
-  }
-  function statusMeta(combo){
-    if(combo.status==='inactive-manual') return {label:'Inactivo', cls:''};
-    if(combo.status==='inactive-auto') return {label:'Inactivo — requiere revisión', cls:'review'};
-    const calc=calculations(combo);
-    if(combo.availabilityStatus==='ok' && calc.availability===0) return {label:'Agotado', cls:''};
-    return {label:'Activo', cls:'active'};
-  }
-  function availabilityLabel(combo){
-    if(combo.availabilityStatus==='error') return 'No disponible';
-    const c=calculations(combo);
-    return c.availability==null ? 'No disponible' : String(c.availability);
-  }
-  function showToast(message){
-    clearTimeout(toastTimer); toast.textContent=message; toast.classList.add('show');
-    toastTimer=setTimeout(()=>toast.classList.remove('show'),2800);
-  }
-  function focusMain(){ setTimeout(()=>app.focus(),0); }
-  function setView(view){ state.view=view; render(); focusMain(); }
-
-  function renderGlobalState(){
-    if(state.queryState==='no-permission'){
-      app.innerHTML=`<div class="page-header"><div><h1>Gestión de combos</h1><p>Administra ofertas agrupadas de productos.</p></div></div><div class="notice error"><span class="notice-icon" aria-hidden="true">!</span><div><h3>No tienes permiso para administrar combos.</h3><p>Vuelve al módulo de productos o solicita acceso por el canal definido por tu organización.</p></div></div><button class="btn" data-action="safe-back">Volver a productos</button>`;
-      return true;
-    }
-    if(state.queryState==='session-expired'){
-      app.innerHTML=`<div class="page-header"><div><h1>Gestión de combos</h1><p>Administra ofertas agrupadas de productos.</p></div></div><div class="notice error"><span class="notice-icon" aria-hidden="true">!</span><div><h3>Tu sesión expiró.</h3><p>Inicia sesión nuevamente para continuar. El sistema intentará recuperar el contexto cuando sea posible.</p></div></div><button class="btn btn-primary" data-action="login">Iniciar sesión</button>`;
-      return true;
-    }
-    return false;
-  }
-
-  function render(){
-    if(renderGlobalState()){ bindPage(); return; }
-    if(state.view==='list') renderList();
-    else if(state.view==='form') renderForm();
-    else if(state.view==='detail') renderDetail();
-    bindPage();
-  }
-
-  function renderList(){
-    const forced=state.queryState;
-    const header=`<div class="page-header"><div><h1>Gestión de combos</h1><p>Crea y administra combos formados por SKUs vendibles directos (variantes o productos simples con SKU base).</p></div><div class="button-row"><button class="btn btn-primary" data-action="create">Crear combo</button></div></div>`;
-    if(state.listLoading && !forced){
-      app.innerHTML=header+`<div class="skeleton" aria-label="Cargando combos"><div class="sk-line w30"></div><div class="sk-line w80"></div><div class="sk-line w50"></div></div>`;
-      setTimeout(()=>{state.listLoading=false;render();},450);
-      return;
-    }
-    if(forced==='empty'){
-      app.innerHTML=header+`<section class="empty-state"><div class="placeholder" aria-hidden="true"></div><h2>Aún no hay combos.</h2><p>Crea el primer combo para agrupar productos complementarios bajo un precio promocional.</p><button class="btn btn-primary" data-action="create">Crear primer combo</button></section>`;
-      return;
-    }
-    if(forced==='list-error'){
-      app.innerHTML=header+`<div class="notice error"><span class="notice-icon" aria-hidden="true">!</span><div><h3>No pudimos cargar los combos.</h3><p>Vuelve a intentarlo. No se muestran datos anteriores como si estuvieran vigentes.</p></div></div><button class="btn" data-action="retry-list">Reintentar</button>`;
-      return;
-    }
-    const rows=combos.map(combo=>{
-      const status=statusMeta(combo);
-      return `<tr>
-        <td class="name-cell"><strong>${escapeHtml(combo.name)}</strong><span title="${escapeHtml(combo.description)}">${escapeHtml(combo.description)}</span></td>
-        <td>${money(combo.price)}</td><td>${combo.components.length}</td><td>${availabilityLabel(combo)}</td>
-        <td><span class="status ${status.cls}">${escapeHtml(status.label)}</span></td>
-        <td><div class="row-actions"><button class="btn btn-quiet" data-action="view" data-id="${combo.id}">Ver detalle</button>${combo.status==='active'?`<button class="btn btn-quiet" data-action="edit" data-id="${combo.id}">Editar</button><button class="btn btn-quiet" data-action="deactivate" data-id="${combo.id}">Desactivar</button>`:''}</div></td>
-      </tr>`;
-    }).join('');
-    const cards=combos.map(combo=>{
-      const status=statusMeta(combo);
-      return `<article class="combo-card">
-        <div class="combo-card-top"><div><strong>${escapeHtml(combo.name)}</strong><div class="muted small">${escapeHtml(combo.description)}</div></div><span class="status ${status.cls}">${escapeHtml(status.label)}</span></div>
-        <dl><div><dt>Precio</dt><dd>${money(combo.price)}</dd></div><div><dt>Componentes</dt><dd>${combo.components.length}</dd></div><div><dt>Disponibilidad</dt><dd>${availabilityLabel(combo)}</dd></div></dl>
-        <div class="row-actions"><button class="btn btn-quiet" data-action="view" data-id="${combo.id}">Ver detalle</button>${combo.status==='active'?`<button class="btn btn-quiet" data-action="edit" data-id="${combo.id}">Editar</button><button class="btn btn-quiet" data-action="deactivate" data-id="${combo.id}">Desactivar</button>`:''}</div>
-      </article>`;
-    }).join('');
-    app.innerHTML=header+`<div class="desktop-table table-wrap"><table><thead><tr><th>Combo</th><th>Precio</th><th>Componentes</th><th>Disponibilidad</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table></div><div class="mobile-list">${cards}</div>`;
-  }
-
-  function resetForm(mode, combo){
-    state.formMode=mode; state.currentComboId=combo?.id||null; state.dirty=false; state.saving=false;
-    state.form=combo?{name:combo.name,description:combo.description,price:String(combo.price),components:combo.components.map(c=>({...c}))}:{name:'',description:'',price:'',components:[]};
-  }
-
-  function formValidation(){
-    const f=state.form; const calc=calculations(f); const errors=[];
-    if(!f.name.trim()) errors.push({key:'name',msg:'Ingresa un nombre para el combo.'});
-    if(!f.description.trim()) errors.push({key:'description',msg:'Ingresa una descripción.'});
-    if(f.components.length<2) errors.push({key:'components',msg:'Añade al menos 2 componentes.'});
-    if(f.components.length>20) errors.push({key:'components',msg:'Un combo no puede tener más de 20 componentes.'});
-    f.components.forEach((c,i)=>{const q=Number(c.qty);if(!Number.isInteger(q)||q<=0) errors.push({key:`qty-${i}`,msg:'Ingresa una cantidad entera mayor que cero.'});});
-    const p=Number(f.price);
-    if(!Number.isFinite(p)||p<=0||p>=calc.sumPublic||p>=calc.sumRegular) {
-      errors.push({key:'price',msg:`El precio debe ser mayor que cero y estrictamente menor que la suma pública vigente (${money(calc.sumPublic)}) y suma regular (${money(calc.sumRegular)}).`});
-    }
-    return {errors,calc,valid:errors.length===0};
-  }
-  function errorFor(v,key){return v.errors.find(e=>e.key===key)?.msg||''}
-
-  function componentRows(v){
-    if(!state.form.components.length) return `<tr><td colspan="7"><div class="muted">Aún no has añadido componentes.</div></td></tr>`;
-    return enrichedComponents(state.form).map((c,i)=>{
-      const qErr=errorFor(v,`qty-${i}`); const prop=Number.isInteger(c.qty)&&c.qty>0?Math.floor((c.stock||0)/c.qty):'—';
-      const offerBadge = c.offerPrice && c.offerPrice < c.price ? `<div class="small" style="font-weight:600">${money(c.offerPrice)} (Oferta)</div>` : '';
-      return `<tr><td><span class="mono">${escapeHtml(c.sku)}</span></td><td><strong>${escapeHtml(c.name)}</strong><div class="small muted">${escapeHtml(c.variant)}</div></td><td><div>${money(c.price)}</div>${offerBadge}</td><td>${c.stock}</td><td><input type="number" min="1" step="1" value="${escapeHtml(c.qty)}" data-qty-index="${i}" aria-label="Cantidad de ${escapeHtml(c.name)}" aria-invalid="${qErr?'true':'false'}"><div class="field-error ${qErr?'show':''}">${escapeHtml(qErr)}</div></td><td>${prop}</td><td><button class="btn btn-quiet" type="button" data-remove-component="${i}">Quitar</button></td></tr>`;
-    }).join('');
-  }
-  function componentCards(v){
-    if(!state.form.components.length) return `<div class="muted">Aún no has añadido componentes.</div>`;
-    return enrichedComponents(state.form).map((c,i)=>{
-      const qErr=errorFor(v,`qty-${i}`); const prop=Number.isInteger(c.qty)&&c.qty>0?Math.floor((c.stock||0)/c.qty):'—';
-      const offerBadge = c.offerPrice && c.offerPrice < c.price ? `<div class="small" style="font-weight:600">${money(c.offerPrice)} (Oferta)</div>` : '';
-      return `<article class="component-card"><div class="component-card-grid"><div class="full"><strong>${escapeHtml(c.name)}</strong><div class="small muted">${escapeHtml(c.sku)} · ${escapeHtml(c.variant)}</div></div><div><span class="small muted">Precio regular</span><div>${money(c.price)}</div>${offerBadge}</div><div><span class="small muted">Stock</span><div>${c.stock}</div></div><div><label for="qtym-${i}">Cantidad</label><input id="qtym-${i}" type="number" min="1" step="1" value="${escapeHtml(c.qty)}" data-qty-index="${i}" aria-invalid="${qErr?'true':'false'}"><div class="field-error ${qErr?'show':''}">${escapeHtml(qErr)}</div></div><div><span class="small muted">Aporte de disponibilidad</span><div>${prop}</div></div><div class="full"><button class="btn btn-quiet" type="button" data-remove-component="${i}">Quitar</button></div></div></article>`;
-    }).join('');
-  }
-
-  function renderForm(extraNotice=''){
-    const v=formValidation(); const mode=state.formMode; const title=mode==='create'?'Crear combo':'Editar combo';
-    const pErr=errorFor(v,'price'); const nameErr=errorFor(v,'name'); const descErr=errorFor(v,'description'); const compErr=errorFor(v,'components');
-    const limiter=v.calc.limiter;
-    const saveErrNotice=state.saveErrorShown?`<div class="notice error" role="alert"><span class="notice-icon" aria-hidden="true">!</span><div><h3>No pudimos guardar el combo.</h3><p>Se produjo un error de comunicación al persistir los cambios. Se conservaron tus datos; revisa la conexión e intenta guardar nuevamente.</p></div></div>`:'';
-    const errorSummary=extraNotice?`<div class="notice error"><span class="notice-icon" aria-hidden="true">!</span><div>${extraNotice}</div></div>`:saveErrNotice;
-    const userPrice=Number(state.form.price);
-    const savingClient=Number.isFinite(userPrice)&&userPrice>0&&userPrice<v.calc.sumPublic ? v.calc.sumPublic - userPrice : null;
-    app.innerHTML=`
-      <div class="page-header"><div><h1>${title}</h1><p>Configura componentes directos (máximo 20), cantidades y un precio promocional válido.</p></div></div>
-      ${errorSummary}
-      <div id="formErrorSummary" class="error-summary" tabindex="-1"><h3>Revisa los datos antes de guardar.</h3><ul>${v.errors.map(e=>`<li>${escapeHtml(e.msg)}</li>`).join('')}</ul></div>
-      <form id="comboForm" novalidate>
-      <div class="form-layout">
-        <div>
-          <section class="section"><h2>Datos generales</h2>
-            <div class="field"><label for="comboName">Nombre</label><input id="comboName" type="text" value="${escapeHtml(state.form.name)}" aria-invalid="${nameErr?'true':'false'}"><div class="field-error ${nameErr?'show':''}">${escapeHtml(nameErr)}</div></div>
-            <div class="field"><label for="comboDescription">Descripción</label><textarea id="comboDescription" aria-invalid="${descErr?'true':'false'}">${escapeHtml(state.form.description)}</textarea><div class="field-error ${descErr?'show':''}">${escapeHtml(descErr)}</div></div>
-          </section>
-          <section class="section">
-            <div class="section-head"><div><h2>Componentes</h2><p class="muted small">Cada componente debe ser un SKU vendible directo (variante o producto simple con SKU base). Máximo 20 componentes por combo.</p></div><button class="btn" type="button" data-action="add-components">Añadir componentes</button></div>
-            <div class="field-error ${compErr?'show':''}" style="margin-bottom:12px">${escapeHtml(compErr)}</div>
-            <div class="component-table table-wrap"><table><thead><tr><th>SKU</th><th>Producto / variante</th><th>Precio regular / público</th><th>Stock</th><th>Cantidad</th><th>Aporte</th><th>Acción</th></tr></thead><tbody>${componentRows(v)}</tbody></table></div>
-            <div class="component-mobile">${componentCards(v)}</div>
-          </section>
-          <section class="section"><h2>Precio del combo</h2>
-            <div class="field"><label for="comboPrice">Precio promocional</label><input id="comboPrice" type="number" min="0" step="0.01" inputmode="decimal" value="${escapeHtml(state.form.price)}" aria-invalid="${pErr?'true':'false'}"><div class="help">Debe ser mayor que cero y menor que ${money(v.calc.sumPublic)} (suma pública vigente) y ${money(v.calc.sumRegular)} (suma regular).</div><div class="field-error ${pErr?'show':''}">${escapeHtml(pErr)}</div></div>
-          </section>
-        </div>
-        <aside class="section summary" aria-live="polite"><h2>Resumen</h2>
-          <div class="metric"><span class="metric-label">Suma pública vigente (límite)</span><span class="metric-value">${money(v.calc.sumPublic)}</span><span class="metric-detail">Calculada con min(regular, oferta) de cada componente.</span></div>
-          <div class="metric"><span class="metric-label">Suma regular</span><span class="metric-value">${money(v.calc.sumRegular)}</span><span class="metric-detail">Precio regular total sin ofertas de Pricing.</span></div>
-          ${savingClient!=null?`<div class="metric"><span class="metric-label">Ahorro cliente vs oferta</span><span class="metric-value">${money(savingClient)}</span></div>`:''}
-          <div class="metric"><span class="metric-label">Disponibilidad calculada</span><span class="metric-value">${v.calc.availability==null?'—':v.calc.availability}</span><span class="metric-detail">${limiter?`Limitada por ${escapeHtml(limiter.name)} (${escapeHtml(limiter.sku)}).`:'Añade componentes válidos para calcularla.'}</span></div>
-          <div class="metric"><span class="metric-label">Componentes</span><span class="metric-value">${state.form.components.length} / 20</span></div>
-        </aside>
-      </div>
-      <div class="form-actions"><button class="btn" type="button" data-action="cancel-form">Cancelar</button><button id="saveComboBtn" class="btn btn-primary" type="submit" ${!v.valid||state.saving?'disabled':''}>${state.saving?'Guardando…':mode==='create'?'Crear combo':'Guardar cambios'}</button></div>
-      </form>`;
-  }
-
-  function renderDetail(){
-    const combo=comboById(state.currentComboId); if(!combo){state.view='list';render();return;}
-    const calc=calculations(combo); const sm=statusMeta(combo); const active=combo.status==='active';
-    const auto=combo.status==='inactive-auto'; const manual=combo.status==='inactive-manual';
-    let notice='';
-    if(auto){const cause=catalogItem(combo.inactiveCause);notice=`<div class="notice error"><span class="notice-icon" aria-hidden="true">!</span><div><h3>El combo fue desactivado porque uno de sus componentes dejó de estar activo.</h3><p>${cause?`${escapeHtml(cause.name)} (${escapeHtml(cause.sku)}) requiere revisión.`:'Revisa los componentes del combo.'}</p></div></div>`;}
-    if(manual){notice=`<div class="notice"><span class="notice-icon" aria-hidden="true">i</span><div><h3>Combo inactivo.</h3><p>Ya no está disponible en los canales de venta.</p></div></div>`;}
-    if(combo.availabilityStatus==='error'){notice+=`<div class="notice error"><span class="notice-icon" aria-hidden="true">!</span><div><h3>No pudimos calcular la disponibilidad.</h3><p>La composición confirmada permanece visible. No se interpreta este error como stock 0.</p><div style="margin-top:12px"><button class="btn" data-action="retry-availability" data-id="${combo.id}">Reintentar</button></div></div></div>`;}
-    const rows=enrichedComponents(combo).map(c=>`<tr><td><span class="mono">${escapeHtml(c.sku)}</span></td><td><strong>${escapeHtml(c.name)}</strong><div class="small muted">${escapeHtml(c.variant)}</div></td><td>${c.qty}</td><td>${money(c.price)}</td><td>${c.stock}</td><td>${Math.floor((c.stock||0)/c.qty)}</td></tr>`).join('');
-    const cards=enrichedComponents(combo).map(c=>`<article class="component-card"><div class="component-card-grid"><div class="full"><strong>${escapeHtml(c.name)}</strong><div class="small muted">${escapeHtml(c.sku)} · ${escapeHtml(c.variant)}</div></div><div><span class="small muted">Cantidad</span><div>${c.qty}</div></div><div><span class="small muted">Precio regular</span><div>${money(c.price)}</div></div><div><span class="small muted">Stock</span><div>${c.stock}</div></div><div><span class="small muted">Aporte</span><div>${Math.floor((c.stock||0)/c.qty)}</div></div></div></article>`).join('');
-    app.innerHTML=`
-      <div class="page-header"><div><div class="small muted" style="margin-bottom:6px">Detalle del combo</div><h1>${escapeHtml(combo.name)}</h1><p>${escapeHtml(combo.description)}</p></div><div class="button-row">${active?`<button class="btn" data-action="edit" data-id="${combo.id}">Editar combo</button><button class="btn btn-danger" data-action="deactivate" data-id="${combo.id}">Desactivar combo</button>`:''}<button class="btn" data-action="back-list">Volver a combos</button></div></div>
-      ${notice}
-      <div class="detail-grid"><div>
-        <section class="section"><div class="detail-intro"><div><span class="status ${sm.cls}">${escapeHtml(sm.label)}</span><div class="price-line"><span class="price-main">${money(combo.price)}</span><span class="price-old">${money(calc.sum)}</span></div></div></div><dl class="definition-list"><dt>Componentes</dt><dd>${combo.components.length}</dd><dt>Suma regular</dt><dd>${money(calc.sum)}</dd><dt>Precio del combo</dt><dd>${money(combo.price)}</dd></dl></section>
-        <section class="section"><h2>Componentes</h2><div class="component-table table-wrap"><table><thead><tr><th>SKU</th><th>Producto / variante</th><th>Cantidad</th><th>Precio regular</th><th>Stock</th><th>Aporte</th></tr></thead><tbody>${rows}</tbody></table></div><div class="component-mobile">${cards}</div></section>
-      </div><aside class="availability-box"><div class="small muted">Disponibilidad del combo</div><div class="big">${combo.availabilityStatus==='error'?'—':calc.availability}</div><div>${combo.availabilityStatus==='error'?'No disponible':calc.availability===0?'Este combo no está disponible porque uno de sus componentes no tiene stock.':`${calc.availability} combos disponibles.`}</div>${combo.availabilityStatus==='ok'&&calc.limiter?`<div class="small muted" style="margin-top:10px">Limitados por ${escapeHtml(calc.limiter.name)} (${escapeHtml(calc.limiter.sku)}).</div>`:''}</aside></div>`;
-  }
-
-  function openSelector(trigger){
-    state.returnFocus=trigger; state.selectedIds=new Set(); componentSearch.value=''; renderSelectorResults('');
-    selectorOverlay.classList.add('open');selectorOverlay.setAttribute('aria-hidden','false');
-    setTimeout(()=>componentSearch.focus(),0);
-  }
-  function closeSelector(){selectorOverlay.classList.remove('open');selectorOverlay.setAttribute('aria-hidden','true');state.returnFocus?.focus();}
-  function renderSelectorResults(query){
-    const q=query.trim().toLowerCase(); const existing=new Set(state.form.components.map(c=>c.catalogId));
-    const currentTotal=state.form.components.length;
-    const items=catalog.filter(item=>!q||[item.sku,item.name,item.variant,item.type].join(' ').toLowerCase().includes(q));
-    if(!items.length){selectorResults.innerHTML=`<div class="empty-state" style="border:0;padding:28px 16px"><h3>Sin resultados</h3><p>Cambia la búsqueda e inténtalo nuevamente.</p></div>`;updateSelectorCount();return;}
-    selectorResults.innerHTML=items.map(item=>{
-      const isLimit=currentTotal>=20;
-      const blocked=item.isCombo||!item.active||existing.has(item.id)||(isLimit&&!state.selectedIds.has(item.id));
-      const reason=item.isCombo?'No se permiten combos dentro de otros combos.':!item.active?'Componente inactivo.':existing.has(item.id)?'Ya añadido al combo.':isLimit?'Límite de 20 componentes alcanzado en el combo.':'';
-      return `<div class="result-item ${blocked?'disabled':''}"><input class="checkbox" type="checkbox" data-select-catalog="${item.id}" ${blocked?'disabled':''} ${state.selectedIds.has(item.id)?'checked':''} aria-label="Seleccionar ${escapeHtml(item.name)}"><div><div class="result-title">${escapeHtml(item.name)} <span class="mono">${escapeHtml(item.sku)}</span></div><div class="result-meta">${escapeHtml(item.type)} · ${escapeHtml(item.variant)} · ${money(item.price)} · Stock ${item.stock??'—'}</div>${reason?`<div class="small" style="margin-top:4px;font-weight:600">${escapeHtml(reason)}</div>`:''}</div><span class="status ${item.active&&!item.isCombo?'active':''}">${item.active?'Activo':'Inactivo'}</span></div>`;
-    }).join('');
-    selectorResults.querySelectorAll('[data-select-catalog]').forEach(cb=>cb.addEventListener('change',e=>{const id=e.target.dataset.selectCatalog;e.target.checked?state.selectedIds.add(id):state.selectedIds.delete(id);updateSelectorCount();}));
-    updateSelectorCount();
-  }
-  function updateSelectorCount(){
-    const total=state.form.components.length+state.selectedIds.size;
-    const overLimit=total>20;
-    if(overLimit){
-      selectorCount.innerHTML=`<span style="font-weight:600;color:var(--neutral-90)">${state.selectedIds.size} seleccionados (supera el límite de 20)</span>`;
-      addSelectedBtn.disabled=true;
-    }else{
-      selectorCount.textContent=`${state.selectedIds.size} seleccionado${state.selectedIds.size===1?'':'s'} (máx. 20)`;
-      addSelectedBtn.disabled=state.selectedIds.size===0;
-    }
-  }
-  function addSelected(){
-    if(state.form.components.length+state.selectedIds.size>20){
-      showToast('No puedes exceder el límite de 20 componentes.');
-      return;
-    }
-    state.selectedIds.forEach(id=>state.form.components.push({catalogId:id,qty:1}));state.dirty=true;closeSelector();render();showToast('Componentes añadidos.');
-  }
-
-  function openDeactivate(id,trigger){
-    const c=comboById(id);if(!c)return;deactivateTargetId=id;state.returnFocus=trigger;document.getElementById('deactivateName').textContent=c.name;confirmDeactivateBtn.disabled=false;confirmDeactivateBtn.textContent='Desactivar combo';deactivateOverlay.classList.add('open');deactivateOverlay.setAttribute('aria-hidden','false');setTimeout(()=>confirmDeactivateBtn.focus(),0);
-  }
-  function closeDeactivate(){deactivateOverlay.classList.remove('open');deactivateOverlay.setAttribute('aria-hidden','true');state.returnFocus?.focus();}
-  function confirmDeactivate(){
-    const c=comboById(deactivateTargetId);if(!c)return;confirmDeactivateBtn.disabled=true;confirmDeactivateBtn.textContent='Desactivando…';
-    setTimeout(()=>{c.status='inactive-manual';closeDeactivate();state.currentComboId=c.id;state.view='detail';render();showToast('Combo desactivado.');},550);
-  }
-
-  function submitForm(){
-    const v=formValidation();
-    if(!v.valid){renderForm();const s=document.getElementById('formErrorSummary');s.classList.add('show');s.focus();return;}
-    state.saving=true;renderForm();
-    setTimeout(()=>{
-      if(state.saveError){
-        state.saveError=false;
-        state.saveErrorShown=true;
-        state.saving=false;
-        renderForm();
-        showToast('No se pudo guardar. Se conservaron tus datos.');
-        return;
-      }
-      state.saveErrorShown=false;
-      if(state.formMode==='edit' && state.currentComboId==='combo-2' && !state.form._conflictResolved){
-        const item=catalogItem('sku-pel');item.price=32.00;state.form._conflictResolved=true;state.saving=false;
-        renderForm(`<h3>Los datos de un componente cambiaron.</h3><p>Pelotas de tenis ahora cuesta ${money(item.price)}. Actualizamos la suma y la disponibilidad con los valores vigentes. Revisa el precio del combo antes de guardar.</p>`);
-        showToast('Se actualizaron datos vigentes.');
-        return;
-      }
-      if(state.formMode==='create'){
-        const id='combo-'+Date.now(); combos.unshift({id,name:state.form.name.trim(),description:state.form.description.trim(),price:Number(state.form.price),status:'active',availabilityStatus:'ok',components:state.form.components.map(c=>({catalogId:c.catalogId,qty:Number(c.qty)}))}); state.currentComboId=id;
-        state.view='detail';state.saving=false;render();showToast('Combo creado.');
-      }else{
-        const c=comboById(state.currentComboId);Object.assign(c,{name:state.form.name.trim(),description:state.form.description.trim(),price:Number(state.form.price),components:state.form.components.map(x=>({catalogId:x.catalogId,qty:Number(x.qty)}))});state.view='detail';state.saving=false;render();showToast('Cambios guardados.');
-      }
-    },650);
-  }
-
-  function bindPage(){
-    app.querySelectorAll('[data-action]').forEach(el=>el.addEventListener('click',e=>{
-      const action=e.currentTarget.dataset.action,id=e.currentTarget.dataset.id;
-      if(action==='create'){resetForm('create');setView('form');}
-      else if(action==='view'){state.currentComboId=id;setView('detail');}
-      else if(action==='edit'){const c=comboById(id);if(c){resetForm('edit',c);setView('form');}}
-      else if(action==='deactivate')openDeactivate(id,e.currentTarget);
-      else if(action==='back-list'){state.queryState='';setView('list');}
-      else if(action==='cancel-form'){state.view=state.formMode==='edit'?'detail':'list';render();focusMain();}
-      else if(action==='add-components')openSelector(e.currentTarget);
-      else if(action==='retry-availability'){const c=comboById(id);if(c){c.availabilityStatus='ok';render();showToast('Disponibilidad actualizada.');}}
-      else if(action==='retry-list'){state.queryState='';state.listLoading=true;render();}
-      else if(action==='safe-back'){showToast('Redirigiendo al catálogo de productos...');}
-      else if(action==='login'){state.queryState='';state.listLoading=true;render();showToast('Sesión restaurada correctamente.');}
-    }));
-
-    const form=document.getElementById('comboForm');
-    if(form){
-      form.addEventListener('submit',e=>{e.preventDefault();submitForm();});
-      const name=document.getElementById('comboName'), desc=document.getElementById('comboDescription'), price=document.getElementById('comboPrice');
-      name?.addEventListener('input',e=>{state.form.name=e.target.value;state.dirty=true;});
-      desc?.addEventListener('input',e=>{state.form.description=e.target.value;state.dirty=true;});
-      price?.addEventListener('input',e=>{state.form.price=e.target.value;state.dirty=true;});
-      [name,desc,price].forEach(el=>el?.addEventListener('blur',()=>renderForm()));
-      app.querySelectorAll('[data-qty-index]').forEach(inp=>inp.addEventListener('change',e=>{const i=Number(e.target.dataset.qtyIndex);state.form.components[i].qty=e.target.value===''?'':Number(e.target.value);state.dirty=true;renderForm();}));
-      app.querySelectorAll('[data-remove-component]').forEach(btn=>btn.addEventListener('click',e=>{state.form.components.splice(Number(e.currentTarget.dataset.removeComponent),1);state.dirty=true;renderForm();}));
-    }
-  }
-
-  componentSearch.addEventListener('input',e=>renderSelectorResults(e.target.value));
-  document.querySelectorAll('[data-close-selector]').forEach(b=>b.addEventListener('click',closeSelector));
-  addSelectedBtn.addEventListener('click',addSelected);
-  document.querySelectorAll('[data-close-deactivate]').forEach(b=>b.addEventListener('click',closeDeactivate));
-  confirmDeactivateBtn.addEventListener('click',confirmDeactivate);
-  [selectorOverlay,deactivateOverlay].forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov){ov===selectorOverlay?closeSelector():closeDeactivate();}}));
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(selectorOverlay.classList.contains('open'))closeSelector();else if(deactivateOverlay.classList.contains('open'))closeDeactivate();}});
-
-  render();
-})();
+ });
+ if(state.view==='form'){
+  const n=document.getElementById('name'),d=document.getElementById('description'),p=document.getElementById('price');
+  if(n)n.oninput=e=>state.form.name=e.target.value;if(d)d.oninput=e=>state.form.description=e.target.value;if(p)p.oninput=e=>state.form.price=e.target.value;
+  app.querySelectorAll('[data-q]').forEach(i=>i.onchange=e=>{state.form.components[Number(e.target.dataset.q)].qty=Number(e.target.value);renderForm()});
+  app.querySelectorAll('[data-remove]').forEach(b=>b.onclick=e=>{state.form.components.splice(Number(e.currentTarget.dataset.remove),1);renderForm()})
+ }
+}
+document.getElementById('search').oninput=e=>renderResults(e.target.value);
+document.getElementById('addSelected').onclick=()=>{state.selected.forEach(id=>{if(!state.form.components.some(x=>x.id===id))state.form.components.push({id,qty:1})});state.selected.clear();closeOverlay('selector');renderForm();notify('Componentes añadidos.')}
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeOverlay(b.dataset.close));
+document.getElementById('doDeactivate').onclick=()=>{const c=combo(state.current);if(c)c.status='inactive';closeOverlay('deactivate');state.view='detail';notify('Combo desactivado.');render()}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.overlay.open').forEach(o=>closeOverlay(o.id))}})
+window.addEventListener('hashchange',render);
+render();
 </script>
 </body>
 </html>

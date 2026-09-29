@@ -2,104 +2,74 @@
 
 **Responsable:** Leonardo Vera Rodríguez  
 **Rama:** vera  
-**Trazabilidad:** HU [HU-014](../hu/HU-014-historial-auditoria-precios.md) | Wireframe [WF-014](../wireframes/flows/WF-014-historial-auditoria-precios.md)
+**Trazabilidad:** HU [HU-014](./hu/HU-014-historial-auditoria-precios.md) | Wireframe [WF-014](./wireframes/flows/WF-014-historial-auditoria-precios.md)
 
 ## 1. Contexto
-En una plataforma de comercio multicanal donde interactúan diversos administradores comerciales, los errores en la asignación de precios o modificaciones no coordinadas conllevan pérdidas de margen considerables o contingencias legales por publicidad engañosa. Para asegurar el control interno, la rendición de cuentas y la detección inmediata de incidencias, se requiere un mecanismo de registro inmutable que documente en tiempo real quién realizó el cambio, cuándo se ejecutó, el valor previo y nuevo, la variación porcentual, el motivo comercial, el canal de origen, el identificador de lote y la dirección IP de procedencia de la petición.
+La plataforma necesita una bitácora inmutable de cada cambio de precio confirmado para trazabilidad, control y análisis posterior.
 
 ## 2. Propósito
-Registrar automáticamente y de forma inmutable cada modificación de precio aplicada a cualquier producto (quién, cuándo, valor anterior, valor nuevo, variación %, motivo, canal e IP), proporcionando a auditores y gestores trazabilidad total, opciones de exportación estructurada y aplicación de una política configurable de retención y archivado.
+Registrar de forma automática quién realizó un cambio, cuándo, precio anterior/nuevo, variación, motivo, canal, lote e información de origen; permitir consulta/exportación y aplicar retención configurable.
 
 ## 3. Alcance
-Incluye:
-- Intercepción y consumo desacoplado de eventos ante actualizaciones individuales o masivas de precios.
-- Captura de contrato de auditoría completo: `id_auditoria`, `sku`, `product_id`, `tipo_precio`, `precio_anterior` (nullable si `tipo_operacion=CREACION`), `precio_nuevo` (nullable si `tipo_operacion=RETIRO_OFERTA`), `variacion_porcentual` (nullable si `tipo_operacion=CREACION|RETIRO_OFERTA`), `tipo_operacion`, `canal_origen`, `motivo_cambio`, `batch_id`, `usuario_id`, `usuario_email`, `ip_origen` y `timestamp` en UTC.
-- Consulta paginada y filtrado del log por SKU, rango de fechas, usuario responsable, canal y lote.
-- Exportación de registros de auditoría en formato CSV (hasta 100,000 filas para análisis masivo) y PDF (hasta 500 filas para reportes ejecutivos de control).
-- Política de ciclo de vida configurable. Para el MVP se conserva como valor inicial 24 meses completos en base operativa y cinco años adicionales en archivo frío, sujeto a validación legal/empresarial antes de producción.
-- Inmutabilidad estricta (patrón Append-Only; prohibición de `PUT`, `PATCH`, `DELETE`).
+- Consumir `pricing.price.changed` después del commit.
+- Persistir contrato completo: `id_auditoria`, `sku`, `product_id`, `tipo_precio`, `precio_anterior`, `precio_nuevo`, `variacion_porcentual`, `tipo_operacion`, `canal_origen`, `motivo_cambio`, `batch_id`, `usuario_id`, `usuario_email`, `ip_origen`, `timestamp`.
+- Filtros y paginación.
+- CSV hasta 100,000 filas.
+- PDF hasta 500 filas.
+- Retención configurable: valores iniciales MVP 24 meses en caliente y 5 años adicionales en archivo.
+- Append-only.
 
 ## 4. Requisitos
 
-### Requisito 1: Registro automático de evento de cambio de precio
-El sistema DEBE consumir de manera asíncrona los eventos de cambio de precio y persistir el registro de auditoría con el contrato completo homologado sin penalizar el flujo de escritura del motor de precios.
+### Requisito 1: Registro asíncrono
+Solo mutaciones persistidas generan `pricing.price.changed`. Auditoría consume el hecho de forma desacoplada y deduplica por identidad del mensaje/evento.
 
-#### Escenario: Registro de auditoría con contrato completo
-- DADO que un usuario comercial con sesión iniciada (`usr_204`, `gestor@tienda.com`), desde la IP "200.48.85.10" y a través del canal "BACKOFFICE", modifica el precio regular del SKU "AD-ZAP-09" de S/ 200.00 a S/ 250.00 con el motivo "Ajuste de margen"
-- CUANDO el microservicio de precios completa la mutación y emite el evento de dominio
-- ENTONCES el suscriptor de auditoría inserta de forma desacoplada un registro con:
-  - `sku: "AD-ZAP-09"`
-  - `precio_anterior: 200.00`
-  - `precio_nuevo: 250.00`
-  - `variacion_porcentual: +25.00`
-  - `motivo_cambio: "Ajuste de margen"`
-  - `canal_origen: "BACKOFFICE"`
-  - `batch_id: null`
-  - `usuario_id: "usr_204"`
-  - `usuario_email: "gestor@tienda.com"`
-  - `ip_origen: "200.48.85.10"`
-  - `timestamp: [timestamp UTC actual]`
-- Y la persistencia no añade más de 50 ms a la respuesta entregada al usuario comercial.
+### Requisito 2: Consulta/exportación
+Filtros: SKU, fechas, usuario, canal y `batch_id`. Orden descendente. CSV asíncrono; PDF máximo 500.
 
-#### Escenario: Omisión de registro ante operación fallida o rechazada
-- DADO que un usuario intenta modificar un precio pero la solicitud es rechazada por regla de negocio (ej. precio negativo o ausencia de motivo)
-- CUANDO el controlador de precios interrumpe la ejecución y no persiste la entidad
-- ENTONCES no se emite ningún evento de cambio de precio y el sistema de auditoría no genera ningún registro, conservando únicamente las mutaciones efectivamente aplicadas.
+La consulta individual por `auditId` devuelve HTTP `404` con `AUDITORIA_PRECIO_NO_ENCONTRADA` cuando el registro no existe.
 
-### Requisito 2: Consulta, filtrado y exportación de la bitácora
-El sistema DEBE proveer endpoints y vistas de consulta para inspeccionar cronológicamente las variaciones de precios y exportar los resultados según el volumen requerido.
+La solicitud de exportación valida la cantidad de registros antes de crear el trabajo:
+- CSV: máximo 100,000 filas;
+- PDF: máximo 500 filas.
 
-#### Escenario: Consulta filtrada multicriterio
-- DADO que existen registros de cambios de precio para el SKU "BALON-FUT-N5"
-- CUANDO el auditor consulta el historial filtrando por SKU "BALON-FUT-N5", rango del último mes y canal "BULK_IMPORT"
-- ENTONCES el sistema entrega la lista paginada ordenada descendentemente (del más reciente al más antiguo) en un tiempo inferior a 800 ms.
+Si el resultado supera el máximo del formato solicitado, responde HTTP `422` con `LIMITE_EXPORTACION_AUDITORIA_EXCEDIDO` y **no crea** `export_id` ni trabajo asíncrono. El límite representa una regla funcional sobre el resultado, no tamaño del request.
 
-#### Escenario: Exportación masiva en formato CSV
-- DADO que un auditor requiere analizar 15,000 cambios de precio ocurridos durante el último semestre
-- CUANDO solicita la exportación en formato CSV aplicando el rango de fechas correspondiente
-- ENTONCES el sistema genera de forma asíncrona un archivo `.csv` con todas las columnas del contrato completo de auditoría y provee un enlace seguro para su descarga.
+### Requisito 3: Inmutabilidad
+No existen operaciones funcionales de edición/borrado. `PUT`, `PATCH` y `DELETE` no forman parte de la superficie válida del recurso histórico.
 
-#### Escenario: Exportación ejecutiva en formato PDF
-- DADO que el auditor requiere presentar un informe de control de un SKU específico que contiene 45 modificaciones de precio
-- CUANDO solicita la exportación en formato PDF con un rango menor o igual a 500 registros
-- ENTONCES el sistema genera un documento PDF formateado, con membrete de control interno, resumen de variaciones y marcas temporales auditadas.
+### Requisito 4: Semántica de valores nulos
+- `CREACION`: `precio_anterior=null`, `variacion_porcentual=null`.
+- `MODIFICACION`: precios anterior/nuevo no nulos y variación calculada.
+- `RETIRO_OFERTA`: `precio_nuevo=null`, `variacion_porcentual=null`.
 
-### Requisito 3: Inmutabilidad estricta y seguridad de acceso
-El sistema DEBE asegurar que los registros de auditoría sean estrictamente de solo lectura y adición (*Append-Only*), impidiendo cualquier actualización o borrado físico/lógico.
+En consulta/exportación:
+- `precio_anterior=null` → `Sin precio anterior`;
+- `precio_nuevo=null` por retiro → `Sin oferta`;
+- variación nula → `No aplicable`.
 
-#### Escenario: Intento de alteración o borrado de un registro
-- DADO que un usuario o proceso intenta invocar los métodos `DELETE`, `PUT` o `PATCH` sobre `/api/v1/auditoria-precios/{id}`
-- CUANDO el servidor recibe la solicitud
-- ENTONCES el sistema deniega la operación con código HTTP 405 (Method Not Allowed) o 403 (Forbidden), garantizando que ningún registro histórico pueda ser alterado o removido.
-
-### Requisito 4: Precio inicial, integridad e idempotencia
-El primer precio regular o primera oferta es `CREACION` con `precio_anterior=null` y variación `null`. Una modificación entre importes existentes es `MODIFICACION` y calcula la variación. El retiro explícito de una oferta usa `RETIRO_OFERTA` con `precio_nuevo=null` y variación `null`, según Requisito 6. `event_id` es único por registro de evento procesado; si llega un duplicado, no se crea otro asiento. Auditoría nunca ejecuta comandos para modificar precios.
+Nunca se representa un valor inexistente como `0`.
 
 ### Requisito 5: Archivo verificable
-La retención usa parámetros `AUDIT_HOT_RETENTION_MONTHS` y `AUDIT_ARCHIVE_RETENTION_YEARS`; para el MVP sus valores iniciales son 24 meses y 5 años. Cada ejecución mensual selecciona únicamente registros que ya cumplieron el período caliente configurado, exporta Parquet, verifica conteo/checksum y recuperabilidad antes de retirar la copia caliente mediante credenciales de mantenimiento aisladas. La conexión habitual de Auditoría conserva permisos INSERT/SELECT y nunca borra ni actualiza asientos; una exportación fallida conserva los registros originales. Cambiar los parámetros requiere decisión administrativa y validación legal cuando corresponda; la especificación no presenta esos valores como obligación normativa universal.
+`AUDIT_HOT_RETENTION_MONTHS` y `AUDIT_ARCHIVE_RETENTION_YEARS` son configuración administrativa. Valores iniciales MVP: 24 meses y 5 años adicionales. Antes de retirar la copia caliente se valida conteo/checksum/recuperabilidad. Fallo conserva originales.
 
-### Requisito 6: Auditar alta y retiro de oferta sin inventar importes
-El alta del **primer** precio regular o de una **nueva** oferta de Pricing registra `tipo_operacion=CREACION`, `precio_anterior=null` y `variacion_porcentual=null`, con `precio_nuevo` positivo. Cuando Pricing retira expresamente una oferta con `accion_precio_oferta=ELIMINAR`, emite `pricing.price.changed` tras el commit con `tipo_precio=OFERTA`, `tipo_operacion=RETIRO_OFERTA`, `precio_anterior` igual a la oferta retirada, `precio_nuevo=null` y `variacion_porcentual=null`: un precio inexistente no equivale a cero y no admite variación porcentual comercial. Toda modificación entre importes existentes utiliza `tipo_operacion=MODIFICACION`, `precio_anterior`/`precio_nuevo` no nulos y variación calculada. La consulta y exportación representan importes nulos como «Sin oferta» o vacío tipado, nunca `0`. Los eventos se deduplican por `event_id` y su auditoría sigue siendo append-only.
+### Requisito 6: Permisos de consulta/exportación
+Los nombres `PRICING_AUDIT_READ` y `PRICING_AUDIT_EXPORT` se conservan como **propuesta interna pendiente de homologación con Seguridad y Usuarios**.
 
-#### Escenario: Retiro explícito de oferta
-- DADO un SKU con `precio_oferta=170` y un cambio autorizado que usa `accion_precio_oferta=ELIMINAR`
-- CUANDO Pricing confirma la retirada
-- ENTONCES Auditoría registra un único evento `OFERTA/RETIRO_OFERTA`, `precio_anterior=170`, `precio_nuevo=null` y variación `null`; no elimina ni modifica registros anteriores.
+Hasta que Seguridad los publique oficialmente:
+- no se presentan como scopes confirmados;
+- la UI solo muestra mensajes genéricos de acceso restringido;
+- la asignación de roles/permisos pertenece a Seguridad.
 
 ## 5. Requisitos no funcionales
-- Rendimiento: La captura y persistencia del log de auditoría no debe añadir más de 50 ms a la operación de precios (arquitectura orientada a eventos mediante el broker acordado y Outbox). La consulta paginada debe responder en menos de 800 ms.
-- Seguridad: Extracción certera de la IP cliente considerando capas de reverse proxy, CDN o API Gateway. La consulta requiere `PRICING_AUDIT_READ` y la exportación `PRICING_AUDIT_EXPORT`, permisos homologados con Seguridad y Usuarios; esta funcionalidad no define por sí misma roles globales como `ADMIN_SISTEMA` o `AUDITOR_COMERCIAL`.
-- Integridad: Conexión de base de datos del servicio de auditoría configurada con permisos exclusivos de `INSERT` y `SELECT` sobre la tabla de auditoría.
-- Política de Retención: se aplican los parámetros configurados de retención; para el MVP, 24 meses calientes y cinco años de archivo son valores iniciales. No se afirma cumplimiento de una ley específica sin validación legal y de privacidad.
+- Consulta <800 ms de referencia.
+- Captura asíncrona sin penalizar flujo de Pricing.
+- DB habitual de Auditoría con INSERT/SELECT.
+- Política de retención no se presenta como obligación legal universal.
+- Datos sensibles como IP/email visibles únicamente a usuarios autorizados.
 
 ## 6. Fuera de alcance
-- Auditoría de inicios de sesión o autenticación de usuarios — responsabilidad del módulo de identidad y seguridad.
-- Auditoría de cambios sobre imágenes, títulos o descripciones de catálogo — responsabilidad de la bitácora de productos.
-- Rollback automático de precios desde la interfaz de auditoría — cualquier reversión debe ejecutarse mediante el flujo formal de gestión de precios.
+Auditoría de autenticación, bitácora de catálogo, rollback de precios y edición/borrado del histórico.
 
 ## Criterio de completitud
-La capacidad se considera correctamente implementada cuando:
-- Todos los requisitos funcionales y de exportación están implementados.
-- El contrato completo de eventos se encuentra homologado y persistido.
-- La política configurable de retención y archivado está definida y los valores del MVP están documentados.
-- No se han incorporado funcionalidades fuera de alcance.
+La bitácora es append-only, representa correctamente valores nulos, exporta dentro de límites, distingue un registro inexistente mediante `AUDITORIA_PRECIO_NO_ENCONTRADA`, rechaza excesos con `LIMITE_EXPORTACION_AUDITORIA_EXCEDIDO` sin crear un trabajo y no presenta permisos de Pricing-Audit como homologados antes de Seguridad.

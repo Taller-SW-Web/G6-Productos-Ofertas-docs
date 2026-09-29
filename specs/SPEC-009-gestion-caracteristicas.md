@@ -2,39 +2,81 @@
 
 **Responsable:** Leonardo Lopez  
 **Rama:** lopez  
-**Trazabilidad:** HU [HU-009](../hu/HU-009-gestion-caracteristicas.md) | Wireframe [WF-009](../wireframes/flows/WF-009-gestion-caracteristicas.md)
+**Trazabilidad:** HU [HU-009](./hu/HU-009-gestion-caracteristicas.md) | Wireframe [WF-009](./wireframes/flows/WF-009-gestion-caracteristicas.md)
 
 ## 1. Contexto
-Los productos requieren atributos como color, talla o material (características) y su clasificación por marcas. Este documento es dueño únicamente de las características y sus valores. La asociación **Tipo de producto–Característica** y Marcas se especifican por separado, evitando confundir categorías de navegación con esquemas de datos.
+Los productos requieren características como color, talla o material. Esta capacidad es propietaria únicamente del catálogo de características y sus valores. La asociación Tipo de Producto–Característica se define en SPEC-010 y Marcas en SPEC-011.
 
 ## 2. Propósito
-Permitir al gestor mantener características tipadas y sus valores, con identidades estables que puedan consumir Asociación y Catálogo.
+Mantener características tipadas y valores con IDs estables para consumo de Asociación y Catálogo.
 
 ## 3. Alcance
-- CRUD de Características (Texto, Número, Lista).
-- Consulta de características y valores por ID y estado para su uso por Asociación y Catálogo.
-
-Fuera de alcance normativo: `SPEC-011-gestion-marcas.md` y `SPEC-010-asociacion-tipo-producto-caracteristica.md` son las únicas fuentes de sus respectivas reglas.
+- CRUD lógico de características `TEXTO`, `NUMERO`, `LISTA`.
+- Consulta por ID/estado.
+- Valores LISTA.
+- Renombrado por ID.
+- Baja lógica segura de valores.
+- Tipo inmutable.
 
 ## 4. Requisitos
 
-### Requisito 1: Creación y límites de características
-El sistema DEBE permitir crear características. Si es `TEXTO`, se aplica `MAX_TEXT_ATTRIBUTE_LENGTH` (valor inicial del MVP: 100 caracteres). Si es `NUMERO`, se exige unidad de medida y se valida que el input final solo acepte formatos numéricos. Estos límites son configuración operativa y no una propiedad conceptual inmutable del dominio.
+### Requisito 1: Creación y límites
+`TEXTO`: `MAX_TEXT_ATTRIBUTE_LENGTH`, valor inicial 100.  
+`NUMERO`: unidad obligatoria y formato numérico.  
+Los límites son configurables.
 
-### Requisito 2: Gestión de valores para tipo LISTA
-El sistema DEBE aplicar `MAX_ACTIVE_LIST_VALUES` a los valores activos de una característica `LISTA` (valor inicial del MVP: 50). El límite se configura para proteger usabilidad y rendimiento y puede evolucionar sin migrar el modelo de datos.
+### Requisito 2: LISTA
+`MAX_ACTIVE_LIST_VALUES`, valor inicial 50 activos. Renombrar un valor conserva su ID y actualiza las consultas actuales tras propagación.
 
-*Impacto al renombrar:* Al renombrar un valor en uso, el nuevo nombre se refleja en las consultas actuales de productos asociados por su ID estable cuando sus proyecciones se actualizan; no se reescriben snapshots de pedidos ni los códigos SKU existentes.
+### Requisito 3: Contratos de consulta/cambios
+La consulta expone ID, tipo, unidad, estado y valores con IDs estables.
 
-### Requisito 3: Contratos de consulta y cambios
-La funcionalidad DEBE exponer identificadores, tipo, unidad cuando aplica, estado y valores permitidos con IDs estables. Renombrar un valor LISTA conserva su ID y publica un evento versionado de cambio para actualizar las proyecciones de Catálogo; no reescribe los valores históricos ni modifica los atributos identificadores inmutables de SKUs ya creados. La creación de nuevos SKUs utiliza el catálogo actualizado.
+Un renombrado confirmado de valor LISTA DEBE publicar el hecho interno versionado `taxonomy.characteristic-value.updated` hacia Catálogo para actualizar sus proyecciones. El payload conserva `caracteristica_id` y `valor_id`, publica la etiqueta vigente (`nombre`), `change_type=RENAMED` y `updated_at`. La identidad del valor no cambia y la entrega se procesa con la política de deduplicación del envelope AsyncAPI.
+
+No se reescriben snapshots históricos ni SKU existentes.
 
 ### Requisito 4: Autoridad normativa
-Las reglas de asociación entre `tipo_producto_id` y características, obligatoriedad y límite operativo configurable se rigen exclusivamente por `SPEC-010-asociacion-tipo-producto-caracteristica.md`; las categorías permanecen como taxonomía de navegación. Las reglas y unicidad de Marcas se rigen por `SPEC-011-gestion-marcas.md`.
+Obligatoriedad y asociación con tipos de producto pertenecen exclusivamente a SPEC-010. Categorías son navegación. Marcas se rige por SPEC-011.
 
-### Requisito 5: Tipo inmutable y baja segura de valores LISTA
-El `tipo` de característica (`TEXTO`, `NUMERO`, `LISTA`) se fija al crear y **no se modifica**; para otro tipo se crea una nueva característica con ID distinto. Los valores LISTA se desactivan lógicamente y conservan ID e histórico. Se rechaza la baja si el valor integra la identidad de cualquier SKU ACTIVO o es usado como valor requerido por un producto ACTIVO; una solicitud de baja inicia verificación asíncrona correlacionada en Catálogo y se mantiene pendiente y no seleccionable para nuevos registros mientras se instala la barrera de escritura, análoga a la baja segura de entidades maestras. Ante error, timeout o falta de confirmación se rechaza la baja y se levanta la barrera; el valor vuelve a su estado anterior. Los productos inactivos y pedidos históricos conservan referencias/snapshots; no se borran ni sustituyen atributos. La creación/activación de productos y variantes no puede vincular valores bajo barrera de desactivación. El cambio de etiqueta de un valor sigue permitido y no equivale a su baja.
+### Requisito 5: Tipo inmutable
+El tipo `TEXTO | NUMERO | LISTA` se fija al crear. Para cambiarlo se crea una nueva característica.
 
-## 5. Requisitos no funcionales
-- Consistencia por ID para permitir renombre de valores sin romper histórico.
-- Respuestas de API < 500 ms al listar características y valores.
+### Requisito 6: Baja segura de un valor LISTA
+La baja es lógica.
+
+Si el valor:
+- integra la identidad de un SKU ACTIVO; o
+- es requerido por un producto ACTIVO,
+
+debe rechazarse.
+
+La solicitud inicia una verificación asíncrona correlacionada con Catálogo y una barrera que evita nuevos vínculos mientras se decide.
+
+Secuencia:
+1. solicitud recibida;
+2. valor queda temporalmente no seleccionable para nuevas altas;
+3. Catálogo verifica uso;
+4. resultado seguro sin uso → baja confirmada;
+5. uso activo → rechazo y restauración del estado previo;
+6. error/timeout/falta de confirmación → no se confirma la baja y el valor vuelve al estado anterior.
+
+**Estado contractual:** la baja segura de `CHARACTERISTIC_VALUE` utiliza el contrato transversal publicado en AsyncAPI: `taxonomy.master.deactivation.check.requested` → `catalog.master.deactivation.checked` → `taxonomy.master.deactivated | taxonomy.master.deactivation.rejected`. El `202 Accepted` representa admisión de la solicitud, no finalización.
+
+### Requisito 7: Baja/reactivación de característica
+La característica puede desactivarse lógicamente y reactivarse sin cambiar su ID. Una característica inactiva no se ofrece para nuevas asociaciones.
+
+## 5. NFR
+- IDs estables.
+- Consulta <500ms de referencia.
+- Fallo cerrado en baja segura.
+- Sin borrado físico.
+
+## 6. Fuera de alcance
+- Marcas.
+- Asociación Tipo Producto–Característica.
+- Captura de valores en un producto.
+- Definir obligatoriedad.
+- Definir unilateralmente nuevos mensajes fuera del AsyncAPI canónico.
+
+## Criterio de completitud
+Se cumplen tipos, límites, IDs estables, tipo inmutable y baja segura asíncrona de valores.

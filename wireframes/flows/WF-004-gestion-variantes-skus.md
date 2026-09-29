@@ -1,720 +1,1211 @@
 # WF-004 — Gestión avanzada de variantes (SKUs)
 
-> **Fuentes normativas:** SPEC individual de esta funcionalidad (`../../specs/SPEC-004-gestion-variantes-skus.md`), HU individual de esta funcionalidad (`../../hu/HU-004-gestion-variantes-skus.md`), `../DESIGN.md` y `../INDEX.md`. Ante contradicción, prevalece SPEC → HU → WF. Los nombres/eventos de Ventas y Postventa son contratos **provisionales no homologados**; el prototipo no debe simular pagos realizados ni confirmaciones externas como si estuvieran implementadas. Las anotaciones, supuestos, preguntas y referencias técnicas permanecen en este documento y no se muestran como elementos de la interfaz simulada.
-
-## 0. Instrucciones para el agente
-
-Genera un wireframe detallado, anotado y navegable para la gestión avanzada de
-variantes y SKUs descrita en este archivo.
-
-Antes de diseñar:
-
-1. Consulta `../../specs/SPEC-004-gestion-variantes-skus.md`.
-2. Consulta `../../hu/HU-004-gestion-variantes-skus.md`.
-3. Consulta `../DESIGN.md`.
-4. Consulta `../INDEX.md` para conservar el ID `WF-004`, el nombre del flujo y
-   las rutas reservadas de sus artefactos.
-5. Consulta `WF-003-gestion-productos-crud.md` para mantener coherencia con el
-   producto padre, su bandera `tiene_variantes` y sus reglas de activación.
-6. Usa este documento como definición específica de composición, navegación,
-   interacción y estados de interfaz.
-
-Prioridad de fuentes:
-
-1. La especificación define las reglas de negocio, restricciones globales y
-   límites de responsabilidad de la gestión de variantes.
-2. La historia de usuario define los criterios de aceptación, escenarios e
-   integraciones esperadas.
-3. Este documento define la composición, navegación y comportamiento visible
-   del flujo.
-4. `DESIGN.md` define la representación visual compartida.
-5. `INDEX.md` define el identificador y la ubicación de los artefactos.
-
-Si las fuentes se contradicen, un contrato no está definido o una decisión no
-puede deducirse de forma inequívoca, no inventes una resolución. Registra la
-cuestión en **Preguntas y decisiones pendientes**, identifica las pantallas
-afectadas y conserva en el prototipo el comportamiento más neutral que no
-contradiga las fuentes. Las transiciones `BORRADOR → ACTIVA`, `ACTIVA → INACTIVA` e `INACTIVA → ACTIVA` están definidas en Specs/HU definitivos. La reactivación exige las mismas validaciones que la activación y conserva el SKU; nunca reactiva automáticamente al producto padre.
-
-Reglas de producción:
-
-- No agregues campos, permisos, endpoints, tipos de atributos, estados ni
-  reglas de validación que no estén documentadas.
-- Este flujo solo aplica a productos existentes con
-  `tiene_variantes = true`. Para un producto simple, muestra el estado
-  informativo definido en `S-01-N`, impide la creación y ofrece volver a
-  `WF-003`.
-- Mantén visible el contexto del producto padre —nombre y `sku_base`— durante
-  listado, creación, detalle, edición y desactivación para evitar operar sobre
-  el producto equivocado.
-- Cada variante recibe un `variant_id` interno generado por Catálogo e inmutable.
-  El SKU comercial de la variante puede ingresarse opcionalmente (para códigos externos/ERP)
-  o generarse automáticamente si se deja vacío, validando siempre su unicidad global.
-  En edición ordinaria, el SKU comercial y los atributos identificadores son inmutables.
-- Cada variante nueva debe definir todos los atributos identificadores
-  configurados para el producto y adjuntar al menos una imagen propia.
-- Impide registrar dos variantes del mismo producto con la misma combinación
-  de atributos identificadores. El error debe distinguirse de una colisión
-  de SKU a nivel global.
-- Una colisión de SKU rechaza toda la creación y no expone la variante,
-  permitiendo al gestor corregir el SKU comercial ingresado o reintentar la generación automática.
-- Los atributos identificadores, el `variant_id` y el SKU son inmutables después de crear la
-  variante. En edición se muestran como información de solo lectura, con la
-  indicación de desactivar la variante y crear otra para corregirlos.
-- Solo permite editar la imagen y los atributos no identificadores
-  documentados. No incluyas controles de estado dentro del formulario de
-  edición.
-- Al reemplazar una imagen, conserva la imagen vigente hasta que el nuevo
-  archivo haya sido validado y el guardado finalice correctamente.
-- Distingue los errores de formato no permitido y tamaño excedido cuando el
-  contrato proporcione ese detalle. Nunca muestres la ruta local completa del
-  archivo.
-- La desactivación es baja lógica y no modifica las demás variantes ni los snapshots de pedidos confirmados. Si se desactiva la **última variante activa**, Catálogo también inactiva el producto padre; de lo contrario el padre conserva su estado.
-- Incluye reactivación de variante INACTIVA mediante validaciones equivalentes a la activación, sin generar un SKU nuevo ni reactivar automáticamente al producto padre.
-- Inventario es el único dueño del stock. No muestres controles editables de
-  existencias ni conviertas un error de consulta en disponibilidad 0.
-- Pricing es el dueño del precio específico por SKU y de la herencia del precio
-  base. El precio, si se representa, es únicamente informativo y de solo
-  lectura.
-- La notificación a Inventario al crear o desactivar es contexto técnico. No la
-  conviertas en una acción manual ni expongas nombres técnicos de eventos al
-  usuario.
-- No incorpores edición avanzada de imágenes, configuración global de nuevos
-  tipos de atributos, ofertas, promociones ni combos.
-- No elijas una librería de UI ni una estrategia CSS.
-- No consumas APIs reales ni uses datos personales o comerciales reales.
-- Usa datos ficticios coherentes entre producto, listado, detalle, formularios
-  y diálogos.
-- Representa todos los estados obligatorios de este documento: carga, datos,
-  vacío inicial, filtros sin resultados, producto incompatible, validación,
-  archivo inválido, duplicado, colisión, error recuperable, sin conexión,
-  permisos, sesión expirada, éxito y conflicto de datos.
-- Numera las anotaciones como `A-01`, `A-02`, `A-03`, etc. Las anotaciones son
-  documentación del wireframe y no deben renderizarse dentro de la interfaz
-  del prototipo HTML.
-- Los supuestos y preguntas abiertas pertenecen a este documento y no deben
-  aparecer como contenido de la interfaz simulada.
-- El comportamiento responsivo debe verificarse redimensionando el viewport;
-  no agregues controles internos para simular escritorio, tablet o móvil.
-- Las rutas, permisos, formatos, tamaños, estados y contratos marcados como
-  propuestos o pendientes no deben presentarse como decisiones confirmadas.
-
-### Formato del entregable
-
-Genera un prototipo navegable con HTML, CSS y JavaScript estáticos:
-
-- Guarda el prototipo en
-  `../prototipos/WF-004-gestion-variantes-skus/index.html`.
-- El punto de entrada debe ser `index.html` y funcionar sin proceso de
-  compilación.
-- Usa rutas y recursos relativos.
-- No uses React ni dependencias del frontend productivo.
-- No requieras conexión a servicios externos ni consumas APIs reales.
-- Usa datos ficticios representativos y consistentes durante toda la
-  navegación.
-- Simula únicamente las interacciones necesarias para validar este flujo.
-- Implementa navegación funcional entre listado, creación, detalle, edición,
-  confirmación de desactivación y estados alternativos.
-- Simula la carga de imagen sin transmitir archivos y sin depender de recursos
-  remotos.
-- Implementa comportamiento responsivo real mediante HTML/CSS para escritorio,
-  tablet y móvil; no incluyas un selector de dispositivo.
-- Aplica el estilo monocromático, sin sombras y de baja fidelidad definido en
-  `DESIGN.md`; usa placeholders en lugar de fotografías finales.
-- No muestres anotaciones `A-xx`, supuestos, preguntas abiertas, endpoints,
-  eventos ni otra documentación interna dentro de la interfaz simulada.
-- El prototipo debe poder recorrerse con teclado y no depender exclusivamente
-  del color, de un icono o de la imagen para identificar una variante.
-
-### Entregables esperados
-
-1. Listado de variantes dentro del contexto de un producto, con filtros por
-   característica y estado.
-2. Estados diferenciados de listado vacío, filtros sin resultados, error de
-   carga y producto con `tiene_variantes = false`.
-3. Formulario de creación con atributos identificadores, imagen propia
-   obligatoria, campo opcional para SKU comercial o generación automática, y asignación de `variant_id` interno.
-4. Resultado exitoso que muestre el `variant_id`, SKU confirmado y el estado de la nueva
-   variante.
-5. Rechazo por combinación duplicada y estado independiente de colisión de SKU.
-6. Detalle de variante con combinación, `variant_id`, SKU comercial, imagen, estado, datos heredados y
-   datos informativos de integraciones cuando correspondan.
-7. Edición restringida a imagen y atributos no identificadores, manteniendo
-   `variant_id`, SKU comercial y atributos identificadores como solo lectura.
-8. Errores de archivo y guardado que conserven los datos y la imagen vigente.
-9. Activación y reactivación con validación; desactivación confirmada con aviso de inactivación del padre si se trata de la última variante activa.
-10. Estados de carga, error, sin conexión, permisos, sesión expirada, éxito y
-    conflicto de datos desactualizados.
-11. Navegación funcional con conservación simulada de filtros, producto padre
-    y retorno de foco/contexto.
-12. Comportamiento responsivo verificable al redimensionar el viewport.
+> **Fuentes normativas:** `././specs/SPEC-004-gestion-variantes-skus.md`, `././hu/HU-004-gestion-variantes-skus.md`, `././api/openapi.yaml`, `././api/catalogo-errores.md`, `./DESIGN.md`, `./INDEX.md` y `WF-003-gestion-productos-crud.md`.
+>
+> Ante contradicción funcional prevalece **SPEC → HU → WF**. Para rutas, requests, responses y códigos HTTP prevalece `api/openapi.yaml`.
+>
+> Esta versión incorpora el **perfil físico por SKU** requerido para la integración con Despacho. Productos y Ofertas administra el peso y dimensiones intrínsecas del SKU; **Despacho administra el empaque, la agrupación, la cantidad de paquetes y el volumen logístico final**.
 
 ---
 
-## 1. Metadatos
+## 0. Instrucciones para el agente
+
+Genera un wireframe detallado, anotado y navegable para la gestión avanzada de variantes y SKUs.
+
+Antes de diseñar:
+
+1. Consulta `././specs/SPEC-004-gestion-variantes-skus.md`.
+2. Consulta `././hu/HU-004-gestion-variantes-skus.md`.
+3. Consulta `././api/openapi.yaml`.
+4. Consulta `././api/catalogo-errores.md`.
+5. Consulta `./DESIGN.md`.
+6. Consulta `./INDEX.md`.
+7. Consulta `WF-003-gestion-productos-crud.md`.
+8. Usa este documento para la composición, navegación, interacción y estados.
+
+### Prioridad documental
+
+1. SPEC-004: reglas de negocio.
+2. HU-004: criterios de aceptación y escenarios.
+3. OpenAPI: interfaz HTTP publicada.
+4. WF-004: comportamiento visible.
+5. DESIGN.md: lenguaje visual.
+
+---
+
+## 0.1. Reglas de producción
+
+- Este flujo aplica únicamente a productos con `tiene_variantes = true`.
+- Para productos simples, mostrar un estado informativo y retornar a WF-003.
+- Mantener visible el contexto del producto padre durante todo el flujo.
+- Cada variante tiene:
+  - una combinación identificadora;
+  - SKU comercial;
+  - imagen propia;
+  - estado;
+  - atributos no identificadores cuando correspondan;
+  - perfil físico opcional mientras esté incompleto.
+- El identificador interno de variante existe, pero **no debe mostrarse al usuario como un dato operativo**, porque no es un código comercial.
+- El SKU sí es visible.
+- El SKU puede ser informado al crear o generado por el sistema.
+- SKU y atributos identificadores son inmutables en edición ordinaria.
+- La imagen puede reemplazarse.
+- Los atributos no identificadores pueden editarse.
+- El perfil físico puede editarse sin cambiar la identidad de la variante.
+- Los campos visibles del perfil físico son:
+  - **Peso (kg)**;
+  - **Largo (cm)**;
+  - **Ancho (cm)**;
+  - **Alto (cm)**.
+- No mostrar nombres técnicos como:
+  - `pesoKg`;
+  - `largoCm`;
+  - `anchoCm`;
+  - `altoCm`;
+  - `variant_id`;
+  - `product_id`;
+  - `tipo_producto_id`;
+  - endpoints;
+  - scopes;
+  - códigos técnicos de Seguridad como `TOKEN_INVALIDO` o `SCOPE_INSUFICIENTE`;
+  - nombres de eventos.
+- No mostrar controles de:
+  - stock;
+  - reservas;
+  - consumo;
+  - precio;
+  - empaque.
+- Disponibilidad y precio, si se muestran, son informativos y de solo lectura.
+- No mostrar `tipoEmpaque`, cantidad de paquetes ni dimensiones finales de envío.
+- No convertir la consulta de Despacho en una acción manual del gestor.
+- No usar fotografías reales; usar placeholders.
+- No elegir librería de UI ni estrategia CSS.
+- No consumir APIs reales.
+- Las anotaciones A-xx pertenecen solo a esta documentación.
+- Aplicar estrictamente DESIGN.md:
+  - escala de grises;
+  - sin sombras;
+  - bordes;
+  - responsive;
+  - accesibilidad;
+  - mínimo 44×44 px para controles táctiles.
+
+---
+
+## 0.2. Formato del prototipo
+
+El prototipo debe:
+
+- guardarse en `./prototipos/WF-004-gestion-variantes-skus/index.html`;
+- usar `index.html` como entrada;
+- funcionar sin compilación;
+- utilizar HTML, CSS y JavaScript estáticos;
+- no utilizar React;
+- no depender de servicios externos;
+- simular carga de imagen;
+- permitir recorrer listado, creación, detalle, edición, activación/reactivación y desactivación;
+- representar validaciones físicas;
+- ser usable desde 320 px;
+- conservar contexto y filtros al navegar.
+
+---
+
+# 1. Metadatos
 
 | Campo | Valor |
 |---|---|
-| ID del wireframe | `WF-004` |
-| Nombre del flujo | Gestión avanzada de variantes (SKUs) |
-| Versión | 0.1 |
-| Estado | Borrador |
+| ID | `WF-004` |
+| Nombre | Gestión avanzada de variantes (SKUs) |
+| Versión | **0.6** |
+| Estado | Actualizado |
 | Responsable | Gabriel Poma Gutierrez |
 | Rama | `poma` |
-| Fecha | 2026-09-17 |
-| Última actualización | 2026-09-18 |
+| Fecha inicial | 2026-09-17 |
+| Última actualización | 2026-09-28 |
 
-## 2. Trazabilidad
+`WF-004` está confirmado en `wireframes/INDEX.md`.
 
-| Fuente | Identificador o sección | Qué aporta al flujo |
-|---|---|---|
-| [`SPEC-004-gestion-variantes-skus.md`](../../specs/SPEC-004-gestion-variantes-skus.md) | Requisitos 1–5; secciones 5 y 6 | Creación, variant_id, SKU, imagen, edición, consulta y baja lógica |
-| [`HU-004-gestion-variantes-skus.md`](../../hu/HU-004-gestion-variantes-skus.md) | CA-01–CA-14; escenarios 1–10 | Permisos, integración y resultados esperados |
-| [`DESIGN.md`](../DESIGN.md) | Layout, componentes, contraste y accesibilidad | Lenguaje visual neutral |
-| [`INDEX.md`](../INDEX.md) | Fila WF-004 | ID, nombre, responsable y rutas reservadas |
-| [`WF-003`](WF-003-gestion-productos-crud.md) | Detalle y activación del producto padre | Entrada y dependencia del ciclo de vida |
+---
 
-### Funcionalidades incluidas
+# 2. Objetivo del flujo
 
-- Consultar variantes activas, inactivas y en borrador de un producto, con filtros por característica o estado.
-- Crear una variante con atributos identificadores, imagen propia, `variant_id` interno y SKU comercial opcional/generado.
-- Mostrar el `variant_id` y el SKU comercial confirmado por el sistema.
-- Editar imagen y atributos no identificadores sin alterar el `variant_id` ni el SKU.
-- Desactivar una variante de forma independiente y conservarla para historial.
-- Comunicar que Inventario inicializa stock en 0 y que Pricing puede definir un precio, sin ofrecer edición local.
+Permitir que el gestor comercial pueda:
 
-### Fuera de alcance
+1. consultar las variantes de un producto;
+2. crear una nueva combinación vendible;
+3. mantener su imagen;
+4. mantener atributos no identificadores;
+5. registrar y corregir peso y dimensiones;
+6. activar, reactivar o desactivar la variante;
+7. comprender qué datos pertenecen a Catálogo y cuáles son administrados por otros componentes.
 
-- Productos con `tiene_variantes = false`.
-- Modificación de `variant_id`, SKU y atributos identificadores en variantes ya publicadas.
-- Gestión, cálculo o ajuste de stock; definición o actualización de precios.
-- Parametrización avanzada de nuevos tipos globales de atributos.
-- Edición o procesamiento de imágenes, ofertas, promociones y combos.
-- Eliminación física de variantes. La reactivación sí está en alcance y conserva el SKU.
+El usuario no necesita conocer la identidad técnica interna utilizada por backend.
 
-## 3. Usuario objetivo
+---
+
+# 3. Usuario objetivo
 
 | Aspecto | Definición |
 |---|---|
 | Persona | Gestor comercial |
-| Rol en el sistema | Administrador de variantes vendibles del catálogo |
+| Contexto | Backoffice del módulo Productos y Ofertas |
 | Nivel técnico | Intermedio |
-| Contexto de uso | Backoffice web, normalmente desde el detalle de un producto |
-| Necesidad principal | Definir combinaciones vendibles exactas y mantener su representación |
-| Permisos relevantes | Consultar según autorización; crear, editar y desactivar solo con permisos correspondientes |
-| Dispositivo principal | Escritorio; tablet y móvil como soporte |
+| Necesidad | Mantener variantes vendibles correctamente identificadas y descritas |
+| Operaciones | Crear, consultar, editar, activar/reactivar, desactivar |
+| No administra | Stock, reservas, precios, empaque |
+| Dispositivo principal | Escritorio |
+| Secundarios | Tablet y móvil para consulta/edición puntual |
 
-## 4. Objetivo del flujo
+---
 
-**El usuario debe poder** consultar, crear, actualizar y desactivar variantes de un producto habilitado **para** ofrecer en los canales una combinación exacta, identificada por un `variant_id` interno, un SKU único y una imagen propia.
+# 4. Alcance visible
 
-### Resultado exitoso
+Incluye:
 
-La variante se guarda asociada al producto con combinación única, `variant_id` interno generado, SKU comercial validado o generado, imagen y estado. En creación queda en `Borrador`, se notifica a Inventario para inicializar stock en 0 y la operación queda trazable. Las ediciones preservan SKU y atributos identificadores.
+- listado de variantes;
+- filtros;
+- creación;
+- SKU opcional/autogenerado;
+- combinación identificadora;
+- imagen;
+- atributos no identificadores;
+- peso;
+- dimensiones;
+- detalle;
+- edición;
+- activación/reactivación;
+- desactivación;
+- estados de error y permisos.
 
-### Indicadores de finalización
+Fuera de alcance:
 
-- Confirmación que incluye el SKU generado/asignado o la operación realizada.
-- Listado y detalle actualizados sin perder filtros ni producto padre.
-- La variante desactivada permanece visible administrativamente con estado `Inactiva`.
-- Los fallos conservan el formulario y la imagen anterior cuando corresponda.
+- productos simples;
+- edición de stock;
+- edición de precio;
+- promociones;
+- combos;
+- reservas;
+- pedidos;
+- empaque;
+- cantidad de paquetes;
+- volumen final del despacho;
+- rutas o capacidades de transporte.
 
-## 5. Precondiciones y disparador
+---
 
-### Precondiciones
+# 5. Precondiciones
 
-- Sesión autenticada y permiso para la acción.
-- Producto existente, en borrador o activo, con `tiene_variantes = true`.
-- `sku_base` y características identificadoras disponibles para generar o validar el SKU.
-- Servicio de imágenes disponible para crear o reemplazar una imagen.
+- Sesión válida.
+- Permisos de gestión de variantes.
+- Producto existente.
+- Producto con variantes habilitadas.
+- Características identificadoras configuradas antes de la primera variante.
+- Producto con contexto suficiente para la creación.
+- Catálogos auxiliares disponibles.
 
-### Puntos de entrada
+---
 
-- Desde el detalle WF-003 mediante **Gestionar variantes**.
-- Ruta propuesta: `/productos/:productoId/variantes`.
-- Creación propuesta: `/productos/:productoId/variantes/nueva`.
-- Detalle/edición propuesta: `/productos/:productoId/variantes/:varianteId`.
-- Se conserva siempre la identidad y el contexto del producto padre.
+# 6. Puntos de entrada
 
-### Salidas del flujo
+Desde WF-003:
 
-| Resultado | Destino o comportamiento |
-|---|---|
-| Creación exitosa | Detalle o listado con `variant_id`, SKU comercial y confirmación |
-| Edición exitosa | Detalle actualizado sin cambio de SKU ni variant_id |
-| Desactivación exitosa | Listado/detalle con estado Inactiva |
-| Cancelación | Retorno al origen; confirma descarte si hubo cambios |
-| Producto simple | Explicación y retorno a WF-003 |
-| Error recuperable | Conserva datos y permite corregir/reintentar |
-| Error no recuperable | Retorno seguro al detalle del producto |
+```text
+Detalle del producto
+    -> Gestionar variantes
+```
 
-## 6. Secuencia principal
+Rutas de interfaz propuestas:
 
-### Flujo A — Consultar variantes
+```text
+/productos/:productoId/variantes
+/productos/:productoId/variantes/nueva
+/productos/:productoId/variantes/:variante
+```
 
-1. El usuario abre la gestión desde un producto con variantes.
-2. El sistema muestra contexto del producto y carga todas sus variantes.
-3. El usuario filtra por característica identificadora o estado.
-4. El sistema muestra SKU, combinación, imagen y estado de cada resultado.
-5. El usuario abre una variante o inicia una nueva.
+Estas rutas son de frontend y no sustituyen al contrato REST.
 
-### Flujo B — Crear variante
+---
 
-1. El usuario selecciona **Nueva variante**.
-2. El sistema muestra el producto y los atributos identificadores configurados.
-3. El usuario elige un valor para cada atributo identificador, adjunta una imagen propia y opcionalmente puede ingresar un SKU comercial.
-4. El sistema valida presencia, archivo, unicidad de la combinación y valida o genera el SKU comercial, asignando el `variant_id` interno.
-5. Guarda la variante como `Borrador`, notifica a Inventario y confirma con el SKU asignado.
+# 7. Inventario de pantallas
 
-### Flujo C — Editar variante
-
-1. El usuario abre el detalle y selecciona **Editar**.
-2. SKU y atributos identificadores aparecen solo lectura.
-3. El usuario modifica la imagen o atributos no identificadores.
-4. El sistema valida los cambios y guarda sin alterar el SKU.
-5. La interfaz confirma y actualiza el detalle.
-
-### Flujo D — Activar o reactivar variante
-
-1. El gestor abre una variante BORRADOR o INACTIVA y selecciona Activar o Reactivar.
-2. El sistema comprueba SKU/atributos/imagen, categoría y marca activas del padre, precio confirmado en Pricing y registro de inventario inicializado.
-3. Si la preparación está completa, confirma ACTIVA sin alterar SKU; **no activa ni reactiva automáticamente el producto padre**.
-4. Si falta preparación, conserva el estado anterior e informa condiciones pendientes.
-
-### Flujo E — Desactivar variante
-
-1. El usuario selecciona **Desactivar** sobre una variante activa.
-2. Un diálogo aclara que no altera otras variantes ni pedidos históricos; si es la última variante activa, el producto padre también quedará inactivo.
-3. El usuario confirma.
-4. El sistema marca la variante como `Inactiva`; si era la última activa, inactiva también el producto padre.
-5. La interfaz actualiza ambos estados y conserva el historial de pedidos.
-
-### Flujos alternativos
-
-| ID | Condición | Comportamiento esperado | Retorno |
+| ID | Pantalla / variante | Propósito | Obligatoria |
 |---|---|---|---|
-| `ALT-01` | Producto con `tiene_variantes = false` | Explica que no maneja variantes y enlaza a Gestión de Productos/Inventario | WF-003 |
-| `ALT-02` | Sin variantes registradas | Lista vacía válida; orienta a crear la primera | Flujo B |
-| `ALT-03` | Combinación duplicada | Rechaza y señala los atributos que ya existen | Flujo B, paso 3 |
-| `ALT-04` | Sin imagen | Bloquea guardado y solicita al menos una imagen | Flujo B, paso 3 |
-| `ALT-05` | Imagen inválida | Explica formato o tamaño; conserva imagen previa al editar | Flujo B/C |
-| `ALT-06` | Colisión del SKU generado | No crea ni expone variante; mensaje seguro y referencia de soporte si existe | Flujo B |
-| `ALT-07` | Intento de editar atributo identificador | Campo bloqueado; indica desactivar y crear una nueva | Flujo C |
-| `ALT-08` | Usuario sin permiso | Rechaza sin cambios | Ubicación permitida |
-| `ALT-09` | Dato desactualizado | Ofrece recargar antes de guardar o desactivar | Pantalla actual |
+| `S-01` | Variantes del producto | Consultar y filtrar | Sí |
+| `S-01-L` | Cargando | Estado inicial | Sí |
+| `S-01-V` | Sin variantes | Vacío válido | Sí |
+| `S-01-F` | Sin resultados | Filtros sin coincidencias | Sí |
+| `S-01-E` | Error de consulta | Recuperación | Sí |
+| `S-01-N` | Producto simple | Bloqueo de flujo | Sí |
+| `S-02` | Crear variante | Alta de combinación | Sí |
+| `S-02-D` | Duplicado / colisión | Conflicto recuperable | Sí |
+| `S-02-P` | Datos físicos incompletos | Advertencia no bloqueante | Sí |
+| `S-03` | Detalle de variante | Consulta completa | Sí |
+| `S-04` | Editar variante | Imagen, atributos y perfil físico | Sí |
+| `S-04-E` | Error de edición | Recuperación | Sí |
+| `S-05` | Desactivar variante | Confirmación | Sí |
+| `S-06` | Activar / reactivar | Validar preparación | Sí |
+| `S-07` | Sin permisos / sesión | Seguridad | Sí |
 
-## 7. Inventario de pantallas y variantes
+---
 
-| ID | Pantalla o variante | Propósito | Presentación | Obligatoria |
-|---|---|---|---|---|
-| `S-01` | Variantes del producto | Consultar, filtrar y acceder a acciones | Ruta propuesta | Sí |
-| `S-01-E` | Vacío, sin resultados o error | Distinguir ausencia, filtros y fallo | Variante de S-01 | Sí |
-| `S-01-N` | Producto sin variantes habilitadas | Impedir uso fuera de alcance | Bloqueo informativo | Sí |
-| `S-02` | Crear variante | Capturar combinación e imagen | Ruta o panel dedicado | Sí |
-| `S-02-D` | Duplicado o colisión | Recuperar de conflicto de combinación/SKU | Variante de S-02 | Sí |
-| `S-03` | Detalle de variante | Mostrar identidad, imagen, estado y herencia | Ruta propuesta | Sí |
-| `S-04` | Editar variante | Modificar solo datos permitidos | Ruta o modo de S-03 | Sí |
-| `S-04-E` | Imagen o guardado inválido | Conservar datos e imagen previa | Variante de S-04 | Sí |
-| `S-05` | Confirmar desactivación | Evitar baja accidental | Diálogo modal | Sí |
-| `S-06` | Activar o reactivar | Validar preparación de borrador/inactiva antes de cambio a ACTIVA | Diálogo/panel | Sí |
-
-## 8. Mapa de navegación
+# 8. Mapa de navegación
 
 ```mermaid
 flowchart LR
-  P[WF-003 Detalle producto] -->|Gestionar variantes| L[S-01 Listado]
-  L -->|Nueva variante| C[S-02 Crear]
-  L -->|Abrir| D[S-03 Detalle]
-  C -->|Guardar| D
-  C -->|Cancelar| L
-  D -->|Editar| E[S-04 Editar]
-  E -->|Guardar| D
-  D -->|Activar o Reactivar| A[S-06 Validación y confirmación]
-  A -->|Éxito o rechazo| D
-  D -->|Desactivar| X[S-05 Confirmación]
-  X -->|Confirmar| D
-  X -->|Cancelar| D
-  L -->|Volver al producto| P
+    P["WF-003 Producto"]
+    L["S-01 Variantes"]
+    C["S-02 Crear"]
+    D["S-03 Detalle"]
+    E["S-04 Editar"]
+    X["S-05 Desactivar"]
+    A["S-06 Activar / Reactivar"]
+
+    P -->|"Gestionar variantes"| L
+    L -->|"Nueva variante"| C
+    C -->|"Crear"| D
+    C -->|"Cancelar"| L
+
+    L -->|"Abrir variante"| D
+    D -->|"Editar"| E
+    E -->|"Guardar"| D
+    E -->|"Cancelar"| D
+
+    D -->|"Activar / Reactivar"| A
+    A -->|"Confirmar / Volver"| D
+
+    D -->|"Desactivar"| X
+    X -->|"Confirmar / Cancelar"| D
+
+    L -->|"Volver al producto"| P
 ```
 
-## 9. Especificación por pantalla
+---
 
-### `S-01` — Variantes del producto
+# 9. Flujo A — Consultar variantes
 
-#### Propósito y jerarquía
+1. El usuario entra desde un producto.
+2. S-01 conserva nombre y SKU base del producto.
+3. Se muestran variantes registradas.
+4. Se puede filtrar por:
+   - atributo identificador;
+   - estado.
+5. Cada variante muestra:
+   - SKU;
+   - combinación;
+   - estado;
+   - imagen placeholder;
+   - resumen del perfil físico.
+6. El usuario puede:
+   - abrir detalle;
+   - crear una variante.
 
-1. **Primario:** producto padre, cantidad de variantes y **Nueva variante**.
-2. **Secundario:** filtros por característica y estado; listado de variantes.
-3. **Terciario:** reglas de activación del producto y acciones por fila.
+---
 
-#### Regiones y componentes
+# 10. S-01 — Variantes del producto
 
-| Región | Componente | Contenido | Comportamiento |
-|---|---|---|---|
-| Contexto | Resumen del producto | Nombre, `sku_base`, estado | Enlace de retorno a WF-003 |
-| Encabezado | Título + acción | Variantes; Nueva variante | Acción condicionada por permiso |
-| Filtros | Selectores | Características configuradas y estado | Actualizan resultados |
-| Resultados | Tabla/listado | Imagen, combinación, SKU, estado | Fila abre detalle |
-| Aviso | Mensaje contextual | Condición de activación del producto | Aparece si no hay variante activa válida |
+## 10.1. Jerarquía
 
-#### Datos mostrados
+1. Producto padre.
+2. Acción **Nueva variante**.
+3. Filtros.
+4. Listado.
+5. Estado operativo.
 
-| Dato | Fuente | Formato | Ausencia |
-|---|---|---|---|
-| Imagen | Variante | Miniatura/placeholders en wireframe | “Sin imagen” y estado inválido, si dato heredado inconsistente |
-| Combinación | Atributos identificadores | Etiqueta: valor | No aplica |
-| `variant_id` | Catálogo | Identificador interno | No aplica |
-| SKU | SKU comercial | Monoespaciado, solo lectura | “Pendiente” solo durante creación no confirmada |
-| Estado | Variante | Borrador/Activa/Inactiva | No aplica |
-| Disponibilidad | Inventario, si se consulta | Texto informativo | “No disponible para consulta”; nunca asumir 0 |
+---
 
-#### Acciones
+## 10.2. Encabezado
 
-| Prioridad | Acción | Disponibilidad | Resultado |
-|---|---|---|---|
-| Primaria | Nueva variante | Producto compatible + permiso | S-02 |
-| Secundaria | Ver / Editar | Según permiso | S-03/S-04 |
-| Destructiva | Desactivar | Solo variante activa + permiso | S-05 |
+Contenido visible:
 
-#### Navegación y foco
+```text
+Variantes del producto
 
-- Foco inicial en el título; anunciar cantidad al cambiar filtros.
-- Al volver del detalle, restaurar filtros, posición y fila.
-- Imagen no es el único enlace ni la única identificación de la variante.
+Zapatillas Running ProSpeed X
+SKU base: ZAP-PSX
 
-#### Anotaciones
+[Nueva variante]
+```
 
-| ID | Elemento | Anotación |
+No mostrar IDs internos.
+
+---
+
+## 10.3. Filtros
+
+- Estado:
+  - Todos;
+  - Borrador;
+  - Activa;
+  - Inactiva.
+- Características identificadoras según producto.
+- Búsqueda por SKU.
+
+---
+
+## 10.4. Listado
+
+En escritorio:
+
+| Columna | Contenido |
+|---|---|
+| Variante | Imagen placeholder + combinación |
+| SKU | Código comercial |
+| Estado | Borrador / Activa / Inactiva |
+| Datos físicos | Completo / Incompleto / Sin registrar |
+| Acción | Ver detalle |
+
+No se muestran:
+
+- stock;
+- precio editable;
+- empaque;
+- IDs internos.
+
+---
+
+## 10.5. Datos físicos en listado
+
+Mostrar únicamente un resumen de estado:
+
+```text
+Completo
+Incompleto
+Sin registrar
+```
+
+No llenar la tabla con cuatro medidas si eso perjudica la lectura.
+
+El detalle de valores vive en S-03.
+
+---
+
+## 10.6. Anotaciones
+
+| ID | Elemento | Regla |
 |---|---|---|
-| `A-01` | Contexto del producto | Evita crear una variante en el producto equivocado |
-| `A-02` | Nueva variante | Solo para `tiene_variantes = true` y usuario autorizado |
-| `A-03` | SKU / variant_id | `variant_id` interno inmutable; SKU comercial único asignado o generado |
-| `A-04` | Disponibilidad | Es propiedad de Inventario; fallo de consulta no equivale a stock 0 |
-| `A-05` | Filtros | Característica y estado están confirmados; no inventar otros |
-| `A-06` | Estado | Debe expresarse con texto y no solo con color |
+| A-01 | Producto padre | Mantener siempre contexto |
+| A-02 | SKU | Código comercial visible |
+| A-03 | Combinación | Define la identidad comercial |
+| A-04 | Datos físicos | Resumen del perfil, no empaque |
+| A-05 | Estado | No depende del color |
 
-### `S-01-E` — Vacío, sin resultados o error
+---
 
-| Variante | Mensaje | Acción primaria |
+# 11. Estados alternativos de S-01
+
+## S-01-V — Sin variantes
+
+Copy:
+
+> Este producto todavía no tiene variantes.
+
+Acción:
+
+```text
+Crear primera variante
+```
+
+Añadir:
+
+> El producto necesitará al menos una variante activa para ofrecerse mediante sus variantes.
+
+---
+
+## S-01-F — Sin resultados
+
+Copy:
+
+> No se encontraron variantes con los filtros aplicados.
+
+Acción:
+
+```text
+Limpiar filtros
+```
+
+---
+
+## S-01-E — Error
+
+Copy:
+
+> No pudimos cargar las variantes. Intenta nuevamente.
+
+Acción:
+
+```text
+Reintentar
+```
+
+---
+
+## S-01-N — Producto simple
+
+Título:
+
+```text
+Este producto no maneja variantes
+```
+
+Texto:
+
+> Este producto se vende directamente mediante su SKU principal. Vuelve al producto para administrar su información.
+
+Acción:
+
+```text
+Volver al producto
+```
+
+No mostrar **Nueva variante**.
+
+---
+
+# 12. Flujo B — Crear variante
+
+1. El usuario pulsa **Nueva variante**.
+2. S-02 muestra contexto del producto.
+3. Selecciona un valor para cada característica identificadora.
+4. Agrega imagen propia.
+5. Opcionalmente ingresa SKU comercial.
+6. Puede registrar el perfil físico.
+7. Guarda.
+8. Catálogo valida combinación y SKU.
+9. La variante se crea en `BORRADOR`.
+10. Se muestra confirmación y detalle.
+
+---
+
+# 13. S-02 — Crear variante
+
+## 13.1. Secciones
+
+```text
+1. Identidad de la variante
+2. Imagen
+3. Datos adicionales
+4. Datos físicos para despacho
+5. SKU comercial
+6. Acciones
+```
+
+---
+
+## 13.2. Identidad
+
+Un selector por cada característica identificadora configurada.
+
+Ejemplo:
+
+```text
+Talla
+[42]
+
+Color
+[Negro]
+```
+
+Texto auxiliar:
+
+> Estos valores identifican la variante y no podrán modificarse después de crearla.
+
+---
+
+## 13.3. Imagen
+
+- placeholder;
+- seleccionar archivo;
+- previsualización simulada;
+- reemplazar antes de guardar;
+- error de archivo.
+
+Copy:
+
+```text
+Imagen de la variante
+```
+
+No mostrar ruta local completa.
+
+---
+
+## 13.4. SKU
+
+Etiqueta:
+
+```text
+SKU comercial
+```
+
+Placeholder:
+
+```text
+Opcional
+```
+
+Ayuda:
+
+> Ingresa un SKU comercial o déjalo vacío para que el sistema genere uno.
+
+No mostrar `variant_id`.
+
+---
+
+# 14. Datos físicos en creación
+
+## 14.1. Sección
+
+Título:
+
+```text
+Datos físicos para despacho
+```
+
+Texto auxiliar:
+
+> Registra el peso y las dimensiones propias de esta unidad. El empaque se define posteriormente en el proceso de despacho.
+
+Campos:
+
+| Campo visible | Unidad | Validación |
 |---|---|---|
-| Sin variantes | “Este producto todavía no tiene variantes.” | Crear primera variante |
-| Sin resultados | “Ninguna variante coincide con estos filtros.” | Limpiar filtros |
-| Error | “No pudimos cargar las variantes.” | Reintentar |
+| Peso | kg | Mayor que 0 |
+| Largo | cm | Mayor que 0 |
+| Ancho | cm | Mayor que 0 |
+| Alto | cm | Mayor que 0 |
 
-El vacío no es un error, pero debe indicar que el producto no puede activarse hasta contar con al menos una variante activa con SKU e imagen válidos.
+No incluir selector de unidad.
 
-### `S-01-N` — Producto simple
+Las unidades son fijas y visibles junto al campo.
 
-- Título: **Este producto no maneja variantes**.
-- Explica que `tiene_variantes` se fijó al crear y es inmutable.
-- Acción: **Volver al producto**.
-- No mostrar botón de creación ni permitir acceder al formulario por URL directa.
+---
 
-### `S-02` — Crear variante
+## 14.2. Completitud
 
-#### Jerarquía y regiones
+Los datos físicos pueden quedar sin registrar mientras la variante está siendo preparada.
 
-1. Producto padre y reglas de la combinación.
-2. Valores de atributos identificadores.
-3. Imagen propia obligatoria.
-4. Campo opcional para SKU comercial (o indicación de generación automática) y acción **Crear variante**.
+Si el usuario registra solo parte de los datos, mostrar aviso:
 
-| Región | Componente | Contenido | Comportamiento |
-|---|---|---|---|
-| Contexto | Resumen | Nombre y `sku_base` | Solo lectura |
-| Identidad | Selectores | Un valor por atributo identificador configurado | Todos obligatorios; no repetir combinación |
-| Imagen | Selector/carga | Archivo y previsualización | Obligatoria; validación segura |
-| SKU comercial | Campo de texto | Opcional; si está vacío, se generará automáticamente | Valida formato y unicidad global |
-| Acciones | Botones | Crear variante; Cancelar | Bloquea doble envío |
+> Los datos físicos están incompletos. Podrás completar esta información después.
 
-#### Formulario y validaciones
+No inventar:
 
-| Campo | Tipo | Obligatorio | Valor inicial | Validación | Mensaje propuesto |
-|---|---|---|---|---|---|
-| Cada atributo identificador | Selector | Sí | Sin selección | Valor válido; combinación única | “Selecciona un valor para {atributo}.” |
-| Imagen propia | Carga de archivo | Sí | Ninguna | Formato/tamaño/contenido permitidos | “Agrega una imagen válida para esta variante.” |
-| SKU comercial | Texto | No | Vacío | Opcional; unicidad global y formato si se ingresa | “El SKU comercial ingresado ya está en uso.” |
+```text
+0 kg
+0 cm
+```
 
-- La combinación se valida localmente cuando sea posible y se confirma en servidor al guardar.
-- Si no se ingresa SKU comercial, el sistema genera uno único determinista y asigna el `variant_id` interno.
-- Conservar atributos e imagen seleccionada ante errores recuperables, salvo que la seguridad impida conservar el archivo.
-- Advertir antes de salir con cambios sin guardar.
+como valores por defecto.
 
-#### Anotaciones
+No bloquear automáticamente la activación únicamente por este motivo, porque esa regla no está definida en SPEC-004.
 
-| ID | Elemento | Anotación |
+---
+
+## 14.3. Copy prohibido
+
+No mostrar:
+
+```text
+pesoKg
+largoCm
+anchoCm
+altoCm
+perfil SKU
+payload
+Despacho API
+```
+
+Usar lenguaje operativo.
+
+---
+
+## 14.4. Anotaciones
+
+| ID | Elemento | Regla |
 |---|---|---|
-| `A-07` | Atributos identificadores | La combinación define la identidad y será inmutable |
-| `A-08` | Imagen | Es propia de la variante, no sustituye la imagen general del producto |
-| `A-09` | SKU comercial / variant_id | Permite SKU externo opcional o autogeneración; variant_id generado internamente |
-| `A-10` | Crear variante | Al éxito queda en borrador y dispara inicialización de Inventario |
-| `A-11` | Duplicado | La unicidad de combinación se evalúa dentro del mismo producto |
+| A-06 | Peso | Propiedad física propia del SKU |
+| A-07 | Dimensiones | Propiedades intrínsecas, no dimensiones del paquete |
+| A-08 | Unidades | kg y cm fijos |
+| A-09 | Incompleto | No inventar valores |
+| A-10 | Empaque | No pertenece a Productos |
 
-### `S-02-D` — Duplicado o colisión
+---
 
-| Caso | Representación | Recuperación |
+# 15. Validaciones de S-02
+
+| Caso | Mensaje visible |
+|---|---|
+| Valor identificador faltante | “Selecciona un valor para {atributo}.” |
+| Imagen faltante | “Agrega una imagen para esta variante.” |
+| Combinación repetida | “Ya existe una variante con esta combinación.” |
+| SKU duplicado | “El SKU ingresado ya está en uso.” |
+| SKU inválido | “Revisa el formato del SKU.” |
+| Peso <= 0 | “Ingresa un peso mayor que 0.” |
+| Largo <= 0 | “Ingresa un largo mayor que 0.” |
+| Ancho <= 0 | “Ingresa un ancho mayor que 0.” |
+| Alto <= 0 | “Ingresa un alto mayor que 0.” |
+| Perfil parcialmente cargado | Aviso no bloqueante de datos incompletos |
+
+No mostrar códigos internos de error en la interfaz.
+
+---
+
+# 16. S-02-D — Duplicado o colisión
+
+Distinguir:
+
+## Combinación duplicada
+
+> Ya existe una variante con esta combinación.
+
+Resaltar los selectores de identidad.
+
+## SKU duplicado
+
+> El SKU ingresado ya está en uso.
+
+Mantener:
+
+- combinación;
+- imagen;
+- datos físicos;
+- atributos capturados.
+
+Permitir corregir solo el SKU.
+
+---
+
+# 17. Creación exitosa
+
+Después de guardar:
+
+```text
+Variante creada
+
+SKU: ZAP-PSX-42-NEG
+Estado: Borrador
+```
+
+No mostrar el identificador interno.
+
+Acciones:
+
+```text
+Ver variante
+Crear otra variante
+Volver al listado
+```
+
+Si los datos físicos están incompletos, puede mostrarse:
+
+```text
+Datos físicos: Incompletos
+```
+
+como recordatorio operacional, no como error de creación.
+
+---
+
+# 18. S-03 — Detalle de variante
+
+## 18.1. Encabezado
+
+Mostrar:
+
+```text
+Zapatillas Running ProSpeed X
+Talla 42 · Negro
+SKU ZAP-PSX-42-NEG
+Estado: Borrador
+```
+
+Acciones según estado:
+
+```text
+Editar
+Activar
+Reactivar
+Desactivar
+Volver
+```
+
+No mostrar `variant_id`.
+
+---
+
+## 18.2. Secciones
+
+### Identidad
+
+- SKU;
+- Talla;
+- Color;
+- demás identificadores.
+
+Solo lectura.
+
+### Imagen
+
+Placeholder propio.
+
+### Otros atributos
+
+Solo lectura.
+
+### Datos físicos
+
+Mostrar:
+
+```text
+Peso        1.40 kg
+Largo       35 cm
+Ancho       22 cm
+Alto        13 cm
+```
+
+Si está incompleto:
+
+```text
+Datos físicos incompletos
+```
+
+y solo mostrar los valores realmente registrados.
+
+### Información comercial
+
+Opcional, de solo lectura:
+
+- estado;
+- disponibilidad cuando la integración esté disponible;
+- precio cuando corresponda.
+
+No debe poder editarse desde aquí.
+
+---
+
+## 18.3. Explicación logística
+
+Si se necesita ayuda contextual:
+
+> Estas medidas describen el producto. El empaque y las dimensiones finales del envío se definen durante el despacho.
+
+No usar una caja editable ni un campo “Tipo de empaque”.
+
+---
+
+## 18.4. Anotaciones
+
+| ID | Elemento | Regla |
 |---|---|---|
-| Combinación duplicada | Error junto a los atributos y resumen superior | Cambiar combinación o cancelar |
-| Colisión de SKU | Error de unicidad de SKU; permite corregir SKU ingresado o regenerar | Corregir SKU comercial o reintentar generación |
-| Producto desactualizado/inactivo | Aviso de contexto cambiado | Recargar producto y revisar |
+| A-11 | SKU | Identidad comercial |
+| A-12 | Identificadores | Inmutables |
+| A-13 | Datos físicos | Editables sin cambiar identidad |
+| A-14 | Precio | Solo lectura |
+| A-15 | Disponibilidad | Inventario es la fuente |
+| A-16 | Empaque | Fuera del dominio |
 
-### `S-03` — Detalle de variante
+---
 
-#### Regiones y componentes
+# 19. Flujo C — Editar variante
 
-| Región | Contenido | Comportamiento |
+1. Desde S-03 selecciona **Editar**.
+2. S-04 muestra identidad bloqueada.
+3. Puede cambiar:
+   - imagen;
+   - atributos no identificadores;
+   - peso;
+   - dimensiones.
+4. Guarda.
+5. La identidad comercial se conserva.
+6. S-03 refleja los cambios.
+
+---
+
+# 20. S-04 — Editar variante
+
+## 20.1. Datos de solo lectura
+
+Mostrar como texto, no como inputs ambiguamente deshabilitados:
+
+```text
+SKU
+Talla
+Color
+```
+
+Ayuda:
+
+> Para cambiar los datos que identifican esta variante, desactívala y crea una nueva.
+
+---
+
+## 20.2. Datos editables
+
+- imagen;
+- atributos no identificadores;
+- Peso (kg);
+- Largo (cm);
+- Ancho (cm);
+- Alto (cm).
+
+---
+
+## 20.3. Actualización de datos físicos
+
+Al editar:
+
+- conservar el perfil vigente hasta que el guardado tenga éxito;
+- si un valor nuevo es inválido, no destruir el anterior;
+- mostrar error junto al campo;
+- no cambiar SKU.
+
+Ejemplo:
+
+```text
+Peso actual: 1.40 kg
+Nuevo peso: 1.35 kg
+```
+
+Resultado exitoso:
+
+```text
+Datos físicos actualizados
+```
+
+---
+
+# 21. S-04-E — Error de edición
+
+## Archivo inválido
+
+La imagen vigente sigue visible.
+
+## Error físico
+
+Ejemplo:
+
+> El alto debe ser mayor que 0.
+
+Los demás valores no se pierden.
+
+## Fallo de guardado
+
+> No pudimos guardar los cambios. Revisa tu conexión e intenta nuevamente.
+
+No asumir que el cambio se aplicó.
+
+---
+
+# 22. S-06 — Activar o reactivar
+
+Disponible para:
+
+```text
+BORRADOR
+INACTIVA
+```
+
+Mostrar lista de comprobaciones:
+
+- SKU válido;
+- combinación válida;
+- imagen válida;
+- producto padre compatible;
+- precio preparado;
+- inventario inicializado.
+
+El perfil físico puede mostrarse como:
+
+```text
+Datos físicos completos
+```
+
+o:
+
+```text
+Datos físicos pendientes
+```
+
+pero **no debe bloquear la acción por sí solo** en esta versión.
+
+Si el producto padre no está activo:
+
+> La variante puede quedar activa, pero no se ofrecerá para nuevas ventas hasta que el producto padre esté activo.
+
+---
+
+# 23. S-05 — Desactivar variante
+
+Título:
+
+```text
+Desactivar variante ZAP-PSX-42-NEG
+```
+
+Mensaje:
+
+> La variante dejará de estar disponible para nuevas ventas. Su información e historial se conservarán.
+
+Si es la última activa:
+
+> Esta es la última variante activa. Al desactivarla, el producto también quedará inactivo.
+
+Acciones:
+
+```text
+Cancelar
+Desactivar variante
+```
+
+No eliminar perfil físico ni histórico.
+
+---
+
+# 24. Integración con Despacho: impacto visual
+
+La consulta de datos físicos desde Despacho ocurre sistema-a-sistema.
+
+Por ello, WF-004 **no debe** agregar botones como:
+
+```text
+Enviar a despacho
+Consultar despacho
+Calcular empaque
+Calcular volumen
+```
+
+La responsabilidad del gestor termina al mantener correctamente:
+
+```text
+Peso
+Largo
+Ancho
+Alto
+```
+
+---
+
+# 25. Estados de interfaz
+
+| Estado | Representación | Recuperación |
 |---|---|---|
-| Encabezado | `variant_id`, SKU, combinación, estado, acciones | SKU y `variant_id` destacados y copiables |
-| Imagen | Imagen propia | Alternativa textual basada en producto/combinación |
-| Identidad | Atributos identificadores | Solo lectura |
-| Otros atributos | Atributos no identificadores | Solo lectura; editables en S-04 |
-| Herencia | Nombre, categoría y marca del producto | Indica que provienen del padre |
-| Integraciones | Precio/disponibilidad si existen | Solo lectura y con fuente señalada |
-| Metadatos | Creación y última modificación | Prioridad baja |
+| Cargando | Skeleton | Esperar |
+| Con datos | Listado / detalle | Operar |
+| Vacío | CTA de primera variante | Crear |
+| Sin resultados | Mensaje + limpiar filtros | Limpiar |
+| Error de carga | Mensaje + reintentar | Reintentar |
+| Validación | Errores junto a campos | Corregir |
+| Combinación duplicada | Error de identidad | Cambiar combinación |
+| SKU duplicado | Error junto a SKU | Corregir SKU |
+| Imagen inválida | Error específico | Elegir otra |
+| Datos físicos inválidos | Error específico | Corregir |
+| Datos físicos incompletos | Aviso no bloqueante | Completar después |
+| Guardando | Acciones bloqueadas | Esperar |
+| Sin conexión | Guardado no confirmado | Reintentar |
+| Sin permisos | Acceso restringido | Volver |
+| Sesión expirada | Reautenticación | Retornar al contexto |
+| Conflicto | Datos cambiaron | Recargar |
+| Éxito | Confirmación | Continuar |
 
-#### Acciones
+---
 
-| Acción | Disponibilidad | Resultado |
+# 25.1. Sesión y permisos
+
+La interfaz diferencia autenticación de autorización sin exponer códigos técnicos:
+
+| Contrato técnico | Estado visual | Copy |
 |---|---|---|
-| Editar | Permiso correspondiente | S-04 |
-| Activar | Variante en BORRADOR, permiso y preparación comprobable | S-06: confirmación de activación |
-| Reactivar | Variante INACTIVA, permiso y preparación comprobable | S-06: confirmación de reactivación |
-| Desactivar | Variante activa + permiso | S-05 |
-| Volver a variantes | Siempre | S-01 con contexto |
+| `401 TOKEN_INVALIDO` | Sesión no utilizable / expirada | **Tu sesión expiró. Inicia sesión nuevamente para continuar.** |
+| `403 SCOPE_INSUFICIENTE` | Acceso restringido | **No tienes permiso para realizar esta acción.** |
 
-#### Anotaciones
+Reglas:
 
-| ID | Elemento | Anotación |
-|---|---|---|
-| `A-12` | SKU / variant_id | `variant_id` interno y SKU comercial inmutables en edición ordinaria |
-| `A-13` | Atributos identificadores | Para corregirlos se desactiva y crea otra variante |
-| `A-14` | Precio | Pricing puede sobrescribirlo; no se edita aquí |
-| `A-15` | Stock | Inventario es la única fuente; no se edita aquí |
-| `A-16` | Estado inactivo | Conserva registro y puede seguir apareciendo en pedidos históricos |
+- no mostrar `TOKEN_INVALIDO`;
+- no mostrar `SCOPE_INSUFICIENTE`;
+- no mostrar `SIN_AUTORIZACION`;
+- no revelar el permiso/scope exacto faltante;
+- una respuesta 401 no debe presentarse como falta de rol;
+- una respuesta 403 no debe presentarse como sesión expirada;
+- ninguna mutación rechazada debe representarse como exitosa.
 
-### `S-06` — Confirmar activación o reactivación de variante
+El prototipo actual ya representa ambos estados mediante:
 
-- Disponible para variante `BORRADOR` o `INACTIVA` con autorización. Comprobar SKU y atributos identificadores, imagen, categoría y marca activas del padre, precio confirmado y registro SKU inicializado en Inventario.
-- Mostrar SKU generado (solo lectura), producto padre y validaciones pendientes; bloquear Activar si hay dependencias sin confirmar.
-- Acciones **Activar variante** o **Reactivar variante**, según estado, y **Cancelar**. Conservar SKU y mostrar resultado `ACTIVA` solo tras confirmación. Si el padre sigue `BORRADOR` o `INACTIVO`, explicar que todavía no es vendible hasta activar/reactivar al padre por WF-003.
-- Si el servidor rechaza por condiciones cambiantes, conservar estado original (`BORRADOR` o `INACTIVA`) y señalar los motivos.
+```text
+#session-expired
+#no-permission
+```
 
-### `S-04` — Editar variante
+por lo que esta normalización contractual no requiere nuevos controles ni cambios de copy en el HTML.
 
-#### Formulario y comportamiento
+---
 
-- SKU, `variant_id` y atributos identificadores se muestran como información bloqueada, no como controles deshabilitados ambiguos.
-- Solo la imagen y atributos no identificadores documentados son editables.
-- Al sustituir una imagen, conservar la anterior hasta que el guardado nuevo se complete.
-- Si el archivo es inválido o el guardado falla, no eliminar la imagen vigente.
-- No agregar controles de estado; la desactivación usa S-05.
-
-| ID | Elemento | Anotación |
-|---|---|---|
-| `A-17` | Identidad bloqueada | Explica por qué no puede editarse y ofrece el procedimiento correcto |
-| `A-18` | Reemplazo de imagen | La imagen anterior permanece hasta confirmar el cambio |
-| `A-19` | Guardar cambios | Conserva el SKU y registra trazabilidad |
-| `A-20` | Error de archivo | Distingue formato no permitido de tamaño excedido |
-
-### `S-05` — Confirmar desactivación
-
-- Título: **Desactivar variante {SKU}**.
-- Muestra combinación y producto para evitar confusión.
-- Mensaje: “Dejará de estar disponible para nuevas ventas. Las demás variantes y los pedidos confirmados se conservan. Si era la última variante activa, el producto también quedará inactivo.”
-- Si es la última variante activa, añadir advertencia explícita de que el producto padre también quedará inactivo.
-- Acciones: **Cancelar** y **Desactivar variante**.
-- Foco vuelve al botón de origen; doble envío bloqueado.
-
-| ID | Elemento | Anotación |
-|---|---|---|
-| `A-21` | Alcance de baja | Afecta a la variante y al padre únicamente si era la última activa |
-| `A-22` | Historial | No elimina pedidos ni snapshots confirmados |
-| `A-23` | Última variante activa | Advierte que también se inactiva el producto padre |
-| `A-24` | Reactivación | Permitida con mismas validaciones que activación; preserva SKU y no reactiva al padre |
-
-## 10. Estados de interfaz
-
-| Estado | ¿Aplica? | Representación | Recuperación |
-|---|---|---|---|
-| Inicial | Sí | Contexto del producto y listado/formulario | N/A |
-| Cargando inicial | Sí | Estructura reservada | Esperar/reintentar |
-| Actualizando en segundo plano | Sí | Indicador no bloqueante | Mantener datos previos |
-| Con datos | Sí | Variantes y acciones | N/A |
-| Vacío inicial | Sí | Lista vacía válida + CTA | Crear primera variante |
-| Sin resultados por filtros | Sí | Mensaje contextual | Limpiar filtros |
-| Error recuperable | Sí | Mensaje seguro | Reintentar |
-| Error de validación | Sí | Resumen y campos | Corregir sin perder datos |
-| Archivo inválido | Sí | Motivo específico | Elegir otro archivo |
-| Sin conexión | Sí | Guardado no confirmado | Reintentar |
-| Sin permisos | Sí | Explicación segura | Volver |
-| Sesión expirada | Sí | Inicio de sesión | Retornar al contexto |
-| Éxito | Sí | SKU/estado confirmado | N/A |
-| Conflicto/dato desactualizado | Sí | Aviso explícito | Recargar |
-| Producto no compatible | Sí | Bloqueo informativo | Volver a WF-003 |
-
-### Reglas para datos remotos
-
-- Refrescar listado, detalle y resumen del producto tras crear, editar o desactivar.
-- No usar actualización optimista para creación, imagen ni desactivación.
-- Diferenciar error de consulta de Inventario de disponibilidad 0.
-- Preservar filtros y datos capturados tras errores recuperables.
-- No exponer una variante hasta confirmar unicidad y persistencia del SKU.
-
-## 11. Comportamiento responsivo
+# 26. Comportamiento responsive
 
 | Aspecto | Escritorio | Tablet | Móvil |
 |---|---|---|---|
-| Navegación | Breadcrumb/contexto y retorno | Contexto compacto | Retorno y producto siempre identificables |
-| Distribución | Cuadrícula de 12 columnas | Reorganización en bloques | Cuadrícula de 4 columnas y apilado |
-| Listado | Tabla completa | Oculta metadatos secundarios | Tarjetas o desplazamiento accesible |
-| Formulario | Atributos agrupados; imagen lateral posible | Bloques | Una columna |
-| Acciones | Encabezado/pie | Compactas | Mínimo 44×44 px; menú etiquetado para secundarias |
-| Contenido omitido | Ninguno | Timestamps contraíbles | Timestamps contraíbles; nunca SKU, combinación o estado |
+| Grid | 12 columnas | 8 columnas | 4 columnas |
+| Listado | Tabla | Tabla compacta/tarjetas | Tarjetas |
+| Formulario | Secciones de 2–4 columnas | 2 columnas | 1 columna |
+| Perfil físico | 4 campos alineados | 2×2 | Apilados |
+| Imagen | Lateral cuando haya espacio | Superior/lateral | Superior |
+| Acciones | Inline | Compactas | Ancho completo |
+| Modales | Centrados | Centrados | Casi pantalla completa |
 
-### Condiciones críticas
+En móvil nunca ocultar:
 
-- Muchas combinaciones y valores largos sin truncar la identidad esencial.
-- Imagen vertical u horizontal y mensajes largos a 200 % de zoom.
-- Diálogo y selector de archivo utilizables solo con teclado.
+- SKU;
+- combinación;
+- estado.
 
-## 12. Accesibilidad
-
-- Objetivo **WCAG 2.2 AA**, foco visible y orden lógico.
-- Un único `h1`; regiones de contexto, filtros, resultados y principal.
-- Etiquetas persistentes y descripción de que SKU/atributos identificadores son solo lectura.
-- Errores asociados a campos y resumen navegable.
-- Cambios de resultados, carga, subida, éxito y error anunciados.
-- Estados no dependen del color; imagen no es la única identificación.
-- Selector de archivos operable con teclado; no exigir arrastrar y soltar.
-- Imágenes con texto alternativo informativo; placeholders decorativos ignorados.
-- Diálogo con foco contenido y retorno al disparador.
-
-## 13. Tono visual y contenido
-
-- Densidad: media-alta en listado; media en creación y detalle.
-- Sensación: precisa, segura y técnica sin jerga innecesaria.
-- Dominante: combinación + SKU + estado.
-- Discretos: integraciones, ID interno y timestamps.
-- Escala de grises, bordes de 1 px, sin sombras ni fotografía real en el wireframe.
-
-| Contexto | Texto propuesto | Observación |
-|---|---|---|
-| Acción primaria | “Crear variante” | Resultado inequívoco |
-| SKU | “Ingresa un SKU comercial o déjalo vacío para autogeneración.” | SKU opcional en creación |
-| Duplicado | “Ya existe una variante con esta combinación.” | Regla recuperable |
-| Identidad inmutable | “Para cambiar estos valores, desactiva esta variante y crea una nueva.” | Explica procedimiento |
-| Vacío | “Este producto todavía no tiene variantes.” | Ofrece crear la primera |
-| Archivo inválido | “La imagen no cumple el formato o tamaño permitido.” | El detalle exacto debe venir de validación |
-
-## 14. Restricciones técnicas relevantes
-
-- SPA con React, TypeScript, Vite y React Router; preservar `productoId` y contexto.
-- TanStack Query representa carga, caché, revalidación, error y conflicto.
-- React Hook Form y Zod para formulario; no inventar límites no documentados.
-- Carga valida tipo y contenido en cliente como ayuda y siempre en servidor.
-- No prescribir librería de componentes ni estrategia CSS.
-- Interacciones críticas comprobables con React Testing Library y Playwright.
-
-### Dependencias o contratos
-
-| Tipo | Referencia | Impacto visible |
-|---|---|---|
-| API | Producto padre y `tiene_variantes` | Acceso, contexto y bloqueo de incompatibles |
-| API | Listado/CRUD de variantes; rutas por confirmar | Datos, guardado y errores |
-| API | Catálogo de características | Selectores de atributos identificadores/no identificadores |
-| API | Servicio de imagen | Selección, espera y error de archivo |
-| Evento/integración | Inventario: variante creada/desactivada | Confirmación; no edición de stock |
-| Integración | Pricing por SKU | Dato opcional de solo lectura |
-| Permiso | Gestor comercial / permiso por confirmar | Acciones visibles y autorizadas |
-
-## 15. Privacidad, seguridad y acciones sensibles
-
-- Validar contenido real, tipo y tamaño de archivos; no confiar solo en extensión.
-- No mostrar rutas locales completas ni metadatos sensibles del archivo.
-- Crear, editar y desactivar requieren autorización en servidor.
-- Desactivar requiere confirmación; no existe eliminación física.
-- Errores de colisión no exponen detalles internos, stack traces ni reglas explotables.
-- La trazabilidad registra usuario, fecha/hora, cambio y resultado, sin ampliar datos visibles sin contrato.
-
-## 16. Criterios de aceptación del wireframe
-
-- [ ] Solo permite entrar y crear para productos con `tiene_variantes = true`.
-- [ ] Conserva siempre el contexto del producto padre.
-- [ ] Permite consultar y filtrar por característica o estado.
-- [ ] Crear exige valores identificadores e imagen propia.
-- [ ] Asigna `variant_id` interno y permite ingresar SKU comercial opcional o generarlo automáticamente.
-- [ ] Rechaza combinaciones duplicadas dentro del producto.
-- [ ] Representa colisión del SKU sin exponer la variante.
-- [ ] Editar bloquea `variant_id`, SKU comercial y atributos identificadores.
-- [ ] Permite modificar imagen y atributos no identificadores.
-- [ ] Una imagen inválida no elimina la imagen previa.
-- [ ] Desactivar conserva historial e inactiva el padre si se desactiva la última variante activa.
-- [ ] Representa desactivación de última variante → padre INACTIVO; activación y reactivación de variante validadas sin activar el padre automáticamente.
-- [ ] Stock y precio son solo lectura o están ausentes; nunca editables.
-- [ ] Incluye vacío, filtros sin resultados, carga, error, archivo inválido, permisos, sesión y conflicto.
-- [ ] Funciona con teclado, zoom y sin depender del color.
-- [ ] No elige librería UI y es consistente con `DESIGN.md`.
-
-### Cobertura de la historia de usuario
-
-| Criterio HU | Cobertura |
-|---|---|
-| CA-01 | Permisos en S-01–S-06 |
-| CA-02–CA-05 | Creación y conflictos en S-02/S-02-D |
-| CA-06 | Filtros y listado en S-01 |
-| CA-07 | Resultado de creación e integración con Inventario |
-| CA-08 | Avisos de elegibilidad y enlace con WF-003 |
-| CA-09 | Desactivación en S-05 |
-| CA-10 | Solo lectura y procedimiento alternativo en S-03/S-04 |
-| CA-11 | Metadatos y confirmaciones de operación |
-| CA-12–CA-13 | Límites con Pricing y Combos en detalle/alcance |
-| CA-14 | Copy de desactivación y conservación histórica |
-
-## 17. Supuestos
-
-| ID | Supuesto | Motivo | Impacto si es incorrecto | Validar |
-|---|---|---|---|---|
-| `SUP-01` | La gestión de variantes se abre desde el detalle del producto | Dependencia explícita con producto padre | Cambia punto de entrada | Sí |
-| `SUP-02` | La variante nueva queda BORRADOR según Spec y HU | Estados y transición confirmados | Mantener borrador hasta acción de activar | No |
-| `SUP-03` | Precio y disponibilidad pueden mostrarse solo si sus contratos responden | Ayudan al contexto sin transferir propiedad | Pueden omitirse por completo | Sí |
-
-## 18. Preguntas y decisiones pendientes
-
-| ID | Pregunta o decisión | Responsable | Bloquea wireframe | Estado |
-|---|---|---|---|---|
-| `Q-01` | ¿Cuáles son rutas, métodos y esquemas exactos de OpenAPI? | Backend / Arquitectura | No; sí implementación | Abierta |
-| `Q-02` | ¿Qué formatos, tamaño máximo y cantidad de imágenes se permiten? | Producto / Backend | No; sí validación final | Abierta |
-| `Q-03` | Resuelto: antes de la primera variante se selecciona por producto un conjunto no vacío de características LISTA efectivas; desde la primera variante es inmutable. Cada variante aporta valor_id activo para cada característica; otros atributos no identifican el SKU. | Spec/HU Variantes | No | Resuelta |
-| `Q-04` | Resuelto: variante BORRADOR → ACTIVA → INACTIVA; activación por acción explícita con validaciones. | Specs/HU definitivos | No | Resuelta |
-| `Q-05` | Resuelto: se permite reactivar INACTIVA si cumple las validaciones de activación; conserva SKU, padre no se reactiva automáticamente. | Specs/HU definitivos | No | Resuelta |
-| `Q-06` | ¿Qué permisos granulares existen y cómo se informa una colisión interna de SKU? | Seguridad / Backend | No | Abierta |
-| `Q-07` | ¿Cuál es la estrategia de concurrencia para combinaciones y ediciones? | Backend | No; sí conflicto final | Abierta |
-| `D-01` | Selección de librería UI y estrategia CSS | Equipo frontend | No para wireframe; sí implementación | Pendiente |
-
-### Alineación definitiva de Variantes y SKUs
-
-- Incluir en el detalle de variante **acción explícita Activar** para una variante `BORRADOR` que cumpla atributos identificadores válidos y preparación mínima de precio/registro en Inventario; confirmar transición en pantalla sin confundirla con disponibilidad para venta si el padre sigue en `BORRADOR`.
-- Las transiciones normadas son `BORRADOR → ACTIVA`, `ACTIVA → INACTIVA` e `INACTIVA → ACTIVA`; al desactivar la **última variante activa**, el producto padre se inactiva también. Reactivar la variante conserva el SKU y **no** reactiva automáticamente el padre.
-- Al crear variante, Catálogo asigna `variant_id` interno y valida el SKU comercial informado o lo genera desde `sku_base` y atributos identificadores si se deja vacío. En edición ordinaria, el SKU y `variant_id` son inmutables.
-- Disponibilidad es informativa, por SKU, proveniente de Inventario; no editar stock desde Variantes. El producto padre no tiene saldo independiente.
-
-### Configuración de identidad por producto (Q-03 cerrada)
-En la creación del producto con variantes, seleccionar características identificadoras LISTA efectivas del tipo de producto (`tipo_producto_id`) **antes de crear la primera variante**. Una vez creada, esa selección queda bloqueada aunque se desactive la variante. Al crear una variante, mostrar exactamente un selector de `valor_id` por característica elegida; el SKU se genera desde IDs estables y `sku_base`, nunca a partir de textos editables. Si cambió el tipo de producto y quedó inválida la configuración, bloquear creación/activación nueva y mostrar corrección requerida sin reescribir identidades históricas.
-
-## 19. Registro de revisiones
-
-| Versión | Fecha | Autor | Cambio | Aprobado por |
-|---|---|---|---|---|
-| 0.1 | 2026-09-17 | Gabriel Poma Gutierrez | Borrador inicial del flow WF-004 | — |
-| 0.3 | 2026-09-18 | Asistente | Alineación de wireframe con Specs/HU definitivos y contratos externos provisionales; ver registro de cambios. | Pendiente de revisión del equipo |
-
-## Lista de control antes de generar el HTML
-
-- [x] ID y responsable confirmados contra `INDEX.md`.
-- [x] Spec, HU, WF-003 y diseño están trazados.
-- [x] Alcance, pantallas, estados, navegación y responsividad están definidos.
-- [x] Los criterios CA-01–CA-14 tienen cobertura.
-- [x] Supuestos y preguntas están separados de datos confirmados.
-- [ ] Resolver configuración de atributos, estados, contratos, límites y permisos antes de implementar.
+Los cuatro datos físicos pueden agruparse en un bloque expandible en detalle si hace falta, pero deben seguir siendo accesibles.
 
 ---
+
+# 27. Accesibilidad
+
+- WCAG 2.2 AA.
+- Un `h1`.
+- Focus visible.
+- Labels persistentes.
+- Unidades visibles en el label o junto al input.
+- Errores asociados mediante texto.
+- No depender del color para estados.
+- Imagen no debe ser la única forma de reconocer una variante.
+- Diálogos con focus trap y retorno de foco.
+- Selector de archivo operable con teclado.
+- Mensajes de éxito/error anunciados mediante `aria-live`.
+- No usar placeholders como sustituto de labels.
+
+---
+
+# 28. Tono visual
+
+Seguir DESIGN.md:
+
+- fondo blanco;
+- escala neutral;
+- sin sombras;
+- bordes de 1 px;
+- contenedores simples;
+- tipografía Inter/system;
+- SKU puede usar tipografía monoespaciada;
+- datos físicos se presentan como datos operativos, no como una ficha logística compleja.
+
+---
+
+# 29. Microcopy
+
+| Contexto | Texto |
+|---|---|
+| Acción primaria | Crear variante |
+| SKU opcional | Ingresa un SKU comercial o déjalo vacío para que el sistema genere uno. |
+| Identidad | Estos valores identifican la variante y no podrán modificarse después. |
+| Datos físicos | Registra el peso y las dimensiones propias de esta unidad. |
+| Ayuda logística | El empaque se define posteriormente durante el despacho. |
+| Perfil incompleto | Los datos físicos están incompletos. Puedes completarlos después. |
+| Peso inválido | Ingresa un peso mayor que 0. |
+| Dimensión inválida | Ingresa un valor mayor que 0. |
+| Duplicado | Ya existe una variante con esta combinación. |
+| SKU duplicado | El SKU ingresado ya está en uso. |
+| Edición identidad | Para cambiar estos valores, desactiva esta variante y crea una nueva. |
+
+---
+
+# 30. Restricciones técnicas relevantes
+
+Aplicación productiva:
+
+```text
+React
+TypeScript
+Vite
+React Router
+TanStack Query
+React Hook Form
+Zod
+```
+
+El wireframe no prescribe componentes concretos.
+
+Para los campos físicos:
+
+- utilizar tipo numérico;
+- conservar decimales;
+- no convertir unidades en la UI;
+- enviar/recibir conforme al contrato HTTP;
+- validar también en backend.
+
+No usar `float` de manera que introduzca errores de negocio en persistencia.
+
+---
+
+# 31. Dependencias e integración
+
+| Componente | Relación | Impacto en WF |
+|---|---|---|
+| Productos WF-003 | Producto padre | Contexto y acceso |
+| Características | Identificadores | Selectores |
+| Inventario | Inicialización/disponibilidad | Solo lectura; no editar |
+| Pricing | Precio | Solo lectura |
+| Bulk | Creación masiva | Mismas reglas de identidad |
+| Despacho | Consume datos físicos | No genera controles adicionales |
+| Seguridad | 401 `TOKEN_INVALIDO` → sesión; 403 `SCOPE_INSUFICIENTE` → acceso restringido | Códigos técnicos no visibles; mutaciones no autorizadas no se simulan como exitosas |
+
+---
+
+# 32. Cobertura HU-004
+
+| Criterios | Cobertura |
+|---|---|
+| CA-01–CA-06 | Permisos, contexto e identidad en S-01/S-02 |
+| CA-07–CA-13 | SKU, imagen e inmutabilidad en S-02/S-04 |
+| CA-14–CA-19 | Ciclo de vida en S-03/S-05/S-06 |
+| CA-20–CA-21 | Límites con Inventario/Pricing |
+| CA-22–CA-28 | Perfil físico en S-02/S-03/S-04 |
+| CA-29–CA-32 | Delimitación visual con Despacho |
+| CA-33–CA-37 | Trazabilidad, snapshots y Bulk como reglas no visuales |
+| CA-38–CA-40 | Autenticación/autorización y retiro de `SIN_AUTORIZACION` |
+
+---
+
+# 33. Criterios de aceptación del wireframe
+
+- [x] conserva contexto del producto;
+- [x] impide creación en productos simples;
+- [x] permite listar/filtrar variantes;
+- [x] creación usa atributos identificadores;
+- [x] permite SKU opcional/autogenerado;
+- [x] no muestra el identificador interno al usuario;
+- [x] exige imagen;
+- [x] distingue combinación duplicada de SKU duplicado;
+- [x] mantiene identidad inmutable en edición;
+- [x] permite editar imagen y atributos no identificadores;
+- [x] incorpora Peso/Largo/Ancho/Alto;
+- [x] muestra kg y cm;
+- [x] valida valores mayores a cero;
+- [x] contempla datos físicos incompletos sin inventar cero;
+- [x] no convierte perfil físico en requisito automático de activación;
+- [x] no contiene campos de empaque;
+- [x] no permite editar stock ni precio;
+- [x] contempla activar/reactivar/desactivar;
+- [x] contempla errores, permisos y conflictos;
+- [x] diferencia sesión inválida de permisos insuficientes;
+- [x] no muestra códigos técnicos de Seguridad al usuario;
+- [x] cumple responsive;
+- [x] cumple DESIGN.md;
+- [x] no filtra términos técnicos en la interfaz.
+
+---
+
+# 34. Supuestos
+
+| ID | Supuesto | Estado |
+|---|---|---|
+| SUP-01 | Gestión de variantes inicia desde WF-003 | Confirmado por diseño actual |
+| SUP-02 | Nueva variante inicia en BORRADOR | Confirmado |
+| SUP-03 | Perfil físico puede completarse posteriormente | Confirmado por SPEC-004 |
+| SUP-04 | Perfil físico no bloquea activación por sí mismo | Confirmado en SPEC-004 actual |
+| SUP-05 | Los datos físicos son por SKU y no por producto padre | Confirmado |
+| SUP-06 | Despacho define el empaque | Confirmado |
+
+

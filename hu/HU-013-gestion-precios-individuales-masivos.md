@@ -2,123 +2,151 @@
 
 **Responsable:** Leonardo Vera Rodríguez  
 **Rama:** vera  
-**Trazabilidad:** Spec [SPEC-013](../specs/SPEC-013-gestion-precios-individuales-masivos.md) | Flow [WF-013](../wireframes/flows/WF-013-gestion-precios-individuales-masivos.md)
+**Trazabilidad:** Spec [SPEC-013](./specs/SPEC-013-gestion-precios-individuales-masivos.md) | Flow [WF-013](./wireframes/flows/WF-013-gestion-precios-individuales-masivos.md)
 
----
-
-## 1. Historia de Usuario Principal
+## 1. Historia de usuario principal
 
 | Parámetro | Detalle |
-| :--- | :--- |
-| **Rol (Como)** | Gestor Comercial |
-| **Acción (Quiero)** | Actualizar y programar precios regulares y de oferta de productos (individualmente o mediante carga masiva de archivos CSV/XLSX), indicando obligatoriamente el motivo del cambio y consultando precios en fechas históricas |
-| **Beneficio (Para)** | Mantener controlados los precios base y ofertas directas por contexto de venta, garantizando trazabilidad temporal, evitando valores inválidos y reduciendo errores operativos de cambios extraordinarios sin afirmar control de margen cuando no existe información de costo |
+|---|---|
+| **Como** | Gestor Comercial |
+| **Quiero** | Consultar, actualizar y programar precios regulares/ofertas, consultar precios históricos y cargar archivos de precios |
+| **Para** | Mantener precios oficiales consistentes, trazables y vigentes por producto/SKU, tiempo y canal |
 
----
-
-## 2. Criterios de Aceptación
+## 2. Criterios de aceptación
 
 | ID | Criterio |
-| :---: | :--- |
-| **CA-01** | **Seguridad y Permisos:** Los endpoints requieren autenticación y permisos de capacidad (`PRICING_READ`, `PRICING_WRITE`, `PRICING_BULK` según operación). La asignación de esos permisos a roles concretos pertenece a Seguridad y Usuarios. Peticiones no autorizadas responden `401`/`403`. |
-| **CA-02** | **Modelo de Precios y Validaciones:** Cada producto gestiona `precio_regular` y opcionalmente `precio_oferta`. El sistema valida que: (a) el `precio_regular` sea un valor numérico estrictamente mayor a 0.00, y (b) si se define `precio_oferta`, este debe ser estrictamente mayor a 0.00 y menor al `precio_regular` (`precio_oferta < precio_regular`). |
-| **CA-03** | **Actualización Individual y Motivo Obligatorio:** Permite modificar el precio regular u oferta enviando SKU, nuevos valores y el campo obligatorio `motivo_cambio`. Ante datos válidos, persiste los cambios en la tabla operativa, actualiza la fecha de modificación, responde en menos de 300 ms con HTTP `200 OK` y emite el evento asíncrono `pricing.price.changed`. Si falta el motivo, rechaza con HTTP `400 Bad Request`. |
-| **CA-04** | **Programación y alcance:** Cada vigencia define `valid_from`, `valid_until` opcional, moneda y `channel_id` opcional (`null` = precio global). No se admiten intervalos superpuestos para el mismo SKU + canal + moneda + tipo de precio. Una vigencia futura queda `SCHEDULED` y se activa automáticamente cuando corresponde. |
-| **CA-05** | **Consulta de Precio Histórico (As-Of):** Provee el endpoint `GET /api/v1/pricing/skus/{sku}/price?at={timestamp}` y una pantalla administrativa que consume ese contrato para retornar el precio oficial que tenía un SKU en una fecha y hora determinada del pasado basándose en la tabla de vigencias temporales. La consulta es de solo lectura. |
-| **CA-06** | **Carga Masiva Atómica por Defecto (All-or-Nothing):** Permite CSV/XLSX con `sku`, `precio_regular`, `motivo_cambio` y opcionales `precio_oferta`, `channel_id`, vigencias y `price_version`. Si una fila es inválida, tiene versión obsoleta o genera solapamiento de vigencias, el lote se descarta en Pricing salvo modo parcial explícito. |
-| **CA-07** | **Modo Tolerante Opcional en Carga Masiva:** Si la solicitud de carga masiva incluye el parámetro explícito `allow_partial=true`, el sistema persiste todas las filas válidas en una única transacción, descarta las filas inválidas, responde HTTP `207 Multi-Status` solo si el resultado se entrega en esa solicitud; el flujo asíncrono responde inicialmente HTTP `202` y expone éxito parcial y el reporte al finalizar con las filas rechazadas y su motivo de error. |
-| **CA-08** | **Delimitación frente a Promociones:** Pricing es dueño de precios regulares/ofertas y sus scopes; Promociones decide combinabilidad de beneficios sin sobrescribir precios maestros. Combos recibe regular y precio público efectivo vigente para validar que el paquete siga siendo comercialmente conveniente. |
-| **CA-09** | **Precio efectivo por SKU y canal:** el producto define precio base y una variante puede tener override. La resolución selecciona la vigencia aplicable al `channel_id` solicitado y, si no existe, usa el precio global (`channel_id=null`) según la regla definida. La consulta devuelve regular, oferta opcional, moneda, scope y vigencia por separado. |
-| **CA-10** | La creación del precio base por Catálogo es idempotente; Pricing emite `pricing.price.changed` tras persistirla con `tipo_operacion=CREACION`, `precio_anterior=null` y `variacion_porcentual=null`. |
-| **CA-11** | Pricing devuelve precio regular y precio de oferta separadamente junto con moneda, canal efectivo y vigencia; Promociones y Cupones evalúan las combinaciones expresamente permitidas por su política comercial sin que Pricing decida exclusividad; Combos recibe precio regular y precio público efectivo vigente para validar que el combo no sea más costoso que la compra individual de sus componentes. |
-| **CA-12** | La importación exclusiva de Pricing aplica All-or-Nothing dentro de Pricing, sin prometer atomicidad global con Catálogo o Inventario; `pricing.price.changed` es un evento posterior al commit, no un comando. |
-| **CA-13** | Una carga asíncrona devuelve inicialmente HTTP 202 y `batch_id`; HTTP 422/207 solo corresponde a un resultado de validación o procesamiento devuelto sincrónicamente. |
-| CA-14 | La carga exclusiva de Pricing admite `accion_precio_oferta=CONSERVAR | ESTABLECER | ELIMINAR` y `price_version` para concurrencia optimista. Blanco no elimina oferta. Si el regular nuevo invalida una oferta conservada se rechaza la fila. El sistema calcula la variación porcentual respecto del precio vigente y muestra una advertencia reforzada cuando supera un umbral configurable de cambio extraordinario; la advertencia no sustituye reglas de aprobación externas si la empresa las incorpora. |
-| CA-15 | Una actualización con `price_version` obsoleta se rechaza con conflicto y devuelve la versión vigente; no se sobrescribe silenciosamente un precio modificado después de la lectura/exportación. |
+|---|---|
+| **CA-01** | Las operaciones requieren autenticación/autorización. `PRICING_READ`, `PRICING_WRITE` y `PRICING_BULK` se consideran nombres propuestos mientras Seguridad no los publique oficialmente. El contrato estable de denegación usa 401/403. |
+| **CA-02** | `precio_regular > 0`; si existe oferta, `0 < precio_oferta < precio_regular`. |
+| **CA-03** | Actualizar precio exige `motivo_cambio` y, cuando parte de lectura previa, `price_version`. Un conflicto de versión no sobrescribe el precio vigente. |
+| **CA-04** | Una vigencia define `valid_from`, `valid_until` opcional, moneda y `channel_id` opcional; `null` significa precio global. |
+| **CA-05** | No se permiten intervalos superpuestos para el mismo objetivo, tipo de precio, moneda y canal. |
+| **CA-06** | `GET /api/v1/precios/skus/{sku}?at={timestamp}` devuelve el precio oficial de ese instante. `canal` es opcional; sin canal se resuelve el precio global. |
+| **CA-07** | La respuesta de precio identifica regular, oferta opcional, moneda, `channel_id` efectivo o `null`, vigencia, `price_version`, `vigencia_id` y origen producto/override. |
+| **CA-08** | Producto simple usa el precio de su producto; variante sin override hereda; variante con override usa el precio propio del SKU. |
+| **CA-09** | La carga exclusiva de Pricing acepta CSV/XLSX y opera en modo All-or-Nothing por defecto. |
+| **CA-10** | `allow_partial=true` aplica filas válidas y reporta inválidas dentro del resultado final del lote; el resultado parcial se consulta en el estado del proceso asíncrono. |
+| **CA-11** | Prevalidar archivo responde 200; crear lote asíncrono responde 202 + `batch_id`; el estado final se consulta posteriormente. |
+| **CA-12** | `accion_precio_oferta` usa `CONSERVAR | ESTABLECER | ELIMINAR`; blanco conserva la oferta y nunca la elimina por sí solo. |
+| **CA-13** | Una oferta conservada incompatible con un nuevo regular provoca rechazo de la fila. |
+| **CA-14** | Pricing publica `pricing.price.changed` solo después de persistir el cambio. |
+| **CA-15** | El primer precio se registra como creación con valores previos/variación nulos. El comando Catálogo → Pricing inicial todavía debe formalizarse en AsyncAPI. |
+| **CA-16** | Promociones/Cupones decide combinabilidad; Pricing no modifica ni evalúa reglas promocionales. |
+| **CA-17** | La carga exclusiva de Pricing no promete atomicidad global con Catálogo/Inventario. |
+| **CA-18** | 5,000 filas es benchmark de rendimiento, no límite de rechazo contractual mientras no se formalice lo contrario. |
+| **CA-19** | Una variación extraordinaria puede generar advertencia reforzada; no se afirma control de margen porque Pricing no conoce costos. |
 
-## 3. Escenarios (Dado - Cuando - Entonces / Gherkin)
+## 3. Escenarios
 
-### Escenario 1: Actualización exitosa de precio individual con motivo
-* **Dado** que el gestor comercial autenticado visualiza el producto con SKU `NK-DEP-001` con precio regular de S/ 120.00,
-* **Cuando** ingresa un nuevo precio regular de S/ 150.00 junto con el motivo "Ajuste tarifario proveedor",
-* **Entonces** el sistema persiste el nuevo precio en el almacén operativo de Pricing, emite el evento asíncrono de cambio de precio conteniendo el motivo y retorna HTTP 200 con el mensaje "Precio actualizado exitosamente".
+### Escenario 1: Actualizar precio
 
-### Escenario 2: Rechazo por omisión de motivo obligatorio
-* **Dado** que el gestor comercial intenta actualizar el precio del SKU `NK-DEP-001` a S/ 150.00,
-* **Cuando** envía la solicitud dejando el campo de motivo vacío o nulo,
-* **Entonces** el sistema rechaza la operación con código HTTP 400 Bad Request y no altera el precio en la base de datos.
+- **DADO** un SKU con regular S/ 120 y versión vigente
+- **CUANDO** el gestor solicita S/ 150 con motivo y versión correctos
+- **ENTONCES** se persiste, se incrementa versión y se publica el hecho después del commit.
 
-### Escenario 3: Programación de precio con vigencia futura
-* **Dado** que la fecha actual es `2026-10-15T09:00:00Z` y el gestor comercial programa para el SKU `AD-RUN-01` un precio de oferta de S/ 199.00 con inicio de vigencia `2026-11-20T00:00:00Z` y motivo "Campaña Cyber Days",
-* **Cuando** confirma la operación,
-* **Entonces** el sistema guarda el registro como `SCHEDULED` en la tabla de vigencias sin alterar el precio de venta actual y responde HTTP 201 Created.
-* **Y cuando** el reloj del sistema alcanza `2026-11-20T00:00:00Z`, el worker activa el nuevo precio en la tabla operativa y notifica al bus de eventos.
+### Escenario 2: Rechazar motivo ausente
 
-### Escenario 4: Consulta de precio oficial en fecha pasada (As-Of)
-* **Dado** que un cliente presenta un reclamo sobre una compra realizada el `2026-08-10T15:30:00Z` respecto al SKU `NK-DEP-001`,
-* **Cuando** el gestor o servicio invoca `GET /api/v1/pricing/skus/NK-DEP-001/price?at=2026-08-10T15:30:00Z`,
-* **Entonces** el sistema consulta el histórico de vigencias temporales y retorna HTTP 200 con el precio exacto vigente en ese instante (S/ 120.00) y su identificador de vigencia.
+- **DADO** un nuevo precio válido
+- **CUANDO** falta `motivo_cambio`
+- **ENTONCES** se rechaza con HTTP 400 sin modificar el precio.
 
-### Escenario 5: Carga masiva atómica rechazada por error puntual (All-or-Nothing)
-* **Dado** que se carga un archivo de 500 filas en modo predeterminado (`allow_partial=false`), donde la fila 312 posee un precio de oferta mayor al regular,
-* **Cuando** el sistema procesa el lote masivo,
-* **Entonces** cancela la transacción completa, no actualiza ninguno de los otros 499 productos y genera un reporte detallando: "Fila 312: El precio de oferta no puede ser mayor o igual al regular".
+### Escenario 3: Conflicto de versión
 
-### Escenario 6: Carga masiva con tolerancia a fallos (`allow_partial=true`)
-* **Dado** un archivo de 100 filas con `allow_partial=true`, 98 válidas y 2 inválidas,
-* **Cuando** se procesa mediante el flujo asíncrono de carga,
-* **Entonces** la admisión responde HTTP `202` con `batch_id`; al finalizar, el lote queda en estado de éxito parcial, aplica las 98 filas válidas dentro de Pricing y expone un reporte de las 2 rechazadas. (Si existiese una variante síncrona del contrato que complete la operación dentro de la misma solicitud, puede responder HTTP `207 Multi-Status`).
+- **DADO** una lectura antigua
+- **CUANDO** el gestor guarda con `price_version` obsoleta
+- **ENTONCES** se rechaza con conflicto y se conserva la versión vigente.
 
----
+### Escenario 4: Programación futura
 
-### Escenario adicional: Primer precio sin valor anterior
-* **Dado** un producto borrador sin precio histórico,
-* **Cuando** Pricing procesa su inicialización autorizada,
-* **Entonces** persiste el precio, emite el hecho confirmado con `tipo_operacion=CREACION` y valores previos/variación nulos, y confirma a Catálogo.
+- **DADO** una vigencia futura válida
+- **CUANDO** el gestor confirma
+- **ENTONCES** se crea una programación `SCHEDULED` sin cambiar el precio actual.
 
-### Escenario adicional: Oferta como beneficio alternativo
-* **Dado** un SKU con precio regular S/ 200 y oferta vigente S/ 180,
-* **Cuando** una promoción automática del 15 % produciría S/ 170 sobre el regular,
-* **Entonces** se selecciona S/ 170 sin descontar nuevamente sobre S/ 180.
+### Escenario 5: Vigencia superpuesta
 
-### Escenario adicional: Eliminar oferta solo con acción explícita
-* **Dado** un SKU con oferta S/ 170 y regular S/ 200,
-* **Cuando** una carga exclusiva incluye `accion_precio_oferta=ELIMINAR` y `precio_oferta` vacío,
-* **Entonces** Pricing retira la oferta, registra el cambio y publica el hecho solo después de persistir; si la acción se omite, conserva la oferta.
+- **DADO** una programación existente
+- **CUANDO** otra se solapa en el mismo scope
+- **ENTONCES** se rechaza y se conserva la existente.
 
-### Escenario adicional: Vigencias solapadas en el mismo canal
-* **Dado** un precio programado para `MARKETPLACE` del 1 al 30 de noviembre,
-* **Cuando** el gestor intenta registrar otra vigencia del mismo SKU, moneda y tipo de precio del 15 al 25 de noviembre,
-* **Entonces** Pricing rechaza la superposición e indica el intervalo en conflicto.
+### Escenario 6: Consulta histórica
 
-### Escenario adicional: Variación extraordinaria de precio
-* **Dado** un SKU con precio vigente S/ 999.00,
-* **Cuando** el gestor propone S/ 9.99,
-* **Entonces** el sistema muestra la variación porcentual y una advertencia reforzada antes de confirmar; no afirma que exista margen positivo porque Pricing no administra costos.
+- **DADO** un SKU con cambios de precio históricos
+- **CUANDO** se invoca `GET /api/v1/precios/skus/{sku}?at={timestamp}`
+- **ENTONCES** se devuelve el precio de ese instante y su `vigencia_id`.
 
-## 4. Matriz de Interacción con Otros Módulos
+### Escenario 7: Consulta global sin canal
 
-| Módulo | Necesidad de Interacción | Información que Recibe | Información que Entrega |
-| :--- | :--- | :--- | :--- |
-| **Canales de Venta (Marketplace, Chatbot, Retail)** | Consultar precios vigentes según el canal de la operación. | SKU/lista de SKUs, `channel_id`, moneda y timestamp de evaluación cuando corresponda. | Precio regular, oferta opcional, scope, vigencia y moneda. |
-| **Ventas y Postventa** | Consultar precio histórico oficial para validación de órdenes o reclamos. | SKU del producto y fecha/hora exacta (`at`). | Precio oficial vigente en dicho instante temporal y regla que lo respaldaba. |
-| **Seguridad y Usuarios** | Validar identidad y permisos de Pricing (`PRICING_READ`, `PRICING_WRITE`, `PRICING_BULK`); la asignación a roles concretos pertenece a Seguridad. | Token JWT de autenticación con claims/permisos. | Respuesta de autorización o denegación de acceso. |
-| **Historial de Auditoría** | Registrar de forma asíncrona cada mutación de precio aplicada. | Evento con SKU, precios previos/nuevos, variación %, motivo, canal, batch_id, IP y usuario. | Confirmación de evento recibido. |
+- **DADO** un SKU con precio global
+- **CUANDO** se consulta sin `canal`
+- **ENTONCES** la respuesta puede indicar `channel_id=null`.
 
----
+### Escenario 8: Fallback de canal
 
-## 5. Dependencias del Dominio (Productos y Ofertas)
+- **DADO** una consulta para `RETAIL`
+- **Y** no existe una vigencia específica para Retail
+- **CUANDO** se resuelve el precio
+- **ENTONCES** se utiliza el precio global vigente.
 
-* **Gestión de productos:**
-  * *Datos requeridos:* Validación de existencia activa del SKU en el catálogo.
-  * *Propósito:* Evitar fijación de precios a artículos inexistentes.
-* **Gestión de ofertas, promociones y cupones:**
-  * *Datos requeridos:* `precio_regular` y `precio_oferta` actuales.
-  * *Propósito:* Servir de base oficial sobre la cual se calculan descuentos adicionales de campañas o cupones.
+### Escenario 9: Lote atómico con error
 
----
+- **DADO** un archivo con `allow_partial=false`
+- **Y** al menos una fila inválida
+- **CUANDO** termina el procesamiento
+- **ENTONCES** ninguna fila se aplica y el lote ofrece el reporte.
 
-## 6. Reglas de Negocio Resueltas
+### Escenario 10: Lote tolerante
 
-- [x] **Política de carga masiva:** Resuelta. Por defecto opera en modo atómico estricto (*All-or-Nothing*); solo permite actualización parcial si se provee el parámetro explícito `allow_partial=true`.
-- [x] **Motivo de cambio:** Resuelto. El motivo es formalmente obligatorio en actualizaciones individuales y como columna requerida en cargas masivas.
+- **DADO** un archivo con `allow_partial=true`
+- **Y** filas válidas e inválidas
+- **CUANDO** termina el procesamiento
+- **ENTONCES** se aplican las válidas y se reportan las inválidas.
+
+### Escenario 11: Admisión asíncrona
+
+- **DADO** un archivo prevalidado
+- **CUANDO** se crea la importación
+- **ENTONCES** se responde `202 Accepted` + `batch_id` y el resultado se consulta después.
+
+### Escenario 12: Conservar oferta
+
+- **DADO** regular S/ 200 y oferta S/ 170
+- **CUANDO** la fila deja `precio_oferta` y `accion_precio_oferta` vacíos
+- **ENTONCES** se conserva la oferta S/ 170.
+
+### Escenario 13: Eliminar oferta
+
+- **DADO** una oferta vigente
+- **CUANDO** `accion_precio_oferta=ELIMINAR` y la celda de oferta está vacía
+- **ENTONCES** se retira la oferta de manera explícita y auditable.
+
+### Escenario 14: Variación extraordinaria
+
+- **DADO** un precio vigente S/ 999
+- **CUANDO** se propone S/ 9.99
+- **ENTONCES** la UI muestra una advertencia reforzada antes de confirmar sin afirmar un margen comercial.
+
+## 4. Interacción con otros módulos
+
+| Módulo | Necesidad | Recibe | Entrega |
+|---|---|---|---|
+| Marketplace/Chatbot/Retail | Consultar precio vigente | SKU, canal opcional, timestamp cuando aplique | regular, oferta, moneda, vigencia y scope |
+| Ventas/Postventa | Verificar precio histórico | SKU + `at` | precio oficial de ese instante |
+| Seguridad | Autenticar/autorizar | token/claims | 401/403 o acceso |
+| Auditoría | Registrar cambios | `pricing.price.changed` | proyección/historial de auditoría |
+| Catálogo | Preparar precio base | datos de alta | confirmación de Pricing; contrato de comando todavía pendiente de AsyncAPI |
+
+## 5. Dependencias internas
+
+- Productos/SKU: existencia e identidad.
+- Promociones/Cupones: consumen regular/oferta sin modificar Pricing.
+- Auditoría: consume hechos confirmados.
+
+## 6. Reglas resueltas
+
+- [x] Ruta REST en español: `/api/v1/precios`.
+- [x] Canal opcional y scope global expresable con `null`.
+- [x] Consulta histórica con `vigencia_id`.
+- [x] Resultado parcial únicamente mediante el estado final del proceso asíncrono.
+- [x] Flujo masivo: prevalidación 200 → admisión 202 → estado final.
+- [x] Oferta vacía conserva; eliminación solo explícita.
+- [x] Permisos `PRICING_*` no se presentan como oficiales.

@@ -2,87 +2,127 @@
 
 **Responsable:** Leonardo Lopez  
 **Rama:** lopez  
-**Trazabilidad:** HU [HU-008](../hu/HU-008-gestion-categorias.md) | Wireframe [WF-008](../wireframes/flows/WF-008-gestion-categorias.md)
+**Trazabilidad:** HU [HU-008](./hu/HU-008-gestion-categorias.md) | Wireframe [WF-008](./wireframes/flows/WF-008-gestion-categorias.md)
 
 ## 1. Contexto
-El Marketplace Multicanal organiza los productos en categorías y subcategorías para navegación, filtros y clasificación en Catálogo Core. La estructura se administra centralmente en Taxonomía y se expone por API.
+El Marketplace Multicanal organiza productos en categorías y subcategorías para navegación, filtros y clasificación. La estructura se administra en Taxonomía y se expone por API.
+
+Las categorías **no definen ni heredan características de producto**; el esquema de atributos pertenece a `tipo_producto_id`.
 
 ## 2. Propósito
-Permitir al Gestor Comercial crear, consultar, actualizar, desactivar y reactivar categorías de navegación. El modelo de datos es jerárquico y recursivo; para el MVP se configura `MAX_CATEGORY_DEPTH=2` (categoría y subcategoría), evitando que el límite docente quede embebido como una imposibilidad estructural permanente.
+Permitir crear, consultar, actualizar, desactivar y reactivar categorías de navegación sobre un modelo recursivo. Para el MVP se configura `MAX_CATEGORY_DEPTH=2`, sin convertirlo en una restricción irreversible del modelo.
 
 ## 3. Alcance
-Incluye:
 - Categorías raíz y subcategorías.
-- Modelo jerárquico mediante `categoria_padre_id`; `MAX_CATEGORY_DEPTH=2` como configuración del MVP, no como restricción irreversible del esquema.
-- Edición de `categoria_padre_id`.
-- Consulta individual, listado y árbol jerárquico.
+- `categoria_padre_id` opcional y editable.
+- Modelo recursivo sin ciclos.
+- Profundidad máxima configurable, valor MVP 2.
+- Consulta individual/listado/árbol.
 - Baja lógica y reactivación.
-- Validación asíncrona, con confirmación de Catálogo y barrera concurrente, de productos activos antes de desactivar.
-- API de solo lectura para canales y Catálogo Core.
+- Baja segura mediante coordinación asíncrona con Catálogo.
+- Consumo activo para canales/Catálogo.
+- Integración con SEO para obtener el slug final durante la creación.
 
 ## 4. Requisitos
 
 ### Requisito 1: Crear categoría
-El sistema DEBE permitir crear una categoría con nombre, descripción y `categoria_padre_id` opcional.
+Nombre requerido, descripción y `categoria_padre_id` opcional. El nombre NO necesita ser único.
 
-El nombre NO necesita ser único. La unicidad de URL se resuelve mediante la política de slug definida en `SPEC-012-seo-metadatos.md`.
+Si existe padre, debe estar activo.
 
-Si se especifica padre, este debe existir y estar activo.
+La creación solicita a la capacidad SEO el slug final mediante `POST /api/v1/seo/categorias/slug/resolver`. Si la normalización colisiona, SEO puede resolver mediante sufijo incremental, pero **Taxonomía no completa silenciosamente la publicación administrativa**: el slug final se devuelve al flujo y debe mostrarse al gestor antes de la confirmación final.
+
+La propuesta no reserva el slug. La confirmación final se envía a `POST /api/v1/categorias` como `slugConfirmado`. La creación revalida unicidad inmediatamente antes de persistir; si otro proceso ocupó el slug desde la resolución previa, responde `409 SLUG_DUPLICADO` y el flujo debe resolver otra propuesta. Nunca se aplica un sufijo distinto sin volver a mostrarlo al gestor.
+
+#### Escenario: Slug sin colisión
+DADO nombre `Running`, CUANDO SEO devuelve `running`, ENTONCES el gestor puede confirmar la creación con ese slug visible.
+
+#### Escenario: Slug con colisión
+DADO que `futbol` ya está ocupado, CUANDO se crea otra categoría `Fútbol`, ENTONCES SEO propone `futbol-2`, el flujo muestra `/categoria/futbol-2` antes de confirmar y solo después se completa la creación.
 
 ### Requisito 2: Jerarquía
-El modelo admite una jerarquía recursiva basada en `categoria_padre_id`, sin referencias circulares. Para el alcance actual, `MAX_CATEGORY_DEPTH=2`, por lo que la interfaz y las validaciones solo permiten:
-1. categoría raíz;
-2. subcategoría.
-
-La profundidad máxima es un parámetro de negocio/técnico del despliegue y puede ampliarse en una evolución sin rediseñar la entidad ni las APIs básicas.
+El modelo usa `categoria_padre_id`, sin ciclos. `MAX_CATEGORY_DEPTH=2` en el MVP: raíz + subcategoría.
 
 ### Requisito 3: Actualizar categoría
-El sistema DEBE permitir editar nombre, descripción, orden, imagen y `categoria_padre_id`.
+Permite editar nombre, descripción, orden, imagen y `categoria_padre_id`.
 
-Al cambiar el padre se valida:
-- existencia y estado activo del nuevo padre;
+Al cambiar padre se valida:
+- existencia;
+- estado activo;
 - ausencia de autorreferencia/ciclo;
-- cumplimiento de `MAX_CATEGORY_DEPTH` vigente (2 en el MVP).
+- profundidad configurada.
 
-El cambio de ubicación no altera automáticamente los productos ya asociados.
+Cambiar ubicación no altera productos ni sus características.
+
+La edición posterior del slug y metadatos pertenece a SPEC-012.
 
 ### Requisito 4: Desactivar categoría
-Toda baja es lógica. El sistema NUNCA elimina físicamente una categoría.
+Toda baja es lógica.
 
-La desactivación se bloquea si:
-- posee subcategorías activas; o
+Se bloquea si:
+- existen subcategorías activas; o
 - existen productos activos asociados.
 
-La existencia de productos activos se verifica mediante la coordinación asíncrona con Catálogo Core definida a continuación. La solicitud puede permanecer pendiente; una validación inexistente, fallida o vencida NUNCA autoriza la baja.
+La verificación de productos utiliza coordinación asíncrona:
 
-### Requisito 5: Reactivar categoría
+```text
+taxonomy.master.deactivation.check.requested
+catalog.master.deactivation.checked
+taxonomy.master.deactivated
+taxonomy.master.deactivation.rejected
+```
+
+Taxonomía registra `PENDING_DEACTIVATION` y Catálogo instala una barrera concurrente. Solo `CLEAR` vigente permite confirmar la baja.
+
+Timeout, error o falta de confirmación NUNCA autorizan la desactivación.
+
+### Requisito 5: Reactivar
 Una categoría inactiva puede reactivarse. Si tiene padre, este debe estar activo.
 
 ### Requisito 6: Consultar árbol
-El sistema DEBE exponer el árbol jerárquico completo, incluyendo categorías activas e inactivas, para uso administrativo conforme a permisos. Para Catálogo Core y canales externos, la API de consumo DEBE exponer únicamente categorías activas; una categoría inactiva no forma parte del árbol público/consumible.
+La administración puede ver activas e inactivas según permisos. Canales y Catálogo consumen únicamente categorías activas.
 
-### Contrato transversal para baja segura de entidades maestras (EDA)
+### Requisito 7: Reubicación segura
+Antes de confirmar `categoria_padre_id` se revalidan ciclos, padre activo y profundidad. Un cambio confirmado emite el hecho versionado:
 
-La desactivación de categoría o marca que pueda tener productos asociados es **una operación asíncrona de dos fases funcionales**, no una llamada HTTP entre servicios. Taxonomía registra la operación `PENDING_DEACTIVATION` con `operation_id`, `entity_type`, `entity_id` y `version`, y publica el comando `taxonomy.master.deactivation.check.requested`. Catálogo, en una transacción local, instala una barrera de escritura por entidad (impide crear, activar o reasignar productos a ella mientras dure la operación), revisa todos los productos activos asociados y publica `catalog.master.deactivation.checked` con el mismo `operation_id`, versión y resultado `HAS_ACTIVE_PRODUCTS` o `CLEAR`. La barrera debe participar de las mismas transacciones de escritura de producto para evitar carreras.
+```text
+taxonomy.category.updated
+```
 
-Taxonomía **solo confirma la baja lógica tras un resultado `CLEAR` vigente**; si hay productos activos, timeout o error, deja la entidad activa y registra rechazo o estado pendiente recuperable, nunca éxito supuesto. Publica `taxonomy.master.deactivated` o `taxonomy.master.deactivation.rejected`; Catálogo libera la barrera tras procesar idempotentemente ese resultado. La caída de un servicio no autoriza liberar automáticamente una barrera sin reconciliar el estado por `operation_id`. Los consumidores de canales actualizan sus vistas por eventos; durante la propagación no deben prometer visibilidad instantánea global. **No existe transacción distribuida** ni validación HTTP síncrona entre Catálogo y Taxonomía.
+La propagación es eventual.
 
-La desactivación de una categoría sigue bloqueándose cuando tiene subcategorías activas, comprobación local de Taxonomía. La reactivación vuelve a validar padre y unicidad aplicable según el tipo de entidad. Este protocolo es interno y no presupone contratos confirmados con Ventas y Postventa.
+### Requisito 8: Contrato con SEO durante la creación
+SPEC-012 es autoridad sobre normalización, colisiones, historia de slug y metadatos.
 
-### Requisito 7: Reubicación segura de categoría
-Antes de confirmar el cambio de `categoria_padre_id`, Taxonomía comprueba existencia y estado del nuevo padre, ausencia de ciclos y cumplimiento de `MAX_CATEGORY_DEPTH`. El cambio se confirma atómicamente con la versión de taxonomía y emite `taxonomy.category.updated`; los consumidores actualizan sus proyecciones de forma eventual. **Las categorías se usan para navegación y clasificación, no para definir el esquema de atributos del producto**, por lo que reubicar una categoría no añade ni elimina características obligatorias de los productos existentes. El esquema de atributos se resuelve mediante `tipo_producto_id` y la capacidad de asociación definida en `SPEC-010-asociacion-tipo-producto-caracteristica.md`.
+WF/SPEC-008 solo consumen la resolución del slug para la creación y muestran el resultado final antes de confirmar. No permiten editar manualmente SEO dentro de Categorías.
+
+Contrato publicado:
+
+```text
+POST /api/v1/seo/categorias/slug/resolver
+  { nombre }
+  -> { slug, colisionResuelta }
+
+POST /api/v1/categorias
+  { .., slugConfirmado }
+  -> 201 con slug confirmado
+  -> 409 SLUG_DUPLICADO si la propuesta dejó de estar disponible
+```
+
+La segunda operación no autogenera una alternativa silenciosa: ante conflicto se regresa al paso de resolución/confirmación.
 
 ## 5. Requisitos no funcionales
-- Rendimiento: árbol completo < 1 s con hasta 500 categorías.
-- Seguridad: escritura restringida a Gestor Comercial.
-- Disponibilidad: API de categorías activas disponible para Catálogo Core y canales.
-- Auditoría: registrar creación y modificación con fecha/hora y usuario.
+- Árbol de referencia <1s con hasta 500 categorías.
+- Escrituras autenticadas/autorizadas.
+- Auditoría de creación/modificación.
+- Sin transacción distribuida.
+- Idempotencia y correlación en baja segura.
 
 ## 6. Fuera de alcance
-- CRUD de características y marcas.
-- Definición del esquema de atributos por tipo de producto, especificada en `SPEC-010-asociacion-tipo-producto-caracteristica.md`; las categorías no son propietarias de esas reglas.
-- Metadatos SEO; el slug y sus colisiones se rigen por `SPEC-012-seo-metadatos.md`.
-- Asociación de productos a categoría, responsabilidad de Catálogo Core.
+- CRUD de características/marcas.
+- Esquema de atributos por categoría.
+- Edición de metadatos SEO.
+- Asociación producto-categoría dentro de esta capacidad.
 
 ## Criterio de completitud
-Se considera completa cuando se cumplen creación, jerarquía recursiva con profundidad 2 configurada para el MVP, edición de padre, baja lógica, reactivación, validación de productos activos y consulta del árbol, sin acoplar la jerarquía de navegación al esquema de características.
+Creación/jerarquía/reubicación/baja/reactivación funcionan y la creación no oculta una colisión de slug resuelta por SEO.
