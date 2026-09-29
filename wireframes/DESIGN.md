@@ -5,10 +5,8 @@ description: Un sistema de diseño de baja fidelidad para wireframes enfocado pu
 colors:
   surface: "#FFFFFF"
   neutral-10: "#F3F4F6"
-  neutral-20: "#E5E7EB"
   neutral-30: "#D1D5DB"
   neutral-50: "#6B7280"
-  neutral-70: "#374151"
   neutral-90: "#111827"
   primary: "#111827"
 typography:
@@ -40,9 +38,6 @@ spacing:
   lg: 32px
   xl: 64px
   gutter: 24px
-breakpoints:
-  tablet: 900px
-  mobile: 600px
 rounded:
   none: 0px
   sm: 4px
@@ -77,35 +72,24 @@ El objetivo de este sistema de diseño es eliminar distracciones visuales (color
 El wireframe se construye estrictamente en escala de grises. La ausencia de color evita que el usuario final o los stakeholders asuman que el diseño visual está terminado.
 
 - **Surface (#FFFFFF):** Blanco puro para el fondo general y el interior de las tarjetas.
-- **Neutral-10 (#F3F4F6):** Gris muy claro, utilizado principalmente para rellenar marcadores de posición de imágenes (placeholders), fondos secundarios de tablas y contenedores.
-- **Neutral-20 (#E5E7EB):** Gris claro de transición para fondos de pestañas inactivas y separadores sutiles.
+- **Neutral-10 (#F3F4F6):** Gris muy claro, utilizado principalmente para rellenar marcadores de posición de imágenes (placeholders) o fondos secundarios.
 - **Neutral-30 (#D1D5DB):** Gris medio-claro empleado para bordes de contenedores, inputs inactivos y divisores horizontales.
 - **Neutral-50 (#6B7280):** Gris medio-oscuro utilizado para texto secundario, descripciones y estados deshabilitados.
-- **Neutral-70 (#374151):** Gris oscuro para etiquetas de alto contraste y encabezados de tabla técnicos.
 - **Neutral-90 / Primary (#111827):** Casi negro, utilizado para el texto principal, encabezados, y botones de llamada a la acción (CTA) para garantizar un contraste máximo y legibilidad WCAG AAA.
 
 ## Typography
 
 La tipografía debe ser estándar, sin adornos y fácil de leer. Utilizamos fuentes del sistema o sin remates (sans-serif) para el contenido general, y una fuente monoespaciada para anotaciones técnicas.
 
-- **Headlines:** `Inter` o fuente del sistema en pesos Bold/Semi-Bold. Define la jerarquía clara de la página. En wireframes adaptables, se recomienda `font-size: clamp(24px, 4vw, 36px); line-height: 1.15;` para que los títulos se ajusten naturalmente a móviles sin quebrar el layout.
+- **Headlines:** `Inter` o fuente del sistema en pesos Bold/Semi-Bold. Define la jerarquía clara de la página.
 - **Body:** `Inter` en peso Regular. Se utiliza para simular cómo ocupará espacio el contenido real o el texto simulado (Lorem Ipsum).
-- **Labels (Anotaciones):** `Roboto Mono` o cualquier tipografía monoespaciada en tamaño pequeño. Se usa exclusivamente para notas técnicas del diseñador (ej. "Área dinámica", códigos SKU, fechas de auditoría).
+- **Labels (Anotaciones):** `Roboto Mono` o cualquier tipografía monoespaciada en tamaño pequeño. Se usa exclusivamente para notas técnicas del diseñador (ej. "Área dinámica", "Carrusel: 3 items visibles").
 
-## Layout & Responsive Design
+## Layout
 
-El sistema está diseñado para adaptarse fluidamente a tres rangos de pantalla:
+El layout sigue el estándar de una **Cuadrícula de 12 columnas (Grid)** para escritorio y 4 columnas para dispositivos móviles. 
 
-1. **Escritorio (`> 900px`):** Cuadrícula de 12 columnas (Grid), ancho máximo de contenedor unificado a `1200px` (o `100%` con margen interno de `24px`).
-2. **Tablet / Ventanas intermedias (`<= 900px`):** Cuadrícula colapsada a 8 columnas o formularios/filtros en 2 columnas.
-3. **Dispositivos móviles (`<= 600px`):** Cuadrícula de 4 columnas, margen interno de página reducido a `16px`, toolbars de filtro y formularios colapsados a 1 columna (`grid-template-columns: 1fr`).
-
-Nos basamos en un sistema de espaciado estricto múltiplo de 8px (4, 8, 16, 24, 32, 64px). Los contenedores y las secciones se agrupan utilizando bordes sólidos de 1px (`neutral-30`) en lugar de colores de fondo.
-
-### Tablas y Contención Móvil
-En pantallas de smartphone, las tablas densas deben evitar forzar el desbordamiento horizontal de la página completa. Se aplican dos técnicas:
-- Envolver la tabla en un contenedor `.table-wrap` con `overflow-x: auto; -webkit-overflow-scrolling: touch;`.
-- O alternar a una vista de tarjetas apiladas en móvil (`.desktop-table { display: none }` / `.mobile-list { display: block }`).
+Nos basamos en un sistema de espaciado estricto múltiplo de 8px. Los contenedores y las secciones se agrupan utilizando bordes sólidos de 1px (`neutral-30`) en lugar de colores de fondo, para mantener la interfaz ligera y fácil de imprimir o escanear visualmente. Se usa un margen interno estándar de 16px o 24px dentro de las tarjetas estructurales.
 
 ## Elevation & Depth
 
@@ -113,32 +97,28 @@ En los wireframes, **no se utilizan sombras ni desenfoques (blurs)**.
 
 La profundidad y la separación de elementos (ej. modales, menús desplegables o popovers) se logran mediante:
 1. Un borde de mayor contraste (`neutral-90`).
-2. Una capa de oscurecimiento en el fondo (overlay al 50% de opacidad usando `neutral-90`: `rgba(17, 24, 39, 0.5)`).
-3. Modales elásticos en móvil: `width: min(600px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto;`.
+2. Una capa de oscurecimiento en el fondo (overlay al 50% de opacidad usando `neutral-90`) para resaltar elementos modales por encima de la página principal.
 
 ## Shapes
 
 Las formas son puramente utilitarias e informativas:
 - **Cajas rectangulares con una "X" diagonal:** Representan imágenes o videos (placeholders).
 - **Círculos perfectos:** Representan avatares de usuarios o íconos principales.
-- **Bordes rectos o mínimamente redondeados (4px):** Para botones y campos de entrada de texto.
+- **Bordes rectos o mínimamente redondeados (4px):** Para botones y campos de entrada de texto, solo para sugerir interaccionabilidad.
 
-## Components & Accessibility
+## Components
 
-- **Buttons (Botones):** Los primarios utilizan relleno oscuro (`neutral-90`) con texto blanco. Los secundarios tienen borde (`neutral-90` o `neutral-30`) y fondo blanco. En dispositivos móviles, las acciones modales se apilan verticalmente a ancho completo (`width: 100%`).
-- **Touch Target:** Todos los botones, campos de texto y enlaces deben tener un área de contacto mínima de `44x44px` para accesibilidad táctil WCAG.
-- **Input fields (Campos de texto):** Rectángulos con borde gris (`neutral-30`) y etiqueta superior. En estado de error o `[aria-invalid="true"]`, el borde se eleva a `2px solid var(--neutral-90)` con mensaje de error en escala de grises.
-- **Checkboxes & Radios:** Usar `accent-color: var(--neutral-90);` para garantizar que la selección activa respete la escala de grises.
-- **Focus Indicators:** Todo elemento interactivo debe contar con un foco visible accesible: `outline: 3px solid var(--neutral-90); outline-offset: 2px;`.
-- **Anotaciones técnicas (`A-01`, `A-02`):** Pertenecen exclusivamente a la documentación de flujo (`wireframes/flows/`). No deben renderizarse en el HTML visible del prototipo.
-- **Convención de título:** Cada prototipo debe identificar su código y función en el `<title>`: `<title>WF-XXX — [Nombre funcional]</title>`.
-- **Identidad de cabecera:** La marca oficial del sistema es `PO Productos y ofertas`.
+Los componentes son bloques de construcción desnudos, diseñados para denotar función más que forma.
+
+* **Buttons (Botones):** Los primarios utilizan un relleno oscuro (`neutral-90`) con texto blanco. Los secundarios solo tienen un borde oscuro y fondo blanco.
+* **Input fields (Campos de texto):** Se representan como rectángulos con un borde gris (`neutral-30`) y la etiqueta descriptiva posicionada siempre en la parte superior.
+* **Image Placeholders (Imágenes):** Contenedores grises (`neutral-10`). No se deben incluir fotografías reales en esta etapa.
+* **Checkboxes & Radios:** Cuadrados y círculos vacíos con bordes definidos. Se usa un cuadro sólido negro en su interior para representar el estado seleccionado.
 
 ## Do's and Don'ts
 
 - **Do (Hacer):** Utiliza siempre escala de grises para no desviar la atención de la funcionalidad.
 - **Don't (No hacer):** No utilices fotografías reales o logotipos finales; usa cajas con una "X" y texto genérico como "Logo de Marca".
-- **Do (Hacer):** Asegúrate de que el tamaño de los botones (mínimo 44x44px) respete los estándares de accesibilidad para áreas táctiles en móviles y escritorio.
-- **Don't (No hacer):** No uses sombras (drop shadows); define las áreas flotantes utilizando bordes oscuros de 1px o 2px y fondos blancos.
-- **Do (Hacer):** Garantiza que la página sea navegable en 320px de ancho sin scroll horizontal indeseado en el `<body>`.
-- **Do (Hacer):** Utiliza texto real (copy) en botones y títulos en lugar de *Lorem Ipsum* siempre que sea posible.
+- **Do (Hacer):** Asegúrate de que el tamaño de los botones (mínimo 44x44px en móviles) respete los estándares de accesibilidad para áreas táctiles.
+- **Don't (No hacer):** No uses sombras (drop shadows); define las áreas flotantes utilizando bordes oscuros de 1px y fondos blancos.
+- **Do (Hacer):** Utiliza texto real (copy) en botones y títulos en lugar de *Lorem Ipsum* siempre que sea posible, ya que afecta directamente al ancho de los elementos y a la experiencia de usuario.
