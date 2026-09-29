@@ -243,7 +243,7 @@ La combinación final con datos del pedido continúa sujeta a los contratos homo
 
 ## 7. Contrato HTTP relacionado
 
-El OpenAPI P0 contempla:
+El OpenAPI contempla:
 
 ```text
 GET  /api/v1/promociones

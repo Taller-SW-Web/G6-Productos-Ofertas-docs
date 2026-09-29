@@ -5,7 +5,7 @@
 **Archivo:** `Arquitectura.md`  
 **Contrato HTTP canónico:** `api/openapi.yaml` (`0.3.5-p0`)  
 **Contrato asíncrono canónico:** `asyncapi/asyncapi.yaml` (`0.2.1-p0`)  
-**Catálogo humano de eventos:** `api/catalogo-eventos.md` (`0.2.1-p0`)  
+**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.2.1-p0`)  
 **Catálogo canónico de errores:** `api/catalogo-errores.md` (`0.2.4-p0`)  
 **Contrato humano de integración:** `Contrato_Api.md`  
 **Modelo conceptual:** `Modelo_Conceptual.md`  
@@ -50,7 +50,7 @@ La arquitectura debe permitir que estas capacidades evolucionen de forma indepen
 
 ---
 
-# 1. Decisiones arquitectónicas P0
+# 1. Decisiones arquitectónicas
 
 ## 1.1. Bounded contexts
 
@@ -863,7 +863,7 @@ El contrato AsyncAPI P0 ya formaliza:
 - entrega `at-least-once`;
 - deduplicación por `message_id`.
 
-El catálogo humano correspondiente es:
+El catálogo de eventos correspondiente es:
 
 ```text
 api/catalogo-eventos.md
@@ -2687,9 +2687,9 @@ Debe cumplir:
 
 ---
 
-# 54. Pendientes posteriores a esta arquitectura
+# 54. Pendientes de integración arquitectónica
 
-Ya están cerrados a nivel contractual P0:
+Ya están cerrados a nivel contractual:
 
 - `asyncapi/asyncapi.yaml` `0.2.1-p0`, con 29 mensajes lógicos;
 - catálogo de eventos `0.2.1-p0`;
@@ -2744,7 +2744,7 @@ Estas decisiones pueden tomarse más tarde sin alterar los bounded contexts ni l
 
 La arquitectura resultante mantiene ocho bounded contexts con ownership explícito y establece una disciplina de implementación que evita el acoplamiento accidental.
 
-Los cambios P0 principales son:
+Los principios arquitectónicos principales son:
 
 1. **Ventas/Postventa orquesta Inventario**.
 2. `CREADO` produce reserva.

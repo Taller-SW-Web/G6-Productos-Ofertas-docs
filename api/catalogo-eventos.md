@@ -3,9 +3,9 @@
 **Versión del catálogo:** `0.2.1-p0`  
 **Contrato canónico:** `asyncapi/asyncapi.yaml` — AsyncAPI `3.0.0`, contrato `0.2.1-p0`  
 **Fecha:** 2026-09-28  
-**Fuente funcional:** SPEC-001 a SPEC-016; en este incremento se cierran específicamente SPEC-009 y SPEC-010.
+**Fuente funcional:** SPEC-001 a SPEC-016.
 
-> Este documento es la vista humana del contrato asíncrono. Si existe una discrepancia de nombres, payloads o versiones, prevalece `asyncapi/asyncapi.yaml`.
+> Este documento complementa el contrato asíncrono de eventos y mensajería. En caso de discrepancia de schemas o versiones, prevalece `asyncapi/asyncapi.yaml`.
 
 ---
 
@@ -497,23 +497,4 @@ Permanecen fuera de este incremento y siguen declarados en AsyncAPI:
 - Exchanges, queues, binding keys físicos, retry queues y DLQ.
 - Permisos/scopes definitivos de los contratos externos aún marcados como provisionales.
 
-Los contratos de SPEC-009/SPEC-010 **ya no forman parte de los diferidos**: sus nombres y payloads mínimos quedaron publicados en `0.2.1-p0`.
 
----
-
-## 7. Trazabilidad de este incremento
-
-| Necesidad | Fuente | Contrato | Estado |
-|---|---|---|---|
-| Renombrado de valor LISTA | SPEC-009 / HU-009 | `taxonomy.characteristic-value.updated` | Cerrado |
-| Baja segura de valor LISTA | SPEC-009 / HU-009 | flujo `taxonomy.master.*` con `CHARACTERISTIC_VALUE` | Cerrado |
-| Cambio confirmado de esquema | SPEC-010 / HU-010 | `taxonomy.product-type-schema.changed` | Cerrado |
-| Baja segura de tipo | SPEC-010 / HU-010 | flujo `taxonomy.master.*` con `PRODUCT_TYPE` | Cerrado |
-| Desasociación segura | SPEC-010 / HU-010 | flujo `taxonomy.master.*` con `PRODUCT_TYPE_CHARACTERISTIC` | Cerrado |
-
-## 8. Registro de cambios
-
-| Versión | Fecha | Cambio |
-|---|---|---|
-| `0.2.1-p0` | 2026-09-28 | Formaliza propagación de SPEC-009, evento de cambio de esquema de SPEC-010 y amplía baja segura a `PRODUCT_TYPE`/`PRODUCT_TYPE_CHARACTERISTIC`. |
-| `0.2.0-p0` | 2026-09-28 | Baseline previo alineado con inventario/SPEC-015 y contratos P0 existentes. |
