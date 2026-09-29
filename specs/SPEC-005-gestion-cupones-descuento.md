@@ -2,150 +2,91 @@
 
 **Responsable:** Axel Andree Cueva Alcalá  
 **Rama:** cueva  
-**Trazabilidad:** HU [HU-005](../hu/HU-005-gestion-cupones-descuento.md) | Wireframe [WF-005](../wireframes/flows/WF-005-gestion-cupones-descuento.md)
+**Trazabilidad:** HU [HU-005](./hu/HU-005-gestion-cupones-descuento.md) | Wireframe [WF-005](./wireframes/flows/WF-005-gestion-cupones-descuento.md)
 
 ## 1. Contexto
-
-La gestión de cupones permite administrar códigos que habilitan promociones previamente configuradas para aplicarse mediante código. Esta capacidad concentra las restricciones propias del cupón y el control seguro de su utilización.
+La gestión de cupones administra códigos que habilitan promociones configuradas con modalidad `CUPON`. El cupón no duplica descuento, alcance ni vigencia: esos datos pertenecen a la promoción asociada.
 
 ## 2. Propósito
+Permitir al Gestor Comercial administrar cupones y permitir a los canales validarlos y consumirlos de forma segura.
 
-Permitir al Gestor Comercial administrar cupones y permitir a los canales validar y consumir de forma segura un código de descuento.
+## 3. Modelo consolidado
+El cupón contiene código, estado, referencia a promoción `CUPON`, monto mínimo opcional, límite global opcional, límite por cliente opcional, política de restitución, contadores de uso y auditoría.
 
-## 3. Modelo de dominio consolidado
-
-El **Cupón** contiene:
-- código único;
-- estado;
-- referencia a una promoción de modalidad CUPÓN;
-- monto mínimo de compra opcional;
-- límite máximo de usos global opcional;
-- límite máximo de usos por cliente opcional;
-- política configurable de restitución de uso ante cancelación (`RESTAURAR_EN_CANCELACION | NO_RESTAURAR`);
-- usos consumidos globales y, cuando aplica, consumo por `customer_ref` estable;
-- datos de auditoría.
-
-La **Promoción asociada** contiene:
-- tipo de descuento;
-- valor;
-- productos elegibles;
-- fecha/hora de inicio y fin;
-- estado.
-
-Por tanto, el cupón no duplica descuento, productos elegibles ni vigencia.
+La promoción asociada contiene descuento, productos elegibles, vigencia y política de combinación.
 
 ## 4. Alcance
-
-Incluye:
-- Registrar, consultar, modificar, activar y desactivar cupones.
-- Asociar cada cupón a una promoción de modalidad CUPÓN.
-- Validar códigos duplicados y formato.
-- Validar monto mínimo opcional.
-- Validar límites de uso globales y por cliente cuando estén configurados.
-- Validar estado y vigencia mediante la promoción asociada.
-- Exponer validación por API sin consumir usos.
-- Consumir el uso al recibir la confirmación definitiva del pedido.
-- Garantizar idempotencia y concurrencia del consumo.
-- Consultar información operacional de uso.
+Incluye alta, consulta, modificación, activación/desactivación, validación sin consumo, consumo idempotente, límites opcionales, concurrencia segura, restitución según política y consulta de usos.
 
 ## 5. Requisitos
 
-### Requisito 1: Registrar cupones
+### Requisito 1: Registrar y normalizar código
+El código se normaliza con `trim` + mayúsculas y acepta `A-Z`, `0-9`, `-`, `_`. La unicidad se evalúa sobre el valor normalizado.
 
-El sistema DEBE permitir registrar código, estado, promoción asociada, monto mínimo opcional, límite máximo de usos global opcional, límite máximo por cliente opcional y política de restitución de uso ante cancelación. Productos y Ofertas almacena únicamente la referencia estable `customer_ref` necesaria para contabilizar el uso; no replica datos personales ni perfiles cuyo propietario es Seguridad y Usuarios.
+Si ya existe, el backend responde conflicto en `application/problem+json` con:
 
-La promoción asociada DEBE existir y estar configurada con modalidad CUPÓN.
+```text
+code = CUPON_DUPLICADO
+```
 
-El código se normaliza con `trim` y conversión a mayúsculas. Solo se permiten letras A-Z, números, guion medio y guion bajo. La unicidad se evalúa sobre el valor normalizado.
+Los consumidores dependen de `status` + `code`, no de `detail`.
 
-### Requisito 2: Validar la promoción asociada
+### Requisito 2: Promoción asociada
+Debe existir, estar en modalidad `CUPON`, activa, vigente y ser aplicable a los productos evaluados.
 
-Para aceptar el cupón, la promoción asociada DEBE:
-- estar activa;
-- encontrarse dentro de su vigencia;
-- aplicar a los productos de la compra.
+### Requisito 3: Monto mínimo
+Es opcional; cuando existe debe ser mayor que 0.
 
-El descuento, valor, productos elegibles y vigencia provienen únicamente de dicha promoción.
+### Requisito 4: Límites de uso
+`max_usos_global` y `max_usos_por_cliente` son opcionales. Si se informan deben ser enteros positivos.
 
-### Requisito 3: Validar monto mínimo
+No se permite reducirlos por debajo de consumos existentes. Si ambos existen, `max_usos_por_cliente <= max_usos_global`. Si existe límite por cliente, la validación requiere `customer_ref`.
 
-Si el cupón tiene monto mínimo, la compra elegible debe alcanzar o superar dicho monto. El valor configurado debe ser mayor que 0.
+**La ausencia del límite por cliente significa “Sin límite”; nunca equivale automáticamente a 1.**
 
-### Requisito 4: Validar límites de uso
+### Requisito 5: Validar sin consumir
+La validación devuelve validez, motivo de rechazo cuando aplique, promoción/beneficio, descuento e importe resultante. No incrementa contadores.
 
-Si existe límite global o por cliente:
-- cada límite debe ser entero positivo;
-- `max_usos_global` no puede reducirse por debajo de `usos_globales_consumidos`;
-- cuando se modifique `max_usos_por_cliente`, el nuevo valor no puede quedar por debajo del mayor consumo ya registrado para un `customer_ref` bajo ese cupón;
-- si ambos límites existen, `max_usos_por_cliente <= max_usos_global`;
-- un cupón globalmente agotado no es aplicable;
-- si existe límite por cliente, la evaluación exige `customer_ref`.
+### Requisito 6: Consumir uso
+El uso se consume solo cuando el cupón forma parte del beneficio finalmente seleccionado y Ventas/Postventa confirma contractualmente la consolidación. El consumo actualiza contador global y por cliente, cuando aplique, en una transacción local.
 
-### Requisito 5: Validar cupón por API sin consumirlo
+### Requisito 7: Idempotencia
+`order_id + cupon_id` identifica un consumo. Reintentos no incrementan nuevamente.
 
-La validación DEBE devolver:
-- validez;
-- motivo de rechazo, cuando corresponda;
-- promoción/beneficio asociado;
-- descuento calculado;
-- importe resultante.
+### Requisito 8: Concurrencia
+La competencia por los últimos usos nunca puede superar el límite configurado.
 
-La validación, por sí sola, NO incrementa el contador de usos.
+### Requisito 9: Combinabilidad
+La combinación con promociones/oferta de Pricing se rige por `politica_combinacion` de la promoción asociada. El cupón consume solo si pertenece a la alternativa ganadora.
 
-### Requisito 6: Consumir un uso
+### Requisito 10: Cancelación
+`RESTAURAR_EN_CANCELACION` restituye idempotentemente el uso cuando Ventas/Postventa comunica una cancelación homologada aplicable. `NO_RESTAURAR` conserva el consumo.
 
-El uso se consume cuando Ventas y Postventa confirma definitivamente el pedido después de la aprobación del pago o del evento equivalente de confirmación en el canal. La confirmación incluye `customer_ref` cuando el cupón aplica un límite por cliente.
+Cupones no decide el estado del pedido ni procesa reembolsos.
 
-Solo se consume si el cupón fue el beneficio finalmente seleccionado. El incremento del contador global y del contador por cliente, cuando exista, se realiza en una misma transacción local e idempotente.
+### Requisito 11: Consulta administrativa
+Debe mostrar código, promoción, estado, monto mínimo, límites, política de restitución, usos consumidos y usos disponibles cuando exista límite.
 
-### Requisito 7: Garantizar idempotencia
+### Requisito 12: Integración asíncrona
+El contrato actual publica los resultados:
 
-La combinación `order_id + cupon_id` debe ser única para el registro de consumo. Reintentos o mensajes duplicados de la misma confirmación no incrementan el contador.
+```text
+promotions.coupon.consumption.completed
+promotions.coupon.consumption.rejected
+```
 
-### Requisito 8: Garantizar concurrencia
-
-Si varios pedidos compiten por los últimos usos, el sistema debe asegurar atómicamente que el contador nunca supere el límite máximo.
-
-### Requisito 9: Resolver convivencia con otros beneficios
-
-La convivencia del cupón con una promoción automática o una oferta de Pricing se rige por la `politica_combinacion` de la promoción asociada. Una promoción puede declararse exclusiva o permitir combinaciones concretas. El motor evalúa únicamente combinaciones expresamente autorizadas y selecciona la combinación válida con menor importe final sobre la misma cesta; nunca acumula beneficios cuya configuración no lo permita. Un cupón solo consume uso cuando forma parte de la combinación finalmente seleccionada.
-
-### Requisito 10: Anulación posterior
-
-La restitución de un uso consumido depende de la política configurada en el cupón. Si `politica_cancelacion=RESTAURAR_EN_CANCELACION` y Ventas/Postventa comunica una cancelación homologada del pedido antes de que exista un uso comercial consumado según la política acordada, Cupones restaura idempotentemente el contador global y por cliente. Si la política es `NO_RESTAURAR`, conserva el consumo. Cupones no decide la causa ni el estado del pedido; solo reacciona al contrato de Postventa.
-
-### Requisito 11: Consultar cupones
-
-La consulta administrativa DEBE mostrar:
-- código;
-- promoción asociada;
-- estado;
-- monto mínimo;
-- límite máximo global;
-- límite por cliente, cuando exista;
-- política de restitución ante cancelación;
-- usos consumidos;
-- usos disponibles, cuando exista límite.
-
-### Requisito 12: Integración provisional de confirmación y rechazo
-La validación sin consumo puede vencer entre cotización y confirmación. Al recibir un `order.confirmed` provisional con `order_id`, `cupon_id`, `customer_ref` cuando corresponda, beneficio elegido y líneas de compra, Cupones comprueba de forma atómica que el mismo `order_id + cupon_id` no fue consumido, que el cupón sigue elegible, que queda capacidad global y que el cliente no superó su límite. Publica un resultado idempotente `promotions.coupon.consumption.completed` o `promotions.coupon.consumption.rejected` con `order_id`, `operation_id` y motivo. Si falla después de que Ventas confirmó el pago, Ventas/Postventa define la gestión comercial/financiera; Cupones no procesa reembolsos ni decreta el estado del pedido. Las denominaciones y campos externos están pendientes de homologación con Ventas; no se consideran un compromiso de ese equipo.
+El nombre/payload definitivo del comando de Ventas/Postventa que inicia el consumo sigue pendiente de homologación. La documentación anterior utilizaba un nombre provisional ligado a la confirmación del pedido; **ese nombre no se considera contrato definitivo**.
 
 ## 6. Requisitos no funcionales
-
-- Rendimiento: la validación no debe retrasar perceptiblemente la compra.
-- Seguridad: solo Gestor Comercial autorizado administra cupones.
-- Auditoría: conservar creación y última modificación.
-- Consistencia: usar referencia temporal consistente.
-- Concurrencia: consumo atómico y seguro ante solicitudes simultáneas.
-- Integración: API y eventos sin acceso directo de otros módulos a la base de datos.
+- Administración autenticada/autorizada.
+- Consumo atómico e idempotente.
+- Errores `application/problem+json` con `code` estable y `correlationId`.
+- Sin acceso directo a bases de datos de otros módulos.
 
 ## 7. Fuera de alcance
-
-- Definir el descuento, productos elegibles y vigencia: corresponde a Gestión de Promociones.
-- Procesamiento del pago.
-- Reembolsos y devoluciones.
-- Decidir causas, autorizaciones o efectos financieros de una anulación; la eventual restitución del contador se limita a aplicar la política propia del cupón cuando Ventas/Postventa comunique una cancelación homologada.
+- Definir descuento, alcance o vigencia.
+- Procesar pago, devolución o reembolso.
+- Consumir/restaurar usos manualmente desde el backoffice.
 
 ## Criterio de completitud
-
-La capacidad se considera correctamente implementada cuando todos los requisitos anteriores se cumplen.
+La capacidad queda alineada cuando `CUPON_DUPLICADO` está formalizado, los límites son opcionales, validar no consume y el iniciador externo no se presenta como homologado hasta cerrar el contrato con Ventas/Postventa.

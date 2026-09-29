@@ -2,10 +2,7 @@
 
 **Responsable:** Axel Andree Cueva Alcalá  
 **Rama:** cueva  
-**Trazabilidad:** Spec [SPEC-006](../specs/SPEC-006-gestion-ofertas-promociones.md) | Flow [WF-006](../wireframes/flows/WF-006-gestion-ofertas-promociones.md)
-
-Responsabilidad: Persona 4 — Axel Cueva.
-Versión corregida: 2026-09-15.
+**Trazabilidad:** Spec [SPEC-006](./specs/SPEC-006-gestion-ofertas-promociones.md) | Flow [WF-006](./wireframes/flows/WF-006-gestion-ofertas-promociones.md)
 
 ## Funcionalidad
 
@@ -13,123 +10,142 @@ Gestión de ofertas y promociones — Obligatoria.
 
 ## Historia de usuario
 
-**Como** gestor comercial,
-**quiero** configurar ofertas y promociones indicando los productos o SKUs participantes, el descuento, su vigencia y estado,
-**para** ofrecer precios promocionales que los canales de venta puedan consultar y aplicar correctamente.
+**Como** gestor comercial,  
+**quiero** configurar ofertas y promociones indicando productos o SKUs participantes, descuento, modalidad, vigencia, estado, prioridad, canales y política de combinación,  
+**para** que los canales de venta puedan consultar y evaluar correctamente beneficios comerciales sin modificar el precio maestro de Pricing.
 
 ## Reglas de negocio consolidadas
 
-- Una promoción puede usar descuento por **porcentaje** o por **monto fijo**.
-- El porcentaje debe ser mayor que 0 y menor o igual que 100.
-- El monto fijo debe ser mayor que 0 y se descuenta **una sola vez sobre el subtotal elegible de la evaluación**, nunca por unidad.
-- El descuento nunca puede producir un importe resultante negativo.
-- Una promoción solo participa en una evaluación si está activa, vigente y aplica a los productos evaluados.
-- Cada promoción define `prioridad`, alcance de `canales` y una **política de combinabilidad**. El evaluador construye únicamente combinaciones compatibles y, entre ellas, selecciona la de menor importe final; la prioridad resuelve empates o precedencias comerciales configuradas.
-- Si coinciden promoción automática, cupón u oferta de Pricing, se evalúan únicamente las **combinaciones permitidas** por sus políticas. Si son exclusivas, se compara el importe final y se selecciona la alternativa válida correspondiente; si son combinables, pueden coexistir sin aplicar dos veces el mismo beneficio.
-- Un cupón solo consume un uso si finalmente fue el beneficio seleccionado y el pedido fue confirmado.
-- Modificar o desactivar una promoción no altera descuentos ya registrados en pedidos confirmados.
-- Al crear una promoción, el gestor debe indicar su estado inicial: **ACTIVA** o **INACTIVA**.
-
-**Decisión de interfaz:** la evaluación de beneficios continúa siendo una capacidad de negocio consumida por canales/venta mediante API; no existe una pantalla administrativa independiente «Evaluar compra».
+- Una promoción usa descuento por **porcentaje** o por **monto fijo**.
+- Porcentaje: `0 < valor <= 100`.
+- Monto fijo: `valor > 0`, aplicado una vez al subtotal elegible.
+- El descuento no produce importe final negativo.
+- Solo participa si está activa, vigente, aplica al alcance y está habilitada para el canal.
+- La modalidad es `AUTOMATICA` o `CUPON`.
+- Cada promoción define prioridad y política de combinación.
+- Por defecto no se permite combinar con otros beneficios.
+- Se construyen únicamente combinaciones autorizadas.
+- Se selecciona la alternativa válida de menor importe final.
+- En empate exacto: no consumir cupón → menor prioridad → identificador estable.
+- Un cupón no se consume durante la validación/evaluación.
+- Modificar o desactivar una promoción no modifica pedidos ya confirmados.
+- Pricing entrega precios; Promociones evalúa beneficios y no sobrescribe esos precios.
+- No existe pantalla administrativa «Evaluar compra».
 
 ## Criterios de aceptación
 
 | ID | Criterio |
-| --- | --- |
-| CA-01 | Solo un gestor comercial con permisos puede crear, modificar, activar o desactivar promociones. |
-| CA-02 | Para registrar una promoción se debe indicar nombre, al menos un producto o SKU participante, tipo/valor de descuento, fecha y hora de inicio y fin, modalidad `AUTOMATICA` o `CUPON`, estado inicial, `prioridad`, canales aplicables y política de combinabilidad. |
-| CA-03 | Los productos o SKUs seleccionados deben existir y estar activos. El inicio debe ser anterior al fin; el porcentaje debe ser mayor que 0 y hasta 100 %, y el monto fijo debe ser mayor que 0. |
-| CA-04 | El gestor puede consultar el listado y el detalle de las promociones, modificar sus condiciones y activarlas o desactivarlas. |
-| CA-05 | Una promoción solo se aplica si está activa, dentro de su vigencia y corresponde a los productos evaluados. |
-| CA-06 | El descuento se calcula sobre la base monetaria definida para cada SKU elegible. La oferta propia de Pricing participa según la política de combinabilidad. El monto fijo se aplica una sola vez al subtotal elegible y ningún descuento puede producir un importe negativo. |
-| CA-07 | Si existen varias promociones automáticas válidas, el sistema evalúa solo las combinaciones permitidas por sus políticas. Entre las combinaciones válidas selecciona la de menor importe final; la `prioridad` configurada se utiliza para desempates o precedencias definidas. |
-| CA-08 | La evaluación devuelve la promoción aplicada, el importe original, el descuento y el importe resultante; si no corresponde aplicarla, informa el motivo. |
-| CA-09 | Modificar o desactivar una promoción no altera los descuentos ya registrados en pedidos confirmados. |
-| CA-10 | Promociones, cupones y la oferta propia de Pricing se combinan únicamente cuando sus políticas lo permiten. Una promoción puede declararse `EXCLUSIVE` o compatible con clases de beneficio específicas; el motor no aplica una regla global de no-stacking. |
-| CA-11 | Una promoción puede configurarse a nivel producto (aplica a sus SKUs vendibles activos) o a nivel SKU específico. |
-| CA-12 | La modalidad `AUTOMATICA` o `CUPON` es obligatoria y visible en consulta. Una promoción CUPON nunca se aplica sin código asociado validado. |
-| CA-13 | La modalidad solo puede editarse en promoción inactiva nunca activada y sin cupones asociados ni usos históricos; en otros casos se crea otra promoción. |
-| CA-14 | Pricing devuelve regular/oferta por SKU separadamente. La evaluación usa bases monetarias explícitas y la oferta de Pricing participa como beneficio según la política de combinabilidad, evitando descuentos duplicados o bases ambiguas. |
-| CA-15 | La evaluación considera el canal solicitante (`MARKETPLACE`, `CHATBOT`, `RETAIL` u otro homologado) y excluye promociones no habilitadas para él. La validación no consume cupón; confirmaciones provisionales de Ventas generan consumo aceptado o rechazo idempotente y Ventas/Postventa resuelve el pedido. |
+|---|---|
+| **CA-01** | Solo un usuario autorizado puede crear, modificar, activar o desactivar promociones. Los permisos granulares los define Seguridad. |
+| **CA-02** | Para registrar una promoción se indican nombre, alcance, tipo/valor, inicio, fin, modalidad, estado inicial, prioridad, canales y política de combinación. |
+| **CA-03** | El alcance contiene al menos un producto o SKU vendible activo. Inicio < fin; porcentaje `(0,100]`; monto fijo `>0`. |
+| **CA-04** | El gestor puede consultar listado/detalle, editar condiciones y activar/desactivar. |
+| **CA-05** | Solo se aplica si está activa, vigente, es elegible por alcance y está habilitada para el canal. |
+| **CA-06** | El monto fijo se aplica una sola vez al subtotal elegible; ningún descuento deja importe negativo. |
+| **CA-07** | Con varias promociones automáticas se evalúan solo combinaciones permitidas y se elige la de menor importe final. |
+| **CA-08** | La evaluación devuelve beneficio seleccionado, importe original, descuento, importe resultante y motivo si no aplica beneficio. |
+| **CA-09** | Modificar o desactivar no altera pedidos confirmados. |
+| **CA-10** | Oferta propia de Pricing, promoción automática y cupón se combinan únicamente cuando la política lo permite; todas las combinaciones deshabilitadas equivalen a una promoción exclusiva. |
+| **CA-11** | El alcance puede definirse por producto completo o SKU específico; la coincidencia se deduplica. |
+| **CA-12** | La modalidad es obligatoria. Una promoción `CUPON` no se aplica automáticamente sin un código válido asociado. |
+| **CA-13** | La modalidad solo se cambia en una promoción inactiva nunca activada, sin cupones asociados ni usos históricos; en otro caso se crea una nueva promoción. |
+| **CA-14** | Pricing entrega regular/oferta por SKU; Promociones los usa como insumo sin cambiar el precio maestro. |
+| **CA-15** | La evaluación considera el canal solicitante y excluye promociones no habilitadas. Validar no consume cupón. |
+| **CA-16** | El backoffice no ofrece una pantalla de simulación de compra; la evaluación es una capacidad API consumida por el flujo real. |
+| **CA-17** | Las reglas de importación, programación e histórico de precios pertenecen a SPEC/HU-013 y no forman parte de esta HU. |
 
-## Escenarios dado-cuando-entonces
+## Escenarios
 
-### Escenario 1: Registrar una promoción válida
+### Escenario 1: Registrar promoción válida
 
-* **DADO** que el gestor comercial tiene permisos y existen productos activos,
-* **CUANDO** registra una promoción con productos participantes, descuento válido, fechas correctas y estado inicial,
-* **ENTONCES** el sistema guarda la promoción, confirma la operación y la muestra en el listado con el estado indicado.
+- **DADO** un gestor autorizado y productos/SKUs activos
+- **CUANDO** registra una promoción completa y válida
+- **ENTONCES** se guarda y aparece en la administración con el estado indicado.
 
-### Escenario 2: Rechazar una configuración inválida
+### Escenario 2: Rechazar configuración inválida
 
-* **DADO** que el gestor comercial está registrando una promoción,
-* **CUANDO** ingresa un porcentaje superior al 100 %, un monto fijo menor o igual a 0, una fecha final igual o anterior al inicio o no selecciona productos,
-* **ENTONCES** el sistema impide guardar, identifica los errores y conserva los datos para corregirlos.
+- **DADO** un formulario de promoción
+- **CUANDO** se ingresa porcentaje >100, monto <=0, fin <= inicio o alcance vacío
+- **ENTONCES** se impide guardar y se conservan los datos para corregirlos.
 
-### Escenario 3: Aplicar una promoción vigente
+### Escenario 3: Aplicar porcentaje
 
-* **DADO** que un producto cuesta S/ 200 y tiene una promoción activa y vigente del 15 %,
-* **CUANDO** un canal solicita evaluar el precio para una unidad del producto,
-* **ENTONCES** el sistema devuelve el precio original de S/ 200, el descuento de S/ 30 y el precio resultante de S/ 170.
+- **DADO** subtotal elegible S/ 200 y promoción válida del 15 %
+- **CUANDO** el canal evalúa
+- **ENTONCES** se devuelve descuento S/ 30 e importe S/ 170.
 
-### Escenario 4: Aplicar un monto fijo sin producir un importe negativo
+### Escenario 4: Limitar monto fijo
 
-* **DADO** que el subtotal elegible es S/ 30 y existe una promoción válida de monto fijo S/ 50,
-* **CUANDO** el sistema calcula el beneficio,
-* **ENTONCES** limita el descuento a S/ 30 y devuelve un importe resultante de S/ 0.
+- **DADO** subtotal S/ 30 y descuento fijo S/ 50
+- **CUANDO** se evalúa
+- **ENTONCES** el descuento se limita a S/ 30 y el importe final es S/ 0.
 
-### Escenario 5: Elegir la mejor promoción
+### Escenario 5: Elegir mejor alternativa
 
-* **DADO** que para una compra existen promociones válidas con políticas de combinación conocidas,
-* **CUANDO** el sistema evalúa las combinaciones permitidas,
-* **ENTONCES** aplica la combinación válida de menor importe final; si son mutuamente exclusivas, conserva únicamente la alternativa ganadora.
+- **DADO** múltiples beneficios con políticas conocidas
+- **CUANDO** se evalúan combinaciones permitidas
+- **ENTONCES** se selecciona la alternativa válida de menor importe final.
 
-### Escenario 6: Resolver promoción automática y cupón
+### Escenario 6: Promoción automática y cupón
 
-* **DADO** que una promoción automática y un cupón válido participan en la misma compra,
-* **CUANDO** el canal solicita evaluar ambos beneficios,
-* **ENTONCES** el sistema respeta su política de combinabilidad: los acumula solo si está permitido; de lo contrario selecciona la alternativa válida de menor importe final.
+- **DADO** una promoción automática y un cupón válido
+- **CUANDO** el canal evalúa
+- **ENTONCES** se combinan solo si está permitido; de lo contrario se elige la alternativa válida correspondiente.
 
-### Escenario 7: Excluir una promoción fuera de vigencia
+### Escenario 7: Fuera de vigencia
 
-* **DADO** que una promoción todavía no inicia o ya finalizó,
-* **CUANDO** un canal solicita evaluar su aplicación,
-* **ENTONCES** el sistema no aplica el descuento e informa que está fuera de vigencia.
+- **DADO** una promoción no iniciada o vencida
+- **CUANDO** se evalúa
+- **ENTONCES** no se aplica.
 
-### Escenario 8: Desactivar una promoción
+### Escenario 8: Desactivar
 
-* **DADO** que existe una promoción activa,
-* **CUANDO** el gestor comercial la desactiva,
-* **ENTONCES** deja de aplicarse en nuevas evaluaciones y se conservan los descuentos de pedidos ya confirmados.
+- **DADO** una promoción activa
+- **CUANDO** el gestor la desactiva
+- **ENTONCES** deja de participar en nuevas evaluaciones y los pedidos históricos no cambian.
 
-### Escenario 9: Promoción por cupón sin código
-* **DADO** una promoción vigente de modalidad CUPON,
-* **CUANDO** se evalúa una compra sin presentar un código válido que la referencie,
-* **ENTONCES** la promoción no se aplica automáticamente.
+### Escenario 9: Modalidad cupón sin código
 
-### Escenario 10: Oferta propia de Pricing sin acumulación
-* **DADO** un SKU de precio regular S/ 200 y oferta vigente S/ 180, con promoción automática del 15 %,
-* **CUANDO** se comparan alternativas sobre el regular,
-* **ENTONCES** se aplica S/ 170 y nunca 15 % adicional sobre S/ 180.
+- **DADO** una promoción `CUPON`
+- **CUANDO** la compra no presenta un código válido
+- **ENTONCES** la promoción no se aplica automáticamente.
+
+### Escenario 10: Oferta propia de Pricing como alternativa
+
+- **DADO** regular S/ 200, oferta propia vigente S/ 180 y promoción automática que deja S/ 170
+- **CUANDO** la política no permite acumulación
+- **ENTONCES** se elige S/ 170 y no se vuelve a descontar sobre S/ 180.
+
+### Escenario 11: Modalidad no editable
+
+- **DADO** una promoción que ya fue activada o tiene cupones/usos históricos
+- **CUANDO** el gestor intenta cambiar `AUTOMATICA ↔ CUPON`
+- **ENTONCES** el sistema bloquea el cambio y orienta a crear una nueva promoción.
 
 ## Interacción con otros módulos
 
-| Módulo | Necesidad de interacción | Información que recibe esta funcionalidad | Información que entrega esta funcionalidad |
-| --- | --- | --- | --- |
-| Marketplace | Mostrar ofertas y evaluar descuentos en la compra. | Productos, cantidades y, cuando corresponda, cupón presentado. | Promoción seleccionada, condiciones y desglose de importes. |
-| Chatbot | Responder consultas sobre ofertas y promociones. | Productos consultados y cantidades. | Descripción de ofertas, vigencia y precios promocionales. |
-| Retail | Aplicar promociones en la venta asistida. | Productos, cantidades y, cuando corresponda, cupón presentado. | Beneficio seleccionado y descuento calculado. |
-| Ventas y Postventa | Validar y conservar el descuento del pedido. | Productos, cantidades, identificador del beneficio aplicado y pedido. | Resultado de validación y desglose del descuento para registrar en el pedido. |
-| Seguridad y Usuarios | Autorizar la administración. | Identidad autenticada y permisos. | Solicitudes de validación cuando lo requiera el mecanismo acordado. |
+| Módulo | Necesidad | Recibe | Entrega |
+|---|---|---|---|
+| Marketplace | Consultar/evaluar promociones | Cesta, cantidades, canal y cupón cuando exista | Beneficio seleccionado y desglose |
+| Chatbot | Consultar promociones | Productos y cantidades | Descripción/vigencia/resultado |
+| Retail | Venta asistida | Cesta y canal | Beneficio seleccionado |
+| Ventas/Postventa | Registrar snapshot comercial | Beneficio aceptado por el flujo de venta | Datos de evaluación; consumo de cupón se trata en HU-005 |
+| Seguridad | Autorizar administración | Token/claims | 401/403 según contrato |
+| Pricing | Proveer precios | regular/oferta, vigencia, scope | Promociones no modifica Pricing |
 
 ## Dependencias internas
 
-| Funcionalidad | Información necesaria |
-| --- | --- |
-| Gestión de Productos — Persona 2 | Identificadores, nombres y estados de los productos. |
-| Gestión de Precios — Persona 3 | Precios vigentes de los productos. |
-| Gestión de Cupones | Cupón válido y beneficio calculado cuando el cliente presenta un código. |
+- Gestión de Productos: identidad/estado de productos y SKU.
+- Gestión de Precios: precios regular/oferta vigentes.
+- Gestión de Cupones: código y límites del cupón cuando la modalidad lo requiera.
 
-## Condiciones de integración
+## Delimitación
 
-Las integraciones se realizan mediante APIs, de forma asíncrona y sin acceso directo a las bases de datos de otros módulos. Los contratos y mecanismos concretos se coordinan con los equipos involucrados.
+No pertenecen a esta HU:
+
+- inicialización de precios;
+- carga masiva de precios;
+- histórico temporal de Pricing;
+- SCD de precios;
+- límites de archivos de Pricing;
+- permisos `PRICING_*` como requisito de Promociones.
