@@ -1,1270 +1,216 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WF-001 — Carga y exportación masiva de productos</title>
-  <style>
-    :root {
-      --surface: #ffffff;
-      --neutral-10: #f3f4f6;
-      --neutral-20: #e5e7eb;
-      --neutral-30: #d1d5db;
-      --neutral-50: #6b7280;
-      --neutral-70: #374151;
-      --neutral-90: #111827;
-      --space-xs: 4px;
-      --space-sm: 8px;
-      --space-md: 16px;
-      --space-lg: 32px;
-      --space-xl: 64px;
-      --gutter: 24px;
-      --radius-sm: 4px;
-      --radius-md: 8px;
-      --content: 1200px;
-    }
-
-    * { box-sizing: border-box; }
-    input[type="checkbox"], input[type="radio"] { accent-color: var(--neutral-90); }
-    html { color-scheme: light; }
-    body {
-      margin: 0;
-      background: var(--surface);
-      color: var(--neutral-90);
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 16px;
-      line-height: 1.5;
-    }
-    button, select, input { font: inherit; }
-    button, select, a { -webkit-tap-highlight-color: transparent; }
-    button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible, a:focus-visible {
-      outline: 3px solid var(--neutral-90);
-      outline-offset: 2px;
-    }
-    [hidden] { display: none !important; }
-
-    .app-header {
-      border-bottom: 1px solid var(--neutral-30);
-      background: var(--surface);
-    }
-    .header-inner {
-      max-width: var(--content);
-      margin: 0 auto;
-      padding: 14px var(--gutter);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-      font-weight: 700;
-    }
-    .brand-mark {
-      width: 34px;
-      height: 34px;
-      border: 2px solid var(--neutral-90);
-      display: grid;
-      place-items: center;
-      flex: 0 0 auto;
-      font-size: 12px;
-    }
-    .brand-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .header-nav {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      color: var(--neutral-50);
-      font-size: 14px;
-    }
-    .header-nav span[aria-current="page"] { color: var(--neutral-90); font-weight: 600; }
-
-    .offline-banner {
-      border-bottom: 1px solid var(--neutral-90);
-      background: var(--neutral-10);
-      padding: 10px var(--gutter);
-      text-align: center;
-      font-weight: 600;
-    }
-
-    main {
-      max-width: var(--content);
-      margin: 0 auto;
-      padding: 40px var(--gutter) 72px;
-    }
-    .breadcrumbs {
-      margin: 0 0 24px;
-      color: var(--neutral-50);
-      font-size: 14px;
-    }
-    .breadcrumbs span:last-child { color: var(--neutral-90); }
-    h1 {
-      margin: 0;
-      font-size: clamp(30px, 4vw, 48px);
-      line-height: 1.1;
-      letter-spacing: -0.025em;
-    }
-    h2 {
-      margin: 0;
-      font-size: 24px;
-      line-height: 1.2;
-    }
-    h3 {
-      margin: 0;
-      font-size: 18px;
-      line-height: 1.3;
-    }
-    p { margin: 0; }
-    .lede {
-      margin-top: 14px;
-      max-width: 760px;
-      color: var(--neutral-50);
-      font-size: 18px;
-    }
-    .page-heading { margin-bottom: 32px; }
-
-    .grid-12 {
-      display: grid;
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: var(--gutter);
-    }
-    .col-8 { grid-column: span 8; }
-    .col-4 { grid-column: span 4; }
-    .col-12 { grid-column: span 12; }
-
-    .panel {
-      border: 1px solid var(--neutral-30);
-      background: var(--surface);
-      padding: 24px;
-    }
-    .panel + .panel { margin-top: 16px; }
-    .panel-title { margin-bottom: 8px; }
-    .muted { color: var(--neutral-50); }
-    .small { font-size: 14px; }
-
-    .drop-zone {
-      margin-top: 20px;
-      min-height: 260px;
-      border: 1px dashed var(--neutral-50);
-      background: var(--neutral-10);
-      padding: 32px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      gap: 12px;
-    }
-    .drop-zone.is-dragover {
-      border-style: solid;
-      border-color: var(--neutral-90);
-    }
-    .file-symbol {
-      width: 54px;
-      height: 64px;
-      border: 2px solid var(--neutral-90);
-      display: grid;
-      place-items: center;
-      font-weight: 700;
-      background: var(--surface);
-    }
-    .drop-zone strong { font-size: 18px; }
-
-    .btn {
-      min-height: 44px;
-      border: 1px solid var(--neutral-90);
-      border-radius: var(--radius-sm);
-      padding: 10px 16px;
-      background: var(--surface);
-      color: var(--neutral-90);
-      cursor: pointer;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      text-decoration: none;
-    }
-    .btn:hover:not(:disabled) { background: var(--neutral-10); }
-    .btn-primary { background: var(--neutral-90); color: var(--surface); }
-    .btn-primary:hover:not(:disabled) { background: #000; }
-    .btn:disabled { color: var(--neutral-50); border-color: var(--neutral-30); cursor: not-allowed; background: var(--neutral-10); }
-    .btn-link { border-color: transparent; padding-inline: 8px; }
-    .btn-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-
-    .download-card {
-      border: 1px solid var(--neutral-30);
-      padding: 18px;
-    }
-    .download-card + .download-card { margin-top: 14px; }
-    .download-card h3 { margin-bottom: 6px; }
-    .download-controls {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 8px;
-      margin-top: 14px;
-    }
-    .select {
-      min-height: 44px;
-      border: 1px solid var(--neutral-30);
-      border-radius: var(--radius-sm);
-      background: var(--surface);
-      color: var(--neutral-90);
-      padding: 8px 34px 8px 12px;
-      width: 100%;
-    }
-
-    .rules {
-      margin: 20px 0 0;
-      padding: 0;
-      list-style: none;
-    }
-    .rules li {
-      padding: 12px 0 12px 30px;
-      border-top: 1px solid var(--neutral-30);
-      position: relative;
-    }
-    .rules li:first-child { border-top: 0; }
-    .rules li::before {
-      content: "✓";
-      position: absolute;
-      left: 2px;
-      top: 12px;
-      font-weight: 700;
-    }
-
-    .notice {
-      border: 1px solid var(--neutral-90);
-      padding: 14px 16px;
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      background: var(--surface);
-    }
-    .notice + .notice { margin-top: 12px; }
-    .notice-icon { font-weight: 800; flex: 0 0 auto; }
-    .notice-title { font-weight: 700; }
-    .notice p + p { margin-top: 3px; }
-
-    .status-box {
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-      padding: 20px;
-      border: 1px solid var(--neutral-90);
-      margin-bottom: 20px;
-    }
-    .status-icon {
-      width: 42px;
-      height: 42px;
-      border: 2px solid var(--neutral-90);
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      font-weight: 800;
-      flex: 0 0 auto;
-    }
-    .spinner {
-      width: 42px;
-      height: 42px;
-      border: 3px solid var(--neutral-30);
-      border-top-color: var(--neutral-90);
-      border-radius: 50%;
-      animation: spin 0.9s linear infinite;
-      flex: 0 0 auto;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @media (prefers-reduced-motion: reduce) { .spinner { animation: none; border-top-color: var(--neutral-30); } }
-
-    .file-summary {
-      border: 1px solid var(--neutral-30);
-      margin-top: 18px;
-    }
-    .file-summary dl {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      margin: 0;
-    }
-    .file-summary .item {
-      min-width: 0;
-      padding: 16px;
-      border-right: 1px solid var(--neutral-30);
-    }
-    .file-summary .item:last-child { border-right: 0; }
-    .file-summary dt { color: var(--neutral-50); font-size: 13px; margin-bottom: 4px; }
-    .file-summary dd { margin: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-    .check-list { list-style: none; padding: 0; margin: 18px 0 0; }
-    .check-list li { display: flex; gap: 10px; padding: 9px 0; }
-    .check-mark { font-weight: 800; }
-
-    .actions-bar {
-      margin-top: 24px;
-      padding-top: 20px;
-      border-top: 1px solid var(--neutral-30);
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .actions-bar .group { display: flex; flex-wrap: wrap; gap: 12px; }
-
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
-      margin: 24px 0;
-    }
-    .metric {
-      border: 1px solid var(--neutral-30);
-      padding: 20px;
-    }
-    .metric-label { color: var(--neutral-50); font-size: 14px; }
-    .metric-value { display: block; margin-top: 4px; font-size: 34px; font-weight: 700; line-height: 1; }
-
-    .details-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1px;
-      border: 1px solid var(--neutral-30);
-      background: var(--neutral-30);
-      margin: 20px 0 0;
-    }
-    .detail { background: var(--surface); padding: 14px 16px; min-width: 0; }
-    .detail-label { color: var(--neutral-50); font-size: 13px; }
-    .detail-value { margin-top: 4px; font-weight: 600; overflow-wrap: anywhere; }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgb(17 24 39 / 0.5);
-      display: grid;
-      place-items: center;
-      padding: 20px;
-      z-index: 20;
-    }
-    .modal {
-      width: min(620px, 100%);
-      max-height: min(760px, calc(100vh - 40px));
-      overflow: auto;
-      background: var(--surface);
-      border: 2px solid var(--neutral-90);
-      padding: 24px;
-    }
-    .modal h2 { margin-bottom: 8px; }
-    .modal .modal-summary {
-      margin: 20px 0;
-      padding: 14px 16px;
-      border: 1px solid var(--neutral-30);
-    }
-    .modal .modal-actions {
-      margin-top: 22px;
-      display: flex;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .toast-region {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      z-index: 30;
-      width: min(420px, calc(100vw - 40px));
-    }
-    .toast {
-      border: 1px solid var(--neutral-90);
-      background: var(--surface);
-      padding: 14px 16px;
-    }
-
-    .global-state {
-      max-width: 720px;
-      margin: 50px auto 0;
-      border: 1px solid var(--neutral-90);
-      padding: 28px;
-    }
-    .global-state .status-icon { margin-bottom: 18px; }
-    .global-state h1 { font-size: 32px; }
-    .global-state .btn-row { margin-top: 24px; }
-
-    .sr-only {
-      position: absolute !important;
-      width: 1px !important;
-      height: 1px !important;
-      padding: 0 !important;
-      margin: -1px !important;
-      overflow: hidden !important;
-      clip: rect(0, 0, 0, 0) !important;
-      white-space: nowrap !important;
-      border: 0 !important;
-    }
-
-    @media (max-width: 900px) {
-      main { padding-top: 32px; }
-      .col-8, .col-4 { grid-column: span 12; }
-      .grid-12 { gap: 16px; }
-      .file-summary dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .file-summary .item:nth-child(2) { border-right: 0; }
-      .file-summary .item:nth-child(-n+2) { border-bottom: 1px solid var(--neutral-30); }
-      .details-grid { grid-template-columns: 1fr 1fr; }
-      .details-grid .detail:last-child { grid-column: 1 / -1; }
-      .header-nav .optional { display: none; }
-    }
-
-    @media (max-width: 600px) {
-      :root { --gutter: 16px; }
-      main { padding-top: 24px; padding-bottom: 48px; }
-      .header-inner { padding-block: 10px; }
-      .brand-text { max-width: 190px; }
-      .header-nav { display: none; }
-      .breadcrumbs { margin-bottom: 18px; }
-      .page-heading { margin-bottom: 24px; }
-      .lede { font-size: 16px; }
-      .panel { padding: 18px; }
-      .drop-zone { min-height: 220px; padding: 24px 16px; background: var(--surface); }
-      .download-controls { grid-template-columns: 1fr; }
-      .download-controls .btn { width: 100%; }
-      .file-summary dl { grid-template-columns: 1fr; }
-      .file-summary .item { border-right: 0; border-bottom: 1px solid var(--neutral-30); }
-      .file-summary .item:last-child { border-bottom: 0; }
-      .metrics { grid-template-columns: 1fr; }
-      .details-grid { grid-template-columns: 1fr; }
-      .details-grid .detail:last-child { grid-column: auto; }
-      .actions-bar { flex-direction: column; }
-      .actions-bar .group { width: 100%; }
-      .actions-bar .btn { width: 100%; }
-      .btn-row { flex-direction: column; align-items: stretch; }
-      .btn-row .btn { width: 100%; }
-      .modal-backdrop { padding: 10px; align-items: end; }
-      .modal { width: 100%; max-height: calc(100vh - 20px); padding: 20px 16px; }
-      .modal .modal-actions { flex-direction: column-reverse; }
-      .modal .modal-actions .btn { width: 100%; }
-      .toast-region { right: 12px; bottom: 12px; width: calc(100vw - 24px); }
-      .global-state { margin-top: 20px; padding: 22px 18px; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carga y exportación masiva de productos</title>
+<style>
+:root{--s:#fff;--n10:#f3f4f6;--n20:#D1D5DB;--n30:#d1d5db;--n50:#6b7280;--n70:#6B7280;--n90:#111827}
+*{box-sizing:border-box}html{background:#fff}body{margin:0;background:#fff;color:var(--n90);font:16px/1.5 Inter,system-ui,-apple-system,sans-serif}
+button,input,select{font:inherit;min-height:44px}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--n90);outline-offset:2px}
+.top{border-bottom:1px solid var(--n30);background:#fff}.topin,.wrap{max-width:1200px;margin:auto;padding:16px 24px}.topin{display:flex;justify-content:space-between;gap:16px}.brand{font-weight:700}.muted{color:var(--n50)}.small{font-size:13px}
+.wrap{padding-top:32px;padding-bottom:64px}.head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}.head h1{margin:0 0 6px;font-size:clamp(26px,4vw,36px)}.head p{margin:0;color:var(--n50)}
+.btn{border:1px solid var(--n90);background:#fff;color:var(--n90);border-radius:4px;padding:10px 14px;cursor:pointer}.primary{background:var(--n90);color:#fff}.quiet{border-color:var(--n30)}
+.row{display:flex;gap:8px;flex-wrap:wrap}.panel{border:1px solid var(--n30);padding:18px;margin-bottom:16px}.notice{border:2px solid var(--n90);padding:14px;margin-bottom:16px}.soft{background:var(--n10);border:1px solid var(--n30)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}.span6{grid-column:span 6}.span12{grid-column:1/-1}
+.rule-list{margin:8px 0 0;padding-left:22px}.rule-list li{margin:5px 0}.field label{display:block;font-weight:600;margin-bottom:6px}.control{width:100%;border:1px solid var(--n30);padding:10px 12px;background:#fff}
+.drop{border:2px dashed var(--n50);padding:24px;text-align:center}.drop strong{display:block;margin-bottom:6px}.file-name{font-family:"Roboto Mono",monospace}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpi{border:1px solid var(--n30);padding:14px}.kpi b{display:block;font-size:28px;margin-top:4px}
+.progress{height:14px;border:1px solid var(--n90);background:#fff}.bar{height:100%;background:var(--n90)}
+.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:760px}th,td{padding:11px;border-bottom:1px solid var(--n20);text-align:left;vertical-align:top}th{background:var(--n10);font-size:13px}
+.tag{display:inline-block;border:1px solid var(--n70);border-radius:999px;padding:2px 8px;font-size:13px}.mono{font-family:"Roboto Mono",monospace}
+.cards{display:none}.card{border:1px solid var(--n30);padding:14px;margin-bottom:10px}
+.toast{position:fixed;right:16px;bottom:16px;background:#fff;border:2px solid var(--n90);padding:12px 16px;display:none;z-index:30}.toast.show{display:block}
+@media(max-width:900px){.span6{grid-column:1/-1}.kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.topin,.wrap{padding-left:16px;padding-right:16px}.topin,.head{display:block}.head .row{margin-top:12px}.grid,.kpis{display:block}.span6,.span12{margin-bottom:14px}.row>.btn{flex:1 1 100%}.desktop{display:none}.cards{display:block}}
+</style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="header-inner">
-      <div class="brand" aria-label="PO Productos y ofertas">
-        <div class="brand-mark" aria-hidden="true">PO</div>
-        <span class="brand-text">PO Productos y ofertas</span>
+<header class="top"><div class="topin"><div class="brand">PO Productos y ofertas</div><div class="muted">Productos / Carga masiva</div></div></header>
+<main class="wrap" id="app" tabindex="-1"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+  'use strict';
+  const MAX_BYTES=10*1024*1024, MAX_ROWS=5000;
+  const app=document.getElementById('app'), toastEl=document.getElementById('toast');
+  const state={
+    screen:'home',
+    file:null,
+    format:'xlsx',
+    exportFormat:'xlsx',
+    exportJob:null,
+    batch:null,
+    queryState:'',
+    rejected:[],
+    selectedDemo:'valid'
+  };
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function toast(m){toastEl.textContent=m;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),1800)}
+  function head(t,p,a=''){return `<div class="head"><div><h1>${t}</h1><p>${p}</p></div><div class="row">${a}</div></div>`}
+  function goto(screen){state.screen=screen;render();app.focus()}
+  function home(){
+    const exp=state.exportJob ? `<div class="notice" style="margin-top:12px"><strong>${state.exportJob.status==='ready'?'Exportación lista':'Exportación en proceso'}</strong><p class="muted">${state.exportJob.status==='ready'?'El archivo completo está preparado.':'Puedes continuar trabajando; el archivo se genera en segundo plano.'}</p>${state.exportJob.status==='ready'?'<button class="btn" data-a="download-export">Descargar archivo</button>':''}</div>`:'';
+    app.innerHTML=head('Carga y exportación masiva de productos','Importa o exporta productos y SKU mediante archivos XLSX o CSV.')+
+    `<section class="panel">
+      <h2>Antes de seleccionar un archivo</h2>
+      <ul class="rule-list">
+        <li>Usa la plantilla oficial.</li>
+        <li>Formatos admitidos: XLSX o CSV.</li>
+        <li>Máximo 10 MB y 5,000 filas por importación.</li>
+        <li>En actualizaciones, una celda vacía conserva el valor existente.</li>
+        <li>Las imágenes se indican mediante URL.</li>
+        <li>El procesamiento continúa en segundo plano.</li>
+      </ul>
+    </section>
+    <div class="grid">
+      <section class="panel span6">
+        <h2>Importar archivo</h2>
+        <div class="drop">
+          <strong>Selecciona el archivo preparado con la plantilla</strong>
+          <p class="muted">La estructura se revisará antes de confirmar la importación.</p>
+          <label class="btn" for="file">Seleccionar archivo</label>
+          <input id="file" type="file" accept=".xlsx,.csv" hidden>
+          <div style="margin-top:12px"><label for="demo">Caso de demostración</label><select id="demo" class="control"><option value="valid">Archivo válido</option><option value="rows">Más de 5,000 filas</option><option value="size">Más de 10 MB</option><option value="structure">Columnas incorrectas</option><option value="active">Contenido activo</option></select></div>
+        </div>
+      </section>
+      <section class="panel span6">
+        <h2>Descargas</h2>
+        <div class="field"><label for="fmt">Formato de plantilla</label><select class="control" id="fmt"><option value="xlsx">XLSX</option><option value="csv">CSV</option></select></div>
+        <button class="btn" style="margin-top:10px" data-a="template">Descargar plantilla</button>
+        <hr style="border:0;border-top:1px solid var(--n30);margin:18px 0">
+        <div class="field"><label for="efmt">Formato del catálogo</label><select class="control" id="efmt"><option value="xlsx">XLSX</option><option value="csv">CSV</option></select></div>
+        <button class="btn primary" style="margin-top:10px" data-a="export">Exportar catálogo</button>
+        ${exp}
+      </section>
+    </div>`;
+    bind();
+    document.getElementById('file').onchange=e=>{
+      const f=e.target.files?.[0];
+      if(!f)return;
+      state.file={name:f.name,size:f.size,rows:1200,kind:f.name.toLowerCase().endsWith('.csv')?'CSV':'XLSX'};
+      prevalidate();
+    };
+    document.getElementById('demo').onchange=e=>state.selectedDemo=e.target.value;
+  }
+  function prevalidate(){
+    const demo=state.selectedDemo;
+    const reasons=[];
+    let rows=1200,size=2.4*1024*1024;
+    if(demo==='rows')rows=5204;
+    if(demo==='size')size=10.8*1024*1024;
+    if(demo==='structure')reasons.push('Las columnas no coinciden con la plantilla oficial.');
+    if(demo==='active')reasons.push('El archivo contiene contenido activo y no puede procesarse.');
+    if(rows>MAX_ROWS)reasons.push('El archivo supera el límite de 5,000 filas.');
+    if(size>MAX_BYTES)reasons.push('El archivo supera el límite de 10 MB.');
+    state.file={name:state.file?.name||'catalogo_carga.xlsx',size,rows,kind:state.file?.kind||'XLSX'};
+    state.rejected=reasons;
+    goto(reasons.length?'rejected':'review');
+  }
+  function review(){
+    const f=state.file;
+    app.innerHTML=head('Archivo listo para revisar','La prevalidación terminó sin errores estructurales.')+
+    `<section class="panel">
+      <div class="kpis">
+        <div class="kpi">Archivo<b class="small file-name">${esc(f.name)}</b></div>
+        <div class="kpi">Formato<b>${f.kind}</b></div>
+        <div class="kpi">Filas<b>${f.rows.toLocaleString('es-PE')}</b></div>
+        <div class="kpi">Tamaño<b>${(f.size/1024/1024).toFixed(1)} MB</b></div>
       </div>
-      <nav class="header-nav" aria-label="Navegación principal">
-        <span class="optional">Catálogo</span>
-        <span class="optional">Precios</span>
-        <span class="optional">Inventario</span>
-        <span aria-current="page">Carga masiva</span>
-      </nav>
-    </div>
-  </header>
-
-  <div id="offline-banner" class="offline-banner" role="status" hidden>
-    Sin conexión. Conservaremos el contexto disponible y podrás volver a consultar el estado cuando recuperes la conexión.
-  </div>
-
-  <main id="main-content" tabindex="-1"></main>
-
-  <div id="modal-root"></div>
-  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-  <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-
-  <script>
-    (() => {
-      'use strict';
-
-      const MAX_BYTES = 10 * 1024 * 1024;
-      const MAX_ROWS = 5000;
-      const mockFile = {
-        name: 'catalogo_actualizacion_septiembre.csv',
-        typeLabel: 'CSV',
-        sizeBytes: 4.8 * 1024 * 1024,
-        rows: 2450,
-        structure: 'Válida'
-      };
-
-      const state = {
-        screen: 's01',
-        file: null,
-        prevalidating: false,
-        modalOpen: false,
-        sending: false,
-        batchStatus: 'En cola',
-        batchId: 'LOT-2026-0917-0142',
-        batchStart: '17/09/2026, 13:12',
-        lastCheck: '13:12:08',
-        queryError: false,
-        result: null,
-        downloadError: null,
-        rejectedReasons: [],
-        structuralReject: false,
-        exportJob: null
-      };
-
-      const main = document.getElementById('main-content');
-      const modalRoot = document.getElementById('modal-root');
-      const toastRegion = document.getElementById('toast-region');
-      const liveRegion = document.getElementById('live-region');
-      const offlineBanner = document.getElementById('offline-banner');
-      let modalReturnFocus = null;
-      let processingTimers = [];
-
-      function escapeHtml(value) {
-        return String(value ?? '').replace(/[&<>'"]/g, c => ({
-          '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-        }[c]));
-      }
-
-      function announce(text) {
-        liveRegion.textContent = '';
-        window.setTimeout(() => { liveRegion.textContent = text; }, 20);
-      }
-
-      function toast(text) {
-        toastRegion.innerHTML = `<div class="toast" role="status">${escapeHtml(text)}</div>`;
-        window.setTimeout(() => { toastRegion.innerHTML = ''; }, 3200);
-      }
-
-      function formatBytes(bytes) {
-        const mb = bytes / (1024 * 1024);
-        return `${mb.toFixed(mb < 1 ? 2 : 1)} MB`;
-      }
-
-      function clearTimers() {
-        processingTimers.forEach(window.clearTimeout);
-        processingTimers = [];
-      }
-
-      function baseHeading(title, description) {
-        return `
-          <p class="breadcrumbs"><span>Productos</span> / <span>Carga masiva</span></p>
-          <div class="page-heading">
-            <h1>${escapeHtml(title)}</h1>
-            ${description ? `<p class="lede">${escapeHtml(description)}</p>` : ''}
-          </div>`;
-      }
-
-      function render() {
-        modalRoot.innerHTML = '';
-        if (state.modalOpen) renderModal();
-
-        if (state.screen === 'no-permission') return renderNoPermission();
-        if (state.screen === 'session-expired') return renderSessionExpired();
-        if (state.screen === 's02') return renderS02();
-        if (state.screen === 's02r') return renderS02Rejected();
-        if (state.screen === 's04') return renderS04();
-        if (state.screen === 's05s') return renderS05('success');
-        if (state.screen === 's05p') return renderS05('partial');
-        if (state.screen === 's05f') return renderS05('failed');
-        return renderS01();
-      }
-
-      function renderS01() {
-        state.screen = 's01';
-        main.innerHTML = `
-          ${baseHeading('Carga y exportación masiva de productos', 'Importa o exporta productos y SKUs vendibles mediante archivos XLSX o CSV.')}
-          ${state.downloadError ? `
-            <div class="notice" role="alert" style="margin-bottom:20px">
-              <div class="notice-icon" aria-hidden="true">!</div>
-              <div>
-                <p class="notice-title">No se pudo iniciar la descarga.</p>
-                <p class="muted">${escapeHtml(state.downloadError)}</p>
-                <div class="btn-row" style="margin-top:12px">
-                  <button class="btn" type="button" data-action="retry-download">Reintentar</button>
-                  <button class="btn btn-link" type="button" data-action="dismiss-download-error">Cerrar</button>
-                </div>
-              </div>
-            </div>` : ''}
-          <div class="grid-12">
-            <section class="panel col-8" aria-labelledby="import-title">
-              <h2 id="import-title" class="panel-title">Importar archivo</h2>
-              <p class="muted">Cada fila representa un SKU vendible. El archivo debe respetar la estructura oficial.</p>
-              <div id="drop-zone" class="drop-zone">
-                <div class="file-symbol" aria-hidden="true">.X</div>
-                <strong>Arrastra un archivo aquí</strong>
-                <p class="muted small">XLSX o CSV · máximo 10 MB · máximo 5,000 filas</p>
-                <button id="select-file" class="btn btn-primary" type="button">Seleccionar archivo</button>
-                <input id="file-input" class="sr-only" type="file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
-              </div>
-              <div style="margin-top:24px">
-                <h3 style="margin-bottom:8px">Antes de importar</h3>
-                <ul class="rules">
-                  <li>Usa la estructura de la plantilla oficial.</li>
-                  <li>En SKU existentes, las celdas vacías conservan su valor actual.</li>
-                  <li>Para imágenes, utiliza URLs válidas.</li>
-                  <li>La importación se procesará en segundo plano.</li>
-                </ul>
-              </div>
-            </section>
-
-            <aside class="col-4" aria-label="Descargas">
-              <div class="download-card">
-                <h3>Descargar plantilla</h3>
-                <p class="muted small">Estructura oficial con ejemplos eliminables.</p>
-                <div class="download-controls">
-                  <label class="sr-only" for="template-format">Formato de plantilla</label>
-                  <select id="template-format" class="select" aria-label="Formato de plantilla">
-                    <option value="xlsx">XLSX</option>
-                    <option value="csv">CSV</option>
-                  </select>
-                  <button class="btn" type="button" data-action="download-template">Descargar plantilla</button>
-                </div>
-              </div>
-
-              <div class="download-card">
-                <h3>Exportar catálogo</h3>
-                <p class="muted small">Catálogo completo con una fila por SKU vendible.</p>
-                <div class="download-controls">
-                  <label class="sr-only" for="catalog-format">Formato de exportación</label>
-                  <select id="catalog-format" class="select" aria-label="Formato de exportación">
-                    <option value="xlsx">XLSX</option>
-                    <option value="csv">CSV</option>
-                  </select>
-                  <button class="btn" type="button" data-action="export-catalog">Exportar catálogo</button>
-                </div>
-                ${state.exportJob ? `
-                  <div class="export-job-box" style="margin-top:14px;padding:12px;border:1px solid var(--neutral-30);background:var(--neutral-10)" role="status">
-                    <div style="font-weight:600;font-size:14px">${escapeHtml(state.exportJob.id)}</div>
-                    ${state.exportJob.status === 'generating' ? `
-                      <div style="display:flex;align-items:center;gap:8px;margin-top:6px" class="muted small">
-                        <span class="spinner" aria-hidden="true" style="width:16px;height:16px;border-width:2px"></span>
-                        <span>Generando catálogo en ${state.exportJob.format.toUpperCase()}…</span>
-                      </div>
-                      <p class="muted small" style="margin-top:4px">Puedes continuar navegando mientras finaliza.</p>` : `
-                      <div style="margin-top:6px" class="small">
-                        <span style="font-weight:600">✓ Exportación lista (${state.exportJob.format.toUpperCase()})</span>
-                      </div>
-                      <div class="btn-row" style="margin-top:8px">
-                        <button class="btn btn-primary" type="button" data-action="download-catalog-file" style="min-height:36px;padding:6px 10px;font-size:13px">Descargar archivo</button>
-                        <button class="btn btn-link" type="button" data-action="dismiss-export-job" style="min-height:36px;font-size:13px">Cerrar</button>
-                      </div>`}
-                  </div>` : ''}
-              </div>
-            </aside>
-          </div>`;
-        bindS01();
-      }
-
-      function bindS01() {
-        const input = document.getElementById('file-input');
-        const dropZone = document.getElementById('drop-zone');
-        document.getElementById('select-file')?.addEventListener('click', () => input.click());
-        input?.addEventListener('change', () => {
-          const file = input.files && input.files[0];
-          if (file) prevalidateFile(file);
-        });
-        dropZone?.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('is-dragover'); });
-        dropZone?.addEventListener('dragleave', () => dropZone.classList.remove('is-dragover'));
-        dropZone?.addEventListener('drop', e => {
-          e.preventDefault();
-          dropZone.classList.remove('is-dragover');
-          const file = e.dataTransfer.files && e.dataTransfer.files[0];
-          if (file) prevalidateFile(file);
-        });
-      }
-
-      async function prevalidateFile(file) {
-        state.prevalidating = true;
-        main.innerHTML = `
-          ${baseHeading('Prevalidando archivo', 'Estamos comprobando el archivo antes de crear cualquier lote.')}
-          <section class="panel" aria-labelledby="pre-title">
-            <div class="status-box" role="status">
-              <div class="spinner" aria-hidden="true"></div>
-              <div>
-                <h2 id="pre-title">Comprobando ${escapeHtml(file.name)}</h2>
-                <p class="muted">Validando formato, tamaño, filas y estructura.</p>
-              </div>
-            </div>
-            <button class="btn" type="button" data-action="replace-file">Reemplazar archivo</button>
-          </section>`;
-        announce('Prevalidando archivo.');
-
-        const ext = file.name.split('.').pop()?.toLowerCase();
-        const allowed = ext === 'csv' || ext === 'xlsx';
-        const reasons = [];
-        let structural = false;
-        let rows = null;
-
-        if (!allowed) reasons.push('El formato no es compatible. Selecciona un archivo XLSX o CSV.');
-        if (file.size > MAX_BYTES) reasons.push('El archivo supera el límite de 10 MB.');
-
-        if (ext === 'csv' && file.size <= MAX_BYTES) {
-          try {
-            const text = await file.text();
-            const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-            const lines = normalized.split('\n').filter(line => line.trim().length > 0);
-            rows = Math.max(0, lines.length - 1);
-            if (rows > MAX_ROWS) reasons.push('El archivo supera el límite de 5,000 filas.');
-            const unsafe = lines.some(line => line.split(',').some(cell => /^[=+@]/.test(cell.trim())));
-            if (unsafe) {
-              reasons.push('El archivo contiene contenido potencialmente inseguro y no puede procesarse.');
-              structural = true;
-            }
-          } catch (_) {
-            rows = null;
-          }
-        }
-
-        state.file = {
-          name: file.name,
-          typeLabel: ext ? ext.toUpperCase() : 'No disponible',
-          sizeBytes: file.size,
-          rows: rows ?? (ext === 'xlsx' ? 2480 : 0),
-          structure: reasons.length ? 'Inválida' : 'Válida'
-        };
-        state.rejectedReasons = reasons;
-        state.structuralReject = structural || !allowed;
-
-        processingTimers.push(window.setTimeout(() => {
-          state.prevalidating = false;
-          if (reasons.length) {
-            state.screen = 's02r';
-            history.replaceState(null, '', '#s02r');
-          } else {
-            state.screen = 's02';
-            history.replaceState(null, '', '#s02');
-          }
-          render();
-          main.focus();
-          announce(reasons.length ? 'Archivo rechazado durante la prevalidación.' : 'Archivo prevalidado correctamente.');
-        }, 700));
-      }
-
-      function fileData() { return state.file || mockFile; }
-
-      function renderFileSummary(file) {
-        return `
-          <div class="file-summary">
-            <dl>
-              <div class="item"><dt>Archivo</dt><dd title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</dd></div>
-              <div class="item"><dt>Tipo</dt><dd>${escapeHtml(file.typeLabel)}</dd></div>
-              <div class="item"><dt>Tamaño</dt><dd>${escapeHtml(formatBytes(file.sizeBytes))}</dd></div>
-              <div class="item"><dt>Filas detectadas</dt><dd>${Number(file.rows).toLocaleString('es-PE')}</dd></div>
-            </dl>
-          </div>`;
-      }
-
-      function renderS02() {
-        const file = fileData();
-        main.innerHTML = `
-          ${baseHeading('Archivo listo para continuar', 'La prevalidación estructural terminó correctamente. Revisa el resumen antes de confirmar la importación.')}
-          <section class="panel" aria-labelledby="valid-title">
-            <div class="status-box">
-              <div class="status-icon" aria-hidden="true">✓</div>
-              <div>
-                <h2 id="valid-title">Archivo válido</h2>
-                <p class="muted">La estructura fue aceptada y todavía no se ha creado ningún lote.</p>
-              </div>
-            </div>
-            ${renderFileSummary(file)}
-            <ul class="check-list" aria-label="Comprobaciones aprobadas">
-              <li><span class="check-mark" aria-hidden="true">✓</span><span>Formato admitido: XLSX o CSV.</span></li>
-              <li><span class="check-mark" aria-hidden="true">✓</span><span>Tamaño dentro del límite de 10 MB.</span></li>
-              <li><span class="check-mark" aria-hidden="true">✓</span><span>Cantidad de filas dentro del límite de 5,000.</span></li>
-              <li><span class="check-mark" aria-hidden="true">✓</span><span>La estructura coincide con la plantilla oficial.</span></li>
-            </ul>
-          </section>
-
-          <section class="panel" aria-labelledby="update-rules-title">
-            <h2 id="update-rules-title" class="panel-title">Reglas de actualización</h2>
-            <ul class="rules">
-              <li>Las filas válidas se aplicarán aunque existan errores de negocio en otras filas.</li>
-              <li>En SKU existentes, una celda vacía conserva el valor actual; no lo elimina.</li>
-              <li>Las imágenes se registran mediante URLs válidas.</li>
-            </ul>
-          </section>
-
-          <div class="actions-bar">
-            <div class="group">
-              <button class="btn" type="button" data-action="back-s01">Volver</button>
-              <button class="btn" type="button" data-action="replace-file">Reemplazar archivo</button>
-            </div>
-            <button id="continue-btn" class="btn btn-primary" type="button" data-action="open-confirm">Continuar</button>
-          </div>`;
-      }
-
-      function renderS02Rejected() {
-        const file = fileData();
-        const reasons = state.rejectedReasons.length ? state.rejectedReasons : ['Las columnas no coinciden con la plantilla oficial.'];
-        const showTemplate = state.structuralReject || reasons.some(r => /estructura|column|formato/i.test(r));
-        main.innerHTML = `
-          ${baseHeading('Archivo no válido', 'El archivo fue rechazado durante la prevalidación y no se creó ningún lote.')}
-          <section class="panel" aria-labelledby="reject-title">
-            <div class="status-box" role="alert">
-              <div class="status-icon" aria-hidden="true">!</div>
-              <div>
-                <h2 id="reject-title">No podemos procesar este archivo</h2>
-                <p class="muted">Corrige las causas indicadas y selecciona un nuevo archivo.</p>
-              </div>
-            </div>
-            ${renderFileSummary(file)}
-            <div style="margin-top:20px">
-              <h3>Motivos del rechazo</h3>
-              <ul class="check-list">
-                ${reasons.map(r => `<li><span class="check-mark" aria-hidden="true">×</span><span>${escapeHtml(r)}</span></li>`).join('')}
-              </ul>
-            </div>
-          </section>
-          <div class="actions-bar">
-            <div class="group">
-              <button class="btn" type="button" data-action="back-s01">Volver</button>
-              ${showTemplate ? '<button class="btn" type="button" data-action="download-template">Descargar plantilla</button>' : ''}
-            </div>
-            <button class="btn btn-primary" type="button" data-action="replace-file">Reemplazar archivo</button>
-          </div>`;
-      }
-
-      function renderModal() {
-        const file = fileData();
-        modalRoot.innerHTML = `
-          <div class="modal-backdrop" data-modal-backdrop>
-            <section class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description">
-              <h2 id="confirm-title" tabindex="-1">Confirmar importación</h2>
-              <p id="confirm-description" class="muted">Revisa el archivo y las reglas antes de iniciar los cambios masivos.</p>
-              <div class="modal-summary">
-                <strong title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</strong>
-                <p class="muted small">${escapeHtml(formatBytes(file.sizeBytes))} · ${Number(file.rows).toLocaleString('es-PE')} filas</p>
-              </div>
-              <ul class="rules">
-                <li>Las filas válidas se aplicarán y las inválidas podrán quedar rechazadas.</li>
-                <li>En SKU existentes, las celdas vacías conservarán el valor actual.</li>
-                <li>El procesamiento continuará en segundo plano.</li>
-              </ul>
-              <div class="modal-actions">
-                <button class="btn" type="button" data-action="close-confirm" ${state.sending ? 'disabled' : ''}>Volver</button>
-                <button class="btn btn-primary" type="button" data-action="confirm-import" ${state.sending ? 'disabled' : ''}>${state.sending ? 'Enviando…' : 'Confirmar importación'}</button>
-              </div>
-            </section>
-          </div>`;
-        const title = document.getElementById('confirm-title');
-        window.setTimeout(() => title?.focus(), 0);
-      }
-
-      function openModal(trigger) {
-        modalReturnFocus = trigger || document.activeElement;
-        state.modalOpen = true;
-        renderModal();
-      }
-
-      function closeModal() {
-        if (state.sending) return;
-        state.modalOpen = false;
-        modalRoot.innerHTML = '';
-        modalReturnFocus?.focus?.();
-      }
-
-      function confirmImport() {
-        if (state.sending) return;
-        state.sending = true;
-        renderModal();
-        announce('Enviando importación.');
-        processingTimers.push(window.setTimeout(() => {
-          state.modalOpen = false;
-          state.sending = false;
-          state.screen = 's04';
-          state.batchStatus = 'En cola';
-          state.queryError = false;
-          state.result = null;
-          history.replaceState(null, '', '#s04');
-          render();
-          main.focus();
-          announce('Importación en cola.');
-          startProcessingSimulation();
-        }, 650));
-      }
-
-      function renderS04() {
-        const file = fileData();
-        main.innerHTML = `
-          ${baseHeading('Estado de la importación', 'El archivo se está procesando en segundo plano.')}
-          ${state.queryError ? `
-            <div class="notice" role="alert" style="margin-bottom:20px">
-              <div class="notice-icon" aria-hidden="true">!</div>
-              <div>
-                <p class="notice-title">No pudimos consultar el estado en este momento.</p>
-                <p class="muted">Esto no significa que la importación haya fallado. El lote conserva su último estado conocido.</p>
-                <button class="btn" type="button" data-action="retry-query" style="margin-top:12px">Actualizar estado</button>
-              </div>
-            </div>` : ''}
-          <section class="panel" aria-labelledby="processing-title">
-            <div class="status-box" role="status">
-              <div class="spinner" aria-hidden="true"></div>
-              <div>
-                <h2 id="processing-title">${escapeHtml(state.batchStatus)}</h2>
-                <p class="muted">Puede salir de esta pantalla. Le notificaremos cuando termine.</p>
-              </div>
-            </div>
-            <div class="details-grid">
-              <div class="detail"><div class="detail-label">Archivo</div><div class="detail-value" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div></div>
-              <div class="detail"><div class="detail-label">Referencia</div><div class="detail-value">${escapeHtml(state.batchId)}</div></div>
-              <div class="detail"><div class="detail-label">Inicio</div><div class="detail-value">${escapeHtml(state.batchStart)}</div></div>
-            </div>
-            <p class="muted small" style="margin-top:14px">Última consulta: ${escapeHtml(state.lastCheck)}</p>
-          </section>
-          <div class="actions-bar">
-            <button class="btn" type="button" data-action="leave-products">Volver a productos</button>
-          </div>`;
-      }
-
-      function startProcessingSimulation(outcome = 'success') {
-        clearTimers();
-        processingTimers.push(window.setTimeout(() => {
-          if (state.screen !== 's04') return;
-          state.batchStatus = 'Procesando';
-          state.lastCheck = new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-          render();
-          announce('La importación está procesando.');
-        }, 1300));
-        processingTimers.push(window.setTimeout(() => {
-          if (state.screen !== 's04' || state.queryError) return;
-          finishProcessing(outcome);
-        }, 3400));
-      }
-
-      function finishProcessing(outcome) {
-        clearTimers();
-        state.result = outcome;
-        state.screen = outcome === 'partial' ? 's05p' : 's05s';
-        history.replaceState(null, '', outcome === 'partial' ? '#s05p' : '#s05s');
-        render();
-        main.focus();
-        announce(outcome === 'partial' ? 'Importación completada con filas rechazadas.' : 'Importación completada sin errores.');
-      }
-
-      function renderS05(kind) {
-        const file = fileData();
-        const partial = kind === 'partial';
-        const failed = kind === 'failed';
-        const metrics = failed
-          ? { total: 2450, ok: 1820, failed: 630 }
-          : partial
-          ? { total: 2450, ok: 2435, failed: 15 }
-          : { total: Number(file.rows) || 2480, ok: Number(file.rows) || 2480, failed: 0 };
-        const title = failed
-          ? 'Procesamiento interrumpido (Fallo general)'
-          : partial
-          ? 'Importación completada con errores'
-          : 'Importación completada';
-        const lede = failed
-          ? 'El procesamiento en segundo plano se interrumpió de forma irrecuperable. Las filas confirmadas antes de la interrupción se conservan.'
-          : partial
-          ? 'Las filas válidas fueron aplicadas y algunas filas fueron rechazadas.'
-          : 'Se procesaron correctamente todas las filas.';
-        const statusTitle = failed
-          ? 'Interrupción del procesamiento (FAILED_GENERAL)'
-          : partial
-          ? 'Completado con errores parciales'
-          : 'Completado sin errores';
-        const statusDesc = failed
-          ? 'El lote se detuvo antes de finalizar. Puedes reanudar las filas pendientes sin duplicar las ya aplicadas.'
-          : partial
-          ? 'Puedes descargar el detalle de las filas rechazadas.'
-          : 'No se detectaron filas fallidas.';
-        const statusIcon = failed ? '!' : partial ? '!' : '✓';
-        const labelFailed = failed ? 'Pendientes de reanudar' : 'Fallidos';
-
-        main.innerHTML = `
-          ${baseHeading(title, lede)}
-          <section class="panel" aria-labelledby="result-title">
-            <div class="status-box" ${failed ? 'role="alert"' : ''}>
-              <div class="status-icon" aria-hidden="true">${statusIcon}</div>
-              <div>
-                <h2 id="result-title">${statusTitle}</h2>
-                <p class="muted">${statusDesc}</p>
-              </div>
-            </div>
-            <div class="metrics" aria-label="Resumen del procesamiento">
-              <div class="metric"><span class="metric-label">Total procesado</span><span class="metric-value">${metrics.total.toLocaleString('es-PE')}</span></div>
-              <div class="metric"><span class="metric-label">Exitosos</span><span class="metric-value">${metrics.ok.toLocaleString('es-PE')}</span></div>
-              <div class="metric"><span class="metric-label">${labelFailed}</span><span class="metric-value">${metrics.failed.toLocaleString('es-PE')}</span></div>
-            </div>
-            ${failed ? `
-              <div class="notice">
-                <div class="notice-icon" aria-hidden="true">i</div>
-                <div>
-                  <p class="notice-title">Se conservan las ${metrics.ok.toLocaleString('es-PE')} filas ya aplicadas.</p>
-                  <p class="muted">Al reanudar, el procesamiento continuará a partir de la fila ${metrics.ok + 1} utilizando la misma referencia (${escapeHtml(state.batchId)}), sin duplicar registros ya procesados ni crear un lote nuevo.</p>
-                  <button class="btn btn-primary" type="button" data-action="resume-batch" style="margin-top:12px">Reanudar operaciones pendientes</button>
-                </div>
-              </div>` : partial ? `
-              <div class="notice">
-                <div class="notice-icon" aria-hidden="true">i</div>
-                <div>
-                  <p class="notice-title">Hay ${metrics.failed} filas rechazadas.</p>
-                  <p class="muted">El reporte incluye el número de fila, el dominio afectado y el motivo.</p>
-                  <button class="btn btn-primary" type="button" data-action="download-errors" style="margin-top:12px">Descargar errores CSV</button>
-                </div>
-              </div>` : ''}
-            <div class="details-grid">
-              <div class="detail"><div class="detail-label">Archivo</div><div class="detail-value" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div></div>
-              <div class="detail"><div class="detail-label">Referencia</div><div class="detail-value">${escapeHtml(state.batchId)}</div></div>
-              <div class="detail"><div class="detail-label">Finalización</div><div class="detail-value">17/09/2026, 13:16</div></div>
-            </div>
-          </section>
-          <div class="actions-bar">
-            <button class="btn" type="button" data-action="leave-products">Volver a productos</button>
-            <button class="btn" type="button" data-action="restart">Importar otro archivo</button>
-          </div>`;
-      }
-
-      function renderNoPermission() {
-        main.innerHTML = `
-          <section class="global-state" aria-labelledby="permission-title">
-            <div class="status-icon" aria-hidden="true">!</div>
-            <h1 id="permission-title">No tienes permiso para realizar esta acción</h1>
-            <p class="lede">Las acciones de importación y exportación están restringidas para tu sesión actual.</p>
-            <div class="btn-row"><button class="btn" type="button" data-action="leave-products">Volver a productos</button></div>
-          </section>`;
-      }
-
-      function renderSessionExpired() {
-        main.innerHTML = `
-          <section class="global-state" aria-labelledby="session-title">
-            <div class="status-icon" aria-hidden="true">!</div>
-            <h1 id="session-title">Tu sesión expiró</h1>
-            <p class="lede">Inicia sesión nuevamente para continuar. Cuando sea posible, se conservará la referencia del lote en curso.</p>
-            <div class="btn-row"><button class="btn btn-primary" type="button" data-action="login">Iniciar sesión</button></div>
-          </section>`;
-      }
-
-      function simulateDownload(kind, format) {
-        if (!navigator.onLine || state.downloadError) {
-          state.downloadError = 'La descarga no está disponible temporalmente. Intenta nuevamente.';
-          state.screen = 's01';
-          render();
-          announce('No se pudo iniciar la descarga.');
-          return;
-        }
-        if (kind === 'template') {
-          const fmt = format.toLowerCase();
-          const filename = `plantilla_carga_masiva_v2.${fmt}`;
-          const headers = 'operacion,product_id,variant_id,sku_base,sku,nombre,descripcion,categoria_id,tipo_producto_id,marca_id,tiene_variantes,caracteristicas_identificadoras,atributos_identificadores,atributos_no_identificadores,imagen_url,precio_regular,precio_oferta,accion_precio_oferta,location_id,stock,catalog_version,price_version,stock_version,estado,motivo_cambio';
-          const sample = 'CREAR_VARIANTE,prod_991,,NK-AM-PRO,NK-AM-PRO-42-BLK,Nike Air Max Pro,Zapatilla deportiva para running de alto impacto,CAT-001,PT-001,BRD-002,true,Talla;Color,Talla=42;Color=Negro,Material=Malla transpirable,https://img.tienda.com/nike_air_max_42.jpg,299.90,249.90,ESTABLECER,LOC-LIMA-CENTRAL,25,1,1,0,ACTIVO,Carga masiva inicial de temporada';
-          const content = fmt === 'csv' ? `${headers}\n${sample}\n` : `Plantilla oficial v2 (25 columnas con hojas protegidas y listas auxiliares):\n${headers}\n${sample}`;
-          const blob = new Blob([content], { type: fmt === 'csv' ? 'text/csv;charset=utf-8' : 'application/octet-stream' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          URL.revokeObjectURL(url);
-          toast(`Descargando plantilla v2 (${fmt.toUpperCase()}) con 25 columnas oficiales.`);
-          announce('La descarga de la plantilla v2 fue iniciada.');
-          return;
-        }
-        const exportId = 'EXP-' + new Date().getFullYear() + '-0918-0042';
-        state.exportJob = {
-          id: exportId,
-          status: 'generating',
-          format: format.toLowerCase(),
-          createdAt: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-        };
-        render();
-        toast(`Trabajo de exportación ${exportId} iniciado en segundo plano.`);
-        announce(`Trabajo de exportación ${exportId} iniciado en segundo plano.`);
-        processingTimers.push(window.setTimeout(() => {
-          if (!state.exportJob) return;
-          state.exportJob.status = 'ready';
-          render();
-          toast(`Exportación ${exportId} lista para descargar.`);
-          announce(`Exportación ${exportId} lista para descargar.`);
-        }, 2200));
-      }
-
-      function downloadCatalogFile() {
-        if (!state.exportJob) return;
-        const fmt = state.exportJob.format || 'xlsx';
-        const filename = `catalogo_exportado_${state.exportJob.id}.${fmt}`;
-        const headers = 'operacion,product_id,variant_id,sku_base,sku,nombre,descripcion,categoria_id,tipo_producto_id,marca_id,tiene_variantes,caracteristicas_identificadoras,atributos_identificadores,atributos_no_identificadores,imagen_url,precio_regular,precio_oferta,accion_precio_oferta,location_id,stock,catalog_version,price_version,stock_version,estado,motivo_cambio';
-        const rows = [
-          'ACTUALIZAR,prod_001,var_001,NK-AM-BLK,NK-AM-BLK-40,Nike Air Max,Zapatilla deportiva casual con amortiguación,CAT-001,PT-001,BRD-002,true,Talla;Color,Talla=40;Color=Negro,Material=Cuero sintético,https://img.tienda.com/nike_40.jpg,299.90,249.90,CONSERVAR,LOC-LIMA-CENTRAL,10,2,1,1,ACTIVO,Exportación de catálogo activo',
-          'ACTUALIZAR,prod_002,var_002,AD-UB-WHT,AD-UB-WHT-42,Adidas Ultraboost,Zapatilla de alto rendimiento con Boost completo,CAT-001,PT-001,BRD-003,true,Talla;Color,Talla=42;Color=Blanco,Material=Primeknit,https://img.tienda.com/adidas_42.jpg,450.00,399.00,CONSERVAR,LOC-LIMA-CENTRAL,15,2,1,1,ACTIVO,Exportación de catálogo activo'
-        ];
-        const content = fmt === 'csv'
-          ? `${headers}\n${rows.join('\n')}\n`
-          : `Catálogo de productos exportado v2\n${headers}\n${rows.join('\n')}`;
-        const blob = new Blob([content], { type: fmt === 'csv' ? 'text/csv;charset=utf-8' : 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-        toast(`Descargando ${filename}.`);
-      }
-
-      function downloadErrorsCsv() {
-        const rows = [['fila', 'dominio', 'motivo']];
-        for (let i = 0; i < 5; i++) rows.push([String(12 + i), 'Pricing', 'Formato de precio inválido']);
-        for (let i = 0; i < 10; i++) rows.push([String(38 + i), 'Catálogo', 'Categoría inexistente']);
-        const csv = rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'errores_importacion.csv';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-        toast('Descarga del reporte de errores iniciada.');
-      }
-
-      function restart() {
-        clearTimers();
-        Object.assign(state, {
-          screen: 's01', file: null, prevalidating: false, modalOpen: false, sending: false,
-          batchStatus: 'En cola', queryError: false, result: null, downloadError: null,
-          rejectedReasons: [], structuralReject: false, exportJob: null
-        });
-        history.replaceState(null, '', '#s01');
-        render();
-        main.focus();
-      }
-
-      function replaceFile() {
-        state.screen = 's01';
-        state.rejectedReasons = [];
-        state.structuralReject = false;
-        history.replaceState(null, '', '#s01');
-        render();
-        document.getElementById('file-input')?.click();
-      }
-
-      function parseHash() {
-        const hash = location.hash.replace('#', '').toLowerCase();
-        clearTimers();
-        state.modalOpen = false;
-        state.sending = false;
-        state.queryError = false;
-        state.downloadError = null;
-        state.file = state.file || { ...mockFile };
-        switch (hash) {
-          case 's02': state.screen = 's02'; break;
-          case 's02r':
-            state.screen = 's02r';
-            state.rejectedReasons = ['Las columnas no coinciden con la plantilla oficial.'];
-            state.structuralReject = true;
-            break;
-          case 's04': state.screen = 's04'; state.batchStatus = 'Procesando'; break;
-          case 's04e': state.screen = 's04'; state.batchStatus = 'Procesando'; state.queryError = true; break;
-          case 's05s': state.screen = 's05s'; break;
-          case 's05p': state.screen = 's05p'; break;
-          case 's05f': state.screen = 's05f'; break;
-          case 's01e': state.screen = 's01'; state.downloadError = 'La descarga no está disponible temporalmente. Intenta nuevamente.'; break;
-          case 'no-permission': state.screen = 'no-permission'; break;
-          case 'session-expired': state.screen = 'session-expired'; break;
-          default: state.screen = 's01'; state.file = null; break;
-        }
-        render();
-      }
-
-      document.addEventListener('click', e => {
-        const button = e.target.closest('[data-action]');
-        if (!button) return;
-        const action = button.dataset.action;
-        if (action === 'download-template') {
-          const select = document.getElementById('template-format');
-          simulateDownload('template', select?.value || 'xlsx');
-        } else if (action === 'export-catalog') {
-          const select = document.getElementById('catalog-format');
-          simulateDownload('catalog', select?.value || 'xlsx');
-        } else if (action === 'download-catalog-file') {
-          downloadCatalogFile();
-        } else if (action === 'dismiss-export-job') {
-          state.exportJob = null;
-          render();
-        } else if (action === 'retry-download') {
-          state.downloadError = null;
-          render();
-          toast('Puedes intentar la descarga nuevamente.');
-        } else if (action === 'dismiss-download-error') {
-          state.downloadError = null;
-          render();
-        } else if (action === 'back-s01') {
-          restart();
-        } else if (action === 'replace-file') {
-          replaceFile();
-        } else if (action === 'open-confirm') {
-          openModal(button);
-        } else if (action === 'close-confirm') {
-          closeModal();
-        } else if (action === 'confirm-import') {
-          confirmImport();
-        } else if (action === 'retry-query') {
-          state.queryError = false;
-          state.lastCheck = new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-          render();
-          announce('Estado actualizado. El lote continúa procesando.');
-          startProcessingSimulation('success');
-        } else if (action === 'resume-batch') {
-          state.screen = 's04';
-          state.batchStatus = 'Reanudando lote…';
-          state.queryError = false;
-          state.result = null;
-          history.replaceState(null, '', '#s04');
-          render();
-          main.focus();
-          announce('Reanudando procesamiento desde la última fila confirmada.');
-          toast('Reanudando lote...');
-          startProcessingSimulation('success');
-        } else if (action === 'download-errors') {
-          downloadErrorsCsv();
-        } else if (action === 'restart') {
-          restart();
-        } else if (action === 'leave-products') {
-          toast(state.screen === 's04' ? 'El lote continúa en segundo plano.' : 'Volviendo al módulo de productos.');
-        } else if (action === 'login') {
-          toast('Redirigiendo al inicio de sesión.');
-        }
-      });
-
-      document.addEventListener('keydown', e => {
-        if (!state.modalOpen) return;
-        const modal = modalRoot.querySelector('.modal');
-        if (!modal) return;
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          closeModal();
-          return;
-        }
-        if (e.key === 'Tab') {
-          const focusables = [...modal.querySelectorAll('button:not(:disabled), [href], select:not(:disabled), input:not(:disabled), [tabindex]:not([tabindex="-1"])')]
-            .filter(el => !el.hasAttribute('hidden'));
-          if (!focusables.length) return;
-          const first = focusables[0];
-          const last = focusables[focusables.length - 1];
-          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-        }
-      });
-
-      window.addEventListener('online', () => {
-        offlineBanner.hidden = true;
-        announce('Conexión recuperada.');
-      });
-      window.addEventListener('offline', () => {
-        offlineBanner.hidden = false;
-        announce('Sin conexión.');
-        if (state.screen === 's04') {
-          state.queryError = true;
-          render();
-        }
-      });
-      window.addEventListener('hashchange', parseHash);
-
-      offlineBanner.hidden = navigator.onLine;
-      parseHash();
-    })();
-  </script>
+      <div class="notice soft" style="margin-top:16px">
+        <strong>Reglas verificadas</strong>
+        <p class="muted">Tamaño, cantidad de filas, estructura oficial y contenido seguro.</p>
+      </div>
+      <div class="row"><button class="btn" data-a="replace">Elegir otro archivo</button><button class="btn primary" data-a="confirm">Continuar</button></div>
+    </section>`; bind();
+  }
+  function rejected(){
+    app.innerHTML=head('No se puede importar este archivo','Corrige el archivo antes de continuar.')+
+    `<section class="notice"><strong>Revisión requerida</strong><ul>${state.rejected.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>
+    <div class="row"><button class="btn" data-a="replace">Elegir otro archivo</button><button class="btn" data-a="template">Descargar plantilla</button></div>`;bind();
+  }
+  function confirm(){
+    app.innerHTML=head('Confirmar importación','El archivo se procesará en segundo plano.')+
+    `<section class="panel">
+      <p><strong>${esc(state.file.name)}</strong> · ${state.file.rows.toLocaleString('es-PE')} filas</p>
+      <div class="notice soft"><strong>Procesamiento parcial permitido</strong><p>Las filas correctas pueden completarse aunque otras sean rechazadas. El resultado indicará las filas que necesiten revisión.</p></div>
+      <div class="row"><button class="btn" data-a="back-review">Volver</button><button class="btn primary" data-a="start">Confirmar importación</button></div>
+    </section>`;bind();
+  }
+  function startBatch(){
+    state.batch={id:'BATCH-20260928-0042',processed:0,total:state.file.rows,ok:0,failed:0,status:'processing',reconcile:0};
+    goto('processing');
+    let steps=0;
+    const timer=setInterval(()=>{
+      if(!state.batch||state.batch.status!=='processing'){clearInterval(timer);return}
+      steps++;
+      state.batch.processed=Math.min(state.batch.total,Math.round(state.batch.total*(steps/5)));
+      state.batch.ok=Math.max(0,state.batch.processed-(steps>=4?3:0));
+      state.batch.failed=state.batch.processed-state.batch.ok;
+      render();
+      if(steps>=5){clearInterval(timer);state.batch.status='done';state.batch.failed=3;state.batch.ok=state.batch.total-3;state.batch.reconcile=1;goto('result')}
+    },450);
+  }
+  function processing(){
+    const b=state.batch,pct=Math.round(100*b.processed/b.total);
+    app.innerHTML=head('Importación en proceso','Puedes salir de esta pantalla y volver a consultar el lote.')+
+    `<section class="panel">
+      <p><strong>Batch ID:</strong> <span class="mono">${esc(b.id)}</span></p>
+      <p>Procesadas ${b.processed.toLocaleString('es-PE')} de ${b.total.toLocaleString('es-PE')}</p>
+      <div class="progress" aria-label="Progreso" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><div class="bar" style="width:${pct}%"></div></div>
+      <div class="kpis" style="margin-top:16px"><div class="kpi">Completadas<b>${b.ok}</b></div><div class="kpi">Con observaciones<b>${b.failed}</b></div><div class="kpi">Progreso<b>${pct}%</b></div><div class="kpi">Estado<b class="small">Procesando</b></div></div>
+    </section>`;bind();
+  }
+  function result(){
+    const b=state.batch;
+    const rows=[
+      {row:118,sku:'RUN-42',result:'Rechazada',reason:'Revisa el precio indicado.'},
+      {row:392,sku:'BAL-05',result:'Rechazada',reason:'La categoría seleccionada no está disponible.'},
+      {row:801,sku:'ZAP-40',result:'Requiere conciliación',reason:'Una parte del cambio ya fue confirmada antes del rechazo.'}
+    ];
+    app.innerHTML=head('Resultado de la importación','El procesamiento terminó y conserva el resultado real de cada fila.','<button class="btn" data-a="home">Volver al centro</button>')+
+    `<section class="kpis">
+      <div class="kpi">Total<b>${b.total}</b></div><div class="kpi">Completadas<b>${b.ok}</b></div><div class="kpi">Fallidas<b>${b.failed}</b></div><div class="kpi">Requieren conciliación<b>${b.reconcile}</b></div>
+    </section>
+    <section class="notice"><strong>Hay filas que requieren revisión</strong><p>Una fila parcialmente aplicada no se presenta como revertida. Revisa el detalle antes de reintentar.</p></section>
+    <section class="panel"><h2>Detalle</h2><div class="desktop tablewrap"><table><thead><tr><th>Fila</th><th>SKU</th><th>Resultado</th><th>Motivo</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.row}</td><td class="mono">${r.sku}</td><td><span class="tag">${r.result}</span></td><td>${r.reason}</td></tr>`).join('')}</tbody></table></div><div class="cards">${rows.map(r=>`<article class="card"><strong>Fila ${r.row} · ${r.sku}</strong><p>${r.result}</p><p class="muted">${r.reason}</p></article>`).join('')}</div><button class="btn" data-a="report">Descargar reporte CSV</button></section>`;bind();
+  }
+  function interrupted(){
+    app.innerHTML=head('El procesamiento se interrumpió','El estado confirmado de las filas se conserva.')+
+    `<section class="notice"><strong>No se creó un lote nuevo</strong><p>Puedes reanudar las operaciones pendientes con el mismo Batch ID sin duplicar las ya confirmadas.</p></section>
+    <section class="panel"><p><strong>Batch ID:</strong> <span class="mono">${esc(state.batch?.id||'BATCH-20260928-0042')}</span></p><div class="row"><button class="btn" data-a="home">Volver</button><button class="btn primary" data-a="resume">Reanudar pendientes</button></div></section>`;bind();
+  }
+  function render(){
+    if(state.screen==='home')home();
+    else if(state.screen==='review')review();
+    else if(state.screen==='rejected')rejected();
+    else if(state.screen==='confirm')confirm();
+    else if(state.screen==='processing')processing();
+    else if(state.screen==='result')result();
+    else if(state.screen==='interrupted')interrupted();
+  }
+  function bind(){
+    app.querySelectorAll('[data-a]').forEach(btn=>btn.onclick=()=>{
+      const a=btn.dataset.a;
+      if(a==='template'){
+        const fmt=document.getElementById('fmt')?.value||state.format;
+        const headers='operacion,product_id,variant_id,sku_base,sku,nombre,descripcion,categoria_id,tipo_producto_id,marca_id,tiene_variantes,caracteristicas_identificadoras,atributos_identificadores,atributos_no_identificadores,imagen_url,precio_regular,precio_oferta,accion_precio_oferta,location_id,stock,catalog_version,price_version,stock_version,estado,motivo_cambio';
+        const blob=new Blob([headers+'\\n'],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),x=document.createElement('a');x.href=url;x.download='plantilla_carga_masiva_v2.'+fmt;x.click();URL.revokeObjectURL(url);toast('Plantilla preparada.');
+      }else if(a==='export'){
+        const fmt=document.getElementById('efmt')?.value||'xlsx';
+        state.exportJob={format:fmt,status:'processing'};render();setTimeout(()=>{if(state.exportJob){state.exportJob.status='ready';render();toast('Exportación lista.')}},700);
+      }else if(a==='download-export'){
+        const blob=new Blob(['Catálogo completo generado para demostración.\\n'],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),x=document.createElement('a');x.href=url;x.download='catalogo_completo.'+(state.exportJob?.format||'xlsx');x.click();URL.revokeObjectURL(url);
+      }else if(a==='replace'||a==='home'){state.screen='home';state.file=null;render()}
+      else if(a==='confirm')goto('confirm');
+      else if(a==='back-review')goto('review');
+      else if(a==='start')startBatch();
+      else if(a==='report'){const blob=new Blob(['fila,sku,resultado,motivo\\n118,RUN-42,Rechazada,Revisa el precio indicado\\n392,BAL-05,Rechazada,La categoria seleccionada no esta disponible\\n801,ZAP-40,Requiere conciliacion,Parte del cambio ya fue confirmada\\n'],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),x=document.createElement('a');x.href=url;x.download='reporte_importacion.csv';x.click();URL.revokeObjectURL(url)}
+      else if(a==='resume'){state.batch={...(state.batch||{id:'BATCH-20260928-0042',total:1200}),processed:900,ok:897,failed:3,status:'processing',reconcile:1};goto('processing');setTimeout(()=>{state.batch.processed=state.batch.total;state.batch.ok=state.batch.total-3;state.batch.failed=3;state.batch.status='done';goto('result')},800)}
+    });
+  }
+  render();
+})();
+</script>
 </body>
 </html>
