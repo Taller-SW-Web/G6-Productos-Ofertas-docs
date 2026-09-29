@@ -1,0 +1,372 @@
+# Productos y Ofertas
+
+Repositorio de documentación del módulo **Productos y Ofertas** del proyecto de Taller de Construcción de Software Web.
+
+El módulo concentra las capacidades compartidas de catálogo, taxonomía, precios, promociones, combos, inventario y operaciones masivas que son consumidas por otros módulos del sistema, entre ellos Marketplace, Chatbot, Retail, Ventas/Postventa y Despacho.
+
+La documentación sigue un enfoque **contract-first**: las reglas funcionales, contratos HTTP, eventos y responsabilidades de cada módulo se mantienen explícitamente separados para evitar duplicación de ownership y acoplamiento entre módulos.
+
+---
+
+## 1. Alcance del módulo
+
+Productos y Ofertas cubre 16 funcionalidades principales:
+
+| ID | Funcionalidad |
+|---|---|
+| 001 | Carga y exportación masiva de productos |
+| 002 | Gestión de combos de productos |
+| 003 | Gestión de productos |
+| 004 | Gestión de variantes y SKU |
+| 005 | Gestión de cupones de descuento |
+| 006 | Gestión de ofertas y promociones |
+| 007 | Reglas de venta cruzada y upselling |
+| 008 | Gestión de categorías y subcategorías |
+| 009 | Gestión de características y valores |
+| 010 | Asociación entre tipos de producto y características |
+| 011 | Gestión de marcas |
+| 012 | Gestión de SEO y metadatos |
+| 013 | Gestión de precios individuales y masivos |
+| 014 | Historial y auditoría de precios |
+| 015 | Control de stock y disponibilidad |
+| 016 | Dashboard analítico y alertas de stock |
+
+Cada funcionalidad mantiene una cadena documental formada por:
+
+```mermaid
+flowchart TD
+    SPEC["SPEC"] --> HU["Historia de Usuario"]
+    HU --> WF["Wireframe / flujo UX"]
+    WF --> HTML["Prototipo HTML"]
+    HTML --> API["Contrato API / Evento<br/>cuando corresponde"]
+    API --> ARQ["Arquitectura e implementación"]
+```
+
+El inventario detallado de funcionalidades, responsables y artefactos se encuentra en [`wireframes/INDEX.md`](wireframes/INDEX.md).
+
+---
+
+## 2. Cómo navegar este repositorio
+
+| Artefacto | Ubicación | Propósito |
+|---|---|---|
+| Especificaciones funcionales | [`specs/`](specs/) | Reglas de negocio y comportamiento esperado |
+| Historias de usuario | [`hu/`](hu/) | Necesidades del usuario y criterios funcionales |
+| Flujos funcionales complementarios | [`flujos/`](flujos/) | Flujos detallados de procesos relevantes |
+| Wireframes | [`wireframes/flows/`](wireframes/flows/) | Definición funcional de las interfaces |
+| Prototipos HTML | [`wireframes/prototipos/`](wireframes/prototipos/) | Representaciones navegables de los wireframes |
+| Guía visual de wireframes | [`wireframes/DESIGN.md`](wireframes/DESIGN.md) | Lineamientos visuales aplicables exclusivamente a los wireframes |
+| Índice funcional | [`wireframes/INDEX.md`](wireframes/INDEX.md) | Mapeo de las 16 funcionalidades y responsables |
+| Visor de prototipos | [`wireframes/Visor_Prototipos_PO.html`](wireframes/Visor_Prototipos_PO.html) | Acceso unificado a los prototipos de wireframes |
+| Arquitectura | [`Arquitectura.md`](Arquitectura.md) | Diseño técnico y decisiones arquitectónicas |
+| Modelo conceptual | [`Modelo_Conceptual.md`](Modelo_Conceptual.md) | Ownership y relaciones conceptuales de datos |
+| Contrato de integración | [`Contrato_Api.md`](Contrato_Api.md) | Responsabilidades e integración con otros módulos |
+| OpenAPI | [`api/openapi.yaml`](api/openapi.yaml) | Contrato HTTP ejecutable |
+| AsyncAPI | [`asyncapi/asyncapi.yaml`](asyncapi/asyncapi.yaml) | Contrato de mensajería asíncrona |
+| Catálogo de errores | [`api/catalogo-errores.md`](api/catalogo-errores.md) | Semántica estable de errores del módulo |
+| Catálogo de eventos | [`api/catalogo-eventos.md`](api/catalogo-eventos.md) | Eventos publicados y consumidos |
+
+---
+
+## 3. Fuentes de verdad
+
+No todos los documentos tienen la misma autoridad.
+
+| Tema | Fuente de verdad |
+|---|---|
+| Reglas funcionales | `specs/SPEC-XXX-*.md` |
+| Necesidad y comportamiento desde usuario | `hu/HU-XXX-*.md` |
+| Comportamiento de interfaz | `wireframes/flows/WF-XXX-*.md` |
+| Representación visual de wireframes | `wireframes/DESIGN.md` |
+| Contrato HTTP | `api/openapi.yaml` |
+| Mensajería asíncrona | `asyncapi/asyncapi.yaml` |
+| Códigos de error | `api/catalogo-errores.md` |
+| Eventos | `api/catalogo-eventos.md` |
+| Ownership e integración entre módulos | `Contrato_Api.md` |
+| Arquitectura interna | `Arquitectura.md` |
+| Ownership conceptual de datos | `Modelo_Conceptual.md` |
+
+Ante una diferencia entre documentación narrativa y un contrato ejecutable, se debe revisar primero la fuente de verdad correspondiente y posteriormente propagar la corrección a los documentos derivados.
+
+> **Nota sobre diseño:** `wireframes/DESIGN.md` gobierna únicamente la representación visual de los wireframes actuales. Los mockups de mayor fidelidad tendrán su propio documento de diseño y no deberán utilizar `wireframes/DESIGN.md` como fuente visual canónica.
+
+---
+
+## 4. Arquitectura
+
+El módulo se divide en ocho bounded contexts de negocio.
+
+| Servicio | Responsabilidad |
+|---|---|
+| `taxonomy-svc` | Categorías, marcas, características, valores, tipos de producto y asociaciones |
+| `catalog-svc` | Productos, variantes, SKU, imágenes, atributos y perfil físico |
+| `pricing-svc` | Precios, vigencias, canales y programación |
+| `price-audit-svc` | Historial y auditoría de cambios de precio |
+| `promotions-svc` | Promociones, cupones, cross-sell y upselling |
+| `combos-svc` | Definición y composición de combos |
+| `inventory-svc` | Stock, reservas, consumo, liberación, ajustes y disponibilidad |
+| `bulk-svc` | Importación, exportación y procesamiento masivo |
+
+Adicionalmente existe un `api-gateway` / BFF como punto de acceso, pero no constituye un bounded context de negocio.
+
+La descripción completa, reglas de dependencias, persistencia, mensajería, resiliencia, seguridad, observabilidad y diagramas C4 se encuentran en [`Arquitectura.md`](Arquitectura.md).
+
+---
+
+## 5. Ownership de negocio
+
+El sistema evita compartir directamente bases de datos o entidades entre módulos.
+
+| Información / proceso | Módulo propietario |
+|---|---|
+| Producto, variante y SKU | Productos y Ofertas |
+| Categoría, marca y características | Productos y Ofertas |
+| Precio | Productos y Ofertas |
+| Promoción y cupón | Productos y Ofertas |
+| Combo | Productos y Ofertas |
+| Stock y reservas | Productos y Ofertas |
+| Usuario, identidad, roles y autenticación | Seguridad y Usuarios |
+| Pedido, pago y estado comercial | Ventas y Postventa |
+| Devolución comercial y reembolso | Ventas y Postventa |
+| Despacho, empaque y entrega | Despacho y Entrega |
+
+No se permiten foreign keys ni consultas SQL directas entre bases de datos pertenecientes a módulos diferentes.
+
+La integración se realiza mediante contratos HTTP y mensajería asíncrona publicada.
+
+---
+
+## 6. Integración con Ventas/Postventa
+
+El flujo homologado de inventario es:
+
+```mermaid
+flowchart TD
+    C["Canal"] -->|Consulta disponibilidad| PO["Productos y Ofertas"]
+    C -->|Crea pedido| VP["Ventas/Postventa"]
+
+    VP -->|Pedido = CREADO| R["Solicita reserva"]
+    VP -->|Pedido = PAGADO| CO["Confirma consumo"]
+    VP -->|Cancelación o PAGO_NO_COMPLETADO| L["Solicita liberación"]
+
+    R --> INV["Inventario<br/>Productos y Ofertas"]
+    CO --> INV
+    L --> INV
+```
+
+Los canales como Marketplace, Chatbot y Retail consultan disponibilidad, pero no realizan directamente el consumo definitivo de inventario.
+
+Ventas/Postventa coordina el ciclo asociado al pedido y Productos y Ofertas mantiene el estado autoritativo del inventario.
+
+Las reservas pueden expirar mediante un TTL configurable.
+
+---
+
+## 7. Integración con Despacho
+
+Productos y Ofertas es propietario de las propiedades físicas intrínsecas de cada SKU, como peso y dimensiones.
+
+Despacho y Entrega es propietario de las decisiones logísticas derivadas de esos datos, entre ellas:
+
+- Tipo de empaque.
+- Agrupación de unidades.
+- Cantidad de paquetes.
+- Volumen logístico final.
+- Capacidad de transporte.
+
+El módulo de Productos y Ofertas no incorpora reglas propias de empaquetado.
+
+---
+
+## 8. Contratos de API
+
+La API HTTP utiliza como prefijo:
+
+```text
+/api/v1
+```
+
+Los recursos se organizan por dominio y se publican en español.
+
+Ejemplos:
+
+```text
+/api/v1/productos
+/api/v1/categorias
+/api/v1/marcas
+/api/v1/precios
+/api/v1/promociones
+/api/v1/cupones
+/api/v1/combos
+/api/v1/inventario
+```
+
+El contrato HTTP completo se encuentra en:
+
+[`api/openapi.yaml`](api/openapi.yaml)
+
+La mensajería asíncrona se encuentra en:
+
+[`asyncapi/asyncapi.yaml`](asyncapi/asyncapi.yaml)
+
+La explicación humana de responsabilidades e integración se mantiene en:
+
+[`Contrato_Api.md`](Contrato_Api.md)
+
+### Versiones contractuales actuales
+
+| Artefacto | Versión |
+|---|---|
+| OpenAPI | `0.3.5` |
+| AsyncAPI | `0.2.1` |
+| Catálogo de errores | `0.2.4` |
+| Catálogo de eventos | `0.2.1` |
+
+---
+
+## 9. Diseño y experiencia de usuario
+
+Las 16 funcionalidades cuentan con definición de wireframe y prototipo HTML.
+
+La guía visual vigente para estos artefactos se encuentra en:
+
+[`wireframes/DESIGN.md`](wireframes/DESIGN.md)
+
+Este documento define exclusivamente los lineamientos de los **wireframes de baja fidelidad** actuales.
+
+Los futuros **mockups de mayor fidelidad** contarán con un documento de diseño independiente, de modo que las reglas visuales de los wireframes no se mezclen con las decisiones visuales de los mockups.
+
+Los prototipos HTML actuales son artefactos de documentación y validación de wireframes. No constituyen el frontend productivo.
+
+La cadena actual de diseño es:
+
+```mermaid
+flowchart TD
+    A["SPEC + HU"] --> B["WF"]
+    B --> C["Prototipo HTML del wireframe"]
+    C --> D["Validación contra<br/>wireframes/DESIGN.md"]
+```
+
+La evolución posterior hacia mockups seguirá una cadena independiente:
+
+```mermaid
+flowchart TD
+    A["Wireframe validado"] --> B["Propuesta visual / mockup"]
+    B --> C["Guía de diseño de mockups"]
+    C --> D["Refinamiento y consistencia"]
+    D --> E["Mockup final"]
+    E --> F["Implementación frontend"]
+```
+
+Para recorrer los wireframes desde un único punto puede utilizarse:
+
+[`wireframes/Visor_Prototipos_PO.html`](wireframes/Visor_Prototipos_PO.html)
+
+---
+
+## 10. Equipo y responsabilidades
+
+| Rama | Responsable | Área principal |
+|---|---|---|
+| `castilla` | Marco Renato Castilla Huanca | Carga/exportación masiva y combos |
+| `poma` | Gabriel Poma Gutierrez | Productos y variantes SKU |
+| `cueva` | Axel Andree Cueva Alcalá | Cupones, promociones y venta cruzada |
+| `lopez` | Leonardo Lopez | Taxonomía, características, marcas y SEO |
+| `vera` | Leonardo Vera Rodríguez | Precios y auditoría de precios |
+| `taco` | Miguel Ángel Taco Zavala | Inventario, analítica y alertas |
+
+La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`wireframes/INDEX.md`](wireframes/INDEX.md).
+
+---
+
+## 11. Estado documental
+
+| Área | Estado |
+|---|---|
+| 16 especificaciones funcionales | Consolidado |
+| 16 historias de usuario | Consolidado |
+| 16 wireframes funcionales | Consolidado |
+| 16 prototipos HTML de wireframes | Consolidado |
+| Guía visual de wireframes | Consolidado |
+| Arquitectura | Consolidado |
+| Modelo conceptual | Consolidado |
+| Contrato de integración | Consolidado |
+| OpenAPI | Disponible |
+| AsyncAPI | Disponible |
+| Catálogo de errores | Disponible |
+| Catálogo de eventos | Disponible |
+| Diseño y mockups de mayor fidelidad | En evolución para Hito 2 |
+| Modelo lógico/físico de BD | En evolución para Hito 2 |
+| Implementación de BD / Supabase | En evolución para Hito 2 |
+| Matriz de trazabilidad integral | Pendiente de consolidación |
+
+---
+
+## 12. Regla de mantenimiento documental
+
+Cuando una funcionalidad cambie, la modificación no debe limitarse a un único archivo.
+
+Debe revisarse la cadena completa:
+
+```mermaid
+flowchart TD
+    SPEC["SPEC"] --> HU["HU"]
+    SPEC --> WF["WF"]
+    WF --> HTML["Prototipo HTML del wireframe"]
+    SPEC --> OA["OpenAPI"]
+    SPEC --> AA["AsyncAPI"]
+    SPEC --> MD["Modelo de datos"]
+    SPEC --> ARQ["Arquitectura"]
+```
+
+Solo deben modificarse los artefactos afectados por el cambio, pero todos deben ser revisados para verificar consistencia.
+
+Los contratos ejecutables no deben duplicarse manualmente dentro de otros documentos.
+
+---
+
+## 13. Principios del repositorio
+
+Este repositorio busca mantener:
+
+- Una única fuente de verdad para cada tipo de información.
+- Trazabilidad entre requisitos, experiencia de usuario, arquitectura y contratos.
+- Separación de ownership entre módulos.
+- Contratos independientes de la implementación.
+- Documentación navegable y auditable.
+- Evidencia clara de responsabilidad por funcionalidad.
+- Compatibilidad entre especificaciones, APIs, eventos y modelos de datos.
+- Evolución controlada de los contratos.
+
+---
+
+## 14. Próxima evolución documental
+
+Sin modificar por ahora la estructura actual del repositorio, los siguientes artefactos ampliarán la trazabilidad hacia el Hito 2:
+
+- Documento de diseño específico para mockups.
+- Tres propuestas de experiencia de usuario.
+- Mockups refinados y finales.
+- Modelo lógico de base de datos.
+- Modelo físico de base de datos.
+- Scripts SQL y migraciones.
+- Evidencia de implementación en Supabase.
+- Matriz integral de trazabilidad.
+- Evidencia de pruebas y validación.
+
+La evolución esperada de la documentación será:
+
+```mermaid
+flowchart TD
+    A["Requisitos"] --> B["Wireframes"]
+    B --> C["Mockups"]
+    C --> D["Arquitectura y contratos"]
+    D --> E["Modelo lógico"]
+    E --> F["Modelo físico"]
+    F --> G["SQL / migraciones"]
+    G --> H["Supabase"]
+    H --> I["Implementación"]
+    I --> J["Pruebas y evidencia"]
+```
+
+El objetivo es mantener una cadena verificable desde la necesidad funcional hasta la implementación técnica.
