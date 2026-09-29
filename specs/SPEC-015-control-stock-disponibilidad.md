@@ -2,217 +2,1350 @@
 
 **Responsable:** Miguel Ángel Taco Zavala  
 **Rama:** taco  
-**Trazabilidad:** HU [HU-015](../hu/HU-015-control-stock-disponibilidad.md) | Wireframe [WF-015](../wireframes/flows/WF-015-control-stock-disponibilidad.md)
+**Trazabilidad:** HU [HU-015](./hu/HU-015-control-stock-disponibilidad.md) | Wireframe [WF-015](./wireframes/flows/WF-015-control-stock-disponibilidad.md)  
+**Contrato HTTP:** [`./api/openapi.yaml`](./api/openapi.yaml)  
+**Contrato de integración:** [`./Contrato_Api.md`](./Contrato_Api.md)  
+**Arquitectura:** [`./Arquitectura.md`](./Arquitectura.md)  
+**Modelo conceptual:** [`./Modelo_Conceptual.md`](./Modelo_Conceptual.md)  
+**Contrato asíncrono:** [`./asyncapi/asyncapi.yaml`](./asyncapi/asyncapi.yaml)  
+**Catálogo de errores:** [`./api/catalogo-errores.md`](./api/catalogo-errores.md)
 
-## Descripción
-
-La funcionalidad de **Gestión de inventario** permitirá controlar y mantener actualizada la disponibilidad de las variantes dentro del Marketplace.
-
-Esta funcionalidad contempla dos operaciones principales: la **consulta de disponibilidad de stock** y la **actualización del stock por consumo**. Ambas permitirán que los diferentes canales y módulos del sistema trabajen con información actualizada sobre las unidades disponibles.
-
-La gestión del inventario se realizará de manera integrada con los demás componentes del Marketplace, permitiendo consultar la disponibilidad de las variantes y actualizarla cuando se produzca un consumo.
-
-## Unidad de inventario
-
-En este módulo la unidad comercial sigue siendo el **SKU vendible**, pero el saldo operativo se identifica por **`(sku, location_id)`** para permitir tienda, almacén u otra ubicación sin rediseñar el dominio. Si el MVP despliega una sola ubicación, Inventario configura `location_id=DEFAULT` y las APIs pueden omitirla solo cuando no exista ambigüedad. Todo elemento vendible mantiene exactamente una identidad SKU:
-
-* producto simple (`tiene_variantes = false`) → usa su `sku_base` como SKU vendible;
-* producto con variantes (`tiene_variantes = true`) → cada variante posee un SKU comercial único (suministrado o generado) y el producto padre no tiene stock propio.
-
-* **Inventario → SKU vendible + ubicación:** `on_hand`, `reserved` y `available` se controlan por `(sku, location_id)`; `available = max(on_hand - reserved, 0)`.
-* **Producto simple:** su `sku_base` funciona como SKU vendible y tiene un único registro de inventario.
-* **Producto con variantes:** el producto es agrupador comercial y no posee stock propio; el inventario reside en los SKUs de sus variantes.
-
-```text
-Producto: Nike Air Max
-
-├── SKU-001 → Negro / Talla 40 → stock 5
-├── SKU-002 → Negro / Talla 41 → stock 0
-└── SKU-003 → Blanco / Talla 40 → stock 8
-```
-
-Por lo tanto, toda consulta, registro o actualización de stock referencia un **SKU vendible** y una ubicación. La respuesta puede agregar ubicaciones cuando el canal solicite disponibilidad global, pero nunca confunde un agregado comercial con el saldo autoritativo de cada `location_id`.
+**Versión:** v1.1 — idempotencia y códigos de error armonizados
 
 ---
 
-## 1. Consulta de disponibilidad de stock
+## 1. Contexto
 
-Esta funcionalidad permitirá consultar `on_hand`, `reserved` y especialmente `available` de un SKU por ubicación o de forma agregada según el contrato del canal, y conocer su estado actual dentro del inventario.
+La gestión de inventario del módulo **Productos y Ofertas** mantiene la disponibilidad autoritativa de los SKU vendibles para todos los canales del Marketplace Multicanal.
 
-Los diferentes canales podrán utilizar esta información para determinar si una variante se encuentra disponible antes de ofrecerla o realizar una operación relacionada con ella. Cuando se consulte el stock, la referencia obligatoria será el **SKU vendible**; `location_id` será obligatorio cuando exista más de una ubicación o cuando el canal necesite disponibilidad de una ubicación concreta.
+El módulo es responsable de:
 
-Se contemplan principalmente los siguientes estados:
+- consultar disponibilidad;
+- mantener saldos por SKU y ubicación;
+- reservar unidades temporalmente;
+- confirmar su consumo definitivo;
+- liberar reservas;
+- expirar reservas vencidas;
+- registrar movimientos de inventario;
+- notificar cambios de stock.
 
-* **Disponible:** la variante cuenta con unidades disponibles.
-* **Stock bajo:** la variante todavía cuenta con unidades, pero su cantidad se encuentra en o por debajo del umbral configurado.
-* **Agotado:** no existen unidades disponibles.
+Los canales **Marketplace, Chatbot y Retail** consumen información de disponibilidad, pero **no reservan ni consumen stock directamente**.
 
-Las reglas de determinación del estado son las siguientes:
+El ciclo de reserva y consumo es orquestado por **Ventas y Postventa**:
+
+```text
+Pedido CREADO
+    -> reservar stock
+
+Pedido PAGADO
+    -> confirmar consumo definitivo
+
+PAGO_NO_COMPLETADO o anulación aplicable
+    -> liberar reserva
+```
+
+Despacho y Entrega no genera un segundo consumo de inventario.
+
+---
+
+## 2. Propósito
+
+Garantizar que la disponibilidad de cada SKU sea consistente frente a:
+
+- consultas concurrentes;
+- reservas de pedidos;
+- confirmaciones de pago;
+- cancelaciones;
+- expiración de reservas;
+- ajustes manuales o masivos;
+- múltiples ubicaciones;
+- reintentos y mensajes duplicados.
+
+El sistema debe impedir:
+
+- stock negativo;
+- doble reserva de las mismas unidades;
+- doble consumo;
+- doble liberación;
+- sobrescritura de saldos recientes mediante ajustes obsoletos.
+
+---
+
+## 3. Alcance
+
+Incluye:
+
+1. consulta de disponibilidad por SKU y ubicación;
+2. cálculo de `on_hand`, `reserved` y `available`;
+3. determinación de estado de stock;
+4. creación de reservas;
+5. confirmación de reservas como consumo definitivo;
+6. liberación de reservas;
+7. expiración por TTL;
+8. movimientos de Kardex;
+9. idempotencia;
+10. concurrencia;
+11. integración con Ventas/Postventa;
+12. eventos de cambio de stock;
+13. interacción con Bulk;
+14. soporte de múltiples ubicaciones.
+
+No incluye:
+
+- creación del pedido;
+- procesamiento del pago;
+- reembolso;
+- política comercial de devolución;
+- empaque;
+- ejecución del despacho;
+- creación o edición del SKU;
+- precio;
+- promociones.
+
+---
+
+# 4. Unidad de inventario
+
+La unidad comercial es el **SKU vendible**.
+
+El saldo autoritativo se identifica por:
+
+```text
+(sku, location_id)
+```
+
+## 4.1. Producto simple
+
+Si:
+
+```text
+tiene_variantes = false
+```
+
+el `sku_base` funciona como SKU vendible.
+
+## 4.2. Producto con variantes
+
+Si:
+
+```text
+tiene_variantes = true
+```
+
+cada variante posee un SKU comercial único.
+
+El producto padre:
+
+- no tiene stock propio;
+- no puede reservarse;
+- no puede consumirse directamente.
+
+---
+
+# 5. Magnitudes de inventario
+
+Cada saldo mantiene:
+
+```text
+on_hand
+reserved
+available
+stock_version
+```
+
+donde:
+
+```text
+available = max(on_hand - reserved, 0)
+```
+
+## 5.1. Interpretación
+
+### `on_hand`
+
+Cantidad física registrada en la ubicación.
+
+### `reserved`
+
+Cantidad temporalmente comprometida para pedidos aún no consumidos definitivamente.
+
+### `available`
+
+Cantidad actualmente ofrecible para nuevas operaciones.
+
+### `stock_version`
+
+Versión del saldo utilizada para control de concurrencia y ajustes absolutos.
+
+---
+
+# 6. Estados de disponibilidad
+
+El estado comercial del saldo se calcula sobre `available`.
 
 ```text
 available = 0
-→ AGOTADO
+-> AGOTADO
 
 0 < available <= umbral_stock_bajo_resuelto
-→ STOCK_BAJO
+-> STOCK_BAJO
 
 available > umbral_stock_bajo_resuelto
-→ DISPONIBLE
+-> DISPONIBLE
 ```
 
-Inventario mantiene un `umbral_stock_bajo_default` global configurable y permite un `umbral_stock_bajo` específico por SKU como override. El `umbral_stock_bajo_resuelto` usa primero el override del SKU y, si no existe, el valor global. Esto evita tener que configurar manualmente miles de SKUs sin perder la capacidad de ajustar artículos sensibles. Gestión de Variantes puede consultar el valor resuelto, pero no lo edita.
+Inventario mantiene:
 
-### Ejemplo
+- `umbral_stock_bajo_default` global configurable;
+- `umbral_stock_bajo` opcional por SKU.
 
-Una variante presenta:
+Regla:
 
-> **Producto:** Nike Air Max
-> **Variante/SKU:** SKU-001 — Negro / Talla 40
-> **Stock disponible:** 8 unidades
-> **Estado:** Disponible
+```text
+umbral_stock_bajo_resuelto =
+  override SKU ?? umbral global
+```
 
-Cuando el stock llegue a cero:
-
-> **Producto:** Nike Air Max
-> **Variante/SKU:** SKU-002 — Negro / Talla 41
-> **Stock disponible:** 0 unidades
-> **Estado:** Agotado
-
-Cuando el stock se encuentre en el umbral o por debajo de él:
-
-> **Producto:** Nike Air Max
-> **Variante/SKU:** SKU-003 — Blanco / Talla 40
-> **Stock disponible:** 3 unidades
-> **umbral_stock_bajo:** 5 unidades
-> **Estado:** Stock bajo
-
-La consulta estará disponible para los diferentes canales contemplados por el proyecto, como **Marketplace, Retail y Chatbot**, permitiendo que cada uno conozca el estado actualizado del inventario de las variantes.
+El umbral no se define por ubicación en el alcance actual.
 
 ---
 
-## 2. Actualización de stock por consumo
+# 7. Requisito 1 — Consulta de disponibilidad
 
-Esta funcionalidad permitirá actualizar el inventario cuando se produzca el **consumo de unidades de una variante**.
+El sistema DEBE permitir consultar la disponibilidad autoritativa de un SKU.
 
-Cuando una operación implique consumo, Inventario descuenta `on_hand` y recalcula `available` en la ubicación correspondiente. Si existe una reserva homologada previa, el consumo libera simultáneamente la cantidad reservada; si no existe reserva, el débito se valida directamente contra `available`.
+Contrato técnico canónico:
 
-### Ejemplo
+```http
+GET /api/v1/inventario/disponibilidad
+```
 
-Si una variante cuenta inicialmente con:
+La SPEC define la semántica; los parámetros exactos pertenecen a OpenAPI.
 
-> **Variante/SKU:** SKU-001 — Negro / Talla 40
-> **Stock:** 10 unidades
+## 7.1. Datos mínimos
 
-y se consumen:
+La consulta debe permitir resolver:
 
-> **Cantidad consumida:** 3 unidades
+```text
+sku
+location_id, cuando aplique
+on_hand
+reserved
+available
+estado
+umbral_stock_bajo_resuelto
+stock_version, cuando el consumidor autorizado lo requiera
+```
 
-el inventario se actualizará a:
+## 7.2. Reglas
 
-> **Stock disponible:** 7 unidades
+- La consulta no crea una reserva.
+- La consulta no garantiza disponibilidad futura.
+- `location_id` puede omitirse únicamente cuando exista una única ubicación inequívoca o el contrato permita una agregación explícita.
+- Un agregado no reemplaza los saldos autoritativos por ubicación.
+- Marketplace, Chatbot y Retail pueden consultar disponibilidad.
 
-De esta manera, las unidades consumidas dejarán de considerarse disponibles para futuras operaciones.
+## 7.3. Escenario — SKU disponible
 
----
+**DADO** un SKU con:
 
-## 3. Validación del consumo
+```text
+on_hand = 10
+reserved = 2
+```
 
-Antes de actualizar el inventario se deberá verificar que exista una cantidad suficiente de unidades disponibles.
+**CUANDO** se consulta su disponibilidad
 
-Si la cantidad solicitada supera el stock existente, el consumo no deberá realizarse.
+**ENTONCES**:
 
-### Reglas de consumo
+```text
+available = 8
+```
 
-La actualización por consumo deberá garantizar lo siguiente:
-
-* El stock de una variante **nunca puede quedar negativo**.
-* El consumo **no puede superar el stock disponible** de la variante.
-* **Dos consumos simultáneos no pueden consumir las mismas unidades**; cada consumo debe operar sobre unidades disponibles reales.
-* La actualización del stock debe realizarse de forma **atómica/transaccional**, sin estados intermedios que corrompan la información.
-* Para ello, el descuento se ejecutará como una **actualización condicional sobre el stock disponible**: el consumo se acepta únicamente si, al momento de aplicarse, la cantidad solicitada está cubierta por las unidades disponibles.
-* La protección de los consumos concurrentes será la misma definida para las operaciones masivas de actualización de inventario del módulo (**control de concurrencia optimista**), de modo que los consumos por venta y los ajustes masivos convivan sin inconsistencias ni bloqueos globales.
-* Si no se puede garantizar la disponibilidad de las unidades solicitadas, la operación debe **rechazarse**.
-
-### Ejemplo
-
-> **Variante/SKU:** SKU-001 — Negro / Talla 40
-> **Stock inicial:** 5 unidades
->
-> **Consumo A = 3 unidades**
-> **Consumo B = 3 unidades**
-
-No se deben aceptar ambos consumos.
-
-Resultado válido:
-
-> **Consumo A:** Aceptado — Stock final: 2 unidades
-> **Consumo B:** Rechazado por stock insuficiente
-
-En el resultado, una operación se acepta, la otra se rechaza por stock insuficiente y el stock nunca queda negativo.
+y el estado se determina con el umbral resuelto.
 
 ---
 
-## 4. Integración con otros módulos
+# 8. Requisito 2 — Crear reserva
 
-La gestión de inventario estará integrada con los diferentes componentes que necesiten consultar o actualizar la disponibilidad de las variantes.
+Cuando Ventas/Postventa crea un pedido y este entra en estado:
 
-### Dependencias internas del módulo de Productos y Ofertas
+```text
+CREADO
+```
 
-La gestión de inventario se sustenta en las siguientes capacidades del mismo módulo, por lo que no constituyen integraciones externas:
+Ventas DEBE solicitar una reserva de inventario.
 
-* **Gestión de productos:** define el producto como agrupador comercial de las variantes.
-* **Gestión de variantes/SKUs:** define cada variante, su código único y sus atributos; es la base sobre la cual se controla el stock.
-* **Gestión de características:** proporciona los atributos (talla, color, entre otros) que distinguen a cada variante.
-* **Gestión de precios:** identifica la variante y su precio vigente cuando los canales necesiten relacionar la disponibilidad con la información comercial del producto.
+Contrato técnico:
 
-### Canales
+```http
+POST /api/v1/inventario/reservas
+```
 
-La **consulta de disponibilidad** será utilizada por los canales que necesiten conocer el stock disponible de una variante. Los canales **Marketplace, Retail y Chatbot** consultan disponibilidad referenciando una **Variante/SKU**; este consumo de información no cambia la unidad de inventario.
+La operación es exclusiva para consumidores autorizados del módulo Ventas/Postventa.
 
-### Integraciones externas
+## 8.1. Datos conceptuales mínimos
 
-La **actualización por consumo** permitirá reflejar las unidades utilizadas en las operaciones correspondientes. Para las operaciones que impliquen consumo de stock, se contempla la comunicación con los módulos de **Ventas y Despacho**.
+```text
+order_id
+operation_id
+channel_id
+lines[]
+  sku
+  quantity
+  location_id
+```
 
-**Delimitación de Ventas y Despacho:**
+El request HTTP exacto se define en OpenAPI.
 
-* La **confirmación definitiva del consumo** se solicita mediante el contrato **provisional `order.confirmed`**, cuya existencia, nombre y campos deberán homologarse con **Ventas y Postventa**, cuando la venta queda confirmada (pago aprobado o estado equivalente para un canal sin pago electrónico). Sin `order.confirmed` no se aplica consumo definitivo.
-* El módulo de **Despacho no genera consumo adicional ni modifica directamente el stock**: se limita a entregar las unidades correspondientes a ventas ya confirmadas, cuyos consumos ya fueron aplicados y validados bajo la misma regla de consumo.
-* El dominio de Inventario **soporta `reserved` y contratos idempotentes de `reserve/release/consume`**, pero Ventas/Postventa decide en qué momento del ciclo del pedido solicitar una reserva. Mientras ese contrato no esté homologado, `order.created` por sí solo no reserva ni descuenta y `reserved` puede permanecer en cero en el MVP.
-* Si una venta confirmada es anulada **antes del despacho**, el evento provisional `order.cancelled` solicita compensar únicamente un consumo previo exitoso y no compensado.
-* Si la mercadería ya fue entregada, la reposición solo ocurre ante una **devolución aceptada y físicamente reintegrable**, comunicada mediante el contrato provisional `order.returned` con SKU, `location_id` de reintegro y cantidades aceptadas. La política de devolución total o parcial —incluidos combos— pertenece a Ventas/Postventa.
-* Una anulación administrativa posterior al despacho que no implique devolución física no repone stock.
+## 8.2. Reglas
 
-Después de cada actualización de stock (por consumo o ajuste), la gestión de inventario **notificará el cambio de stock** de la variante mediante el contrato de evento `inventory.stock.changed`, que será consumido por el dashboard analítico y por otros componentes interesados para mantenerse actualizados.
+La creación de reserva DEBE:
 
-La comunicación entre módulos se realizará mediante las interfaces de integración establecidas para el proyecto, manteniendo la separación entre los diferentes componentes.
+1. validar que `order_id` y `operation_id` sean válidos;
+2. validar que todas las cantidades sean enteros positivos;
+3. validar que cada SKU sea vendible;
+4. resolver la ubicación;
+5. comprobar idempotencia;
+6. validar disponibilidad real;
+7. reservar todas las líneas de la operación de forma consistente;
+8. registrar la reserva y sus líneas;
+9. incrementar `reserved`;
+10. recalcular `available`;
+11. registrar la operación;
+12. escribir el registro de Outbox dentro de la misma transacción local que persiste la reserva;
+13. publicar los mensajes de Outbox únicamente después del commit.
+
+## 8.3. Efecto
+
+Para cada línea:
+
+```text
+reserved_nuevo = reserved_anterior + quantity
+
+available_nuevo =
+  on_hand - reserved_nuevo
+```
+
+`on_hand` no cambia al reservar.
 
 ---
 
-### Contrato provisional de consumo, compensación y venta sin stock
-Ventas/Postventa aún no ha homologado eventos. Como hipótesis interna se acepta `order.confirmed` con `order_id`, `operation_id`, `occurred_at`, SKUs y cantidades por línea, referencia/snapshot de componentes de combo cuando aplique, y versión del contrato. Inventario verifica existencia, elegibilidad, stock y deduplicación por `order_id + tipo_operacion + sku`, aplica el débito ACID para **todas las líneas de la misma operación** y registra Kardex y Outbox en la misma transacción local. Publica `inventory.consumption.completed` o `inventory.consumption.rejected` con `order_id`, `operation_id`, SKUs y motivo; no decide ni altera estados del pedido o pagos. Si el stock es insuficiente tras un pedido/pago confirmado, Ventas/Postventa resuelve la anulación, sustitución o reembolso mediante su propio proceso pendiente de coordinación. La consulta anterior a la venta no constituye reserva ni garantía de stock.
+# 9. Requisito 3 — Atomicidad de reserva
 
-Las compensaciones `order.cancelled`/`order.returned` deben referenciar `order_id`, operación previa, `location_id` y líneas/cantidades aceptadas. `order.cancelled` revierte solamente consumos efectivos y previos a despacho; `order.returned` registra solo unidades realmente aceptadas y físicamente reintegrables. El procesamiento es idempotente, tolera llegada desordenada con estado pendiente/reconciliación y evita acreditar dos veces el mismo consumo. Ningún evento de Despacho ocasiona débito adicional ni decide disponibilidad.
+Una reserva con múltiples líneas debe ser aceptada o rechazada de forma consistente dentro del límite transaccional de Inventario.
 
-### Ajuste masivo y control de concurrencia
-Inventario inicializa cada nuevo SKU vendible con saldo 0 y `stock_version=0` en la ubicación predeterminada, de forma idempotente. Los conteos absolutos de `SPEC-001-carga-exportacion-masiva-productos.md` identifican `(sku, location_id)` y requieren `stock_version`. Inventario es el único dueño del ajuste; registra Kardex con valores anteriores/nuevos de `on_hand`, `reserved` y `available` cuando corresponda. Si hubo consumo, reserva o ajuste concurrente que cambió la versión, publica `VERSION_CONFLICT` y no reaplica un conteo obsoleto. Solo después del commit emite `inventory.stock.adjusted` y `inventory.stock.changed`. Se permiten bloqueos transaccionales breves por `(sku, location_id)`, nunca un bloqueo global del inventario.
+Ejemplo:
 
-### Límite de aprobación de contratos externos
-Los nombres y payloads de `order.confirmed`, `order.cancelled` y `order.returned`, y de los resultados de consumo, constituyen un **contrato de integración propuesto**, pendiente de homologación con Ventas y Postventa. Hasta ese acuerdo, ninguna implementación puede presumir que el equipo externo ya publica tales mensajes, ni que el pago queda automáticamente revertido ante un rechazo de Inventario. El consumo y las compensaciones aquí descritos son las reglas internas que implementará Productos al recibir una comunicación equivalente acordada.
+```text
+Pedido:
+SKU-A x 2
+SKU-B x 1
+```
 
-## 5. Resultado esperado
+Si:
 
-La funcionalidad permitirá mantener un inventario actualizado y disponible para los diferentes componentes del Marketplace.
+```text
+SKU-A tiene disponibilidad
+SKU-B no tiene disponibilidad
+```
 
-En términos generales, permitirá:
+la operación no debe dejar reservado únicamente `SKU-A` como si la reserva completa hubiera sido exitosa.
 
-* Consultar la cantidad disponible de una variante.
-* Conocer el estado actual del stock de cada variante.
-* Identificar SKUs disponibles, con stock bajo o agotados mediante el umbral resuelto global/SKU y, cuando aplique, por ubicación.
-* Registrar el consumo de unidades sobre una variante.
-* Actualizar la cantidad disponible después de cada consumo.
-* Evitar consumos superiores al stock existente y consumos concurrentes sobre las mismas unidades.
-* Aplicar el consumo únicamente cuando exista una venta confirmada, quedando Despacho limitado a la entrega de unidades ya vendidas.
-* Notificar los cambios de stock mediante el contrato de evento `inventory.stock.changed` para mantener actualizados el dashboard analítico y los componentes integrados.
-* Mantener las proyecciones de disponibilidad utilizadas por los canales mediante eventos; las vistas son eventualmente consistentes y el consumo definitivo vuelve a comprobar el stock en Inventario.
+El resultado debe indicar rechazo y conservar invariantes.
 
-Con estas funcionalidades, el inventario proporcionará información actualizada sobre la disponibilidad de las variantes y permitirá reflejar correctamente los cambios producidos por su consumo.
+---
+
+# 10. Requisito 4 — Estado de la reserva
+
+Toda reserva mantiene un estado.
+
+Estados:
+
+```text
+ACTIVA
+CONSUMIDA
+LIBERADA
+EXPIRADA
+```
+
+Máquina de estados:
+
+```text
+                 +---------+
+                 | ACTIVA  |
+                 +----+----+
+                      |
+          +-----------+-----------+
+          |           |           |
+          v           v           v
+      CONSUMIDA   LIBERADA    EXPIRADA
+```
+
+No se permiten transiciones de retorno hacia `ACTIVA`.
+
+---
+
+# 11. Requisito 5 — Confirmar consumo definitivo
+
+Cuando Ventas/Postventa cambia el pedido a:
+
+```text
+PAGADO
+```
+
+DEBE confirmar el consumo de la reserva.
+
+Contrato técnico:
+
+```http
+POST /api/v1/inventario/reservas/{reservaId}/confirmar
+```
+
+## 11.1. Precondición
+
+La reserva debe encontrarse:
+
+```text
+ACTIVA
+```
+
+o la operación debe reconocerse como repetición idempotente de una confirmación previamente aplicada.
+
+## 11.2. Efecto
+
+Para cada línea:
+
+```text
+on_hand_nuevo =
+  on_hand_anterior - quantity
+
+reserved_nuevo =
+  reserved_anterior - quantity
+
+available_nuevo =
+  on_hand_nuevo - reserved_nuevo
+```
+
+La reserva pasa a:
+
+```text
+CONSUMIDA
+```
+
+## 11.3. Kardex
+
+El consumo definitivo debe producir movimientos trazables con:
+
+- SKU;
+- ubicación;
+- cantidad;
+- saldo anterior;
+- saldo posterior;
+- tipo de operación;
+- `order_id`;
+- `operation_id`;
+- timestamp.
+
+---
+
+# 12. Requisito 6 — Liberar reserva
+
+Cuando el pedido:
+
+- no completa el pago; o
+- es anulado antes del consumo definitivo cuando corresponda;
+
+Ventas/Postventa DEBE solicitar la liberación.
+
+Contrato técnico:
+
+```http
+POST /api/v1/inventario/reservas/{reservaId}/liberar
+```
+
+## 12.1. Motivos previstos
+
+Como mínimo:
+
+```text
+PAGO_NO_COMPLETADO
+ANULACION
+EXPIRACION_FORZADA
+OTRO
+```
+
+La enumeración técnica exacta pertenece a OpenAPI.
+
+## 12.2. Efecto
+
+```text
+on_hand
+  no cambia
+
+reserved_nuevo =
+  reserved_anterior - quantity
+
+available_nuevo =
+  on_hand - reserved_nuevo
+```
+
+La reserva pasa a:
+
+```text
+LIBERADA
+```
+
+---
+
+# 13. Requisito 7 — Expiración de reserva
+
+Toda reserva activa DEBE tener un vencimiento.
+
+El TTL:
+
+- es configurable;
+- puede variar por canal o entorno;
+- no se fija como constante funcional dentro de esta SPEC.
+
+La reserva almacena conceptualmente:
+
+```text
+created_at
+expires_at
+```
+
+Cuando:
+
+```text
+now >= expires_at
+```
+
+y la reserva continúa `ACTIVA`, Inventario puede expirar la reserva automáticamente.
+
+La transición es:
+
+```text
+ACTIVA -> EXPIRADA
+```
+
+y libera las unidades reservadas.
+
+---
+
+# 14. Requisito 8 — Concurrencia entre confirmar, liberar y expirar
+
+Puede ocurrir que simultáneamente:
+
+- Ventas confirme una reserva;
+- Ventas solicite liberarla;
+- el worker de expiración la detecte como vencida.
+
+Solo **una transición terminal** puede aplicarse.
+
+Ejemplo:
+
+```text
+ACTIVA
+  -> CONSUMIDA
+```
+
+Si luego llega una expiración atrasada:
+
+- no debe restaurar unidades;
+- no debe modificar nuevamente el saldo;
+- si corresponde al **mismo intento lógico ya aplicado**, debe resolverse mediante replay idempotente;
+- si es una **operación distinta** que intenta cambiar una reserva ya terminal, debe rechazarse con el código estable correspondiente, por ejemplo `RESERVA_NO_ACTIVA` o `RESERVA_EXPIRADA`.
+
+La idempotencia no convierte una transición de negocio incompatible en una operación válida.
+
+---
+
+# 15. Requisito 9 — Idempotencia
+
+Las mutaciones externas de Inventario DEBEN ser idempotentes.
+
+El contrato HTTP utiliza conjuntamente:
+
+```text
+Idempotency-Key
+operation_id
+```
+
+Reglas:
+
+1. un retry de la misma operación DEBE conservar la misma identidad idempotente;
+2. una repetición con la **misma identidad y el mismo payload semántico** no vuelve a ejecutar efectos;
+3. si la operación original sigue en proceso, se devuelve o reproduce su reconocimiento sin lanzar un segundo procesamiento;
+4. si la operación original ya terminó, el consumidor obtiene el mismo resultado lógico conocido sin volver a modificar saldos;
+5. reutilizar la misma identidad idempotente para una **intención semánticamente distinta** se rechaza con:
+
+```text
+IDEMPOTENCY_CONFLICT
+```
+
+6. ese conflicto no modifica reserva, saldo ni Kardex;
+7. `correlation_id` sirve para trazabilidad y no reemplaza la identidad idempotente.
+
+El sistema NO debe utilizar:
+
+```text
+OPERACION_DUPLICADA
+```
+
+para representar un retry legítimo.
+
+## 15.1. Crear reserva repetida
+
+Si Ventas reenvía la misma creación de reserva con la misma identidad idempotente y el mismo contenido de negocio:
+
+- no se crea una segunda reserva;
+- no se incrementa nuevamente `reserved`;
+- se reutiliza el estado o resultado de la operación original.
+
+## 15.2. Confirmación repetida
+
+Si una confirmación ya aplicada se reintenta con la misma identidad y el mismo payload:
+
+- no vuelve a disminuir `on_hand`;
+- no vuelve a disminuir `reserved`;
+- se devuelve o reproduce el resultado de la confirmación original.
+
+## 15.3. Liberación repetida
+
+Si una liberación ya aplicada se reintenta con la misma identidad y el mismo payload:
+
+- no vuelve a disminuir `reserved`;
+- no vuelve a aumentar `available`;
+- se devuelve o reproduce el resultado de la liberación original.
+
+## 15.4. Reutilización conflictiva
+
+Ejemplo:
+
+```text
+Idempotency-Key = abc
+operation_id = op-123
+```
+
+se utilizó para:
+
+```text
+reservar SKU-A x 1
+```
+
+y posteriormente se intenta reutilizar para:
+
+```text
+reservar SKU-A x 3
+```
+
+El segundo request debe rechazarse con:
+
+```text
+409
+IDEMPOTENCY_CONFLICT
+```
+
+sin aplicar ningún efecto nuevo.
+
+La comparación se realiza sobre la intención de negocio definida por el contrato; metadatos puramente de trazabilidad no deben convertir un retry legítimo en una nueva operación.
+
+---
+
+# 16. Requisito 10 — Concurrencia del saldo
+
+Dos operaciones concurrentes no pueden comprometer las mismas unidades.
+
+Inventario DEBE garantizar:
+
+```text
+on_hand >= 0
+reserved >= 0
+available >= 0
+reserved <= on_hand
+```
+
+cuando corresponda al modelo de saldo.
+
+## 16.1. Estrategia conceptual
+
+La implementación puede utilizar:
+
+- bloqueo transaccional breve por saldo;
+- actualización condicional;
+- versión optimista;
+- orden determinista de adquisición de registros.
+
+No se permite un lock global de Inventario.
+
+---
+
+# 17. Escenario — Dos reservas sobre las últimas unidades
+
+**DADO**:
+
+```text
+on_hand = 5
+reserved = 0
+available = 5
+```
+
+y dos solicitudes concurrentes:
+
+```text
+Reserva A = 3
+Reserva B = 3
+```
+
+**ENTONCES** solo una puede reservar tres unidades.
+
+Resultado posible:
+
+```text
+Reserva A: ACEPTADA
+Reserva B: RECHAZADA - STOCK_INSUFICIENTE
+```
+
+Saldo final:
+
+```text
+on_hand = 5
+reserved = 3
+available = 2
+```
+
+---
+
+# 18. Escenario — Confirmación después de reserva
+
+**DADO**:
+
+```text
+on_hand = 10
+reserved = 3
+available = 7
+```
+
+y una reserva ACTIVA de 3 unidades
+
+**CUANDO** Ventas confirma el pedido como `PAGADO`
+
+**ENTONCES**:
+
+```text
+on_hand = 7
+reserved = 0
+available = 7
+```
+
+y la reserva queda:
+
+```text
+CONSUMIDA
+```
+
+---
+
+# 19. Escenario — Pago no completado
+
+**DADO**:
+
+```text
+on_hand = 10
+reserved = 3
+available = 7
+```
+
+**CUANDO** Ventas informa `PAGO_NO_COMPLETADO` y solicita liberar la reserva
+
+**ENTONCES**:
+
+```text
+on_hand = 10
+reserved = 0
+available = 10
+```
+
+y la reserva queda:
+
+```text
+LIBERADA
+```
+
+---
+
+# 20. Escenario — Expiración
+
+**DADO** una reserva:
+
+```text
+estado = ACTIVA
+expires_at <= now
+```
+
+**Y** no existe una confirmación definitiva aplicada
+
+**CUANDO** el proceso de expiración la ejecuta
+
+**ENTONCES**:
+
+- libera las cantidades;
+- recalcula `available`;
+- marca `EXPIRADA`;
+- registra operación;
+- publica el resultado correspondiente.
+
+---
+
+# 21. Integración con canales
+
+Marketplace, Chatbot y Retail pueden consultar:
+
+```http
+GET /api/v1/inventario/disponibilidad
+```
+
+No deben invocar:
+
+```text
+crear reserva
+confirmar consumo
+liberar reserva
+```
+
+La creación del pedido se dirige a Ventas/Postventa.
+
+---
+
+# 22. Integración con Ventas/Postventa
+
+Ventas/Postventa es owner del pedido.
+
+Inventario no cambia:
+
+- estado del pedido;
+- pago;
+- reembolso;
+- comprobante.
+
+Flujo homologado:
+
+| Estado/acción en Ventas | Acción sobre Inventario |
+|---|---|
+| Pedido pasa a `CREADO` | Crear reserva |
+| Pedido pasa a `PAGADO` | Confirmar reserva / consumir |
+| `PAGO_NO_COMPLETADO` | Liberar reserva |
+| Anulación aplicable antes del consumo | Liberar reserva |
+| Devolución aceptada físicamente después del consumo | Reintegrar únicamente cantidades aceptadas |
+
+---
+
+# 23. Integración con Despacho
+
+Despacho:
+
+- no crea reservas;
+- no confirma reservas;
+- no consume stock;
+- no libera stock por sí mismo.
+
+Despacho opera sobre pedidos cuya responsabilidad comercial pertenece a Ventas/Postventa.
+
+Una entrega física no produce un segundo débito de inventario.
+
+---
+
+# 24. Devoluciones
+
+Si una venta ya fue consumida definitivamente, una devolución NO equivale automáticamente a reposición.
+
+Solo se reintegra inventario cuando Ventas/Postventa comunique una devolución:
+
+- aceptada;
+- físicamente reintegrable;
+- con SKU;
+- cantidad;
+- `location_id`.
+
+La política comercial de devolución pertenece a Ventas/Postventa.
+
+El nombre/payload asíncrono definitivo debe formalizarse en AsyncAPI.
+
+---
+
+# 25. Ajustes masivos
+
+SPEC-001 puede solicitar ajustes absolutos de stock.
+
+Cada ajuste se identifica por:
+
+```text
+(sku, location_id)
+```
+
+y utiliza:
+
+```text
+stock_version
+```
+
+para evitar sobrescribir operaciones posteriores.
+
+Ejemplo:
+
+1. se exporta `stock_version = 12`;
+2. ocurre una reserva y el saldo pasa a versión 13;
+3. llega una importación con versión esperada 12;
+4. Inventario rechaza:
+
+```text
+VERSION_CONFLICT
+```
+
+No se reaplica el conteo obsoleto.
+
+---
+
+# 26. Inicialización de SKU
+
+Cuando Catálogo confirma un nuevo SKU vendible, Inventario debe poder inicializarlo idempotentemente.
+
+Estado inicial:
+
+```text
+on_hand = 0
+reserved = 0
+available = 0
+stock_version = 0
+```
+
+en la ubicación predeterminada cuando corresponda.
+
+La creación repetida del mismo SKU no debe generar saldos duplicados.
+
+---
+
+# 27. Kardex
+
+Toda mutación autoritativa de saldo debe ser trazable.
+
+Tipos conceptuales de operación:
+
+```text
+RESERVE
+CONSUME
+RELEASE
+EXPIRE
+ADJUST
+RETURN
+```
+
+Cada movimiento registra como mínimo:
+
+```text
+sku
+location_id
+operation_id
+tipo
+cantidad
+on_hand_anterior
+on_hand_nuevo
+reserved_anterior
+reserved_nuevo
+available_anterior
+available_nuevo
+occurred_at
+```
+
+El Kardex no es editable como mecanismo ordinario.
+
+---
+
+# 28. Eventos de dominio
+
+Después del commit local pueden publicarse:
+
+```text
+inventory.stock.changed
+inventory.stock.adjusted
+
+inventory.reservation.created
+inventory.reservation.consumed
+inventory.reservation.released
+inventory.reservation.expired
+
+inventory.consumption.completed
+inventory.consumption.rejected
+```
+
+## 28.1. Regla
+
+Un evento comunica un hecho ya persistido.
+
+No debe reutilizarse:
+
+```text
+inventory.stock.changed
+```
+
+como comando para modificar stock.
+
+---
+
+# 29. `inventory.stock.changed`
+
+Es el evento canónico para:
+
+- dashboard;
+- proyecciones de Combos;
+- proyecciones de Promociones;
+- BFF/read model;
+- consumidores autorizados.
+
+Debe contener información suficiente para que una proyección identifique:
+
+```text
+sku
+location_id
+on_hand
+reserved
+available
+estado
+stock_version
+updated_at
+```
+
+El schema final pertenece a AsyncAPI.
+
+---
+
+# 30. Resultados asíncronos hacia Ventas
+
+Las operaciones HTTP de mutación pueden devolver:
+
+```text
+202 Accepted
+```
+
+cuando el comando fue **admitido**, pero el resultado de negocio todavía se procesa de forma asíncrona.
+
+Por tanto:
+
+```text
+202 Accepted != operación completada
+```
+
+La creación de reserva puede terminar posteriormente en:
+
+```text
+inventory.reservation.created
+```
+
+o en un rechazo de negocio correlacionado.
+
+La confirmación puede terminar en:
+
+```text
+inventory.reservation.consumed
+inventory.consumption.completed
+```
+
+o:
+
+```text
+inventory.consumption.rejected
+```
+
+Ventas debe correlacionar resultados mediante:
+
+```text
+order_id
+operation_id
+correlation_id
+reservation_id
+```
+
+Un conflicto de idempotencia detectado antes de admitir el comando utiliza:
+
+```text
+409
+IDEMPOTENCY_CONFLICT
+```
+
+y no debe tratarse como una segunda operación asíncrona.
+
+Los nombres, envelopes y payloads canónicos pertenecen a:
+
+```text
+asyncapi/asyncapi.yaml
+```
+
+---
+
+# 31. Errores y rechazos funcionales
+
+El catálogo canónico de códigos pertenece a:
+
+```text
+api/catalogo-errores.md
+```
+
+## 31.1. Admisión HTTP
+
+Los códigos relevantes para las mutaciones de Inventario incluyen:
+
+```text
+VALIDACION
+TOKEN_INVALIDO
+SCOPE_INSUFICIENTE
+IDEMPOTENCY_CONFLICT
+CANTIDAD_INVALIDA
+RESERVA_NO_ENCONTRADA
+RESERVA_NO_ACTIVA
+RESERVA_EXPIRADA
+VERSION_CONFLICT
+ERROR_INTERNO
+SERVICIO_NO_DISPONIBLE
+```
+
+El mapeo exacto por endpoint y status pertenece a OpenAPI y utiliza:
+
+```text
+application/problem+json
+```
+
+## 31.2. Rechazos de negocio asíncronos
+
+Después de un `202 Accepted`, una reserva o confirmación puede producir códigos como:
+
+```text
+STOCK_INSUFICIENTE
+SKU_NO_ENCONTRADO
+SKU_INACTIVO
+UBICACION_NO_ENCONTRADA
+CANTIDAD_INVALIDA
+RESERVA_NO_ENCONTRADA
+RESERVA_NO_ACTIVA
+RESERVA_EXPIRADA
+```
+
+según el tipo de operación y el contrato AsyncAPI.
+
+## 31.3. Código retirado
+
+No emitir en nuevos contratos:
+
+```text
+OPERACION_DUPLICADA
+```
+
+Un retry legítimo no es un error.
+
+Si la misma identidad idempotente se reutiliza con una intención diferente:
+
+```text
+IDEMPOTENCY_CONFLICT
+```
+
+Los consumidores deben ramificar por `code`, no por `title`, `detail` ni el texto del mensaje.
+
+---
+
+# 32. Seguridad
+
+## 32.1. Consulta de disponibilidad
+
+Requiere el mecanismo de autenticación definido para consumidores de canal cuando corresponda.
+
+Para respuestas HTTP autenticadas:
+
+```text
+401 -> TOKEN_INVALIDO
+403 -> SCOPE_INSUFICIENTE
+```
+
+según el contrato adoptado de Seguridad.
+
+## 32.2. Mutaciones
+
+Reserva, confirmación y liberación son operaciones servicio-a-servicio.
+
+Consumidor autorizado:
+
+```text
+modulo-ventas
+```
+
+Scopes propuestos:
+
+```text
+inventario:reservar
+inventario:consumir
+inventario:liberar
+```
+
+Deben registrarse con Seguridad antes de considerarse contractualmente definitivos.
+
+---
+
+# 33. Requisitos no funcionales
+
+## 33.1. Consistencia
+
+Las invariantes de un movimiento de Inventario deben persistirse dentro de una transacción local.
+
+No existe transacción distribuida con Ventas.
+
+## 33.2. Idempotencia
+
+Toda mutación externa debe soportar reintentos sin duplicar efectos.
+
+Un retry con la misma identidad y la misma intención debe ser seguro. La reutilización de esa identidad para una intención distinta debe terminar en `IDEMPOTENCY_CONFLICT` sin efectos secundarios.
+
+## 33.3. Concurrencia
+
+Los locks deben:
+
+- ser locales;
+- ser breves;
+- afectar únicamente los saldos requeridos.
+
+## 33.4. Trazabilidad
+
+Cada operación debe conservar:
+
+```text
+operation_id
+correlation_id
+order_id cuando aplique
+actor/service
+timestamp
+```
+
+## 33.5. Observabilidad
+
+Registrar métricas al menos de:
+
+```text
+reservas aceptadas
+reservas rechazadas
+consumos confirmados
+liberaciones
+expiraciones
+conflictos
+latencia
+```
+
+## 33.6. Disponibilidad
+
+La caída temporal del broker no debe perder cambios persistidos; utilizar Outbox.
+
+---
+
+# 34. Reglas de mantenibilidad de implementación
+
+La implementación de esta SPEC debe respetar `Arquitectura.md`.
+
+En particular:
+
+- reglas de inventario dentro de `domain/application`;
+- controllers delgados;
+- repositorios mediante puertos;
+- DTO HTTP separados de entidades de dominio;
+- ningún acceso directo a tablas de Ventas;
+- ningún import de código de otros microservicios;
+- Outbox/Inbox para integración;
+- pruebas unitarias sin NestJS/DB para invariantes;
+- pruebas de integración con DB/broker real mediante Testcontainers.
+
+---
+
+# 35. Casos de prueba mínimos
+
+La implementación no se considera completa sin pruebas para:
+
+1. consulta de SKU disponible;
+2. consulta de SKU agotado;
+3. reserva exitosa;
+4. reserva insuficiente;
+5. reserva multilínea atómica;
+6. repetición idempotente de reserva con mismo payload;
+7. reutilización conflictiva de `Idempotency-Key`/`operation_id` con payload distinto -> `IDEMPOTENCY_CONFLICT`;
+8. confirmación de reserva;
+9. confirmación repetida;
+10. liberación;
+11. liberación repetida;
+12. expiración;
+13. confirmación vs expiración concurrentes;
+14. liberación vs confirmación concurrentes;
+15. dos reservas por últimas unidades;
+16. `stock_version` obsoleta;
+17. SKU inexistente;
+18. ubicación inexistente;
+19. replay de mensaje;
+20. persistencia de Kardex;
+21. persistencia de Outbox en la misma transacción local;
+22. publicación de Outbox posterior al commit.
+
+---
+
+# 36. Fuera de alcance
+
+Esta SPEC no define:
+
+- proceso de checkout;
+- aprobación del pago;
+- estado maestro del pedido;
+- reembolso;
+- empaque;
+- despacho;
+- definición física del producto;
+- reglas de pricing;
+- reglas de promociones;
+- UI del dashboard analítico completo de WF-016.
+
+---
+
+# 37. Resultado esperado
+
+Al completarse esta funcionalidad:
+
+- cada SKU vendible tiene disponibilidad autoritativa por ubicación;
+- Marketplace, Chatbot y Retail pueden consultar stock;
+- los canales no mutan inventario;
+- Ventas reserva al crear el pedido;
+- Ventas confirma consumo al quedar pagado;
+- Ventas libera ante pago fallido/anulación aplicable;
+- las reservas pueden expirar;
+- ninguna operación válida deja stock negativo;
+- un retry legítimo no duplica efectos;
+- reutilizar una identidad idempotente para otra intención produce `IDEMPOTENCY_CONFLICT`;
+- Bulk no puede pisar un saldo más reciente;
+- Dashboard y proyecciones reciben cambios mediante eventos;
+- Despacho no produce un segundo consumo.
+
+---
+
+# 38. Criterio de completitud
+
+SPEC-015 se considera implementada cuando:
+
+- [ ] existe consulta autoritativa por SKU/ubicación;
+- [ ] `on_hand`, `reserved` y `available` cumplen sus invariantes;
+- [ ] existe creación idempotente de reserva;
+- [ ] existe confirmación idempotente;
+- [ ] existe liberación idempotente;
+- [ ] un retry con misma identidad + mismo payload reutiliza el resultado sin duplicar efectos;
+- [ ] misma identidad + payload semánticamente distinto produce `IDEMPOTENCY_CONFLICT`;
+- [ ] `OPERACION_DUPLICADA` no se emite en contratos nuevos;
+- [ ] existe expiración de reservas;
+- [ ] existe Kardex;
+- [ ] existe Outbox/Inbox para los flujos asíncronos;
+- [ ] la concurrencia está cubierta por pruebas;
+- [ ] los ajustes absolutos respetan `stock_version`;
+- [ ] los eventos están versionados;
+- [ ] las rutas coinciden con `api/openapi.yaml`;
+- [ ] los contratos asíncronos coinciden con `asyncapi/asyncapi.yaml`;
+- [ ] Ventas/Postventa tiene pruebas de contrato sobre reserva/consumo/liberación;
+- [ ] los canales no poseen permisos de mutación de inventario.

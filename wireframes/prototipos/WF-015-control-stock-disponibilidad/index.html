@@ -1,691 +1,119 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WF-015 — Control de stock y disponibilidad</title>
-  <style>
-    :root{
-      --surface:#fff;
-      --neutral-10:#f3f4f6;
-      --neutral-20:#e5e7eb;
-      --neutral-30:#d1d5db;
-      --neutral-50:#6b7280;
-      --neutral-70:#374151;
-      --neutral-90:#111827;
-      --radius:4px;
-      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      color:var(--neutral-90);
-      background:var(--surface);
-    }
-    *{box-sizing:border-box}
-    html{min-width:320px}
-    body{margin:0;background:var(--surface);font-size:16px;line-height:1.5}
-    button,input,textarea,select{font:inherit;color:inherit}
-    button{min-height:44px;cursor:pointer}
-    button:disabled{cursor:not-allowed;color:var(--neutral-50);border-color:var(--neutral-30);background:var(--neutral-10)}
-    a,button,input,select,textarea{outline-offset:3px}
-    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible{outline:3px solid var(--neutral-90);outline-offset:2px}
-    input[type="checkbox"], input[type="radio"]{accent-color:var(--neutral-90)}
-    .app-shell{min-height:100vh}
-    .topbar{border-bottom:1px solid var(--neutral-30);background:var(--surface)}
-    .topbar-inner{max-width:1200px;margin:auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-    .brand{display:flex;align-items:center;gap:12px;font-weight:700}
-    .brand-mark{width:32px;height:32px;border:1px solid var(--neutral-90);display:grid;place-items:center;font-family:"Roboto Mono",monospace;font-size:11px}
-    .brand-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .crumb{color:var(--neutral-50);font-size:14px}
-    .page{max-width:1200px;margin:auto;padding:32px 24px 64px}
-    .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px}
-    .page-header h1{font-size:clamp(24px, 4vw, 32px);line-height:1.15;margin:0 0 8px;font-weight:700}
-    .page-header p{margin:0;color:var(--neutral-50);max-width:760px}
-    h2{font-size:22px;line-height:1.2;margin:0 0 16px}
-    h3{font-size:18px;line-height:1.3;margin:0 0 12px}
-    .mono{font-family:"Roboto Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;letter-spacing:.02em}
-    .btn{border:1px solid var(--neutral-90);background:var(--surface);padding:10px 14px;border-radius:var(--radius);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;white-space:nowrap}
-    .btn-primary{background:var(--neutral-90);color:var(--surface)}
-    .btn-quiet{border-color:var(--neutral-30);font-weight:500}
-    .button-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .button-row.end{justify-content:flex-end}
-    .card{border:1px solid var(--neutral-30);background:var(--surface);padding:24px;margin-bottom:20px}
-    .muted{color:var(--neutral-50)}
-    .small{font-size:14px}
-    .status{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;border:1px solid var(--neutral-30);padding:4px 8px;border-radius:999px;background:var(--surface)}
-    .status::before{content:"";width:8px;height:8px;border:1px solid var(--neutral-90);border-radius:50%;background:var(--surface)}
-    .status.avail::before{background:var(--neutral-90)}
-    .status.low::before{background:var(--surface)}
-    .status.out::before{background:transparent}
-    .notice{border:1px solid var(--neutral-90);padding:16px;display:flex;gap:12px;align-items:flex-start;background:var(--surface);margin-bottom:16px}
-    .notice-icon{width:24px;height:24px;min-width:24px;border:1px solid var(--neutral-90);border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px}
-    .notice h3{font-size:16px;margin:0 0 4px}
-    .notice p{margin:0;color:var(--neutral-70)}
-    .notice.error{border-width:2px}
-    .toast{position:fixed;right:24px;bottom:24px;border:1px solid var(--neutral-90);background:var(--surface);padding:14px 16px;max-width:380px;z-index:80;display:none}
-    .toast.show{display:block}
-
-    .toolbar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
-    .search{min-width:220px;flex:1}
-    .filter{min-width:180px}
-    .desktop-table,.mobile-list{width:100%}
-    .table-wrap{border:1px solid var(--neutral-30);overflow-x:auto;-webkit-overflow-scrolling:touch}
-    table{width:100%;border-collapse:collapse}
-    th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--neutral-30);vertical-align:middle}
-    th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-family:"Roboto Mono",ui-monospace,monospace;font-weight:600;color:var(--neutral-70);background:var(--neutral-10);white-space:nowrap}
-    tbody tr:last-child td{border-bottom:0}
-    .sku-code{font-family:"Roboto Mono",ui-monospace,monospace;font-size:13px;font-weight:600}
-    .product-name{font-weight:600}
-    .row-actions{display:flex;gap:4px;flex-wrap:wrap}
-    .row-actions .btn{min-height:36px;padding:6px 10px;font-size:13px}
-    .stock-num{font-family:"Roboto Mono",monospace;font-weight:600;text-align:right}
-    .tag{border:1px solid var(--neutral-30);padding:2px 8px;font-size:12px;font-family:"Roboto Mono",monospace;font-weight:600;display:inline-block;background:var(--neutral-10)}
-    .tag.strong{border-color:var(--neutral-90);background:var(--surface)}
-    .mobile-list{display:none}
-    .sku-card{border:1px solid var(--neutral-30);padding:16px;margin-bottom:12px;background:var(--surface)}
-
-    .detail-head{display:flex;gap:24px;align-items:flex-start;margin-bottom:20px}
-    .kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-    .kv-item{background:var(--neutral-10);padding:10px 14px;border:1px solid var(--neutral-30)}
-    .kv-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--neutral-50);font-weight:600;margin-bottom:4px}
-    .kv-val{font-size:14px;font-weight:600}
-    .section{border:1px solid var(--neutral-30);padding:24px;margin-bottom:16px}
-    .field{margin-bottom:16px}
-    .field:last-child{margin-bottom:0}
-    label{display:block;font-weight:600;margin-bottom:6px;font-size:14px}
-    .hint{display:block;font-size:13px;color:var(--neutral-50);margin-top:5px}
-    input[type="text"],input[type="number"],select{width:100%;border:1px solid var(--neutral-30);background:var(--surface);padding:10px 12px;border-radius:var(--radius);min-height:44px}
-    .field-error{display:block;color:var(--neutral-90);background:var(--neutral-10);border:1px solid var(--neutral-90);padding:8px 10px;margin-top:8px;font-size:13px;font-weight:600}
-
-    .overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);z-index:90;display:none;align-items:center;justify-content:center;padding:24px}
-    .overlay.open{display:flex}
-    .dialog{width:min(640px,100%);max-height:calc(100vh - 48px);overflow:auto;background:var(--surface);border:2px solid var(--neutral-90);padding:24px}
-    .dialog.small-dialog{width:min(520px,100%)}
-    .dialog-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px;border-bottom:1px solid var(--neutral-30);padding-bottom:12px}
-    .dialog-header h2{margin:0;font-size:20px}
-    .icon-button{width:44px;height:44px;border:1px solid var(--neutral-90);background:var(--surface);font-size:20px;line-height:1}
-
-    .empty-state{border:1px solid var(--neutral-30);padding:48px 24px;text-align:center;background:var(--surface)}
-    .empty-state h2{margin-bottom:8px}
-    .empty-state p{color:var(--neutral-50);margin:0 auto 20px;max-width:520px}
-
-    .skeleton{border:1px solid var(--neutral-30);padding:24px}
-    .sk-line{height:14px;background:var(--neutral-10);margin:8px 0}
-    .sk-line.w30{width:30%}.sk-line.w50{width:50%}.sk-line.w80{width:80%}
-
-    .sync-footer{display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--neutral-30);font-size:13px;color:var(--neutral-50)}
-
-    @media (max-width:900px){
-      .desktop-table{display:none}
-      .mobile-list{display:block}
-      .page-header{align-items:stretch}
-      .kv-grid{grid-template-columns:1fr}
-    }
-    @media (max-width:600px){
-      .topbar-inner{padding:12px 16px}
-      .crumb{display:none}
-      .page{padding:24px 16px 48px}
-      .page-header{display:block;margin-bottom:24px}
-      .page-header h1{font-size:24px}
-      .section,.card{padding:16px}
-      .row-actions,.button-row{display:grid;grid-template-columns:1fr;width:100%}
-      .row-actions .btn,.button-row .btn{width:100%;min-height:44px}
-      .dialog{padding:16px}
-      .toast{left:16px;right:16px;bottom:16px}
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Control de stock y disponibilidad</title>
+<style>
+:root{--surface:#fff;--n10:#f3f4f6;--n30:#d1d5db;--n50:#6b7280;--n90:#111827}
+*{box-sizing:border-box}
+html{background:var(--surface)}
+body{margin:0;color:var(--n90);background:var(--surface);font:16px/1.5 Inter,system-ui,sans-serif}
+button,input,select{font:inherit;min-height:44px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--n90);outline-offset:2px}
+.top{border-bottom:1px solid var(--n30)}
+.topin,.wrap{max-width:1200px;margin:auto;padding:16px 24px}
+.topin,.head,.actions,.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-weight:700}.muted{color:var(--n50)}
+.wrap{padding-top:32px;padding-bottom:64px}.head{align-items:flex-start}.head h1{font-size:clamp(28px,4vw,42px);line-height:1.1;margin:0 0 8px}
+.btn{border:1px solid var(--n90);background:var(--surface);color:var(--n90);padding:10px 14px;border-radius:4px;cursor:pointer}
+.btn.primary{background:var(--n90);color:var(--surface)}.btn:disabled{border-color:var(--n30);color:var(--n50);cursor:not-allowed}
+.panel,.card,.notice{border:1px solid var(--n30);background:var(--surface);padding:16px;margin:16px 0}
+.notice{border:2px solid var(--n90)}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end}
+.field label,.label{display:block;font-weight:600;margin-bottom:6px}.input,select{width:100%;border:1px solid var(--n30);background:var(--surface);color:var(--n90);padding:9px 10px;border-radius:4px}
+.summary{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:20px 0 8px}.summary h2{margin:0;font-size:24px}
+.tablewrap{overflow:auto;border:1px solid var(--n30)}table{border-collapse:collapse;width:100%;min-width:1030px}th,td{text-align:left;vertical-align:middle;padding:12px;border-bottom:1px solid var(--n30)}th{background:var(--n10);font-weight:600}tbody tr:last-child td{border-bottom:0}.status{display:inline-block;border:1px solid var(--n90);border-radius:999px;padding:3px 9px;white-space:nowrap}.sku{font-family:"Roboto Mono",monospace;font-size:13px}.cell-actions{display:flex;gap:8px;flex-wrap:wrap}
+.cards{display:none}.stock-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.metric{border:1px solid var(--n30);padding:10px}.metric strong{display:block;font-size:22px;margin-top:2px}.small{font-size:14px}.empty{text-align:center;padding:40px 16px;border:1px solid var(--n30);margin-top:16px}.empty h2{margin-top:0}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}.overlay.open{display:flex}.dialog{background:var(--surface);border:2px solid var(--n90);width:min(720px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:20px}.dialog h2{margin-top:0}.dialog-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.section{border-top:1px solid var(--n30);padding-top:16px;margin-top:16px}.feedback{min-height:24px;margin-top:8px}.skeleton{height:20px;background:var(--n10);margin:10px 0;border:1px solid var(--n30)}
+@media(max-width:900px){.filters{grid-template-columns:1fr 1fr}.filters .filter-action{align-self:end}.desktop{display:none}.cards{display:block}.head{display:block}.actions{margin-top:16px;justify-content:flex-start}.dialog-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.topin,.wrap{padding-left:16px;padding-right:16px}.topin{display:block}.topin .muted{margin-top:4px}.filters{grid-template-columns:1fr}.actions,.row{flex-wrap:wrap}.actions .btn,.row .btn{width:100%}.stock-grid{grid-template-columns:1fr 1fr}.summary{display:block}.summary .muted{margin-top:4px}.dialog{width:100%;max-height:100vh;border-left:0;border-right:0}.cell-actions{display:grid;grid-template-columns:1fr}.card .btn{width:100%}}
+</style>
 </head>
 <body>
-<div class="app-shell">
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <div class="brand-mark" aria-hidden="true">PO</div>
-        <span class="brand-text">PO Productos y ofertas</span>
-      </div>
-      <div class="crumb">Productos / Inventario y disponibilidad</div>
+<header class="top"><div class="topin"><div class="brand">PO Productos y ofertas</div><div class="muted">Inventario / Control de stock</div></div></header>
+<main class="wrap" id="app"></main>
+<div class="overlay" id="thresholdOverlay" role="dialog" aria-modal="true" aria-labelledby="thresholdTitle">
+  <section class="dialog" tabindex="-1">
+    <div class="row"><h2 id="thresholdTitle">Configurar umbrales</h2><button class="btn" type="button" data-close="thresholdOverlay">Cerrar</button></div>
+    <div class="section" style="border-top:0;padding-top:0;margin-top:0">
+      <h3>Umbral global</h3>
+      <p class="muted">Se utilizará este valor en los productos que no tengan un umbral específico.</p>
+      <div class="field"><label for="globalThreshold">Unidades</label><input class="input" id="globalThreshold" type="number" min="0" step="1"></div>
+      <div class="feedback" id="globalFeedback" aria-live="polite"></div>
+      <button class="btn primary" id="saveGlobal" type="button">Guardar umbral global</button>
     </div>
-  </header>
-  <main id="app" class="page" tabindex="-1"></main>
-</div>
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-<!-- Modal S-03: Configurar umbral de stock bajo -->
-<div id="umbralOverlay" class="overlay" aria-hidden="true">
-  <section class="dialog small-dialog" role="dialog" aria-modal="true" aria-labelledby="umbralTitle">
-    <div class="dialog-header">
-      <div>
-        <h2 id="umbralTitle">Configurar umbral de stock bajo</h2>
-        <p id="umbralMeta" class="muted small"></p>
-      </div>
-      <button class="icon-button" type="button" id="umbralCloseTop" aria-label="Cerrar modal">×</button>
+    <div class="section">
+      <h3>Umbral específico</h3>
+      <div class="field"><label for="skuThresholdSelect">SKU / producto</label><select id="skuThresholdSelect"></select></div>
+      <div id="skuThresholdInfo" class="panel"></div>
+      <div class="field"><label for="specificThreshold">Unidades</label><input class="input" id="specificThreshold" type="number" min="0" step="1"></div>
+      <div class="feedback" id="specificFeedback" aria-live="polite"></div>
+      <div class="row"><button class="btn primary" id="saveSpecific" type="button">Guardar umbral específico</button><button class="btn" id="useGlobal" type="button">Usar umbral global</button></div>
     </div>
-    <div id="umbralBody"></div>
   </section>
 </div>
-
+<div class="overlay" id="detailOverlay" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+  <section class="dialog" tabindex="-1">
+    <div class="row"><h2 id="detailTitle">Detalle de saldo</h2><button class="btn" type="button" data-close="detailOverlay">Cerrar</button></div>
+    <div id="detailBody"></div>
+  </section>
+</div>
 <script>
-(() => {
-  'use strict';
-
-  /*
-    WF-015 — Control de stock y disponibilidad
-    Estados documentales inspeccionables vía query param:
-      ?state=empty            -> listado vacío (S-01-E)
-      ?state=list-error       -> error de carga (S-01-E)
-      ?state=no-permission    -> usuario sin permiso
-      ?state=session-expired  -> sesión expirada
-  */
-
-  const DEFAULT_GLOBAL_UMBRAL = 5;
-
-  let inventory = [
-    { id: 'inv-1', product: 'Nike Air Max', sku: 'NK-AM-BLK-40', attrs: 'Negro / Talla 40', location_id: 'LOC-LIMA-CENTRAL', on_hand: 12, reserved: 2, available: 10, umbral: 5, use_default_umbral: true, version: 102 },
-    { id: 'inv-2', product: 'Nike Air Max', sku: 'NK-AM-BLK-41', attrs: 'Negro / Talla 41', location_id: 'LOC-LIMA-CENTRAL', on_hand: 4, reserved: 1, available: 3, umbral: 5, use_default_umbral: true, version: 108 },
-    { id: 'inv-3', product: 'Nike Air Max', sku: 'NK-AM-WHT-40', attrs: 'Blanco / Talla 40', location_id: 'LOC-LIMA-SUR', on_hand: 0, reserved: 0, available: 0, umbral: 5, use_default_umbral: true, version: 95 },
-    { id: 'inv-4', product: 'Adidas Predator', sku: 'AD-PR-42-RD', attrs: 'Rojo / Talla 42', location_id: 'LOC-LIMA-CENTRAL', on_hand: 18, reserved: 3, available: 15, umbral: 8, use_default_umbral: false, version: 114 },
-    { id: 'inv-5', product: 'Adidas Predator', sku: 'AD-PR-43-RD', attrs: 'Rojo / Talla 43', location_id: 'LOC-LIMA-SUR', on_hand: 7, reserved: 2, available: 5, umbral: 6, use_default_umbral: false, version: 88 },
-    { id: 'inv-6', product: 'Puma Future', sku: 'PM-FT-40-BK', attrs: 'Negro / Talla 40', location_id: 'LOC-LIMA-CENTRAL', on_hand: 1, reserved: 1, available: 0, umbral: 4, use_default_umbral: false, version: 73 }
-  ];
-
-  const state = {
-    view: 'list',
-    selectedId: null,
-    loading: true,
-    search: '',
-    locationFilter: 'all',
-    statusFilter: 'all',
-    queryState: new URLSearchParams(location.search).get('state') || ''
-  };
-
-  let lastSyncTime = '14:25:10';
-
-  const app = document.getElementById('app');
-  const toast = document.getElementById('toast');
-  const umbralOverlay = document.getElementById('umbralOverlay');
-  const umbralMeta = document.getElementById('umbralMeta');
-  const umbralBody = document.getElementById('umbralBody');
-  const umbralCloseTop = document.getElementById('umbralCloseTop');
-  let umbralTarget = null;
-  let toastTimer = null;
-
-  function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch])); }
-  function invById(id){ return inventory.find(s => s.id === id); }
-  function showToast(message){ clearTimeout(toastTimer); toast.textContent = message; toast.classList.add('show'); toastTimer = setTimeout(() => toast.classList.remove('show'), 3200); }
-
-  function getEffectiveUmbral(item){
-    return item.use_default_umbral ? DEFAULT_GLOBAL_UMBRAL : item.umbral;
-  }
-
-  function estadoOf(available, effectiveUmbral){
-    if (available === 0) return 'out';
-    if (available <= effectiveUmbral) return 'low';
-    return 'avail';
-  }
-
-  function labelOf(status){
-    if (status === 'avail') return 'Disponible';
-    if (status === 'low') return 'Stock bajo';
-    return 'Agotado';
-  }
-
-  function statusBadge(item){
-    const u = getEffectiveUmbral(item);
-    const st = estadoOf(item.available, u);
-    return `<span class="status ${st}">${labelOf(st)}</span>`;
-  }
-
-  function syncFooter(){
-    return `<div class="sync-footer"><span class="small">Saldos de stock y disponibilidad actualizados.</span><span class="mono small">Última sincronización: ${lastSyncTime}</span></div>`;
-  }
-
-  function renderGlobalState(){
-    if (state.queryState === 'no-permission'){
-      app.innerHTML = `
-        <div class="page-header">
-          <div>
-            <h1>Control de stock y disponibilidad</h1>
-            <p>Consulta de saldos de inventario por SKU y sede.</p>
-          </div>
-        </div>
-        <div class="notice error">
-          <span class="notice-icon" aria-hidden="true">!</span>
-          <div>
-            <h3>Acceso restringido</h3>
-            <p>No tienes permiso para consultar o gestionar el stock. Se requiere permiso comercial de inventario.</p>
-          </div>
-        </div>
-        <button class="btn" data-action="login">Reintentar autenticación</button>`;
-      return true;
-    }
-    if (state.queryState === 'session-expired'){
-      app.innerHTML = `
-        <div class="page-header">
-          <div>
-            <h1>Control de stock y disponibilidad</h1>
-            <p>Consulta de saldos de inventario por SKU y sede.</p>
-          </div>
-        </div>
-        <div class="notice error">
-          <span class="notice-icon" aria-hidden="true">!</span>
-          <div>
-            <h3>Tu sesión expiró</h3>
-            <p>Inicia sesión nuevamente para continuar consultando las existencias de stock.</p>
-          </div>
-        </div>
-        <button class="btn btn-primary" data-action="login">Iniciar sesión</button>`;
-      return true;
-    }
-    return false;
-  }
-
-  function visibleInventory(){
-    return inventory.filter(item => {
-      const matchSearch = !state.search ||
-        item.product.toLowerCase().includes(state.search.toLowerCase()) ||
-        item.sku.toLowerCase().includes(state.search.toLowerCase());
-      const matchLocation = state.locationFilter === 'all' || item.location_id === state.locationFilter;
-      const u = getEffectiveUmbral(item);
-      const st = estadoOf(item.available, u);
-      const matchStatus = state.statusFilter === 'all' || st === state.statusFilter;
-      return matchSearch && matchLocation && matchStatus;
-    });
-  }
-
-  function renderList(){
-    if (state.loading){
-      app.innerHTML = `
-        <div class="page-header">
-          <div>
-            <h1>Control de stock y disponibilidad</h1>
-            <p>Consulta de existencias físicas, reservas y unidades disponibles por SKU y sede.</p>
-          </div>
-        </div>
-        <div class="skeleton">
-          <div class="sk-line w30"></div>
-          <div class="sk-line w80"></div>
-          <div class="sk-line w50"></div>
-        </div>`;
-      setTimeout(() => { state.loading = false; render(); }, 350);
-      return;
-    }
-    if (state.queryState === 'list-error'){
-      app.innerHTML = `
-        <div class="page-header">
-          <div>
-            <h1>Control de stock y disponibilidad</h1>
-            <p>Consulta de saldos de stock por SKU vendible y ubicación.</p>
-          </div>
-        </div>
-        <div class="notice error">
-          <span class="notice-icon" aria-hidden="true">!</span>
-          <div>
-            <h3>Error al consultar saldos de inventario</h3>
-            <p>No se pudo conectar con el servicio de inventario. Intente nuevamente en unos instantes.</p>
-          </div>
-        </div>
-        <button class="btn btn-primary" data-action="retry">Reintentar</button>`;
-      bindPage();
-      return;
-    }
-    if (inventory.length === 0 || state.queryState === 'empty'){
-      app.innerHTML = `
-        <div class="page-header">
-          <div>
-            <h1>Control de stock y disponibilidad</h1>
-            <p>Consulta de saldos de stock por SKU vendible y ubicación.</p>
-          </div>
-        </div>
-        <div class="empty-state">
-          <h2>Aún no hay registros de stock</h2>
-          <p>Los saldos por sede se inicializan al sincronizar el catálogo o recibir eventos de almacén.</p>
-        </div>`;
-      bindPage();
-      return;
-    }
-
-    const rows = visibleInventory();
-    const locations = [...new Set(inventory.map(i => i.location_id))];
-
-    const trs = rows.map(item => {
-      const u = getEffectiveUmbral(item);
-      const umbralText = item.use_default_umbral ? `${u} (global)` : `${u} (personalizado)`;
-      return `<tr>
-        <td>
-          <span class="sku-code">${escapeHtml(item.sku)}</span>
-          <div class="small muted">${escapeHtml(item.attrs)}</div>
-        </td>
-        <td class="product-name">${escapeHtml(item.product)}</td>
-        <td><span class="tag">${escapeHtml(item.location_id)}</span></td>
-        <td class="stock-num">${item.on_hand}</td>
-        <td class="stock-num muted">${item.reserved}</td>
-        <td class="stock-num"><strong>${item.available}</strong></td>
-        <td class="small col-nowrap">${escapeHtml(umbralText)}</td>
-        <td>${statusBadge(item)}</td>
-        <td>
-          <div class="row-actions">
-            <button class="btn btn-quiet" data-action="view" data-id="${item.id}">Ver detalle</button>
-            <button class="btn btn-quiet" data-action="umbral" data-id="${item.id}">Configurar umbral</button>
-          </div>
-        </td>
-      </tr>`;
-    }).join('');
-
-    const cards = rows.map(item => {
-      const u = getEffectiveUmbral(item);
-      const umbralText = item.use_default_umbral ? `${u} (global)` : `${u} (personalizado)`;
-      return `<article class="sku-card">
-        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
-          <div>
-            <div class="product-name">${escapeHtml(item.product)}</div>
-            <div class="sku-code">${escapeHtml(item.sku)}</div>
-            <div class="small muted">${escapeHtml(item.attrs)} · <span class="tag">${escapeHtml(item.location_id)}</span></div>
-          </div>
-          ${statusBadge(item)}
-        </div>
-        <div class="small" style="margin:10px 0">
-          Físico: <strong>${item.on_hand}</strong> · Reservado: <strong>${item.reserved}</strong> · Disponible: <strong>${item.available}</strong> (Umbral: ${umbralText})
-        </div>
-        <div class="row-actions">
-          <button class="btn btn-quiet" data-action="view" data-id="${item.id}">Ver detalle</button>
-          <button class="btn btn-quiet" data-action="umbral" data-id="${item.id}">Configurar umbral</button>
-        </div>
-      </article>`;
-    }).join('');
-
-    app.innerHTML = `
-      <div class="page-header">
-        <div>
-          <h1>Control de stock y disponibilidad</h1>
-          <p class="muted">Consulta de existencias físicas, reservas y unidades disponibles por SKU y sede.</p>
-        </div>
-      </div>
-
-      <div class="toolbar">
-        <input class="search" type="text" id="searchInput" placeholder="Buscar por SKU o producto…" value="${escapeHtml(state.search)}" aria-label="Buscar por SKU o producto">
-        <select class="filter" id="locationFilter" aria-label="Filtrar por ubicación">
-          <option value="all" ${state.locationFilter === 'all' ? 'selected' : ''}>Todas las sedes</option>
-          ${locations.map(loc => `<option value="${escapeHtml(loc)}" ${state.locationFilter === loc ? 'selected' : ''}>${escapeHtml(loc)}</option>`).join('')}
-        </select>
-        <select class="filter" id="statusFilter" aria-label="Filtrar por estado">
-          <option value="all" ${state.statusFilter === 'all' ? 'selected' : ''}>Todos los estados</option>
-          <option value="avail" ${state.statusFilter === 'avail' ? 'selected' : ''}>Disponible</option>
-          <option value="low" ${state.statusFilter === 'low' ? 'selected' : ''}>Stock bajo</option>
-          <option value="out" ${state.statusFilter === 'out' ? 'selected' : ''}>Agotado</option>
-        </select>
-      </div>
-
-      ${rows.length === 0 ? `
-        <div class="empty-state">
-          <h2>Sin resultados</h2>
-          <p>No se encontraron registros de stock que coincidan con los filtros aplicados.</p>
-          <button class="btn" data-action="clear-filters">Limpiar filtros</button>
-        </div>
-      ` : `
-        <div class="desktop-table table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">SKU / Atributos</th>
-                <th scope="col">Producto</th>
-                <th scope="col">Ubicación (Sede)</th>
-                <th scope="col" style="text-align:right">Físico</th>
-                <th scope="col" style="text-align:right">Reservado</th>
-                <th scope="col" style="text-align:right">Disponible</th>
-                <th scope="col">Umbral alerta</th>
-                <th scope="col">Estado</th>
-                <th scope="col">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>${trs}</tbody>
-          </table>
-        </div>
-        <div class="mobile-list">${cards}</div>
-      `}
-
-      ${syncFooter()}
-    `;
-
-    bindControls();
-    bindPage();
-  }
-
-  function bindControls(){
-    const s = document.getElementById('searchInput');
-    const loc = document.getElementById('locationFilter');
-    const st = document.getElementById('statusFilter');
-    if (s) s.addEventListener('input', () => { state.search = s.value; render(); });
-    if (loc) loc.addEventListener('change', () => { state.locationFilter = loc.value; render(); });
-    if (st) st.addEventListener('change', () => { state.statusFilter = st.value; render(); });
-  }
-
-  function renderDetail(){
-    const item = invById(state.selectedId);
-    if (!item){ showToast('El registro de inventario no existe.'); state.selectedId = null; state.view = 'list'; render(); return; }
-
-    const u = getEffectiveUmbral(item);
-    const st = estadoOf(item.available, u);
-    const relatedLocations = inventory.filter(i => i.sku === item.sku);
-
-    app.innerHTML = `
-      <div class="page-header">
-        <div>
-          <button class="btn btn-quiet" data-action="list" style="margin-bottom:12px;">← Volver al listado</button>
-          <h1>${escapeHtml(item.product)}</h1>
-          <p class="mono muted">${escapeHtml(item.sku)} · ${escapeHtml(item.attrs)}</p>
-        </div>
-        <div>
-          ${statusBadge(item)}
-        </div>
-      </div>
-
-      <div class="card">
-        <h2 style="font-size:18px; margin-top:0;">Desglose de existencias — ${escapeHtml(item.location_id)}</h2>
-        <div class="kv-grid">
-          <div class="kv-item">
-            <div class="kv-lbl">Stock físico</div>
-            <div class="kv-val mono">${item.on_hand} unidades</div>
-          </div>
-          <div class="kv-item">
-            <div class="kv-lbl">Stock reservado</div>
-            <div class="kv-val mono">${item.reserved} unidades</div>
-          </div>
-          <div class="kv-item">
-            <div class="kv-lbl">Stock disponible</div>
-            <div class="kv-val mono" style="font-size:18px;"><strong>${item.available}</strong> unidades</div>
-          </div>
-          <div class="kv-item">
-            <div class="kv-lbl">Umbral de alerta</div>
-            <div class="kv-val mono">${u} unidades ${item.use_default_umbral ? '<span class="muted small">(global: 5)</span>' : '<span class="muted small">(personalizado)</span>'}</div>
-          </div>
-        </div>
-
-        <div class="button-row">
-          <button class="btn btn-primary" data-action="umbral" data-id="${item.id}">Configurar umbral de stock bajo</button>
-          <button class="btn btn-quiet" data-action="list">Volver al inventario</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2 style="font-size:18px; margin-top:0;">Disponibilidad del SKU en otras sedes</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Ubicación</th>
-                <th scope="col" style="text-align:right">Físico</th>
-                <th scope="col" style="text-align:right">Reservado</th>
-                <th scope="col" style="text-align:right">Disponible</th>
-                <th scope="col">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${relatedLocations.map(rel => `
-                <tr style="${rel.id === item.id ? 'font-weight:700;' : ''}">
-                  <td><span class="tag ${rel.id === item.id ? 'strong' : ''}">${escapeHtml(rel.location_id)}</span> ${rel.id === item.id ? '(actual)' : ''}</td>
-                  <td class="stock-num">${rel.on_hand}</td>
-                  <td class="stock-num muted">${rel.reserved}</td>
-                  <td class="stock-num"><strong>${rel.available}</strong></td>
-                  <td>${statusBadge(rel)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-
-    bindPage();
-  }
-
-  function openUmbral(item, isSimulatedError = false){
-    umbralTarget = item;
-    const currentU = getEffectiveUmbral(item);
-    umbralMeta.textContent = `${item.sku} · ${item.location_id}`;
-    umbralBody.innerHTML = `
-      <form id="umbralForm" novalidate>
-        <div class="field">
-          <label>Origen de la regla de umbral:</label>
-          <div style="margin-bottom:8px;">
-            <label style="font-weight:normal; display:flex; align-items:center; gap:8px;">
-              <input type="radio" name="umbralMode" value="default" ${item.use_default_umbral ? 'checked' : ''}>
-              Usar umbral global por defecto (<strong>${DEFAULT_GLOBAL_UMBRAL} unidades</strong>)
-            </label>
-          </div>
-          <div>
-            <label style="font-weight:normal; display:flex; align-items:center; gap:8px;">
-              <input type="radio" name="umbralMode" value="custom" ${!item.use_default_umbral ? 'checked' : ''}>
-              Personalizar umbral específico para este SKU
-            </label>
-          </div>
-        </div>
-
-        <div class="field" id="customInputWrap" style="${item.use_default_umbral ? 'display:none;' : ''}">
-          <label for="umbralValue">Valor del umbral personalizado *</label>
-          <input type="number" id="umbralValue" min="0" max="9999" step="1" value="${item.umbral}">
-          <span class="hint">Si el stock disponible es menor o igual a este valor, el SKU figurará en "Stock bajo".</span>
-          <span id="umbralError" class="field-error" style="display:none"></span>
-        </div>
-
-        <div class="notice error" id="umbralPersistError" style="${isSimulatedError ? 'display:flex;' : 'display:none;'} margin-top:16px;" role="alert">
-          <div class="notice-icon" aria-hidden="true">!</div>
-          <div>
-            <h3 style="margin:0 0 4px; font-size:16px;">No pudimos guardar el umbral</h3>
-            <p style="margin:0; font-size:14px;">Ocurrió un error al persistir la configuración del umbral. Tus cambios se conservaron.</p>
-            <div class="button-row" style="margin-top:10px;">
-              <button class="btn btn-primary" type="button" id="btnRetryUmbralSave">Reintentar</button>
-              <button class="btn btn-quiet" type="button" id="btnCancelUmbralError">Cancelar</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="button-row end" style="margin-top:20px; border-top:1px solid var(--neutral-30); padding-top:16px;">
-          <button class="btn btn-quiet" type="button" data-umbral-cancel>Cancelar</button>
-          <button class="btn btn-primary" type="submit" id="saveUmbral">Guardar umbral</button>
-        </div>
-      </form>
-    `;
-
-    umbralOverlay.classList.add('open');
-    umbralOverlay.setAttribute('aria-hidden', 'false');
-
-    const form = document.getElementById('umbralForm');
-    const customWrap = document.getElementById('customInputWrap');
-    const radios = form.querySelectorAll('input[name="umbralMode"]');
-    const persistErr = document.getElementById('umbralPersistError');
-    const retryBtn = document.getElementById('btnRetryUmbralSave');
-    const cancelErrBtn = document.getElementById('btnCancelUmbralError');
-
-    radios.forEach(r => {
-      r.addEventListener('change', () => {
-        if (r.value === 'custom') {
-          customWrap.style.display = 'block';
-        } else {
-          customWrap.style.display = 'none';
-        }
-      });
-    });
-
-    const cancel = form.querySelector('[data-umbral-cancel]');
-    cancel.addEventListener('click', closeUmbral);
-    if (cancelErrBtn) cancelErrBtn.addEventListener('click', closeUmbral);
-
-    const performSave = () => {
-      const mode = form.querySelector('input[name="umbralMode"]:checked').value;
-      const err = document.getElementById('umbralError');
-      err.style.display = 'none';
-      if (persistErr) persistErr.style.display = 'none';
-
-      if (mode === 'default') {
-        item.use_default_umbral = true;
-        state.queryState = '';
-        closeUmbral();
-        render();
-        showToast(`Umbral restablecido a valor global (${DEFAULT_GLOBAL_UMBRAL}) para ${item.sku}.`);
-      } else {
-        const v = parseInt(document.getElementById('umbralValue').value, 10);
-        if (!Number.isInteger(v) || v < 0) {
-          err.textContent = 'El umbral debe ser un número entero mayor o igual a 0.';
-          err.style.display = 'block';
-          return;
-        }
-        item.use_default_umbral = false;
-        item.umbral = v;
-        state.queryState = '';
-        closeUmbral();
-        render();
-        showToast(`Umbral personalizado guardado (${v} unidades) para ${item.sku}.`);
-      }
-    };
-
-    if (retryBtn) retryBtn.addEventListener('click', performSave);
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      performSave();
-    });
-  }
-
-  function closeUmbral(){
-    umbralOverlay.classList.remove('open');
-    umbralOverlay.setAttribute('aria-hidden', 'true');
-    umbralTarget = null;
-    if (state.queryState === 's02-e') {
-      state.queryState = '';
-    }
-  }
-
-  function bindPage(){
-    app.querySelectorAll('[data-action]').forEach(el => el.addEventListener('click', e => {
-      const action = e.currentTarget.dataset.action;
-      const id = e.currentTarget.dataset.id;
-      if (action === 'list') { state.view = 'list'; state.selectedId = null; render(); }
-      else if (action === 'view') { state.view = 'detail'; state.selectedId = id; render(); }
-      else if (action === 'umbral') { openUmbral(invById(id)); }
-      else if (action === 'retry') { state.queryState = ''; state.loading = true; render(); }
-      else if (action === 'clear-filters') { state.statusFilter = 'all'; state.locationFilter = 'all'; state.search = ''; render(); }
-      else if (action === 'login') { state.queryState = ''; state.loading = true; render(); showToast('Sesión autenticada.'); }
-    }));
-  }
-
-  umbralCloseTop.addEventListener('click', closeUmbral);
-  umbralOverlay.addEventListener('click', e => { if (e.target === umbralOverlay) closeUmbral(); });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && umbralOverlay.classList.contains('open')) closeUmbral();
-  });
-
-  function render(){
-    if (renderGlobalState()){ bindPage(); return; }
-    if (state.queryState === 's02-e'){
-      state.view = 'detail';
-      state.selectedId = 'inv-1';
-      renderDetail();
-      openUmbral(invById('inv-1'), true);
-      return;
-    }
-    if (state.view === 'detail'){ renderDetail(); return; }
-    renderList();
-  }
-
-  render();
-})();
+const baseData=[
+ {sku:'NK-AM-BLK-40',producto:'Nike Air Max negro 40',ubicacion:'Tienda San Isidro',fisico:10,reservado:3,umbralEspecifico:5},
+ {sku:'NK-AM-BLK-41',producto:'Nike Air Max negro 41',ubicacion:'Tienda San Isidro',fisico:4,reservado:1,umbralEspecifico:null},
+ {sku:'AD-RUN-WHT-42',producto:'Adidas Run blanco 42',ubicacion:'Almacén Central',fisico:18,reservado:3,umbralEspecifico:8},
+ {sku:'PM-TR-BLU-40',producto:'Puma Trail azul 40',ubicacion:'Tienda Miraflores',fisico:3,reservado:1,umbralEspecifico:null},
+ {sku:'AC-BOT-750',producto:'Botella deportiva 750 ml',ubicacion:'Almacén Central',fisico:0,reservado:0,umbralEspecifico:null}
+];
+let data=baseData.map(x=>({...x}));
+let globalThreshold=5;
+const ui={q:'',ubicacion:'todas',estado:'todos',selectedSku:data[0].sku};
+const app=document.getElementById('app');
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const disponible=x=>Math.max(x.fisico-x.reservado,0);
+const umbral=x=>x.umbralEspecifico??globalThreshold;
+const estado=x=>disponible(x)===0?'agotado':disponible(x)<=umbral(x)?'bajo':'disponible';
+const estadoLabel=x=>estado(x)==='agotado'?'Agotado':estado(x)==='bajo'?'Stock bajo':'Disponible';
+function filtered(){const q=ui.q.trim().toLowerCase();return data.filter(x=>(!q||x.sku.toLowerCase().includes(q)||x.producto.toLowerCase().includes(q))&&(ui.ubicacion==='todas'||x.ubicacion===ui.ubicacion)&&(ui.estado==='todos'||estado(x)===ui.estado));}
+function render(){
+ const params=new URLSearchParams(location.search), demo=params.get('state');
+ if(demo==='no-permission'){app.innerHTML='<h1>Control de stock y disponibilidad</h1><div class="notice"><strong>Acceso restringido</strong><p>No tienes permiso para consultar esta información.</p></div>';return;}
+ if(demo==='loading'){app.innerHTML='<h1>Control de stock y disponibilidad</h1><section class="panel" aria-label="Cargando inventario"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></section>';return;}
+ if(demo==='error'){app.innerHTML='<h1>Control de stock y disponibilidad</h1><div class="notice"><strong>No pudimos cargar el inventario.</strong><p>Intenta nuevamente.</p><button class="btn primary" id="retry">Reintentar</button></div>';document.getElementById('retry').onclick=()=>{history.replaceState({},'',location.pathname);render()};return;}
+ if(demo==='empty'){app.innerHTML='<h1>Control de stock y disponibilidad</h1><div class="empty"><h2>Aún no hay existencias para mostrar</h2><p class="muted">Cuando se inicialicen SKU vendibles, aparecerán aquí por ubicación.</p></div>';return;}
+ if(demo==='updated' && !window.__updatedApplied){data[0].reservado=5;window.__updatedApplied=true;}
+ const rows=filtered(), locations=[...new Set(data.map(x=>x.ubicacion))];
+ app.innerHTML=`<div class="head"><div><h1>Control de stock y disponibilidad</h1><p class="muted">Consulta existencias por SKU y ubicación y configura cuándo considerar stock bajo.</p></div><div class="actions"><button class="btn primary" id="openThresholds">Configurar umbrales</button></div></div>${demo==='updated'?'<div class="notice" role="status" aria-live="polite"><strong>Inventario actualizado.</strong> Los saldos visibles reflejan la información más reciente.</div>':''}<section class="panel filters" aria-label="Filtros de inventario"><div class="field"><label for="q">Buscar por SKU o producto</label><input class="input" id="q" value="${esc(ui.q)}" placeholder="Ej. NK-AM-BLK-40"></div><div class="field"><label for="location">Ubicación</label><select id="location"><option value="todas">Todas</option>${locations.map(l=>`<option value="${esc(l)}" ${ui.ubicacion===l?'selected':''}>${esc(l)}</option>`).join('')}</select></div><div class="field"><label for="status">Estado</label><select id="status"><option value="todos">Todos</option><option value="disponible" ${ui.estado==='disponible'?'selected':''}>Disponible</option><option value="bajo" ${ui.estado==='bajo'?'selected':''}>Stock bajo</option><option value="agotado" ${ui.estado==='agotado'?'selected':''}>Agotado</option></select></div><div class="filter-action"><button class="btn" id="clearFilters">Limpiar filtros</button></div></section><div class="summary"><h2>Existencias</h2><div class="muted">${rows.length} ${rows.length===1?'resultado':'resultados'}</div></div>${rows.length?renderRows(rows):'<div class="empty"><h2>No se encontraron existencias con los filtros aplicados.</h2><button class="btn" id="emptyClear">Limpiar filtros</button></div>'}`;
+ bindMain();
+}
+function renderRows(rows){return `<div class="desktop tablewrap"><table><thead><tr><th>SKU</th><th>Producto</th><th>Ubicación</th><th>Físico</th><th>Reservado</th><th>Disponible</th><th>Umbral</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${rows.map(x=>`<tr><td class="sku">${esc(x.sku)}</td><td>${esc(x.producto)}</td><td>${esc(x.ubicacion)}</td><td>${x.fisico}</td><td>${x.reservado}</td><td><strong>${disponible(x)}</strong></td><td>${umbral(x)}</td><td><span class="status">${estadoLabel(x)}</span></td><td><div class="cell-actions"><button class="btn" data-detail="${esc(x.sku)}">Ver detalle</button><button class="btn" data-threshold="${esc(x.sku)}">Configurar umbral</button></div></td></tr>`).join('')}</tbody></table></div><div class="cards">${rows.map(x=>`<article class="card"><div class="row"><div><strong>${esc(x.producto)}</strong><div class="sku">${esc(x.sku)}</div></div><span class="status">${estadoLabel(x)}</span></div><p class="muted">${esc(x.ubicacion)}</p><div class="stock-grid"><div class="metric"><span class="small">Físico</span><strong>${x.fisico}</strong></div><div class="metric"><span class="small">Reservado</span><strong>${x.reservado}</strong></div><div class="metric"><span class="small">Disponible</span><strong>${disponible(x)}</strong></div><div class="metric"><span class="small">Umbral</span><strong>${umbral(x)}</strong></div></div><div class="cell-actions"><button class="btn" data-detail="${esc(x.sku)}">Ver detalle</button><button class="btn" data-threshold="${esc(x.sku)}">Configurar umbral</button></div></article>`).join('')}</div>`}
+function clearFilters(){ui.q='';ui.ubicacion='todas';ui.estado='todos';render()}
+function bindMain(){
+ document.getElementById('q').oninput=e=>{ui.q=e.target.value;render()};
+ document.getElementById('location').onchange=e=>{ui.ubicacion=e.target.value;render()};
+ document.getElementById('status').onchange=e=>{ui.estado=e.target.value;render()};
+ document.getElementById('clearFilters').onclick=clearFilters;
+ const ec=document.getElementById('emptyClear');if(ec)ec.onclick=clearFilters;
+ document.getElementById('openThresholds').onclick=()=>openThresholds();
+ document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>openDetail(b.dataset.detail));
+ document.querySelectorAll('[data-threshold]').forEach(b=>b.onclick=()=>openThresholds(b.dataset.threshold));
+}
+function openThresholds(sku){if(sku)ui.selectedSku=sku;globalThresholdInput();populateSkuSelect();syncSpecific();openModal('thresholdOverlay','globalThreshold')}
+function globalThresholdInput(){document.getElementById('globalThreshold').value=globalThreshold;document.getElementById('globalFeedback').textContent=''}
+function populateSkuSelect(){const s=document.getElementById('skuThresholdSelect');s.innerHTML=data.map(x=>`<option value="${esc(x.sku)}" ${ui.selectedSku===x.sku?'selected':''}>${esc(x.sku)} — ${esc(x.producto)}</option>`).join('');s.onchange=e=>{ui.selectedSku=e.target.value;syncSpecific()}}
+function syncSpecific(){const x=data.find(v=>v.sku===ui.selectedSku);document.getElementById('skuThresholdInfo').innerHTML=`<strong>${esc(x.producto)}</strong><div class="sku">${esc(x.sku)}</div><p>Umbral global: <strong>${globalThreshold}</strong><br>Umbral específico: <strong>${x.umbralEspecifico==null?'No configurado':x.umbralEspecifico}</strong><br>Umbral aplicado: <strong>${umbral(x)}</strong></p>`;document.getElementById('specificThreshold').value=x.umbralEspecifico??umbral(x);document.getElementById('useGlobal').disabled=x.umbralEspecifico==null;document.getElementById('specificFeedback').textContent=''}
+document.getElementById('saveGlobal').onclick=()=>{const v=Number(document.getElementById('globalThreshold').value),f=document.getElementById('globalFeedback');if(!Number.isInteger(v)||v<0){f.textContent='El umbral debe ser un entero mayor o igual a 0.';return}globalThreshold=v;f.textContent='Umbral global actualizado.';syncSpecific();render()};
+document.getElementById('saveSpecific').onclick=()=>{const v=Number(document.getElementById('specificThreshold').value),f=document.getElementById('specificFeedback');if(!Number.isInteger(v)||v<0){f.textContent='El umbral debe ser un entero mayor o igual a 0.';return}const x=data.find(vv=>vv.sku===ui.selectedSku);x.umbralEspecifico=v;f.textContent='Umbral específico actualizado.';syncSpecific();render()};
+document.getElementById('useGlobal').onclick=()=>{const x=data.find(v=>v.sku===ui.selectedSku);x.umbralEspecifico=null;document.getElementById('specificFeedback').textContent='Este SKU volverá a utilizar el umbral global.';syncSpecific();render()};
+function openDetail(sku){const x=data.find(v=>v.sku===sku);document.getElementById('detailBody').innerHTML=`<h3>${esc(x.producto)}</h3><p class="sku">${esc(x.sku)}</p><p class="muted">${esc(x.ubicacion)}</p><div class="stock-grid"><div class="metric"><span class="small">Físico</span><strong>${x.fisico}</strong></div><div class="metric"><span class="small">Reservado</span><strong>${x.reservado}</strong></div><div class="metric"><span class="small">Disponible</span><strong>${disponible(x)}</strong></div></div><div class="panel"><strong>Umbral: ${umbral(x)} · Estado: ${estadoLabel(x)}</strong></div><p>Las unidades reservadas están temporalmente comprometidas en pedidos y no se ofrecen como disponibles.</p><p class="muted">Este detalle es de solo lectura.</p>`;openModal('detailOverlay','detailTitle')}
+let lastFocus=null;function openModal(id,focusId){lastFocus=document.activeElement;const o=document.getElementById(id);o.classList.add('open');setTimeout(()=>{const t=focusId?document.getElementById(focusId):o.querySelector('button,input,select');t&&t.focus()},0)}
+function closeModal(id){const o=document.getElementById(id);o.classList.remove('open');lastFocus&&lastFocus.focus()}
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id)}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const o=document.querySelector('.overlay.open');if(o)closeModal(o.id)}});
+render();
 </script>
 </body>
 </html>
