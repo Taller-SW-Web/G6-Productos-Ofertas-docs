@@ -1,13 +1,13 @@
 # Modelos conceptuales de datos — Módulo de Productos y Ofertas
 
-**Fecha de actualización:** 2026-09-28  
+**Fecha de actualización:** 2026-09-30  
 **Repositorio:** `Taller-SW-Web/Productos-y-Ofertas-docs`  
 **Archivo:** `Modelo_Conceptual.md`  
 **Arquitectura de referencia:** `Arquitectura.md`  
-**Contrato HTTP de referencia:** `api/openapi.yaml` (`0.3.5-p0`)  
-**Contrato asíncrono de referencia:** `asyncapi/asyncapi.yaml` (`0.2.1-p0`)  
-**Catálogo de errores:** `api/catalogo-errores.md` (`0.2.4-p0`)  
-**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.2.1-p0`)  
+**Contrato HTTP de referencia:** `api/openapi.yaml` (`0.4.0`)  
+**Contrato asíncrono de referencia:** `asyncapi/asyncapi.yaml` (`0.4.0`)  
+**Catálogo de errores:** `api/catalogo-errores.md` (`0.4.0`)  
+**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.4.0`)  
 **Contrato humano de referencia:** `Contrato_Api.md`
 
 > **Alcance:** este documento define los modelos conceptuales de datos de los ocho bounded contexts del módulo Productos y Ofertas.  
@@ -20,11 +20,13 @@
 Esta versión incorpora las decisiones de diseño del modelo de datos:
 
 1. **Inventario pertenece a Productos y Ofertas**.
-2. Los canales Marketplace, Chatbot y Retail **solo consultan disponibilidad**.
-3. **Ventas/Postventa orquesta inventario**:
+2. Marketplace y Chatbot solo consultan disponibilidad; Retail además reporta/resuelve incidencias físicas sin convertirse en owner del saldo.
+3. **Ventas/Postventa orquesta inventario comercial**:
    - pedido `CREADO` → reserva;
    - pedido `PAGADO` → consumo definitivo;
-   - `PAGO_NO_COMPLETADO` o anulación aplicable → liberación.
+   - `PAGO_NO_COMPLETADO` o anulación pre-consumo → liberación;
+   - retorno físicamente reintegrable → reintegro;
+   - venta Retail offline registrada → conciliación.
 4. La reserva tiene expiración configurable.
 5. Los datos físicos propios de una unidad vendible se modelan por **SKU**.
 6. Productos y Ofertas es owner de:
@@ -35,7 +37,7 @@ Esta versión incorpora las decisiones de diseño del modelo de datos:
 9. `SPEC/HU/WF-003`, `004` y `015` ya incorporan estas decisiones; dejan de ser propagaciones futuras.
 10. La idempotencia de Inventario distingue retry legítimo de `IDEMPOTENCY_CONFLICT`.
 11. Los contratos HTTP/asíncronos y códigos estables ya están publicados en OpenAPI, AsyncAPI y `catalogo-errores.md`.
-12. OpenAPI `0.3.5-p0` y AsyncAPI `0.2.1-p0` constituyen el baseline contractual vigente de este modelo.
+12. OpenAPI y AsyncAPI `0.4.0` constituyen el baseline contractual vigente de este modelo.
 13. Taxonomía expone operaciones observables de **baja maestra segura** para recursos con dependencias.
 14. Una operación de baja maestra puede permanecer pendiente después de un `202 Accepted`; su resultado definitivo se resuelve de forma asíncrona.
 15. La operación de baja pertenece a Taxonomía y no implica acceso directo a las tablas del bounded context consumidor.
@@ -665,6 +667,10 @@ Inventario es autoridad de:
 - saldo por SKU + ubicación;
 - reservas;
 - líneas de reserva;
+- unidades bloqueadas (`blocked`);
+- incidencias físicas/cuarentenas;
+- reintegros;
+- conciliaciones offline;
 - movimientos;
 - Kardex;
 - idempotencia;
@@ -691,6 +697,9 @@ flowchart TB
   RLINE["LÍNEA DE RESERVA"]
   OP["OPERACIÓN DE INVENTARIO"]
   MOVEMENT["MOVIMIENTO KARDEX"]
+  INCIDENT["INCIDENCIA DE INVENTARIO"]
+  TRANSFER["TRASLADO DE INVENTARIO"]
+  RECEIPT["RECEPCIÓN DE TRASLADO"]
   OVERRIDE["UMBRAL ESPECÍFICO DE SKU"]
   CONFIG["CONFIGURACIÓN DE INVENTARIO"]
 
@@ -702,6 +711,11 @@ flowchart TB
   R_BAL_MOV{"REGISTRA"}
   R_OP_MOV{"PRODUCE"}
   R_RES_OP{"ES MODIFICADA POR"}
+  R_INC_BAL{"BLOQUEA UNIDADES DE"}
+  R_INC_OP{"SE RESUELVE MEDIANTE"}
+  R_INC_TRANSFER{"PUEDE ORIGINAR"}
+  R_TRANSFER_RECEIPT{"REGISTRA"}
+  R_TRANSFER_TARGET{"SE RECIBE EN"}
   R_OVERRIDE{"PUEDE SOBRESCRIBIR CON"}
   R_DEFAULT{"DEFINE UMBRAL GLOBAL"}
 
@@ -729,7 +743,23 @@ flowchart TB
   RESERVATION ---|"1"| R_RES_OP
   R_RES_OP ---|"1.N"| OP
 
-  SKU ---|"1"| R_OVERRIDER_OVERRIDE ---|"0.1"| OVERRIDE
+  INCIDENT ---|"0.N"| R_INC_BAL
+  R_INC_BAL ---|"1"| BALANCE
+
+  INCIDENT ---|"1"| R_INC_OP
+  R_INC_OP ---|"1.N"| OP
+
+  INCIDENT ---|"0.1"| R_INC_TRANSFER
+  R_INC_TRANSFER ---|"1"| TRANSFER
+
+  TRANSFER ---|"1"| R_TRANSFER_RECEIPT
+  R_TRANSFER_RECEIPT ---|"0.N"| RECEIPT
+
+  TRANSFER ---|"0.N"| R_TRANSFER_TARGET
+  R_TRANSFER_TARGET ---|"1 destino"| LOCATION
+
+  SKU ---|"1"| R_OVERRIDE
+  R_OVERRIDE ---|"0.1"| OVERRIDE
 
   CONFIG ---|"1"| R_DEFAULT
   R_DEFAULT ---|"0.N saldos"| BALANCE
@@ -758,6 +788,7 @@ Atributos de estado:
 ```text
 on_hand
 reserved
+blocked
 available
 stock_version
 ```
@@ -765,7 +796,7 @@ stock_version
 Regla:
 
 ```text
-available = max(on_hand - reserved, 0)
+available = max(on_hand - reserved - blocked, 0)
 ```
 
 ---
@@ -873,6 +904,10 @@ RELEASE
 EXPIRE
 ADJUST
 RETURN
+BLOCK
+UNBLOCK
+WRITE_OFF
+OFFLINE_RECONCILE
 ```
 
 Debe permitir distinguir:
@@ -899,7 +934,86 @@ OPERACIÓN DE INVENTARIO 1 -> N MOVIMIENTOS KARDEX
 
 ---
 
-## 9.8. Pedido externo
+## 9.8. Incidencia de Inventario
+
+`INCIDENCIA DE INVENTARIO` representa un hecho físico reportado por Retail que saca temporalmente unidades del stock vendible sin convertirlas inmediatamente en merma.
+
+Estados conceptuales:
+
+```text
+ABIERTA
+RESUELTA
+TRASLADO_PENDIENTE
+```
+
+Una incidencia abierta afecta un único `SALDO DE INVENTARIO` y contribuye a `blocked`.
+
+Resoluciones:
+
+```text
+REHABILITADO
+MERMA
+FALTANTE_CONFIRMADO
+TRASLADO_ALMACEN_CENTRAL
+```
+
+La incidencia conserva referencias operativas externas (`external_incident_id`, acta) sin asumir ownership sobre la operación de Retail.
+
+---
+
+## 9.9. Traslado y recepción
+
+`TRASLADO DE INVENTARIO` representa unidades que salieron de una ubicación y todavía no fueron acreditadas completamente en otra.
+
+Estados:
+
+```text
+EN_TRANSITO
+RECIBIDO_PARCIAL
+COMPLETADO
+COMPLETADO_CON_DISCREPANCIA
+```
+
+Una incidencia resuelta como `TRASLADO_ALMACEN_CENTRAL` puede originar un traslado.
+
+`RECEPCIÓN DE TRASLADO` registra cada recepción idempotente y su disposición:
+
+```text
+REINGRESAR_DISPONIBLE
+REINGRESAR_BLOQUEADO
+CONFIRMAR_MERMA
+```
+
+La recepción se vincula al `sub` del operador mediante autorización local, sin crear una entidad Usuario propia.
+
+Una recepción parcial final conserva:
+
+```text
+missing_quantity
+```
+
+y cierra como `COMPLETADO_CON_DISCREPANCIA`.
+
+---
+
+## 9.10. Reintegro y conciliación offline
+
+Un reintegro es una `OPERACIÓN DE INVENTARIO` originada por Ventas/Postventa después de una recepción física aceptada.
+
+Una conciliación offline es una operación de ajuste por una venta Retail ya ocurrida y ya registrada comercialmente en Ventas.
+
+La conciliación puede terminar en:
+
+```text
+COMPLETED
+REQUIRES_REVIEW
+```
+
+sin permitir saldos negativos.
+
+---
+
+## 9.11. Pedido externo
 
 Inventario puede conservar referencias como:
 
@@ -922,7 +1036,7 @@ Los resultados asíncronos se correlacionan con el pedido/operación mediante lo
 
 ---
 
-## 9.9. Dashboard
+## 9.12. Dashboard
 
 WF-016 pertenece al mismo bounded context.
 
@@ -930,6 +1044,7 @@ Puede mostrar:
 
 - total disponible;
 - total reservado;
+- total bloqueado;
 - stock bajo;
 - agotados;
 - distribución por ubicación.
@@ -1189,6 +1304,48 @@ No se comparten entidades ORM ni repositorios.
 
 ---
 
+
+## 17.1. Decisiones de referencias interdominio
+
+### Cliente
+
+La referencia externa estable es:
+
+```text
+customer_ref = Seguridad.sub
+```
+
+Productos no crea una segunda identidad de cliente.
+
+`CONSUMO DE CUPÓN` puede conservar `customer_ref` como referencia lógica externa, sin FK física a la base de Seguridad.
+
+### Preparación de Pricing
+
+El alta inicial de precio corresponde al **PRODUCTO**, no a cada variante:
+
+```text
+PRODUCTO
+  -> PREPARACIÓN DE PRECIO BASE
+  -> PRECIO / VIGENCIA EN PRICING
+```
+
+Una variante puede resolver su precio por herencia del producto o por override SKU posterior.
+
+### Inicialización de Inventario
+
+Inventario reconoce cada SKU vendible:
+
+```text
+SKU VENDIBLE
+  -> INICIALIZACIÓN DE SKU
+  -> 0.N SALDOS POR UBICACIÓN
+```
+
+Una inicialización sin `default_location_id` no necesita inventar un saldo en una ubicación ficticia.
+
+El producto padre con variantes no genera un saldo físico.
+
+
 # 18. Proyecciones locales
 
 Se permite duplicar datos para lectura si el owner permanece explícito.
@@ -1258,10 +1415,10 @@ Las decisiones conceptuales principales ya fueron propagadas.
 | `SPEC/HU/WF-003` | Actualizados: perfil físico de producto simple y Seguridad |
 | `SPEC/HU/WF-004` | Actualizados: perfil físico de variante/SKU y Seguridad |
 | `SPEC/HU/WF-015` | Actualizados: reserva/consumo/liberación, TTL e idempotencia |
-| `api/openapi.yaml` | `0.3.5-p0`: cobertura vigente de las 16 funcionalidades y operaciones administrativas |
-| `asyncapi/asyncapi.yaml` | `0.2.1-p0`: mensajería vigente, incluidos cambios de esquema de tipo de producto y valores de característica |
-| `api/catalogo-eventos.md` | `0.2.1-p0`: referencia humana alineada 29/29 con AsyncAPI |
-| `api/catalogo-errores.md` | `0.2.4-p0`: catálogo vigente, incluidos errores de operación maestra y auditoría |
+| `api/openapi.yaml` | `0.4.0`: contrato HTTP consolidado P0/P1/P2 |
+| `asyncapi/asyncapi.yaml` | `0.4.0`: mensajería consolidada y topología RabbitMQ consolidada |
+| `api/catalogo-eventos.md` | `0.4.0`: referencia humana alineada con 39 mensajes y consumidores |
+| `api/catalogo-errores.md` | `0.4.0`: catálogo consolidado, incluidos errores de traslados |
 | Operación de baja maestra | Incorporada conceptualmente en Taxonomía y observable por `GET /api/v1/taxonomia/operaciones/{operationId}` |
 
 Pendientes que sí pueden afectar el modelo lógico futuro:
@@ -1269,7 +1426,7 @@ Pendientes que sí pueden afectar el modelo lógico futuro:
 1. decisión final sobre tabla/abstracción física para representar SKU vendible dentro de Catálogo;
 2. contrato de reintegro por devolución aceptada;
 3. contratos de preparación inicial Catálogo → Pricing e inicialización Catálogo → Inventario;
-4. permisos definitivos registrados por Seguridad.
+4. scopes técnicos de `api-productos` registrados con Seguridad.
 
 Ninguno requiere compartir schemas entre bounded contexts.
 
