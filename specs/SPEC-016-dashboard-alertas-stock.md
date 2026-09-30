@@ -1,51 +1,99 @@
-# SPEC-016 — Especificación: Dashboard analítico y alertas de stock
+# SPEC-016 — Dashboard analítico y alertas de stock
 
 **Responsable:** Miguel Ángel Taco Zavala  
 **Rama:** taco  
-**Trazabilidad:** HU [HU-016](./hu/HU-016-dashboard-alertas-stock.md) | Wireframe [WF-016](./wireframes/flows/WF-016-dashboard-alertas-stock.md)
+**Trazabilidad:** HU [HU-016](../hu/HU-016-dashboard-alertas-stock.md) | Wireframe [WF-016](../wireframes/flows/WF-016-dashboard-alertas-stock.md)
 
-## Descripción
-Dashboard de consulta para monitorear inventario por SKU vendible y ubicación. El producto es únicamente agrupador comercial.
+---
 
-## 1. Indicadores
-- total de SKUs vendibles;
+## 1. Objetivo
+
+Dashboard de solo lectura para monitorear inventario por SKU vendible y ubicación.
+
+## 2. Indicadores
+
+- total de SKU vendibles;
+- unidades físicas;
+- unidades reservadas;
+- unidades bloqueadas;
 - unidades disponibles;
-- SKUs Disponibles;
+- SKU Disponibles;
 - Stock bajo;
-- Agotados.
+- Agotados;
+- traslados pendientes;
+- traslados con discrepancia.
 
-## 2. Alertas
-Por `(sku, location_id)`:
+## 3. Estados de disponibilidad
 
 ```text
-0 < available <= umbral_efectivo -> STOCK_BAJO
-available = 0 -> AGOTADO
+available = max(on_hand - reserved - blocked, 0)
+
+available = 0
+-> AGOTADO
+
+0 < available <= umbral_efectivo
+-> STOCK_BAJO
+
+available > umbral_efectivo
+-> DISPONIBLE
 ```
 
-`umbral_efectivo = override SKU ?? umbral_global`.
+## 4. Actualización
 
-## 3. Actualización
-El dashboard **consume** `inventory.stock.changed`. Cuando Inventario publica un cambio confirmado, la proyección del dashboard recalcula indicadores/alertas.
+El dashboard consume:
 
-El dashboard:
-- NO publica `inventory.stock.changed`;
-- NO modifica `on_hand`, `reserved` o `available`;
-- NO simula un consumo como acción de usuario;
-- NO usa polling fijo como requisito.
+```text
+inventory.stock.changed
+```
 
-## 4. Distribución por ubicación
-Mostrar `on_hand`, `reserved`, `available`, cantidad de SKUs con stock bajo y agotados por ubicación.
+y recalcula indicadores después de cambios confirmados por:
 
-Si solo existe `DEFAULT`, se muestra vista única sin inventar ubicaciones adicionales.
+- reserva;
+- consumo;
+- liberación;
+- incidencia/bloqueo;
+- rehabilitación;
+- merma;
+- reintegro;
+- conciliación offline;
+- recepción de traslado.
 
-## 5. Filtros
-Producto, categoría, marca, SKU, `location_id` y estado de inventario (`Disponible | Stock bajo | Agotado`).
+No publica eventos de Inventario ni modifica saldos.
 
-## 6. Fuera de alcance
-Ventas, rankings, Top productos, edición/ajuste de stock, reservas/consumo y métricas comerciales.
+## 5. Distribución por ubicación
 
-## 7. Resultado esperado
-Vista de inventario de solo lectura, reactiva a hechos confirmados publicados por Inventario.
+Mostrar:
 
-## Criterio de completitud
-Los indicadores usan SKU/location, el filtro por estado funciona y el dashboard nunca se comporta como productor o editor de stock.
+```text
+on_hand
+reserved
+blocked
+available
+```
+
+y cantidad de SKU por estado.
+
+## 6. Traslados
+
+El dashboard puede mostrar conteos/enlaces operativos de:
+
+```text
+EN_TRANSITO
+RECIBIDO_PARCIAL
+COMPLETADO_CON_DISCREPANCIA
+```
+
+La recepción se realiza en el flujo WF-015; el dashboard no ejecuta la mutación directamente.
+
+## 7. Filtros
+
+Producto, categoría, marca, SKU, ubicación y estado.
+
+## 8. Fuera de alcance
+
+- ventas;
+- ranking de productos;
+- edición directa de saldos;
+- creación de reservas;
+- recepción desde el dashboard;
+- decisiones de empaque/despacho.
