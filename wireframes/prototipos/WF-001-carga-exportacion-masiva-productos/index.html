@@ -5,212 +5,216 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Carga y exportación masiva de productos</title>
 <style>
-:root{--s:#fff;--n10:#f3f4f6;--n20:#D1D5DB;--n30:#d1d5db;--n50:#6b7280;--n70:#6B7280;--n90:#111827}
-*{box-sizing:border-box}html{background:#fff}body{margin:0;background:#fff;color:var(--n90);font:16px/1.5 Inter,system-ui,-apple-system,sans-serif}
-button,input,select{font:inherit;min-height:44px}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--n90);outline-offset:2px}
-.top{border-bottom:1px solid var(--n30);background:#fff}.topin,.wrap{max-width:1200px;margin:auto;padding:16px 24px}.topin{display:flex;justify-content:space-between;gap:16px}.brand{font-weight:700}.muted{color:var(--n50)}.small{font-size:13px}
-.wrap{padding-top:32px;padding-bottom:64px}.head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}.head h1{margin:0 0 6px;font-size:clamp(26px,4vw,36px)}.head p{margin:0;color:var(--n50)}
-.btn{border:1px solid var(--n90);background:#fff;color:var(--n90);border-radius:4px;padding:10px 14px;cursor:pointer}.primary{background:var(--n90);color:#fff}.quiet{border-color:var(--n30)}
-.row{display:flex;gap:8px;flex-wrap:wrap}.panel{border:1px solid var(--n30);padding:18px;margin-bottom:16px}.notice{border:2px solid var(--n90);padding:14px;margin-bottom:16px}.soft{background:var(--n10);border:1px solid var(--n30)}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}.span6{grid-column:span 6}.span12{grid-column:1/-1}
-.rule-list{margin:8px 0 0;padding-left:22px}.rule-list li{margin:5px 0}.field label{display:block;font-weight:600;margin-bottom:6px}.control{width:100%;border:1px solid var(--n30);padding:10px 12px;background:#fff}
-.drop{border:2px dashed var(--n50);padding:24px;text-align:center}.drop strong{display:block;margin-bottom:6px}.file-name{font-family:"Roboto Mono",monospace}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpi{border:1px solid var(--n30);padding:14px}.kpi b{display:block;font-size:28px;margin-top:4px}
-.progress{height:14px;border:1px solid var(--n90);background:#fff}.bar{height:100%;background:var(--n90)}
-.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:760px}th,td{padding:11px;border-bottom:1px solid var(--n20);text-align:left;vertical-align:top}th{background:var(--n10);font-size:13px}
-.tag{display:inline-block;border:1px solid var(--n70);border-radius:999px;padding:2px 8px;font-size:13px}.mono{font-family:"Roboto Mono",monospace}
-.cards{display:none}.card{border:1px solid var(--n30);padding:14px;margin-bottom:10px}
-.toast{position:fixed;right:16px;bottom:16px;background:#fff;border:2px solid var(--n90);padding:12px 16px;display:none;z-index:30}.toast.show{display:block}
-@media(max-width:900px){.span6{grid-column:1/-1}.kpis{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.topin,.wrap{padding-left:16px;padding-right:16px}.topin,.head{display:block}.head .row{margin-top:12px}.grid,.kpis{display:block}.span6,.span12{margin-bottom:14px}.row>.btn{flex:1 1 100%}.desktop{display:none}.cards{display:block}}
+:root{
+  --surface:#FFFFFF;
+  --neutral-10:#F3F4F6;
+  --neutral-30:#D1D5DB;
+  --neutral-50:#6B7280;
+  --neutral-90:#111827;
+  --primary:#111827;
+  --space-xs:4px;
+  --space-sm:8px;
+  --space-md:16px;
+  --space-lg:32px;
+  --space-xl:64px;
+  --radius-sm:4px;
+  --radius-md:8px;
+}
+*{box-sizing:border-box}
+html{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--neutral-90);background:var(--surface)}
+body{margin:0;background:var(--surface);line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+button{min-height:44px;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--neutral-90);outline-offset:2px}
+.topbar{border-bottom:1px solid var(--neutral-30);background:var(--surface)}
+.topbar-inner{max-width:1200px;margin:auto;min-height:64px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700}
+.brand-mark{width:36px;height:36px;border:2px solid var(--neutral-90);display:grid;place-items:center;font-weight:700}
+.user{font-size:14px;color:var(--neutral-50)}
+.shell{max-width:1200px;margin:auto;padding:24px}
+.breadcrumb{font-size:14px;color:var(--neutral-50);margin-bottom:8px}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px;flex-wrap:wrap}
+.page-head h1{font-size:32px;line-height:1.2;margin:0 0 8px}
+.page-head p{margin:0;color:var(--neutral-50);max-width:760px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--neutral-90);background:var(--surface);padding:10px 16px;border-radius:var(--radius-sm);font-weight:600;min-height:44px}
+.btn.primary{background:var(--neutral-90);color:var(--surface)}
+.btn.ghost{border-color:var(--neutral-30)}
+.btn[disabled]{color:var(--neutral-50);border-color:var(--neutral-30);background:var(--neutral-10);cursor:not-allowed}
+.card{border:1px solid var(--neutral-30);border-radius:var(--radius-md);padding:20px;background:var(--surface)}
+.card h2{font-size:20px;margin:0 0 8px}
+.card h3{font-size:16px;margin:0 0 8px}
+.muted{color:var(--neutral-50)}
+.small{font-size:14px}
+.mono{font-family:"Roboto Mono",ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;letter-spacing:.02em}
+.grid{display:grid;gap:16px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stack{display:grid;gap:16px}
+.field{display:grid;gap:6px}
+.field label{font-size:14px;font-weight:600}
+.input,.select,.textarea{width:100%;border:1px solid var(--neutral-30);border-radius:var(--radius-sm);background:var(--surface);padding:11px 12px;min-height:44px}
+.textarea{min-height:110px;resize:vertical}
+.help{font-size:13px;color:var(--neutral-50)}
+.section-title{font-size:20px;margin:8px 0 12px}
+.table-wrap{overflow:auto;border:1px solid var(--neutral-30);border-radius:var(--radius-md)}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--neutral-30);vertical-align:top}
+th{font-size:12px;font-family:"Roboto Mono",ui-monospace,monospace;letter-spacing:.04em;text-transform:uppercase;background:var(--neutral-10)}
+tbody tr:last-child td{border-bottom:0}
+.badge{display:inline-flex;align-items:center;min-height:28px;border:1px solid var(--neutral-30);border-radius:9999px;padding:3px 10px;font-size:13px;background:var(--surface)}
+.badge.dark{background:var(--neutral-90);color:var(--surface);border-color:var(--neutral-90)}
+.badge.soft{background:var(--neutral-10)}
+.kpi{border:1px solid var(--neutral-30);padding:16px;border-radius:var(--radius-md)}
+.kpi .value{font-size:28px;font-weight:700;line-height:1.1;margin-top:8px}
+.notice{border:1px solid var(--neutral-90);padding:14px 16px;border-radius:var(--radius-sm);background:var(--surface)}
+.notice.soft{border-color:var(--neutral-30);background:var(--neutral-10)}
+.progress{height:10px;border:1px solid var(--neutral-30);background:var(--surface)}
+.progress > span{display:block;height:100%;background:var(--neutral-90)}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--neutral-30);margin-bottom:20px;overflow:auto}
+.tab{background:var(--surface);border:0;border-bottom:3px solid transparent;padding:12px 16px;white-space:nowrap}
+.tab.active{border-bottom-color:var(--neutral-90);font-weight:700}
+.divider{border:0;border-top:1px solid var(--neutral-30);margin:24px 0}
+.placeholder{min-height:120px;background:var(--neutral-10);position:relative;display:grid;place-items:center;color:var(--neutral-50);border:1px solid var(--neutral-30)}
+.placeholder:before,.placeholder:after{content:"";position:absolute;left:0;top:50%;width:100%;border-top:1px solid var(--neutral-30);transform-origin:center}
+.placeholder:before{transform:rotate(17deg)}
+.placeholder:after{transform:rotate(-17deg)}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+.overlay.open{display:flex}
+.modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:var(--surface);border:2px solid var(--neutral-90);padding:24px}
+.modal-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}
+.modal-head h2{margin:0;font-size:24px}
+.icon-btn{width:44px;height:44px;border:1px solid var(--neutral-90);background:var(--surface);font-size:20px}
+.empty{text-align:center;border:1px dashed var(--neutral-30);padding:48px 24px}
+.hidden{display:none!important}
+.toolbar{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+.toolbar .field{min-width:180px;flex:1}
+.stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px}
+.step{border-top:4px solid var(--neutral-30);padding-top:8px;color:var(--neutral-50);font-size:13px}
+.step.active,.step.done{border-top-color:var(--neutral-90);color:var(--neutral-90);font-weight:700}
+.checkbox-row,.radio-row{display:flex;gap:10px;align-items:flex-start}
+input[type="checkbox"],input[type="radio"]{width:18px;height:18px;margin-top:3px;accent-color:#111827}
+.summary-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.summary-list li{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--neutral-30);padding-bottom:10px}
+.summary-list li:last-child{border-bottom:0;padding-bottom:0}
+.inline-status{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--neutral-90)}
+@media(max-width:820px){
+  .shell{padding:16px}
+  .topbar-inner{padding:0 16px}
+  .grid.two,.grid.three,.grid.four{grid-template-columns:1fr}
+  .page-head h1{font-size:28px}
+  .stepper{grid-template-columns:1fr 1fr}
+  .actions{width:100%}
+  .actions .btn{flex:1}
+  table{min-width:640px}
+}
+@media(max-width:520px){
+  .user{display:none}
+  .stepper{grid-template-columns:1fr}
+  .modal{padding:16px}
+}
 </style>
 </head>
 <body>
-<header class="top"><div class="topin"><div class="brand">PO Productos y ofertas</div><div class="muted">Productos / Carga masiva</div></div></header>
-<main class="wrap" id="app" tabindex="-1"></main>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="brand-mark">PO</span><span>Productos y ofertas</span></div>
+    <div class="user">Gestor comercial</div>
+  </div>
+</header>
+<main class="shell">
+  <div class="breadcrumb">Productos / Carga masiva</div>
+  
+<div class="page-head">
+  <div><h1>Carga y exportación masiva de productos</h1><p>Importa productos en lote, revisa los datos antes de confirmar y descarga el resultado del proceso.</p></div>
+  <div class="actions"><button class="btn" onclick="showView('downloads')">Descargas</button></div>
+</div>
+<div class="stepper">
+  <div id="st1" class="step active">1. Archivo</div><div id="st2" class="step">2. Revisión</div><div id="st3" class="step">3. Preparación</div><div id="st4" class="step">4. Resultado</div>
+</div>
+
+<section id="upload" class="stack">
+  <div class="card">
+    <h2>Antes de seleccionar un archivo</h2>
+    <p class="muted">Usa la plantilla para evitar columnas faltantes. Los productos se guardarán como borradores hasta completar las preparaciones necesarias.</p>
+    <div class="actions"><button class="btn" onclick="fakeDownload('plantilla')">Descargar plantilla</button><button class="btn" onclick="fakeDownload('catalogo')">Exportar catálogo</button></div>
+  </div>
+  <div class="card stack">
+    <h2>Importar archivo</h2>
+    <div class="field"><label for="file">Seleccionar archivo</label><input class="input" id="file" type="file" accept=".csv,.xlsx"></div>
+    <div class="field"><label for="demo">Caso de demostración</label><select class="select" id="demo"><option value="ok">Archivo válido</option><option value="partial">Archivo con observaciones</option></select></div>
+    <div class="actions"><button class="btn primary" onclick="review()">Continuar</button></div>
+  </div>
+</section>
+
+<section id="review" class="hidden stack">
+  <div class="card">
+    <h2>Revisa los datos antes de importar</h2>
+    <div class="grid three">
+      <div class="kpi"><span class="muted">Filas detectadas</span><div class="value" id="rowsCount">24</div></div>
+      <div class="kpi"><span class="muted">Listas para importar</span><div class="value" id="readyCount">24</div></div>
+      <div class="kpi"><span class="muted">Con observaciones</span><div class="value" id="issueCount">0</div></div>
+    </div>
+  </div>
+  <div id="reviewNotice" class="notice soft">La importación preparará los productos, sus precios base y las unidades vendibles de inventario sin duplicar información entre áreas.</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Fila</th><th>SKU</th><th>Resultado</th><th>Motivo</th></tr></thead>
+    <tbody id="reviewRows"></tbody>
+  </table></div>
+  <div class="actions"><button class="btn" onclick="showView('upload')">Elegir otro archivo</button><button id="confirmImport" class="btn primary" onclick="startProcess()">Confirmar importación</button></div>
+</section>
+
+<section id="processing" class="hidden stack">
+  <div class="card stack">
+    <h2>Preparando precio e inventario</h2>
+    <p class="muted">Los productos ya fueron registrados como borradores. Estamos completando las preparaciones necesarias antes de consolidar el lote.</p>
+    <div class="progress" aria-label="Progreso"><span id="bar" style="width:18%"></span></div>
+    <div class="inline-status"><span class="dot"></span><strong id="progressText">Validando productos…</strong></div>
+  </div>
+  <div class="notice soft">Puedes cerrar esta demostración sin perder el resultado del ejemplo. En el sistema final, el proceso podrá retomarse desde el centro de cargas.</div>
+</section>
+
+<section id="result" class="hidden stack">
+  <div class="card">
+    <h2>Importación finalizada</h2>
+    <p id="resultText" class="muted"></p>
+    <div class="grid three">
+      <div class="kpi"><span class="muted">Procesadas</span><div class="value">24</div></div>
+      <div class="kpi"><span class="muted">Completadas</span><div class="value" id="doneCount">24</div></div>
+      <div class="kpi"><span class="muted">Con error</span><div class="value" id="errorCount">0</div></div>
+    </div>
+  </div>
+  <div class="actions"><button class="btn" onclick="fakeDownload('reporte')">Descargar reporte CSV</button><button class="btn primary" onclick="reset()">Volver al centro</button></div>
+</section>
+
+<section id="downloads" class="hidden stack">
+  <div class="card"><h2>Descargas</h2><p class="muted">Obtén una plantilla vacía o una exportación del catálogo actual.</p><div class="actions"><button class="btn" onclick="fakeDownload('plantilla')">Descargar plantilla</button><button class="btn" onclick="fakeDownload('catalogo')">Exportar catálogo</button></div></div>
+  <button class="btn" onclick="showView('upload')">Volver</button>
+</section>
+<div id="toast" class="notice hidden" role="status" style="position:fixed;right:20px;bottom:20px;max-width:360px"></div>
+
+</main>
 <script>
-(() => {
-  'use strict';
-  const MAX_BYTES=10*1024*1024, MAX_ROWS=5000;
-  const app=document.getElementById('app'), toastEl=document.getElementById('toast');
-  const state={
-    screen:'home',
-    file:null,
-    format:'xlsx',
-    exportFormat:'xlsx',
-    exportJob:null,
-    batch:null,
-    queryState:'',
-    rejected:[],
-    selectedDemo:'valid'
-  };
-  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  function toast(m){toastEl.textContent=m;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),1800)}
-  function head(t,p,a=''){return `<div class="head"><div><h1>${t}</h1><p>${p}</p></div><div class="row">${a}</div></div>`}
-  function goto(screen){state.screen=screen;render();app.focus()}
-  function home(){
-    const exp=state.exportJob ? `<div class="notice" style="margin-top:12px"><strong>${state.exportJob.status==='ready'?'Exportación lista':'Exportación en proceso'}</strong><p class="muted">${state.exportJob.status==='ready'?'El archivo completo está preparado.':'Puedes continuar trabajando; el archivo se genera en segundo plano.'}</p>${state.exportJob.status==='ready'?'<button class="btn" data-a="download-export">Descargar archivo</button>':''}</div>`:'';
-    app.innerHTML=head('Carga y exportación masiva de productos','Importa o exporta productos y SKU mediante archivos XLSX o CSV.')+
-    `<section class="panel">
-      <h2>Antes de seleccionar un archivo</h2>
-      <ul class="rule-list">
-        <li>Usa la plantilla oficial.</li>
-        <li>Formatos admitidos: XLSX o CSV.</li>
-        <li>Máximo 10 MB y 5,000 filas por importación.</li>
-        <li>En actualizaciones, una celda vacía conserva el valor existente.</li>
-        <li>Las imágenes se indican mediante URL.</li>
-        <li>El procesamiento continúa en segundo plano.</li>
-      </ul>
-    </section>
-    <div class="grid">
-      <section class="panel span6">
-        <h2>Importar archivo</h2>
-        <div class="drop">
-          <strong>Selecciona el archivo preparado con la plantilla</strong>
-          <p class="muted">La estructura se revisará antes de confirmar la importación.</p>
-          <label class="btn" for="file">Seleccionar archivo</label>
-          <input id="file" type="file" accept=".xlsx,.csv" hidden>
-          <div style="margin-top:12px"><label for="demo">Caso de demostración</label><select id="demo" class="control"><option value="valid">Archivo válido</option><option value="rows">Más de 5,000 filas</option><option value="size">Más de 10 MB</option><option value="structure">Columnas incorrectas</option><option value="active">Contenido activo</option></select></div>
-        </div>
-      </section>
-      <section class="panel span6">
-        <h2>Descargas</h2>
-        <div class="field"><label for="fmt">Formato de plantilla</label><select class="control" id="fmt"><option value="xlsx">XLSX</option><option value="csv">CSV</option></select></div>
-        <button class="btn" style="margin-top:10px" data-a="template">Descargar plantilla</button>
-        <hr style="border:0;border-top:1px solid var(--n30);margin:18px 0">
-        <div class="field"><label for="efmt">Formato del catálogo</label><select class="control" id="efmt"><option value="xlsx">XLSX</option><option value="csv">CSV</option></select></div>
-        <button class="btn primary" style="margin-top:10px" data-a="export">Exportar catálogo</button>
-        ${exp}
-      </section>
-    </div>`;
-    bind();
-    document.getElementById('file').onchange=e=>{
-      const f=e.target.files?.[0];
-      if(!f)return;
-      state.file={name:f.name,size:f.size,rows:1200,kind:f.name.toLowerCase().endsWith('.csv')?'CSV':'XLSX'};
-      prevalidate();
-    };
-    document.getElementById('demo').onchange=e=>state.selectedDemo=e.target.value;
-  }
-  function prevalidate(){
-    const demo=state.selectedDemo;
-    const reasons=[];
-    let rows=1200,size=2.4*1024*1024;
-    if(demo==='rows')rows=5204;
-    if(demo==='size')size=10.8*1024*1024;
-    if(demo==='structure')reasons.push('Las columnas no coinciden con la plantilla oficial.');
-    if(demo==='active')reasons.push('El archivo contiene contenido activo y no puede procesarse.');
-    if(rows>MAX_ROWS)reasons.push('El archivo supera el límite de 5,000 filas.');
-    if(size>MAX_BYTES)reasons.push('El archivo supera el límite de 10 MB.');
-    state.file={name:state.file?.name||'catalogo_carga.xlsx',size,rows,kind:state.file?.kind||'XLSX'};
-    state.rejected=reasons;
-    goto(reasons.length?'rejected':'review');
-  }
-  function review(){
-    const f=state.file;
-    app.innerHTML=head('Archivo listo para revisar','La prevalidación terminó sin errores estructurales.')+
-    `<section class="panel">
-      <div class="kpis">
-        <div class="kpi">Archivo<b class="small file-name">${esc(f.name)}</b></div>
-        <div class="kpi">Formato<b>${f.kind}</b></div>
-        <div class="kpi">Filas<b>${f.rows.toLocaleString('es-PE')}</b></div>
-        <div class="kpi">Tamaño<b>${(f.size/1024/1024).toFixed(1)} MB</b></div>
-      </div>
-      <div class="notice soft" style="margin-top:16px">
-        <strong>Reglas verificadas</strong>
-        <p class="muted">Tamaño, cantidad de filas, estructura oficial y contenido seguro.</p>
-      </div>
-      <div class="row"><button class="btn" data-a="replace">Elegir otro archivo</button><button class="btn primary" data-a="confirm">Continuar</button></div>
-    </section>`; bind();
-  }
-  function rejected(){
-    app.innerHTML=head('No se puede importar este archivo','Corrige el archivo antes de continuar.')+
-    `<section class="notice"><strong>Revisión requerida</strong><ul>${state.rejected.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>
-    <div class="row"><button class="btn" data-a="replace">Elegir otro archivo</button><button class="btn" data-a="template">Descargar plantilla</button></div>`;bind();
-  }
-  function confirm(){
-    app.innerHTML=head('Confirmar importación','El archivo se procesará en segundo plano.')+
-    `<section class="panel">
-      <p><strong>${esc(state.file.name)}</strong> · ${state.file.rows.toLocaleString('es-PE')} filas</p>
-      <div class="notice soft"><strong>Procesamiento parcial permitido</strong><p>Las filas correctas pueden completarse aunque otras sean rechazadas. El resultado indicará las filas que necesiten revisión.</p></div>
-      <div class="row"><button class="btn" data-a="back-review">Volver</button><button class="btn primary" data-a="start">Confirmar importación</button></div>
-    </section>`;bind();
-  }
-  function startBatch(){
-    state.batch={id:'BATCH-20260928-0042',processed:0,total:state.file.rows,ok:0,failed:0,status:'processing',reconcile:0};
-    goto('processing');
-    let steps=0;
-    const timer=setInterval(()=>{
-      if(!state.batch||state.batch.status!=='processing'){clearInterval(timer);return}
-      steps++;
-      state.batch.processed=Math.min(state.batch.total,Math.round(state.batch.total*(steps/5)));
-      state.batch.ok=Math.max(0,state.batch.processed-(steps>=4?3:0));
-      state.batch.failed=state.batch.processed-state.batch.ok;
-      render();
-      if(steps>=5){clearInterval(timer);state.batch.status='done';state.batch.failed=3;state.batch.ok=state.batch.total-3;state.batch.reconcile=1;goto('result')}
-    },450);
-  }
-  function processing(){
-    const b=state.batch,pct=Math.round(100*b.processed/b.total);
-    app.innerHTML=head('Importación en proceso','Puedes salir de esta pantalla y volver a consultar el lote.')+
-    `<section class="panel">
-      <p><strong>Batch ID:</strong> <span class="mono">${esc(b.id)}</span></p>
-      <p>Procesadas ${b.processed.toLocaleString('es-PE')} de ${b.total.toLocaleString('es-PE')}</p>
-      <div class="progress" aria-label="Progreso" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><div class="bar" style="width:${pct}%"></div></div>
-      <div class="kpis" style="margin-top:16px"><div class="kpi">Completadas<b>${b.ok}</b></div><div class="kpi">Con observaciones<b>${b.failed}</b></div><div class="kpi">Progreso<b>${pct}%</b></div><div class="kpi">Estado<b class="small">Procesando</b></div></div>
-    </section>`;bind();
-  }
-  function result(){
-    const b=state.batch;
-    const rows=[
-      {row:118,sku:'RUN-42',result:'Rechazada',reason:'Revisa el precio indicado.'},
-      {row:392,sku:'BAL-05',result:'Rechazada',reason:'La categoría seleccionada no está disponible.'},
-      {row:801,sku:'ZAP-40',result:'Requiere conciliación',reason:'Una parte del cambio ya fue confirmada antes del rechazo.'}
-    ];
-    app.innerHTML=head('Resultado de la importación','El procesamiento terminó y conserva el resultado real de cada fila.','<button class="btn" data-a="home">Volver al centro</button>')+
-    `<section class="kpis">
-      <div class="kpi">Total<b>${b.total}</b></div><div class="kpi">Completadas<b>${b.ok}</b></div><div class="kpi">Fallidas<b>${b.failed}</b></div><div class="kpi">Requieren conciliación<b>${b.reconcile}</b></div>
-    </section>
-    <section class="notice"><strong>Hay filas que requieren revisión</strong><p>Una fila parcialmente aplicada no se presenta como revertida. Revisa el detalle antes de reintentar.</p></section>
-    <section class="panel"><h2>Detalle</h2><div class="desktop tablewrap"><table><thead><tr><th>Fila</th><th>SKU</th><th>Resultado</th><th>Motivo</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.row}</td><td class="mono">${r.sku}</td><td><span class="tag">${r.result}</span></td><td>${r.reason}</td></tr>`).join('')}</tbody></table></div><div class="cards">${rows.map(r=>`<article class="card"><strong>Fila ${r.row} · ${r.sku}</strong><p>${r.result}</p><p class="muted">${r.reason}</p></article>`).join('')}</div><button class="btn" data-a="report">Descargar reporte CSV</button></section>`;bind();
-  }
-  function interrupted(){
-    app.innerHTML=head('El procesamiento se interrumpió','El estado confirmado de las filas se conserva.')+
-    `<section class="notice"><strong>No se creó un lote nuevo</strong><p>Puedes reanudar las operaciones pendientes con el mismo Batch ID sin duplicar las ya confirmadas.</p></section>
-    <section class="panel"><p><strong>Batch ID:</strong> <span class="mono">${esc(state.batch?.id||'BATCH-20260928-0042')}</span></p><div class="row"><button class="btn" data-a="home">Volver</button><button class="btn primary" data-a="resume">Reanudar pendientes</button></div></section>`;bind();
-  }
-  function render(){
-    if(state.screen==='home')home();
-    else if(state.screen==='review')review();
-    else if(state.screen==='rejected')rejected();
-    else if(state.screen==='confirm')confirm();
-    else if(state.screen==='processing')processing();
-    else if(state.screen==='result')result();
-    else if(state.screen==='interrupted')interrupted();
-  }
-  function bind(){
-    app.querySelectorAll('[data-a]').forEach(btn=>btn.onclick=()=>{
-      const a=btn.dataset.a;
-      if(a==='template'){
-        const fmt=document.getElementById('fmt')?.value||state.format;
-        const headers='operacion,product_id,variant_id,sku_base,sku,nombre,descripcion,categoria_id,tipo_producto_id,marca_id,tiene_variantes,caracteristicas_identificadoras,atributos_identificadores,atributos_no_identificadores,imagen_url,precio_regular,precio_oferta,accion_precio_oferta,location_id,stock,catalog_version,price_version,stock_version,estado,motivo_cambio';
-        const blob=new Blob([headers+'\\n'],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),x=document.createElement('a');x.href=url;x.download='plantilla_carga_masiva_v2.'+fmt;x.click();URL.revokeObjectURL(url);toast('Plantilla preparada.');
-      }else if(a==='export'){
-        const fmt=document.getElementById('efmt')?.value||'xlsx';
-        state.exportJob={format:fmt,status:'processing'};render();setTimeout(()=>{if(state.exportJob){state.exportJob.status='ready';render();toast('Exportación lista.')}},700);
-      }else if(a==='download-export'){
-        const blob=new Blob(['Catálogo completo generado para demostración.\\n'],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),x=document.createElement('a');x.href=url;x.download='catalogo_completo.'+(state.exportJob?.format||'xlsx');x.click();URL.revokeObjectURL(url);
-      }else if(a==='replace'||a==='home'){state.screen='home';state.file=null;render()}
-      else if(a==='confirm')goto('confirm');
-      else if(a==='back-review')goto('review');
-      else if(a==='start')startBatch();
-      else if(a==='report'){const blob=new Blob(['fila,sku,resultado,motivo\\n118,RUN-42,Rechazada,Revisa el precio indicado\\n392,BAL-05,Rechazada,La categoria seleccionada no esta disponible\\n801,ZAP-40,Requiere conciliacion,Parte del cambio ya fue confirmada\\n'],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),x=document.createElement('a');x.href=url;x.download='reporte_importacion.csv';x.click();URL.revokeObjectURL(url)}
-      else if(a==='resume'){state.batch={...(state.batch||{id:'BATCH-20260928-0042',total:1200}),processed:900,ok:897,failed:3,status:'processing',reconcile:1};goto('processing');setTimeout(()=>{state.batch.processed=state.batch.total;state.batch.ok=state.batch.total-3;state.batch.failed=3;state.batch.status='done';goto('result')},800)}
-    });
-  }
-  render();
-})();
+const views=['upload','review','processing','result','downloads'];
+function showView(id){views.forEach(v=>document.getElementById(v).classList.toggle('hidden',v!==id)); const map={upload:1,review:2,processing:3,result:4}; const n=map[id]||1; [1,2,3,4].forEach(i=>{const e=document.getElementById('st'+i); e.className='step '+(i<n?'done':i===n?'active':'')});}
+function review(){
+  const partial=document.getElementById('demo').value==='partial';
+  document.getElementById('rowsCount').textContent='24';
+  document.getElementById('readyCount').textContent=partial?'21':'24';
+  document.getElementById('issueCount').textContent=partial?'3':'0';
+  const rows=partial?[
+    ['2','CAM-ALG-M-BLA','Listo','—'],['8','CAM-ALG-L-BLA','Revisar','Falta una categoría válida'],['14','ZAP-URB-42','Revisar','Precio base no válido'],['19','BOL-CUE-UNI','Revisar','SKU repetido en el archivo']
+  ]:[['2','CAM-ALG-M-BLA','Listo','—'],['8','CAM-ALG-L-BLA','Listo','—'],['14','ZAP-URB-42','Listo','—'],['19','BOL-CUE-UNI','Listo','—']];
+  document.getElementById('reviewRows').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><span class="badge ${r[2]==='Listo'?'dark':'soft'}">${r[2]}</span></td><td>${r[3]}</td></tr>`).join('');
+  document.getElementById('confirmImport').disabled=partial;
+  document.getElementById('reviewNotice').textContent=partial?'Corrige las filas observadas antes de confirmar la importación.':'Todo está listo. Al confirmar, se prepararán precio e inventario y el lote se consolidará cuando ambas preparaciones terminen.';
+  showView('review');
+}
+function startProcess(){showView('processing'); const steps=[['34%','Registrando borradores…'],['57%','Preparando precios base…'],['78%','Preparando unidades de inventario…'],['100%','Consolidando resultado…']]; let i=0; const timer=setInterval(()=>{const [w,t]=steps[i++]; document.getElementById('bar').style.width=w; document.getElementById('progressText').textContent=t; if(i===steps.length){clearInterval(timer); setTimeout(()=>{document.getElementById('resultText').textContent='Los 24 registros quedaron preparados correctamente.'; showView('result')},500)}},650);}
+function fakeDownload(what){const e=document.getElementById('toast'); e.textContent=(what==='reporte'?'Reporte preparado.':'Descarga preparada para la demostración.'); e.classList.remove('hidden'); setTimeout(()=>e.classList.add('hidden'),1800);}
+function reset(){document.getElementById('file').value=''; document.getElementById('demo').value='ok'; showView('upload');}
 </script>
 </body>
 </html>
