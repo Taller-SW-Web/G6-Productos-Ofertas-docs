@@ -2,17 +2,10 @@
 
 **Responsable:** Miguel Ángel Taco Zavala  
 **Rama:** taco  
-**Trazabilidad:** HU [HU-015](./hu/HU-015-control-stock-disponibilidad.md) | Wireframe [WF-015](./wireframes/flows/WF-015-control-stock-disponibilidad.md)  
-**Contrato HTTP:** [`./api/openapi.yaml`](./api/openapi.yaml)  
-**Contrato de integración:** [`./Contrato_Api.md`](./Contrato_Api.md)  
-**Arquitectura:** [`./Arquitectura.md`](./Arquitectura.md)  
-**Modelo conceptual:** [`./Modelo_Conceptual.md`](./Modelo_Conceptual.md)  
-**Contrato asíncrono:** [`./asyncapi/asyncapi.yaml`](./asyncapi/asyncapi.yaml)  
-**Catálogo de errores:** [`./api/catalogo-errores.md`](./api/catalogo-errores.md)
-
-**Versión:** v1.1 — idempotencia y códigos de error armonizados
+**Trazabilidad:** HU [HU-015](../hu/HU-015-control-stock-disponibilidad.md) | Wireframe [WF-015](../wireframes/flows/WF-015-control-stock-disponibilidad.md)
 
 ---
+
 
 ## 1. Contexto
 
@@ -27,9 +20,13 @@ El módulo es responsable de:
 - liberar reservas;
 - expirar reservas vencidas;
 - registrar movimientos de inventario;
+- bloquear unidades por incidencia física (`blocked`);
+- resolver cuarentenas, mermas y faltantes;
+- reintegrar unidades postventa físicamente aceptadas;
+- conciliar ventas Retail realizadas offline;
 - notificar cambios de stock.
 
-Los canales **Marketplace, Chatbot y Retail** consumen información de disponibilidad, pero **no reservan ni consumen stock directamente**.
+Marketplace y Chatbot consumen disponibilidad sin mutar Inventario. Retail tampoco reserva ni consume por una venta, pero puede reportar/resolver incidencias físicas mediante contratos dedicados.
 
 El ciclo de reserva y consumo es orquestado por **Ventas y Postventa**:
 
@@ -76,7 +73,7 @@ El sistema debe impedir:
 Incluye:
 
 1. consulta de disponibilidad por SKU y ubicación;
-2. cálculo de `on_hand`, `reserved` y `available`;
+2. cálculo de `on_hand`, `reserved`, `blocked` y `available`;
 3. determinación de estado de stock;
 4. creación de reservas;
 5. confirmación de reservas como consumo definitivo;
@@ -144,40 +141,51 @@ El producto padre:
 
 # 5. Magnitudes de inventario
 
-Cada saldo mantiene:
+Cada saldo por `(sku, location_id)` conserva:
 
 ```text
 on_hand
 reserved
+blocked
 available
 stock_version
-```
-
-donde:
-
-```text
-available = max(on_hand - reserved, 0)
 ```
 
 ## 5.1. Interpretación
 
 ### `on_hand`
 
-Cantidad física registrada en la ubicación.
+Unidades físicamente contabilizadas en la ubicación.
 
 ### `reserved`
 
-Cantidad temporalmente comprometida para pedidos aún no consumidos definitivamente.
+Unidades comprometidas por reservas activas de Ventas/Postventa.
+
+### `blocked`
+
+Unidades físicamente existentes pero temporalmente no vendibles por una incidencia/cuarentena.
+
+`blocked` no representa una reserva comercial ni una merma definitiva.
 
 ### `available`
 
-Cantidad actualmente ofrecible para nuevas operaciones.
+```text
+available = max(on_hand - reserved - blocked, 0)
+```
 
 ### `stock_version`
 
-Versión del saldo utilizada para control de concurrencia y ajustes absolutos.
+Versión optimista del saldo para detectar escrituras obsoletas y conciliaciones.
 
----
+Invariantes obligatorias:
+
+```text
+on_hand >= 0
+reserved >= 0
+blocked >= 0
+reserved + blocked <= on_hand
+available >= 0
+```
 
 # 6. Estados de disponibilidad
 
@@ -800,79 +808,216 @@ expires_at <= now
 
 # 21. Integración con canales
 
-Marketplace, Chatbot y Retail pueden consultar:
+## Marketplace y Chatbot
 
-```http
-GET /api/v1/inventario/disponibilidad
-```
+Pueden consultar disponibilidad, pero no ejecutan ninguna mutación de Inventario.
 
-No deben invocar:
+## Retail
+
+Retail no ejecuta mutaciones comerciales de venta:
 
 ```text
-crear reserva
-confirmar consumo
-liberar reserva
+reservar
+consumir
+liberar
+reintegrar
+conciliar-offline
 ```
 
-La creación del pedido se dirige a Ventas/Postventa.
+Retail sí puede reportar hechos físicos:
 
----
+```http
+POST /api/v1/inventario/incidencias
+POST /api/v1/inventario/incidencias/{incidenciaId}/resolver
+```
+
+Un reporte de incidencia no significa que Retail sea owner del saldo. Inventario valida disponibilidad, idempotencia e invariantes y registra Kardex.
 
 # 22. Integración con Ventas/Postventa
 
-Ventas/Postventa es owner del pedido.
+Ventas/Postventa es el orquestador comercial externo.
 
-Inventario no cambia:
+```text
+CREADO -> inventario:reservar
+PAGADO -> inventario:consumir
+PAGO_NO_COMPLETADO/anulación pre-consumo -> inventario:liberar
+retorno físico aceptado -> inventario:reintegrar
+venta Retail offline ya registrada -> inventario:conciliar-offline
+```
 
-- estado del pedido;
-- pago;
-- reembolso;
-- comprobante.
-
-Flujo homologado:
-
-| Estado/acción en Ventas | Acción sobre Inventario |
-|---|---|
-| Pedido pasa a `CREADO` | Crear reserva |
-| Pedido pasa a `PAGADO` | Confirmar reserva / consumir |
-| `PAGO_NO_COMPLETADO` | Liberar reserva |
-| Anulación aplicable antes del consumo | Liberar reserva |
-| Devolución aceptada físicamente después del consumo | Reintegrar únicamente cantidades aceptadas |
-
----
+Una reserva `CONSUMIDA` no se puede liberar.
 
 # 23. Integración con Despacho
 
-Despacho:
+Despacho no modifica stock.
 
-- no crea reservas;
-- no confirma reservas;
-- no consume stock;
-- no libera stock por sí mismo.
+Su integración con Catálogo para peso/dimensiones permanece separada del bounded context Inventario.
 
-Despacho opera sobre pedidos cuya responsabilidad comercial pertenece a Ventas/Postventa.
+# 24. Integraciones físicas de postventa y Retail
 
-Una entrega física no produce un segundo débito de inventario.
+## 24.1. Reintegro postventa
 
----
+Una devolución comercial no equivale automáticamente a stock disponible.
 
-# 24. Devoluciones
+Solo se acepta:
 
-Si una venta ya fue consumida definitivamente, una devolución NO equivale automáticamente a reposición.
+```http
+POST /api/v1/inventario/reintegros
+```
 
-Solo se reintegra inventario cuando Ventas/Postventa comunique una devolución:
+cuando Ventas/Postventa confirma:
 
-- aceptada;
-- físicamente reintegrable;
-- con SKU;
-- cantidad;
-- `location_id`.
+1. expediente/retorno aceptado;
+2. recepción física confirmada;
+3. unidades reintegrables;
+4. SKU, cantidad y `location_id` de reintegro.
 
-La política comercial de devolución pertenece a Ventas/Postventa.
+Efecto:
 
-El nombre/payload asíncrono definitivo debe formalizarse en AsyncAPI.
+```text
+on_hand += quantity
+blocked no cambia salvo un contrato explícito distinto
+available se recalcula
+stock_version += 1
+```
 
----
+La operación es idempotente y registra Kardex.
+
+## 24.2. Reporte de incidencia física
+
+Tipos iniciales:
+
+```text
+DANIO
+NO_UBICADA
+OTRO_FISICO
+```
+
+Precondición: la cantidad a bloquear debe estar actualmente disponible.
+
+Efecto:
+
+```text
+blocked += quantity
+on_hand no cambia
+reserved no cambia
+available se recalcula
+```
+
+La respuesta confirma centralmente la cuarentena antes de que Retail la trate como sincronizada.
+
+## 24.3. Resolución de incidencia
+
+Resoluciones:
+
+```text
+REHABILITADO
+MERMA
+FALTANTE_CONFIRMADO
+TRASLADO_ALMACEN_CENTRAL
+```
+
+Efectos:
+
+```text
+REHABILITADO:
+  blocked -= quantity
+
+MERMA / FALTANTE_CONFIRMADO:
+  blocked -= quantity
+  on_hand -= quantity
+
+TRASLADO_ALMACEN_CENTRAL:
+  registra salida de la ubicación origen;
+  crea un traslado EN_TRANSITO;
+  el destino no aumenta hasta una recepción confirmada.
+```
+
+Toda resolución exige referencia de acta (`act_ref`) y queda en Kardex.
+
+## 24.4. Recepción de traslado
+
+La recepción pertenece a Inventario y la ejecuta un operador humano autorizado.
+
+Estados:
+
+```text
+EN_TRANSITO
+RECIBIDO_PARCIAL
+COMPLETADO
+COMPLETADO_CON_DISCREPANCIA
+```
+
+Disposiciones:
+
+```text
+REINGRESAR_DISPONIBLE
+REINGRESAR_BLOQUEADO
+CONFIRMAR_MERMA
+```
+
+Reglas:
+
+- no acreditar más unidades de las enviadas;
+- cada recepción usa `operation_id` e idempotencia;
+- `REINGRESAR_DISPONIBLE` aumenta `on_hand` y `available`;
+- `REINGRESAR_BLOQUEADO` aumenta `on_hand` y `blocked`;
+- `CONFIRMAR_MERMA` no aumenta el saldo de destino;
+- una recepción parcial puede continuar;
+- si `final_receipt=true` con faltante, el traslado queda `COMPLETADO_CON_DISCREPANCIA`;
+- las unidades faltantes no se inventan ni se acreditan en ninguna ubicación.
+
+Autorización:
+
+```text
+INVENTARIO_TRASLADOS_LEER
+INVENTARIO_TRASLADOS_RECIBIR
+```
+
+son capacidades locales asociadas al `sub` del usuario, no scopes de servicio.
+
+## 24.5. Conciliación de venta Retail offline
+
+## 24.4. Conciliación de venta Retail offline
+
+Una venta offline ya ocurrió físicamente, por lo que no se crea una reserva retroactiva.
+
+Flujo:
+
+```text
+Retail sincroniza venta -> Ventas/Postventa
+Ventas registra la venta
+Ventas -> POST /inventario/conciliaciones-offline
+```
+
+Por línea:
+
+```text
+applied_quantity = min(requested_quantity, available)
+unresolved_quantity = requested_quantity - applied_quantity
+```
+
+Si todas las líneas se aplican:
+
+```text
+status = COMPLETED
+```
+
+Si existe una cantidad no conciliable:
+
+```text
+status = REQUIRES_REVIEW
+```
+
+Nunca se permite:
+
+```text
+on_hand < 0
+reserved + blocked > on_hand
+```
+
+La discrepancia queda explícita; no se oculta consumiendo reservas o unidades bloqueadas.
+
 
 # 25. Ajustes masivos
 
@@ -939,6 +1084,13 @@ RELEASE
 EXPIRE
 ADJUST
 RETURN
+BLOCK
+UNBLOCK
+WRITE_OFF
+OFFLINE_RECONCILE
+TRANSFER_OUT
+TRANSFER_RECEIPT
+TRANSFER_WRITE_OFF
 ```
 
 Cada movimiento registra como mínimo:
@@ -1010,6 +1162,7 @@ sku
 location_id
 on_hand
 reserved
+blocked
 available
 estado
 stock_version
@@ -1105,6 +1258,10 @@ RESERVA_NO_ENCONTRADA
 RESERVA_NO_ACTIVA
 RESERVA_EXPIRADA
 VERSION_CONFLICT
+INCIDENCIA_NO_ENCONTRADA
+INCIDENCIA_NO_ACTIVA
+RESOLUCION_INCIDENCIA_INVALIDA
+REINTEGRO_NO_APLICABLE
 ERROR_INTERNO
 SERVICIO_NO_DISPONIBLE
 ```
@@ -1156,9 +1313,28 @@ Los consumidores deben ramificar por `code`, no por `title`, `detail` ni el text
 
 ## 32.1. Consulta de disponibilidad
 
-Requiere el mecanismo de autenticación definido para consumidores de canal cuando corresponda.
+Para llamadas módulo-a-módulo, la API utiliza la audiencia:
 
-Para respuestas HTTP autenticadas:
+```text
+api-productos
+```
+
+y propone el scope técnico:
+
+```text
+inventario:disponibilidad:leer
+```
+
+Consumidores previstos:
+
+```text
+modulo-marketplace
+modulo-chatbot
+modulo-retail
+modulo-ventas
+```
+
+El token de servicio debe validar `iss`, `exp`, `tipo=servicio`, `aud` y el scope requerido. El scope permanece pendiente de registro con Seguridad.
 
 ```text
 401 -> TOKEN_INVALIDO
@@ -1167,25 +1343,44 @@ Para respuestas HTTP autenticadas:
 
 según el contrato adoptado de Seguridad.
 
-## 32.2. Mutaciones
-
-Reserva, confirmación y liberación son operaciones servicio-a-servicio.
+## 32.2. Mutaciones comerciales de Ventas/Postventa
 
 Consumidor autorizado:
 
 ```text
-modulo-ventas
+sub = modulo-ventas
+aud = api-productos
 ```
 
-Scopes propuestos:
+Scopes:
 
 ```text
 inventario:reservar
 inventario:consumir
 inventario:liberar
+inventario:reintegrar
+inventario:conciliar-offline
 ```
 
-Deben registrarse con Seguridad antes de considerarse contractualmente definitivos.
+## 32.3. Incidencias físicas de Retail
+
+Consumidor autorizado:
+
+```text
+sub = modulo-retail
+aud = api-productos
+```
+
+Scopes:
+
+```text
+inventario:incidencias:reportar
+inventario:incidencias:resolver
+```
+
+Retail no recibe scopes comerciales de reserva/consumo/liberación/reintegro/conciliación.
+
+Todos los scopes permanecen pendientes de registro efectivo en Seguridad hasta que G7 los publique.
 
 ---
 
@@ -1290,6 +1485,20 @@ La implementación no se considera completa sin pruebas para:
 
 ---
 
+
+## Casos adicionales de traslados e incidencias
+
+- reportar daño sobre una unidad disponible → `blocked` aumenta;
+- intentar bloquear más que `available` → rechazo sin romper invariantes;
+- rehabilitar una incidencia → `blocked` disminuye;
+- confirmar merma → `blocked` y `on_hand` disminuyen exactamente una vez;
+- reintegro duplicado con misma identidad → un solo incremento;
+- devolución aprobada sin recepción física → no se reintegra;
+- venta offline totalmente conciliable → `COMPLETED`;
+- venta offline parcialmente conciliable → `REQUIRES_REVIEW`;
+- ninguna conciliación produce saldo negativo;
+- operación concurrente de reserva e incidencia sobre últimas unidades → solo cantidades compatibles con las invariantes quedan aplicadas.
+
 # 36. Fuera de alcance
 
 Esta SPEC no define:
@@ -1330,6 +1539,7 @@ Al completarse esta funcionalidad:
 # 38. Criterio de completitud
 
 SPEC-015 se considera implementada cuando:
+
 - existe consulta autoritativa por SKU/ubicación;
 - `on_hand`, `reserved` y `available` cumplen sus invariantes;
 - existe creación idempotente de reserva;
