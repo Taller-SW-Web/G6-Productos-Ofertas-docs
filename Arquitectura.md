@@ -1,15 +1,15 @@
 # Arquitectura del Módulo de Productos y Ofertas
 
-**Fecha de actualización:** 2026-09-28  
+**Fecha de actualización:** 2026-09-30  
 **Repositorio de documentación:** `Taller-SW-Web/Productos-y-Ofertas-docs`  
 **Archivo:** `Arquitectura.md`  
-**Contrato HTTP canónico:** `api/openapi.yaml` (`0.3.5-p0`)  
-**Contrato asíncrono canónico:** `asyncapi/asyncapi.yaml` (`0.2.1-p0`)  
-**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.2.1-p0`)  
-**Catálogo canónico de errores:** `api/catalogo-errores.md` (`0.2.4-p0`)  
+**Contrato HTTP canónico:** `api/openapi.yaml` (`0.4.0`)  
+**Contrato asíncrono canónico:** `asyncapi/asyncapi.yaml` (`0.4.0`)  
+**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.4.0`)  
+**Catálogo canónico de errores:** `api/catalogo-errores.md` (`0.4.0`)  
 **Contrato humano de integración:** `Contrato_Api.md`  
 **Modelo conceptual:** `Modelo_Conceptual.md`  
-**Estado contractual consolidado:** OpenAPI `0.3.5-p0` + AsyncAPI `0.2.1-p0` + errores `0.2.4-p0` + eventos `0.2.1-p0`.
+**Estado contractual consolidado:** OpenAPI `0.4.0` + AsyncAPI `0.4.0` + topología RabbitMQ consolidada.
 
 > Esta arquitectura es la guía de implementación del backend y de sus integraciones.  
 > Las SPEC son la fuente de verdad para reglas funcionales; `api/openapi.yaml` gobierna HTTP; `asyncapi/asyncapi.yaml` gobierna mensajería; `api/catalogo-errores.md` gobierna la semántica estable de `code`.
@@ -90,33 +90,38 @@ como contenedor de acceso/BFF, **no como bounded context de negocio**.
 
 ## 1.3. Flujo oficial de inventario
 
-Acuerdo homologado con Ventas/Postventa:
+Flujo comercial normal:
 
 ```text
 Canal
-  |
-  |-- consulta disponibilidad ------> Productos y Ofertas
-  |
-  |-- crea pedido ------------------> Ventas/Postventa
-                                          |
-                                          | pedido = CREADO
-                                          |    -> solicita RESERVA
-                                          |
-                                          | pedido = PAGADO
-                                          |    -> confirma CONSUMO
-                                          |
-                                          | PAGO_NO_COMPLETADO
-                                          | o anulación aplicable
-                                          |    -> solicita LIBERACIÓN
+  -> Ventas crea CREADO
+  -> Ventas RESERVA
+  -> pago aprobado / PAGADO
+  -> Ventas confirma CONSUMO
+```
+
+Compensaciones:
+
+```text
+anulación pre-consumo -> LIBERACIÓN
+retorno físico aceptado -> REINTEGRO
+venta Retail offline registrada -> CONCILIACIÓN
+```
+
+Hechos físicos de tienda:
+
+```text
+Retail -> reporta/resuelve INCIDENCIA -> inventory-svc
 ```
 
 Consecuencias:
 
-- Marketplace, Chatbot y Retail **no reservan ni consumen stock directamente**.
-- Ventas/Postventa orquesta reserva, consumo y liberación.
-- Inventario mantiene el estado autoritativo.
+- Marketplace y Chatbot solo consultan.
+- Retail no muta stock por una venta; solo reporta/resuelve hechos físicos mediante scopes dedicados.
+- Ventas/Postventa orquesta las mutaciones comerciales.
+- Inventario mantiene el saldo autoritativo.
 - Despacho no produce un segundo consumo.
-- La reserva puede expirar por TTL configurable.
+- La reserva conserva TTL configurable.
 
 ---
 
@@ -706,19 +711,80 @@ La coordinación se implementa con:
 
 ## 10.1. RabbitMQ
 
-RabbitMQ es el broker propuesto.
-
-Se separan conceptualmente:
+P2 fija una topología física estable en el vhost:
 
 ```text
-commands
-events
-results
+/marketplace
 ```
 
-Aunque el binding físico pueda compartir exchanges, la semántica nunca debe mezclarse.
+Exchanges:
 
----
+```text
+po.commands.x  topic
+po.events.x    topic
+po.results.x   topic
+po.retry.x     direct
+po.dlx.x       direct
+po.unrouted.x  fanout
+```
+
+Las routing keys son exactamente los nombres AsyncAPI.
+
+Colas principales:
+
+```text
+po.catalog.q
+po.gateway.q
+po.promotions.q
+po.combos.q
+po.inventory.q
+po.pricing.q
+po.price-audit.q
+po.sales.q
+po.taxonomy.q
+po.bulk.q
+```
+
+Cada cola principal tiene:
+
+```text
+<main>.retry
+<main>.dlq
+```
+
+Características:
+
+- quorum + durable;
+- manual ack;
+- publisher confirms;
+- prefetch inicial 20;
+- at-least-once;
+- dedupe por `message_id`;
+- idempotencia de negocio por `operation_id`;
+- Outbox/Inbox obligatorios.
+
+Retry técnico:
+
+```text
+fallo transitorio
+-> po.retry.x
+-> <main>.retry
+-> TTL 30 s
+-> default exchange
+-> <main>
+```
+
+Máximo 3 retries de aplicación. Después:
+
+```text
+po.dlx.x -> <main>.dlq
+```
+
+Rechazos de negocio (`STOCK_INSUFICIENTE`, cupón sin cupo, etc.) se ACKean y producen resultado `...rejected`; no van a DLQ.
+
+Publicaciones sin binding terminan en `po.unrouted.x` / `po.unrouted.q` y el publisher usa `mandatory=true`.
+
+La matriz completa de bindings está en `api/rabbitmq-topologia.md` y en `asyncapi/asyncapi.yaml`.
 
 ## 10.2. Envelope estándar
 
@@ -826,7 +892,7 @@ Fuente canónica:
 api/openapi.yaml
 ```
 
-La línea base vigente es OpenAPI `3.1.0`, contrato `0.3.5-p0`. En este estado el contrato contiene **94 paths, 121 operaciones y 135 schemas**, con cobertura P0 de integración y administración para las 16 funcionalidades del módulo.
+La línea base vigente es OpenAPI `3.1.0`, contrato `0.4.0`. El contrato contiene **101 paths, 128 operaciones y 155 schemas**, con cobertura consolidada para las 16 funcionalidades del módulo.
 
 Entre los cierres incorporados a esta línea base están:
 
@@ -869,7 +935,7 @@ El catálogo de eventos correspondiente es:
 api/catalogo-eventos.md
 ```
 
-Actualmente se documentan **29 mensajes lógicos**, distribuidos entre:
+AsyncAPI P2 documenta **39 mensajes lógicos**, distribuidos entre:
 
 - Taxonomía;
 - Catálogo;
@@ -878,7 +944,7 @@ Actualmente se documentan **29 mensajes lógicos**, distribuidos entre:
 - Bulk;
 - Promociones/Cupones.
 
-Además de la baja segura de entidades maestras, AsyncAPI `0.2.1-p0` formaliza:
+Además de la baja segura de entidades maestras, AsyncAPI `0.4.0` formaliza:
 
 ```text
 taxonomy.product-type-schema.changed
@@ -887,24 +953,9 @@ taxonomy.characteristic-value.updated
 
 El primero propaga a Catálogo cambios confirmados del esquema asociado a un `tipo_producto_id`; el segundo propaga renombres confirmados de valores `LISTA`. El flujo genérico de baja segura cubre también `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC`.
 
-No están fijados todavía los nombres físicos de:
+P2 fija los nombres físicos de exchange, queue, retry y DLQ en `api/rabbitmq-topologia.md`.
 
-```text
-exchange
-queue
-retry queue
-DLQ
-```
-
-porque pertenecen a la topología de despliegue y no al contrato lógico.
-
-Siguen diferidos, hasta homologación explícita:
-
-- comando Catálogo → Pricing para preparación inicial de precio;
-- comando Catálogo → Inventario para inicialización de SKU;
-- comando externo Ventas → Promociones para consumo definitivo de cupón;
-- reintegro físico por devolución aceptada.
-
+Los contratos Catálogo → Pricing, Catálogo → Inventario, consumo/restitución de cupón y reintegro físico ya están formalizados en OpenAPI/AsyncAPI según corresponda.
 ## 11.3. Catálogos humanos
 
 Dos documentos complementan los contratos ejecutables:
@@ -1009,6 +1060,7 @@ Estado:
 ```text
 on_hand
 reserved
+blocked
 available
 stock_version
 ```
@@ -1016,8 +1068,22 @@ stock_version
 Regla:
 
 ```text
-available = max(on_hand - reserved, 0)
-```---
+available = max(on_hand - reserved - blocked, 0)
+```
+
+Invariantes:
+
+```text
+reserved + blocked <= on_hand
+on_hand >= 0
+reserved >= 0
+blocked >= 0
+available >= 0
+```
+
+`blocked` representa unidades físicamente presentes pero temporalmente fuera de venta por incidencia/cuarentena.
+
+---
 
 ## 13.2. Consulta
 
@@ -1033,6 +1099,8 @@ Chatbot
 Retail
 Ventas/Postventa
 ```
+
+Para llamadas módulo-a-módulo, la consulta utiliza la audiencia `api-productos` y propone el scope `inventario:disponibilidad:leer`.
 
 La consulta:
 
@@ -1092,7 +1160,8 @@ Inventario:
 ```text
 on_hand -= cantidad
 reserved -= cantidad
-available = on_hand - reserved
+blocked no cambia
+available = max(on_hand - reserved - blocked, 0)
 ```
 
 y registra Kardex.
@@ -1175,6 +1244,90 @@ Reutilizar la misma identidad idempotente para una intención distinta produce:
 ```
 
 Nunca se vuelve a `ACTIVA`.
+
+---
+
+## 14.6. Incidencias físicas y cuarentena
+
+Retail no escribe el saldo directamente. Reporta:
+
+```http
+POST /api/v1/inventario/incidencias
+```
+
+`inventory-svc` bloquea de forma transaccional únicamente unidades `available`:
+
+```text
+blocked += quantity
+available = max(on_hand - reserved - blocked, 0)
+```
+
+La resolución se realiza mediante:
+
+```http
+POST /api/v1/inventario/incidencias/{incidenciaId}/resolver
+```
+
+Una rehabilitación reduce `blocked`. Una merma/faltante confirmado reduce `blocked` y `on_hand`.
+
+## 14.7. Reintegro postventa
+
+Solo `modulo-ventas` puede invocar:
+
+```http
+POST /api/v1/inventario/reintegros
+```
+
+Precondición de integración:
+
+```text
+retorno comercial aceptado
++
+recepción física confirmada
++
+unidad reintegrable
+```
+
+El reintegro incrementa `on_hand`, recalcula `available`, registra Kardex y es idempotente.
+
+## 14.8. Conciliación Retail offline
+
+La venta offline se registra primero en Ventas/Postventa.
+
+Luego:
+
+```http
+POST /api/v1/inventario/conciliaciones-offline
+```
+
+Inventario aplica:
+
+```text
+applied = min(requested, available)
+unresolved = requested - applied
+```
+
+Nunca consume unidades reservadas/bloqueadas para ocultar una discrepancia ni permite saldos negativos.
+
+Resultado:
+
+```text
+unresolved = 0 -> COMPLETED
+unresolved > 0 -> REQUIRES_REVIEW
+```
+
+## 14.9. Sincronía de capacidades de inventario e incidencias
+
+Incidencias, reintegro y conciliación se confirman en la respuesta HTTP después del commit local. Esto evita crear nuevos mensajes asíncronos que dupliquen un resultado ya autoritativo.
+
+Después del commit pueden publicar:
+
+```text
+inventory.stock.changed
+inventory.stock.adjusted
+```
+
+según corresponda.
 
 ---
 
@@ -1387,29 +1540,44 @@ La bitácora continúa siendo estrictamente append-only; ninguna de estas rutas 
 
 # 21. Seguridad
 
-## 21.1. Seguridad y Usuarios
+## 21.1. Proveedor de identidad y rol comercial
 
-Productos adopta:
+Productos adopta el contrato publicado por `Taller-SW-Web/Modulo-de-Seguridad`.
+
+Identidad técnica del módulo:
 
 ```text
 client_id = modulo-productos
 ```
 
-Scopes concedidos:
+Scopes concedidos a este cliente para consumir Seguridad:
 
 ```text
 tokens:introspeccion
 roles:leer
 ```
 
+Seguridad publica además el rol global:
+
+```text
+GESTOR_COMERCIAL
+```
+
+que cubre administración de catálogo, precios y promociones. Productos y Ofertas autoriza esas operaciones a partir del claim `roles`; el claim `permisos` pertenece a permisos internos de Seguridad y no es el repositorio de permisos de negocio de Productos.
+
+Los perfiles que no forman parte de los seis roles globales —por ejemplo, un responsable operativo de inventario— pueden modelarse localmente y enlazarse al `sub` del usuario.
+
 ---
 
-## 21.2. Validación JWT
+## 21.2. Validación JWT de usuario
 
 Tráfico ordinario:
 
 ```text
-JWT -> validación local con JWKS cacheado
+JWT de usuario
+  -> validar firma/iss/exp localmente
+  -> JWKS cacheado
+  -> comprobar roles y reglas propias
 ```
 
 Endpoints de Seguridad:
@@ -1432,60 +1600,136 @@ exp
 jti
 ```
 
+`permisos` no se usa para esperar capacidades internas de Productos.
+
 ---
 
 ## 21.3. Introspección
 
-Antes de una operación sensible definida por contrato, se consulta:
+Seguridad define introspección para operaciones sensibles y documenta explícitamente el **cambio de precio** como operación sensible. En la integración vigente, `modulo-productos` recibe `tokens:introspeccion` para autorizar cambios de precio.
+
+Antes de admitir una mutación que cambie o programe precios:
 
 ```http
 POST /api/v1/auth/introspeccion
 ```
 
-Cambiar precio es una operación sensible explícitamente documentada por Seguridad.
+Flujo:
+
+```text
+JWT usuario
+  -> validación local
+  -> rol GESTOR_COMERCIAL
+  -> introspección
+  -> activo=true
+  -> ejecutar/admitir cambio de precio
+```
+
+Las lecturas y operaciones no clasificadas como sensibles permanecen en la vía local con JWKS.
 
 ---
 
-## 21.4. Permisos propios propuestos
+## 21.4. Tokens de servicio hacia `api-productos`
 
-El contrato publicado por Seguridad concede actualmente a `modulo-productos`:
+La audiencia contractual de esta API es:
 
 ```text
-tokens:introspeccion
-roles:leer
+api-productos
 ```
 
-Los permisos de operación propios de Productos todavía deben registrarse/homologarse con Seguridad.
-
-Propuestas vigentes:
+Un token técnico entrante debe validar:
 
 ```text
+iss
+aud contiene api-productos
+tipo = servicio
+exp vigente
+scope requerido por la operación
+```
+
+El `sub` identifica al `client_id` del módulo consumidor. Los scopes viajan en `scope` separados por espacios.
+
+La validación de `aud` evita que un token emitido para otra API pueda reutilizarse contra Productos y Ofertas.
+
+---
+
+## 21.5. Scopes propios de Productos y Ofertas
+
+`0.4.0` conserva 16 scopes técnicos bajo `aud=api-productos`.
+
+```text
+catalogo:leer
+precios:leer
+promociones:leer
+promociones:evaluar
+cupones:validar
+recomendaciones:leer
+combos:leer
+inventario:disponibilidad:leer
 inventario:reservar
 inventario:consumir
 inventario:liberar
+inventario:reintegrar
+inventario:conciliar-offline
+inventario:incidencias:reportar
+inventario:incidencias:resolver
 productos:fisicos:leer
 ```
 
-Asignación prevista:
+Agrupación:
 
 ```text
-modulo-ventas:
+catalog/taxonomy:
+  catalogo:leer
+
+pricing:
+  precios:leer
+
+promotions:
+  promociones:leer
+  promociones:evaluar
+  cupones:validar
+
+recommendations:
+  recomendaciones:leer
+
+combos:
+  combos:leer
+
+inventory:
+  inventario:disponibilidad:leer
   inventario:reservar
   inventario:consumir
   inventario:liberar
+  inventario:reintegrar
+  inventario:conciliar-offline
+  inventario:incidencias:reportar
+  inventario:incidencias:resolver
 
-modulo-despacho:
+catalog physical projection:
   productos:fisicos:leer
 ```
 
-Hasta que Seguridad los publique, estos nombres siguen siendo **propuestos**, no scopes oficiales.
-
-Independientemente del nombre granular finalmente registrado, el contrato HTTP de autenticación/autorización ya está cerrado:
+Mínimo privilegio:
 
 ```text
-401 -> TOKEN_INVALIDO
-403 -> SCOPE_INSUFICIENTE
+Marketplace -> lectura/evaluación + disponibilidad
+Chatbot     -> lectura/evaluación + recomendaciones + disponibilidad
+Retail      -> lectura/evaluación + disponibilidad + incidencias físicas
+Ventas      -> disponibilidad + ciclo comercial completo de Inventario
+Despacho    -> datos físicos
 ```
+
+`combos:leer` permanece sin concesión externa inicial.
+
+Hasta que Seguridad registre el catálogo y grants:
+
+```text
+x-scope-registration-status: pending-security-registration
+```
+
+continúa siendo obligatorio.
+
 
 # 22. Errores
 
@@ -1524,7 +1768,7 @@ Formato:
 
 `Problem.code` ya no es un `string` libre. OpenAPI lo restringe mediante `ErrorCode` y cada operación limita el subconjunto aplicable mediante `x-error-codes`.
 
-La línea base `0.2.4-p0` contiene **87 códigos globales**. Entre las armonizaciones recientes:
+La línea base `0.4.0` contiene **95 códigos globales**. Entre las armonizaciones recientes:
 
 ```text
 TIPO_PRODUCTO_NO_ENCONTRADO          -> 404
@@ -1781,9 +2025,9 @@ La invalidación debe basarse en eventos o TTL explícito.
 
 ```mermaid
 flowchart LR
-  gestor["Gestor comercial"]
+  gestor["Gestor comercial<br/>GESTOR_COMERCIAL"]
   auditor["Auditor"]
-  operador["Operador de inventario"]
+  operador["Operador de inventario<br/>perfil local"]
 
   market["Marketplace"]
   chatbot["Chatbot"]
@@ -1921,7 +2165,7 @@ Reglas contractuales adicionales del componente SEO/Taxonomía:
 - la creación de categoría recibe `slugConfirmado` y revalida unicidad al persistir;
 - una carrera de unicidad devuelve `409 SLUG_DUPLICADO`; nunca se sustituye silenciosamente el slug ya confirmado por el gestor;
 - `MasterDeactivationCoordinator` persiste/expone el estado consultable por `operationId`;
-- cambios confirmados del esquema de tipo y de valores `LISTA` se publican por los eventos canónicos de AsyncAPI `0.2.1-p0`.
+- cambios confirmados del esquema de tipo y de valores `LISTA` se publican por los eventos canónicos de AsyncAPI `0.4.0`.
 
 ---
 
@@ -2329,6 +2573,127 @@ Despacho
 
 ---
 
+
+## 39.8. Devolución físicamente reintegrable
+
+```text
+Postventa confirma recepción física
+  -> modulo-ventas
+  -> POST /inventario/reintegros
+  -> inventory-svc
+  -> on_hand aumenta
+  -> Kardex + stock.changed
+```
+
+## 39.9. Incidencia de tienda
+
+```text
+Retail detecta daño/no ubicación
+  -> POST /inventario/incidencias
+  -> blocked aumenta
+  -> available disminuye
+  -> todos los canales dejan de ver esas unidades como disponibles
+```
+
+## 39.11. Traslado Retail → almacén central
+
+```text
+Retail resuelve incidencia como TRASLADO_ALMACEN_CENTRAL
+  -> inventory-svc crea traslado EN_TRANSITO
+  -> origen: on_hand y blocked disminuyen
+  -> transporte físico fuera del saldo de destino
+  -> operador local de Inventario confirma recepción
+  -> disponible | bloqueado | merma
+  -> COMPLETADO | COMPLETADO_CON_DISCREPANCIA
+```
+
+La recepción no pertenece a Despacho. Despacho puede certificar retornos de sus propios paquetes, pero no es owner del reingreso de stock.
+
+Autorización del receptor:
+
+```text
+JWT de usuario validado por JWKS
+sub vinculado a perfil local
+INVENTARIO_TRASLADOS_LEER
+INVENTARIO_TRASLADOS_RECIBIR
+```
+
+No se crea un rol global adicional en Seguridad.
+
+## 39.11. Venta Retail offline
+
+```text
+Retail offline
+  -> ventaLocalUuid
+  -> sincroniza con Ventas
+  -> Ventas registra pedido/venta
+  -> POST /inventario/conciliaciones-offline
+  -> COMPLETED | REQUIRES_REVIEW
+```
+
+
+## 39.12. Preparación de cupón antes del pago
+
+```text
+pedido CREADO
+  -> reserva de stock confirmada
+  -> snapshot comercial de cupón fijado
+  -> promotions.coupon.consumption.requested
+  -> completed
+  -> pago habilitado
+```
+
+Si el pedido se cancela después del consumo:
+
+```text
+promotions.coupon.restoration.requested
+```
+
+Esta secuencia evita cobrar primero y descubrir después que el último uso del cupón ya fue tomado por otro pedido.
+
+## 39.13. Inicialización de Pricing
+
+```text
+catalog-svc
+  -> pricing.product.initialization.requested
+  -> pricing-svc
+  -> completed | rejected
+```
+
+La unidad inicial de Pricing es el producto:
+
+- el producto simple usa ese precio mediante su `sku_base`;
+- la variante sin override hereda ese precio;
+- una variante con override se gestiona posteriormente desde Pricing.
+
+## 39.14. Inicialización de Inventario
+
+```text
+catalog-svc
+  -> inventory.sku.initialization.requested
+  -> inventory-svc
+  -> completed | rejected
+```
+
+La unidad inicial de Inventario es el SKU vendible.
+
+No existe transacción distribuida Catálogo+Pricing+Inventario. El producto/variante permanece `BORRADOR` hasta reunir las confirmaciones requeridas y los reintentos son idempotentes.
+
+## 39.15. `customer_ref`
+
+```text
+Security.sub UUID
+      |
+      +-> canal -> Productos (validación)
+      |
+      +-> Ventas.contacto.clienteId
+                  |
+                  +-> consumo/restitución de cupón
+```
+
+La referencia se trata como identificador opaco y no como copia del perfil del usuario.
+
+
 # 40. Pruebas
 
 ## 40.1. Pirámide
@@ -2689,40 +3054,20 @@ Debe cumplir:
 
 # 54. Pendientes de integración arquitectónica
 
-Ya están cerrados a nivel contractual:
+P2 cerró:
 
-- `asyncapi/asyncapi.yaml` `0.2.1-p0`, con 29 mensajes lógicos;
-- catálogo de eventos `0.2.1-p0`;
-- catálogo de errores `0.2.4-p0`;
-- OpenAPI administrativo `0.3.5-p0` con cobertura de las 16 funcionalidades;
-- reserva/consumo/liberación en SPEC/HU/WF-015;
-- perfil físico de productos simples y variantes en 003/004;
-- semántica de idempotencia de Inventario;
-- `401 TOKEN_INVALIDO` / `403 SCOPE_INSUFICIENTE`;
-- separación `TIPO_PRODUCTO_NO_ENCONTRADO` 404 vs `TIPO_PRODUCTO_INVALIDO` 422;
-- `PRODUCTO_NO_ADMITE_VARIANTES` 409;
-- resolución previa y confirmada del slug de categoría;
-- baja segura de `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC`;
-- propagación `taxonomy.product-type-schema.changed`;
-- propagación `taxonomy.characteristic-value.updated`;
-- códigos específicos para operación maestra y Auditoría de precios;
-- límite contractual de exportación de Auditoría.
+- exchanges, queues, bindings, retry y DLQ;
+- recepción y discrepancias de traslados a almacén central;
+- capacidades locales del operador de Inventario.
 
-Pendientes reales de integración/implementación:
+Pendientes que requieren código/infra real:
 
-1. registrar/homologar permisos propios con Seguridad;
-2. formalizar devolución aceptada y reintegro físico con Ventas/Postventa;
-3. formalizar comando externo de consumo definitivo de cupón;
-4. formalizar contratos Catálogo → Pricing para preparación inicial;
-5. formalizar contratos Catálogo → Inventario para inicialización de SKU;
-6. corregir la documentación de Retail que todavía describa consumo directo;
-7. añadir pruebas consumidor-productor para Ventas ↔ Inventario y Despacho ↔ datos físicos;
-8. decidir topología física RabbitMQ: exchanges, queues, retries y DLQ;
-9. definir infraestructura cloud definitiva;
-10. definir ORM/driver concreto sin romper los puertos de persistencia.
+1. Registrar scopes/grants en Seguridad.
+2. Crear políticas/recursos RabbitMQ del entorno desde IaC/configuración.
+3. Ejecutar contract tests runtime.
+4. Sincronizar prototipos HTML después del freeze documental.
 
-Estos pendientes no invalidan los bounded contexts, ownership ni contratos P0 ya publicados.
-
+No queda pendiente de definición arquitectónica la topología lógica/física de mensajería.
 # 55. Decisiones deliberadamente NO fijadas
 
 Para evitar acoplamiento prematuro, esta arquitectura no obliga todavía a:
@@ -2732,7 +3077,6 @@ Para evitar acoplamiento prematuro, esta arquitectura no obliga todavía a:
 - Kubernetes;
 - proveedor de object storage;
 - Valkey obligatorio;
-- nombres físicos definitivos de exchanges/queues;
 - número fijo de réplicas;
 - valores definitivos de TTL.
 
@@ -2749,17 +3093,20 @@ Los principios arquitectónicos principales son:
 1. **Ventas/Postventa orquesta Inventario**.
 2. `CREADO` produce reserva.
 3. `PAGADO` produce consumo.
-4. pago fallido/anulación aplicable libera.
+4. pago fallido/anulación pre-consumo libera; una reserva consumida nunca se libera.
 5. reservas expiran por TTL configurable.
-6. canales solo consultan disponibilidad.
-7. Catálogo mantiene perfil físico por SKU.
-8. Despacho mantiene ownership del empaque.
-9. OpenAPI `0.3.5-p0` gobierna la interfaz HTTP de integración y administración.
-10. AsyncAPI `0.2.1-p0` gobierna la mensajería lógica y sus 29 mensajes.
-11. `api/catalogo-errores.md` gobierna los códigos estables y `api/catalogo-eventos.md` la lectura humana de mensajería.
-12. cada servicio aplica arquitectura por capas/puertos.
-13. no se comparten entidades ORM, repositorios ni schemas.
-14. Outbox/Inbox, idempotencia, correlación y pruebas de contrato forman parte de la arquitectura, no son mejoras opcionales.
-15. la CI debe proteger automáticamente los límites de dependencias.
+6. devoluciones físicas reintegrables y ventas offline se procesan por contratos explícitos de Ventas/Postventa.
+7. Marketplace/Chatbot solo consultan; Retail además reporta/resuelve incidencias físicas sin orquestar ventas.
+8. Catálogo mantiene perfil físico por SKU.
+9. Despacho mantiene ownership del empaque.
+10. OpenAPI `0.4.0` gobierna la interfaz HTTP de integración y administración.
+11. AsyncAPI `0.4.0` gobierna la mensajería lógica consolidada y sus 39 mensajes.
+12. `api/catalogo-errores.md` gobierna los códigos estables y `api/catalogo-eventos.md` la lectura humana de mensajería.
+13. cada servicio aplica arquitectura por capas/puertos.
+14. no se comparten entidades ORM, repositorios ni schemas.
+15. Outbox/Inbox, idempotencia, correlación y pruebas de contrato forman parte de la arquitectura, no son mejoras opcionales.
+16. la CI debe proteger automáticamente los límites de dependencias.
+17. la autorización comercial usa `GESTOR_COMERCIAL`; la integración técnica valida `aud=api-productos` y scopes propios por operación.
+18. los cambios de precio usan introspección; el resto del tráfico de usuario usa validación local con JWKS salvo ampliación contractual futura.
 
 Esta estructura permite implementar cada bounded context de forma independiente, probarlo en aislamiento, desplegarlo por separado y evolucionar contratos sin convertir el monorepo en una aplicación monolítica fuertemente acoplada.
