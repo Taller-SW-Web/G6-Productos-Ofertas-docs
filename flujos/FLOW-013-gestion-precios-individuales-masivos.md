@@ -6,7 +6,7 @@
 - **Funcionalidad:** Gestión de precios individuales y masivos
 - **Relacionado con:** [HU-013](../hu/HU-013-gestion-precios-individuales-masivos.md) / [SPEC-013](../specs/SPEC-013-gestion-precios-individuales-masivos.md) / [WF-013](../wireframes/flows/WF-013-gestion-precios-individuales-masivos.md)
 - **Responsable:** Leonardo Vera Rodríguez
-- **Última actualización:** 2026-09-23
+- **Última actualización:** 2026-09-29
 
 ---
 
@@ -23,6 +23,8 @@ Representar el ciclo operativo integral para la actualización individual y prog
 - **Worker de Pricing:** procesa lotes masivos asíncronos, activa automáticamente precios programados al cumplirse su vigencia y genera reportes de errores.
 - **Catálogo de productos:** informa la existencia, tipo y estado activo de los SKUs y solicita la inicialización idempotente del primer precio base.
 - **Bus de eventos (Outbox / Auditoría):** propaga de manera asíncrona el evento `pricing.price.changed` únicamente tras confirmarse el commit transaccional en Pricing.
+
+> **Autorización:** La consulta, edición y carga masiva requieren acceso autorizado. `PRICING_READ`, `PRICING_WRITE` y `PRICING_BULK` son nombres propuestos, pendientes de homologación con Seguridad y Usuarios; no se presentan como permisos oficiales.
 
 ---
 
@@ -56,7 +58,7 @@ flowchart LR
         S4["Mostrar advertencia reforzada"]
         S5["Verificar coincidencia de price_version"]
         D5{"¿Versión vigente coincide?"}
-        S6["Persistir nuevo precio en product_prices y SCD Tipo 2"]
+        S6["Persistir precio y vigencia en Pricing"]
         S7["Incrementar price_version y commit local"]
         S8["Rechazar por conflicto y devolver versión vigente"]
         S9["Verificar que valid_from sea futuro y sin solapamiento"]
@@ -69,7 +71,7 @@ flowchart LR
         direction TB
         W1["Verificar reloj del sistema frente a valid_from"]
         D7{"¿Timestamp actual alcanzó vigencia programada?"}
-        W2["Actualizar tabla operativa product_prices a ACTIVE"]
+        W2["Activar precio programado en Pricing"]
     end
 
     subgraph BUS["Bus de eventos"]
@@ -143,7 +145,7 @@ flowchart LR
         direction TB
         P1["Validar existencia de SKU y formato de timestamp"]
         D1{"¿Parámetros de consulta válidos?"}
-        P2["Consultar tabla de vigencias temporales SCD Tipo 2"]
+        P2["Consultar histórico de vigencias en Pricing"]
         D2{"¿Existe vigencia activa para el SKU en el timestamp 'at'?"}
         P3["Retornar precio regular, oferta aplicable, moneda e id_vigencia"]
         P4["Retornar HTTP 200 sin datos asumidos ni precios actuales"]
@@ -196,7 +198,7 @@ flowchart LR
         A3["Rechazar archivo con HTTP 422 antes de encolar"]
         A4["Mostrar resumen de prevalidación"]
         A5["Crear lote idempotente con batch_id"]
-        E1((Lote en cola con HTTP 202 Accepted))
+        E1((Lote en cola: HTTP 202 Accepted con batch_id))
     end
 
     subgraph PRICING_WORKER["Pricing · Worker asíncrono"]
