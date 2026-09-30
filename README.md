@@ -65,6 +65,9 @@ El inventario detallado de funcionalidades, responsables y artefactos se encuent
 | AsyncAPI | [`asyncapi/asyncapi.yaml`](asyncapi/asyncapi.yaml) | Contrato de mensajería asíncrona |
 | Catálogo de errores | [`api/catalogo-errores.md`](api/catalogo-errores.md) | Semántica estable de errores del módulo |
 | Catálogo de eventos | [`api/catalogo-eventos.md`](api/catalogo-eventos.md) | Eventos publicados y consumidos |
+| Topología RabbitMQ | [`api/rabbitmq-topologia.md`](api/rabbitmq-topologia.md) | Definición física de exchanges, colas y retries |
+| Kit de integración | [`api/kit-integracion.md`](api/kit-integracion.md) | Guía práctica de integración para otros módulos |
+| Acuerdos de integración | [`integraciones/`](integraciones/) | Acuerdos homologados con Chatbot, Ventas y Despacho |
 
 ---
 
@@ -80,6 +83,7 @@ No todos los documentos tienen la misma autoridad.
 | Representación visual de wireframes | `wireframes/DESIGN.md` |
 | Contrato HTTP | `api/openapi.yaml` |
 | Mensajería asíncrona | `asyncapi/asyncapi.yaml` |
+| Topología física RabbitMQ | `api/rabbitmq-topologia.md` |
 | Códigos de error | `api/catalogo-errores.md` |
 | Eventos | `api/catalogo-eventos.md` |
 | Ownership e integración entre módulos | `Contrato_Api.md` |
@@ -217,10 +221,12 @@ La explicación humana de responsabilidades e integración se mantiene en:
 
 | Artefacto | Versión |
 |---|---|
-| OpenAPI | `0.3.5` |
-| AsyncAPI | `0.2.1` |
-| Catálogo de errores | `0.2.4` |
-| Catálogo de eventos | `0.2.1` |
+| OpenAPI | `0.4.0` |
+| AsyncAPI | `0.4.0` |
+| Catálogo de errores | `0.4.0` |
+| Catálogo de eventos | `0.4.0` |
+| Topología RabbitMQ | `0.4.0` |
+| Kit de integración | `0.4.0` |
 
 ---
 
