@@ -1,92 +1,102 @@
-# SPEC-005 — Especificación: Gestión de cupones de descuento
+# SPEC-005 — Gestión de cupones de descuento
 
 **Responsable:** Axel Andree Cueva Alcalá  
 **Rama:** cueva  
-**Trazabilidad:** HU [HU-005](./hu/HU-005-gestion-cupones-descuento.md) | Wireframe [WF-005](./wireframes/flows/WF-005-gestion-cupones-descuento.md)
+**Trazabilidad:** HU [HU-005](../hu/HU-005-gestion-cupones-descuento.md) | Wireframe [WF-005](../wireframes/flows/WF-005-gestion-cupones-descuento.md)
 
-## 1. Contexto
-La gestión de cupones administra códigos que habilitan promociones configuradas con modalidad `CUPON`. El cupón no duplica descuento, alcance ni vigencia: esos datos pertenecen a la promoción asociada.
+---
 
-## 2. Propósito
-Permitir al Gestor Comercial administrar cupones y permitir a los canales validarlos y consumirlos de forma segura.
+## 1. Objetivo
 
-## 3. Modelo consolidado
-El cupón contiene código, estado, referencia a promoción `CUPON`, monto mínimo opcional, límite global opcional, límite por cliente opcional, política de restitución, contadores de uso y auditoría.
+Administrar cupones asociados a promociones y controlar validación, consumo y restitución sin trasladar ownership del pedido a Promociones.
 
-La promoción asociada contiene descuento, productos elegibles, vigencia y política de combinación.
+## 2. Identidad del cliente
 
-## 4. Alcance
-Incluye alta, consulta, modificación, activación/desactivación, validación sin consumo, consumo idempotente, límites opcionales, concurrencia segura, restitución según política y consulta de usos.
-
-## 5. Requisitos
-
-### Requisito 1: Registrar y normalizar código
-El código se normaliza con `trim` + mayúsculas y acepta `A-Z`, `0-9`, `-`, `_`. La unicidad se evalúa sobre el valor normalizado.
-
-Si ya existe, el backend responde conflicto en `application/problem+json` con:
+Contrato asíncrono:
 
 ```text
-code = CUPON_DUPLICADO
+customer_ref = claim sub del token de acceso de Seguridad
+formato = UUID
 ```
 
-Los consumidores dependen de `status` + `code`, no de `detail`.
+- El canal copia el `sub` del cliente autenticado.
+- Ventas persiste ese mismo UUID como referencia del cliente del pedido.
+- El `sub` de un token de servicio nunca es `customer_ref`.
+- `null` se admite para anónimo solo si la regla no requiere límite por cliente.
 
-### Requisito 2: Promoción asociada
-Debe existir, estar en modalidad `CUPON`, activa, vigente y ser aplicable a los productos evaluados.
-
-### Requisito 3: Monto mínimo
-Es opcional; cuando existe debe ser mayor que 0.
-
-### Requisito 4: Límites de uso
-`max_usos_global` y `max_usos_por_cliente` son opcionales. Si se informan deben ser enteros positivos.
-
-No se permite reducirlos por debajo de consumos existentes. Si ambos existen, `max_usos_por_cliente <= max_usos_global`. Si existe límite por cliente, la validación requiere `customer_ref`.
-
-**La ausencia del límite por cliente significa “Sin límite”; nunca equivale automáticamente a 1.**
-
-### Requisito 5: Validar sin consumir
-La validación devuelve validez, motivo de rechazo cuando aplique, promoción/beneficio, descuento e importe resultante. No incrementa contadores.
-
-### Requisito 6: Consumir uso
-El uso se consume solo cuando el cupón forma parte del beneficio finalmente seleccionado y Ventas/Postventa confirma contractualmente la consolidación. El consumo actualiza contador global y por cliente, cuando aplique, en una transacción local.
-
-### Requisito 7: Idempotencia
-`order_id + cupon_id` identifica un consumo. Reintentos no incrementan nuevamente.
-
-### Requisito 8: Concurrencia
-La competencia por los últimos usos nunca puede superar el límite configurado.
-
-### Requisito 9: Combinabilidad
-La combinación con promociones/oferta de Pricing se rige por `politica_combinacion` de la promoción asociada. El cupón consume solo si pertenece a la alternativa ganadora.
-
-### Requisito 10: Cancelación
-`RESTAURAR_EN_CANCELACION` restituye idempotentemente el uso cuando Ventas/Postventa comunica una cancelación homologada aplicable. `NO_RESTAURAR` conserva el consumo.
-
-Cupones no decide el estado del pedido ni procesa reembolsos.
-
-### Requisito 11: Consulta administrativa
-Debe mostrar código, promoción, estado, monto mínimo, límites, política de restitución, usos consumidos y usos disponibles cuando exista límite.
-
-### Requisito 12: Integración asíncrona
-El contrato actual publica los resultados:
+Si existe `max_usos_por_cliente` y falta identidad:
 
 ```text
-promotions.coupon.consumption.completed
-promotions.coupon.consumption.rejected
+CUSTOMER_REF_REQUERIDO
 ```
 
-El nombre/payload definitivo del comando de Ventas/Postventa que inicia el consumo sigue pendiente de homologación. La documentación anterior utilizaba un nombre provisional ligado a la confirmación del pedido; **ese nombre no se considera contrato definitivo**.
+## 3. Validación
 
-## 6. Requisitos no funcionales
-- Administración autenticada/autorizada.
-- Consumo atómico e idempotente.
-- Errores `application/problem+json` con `code` estable y `correlationId`.
-- Sin acceso directo a bases de datos de otros módulos.
+```http
+POST /api/v1/cupones/validar
+```
 
-## 7. Fuera de alcance
-- Definir descuento, alcance o vigencia.
-- Procesar pago, devolución o reembolso.
-- Consumir/restaurar usos manualmente desde el backoffice.
+Validar:
 
-## Criterio de completitud
-La capacidad queda alineada cuando `CUPON_DUPLICADO` está formalizado, los límites son opcionales, validar no consume y el iniciador externo no se presenta como homologado hasta cerrar el contrato con Ventas/Postventa.
+- comprueba existencia/estado/vigencia/alcance/límites;
+- evalúa el beneficio;
+- **no consume**.
+
+Una validación positiva no reserva el último uso.
+
+## 4. Consumo de cupones
+
+Secuencia:
+
+```text
+Ventas crea CREADO
+-> reserva de Inventario confirmada
+-> snapshot comercial final
+-> promotions.coupon.consumption.requested
+-> promotions.coupon.consumption.completed | rejected
+-> solo completed habilita continuar al intento de pago
+```
+
+Idempotencia de negocio:
+
+```text
+(order_id, cupon_id) = un único consumo
+```
+
+Al consumir se vuelve a comprobar atómicamente:
+
+- cupo global;
+- cupo por cliente;
+- identidad del cupón;
+- coherencia con el pedido.
+
+Dos pedidos compitiendo por el último uso producen como máximo un consumo exitoso.
+
+## 5. Restitución de cupones
+
+Si un pedido que ya pudo consumir cupón se cancela:
+
+```text
+promotions.coupon.restoration.requested
+```
+
+Resultados:
+
+```text
+RESTORED
+POLICY_KEEPS_CONSUMPTION
+NO_CONSUMPTION
+```
+
+Políticas:
+
+```text
+RESTAURAR_EN_CANCELACION
+NO_RESTAURAR
+```
+
+La restitución es idempotente.
+
+## 6. Fuera de alcance
+
+Cupones no procesa pagos, reembolsos ni decide el estado del pedido.
