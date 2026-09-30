@@ -200,7 +200,7 @@ flowchart LR
     B2 --> FIN_LIB
 ```
 
-### 4.4 Expiación por TTL y carrera hacia una única terminal
+### 4.4 Expiración por TTL y carrera hacia una única terminal
 
 ```mermaid
 flowchart LR
@@ -209,23 +209,26 @@ flowchart LR
         INICIO((Revisión periódica de reservas ACTIVA))
         A1["Identificar reserva ACTIVA vencida"]
         D1{"¿Ya se aplicó una transición terminal?"}
-        A2["Marcar reserva como EXPIRADA"]
-        A3["Publicar inventory.reservation.expired"]
+        A2["Expirar: reserved disminuye, available se recalcula y la reserva pasa a EXPIRADA"]
+        A3["Persistir Kardex y Outbox en la misma transacción"]
+        A4["Confirmar commit local"]
+        A5["Publicar inventory.reservation.expired"]
+        A6["Publicar inventory.stock.changed por el cambio de saldo"]
     end
 
     subgraph VENT["Ventas / Postventa"]
         direction TB
         P1{"¿Confirmar o liberar?"}
-        A4["Confirmar consumo"]
-        A5["Liberar reserva"]
+        A7["Confirmar consumo"]
+        A8["Liberar reserva"]
     end
 
     subgraph INV["Sistema de Inventario"]
         direction TB
         D2{"¿La reserva sigue ACTIVA?"}
-        A6["Rechazar: RESERVA_EXPIRADA / RESERVA_NO_ACTIVA"]
-        A7["Persistir Kardex y Outbox en la misma transacción"]
-        A8["Aplicar transición terminal solicitada"]
+        A9["Rechazar: RESERVA_EXPIRADA / RESERVA_NO_ACTIVA"]
+        A10["Persistir Kardex y Outbox en la misma transacción"]
+        A11["Aplicar transición terminal solicitada"]
     end
 
     subgraph RES["Resultado"]
@@ -239,16 +242,19 @@ flowchart LR
     D1 -->|"No"| A2
     D1 -->|"Sí"| FIN
     A2 --> A3
-    A3 --> E1
-    P1 -->|"Confirmar"| A4
-    P1 -->|"Liberar"| A5
-    A4 --> D2
-    A5 --> D2
-    D2 -->|"No"| A6
-    D2 -->|"Sí"| A8
-    A8 --> A7
-    A7 --> E1
-    A6 --> FIN
+    A3 --> A4
+    A4 --> A5
+    A5 --> A6
+    A6 --> E1
+    P1 -->|"Confirmar"| A7
+    P1 -->|"Liberar"| A8
+    A7 --> D2
+    A8 --> D2
+    D2 -->|"No"| A9
+    D2 -->|"Sí"| A11
+    A11 --> A10
+    A10 --> E1
+    A9 --> FIN
     E1 --> FIN
 ```
 

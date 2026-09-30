@@ -83,6 +83,7 @@ flowchart LR
     D1 -->|"No"| D2
     D2 -->|"Sí"| A2
     D2 -->|"No"| A3
+    A3 --> FIN
     A1 --> A4
     A2 --> A4
     A4 --> A5
