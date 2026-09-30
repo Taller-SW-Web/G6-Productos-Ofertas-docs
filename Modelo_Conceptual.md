@@ -1,89 +1,175 @@
 # Modelos conceptuales de datos — Módulo de Productos y Ofertas
 
-**Fecha:** 2026-09-23  
+**Fecha de actualización:** 2026-09-30  
 **Repositorio:** `Taller-SW-Web/Productos-y-Ofertas-docs`  
-**Ruta recomendada:** `architecture/modelos-conceptuales-datos.md`  
-**Arquitectura de referencia:** `architecture/arquitectura-modulo-productos-ofertas.md`
+**Archivo:** `Modelo_Conceptual.md`  
+**Arquitectura de referencia:** `Arquitectura.md`  
+**Contrato HTTP de referencia:** `api/openapi.yaml` (`0.4.0`)  
+**Contrato asíncrono de referencia:** `asyncapi/asyncapi.yaml` (`0.4.0`)  
+**Catálogo de errores:** `api/catalogo-errores.md` (`0.4.0`)  
+**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.4.0`)  
+**Contrato humano de referencia:** `Contrato_Api.md`
 
-> **Alcance:** este documento define los **modelos conceptuales de datos** de los ocho bounded contexts/microservicios de negocio del módulo Productos y Ofertas y analiza si existe alguna necesidad de compartir esquemas PostgreSQL entre ellos.
+> **Alcance:** este documento define los modelos conceptuales de datos de los ocho bounded contexts del módulo Productos y Ofertas.  
+> Las relaciones entre bounded contexts son conceptuales y **no implican foreign keys ni acceso directo cross-schema**.
 
 ---
 
+# 1. Decisiones del modelo conceptual
 
-# 1. Modelo conceptual interdominio
+Esta versión incorpora las decisiones de diseño del modelo de datos:
 
-Las relaciones interdominio **no implican foreign keys cross-schema**.
+1. **Inventario pertenece a Productos y Ofertas**.
+2. Marketplace y Chatbot solo consultan disponibilidad; Retail además reporta/resuelve incidencias físicas sin convertirse en owner del saldo.
+3. **Ventas/Postventa orquesta inventario comercial**:
+   - pedido `CREADO` → reserva;
+   - pedido `PAGADO` → consumo definitivo;
+   - `PAGO_NO_COMPLETADO` o anulación pre-consumo → liberación;
+   - retorno físicamente reintegrable → reintegro;
+   - venta Retail offline registrada → conciliación.
+4. La reserva tiene expiración configurable.
+5. Los datos físicos propios de una unidad vendible se modelan por **SKU**.
+6. Productos y Ofertas es owner de:
+   - peso;
+   - dimensiones físicas propias del SKU.
+7. **Despacho es owner del empaque**, agrupación logística y volumen operativo final.
+8. Productos y Ofertas no modela `tipoEmpaque` como atributo propio del producto/SKU.
+9. `SPEC/HU/WF-003`, `004` y `015` ya incorporan estas decisiones; dejan de ser propagaciones futuras.
+10. La idempotencia de Inventario distingue retry legítimo de `IDEMPOTENCY_CONFLICT`.
+11. Los contratos HTTP/asíncronos y códigos estables ya están publicados en OpenAPI, AsyncAPI y `catalogo-errores.md`.
+12. OpenAPI y AsyncAPI `0.4.0` constituyen el baseline contractual vigente de este modelo.
+13. Taxonomía expone operaciones observables de **baja maestra segura** para recursos con dependencias.
+14. Una operación de baja maestra puede permanecer pendiente después de un `202 Accepted`; su resultado definitivo se resuelve de forma asíncrona.
+15. La operación de baja pertenece a Taxonomía y no implica acceso directo a las tablas del bounded context consumidor.
+
+---
+
+# 2. Modelo conceptual interdominio
 
 ```mermaid
 flowchart LR
   CAT["CATEGORÍA<br/>(Taxonomía)"]
   BRAND["MARCA<br/>(Taxonomía)"]
   TYPE["TIPO DE PRODUCTO<br/>(Taxonomía)"]
-  CHAR["CARACTERÍSTICA<br/>(Taxonomía)"]
 
   PRODUCT["PRODUCTO<br/>(Catálogo)"]
   VARIANT["VARIANTE<br/>(Catálogo)"]
+  SKU["SKU VENDIBLE<br/>(Catálogo)"]
+  PHYSICAL["PERFIL FÍSICO DE SKU<br/>(Catálogo)"]
 
   PRICE["PRECIO<br/>(Pricing)"]
-  PROMO["PROMOCIÓN<br/>(Promociones)"]
+  PROMO["PROMOCIÓN / CUPÓN<br/>(Promociones)"]
   COMBO["COMBO<br/>(Combos)"]
+
   STOCK["SALDO DE INVENTARIO<br/>(Inventario)"]
+  RESERVATION["RESERVA DE INVENTARIO<br/>(Inventario)"]
+
   AUDIT["REGISTRO DE AUDITORÍA<br/>(Price Audit)"]
   BATCH["LOTE MASIVO<br/>(Bulk)"]
+
+  ORDER["PEDIDO<br/>(externo: Ventas/Postventa)"]
+  DISPATCH["DESPACHO / EMPAQUE<br/>(externo: Despacho)"]
 
   R1{"SE CLASIFICA EN"}
   R2{"PERTENECE A"}
   R3{"USA ESQUEMA DE"}
   R4{"POSEE"}
-  R5{"TIENE PRECIO"}
-  R6{"ES ALCANZADO POR"}
-  R7{"COMPONE"}
-  R8{"TIENE SALDO"}
-  R9{"GENERA CAMBIO AUDITADO"}
-  R10{"COORDINA CAMBIOS SOBRE"}
+  R5{"EXPONE"}
+  R6{"MATERIALIZA COMO"}
+  R7{"TIENE PERFIL FÍSICO"}
+  R8{"TIENE PRECIO"}
+  R9{"ES ALCANZADO POR"}
+  R10{"COMPONE"}
+  R11{"TIENE SALDO"}
+  R12{"RESERVA"}
+  R13{"CORRESPONDE A"}
+  R14{"CONSULTA DATOS FÍSICOS"}
+  R15{"GENERA CAMBIO AUDITADO"}
+  R16{"COORDINA CAMBIOS SOBRE"}
 
-  PRODUCT ---|"0..N"| R1
+  PRODUCT ---|"0.N"| R1
   R1 ---|"1"| CAT
 
-  PRODUCT ---|"0..N"| R2
+  PRODUCT ---|"0.N"| R2
   R2 ---|"1"| BRAND
 
-  PRODUCT ---|"0..N"| R3
+  PRODUCT ---|"0.N"| R3
   R3 ---|"1"| TYPE
 
   PRODUCT ---|"1"| R4
-  R4 ---|"0..N"| VARIANT
+  R4 ---|"0.N"| VARIANT
 
   PRODUCT ---|"1"| R5
-  VARIANT ---|"0..1"| R5
-  R5 ---|"0..N"| PRICE
+  R5 ---|"1.N"| SKU
 
-  PRODUCT ---|"0..N"| R6
-  VARIANT ---|"0..N"| R6
-  R6 ---|"0..N"| PROMO
+  VARIANT ---|"1"| R6
+  R6 ---|"1"| SKU
 
-  VARIANT ---|"0..N"| R7
-  R7 ---|"2..N componentes"| COMBO
+  SKU ---|"1"| R7
+  R7 ---|"0.1"| PHYSICAL
 
-  VARIANT ---|"1"| R8
-  R8 ---|"1..N ubicaciones"| STOCK
+  PRODUCT ---|"1"| R8
+  SKU ---|"0.1"| R8
+  R8 ---|"0.N"| PRICE
 
-  PRICE ---|"1"| R9
-  R9 ---|"0..N"| AUDIT
+  PRODUCT ---|"0.N"| R9
+  SKU ---|"0.N"| R9
+  R9 ---|"0.N"| PROMO
 
-  BATCH ---|"1"| R10
-  R10 ---|"1..N"| PRODUCT
-  R10 ---|"0..N"| PRICE
-  R10 ---|"0..N"| STOCK
+  SKU ---|"0.N"| R10
+  R10 ---|"2.N componentes"| COMBO
+
+  SKU ---|"1"| R11
+  R11 ---|"1.N ubicaciones"| STOCK
+
+  STOCK ---|"0.N"| R12
+  R12 ---|"0.N"| RESERVATION
+
+  RESERVATION ---|"0.N"| R13
+  R13 ---|"1"| ORDER
+
+  PHYSICAL ---|"0.N consultas"| R14
+  R14 ---|"1"| DISPATCH
+
+  PRICE ---|"1"| R15
+  R15 ---|"0.N"| AUDIT
+
+  BATCH ---|"1"| R16
+  R16 ---|"1.N"| PRODUCT
+  R16 ---|"0.N"| PRICE
+  R16 ---|"0.N"| STOCK
+
+  classDef external stroke-dasharray: 5 5;
+  class ORDER,DISPATCH external;
 ```
 
-> **Interpretación:** las relaciones son conceptuales. En persistencia distribuida, el contexto consumidor conserva únicamente identificadores externos, snapshots o proyecciones que necesita. No se crean FK PostgreSQL entre estos rectángulos cuando pertenecen a schemas distintos.
+La entidad conceptual `SKU VENDIBLE` unifica los dos casos:
+
+```text
+producto simple -> sku_base es el SKU vendible
+producto con variantes -> cada variante materializa un SKU vendible
+```
+
+No obliga a crear una tabla `sellable_sku`; expresa la identidad comercial compartida por los contratos.
+
+## 2.1. Interpretación
+
+Las relaciones del diagrama no significan joins distribuidos.
+
+Un bounded context consumidor conserva únicamente:
+
+- identificadores externos;
+- snapshots;
+- proyecciones reconstruibles;
+- correlaciones de operación.
+
+No existen FK entre schemas de bounded contexts distintos.
 
 ---
 
-# 2. `taxonomy-svc` — Modelo conceptual
+# 3. `taxonomy-svc` — Modelo conceptual
 
-## 2.1 Responsabilidad de datos
+## 3.1. Responsabilidad de datos
 
 Taxonomía es autoridad de:
 
@@ -91,15 +177,16 @@ Taxonomía es autoridad de:
 - marcas;
 - características;
 - valores de características `LISTA`;
-- tipos de producto ligeros;
+- tipos de producto;
 - asociación Tipo de Producto–Característica;
-- obligatoriedad de la asociación;
+- obligatoriedad de esa asociación;
 - SEO de categoría;
-- historial de slugs.
+- historial de slugs;
+- operaciones de baja maestra segura sobre recursos de Taxonomía.
 
-Las categorías **no** definen ni heredan características.
+Las categorías no definen ni heredan características.
 
-## 2.2 Diagrama conceptual
+## 3.2. Diagrama conceptual
 
 ```mermaid
 flowchart LR
@@ -111,63 +198,69 @@ flowchart LR
   TYPE["TIPO DE PRODUCTO"]
   SEO["CONFIGURACIÓN SEO"]
   SLUG["SLUG HISTÓRICO"]
+  MASTER_TARGET["OBJETIVO MAESTRO<br/>DESACTIVABLE"]
+  DEACT_OP["OPERACIÓN DE BAJA MAESTRA"]
 
   R_HIER{"ES PADRE DE"}
   R_VALUES{"OFRECE VALORES"}
   R_SCHEMA{"DEFINE COMO<br/>OBLIGATORIA / OPCIONAL"}
   R_SEO{"TIENE SEO"}
   R_HISTORY{"REGISTRA"}
+  R_DEACT{"TRAMITA BAJA SEGURA DE"}
 
   CAT_PARENT ---|"1"| R_HIER
-  R_HIER ---|"0..N"| CAT_CHILD
+  R_HIER ---|"0.N"| CAT_CHILD
 
   CHAR ---|"1"| R_VALUES
-  R_VALUES ---|"0..N"| VALUE
+  R_VALUES ---|"0.N"| VALUE
 
-  TYPE ---|"0..N"| R_SCHEMA
-  R_SCHEMA ---|"0..N"| CHAR
+  TYPE ---|"0.N"| R_SCHEMA
+  R_SCHEMA ---|"0.N"| CHAR
 
   CAT_PARENT ---|"1"| R_SEO
-  R_SEO ---|"0..1"| SEO
+  R_SEO ---|"0.1"| SEO
 
   SEO ---|"1"| R_HISTORY
-  R_HISTORY ---|"0..N"| SLUG
+  R_HISTORY ---|"0.N"| SLUG
+
+  DEACT_OP ---|"0.N"| R_DEACT
+  R_DEACT ---|"1"| MASTER_TARGET
 ```
 
-### 2.3 Observaciones conceptuales
+## 3.3. Reglas conceptuales
 
-1. `CATEGORÍA (padre)` y `CATEGORÍA (hija)` son **roles de la misma entidad**, no dos tablas diferentes.
-2. Una categoría puede ser raíz; por tanto su padre es opcional.
-3. Una característica `LISTA` puede poseer múltiples valores; `TEXTO` y `NUMERO` no necesitan filas de valores enumerados.
-4. Tipo de Producto y Característica forman una relación N:M.
-5. La propiedad `OBLIGATORIA | OPCIONAL` pertenece a esa relación, no a Característica globalmente.
-6. Marca queda intencionalmente sin relación interna en este diagrama: la asociación Marca→Producto pertenece a Catálogo.
-7. SEO es de **categoría**, no de producto.
-8. El slug de producto no aparece porque pertenece a Catálogo.
+1. Categoría padre/hija son roles de la misma entidad.
+2. Una categoría raíz no tiene padre.
+3. Tipo de Producto y Característica forman una relación N:M.
+4. `OBLIGATORIA | OPCIONAL` pertenece a la asociación.
+5. Marca pertenece a Taxonomía aunque su uso comercial se realiza desde Catálogo.
+6. SEO de categoría pertenece a Taxonomía.
+7. Una **Operación de Baja Maestra** registra conceptualmente una solicitud de desactivación/desasociación que puede continuar después de la respuesta HTTP inicial.
+8. Cada operación de baja maestra se ejecuta sobre exactamente un **Objetivo Maestro Desactivable**; un mismo objetivo puede tener cero o varias operaciones a lo largo de su ciclo de vida.
+9. `OBJETIVO MAESTRO DESACTIVABLE` es una abstracción conceptual para una categoría, marca, valor de característica, tipo de producto o asociación Tipo de Producto–Característica. No exige una tabla común ni herencia física.
+10. La asociación Tipo de Producto–Característica sigue siendo una relación conceptual N:M; que pueda ser objetivo de baja no obliga a convertirla en una entidad de dominio independiente fuera de la operación administrativa.
+11. El estado observable de la baja pertenece a Taxonomía; otros bounded contexts reaccionan por contratos publicados, no mediante lectura de su schema.
 
-### 2.4 Consecuencia para el modelo lógico
+## 3.4. Trazabilidad contractual de la baja maestra
 
-Relaciones que probablemente se materializarán como tabla:
+La operación conceptual anterior corresponde al recurso administrativo observable publicado por OpenAPI:
 
-- `product_type_characteristics` ← relación `DEFINE COMO OBLIGATORIA / OPCIONAL`.
-- jerarquía de categorías ← FK interna autorreferenciada dentro de `taxonomy`.
-- `characteristic_values`.
-- `category_seo`.
-- `slug_history`.
-
-No debe existir:
-
-```text
-category_characteristics
+```http
+GET /api/v1/taxonomia/operaciones/{operationId}
 ```
 
-porque la documentación actual separa completamente navegación y esquema de atributos.
+Reglas de interpretación:
+
+- un `202 Accepted` en una solicitud de baja significa **admisión**, no finalización;
+- el resultado definitivo puede requerir coordinación asíncrona con consumidores;
+- una identidad inexistente se expresa como `404 OPERACION_MAESTRA_NO_ENCONTRADA`;
+- el recurso observable pertenece a Taxonomía y no autoriza acceso directo a los schemas de Catálogo u otros bounded contexts.
 
 ---
 
-# 3. `catalog-svc` — Modelo conceptual
+# 4. `catalog-svc` — Modelo conceptual
 
-## 3.1 Responsabilidad de datos
+## 4.1. Responsabilidad de datos
 
 Catálogo es autoridad de:
 
@@ -177,21 +270,32 @@ Catálogo es autoridad de:
 - slug del producto;
 - variantes;
 - `variant_id`;
-- SKU comercial de variante;
+- SKU comercial;
 - imágenes;
-- valores de atributos registrados;
-- selección de características identificadoras por producto con variantes.
+- valores de atributos;
+- características identificadoras;
+- **perfil físico del SKU vendible**.
 
-Categoría, Marca, Tipo de Producto, Característica y Valor de Característica pertenecen a Taxonomía.
+No es autoridad de:
 
-## 3.2 Diagrama conceptual
+- precio;
+- stock;
+- reserva;
+- empaque;
+- capacidad logística.
+
+---
+
+## 4.2. Diagrama conceptual
 
 ```mermaid
 flowchart TB
   PRODUCT["PRODUCTO"]
   VARIANT["VARIANTE"]
+  SKU["SKU VENDIBLE"]
   PIMAGE["IMAGEN DE PRODUCTO"]
   VIMAGE["IMAGEN DE VARIANTE"]
+  PHYSICAL["PERFIL FÍSICO DE SKU"]
 
   CATEGORY["CATEGORÍA<br/>(externa: Taxonomía)"]
   BRAND["MARCA<br/>(externa: Taxonomía)"]
@@ -200,8 +304,11 @@ flowchart TB
   VALUE["VALOR DE CARACTERÍSTICA<br/>(externo: Taxonomía)"]
 
   R_VARIANTS{"POSEE"}
+  R_SKUS{"EXPONE"}
+  R_VARIANT_SKU{"MATERIALIZA COMO"}
   R_PIMG{"TIENE"}
   R_VIMG{"TIENE"}
+  R_PHYSICAL{"PUEDE TENER"}
   R_CATEGORY{"SE CLASIFICA EN"}
   R_BRAND{"PERTENECE A"}
   R_TYPE{"USA ESQUEMA DE"}
@@ -210,83 +317,137 @@ flowchart TB
   R_VATTR{"SE IDENTIFICA POR"}
 
   PRODUCT ---|"1"| R_VARIANTS
-  R_VARIANTS ---|"0..N"| VARIANT
+  R_VARIANTS ---|"0.N"| VARIANT
+
+  PRODUCT ---|"1"| R_SKUS
+  R_SKUS ---|"1.N"| SKU
+
+  VARIANT ---|"1"| R_VARIANT_SKU
+  R_VARIANT_SKU ---|"1"| SKU
 
   PRODUCT ---|"1"| R_PIMG
-  R_PIMG ---|"0..N"| PIMAGE
+  R_PIMG ---|"0.N"| PIMAGE
 
   VARIANT ---|"1"| R_VIMG
-  R_VIMG ---|"1..N"| VIMAGE
+  R_VIMG ---|"1.N"| VIMAGE
 
-  PRODUCT ---|"0..N"| R_CATEGORY
+  SKU ---|"1"| R_PHYSICAL
+  R_PHYSICAL ---|"0.1"| PHYSICAL
+
+  PRODUCT ---|"0.N"| R_CATEGORY
   R_CATEGORY ---|"1"| CATEGORY
 
-  PRODUCT ---|"0..N"| R_BRAND
+  PRODUCT ---|"0.N"| R_BRAND
   R_BRAND ---|"1"| BRAND
 
-  PRODUCT ---|"0..N"| R_TYPE
+  PRODUCT ---|"0.N"| R_TYPE
   R_TYPE ---|"1"| TYPE
 
-  PRODUCT ---|"0..N"| R_PATTR
-  R_PATTR ---|"0..N"| CHAR
+  PRODUCT ---|"0.N"| R_PATTR
+  R_PATTR ---|"0.N"| CHAR
 
-  PRODUCT ---|"0..N"| R_IDCHAR
-  R_IDCHAR ---|"0..N"| CHAR
+  PRODUCT ---|"0.N"| R_IDCHAR
+  R_IDCHAR ---|"0.N"| CHAR
 
-  VARIANT ---|"1..N identificadores"| R_VATTR
-  R_VATTR ---|"0..N usos"| VALUE
+  VARIANT ---|"1.N identificadores"| R_VATTR
+  R_VATTR ---|"0.N usos"| VALUE
 
   classDef external stroke-dasharray: 5 5;
   class CATEGORY,BRAND,TYPE,CHAR,VALUE external;
 ```
 
-### 3.3 Observaciones conceptuales
+`SKU VENDIBLE` es una abstracción conceptual. No implica obligatoriamente una entidad física independiente en PostgreSQL.
 
-1. Un producto puede no tener variantes o tener muchas.
-2. Cuando `tiene_variantes=false`, `sku_base` es también el SKU vendible.
-3. Cuando `tiene_variantes=true`, el producto padre no tiene stock propio.
-4. Una variante pertenece exactamente a un producto.
-5. `variant_id` y SKU comercial son identidades distintas.
-6. El producto puede existir en BORRADOR sin imágenes.
-7. La variante requiere imagen propia en el flujo de creación.
-8. `REGISTRA VALOR PARA` representa valores de atributos de producto; en el lógico se materializará una estructura de valores tipados.
-9. `SELECCIONA COMO IDENTIFICADORA` pertenece al producto con variantes y se fija antes de crear la primera variante.
-10. `SE IDENTIFICA POR` usa valores LISTA estables de Taxonomía.
-11. Ninguna relación a Taxonomía implica FK cross-schema.
+## 4.3. SKU vendible
 
-### 3.4 Refinamiento importante respecto de la arquitectura
+La unidad comercial integrada con Pricing, Inventario, Combos, Promociones y Despacho es el **SKU vendible**.
 
-La lista física preliminar de la arquitectura debe contemplar, en el modelo lógico, una persistencia para:
+### Producto simple
 
 ```text
-product_identifying_characteristics
+tiene_variantes = false
 ```
 
-o equivalente.
+`sku_base` funciona como SKU vendible.
 
-Esta asociación es necesaria porque SPEC-003/SPEC-004 establecen que un producto con variantes selecciona previamente un conjunto de características LISTA identificadoras que queda inmutable desde la primera variante.
+### Producto con variantes
+
+```text
+tiene_variantes = true
+```
+
+Cada variante posee su SKU comercial y el producto padre no tiene stock propio.
 
 ---
 
-# 4. `pricing-svc` — Modelo conceptual
+## 4.4. Perfil físico del SKU
 
-## 4.1 Responsabilidad de datos
+El perfil físico representa propiedades intrínsecas necesarias para integración logística.
+
+Campos conceptuales:
+
+```text
+pesoKg
+largoCm
+anchoCm
+altoCm
+actualizadoEn
+```
+
+### Reglas
+
+1. El perfil corresponde al SKU vendible.
+2. No contiene `tipoEmpaque`.
+3. No contiene cantidad de paquetes.
+4. No determina cómo se agrupan unidades en un despacho.
+5. Despacho puede calcular un volumen unitario a partir de dimensiones.
+6. El volumen logístico final sigue siendo responsabilidad de Despacho.
+7. La consulta externa debe ser en lote para evitar N llamadas por pedido.
+
+> **Trazabilidad cerrada:** estas reglas ya están incorporadas en `SPEC-003` para producto simple y `SPEC-004` para variantes/SKU.
+
+---
+
+## 4.5. Producto simple y perfil físico
+
+Conceptualmente, un producto simple también tiene un SKU vendible.
+
+En el modelo conceptual se representa mediante `SKU VENDIBLE`.
+
+En el modelo lógico no es obligatorio crear una tabla `sellable_sku`: el perfil puede utilizar `sku` como referencia comercial estable mientras Catálogo mantenga la unicidad y el ownership.
+
+Para producto simple:
+
+```text
+sku = sku_base
+```
+
+Para producto con variantes:
+
+```text
+sku = SKU comercial de la variante
+```
+
+---
+
+# 5. `pricing-svc` — Modelo conceptual
+
+## 5.1. Responsabilidad de datos
 
 Pricing es autoridad de:
 
 - precio regular;
-- precio de oferta opcional;
+- precio de oferta;
 - moneda;
-- canal/scope;
+- canal;
 - vigencias;
 - programación futura;
-- historial temporal/as-of;
-- versión de precio;
-- carga masiva exclusiva de precios.
+- histórico/as-of;
+- versión de precio.
 
 Producto y SKU pertenecen a Catálogo.
 
-## 4.2 Diagrama conceptual
+## 5.2. Diagrama conceptual
 
 ```mermaid
 flowchart LR
@@ -302,63 +463,36 @@ flowchart LR
   R_BATCH{"ACTUALIZA"}
 
   PRODUCT ---|"1"| R_BASE
-  R_BASE ---|"0..N"| PRICE
+  R_BASE ---|"0.N"| PRICE
 
   SKU ---|"1"| R_OVERRIDE
-  R_OVERRIDE ---|"0..N"| PRICE
+  R_OVERRIDE ---|"0.N"| PRICE
 
   PRICE ---|"1"| R_PERIOD
-  R_PERIOD ---|"1..N"| PERIOD
+  R_PERIOD ---|"1.N"| PERIOD
 
   BATCH ---|"1"| R_BATCH
-  R_BATCH ---|"1..N"| SKU
+  R_BATCH ---|"1.N"| SKU
 
   classDef external stroke-dasharray: 5 5;
   class PRODUCT,SKU external;
 ```
 
-### 4.3 Restricción XOR conceptual
-
-Cada definición de precio tiene como objetivo:
-
-- **un Producto**, para precio base/fallback; **o**
-- **un SKU**, para override;
-
-pero no ambos simultáneamente.
-
-Ese XOR debe formalizarse en el modelo lógico.
-
-### 4.4 Vigencias
-
-`VIGENCIA DE PRECIO` representa:
-
-- precio regular u oferta;
-- periodo temporal;
-- moneda;
-- scope de canal;
-- estado programado/vigente/histórico.
-
-### 4.5 Carga masiva propia
-
-`LOTE DE PRECIOS` se relaciona con múltiples SKU. En el modelo lógico, la relación `ACTUALIZA` requerirá una entidad/fila de lote para:
-
-- estado de fila;
-- error;
-- `price_version`;
-- acción de oferta;
-- resultado.
+Cada definición de precio apunta a Producto o SKU, pero no a ambos simultáneamente.
 
 ---
 
-# 5. `price-audit-svc` — Modelo conceptual
+# 6. `price-audit-svc` — Modelo conceptual
 
-## 5.1 Responsabilidad de datos
+## 6.1. Responsabilidad de datos
 
-Price Audit es autoridad únicamente de la bitácora append-only, exportaciones y archivado de dicha bitácora.
+Price Audit es autoridad de:
 
-No es autoridad de Precio, Producto, SKU, Usuario ni lote Bulk.
+- bitácora append-only;
+- exportaciones de auditoría;
+- archivado de auditoría.
 
-## 5.2 Diagrama conceptual
+## 6.2. Diagrama conceptual
 
 ```mermaid
 flowchart TB
@@ -378,60 +512,47 @@ flowchart TB
   R_EXPORT{"EXPORTA"}
   R_ARCHIVE{"ARCHIVA"}
 
-  AUDIT ---|"0..N"| R_PRODUCT
+  AUDIT ---|"0.N"| R_PRODUCT
   R_PRODUCT ---|"1"| PRODUCT
 
-  AUDIT ---|"0..N"| R_SKU
+  AUDIT ---|"0.N"| R_SKU
   R_SKU ---|"1"| SKU
 
-  AUDIT ---|"0..N"| R_USER
+  AUDIT ---|"0.N"| R_USER
   R_USER ---|"1"| USER
 
-  AUDIT ---|"0..N"| R_BATCH
-  R_BATCH ---|"0..1"| BATCH
+  AUDIT ---|"0.N"| R_BATCH
+  R_BATCH ---|"0.1"| BATCH
 
   EXPORT ---|"1"| R_EXPORT
-  R_EXPORT ---|"0..N"| AUDIT
+  R_EXPORT ---|"0.N"| AUDIT
 
   ARCHIVE ---|"1"| R_ARCHIVE
-  R_ARCHIVE ---|"1..N"| AUDIT
+  R_ARCHIVE ---|"1.N"| AUDIT
 
   classDef external stroke-dasharray: 5 5;
   class PRODUCT,SKU,USER,BATCH external;
 ```
 
-### 5.3 Razón para NO compartir el schema `pricing`
-
-Aunque Auditoría nace de eventos de Pricing, mantener `price_audit` separado permite:
-
-- privilegios append-only específicos;
-- retención distinta;
-- exportaciones pesadas sin interferir con la escritura de precios;
-- archivado independiente;
-- deduplicación por `event_id`;
-- impedir que una operación de auditoría modifique accidentalmente el precio vigente.
-
-La relación se mantiene mediante `pricing.price.changed`, no mediante FK a `pricing`.
+Price Audit permanece separado de Pricing por privilegios, retención, carga e inmutabilidad.
 
 ---
 
-# 6. `promotions-svc` — Modelo conceptual
+# 7. `promotions-svc` — Modelo conceptual
 
-## 6.1 Responsabilidad de datos
+## 7.1. Responsabilidad de datos
 
-Este bounded context reúne:
+Promociones es autoridad de:
 
 - promociones;
 - alcance por Producto/SKU;
-- política granular de combinación;
+- combinabilidad;
 - cupones;
 - consumos de cupón;
-- reglas Cross-sell;
-- reglas Upsell.
+- cross-sell;
+- upsell.
 
-Producto, SKU y Categoría pertenecen a otros dominios.
-
-## 6.2 Promociones y cupones
+## 7.2. Promociones y cupones
 
 ```mermaid
 flowchart LR
@@ -449,26 +570,32 @@ flowchart LR
   R_USE{"REGISTRA"}
   R_ORDER{"CORRESPONDE A"}
 
-  PROMO ---|"0..N"| R_PRODUCT
-  R_PRODUCT ---|"0..N"| PRODUCT
+  PROMO ---|"0.N"| R_PRODUCT
+  R_PRODUCT ---|"0.N"| PRODUCT
 
-  PROMO ---|"0..N"| R_SKU
-  R_SKU ---|"0..N"| SKU
+  PROMO ---|"0.N"| R_SKU
+  R_SKU ---|"0.N"| SKU
 
   PROMO ---|"1"| R_COUPON
-  R_COUPON ---|"0..N"| COUPON
+  R_COUPON ---|"0.N"| COUPON
 
   COUPON ---|"1"| R_USE
-  R_USE ---|"0..N"| USE
+  R_USE ---|"0.N"| USE
 
-  USE ---|"0..N"| R_ORDER
+  USE ---|"0.N"| R_ORDER
   R_ORDER ---|"1"| ORDER
 
   classDef external stroke-dasharray: 5 5;
   class PRODUCT,SKU,ORDER external;
 ```
 
-### 6.3 Recomendaciones Cross-sell / Upsell
+Validar un cupón no crea `CONSUMO DE CUPÓN`.
+
+El consumo ocurre únicamente al confirmarse el beneficio dentro del flujo comercial acordado.
+
+---
+
+## 7.3. Recomendaciones
 
 ```mermaid
 flowchart LR
@@ -482,65 +609,36 @@ flowchart LR
   R_OC{"PUEDE ORIGINARSE EN"}
   R_REC{"RECOMIENDA"}
 
-  RULE ---|"0..1"| R_OP
-  R_OP ---|"0..N reglas"| ORIGIN_PRODUCT
+  RULE ---|"0.1"| R_OP
+  R_OP ---|"0.N reglas"| ORIGIN_PRODUCT
 
-  RULE ---|"0..1"| R_OC
-  R_OC ---|"0..N reglas"| ORIGIN_CATEGORY
+  RULE ---|"0.1"| R_OC
+  R_OC ---|"0.N reglas"| ORIGIN_CATEGORY
 
   RULE ---|"1"| R_REC
-  R_REC ---|"1..N"| RECOMMENDED
+  R_REC ---|"1.N"| RECOMMENDED
 
   classDef external stroke-dasharray: 5 5;
   class ORIGIN_PRODUCT,ORIGIN_CATEGORY,RECOMMENDED external;
 ```
 
-### 6.4 Restricciones conceptuales
-
-1. Una regla tiene **un solo tipo de origen**: Producto **o** Categoría.
-2. Una regla recomienda uno o varios productos.
-3. El orden del recomendado y, para Upsell, el criterio de superioridad pertenecen a la relación `RECOMIENDA`.
-4. Una promoción puede aplicar a productos completos, SKU específicos o ambos.
-5. Si el mismo SKU queda cubierto por ambas vías, la evaluación lo deduplica.
-6. El descuento, vigencia y alcance pertenecen a Promoción, no a Cupón.
-7. Cupón referencia una promoción en modalidad CUPÓN.
-8. El consumo de cupón se correlaciona con un pedido externo, sin FK al schema de Ventas.
-
-### 6.5 Consecuencia lógica
-
-Probables tablas asociativas:
-
-```text
-promotion_scopes
-recommendation_items
-```
-
-`combination_policy` puede implementarse como:
-
-- columnas/value object dentro de `promotions`; o
-- tabla 1:1;
-
-pero conceptualmente no necesita ser una entidad independiente porque no tiene ciclo de vida autónomo frente a Promoción.
-
 ---
 
-# 7. `combos-svc` — Modelo conceptual
+# 8. `combos-svc` — Modelo conceptual
 
-## 7.1 Responsabilidad de datos
+## 8.1. Responsabilidad de datos
 
 Combos es autoridad de:
 
-- definición del combo;
+- definición;
 - composición;
-- cantidades requeridas;
-- precio propio del combo;
+- cantidades;
+- precio propio;
 - estado;
-- versión/snapshot de composición;
-- disponibilidad proyectada no vinculante.
+- versión/snapshot;
+- disponibilidad proyectada.
 
-No es autoridad de Producto, SKU, Precio ni Stock.
-
-## 7.2 Diagrama conceptual
+## 8.2. Diagrama conceptual
 
 ```mermaid
 flowchart LR
@@ -549,171 +647,419 @@ flowchart LR
 
   R_COMPONENT{"SE COMPONE DE"}
 
-  COMBO ---|"2..N componentes"| R_COMPONENT
-  R_COMPONENT ---|"0..N combos"| SKU
+  COMBO ---|"2.N componentes"| R_COMPONENT
+  R_COMPONENT ---|"0.N combos"| SKU
 
   classDef external stroke-dasharray: 5 5;
   class SKU external;
 ```
 
-### 7.3 Interpretación de la relación
-
-La relación `SE COMPONE DE` tiene información propia, principalmente:
-
-- cantidad requerida del SKU;
-- orden/snapshot si se decide persistirlo.
-
-En el modelo lógico la relación se materializará como:
-
-```text
-combo_items
-```
-
-### 7.4 Proyección de componentes
-
-`component_projection` no es una nueva entidad maestra.
-
-Es una **réplica/proyección local no autoritativa** de datos de:
-
-- Catálogo;
-- Pricing;
-- Inventario.
-
-Puede persistirse para latencia, pero:
-
-- no crea ownership;
-- no recibe FK a schemas externos;
-- puede reconstruirse desde eventos/contratos.
+La relación `SE COMPONE DE` contiene al menos la cantidad requerida del SKU.
 
 ---
 
-# 8. `inventory-svc` — Modelo conceptual
+# 9. `inventory-svc` — Modelo conceptual actualizado
 
-## 8.1 Responsabilidad de datos
+## 9.1. Responsabilidad de datos
 
 Inventario es autoridad de:
 
 - saldo por SKU + ubicación;
+- reservas;
+- líneas de reserva;
+- unidades bloqueadas (`blocked`);
+- incidencias físicas/cuarentenas;
+- reintegros;
+- conciliaciones offline;
 - movimientos;
-- idempotencia de operaciones;
 - Kardex;
-- umbral global;
-- override de umbral por SKU;
-- dashboard operativo de Inventario.
+- idempotencia;
+- expiración de reserva;
+- configuración de umbral;
+- dashboard operativo.
 
-SKU pertenece a Catálogo.
+No es autoridad del pedido.
 
-## 8.2 Diagrama conceptual
+`order_id` es una referencia externa cuyo owner es Ventas/Postventa.
+
+---
+
+## 9.2. Diagrama conceptual
 
 ```mermaid
 flowchart TB
   SKU["SKU VENDIBLE<br/>(externo: Catálogo)"]
+  ORDER["PEDIDO<br/>(externo: Ventas/Postventa)"]
+
   LOCATION["UBICACIÓN"]
   BALANCE["SALDO DE INVENTARIO"]
+  RESERVATION["RESERVA DE INVENTARIO"]
+  RLINE["LÍNEA DE RESERVA"]
   OP["OPERACIÓN DE INVENTARIO"]
   MOVEMENT["MOVIMIENTO KARDEX"]
+  INCIDENT["INCIDENCIA DE INVENTARIO"]
+  TRANSFER["TRASLADO DE INVENTARIO"]
+  RECEIPT["RECEPCIÓN DE TRASLADO"]
   OVERRIDE["UMBRAL ESPECÍFICO DE SKU"]
   CONFIG["CONFIGURACIÓN DE INVENTARIO"]
 
   R_SKU_BAL{"POSEE SALDO"}
   R_LOC_BAL{"SE MANTIENE EN"}
+  R_RES_LINES{"CONTIENE"}
+  R_LINE_BAL{"AFECTA"}
+  R_ORDER_RES{"SE ORIGINA POR"}
   R_BAL_MOV{"REGISTRA"}
   R_OP_MOV{"PRODUCE"}
+  R_RES_OP{"ES MODIFICADA POR"}
+  R_INC_BAL{"BLOQUEA UNIDADES DE"}
+  R_INC_OP{"SE RESUELVE MEDIANTE"}
+  R_INC_TRANSFER{"PUEDE ORIGINAR"}
+  R_TRANSFER_RECEIPT{"REGISTRA"}
+  R_TRANSFER_TARGET{"SE RECIBE EN"}
   R_OVERRIDE{"PUEDE SOBRESCRIBIR CON"}
   R_DEFAULT{"DEFINE UMBRAL GLOBAL"}
 
   SKU ---|"1"| R_SKU_BAL
-  R_SKU_BAL ---|"1..N"| BALANCE
+  R_SKU_BAL ---|"1.N"| BALANCE
 
   LOCATION ---|"1"| R_LOC_BAL
-  R_LOC_BAL ---|"0..N"| BALANCE
+  R_LOC_BAL ---|"0.N"| BALANCE
+
+  RESERVATION ---|"1"| R_RES_LINES
+  R_RES_LINES ---|"1.N"| RLINE
+
+  RLINE ---|"0.N"| R_LINE_BAL
+  R_LINE_BAL ---|"1"| BALANCE
+
+  RESERVATION ---|"0.N"| R_ORDER_RES
+  R_ORDER_RES ---|"1"| ORDER
 
   BALANCE ---|"1"| R_BAL_MOV
-  R_BAL_MOV ---|"0..N"| MOVEMENT
+  R_BAL_MOV ---|"0.N"| MOVEMENT
 
   OP ---|"1"| R_OP_MOV
-  R_OP_MOV ---|"1..N"| MOVEMENT
+  R_OP_MOV ---|"1.N"| MOVEMENT
+
+  RESERVATION ---|"1"| R_RES_OP
+  R_RES_OP ---|"1.N"| OP
+
+  INCIDENT ---|"0.N"| R_INC_BAL
+  R_INC_BAL ---|"1"| BALANCE
+
+  INCIDENT ---|"1"| R_INC_OP
+  R_INC_OP ---|"1.N"| OP
+
+  INCIDENT ---|"0.1"| R_INC_TRANSFER
+  R_INC_TRANSFER ---|"1"| TRANSFER
+
+  TRANSFER ---|"1"| R_TRANSFER_RECEIPT
+  R_TRANSFER_RECEIPT ---|"0.N"| RECEIPT
+
+  TRANSFER ---|"0.N"| R_TRANSFER_TARGET
+  R_TRANSFER_TARGET ---|"1 destino"| LOCATION
 
   SKU ---|"1"| R_OVERRIDE
-  R_OVERRIDE ---|"0..1"| OVERRIDE
+  R_OVERRIDE ---|"0.1"| OVERRIDE
 
   CONFIG ---|"1"| R_DEFAULT
-  R_DEFAULT ---|"0..N saldos"| BALANCE
+  R_DEFAULT ---|"0.N saldos"| BALANCE
 
   classDef external stroke-dasharray: 5 5;
-  class SKU external;
+  class SKU,ORDER external;
 ```
-
-### 8.3 Cardinalidad del saldo
-
-Cada `SALDO DE INVENTARIO` pertenece a:
-
-- exactamente un SKU;
-- exactamente una Ubicación.
-
-Un mismo SKU puede tener varios saldos porque puede existir en varias ubicaciones.
-
-La unicidad lógica será:
-
-```text
-(SKU, location_id)
-```
-
-### 8.4 Operaciones y Kardex
-
-Una operación idempotente de Inventario puede afectar una o varias líneas/saldos, por ejemplo un pedido con varios SKU.
-
-Por eso:
-
-```text
-OPERACIÓN DE INVENTARIO 1 → N MOVIMIENTOS KARDEX
-```
-
-y cada movimiento afecta un saldo concreto.
-
-Esta estructura permite:
-
-- `reserve`;
-- `release`;
-- `consume`;
-- ajuste masivo;
-- compensación;
-- devolución aceptada.
-
-### 8.5 Dashboard
-
-WF-016 pertenece al mismo bounded context de Inventario.
-
-No necesita otro schema.
-
-Puede:
-
-- consultar directamente el modelo de Inventario; o
-- utilizar una proyección/materialized view propia del mismo schema si el volumen lo exige.
-
-No se crea un microservicio o schema separado solo para Dashboard.
 
 ---
 
-# 9. `bulk-svc` — Modelo conceptual
+## 9.3. Saldo de Inventario
 
-## 9.1 Responsabilidad de datos
+Cada saldo pertenece a:
 
-Bulk persiste el **proceso**, no una copia maestra de Catálogo, Pricing o Inventario.
+- un SKU;
+- una ubicación.
 
-Debe poder reconstruir:
+Unicidad conceptual:
 
-- qué archivo originó un lote;
-- qué filas contiene;
-- estado de cada fila;
-- qué dominios debía ejecutar;
-- qué dominios ya confirmaron;
-- qué dominio falló;
-- si requiere conciliación;
-- trabajos de exportación;
-- archivos resultantes.
+```text
+(sku, location_id)
+```
 
-## 9.2 Diagrama conceptual
+Atributos de estado:
+
+```text
+on_hand
+reserved
+blocked
+available
+stock_version
+```
+
+Regla:
+
+```text
+available = max(on_hand - reserved - blocked, 0)
+```
+
+---
+
+## 9.4. Reserva de Inventario
+
+`RESERVA DE INVENTARIO` representa la retención temporal de unidades solicitada por Ventas/Postventa.
+
+Estados conceptuales:
+
+```text
+ACTIVA
+CONSUMIDA
+LIBERADA
+EXPIRADA
+```
+
+Datos conceptuales mínimos:
+
+```text
+reservation_id
+order_id
+operation_id
+channel_id
+estado
+created_at
+expires_at
+```
+
+`order_id` no crea ownership sobre el Pedido.
+
+---
+
+## 9.5. Línea de Reserva
+
+Una reserva contiene una o varias líneas.
+
+Cada línea identifica:
+
+```text
+sku
+location_id
+quantity
+```
+
+Una línea de reserva afecta exactamente un saldo autoritativo.
+
+El mismo pedido puede contener varios SKU y, por tanto, una reserva puede afectar varios saldos.
+
+---
+
+## 9.6. Ciclo de reserva
+
+```text
+PEDIDO CREADO
+    |
+    v
+RESERVA ACTIVA
+    |
+    +---- PAGADO -----------------> CONSUMIDA
+    |
+    +---- PAGO_NO_COMPLETADO -----> LIBERADA
+    |
+    +---- ANULACIÓN APLICABLE ----> LIBERADA
+    |
+    +---- TTL --------------------> EXPIRADA
+```
+
+### Efectos
+
+#### Crear reserva
+
+```text
+reserved += quantity
+available -= quantity
+```
+
+#### Confirmar consumo
+
+```text
+on_hand -= quantity
+reserved -= quantity
+available se recalcula
+```
+
+#### Liberar / expirar
+
+```text
+reserved -= quantity
+available += quantity
+```
+
+Las actualizaciones deben ser atómicas por los saldos involucrados.
+
+---
+
+## 9.7. Operación de Inventario
+
+`OPERACIÓN DE INVENTARIO` conserva la identidad idempotente y el resultado lógico de:
+
+```text
+RESERVE
+CONSUME
+RELEASE
+EXPIRE
+ADJUST
+RETURN
+BLOCK
+UNBLOCK
+WRITE_OFF
+OFFLINE_RECONCILE
+```
+
+Debe permitir distinguir:
+
+```text
+misma identidad + misma intención
+-> replay sin nuevos efectos
+
+misma identidad + intención distinta
+-> IDEMPOTENCY_CONFLICT
+```
+
+Conceptualmente puede conservar un fingerprint semántico de la intención y el resultado conocido; esos campos son una decisión del modelo lógico, no una nueva entidad de dominio.
+
+`correlation_id` sirve para trazabilidad y no sustituye la identidad idempotente.
+
+Una operación puede producir múltiples movimientos de Kardex.
+
+Relación:
+
+```text
+OPERACIÓN DE INVENTARIO 1 -> N MOVIMIENTOS KARDEX
+```
+
+---
+
+## 9.8. Incidencia de Inventario
+
+`INCIDENCIA DE INVENTARIO` representa un hecho físico reportado por Retail que saca temporalmente unidades del stock vendible sin convertirlas inmediatamente en merma.
+
+Estados conceptuales:
+
+```text
+ABIERTA
+RESUELTA
+TRASLADO_PENDIENTE
+```
+
+Una incidencia abierta afecta un único `SALDO DE INVENTARIO` y contribuye a `blocked`.
+
+Resoluciones:
+
+```text
+REHABILITADO
+MERMA
+FALTANTE_CONFIRMADO
+TRASLADO_ALMACEN_CENTRAL
+```
+
+La incidencia conserva referencias operativas externas (`external_incident_id`, acta) sin asumir ownership sobre la operación de Retail.
+
+---
+
+## 9.9. Traslado y recepción
+
+`TRASLADO DE INVENTARIO` representa unidades que salieron de una ubicación y todavía no fueron acreditadas completamente en otra.
+
+Estados:
+
+```text
+EN_TRANSITO
+RECIBIDO_PARCIAL
+COMPLETADO
+COMPLETADO_CON_DISCREPANCIA
+```
+
+Una incidencia resuelta como `TRASLADO_ALMACEN_CENTRAL` puede originar un traslado.
+
+`RECEPCIÓN DE TRASLADO` registra cada recepción idempotente y su disposición:
+
+```text
+REINGRESAR_DISPONIBLE
+REINGRESAR_BLOQUEADO
+CONFIRMAR_MERMA
+```
+
+La recepción se vincula al `sub` del operador mediante autorización local, sin crear una entidad Usuario propia.
+
+Una recepción parcial final conserva:
+
+```text
+missing_quantity
+```
+
+y cierra como `COMPLETADO_CON_DISCREPANCIA`.
+
+---
+
+## 9.10. Reintegro y conciliación offline
+
+Un reintegro es una `OPERACIÓN DE INVENTARIO` originada por Ventas/Postventa después de una recepción física aceptada.
+
+Una conciliación offline es una operación de ajuste por una venta Retail ya ocurrida y ya registrada comercialmente en Ventas.
+
+La conciliación puede terminar en:
+
+```text
+COMPLETED
+REQUIRES_REVIEW
+```
+
+sin permitir saldos negativos.
+
+---
+
+## 9.11. Pedido externo
+
+Inventario puede conservar referencias como:
+
+```text
+order_id
+operation_id
+correlation_id
+```
+
+pero no persiste ni gestiona:
+
+- estado maestro del pedido;
+- pago;
+- comprobante;
+- reembolso.
+
+Ventas/Postventa continúa siendo el único owner del Pedido.
+
+Los resultados asíncronos se correlacionan con el pedido/operación mediante los identificadores del contrato; esto no crea una entidad Pedido dentro de Inventario.
+
+---
+
+## 9.12. Dashboard
+
+WF-016 pertenece al mismo bounded context.
+
+Puede mostrar:
+
+- total disponible;
+- total reservado;
+- total bloqueado;
+- stock bajo;
+- agotados;
+- distribución por ubicación.
+
+No se crea un bounded context adicional.
+
+---
+
+# 10. `bulk-svc` — Modelo conceptual
+
+## 10.1. Responsabilidad de datos
+
+Bulk persiste el workflow de importación/exportación, no una copia maestra de Catálogo, Pricing o Inventario.
+
+## 10.2. Diagrama conceptual
 
 ```mermaid
 flowchart TB
@@ -730,62 +1076,30 @@ flowchart TB
   R_EXPORT{"GENERA"}
 
   FILE ---|"1"| R_INPUT
-  R_INPUT ---|"0..N"| BATCH
+  R_INPUT ---|"0.N"| BATCH
 
   BATCH ---|"1"| R_ROWS
-  R_ROWS ---|"1..N"| ROW
+  R_ROWS ---|"1.N"| ROW
 
   ROW ---|"1"| R_STEPS
-  R_STEPS ---|"1..3"| STEP
+  R_STEPS ---|"1.3"| STEP
 
-  BATCH ---|"0..1"| R_REPORT
-  R_REPORT ---|"0..1"| FILE
+  BATCH ---|"0.1"| R_REPORT
+  R_REPORT ---|"0.1"| FILE
 
   EXPORT ---|"1"| R_EXPORT
-  R_EXPORT ---|"0..1"| FILE
+  R_EXPORT ---|"0.1"| FILE
 ```
 
-### 9.3 Paso de dominio
-
-Cada fila puede requerir pasos sobre:
-
-- Catálogo;
-- Pricing;
-- Inventario.
-
-`PASO DE DOMINIO` permite registrar de forma durable:
-
-- pendiente;
-- aplicado;
-- rechazado;
-- reintentable;
-- error;
-- reconciliación.
-
-Los dominios no se modelan como FK a sus bases. El paso solo conserva el nombre/identificador del dominio y correlación de la operación.
-
-### 9.4 Razón para no leer schemas externos
-
-Aunque una exportación necesita combinar Catálogo, Precio y Stock, Bulk no debe hacer:
-
-```sql
-SELECT ...
-FROM catalog.products
-JOIN pricing.prices ...
-JOIN inventory.stock_balance ...
-```
-
-Debe solicitar la información a sus propietarios mediante los contratos definidos y construir el archivo desde resultados correlacionados.
+Bulk coordina mediante contratos, nunca mediante joins cross-schema.
 
 ---
 
-# 10. `api-gateway` / BFF — Read model auxiliar
+# 11. `api-gateway` / BFF
 
-El gateway no es un bounded context de negocio, por lo que **no se propone un modelo conceptual de dominio equivalente a los ocho anteriores**.
+El gateway no es owner de negocio.
 
-Su schema `read_model` es deliberadamente denormalizado y derivado.
-
-Puede contener proyecciones como:
+Puede mantener read models reconstruibles como:
 
 ```text
 product_listing
@@ -797,42 +1111,84 @@ event_offsets
 
 Reglas:
 
-1. ninguna proyección es autoridad de negocio;
-2. puede eliminarse y reconstruirse;
+1. no es fuente de verdad;
+2. no autoriza mutaciones críticas con información stale;
 3. no tiene FK hacia schemas de dominio;
-4. recibe eventos y conserva `source_version`/`as_of`;
-5. nunca autoriza una escritura crítica usando únicamente una proyección posiblemente obsoleta.
+4. conserva `source_version`, `as_of` o equivalente cuando sea necesario.
 
 ---
 
-# 11. Entidades técnicas comunes
+# 12. Relación con Despacho
 
-Todos los microservicios que publiquen o consuman mensajes pueden necesitar:
+## 12.1. Lo que Productos entrega
+
+Por SKU:
+
+```text
+sku
+estado
+pesoKg
+largoCm
+anchoCm
+altoCm
+actualizadoEn
+```
+
+---
+
+## 12.2. Lo que NO pertenece a Productos
+
+No modelar en Catálogo:
+
+```text
+tipoEmpaque
+cantidadPaquetes
+volumenOperativoFinal
+capacidadVehiculo
+```
+
+Esos conceptos pertenecen a Despacho.
+
+---
+
+## 12.3. Integración
+
+Despacho consume una consulta en lote equivalente a:
+
+```http
+POST /api/v1/productos/datos-fisicos/consulta
+```
+
+No existe acceso a tablas de Catálogo.
+
+---
+
+# 13. Entidades técnicas comunes
+
+Los servicios con mensajería pueden necesitar:
 
 ```text
 outbox
 inbox
 ```
 
-Además, algunos bounded contexts requieren persistencia técnica especializada:
+Persistencia técnica probable:
 
-| Servicio | Persistencia técnica posible |
+| Servicio | Persistencia técnica |
 |---|---|
 | Taxonomía | operaciones de baja segura |
-| Catálogo | barreras de entidades maestras, checks de activación |
-| Pricing | jobs de activación programada |
-| Price Audit | jobs de exportación y manifests de archivo |
-| Promociones | proyecciones de catálogo/precio/stock |
-| Combos | proyección de componentes/precio/stock |
-| Inventario | idempotencia de operaciones y proyección/dashboard |
-| Bulk | reintentos, conciliación y manifiestos de archivos |
-| BFF | offsets de eventos y estado de proyección |
-
-Estas tablas son de infraestructura/aplicación. No deben convertirse en relaciones de dominio artificiales.
+| Catálogo | barreras, activación, perfil físico de SKU |
+| Pricing | jobs programados |
+| Price Audit | exportación/archivo |
+| Promociones | proyecciones comerciales |
+| Combos | proyección de componentes |
+| Inventario | idempotencia, reservas, expiración, dashboard |
+| Bulk | reintentos, conciliación y manifiestos |
+| BFF | offsets y read models |
 
 ---
 
-# 12. Matriz de ownership de schemas
+# 14. Matriz de ownership de schemas
 
 | Schema | Owner exclusivo | Puede escribir | Puede leer directamente |
 |---|---|---|---|
@@ -844,50 +1200,57 @@ Estas tablas son de infraestructura/aplicación. No deben convertirse en relacio
 | `combos` | `combos-svc` | `combos-svc` | `combos-svc` |
 | `inventory` | `inventory-svc` | `inventory-svc` | `inventory-svc` |
 | `bulk` | `bulk-svc` | `bulk-svc` | `bulk-svc` |
-| `read_model` | `api-gateway` | `api-gateway`/projectores propios | `api-gateway` |
+| `read_model` | `api-gateway` | `api-gateway` / proyectores | `api-gateway` |
 
-> Si todos viven en una sola instancia PostgreSQL, esta matriz debe implementarse con roles y `GRANT/REVOKE`. El hecho de que PostgreSQL permita un `JOIN` cross-schema no significa que arquitectónicamente esté permitido.
+Incluso si todos los schemas viven en una sola instancia PostgreSQL/Supabase, se mantiene aislamiento mediante permisos.
 
 ---
 
-# 13. Relaciones conceptuales que se convertirán en tablas asociativas
-
-Este punto es importante para no confundir el modelo conceptual con el modelo lógico.
+# 15. Relaciones conceptuales que probablemente se materializarán
 
 | Relación conceptual | Cardinalidad | Posible materialización lógica |
 |---|---:|---|
-| Tipo de Producto — DEFINE — Característica | N:M | `product_type_characteristics` |
-| Producto — SELECCIONA COMO IDENTIFICADORA — Característica | N:M | `product_identifying_characteristics` |
-| Producto — REGISTRA VALOR PARA — Característica | N:M | `product_attribute_values` |
-| Variante — SE IDENTIFICA POR — Valor de Característica | N:M | `variant_attribute_values` |
-| Promoción — APLICA A — Producto/SKU | N:M | `promotion_scopes` |
-| Regla de recomendación — RECOMIENDA — Producto | N:M | `recommendation_items` |
-| Combo — SE COMPONE DE — SKU | N:M | `combo_items` |
-| SKU + Ubicación — define — Saldo de Inventario | asociación con estado | `stock_balance` |
-| Lote de precios — ACTUALIZA — SKU | N:M procesal | `bulk_price_rows` o equivalente |
-| Trabajo de exportación — EXPORTA — registros | selección procesal | job + filtros/artefacto, no necesariamente FK N:M |
+| Tipo Producto — Característica | N:M | `product_type_characteristics` |
+| Objetivo maestro — Operación de baja maestra | 1:0.N | `master_deactivation_operations` con referencia estable al objetivo, sin FK cross-context |
+| Producto — Característica identificadora | N:M | `product_identifying_characteristics` |
+| Producto — Valor de atributo | N:M | `product_attribute_values` |
+| Variante — Valor identificador | N:M | `variant_attribute_values` |
+| SKU vendible — Perfil físico | 1:0.1 | `sku_physical_profiles` o equivalente referenciado por `sku` |
+| Promoción — Producto/SKU | N:M | `promotion_scopes` |
+| Regla recomendación — Producto | N:M | `recommendation_items` |
+| Combo — SKU | N:M | `combo_items` |
+| SKU + Ubicación — Saldo | asociación con estado | `stock_balance` |
+| Reserva — Línea de reserva | 1:N | `reservation_lines` |
+| Reserva — Pedido externo | N:1 conceptual | `order_id` externo, sin FK |
+| Operación Inventario — Kardex | 1:N | `inventory_operations` + `kardex` |
+| Lote de precios — SKU | N:M procesal | `bulk_price_rows` o equivalente |
 
-Los nombres son propuestas para el **siguiente modelo lógico**; no son todavía contrato físico definitivo.
+Los nombres son propuestas para el futuro modelo lógico; no constituyen todavía nombres físicos obligatorios.
 
 ---
 
-# 14. Foreign keys: dónde sí y dónde no
+# 16. Foreign keys: dónde sí y dónde no
 
-## 14.1 FK permitidas
+## 16.1. FK permitidas
 
-Solo dentro del mismo schema/owner, por ejemplo:
+Solo dentro del mismo schema.
+
+Ejemplos:
 
 ```text
 catalog.variants -> catalog.products
+catalog.sku_physical_profiles -> entidad local que represente SKU
 taxonomy.characteristic_values -> taxonomy.characteristics
-taxonomy.slug_history -> taxonomy.category_seo
-promotions.coupon_uses -> promotions.coupons
-combos.combo_items -> combos.combos
+inventory.reservation_lines -> inventory.reservations
+inventory.reservation_lines -> inventory.stock_balance
 inventory.kardex -> inventory.stock_balance
+inventory.kardex -> inventory.inventory_operations
 bulk.batch_rows -> bulk.batch_jobs
 ```
 
-## 14.2 FK prohibidas arquitectónicamente
+---
+
+## 16.2. FK prohibidas
 
 No crear:
 
@@ -901,134 +1264,185 @@ pricing.prices.sku
 inventory.stock_balance.sku
   FK -> catalog.variants.sku
 
+inventory.reservations.order_id
+  FK -> ventas.orders.id
+
 promotions.promotion_scopes.product_id
   FK -> catalog.products.id
 
 combos.combo_items.sku
   FK -> catalog.variants.sku
 
-price_audit.price_audit_log.price_id
+price_audit.price_id
   FK -> pricing.prices.id
 ```
 
-Esos campos pueden almacenar IDs externos, pero su integridad distribuida se mantiene mediante:
+---
 
-- validación de contrato;
-- APIs autoritativas;
-- eventos;
-- proyecciones;
-- barreras;
-- procesos de reconciliación.
+# 17. Datos compartidos que deben ser contrato
+
+| Dato | Owner / estrategia |
+|---|---|
+| `product_id` | Catálogo |
+| `variant_id` | Catálogo |
+| `sku` | Catálogo |
+| `categoria_id` | Taxonomía |
+| `marca_id` | Taxonomía |
+| `tipo_producto_id` | Taxonomía |
+| `channel_id` | enumeración contractual |
+| `user_id` | Seguridad |
+| `customer_ref` | Seguridad |
+| `order_id` | Ventas/Postventa |
+| `reservation_id` | Inventario |
+| `operation_id` | productor de la operación |
+| `location_id` | Inventario |
+| `batch_id` | Bulk |
+
+Los DTO/JSON Schema pueden compartirse como contrato.
+
+No se comparten entidades ORM ni repositorios.
 
 ---
 
-# 15. Datos compartidos que deben ser contrato, no tabla compartida
 
-Algunos valores aparecen en varios servicios pero no justifican un schema común:
+## 17.1. Decisiones de referencias interdominio
 
-| Dato | Estrategia |
-|---|---|
-| `product_id` | identificador opaco de Catálogo |
-| `variant_id` | identificador opaco de Catálogo; no sustituye SKU |
-| SKU comercial | identificador de integración emitido/validado por Catálogo |
-| `categoria_id` | identificador opaco de Taxonomía |
-| `marca_id` | identificador opaco de Taxonomía |
-| `tipo_producto_id` | identificador opaco de Taxonomía |
-| `caracteristica_id` / `valor_id` | identificadores opacos de Taxonomía |
-| `channel_id` | contrato/enumeración compartida, no tabla de Pricing |
-| moneda | código estándar/contrato |
-| `user_id` | identidad externa de Seguridad y Usuarios |
-| `order_id` | identidad externa de Ventas/Postventa |
-| `batch_id` | identidad de Bulk transportada a eventos de Pricing/Auditoría |
-| `location_id` | autoridad de Inventario |
+### Cliente
 
-Los tipos TypeScript/JSON Schema de estos identificadores pueden vivir en:
+La referencia externa estable es:
 
 ```text
-libs/contracts/
+customer_ref = Seguridad.sub
 ```
 
-pero esa librería no debe exportar entidades ORM ni repositorios.
+Productos no crea una segunda identidad de cliente.
 
----
+`CONSUMO DE CUPÓN` puede conservar `customer_ref` como referencia lógica externa, sin FK física a la base de Seguridad.
 
-# 16. Proyecciones locales y duplicación permitida
+### Preparación de Pricing
 
-La arquitectura de microservicios **sí permite duplicar datos**, siempre que se marque quién es el owner.
+El alta inicial de precio corresponde al **PRODUCTO**, no a cada variante:
 
-Ejemplos válidos:
+```text
+PRODUCTO
+  -> PREPARACIÓN DE PRECIO BASE
+  -> PRECIO / VIGENCIA EN PRICING
+```
 
-- Promociones conserva una proyección mínima de productos/SKU/precios/stock para evaluación.
-- Combos conserva una proyección de componentes y disponibilidad.
-- BFF conserva una ficha comercial agregada.
-- Dashboard de Inventario puede materializar agregados del propio Inventario.
-- Auditoría conserva el snapshot del cambio de precio recibido en el evento.
+Una variante puede resolver su precio por herencia del producto o por override SKU posterior.
+
+### Inicialización de Inventario
+
+Inventario reconoce cada SKU vendible:
+
+```text
+SKU VENDIBLE
+  -> INICIALIZACIÓN DE SKU
+  -> 0.N SALDOS POR UBICACIÓN
+```
+
+Una inicialización sin `default_location_id` no necesita inventar un saldo en una ubicación ficticia.
+
+El producto padre con variantes no genera un saldo físico.
+
+
+# 18. Proyecciones locales
+
+Se permite duplicar datos para lectura si el owner permanece explícito.
+
+Ejemplos:
+
+- Promociones conserva proyección mínima de catálogo/precio/stock.
+- Combos conserva componentes y disponibilidad proyectada.
+- BFF mantiene una ficha comercial agregada.
+- Dashboard de Inventario materializa agregados propios.
+- Auditoría conserva snapshot del cambio de precio.
 
 Regla:
 
 ```text
-duplicar para leer ≠ compartir ownership
+duplicar para leer != compartir ownership
 ```
-
-Una proyección:
-
-- es reconstruible;
-- no autoriza mutaciones sobre el dominio origen;
-- lleva versión/timestamp cuando sea relevante;
-- se actualiza mediante eventos o sincronización explícita.
 
 ---
 
-# 17. Transacciones: límite correcto
+# 19. Límites transaccionales
 
-## 17.1 ACID local
-
-Debe existir dentro de un servicio cuando protege una invariante local.
+## 19.1. ACID local
 
 Ejemplos:
 
-- Producto + última Variante activa.
-- Saldo + Kardex + Outbox de Inventario.
-- Contador global + contador por cliente + consumo idempotente de Cupón.
+- Producto + Variante dentro de Catálogo.
+- Reserva + líneas + actualización de saldos + Outbox.
+- Confirmación de consumo + saldos + Kardex + Outbox.
+- Liberación + saldos + Kardex + Outbox.
 - Precio + vigencia + Outbox.
-- Estado de fila + paso de dominio en Bulk.
+- Consumo de cupón + contador + Outbox.
 
-## 17.2 No ACID distribuido
+---
 
-No deben existir transacciones SQL únicas que incluyan:
+## 19.2. No ACID distribuido
+
+No crear transacciones SQL únicas entre:
 
 ```text
 catalog + pricing
 catalog + inventory
+ventas + inventory
 pricing + audit
 promotions + inventory
 bulk + catalog + pricing + inventory
 ```
 
-La consistencia interdominio es:
+La coordinación entre módulos es:
 
 - eventual;
 - idempotente;
 - correlacionada;
-- basada en comandos/resultados/eventos;
-- conciliable ante fallos parciales.
+- reintentable;
+- reconciliable.
 
 ---
 
-# 18. Conclusión
+# 20. Estado de propagación a otros artefactos
 
-Los modelos conceptuales confirman la descomposición de la arquitectura:
+Las decisiones conceptuales principales ya fueron propagadas.
 
-1. Los ocho bounded contexts poseen **modelos de datos cohesionados internamente**.
-2. Las referencias entre dominios son numerosas, pero ninguna exige compartir tablas.
-3. Una sola instancia PostgreSQL/Supabase puede alojar todos los schemas por economía, siempre que el aislamiento sea real mediante roles y permisos.
-4. No deben existir FK ni joins cross-schema entre bounded contexts.
-5. Taxonomía y Catálogo necesitan una relación estrecha funcionalmente, pero no una base compartida.
-6. Pricing y Price Audit deben permanecer separados por inmutabilidad, seguridad, carga y retención.
-7. Promociones/Cupones/Recomendaciones sí deben permanecer juntas porque comparten política comercial y consumo.
-8. Inventario y su Dashboard pertenecen al mismo modelo; separar el Dashboard en otra base añadiría duplicación sin un bounded context nuevo.
-9. Bulk debe persistir únicamente su workflow y coordinación, no replicar las tablas maestras de los otros tres dominios.
-10. El BFF usa un read model separado y reconstruible; no es fuente de verdad.
-11. Las relaciones N:M identificadas en este documento servirán como base directa del siguiente **modelo lógico relacional**.
+| Artefacto | Estado |
+|---|---|
+| `Arquitectura.md` | Actualizado con Ventas como orquestador, datos físicos, AsyncAPI, errores e idempotencia |
+| `Contrato_Api.md` | Actualizado con OpenAPI/AsyncAPI, catálogos humanos y pendientes reales |
+| `SPEC/HU/WF-003` | Actualizados: perfil físico de producto simple y Seguridad |
+| `SPEC/HU/WF-004` | Actualizados: perfil físico de variante/SKU y Seguridad |
+| `SPEC/HU/WF-015` | Actualizados: reserva/consumo/liberación, TTL e idempotencia |
+| `api/openapi.yaml` | `0.4.0`: contrato HTTP consolidado P0/P1/P2 |
+| `asyncapi/asyncapi.yaml` | `0.4.0`: mensajería consolidada y topología RabbitMQ consolidada |
+| `api/catalogo-eventos.md` | `0.4.0`: referencia humana alineada con 39 mensajes y consumidores |
+| `api/catalogo-errores.md` | `0.4.0`: catálogo consolidado, incluidos errores de traslados |
+| Operación de baja maestra | Incorporada conceptualmente en Taxonomía y observable por `GET /api/v1/taxonomia/operaciones/{operationId}` |
 
+Pendientes que sí pueden afectar el modelo lógico futuro:
 
+1. decisión final sobre tabla/abstracción física para representar SKU vendible dentro de Catálogo;
+2. contrato de reintegro por devolución aceptada;
+3. contratos de preparación inicial Catálogo → Pricing e inicialización Catálogo → Inventario;
+4. scopes técnicos de `api-productos` registrados con Seguridad.
+
+Ninguno requiere compartir schemas entre bounded contexts.
+
+# 21. Conclusión
+
+La actualización P0 confirma que:
+
+1. Los ocho bounded contexts continúan correctamente separados.
+2. No es necesario compartir schemas entre microservicios.
+3. Catálogo es owner de los datos físicos intrínsecos del SKU.
+4. Despacho es owner del empaque y de la logística final.
+5. Inventario es owner de saldo y reserva.
+6. Ventas es owner del Pedido y orquesta el ciclo de reserva/consumo.
+7. Los canales no mutan Inventario.
+8. Una Reserva pertenece conceptualmente a un Pedido externo, pero no existe FK cross-module.
+9. La reserva tiene ciclo propio y debe modelarse explícitamente.
+10. `on_hand`, `reserved` y `available` siguen perteneciendo al saldo por `(sku, location_id)`.
+11. Taxonomía modela explícitamente la operación de baja maestra segura como concepto observable, sin compartir schema ni convertir el `202 Accepted` en resultado definitivo.
+12. Arquitectura, Contrato API y las funcionalidades 003/004/015 ya reflejan estas decisiones; los pendientes restantes son de homologación/implementación, no de ownership conceptual.

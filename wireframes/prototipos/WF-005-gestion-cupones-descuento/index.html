@@ -1,77 +1,152 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WF-005 — Gestión de cupones de descuento</title>
-  <style>
-    :root{
-      --surface:#fff;--neutral-10:#f3f4f6;--neutral-20:#e5e7eb;--neutral-30:#d1d5db;
-      --neutral-50:#6b7280;--neutral-70:#374151;--neutral-90:#111827;
-      --n10:var(--neutral-10);--n30:var(--neutral-30);--n50:var(--neutral-50);--n90:var(--neutral-90);
-      --sm:8px;--md:16px;--lg:32px;--gutter:24px;--radius:4px;--content:1200px;
-    }
-    *{box-sizing:border-box}body{margin:0;color:var(--n90);background:var(--surface);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}button,input,select{font:inherit}[hidden]{display:none!important}
-    button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--n90);outline-offset:2px}
-    input[type="checkbox"], input[type="radio"]{accent-color:var(--neutral-90)}
-    .topbar{border-bottom:1px solid var(--n30)}.topbar-inner{max-width:var(--content);margin:auto;padding:14px var(--gutter);display:flex;justify-content:space-between;align-items:center;gap:24px}.brand{display:flex;align-items:center;gap:12px;font-weight:700}.brand-mark{width:36px;height:36px;border:2px solid var(--n90);display:grid;place-items:center}.topnav{display:flex;gap:20px;color:var(--n50);font-size:14px}.topnav [aria-current=page]{color:var(--n90);font-weight:700}
-    main{max-width:var(--content);margin:auto;padding:36px var(--gutter) 72px}.crumbs{font-size:14px;color:var(--n50);margin-bottom:20px}.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:28px}h1{font-size:clamp(24px,4vw,40px);line-height:1.15;margin:0;letter-spacing:-.025em;word-break:break-word}h2{font-size:24px;line-height:1.2;margin:0}h3{font-size:18px;margin:0}.lede,.muted{color:var(--n50)}.lede{margin:10px 0 0;font-size:18px}.small{font-size:14px}
-    .btn{min-height:44px;border:1px solid var(--n90);border-radius:var(--radius);background:#fff;color:var(--n90);padding:10px 16px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn:hover{background:var(--n10)}.btn-primary{background:var(--n90);color:#fff}.btn-primary:hover{background:#000}.btn-link{border-color:transparent;padding-inline:8px}.btn:disabled{background:var(--n10);border-color:var(--n30);color:var(--n50);cursor:not-allowed}.btn-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-    .toolbar{border:1px solid var(--n30);padding:16px;display:grid;grid-template-columns:minmax(220px,1fr) 190px auto;gap:12px;margin-bottom:16px}.field{display:grid;gap:6px}.field label,.label{font-size:13px;font-weight:700}.input,.select{min-height:44px;width:100%;border:1px solid var(--n30);border-radius:var(--radius);background:#fff;padding:9px 12px;color:var(--n90)}.input[aria-invalid=true]{border:2px solid var(--n90)}.error{font-size:13px;font-weight:650;margin-top:2px}.hint{font-size:13px;color:var(--n50)}
-    .panel{border:1px solid var(--n30);background:#fff;padding:24px}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--n30);width:100%}table{width:100%;border-collapse:collapse;min-width:700px}th,td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--n30);vertical-align:middle}th{background:var(--n10);font-size:12px;text-transform:uppercase;letter-spacing:.05em}tbody tr:last-child td{border-bottom:0}.code{font-family:"Roboto Mono",ui-monospace,monospace;font-weight:700}.status{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700}.dot{width:9px;height:9px;border:1px solid var(--n90);border-radius:50%}.status.active .dot{background:var(--n90)}.actions{white-space:nowrap}
-    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.span-2{grid-column:span 2}.switch-row{min-height:44px;border:1px solid var(--n30);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:12px}.switch{width:46px;height:24px;border:1px solid var(--n90);border-radius:999px;background:var(--n90);padding:2px;cursor:pointer}.switch::after{content:"";display:block;width:18px;height:18px;border-radius:50%;background:#fff;margin-left:20px}.switch.off{background:#fff;border-color:var(--n50)}.switch.off::after{background:var(--n50);margin-left:0}
-    .summary{background:var(--n10);border:1px solid var(--n30);padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.summary strong{display:block;font-size:20px}.notice{border:1px solid var(--n90);padding:14px 16px;display:flex;gap:12px}.notice strong{display:block}.form-actions{display:flex;justify-content:space-between;gap:12px;margin-top:24px;padding-top:20px;border-top:1px solid var(--n30)}
-    .overlay{position:fixed;inset:0;background:rgba(17,24,39,.55);display:grid;place-items:center;padding:24px;z-index:20}.dialog{width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow-y:auto;background:#fff;border:1px solid var(--n90);padding:24px}.dialog h2{margin-bottom:8px}.dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}.toast{position:fixed;right:24px;bottom:24px;max-width:380px;background:#fff;border:1px solid var(--n90);padding:14px 16px;z-index:30}.empty{text-align:center;padding:56px 20px;border:1px solid var(--n30)}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-    @media (max-width: 900px){.topnav{display:none}.page-head{align-items:flex-start;flex-direction:column}.toolbar{grid-template-columns:1fr 1fr}.toolbar .btn{grid-column:span 2}.form-grid{grid-template-columns:1fr}.span-2{grid-column:auto}.summary{grid-template-columns:1fr}.panel{padding:18px}}
-    @media (max-width: 600px){:root{--gutter:16px}.toolbar{grid-template-columns:1fr}.toolbar .btn{grid-column:auto}.page-head .btn{width:100%}.form-actions{flex-direction:column-reverse}.form-actions .btn,.dialog-actions .btn{width:100%}.dialog-actions{flex-direction:column-reverse}.toast{left:16px;right:16px}.topbar-inner{padding-inline:16px}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestión de cupones de descuento</title>
+<style>
+:root{
+  --surface:#FFFFFF;
+  --neutral-10:#F3F4F6;
+  --neutral-30:#D1D5DB;
+  --neutral-50:#6B7280;
+  --neutral-90:#111827;
+  --primary:#111827;
+  --space-xs:4px;
+  --space-sm:8px;
+  --space-md:16px;
+  --space-lg:32px;
+  --space-xl:64px;
+  --radius-sm:4px;
+  --radius-md:8px;
+}
+*{box-sizing:border-box}
+html{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--neutral-90);background:var(--surface)}
+body{margin:0;background:var(--surface);line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+button{min-height:44px;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--neutral-90);outline-offset:2px}
+.topbar{border-bottom:1px solid var(--neutral-30);background:var(--surface)}
+.topbar-inner{max-width:1200px;margin:auto;min-height:64px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700}
+.brand-mark{width:36px;height:36px;border:2px solid var(--neutral-90);display:grid;place-items:center;font-weight:700}
+.user{font-size:14px;color:var(--neutral-50)}
+.shell{max-width:1200px;margin:auto;padding:24px}
+.breadcrumb{font-size:14px;color:var(--neutral-50);margin-bottom:8px}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px;flex-wrap:wrap}
+.page-head h1{font-size:32px;line-height:1.2;margin:0 0 8px}
+.page-head p{margin:0;color:var(--neutral-50);max-width:760px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--neutral-90);background:var(--surface);padding:10px 16px;border-radius:var(--radius-sm);font-weight:600;min-height:44px}
+.btn.primary{background:var(--neutral-90);color:var(--surface)}
+.btn.ghost{border-color:var(--neutral-30)}
+.btn[disabled]{color:var(--neutral-50);border-color:var(--neutral-30);background:var(--neutral-10);cursor:not-allowed}
+.card{border:1px solid var(--neutral-30);border-radius:var(--radius-md);padding:20px;background:var(--surface)}
+.card h2{font-size:20px;margin:0 0 8px}
+.card h3{font-size:16px;margin:0 0 8px}
+.muted{color:var(--neutral-50)}
+.small{font-size:14px}
+.mono{font-family:"Roboto Mono",ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;letter-spacing:.02em}
+.grid{display:grid;gap:16px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stack{display:grid;gap:16px}
+.field{display:grid;gap:6px}
+.field label{font-size:14px;font-weight:600}
+.input,.select,.textarea{width:100%;border:1px solid var(--neutral-30);border-radius:var(--radius-sm);background:var(--surface);padding:11px 12px;min-height:44px}
+.textarea{min-height:110px;resize:vertical}
+.help{font-size:13px;color:var(--neutral-50)}
+.section-title{font-size:20px;margin:8px 0 12px}
+.table-wrap{overflow:auto;border:1px solid var(--neutral-30);border-radius:var(--radius-md)}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--neutral-30);vertical-align:top}
+th{font-size:12px;font-family:"Roboto Mono",ui-monospace,monospace;letter-spacing:.04em;text-transform:uppercase;background:var(--neutral-10)}
+tbody tr:last-child td{border-bottom:0}
+.badge{display:inline-flex;align-items:center;min-height:28px;border:1px solid var(--neutral-30);border-radius:9999px;padding:3px 10px;font-size:13px;background:var(--surface)}
+.badge.dark{background:var(--neutral-90);color:var(--surface);border-color:var(--neutral-90)}
+.badge.soft{background:var(--neutral-10)}
+.kpi{border:1px solid var(--neutral-30);padding:16px;border-radius:var(--radius-md)}
+.kpi .value{font-size:28px;font-weight:700;line-height:1.1;margin-top:8px}
+.notice{border:1px solid var(--neutral-90);padding:14px 16px;border-radius:var(--radius-sm);background:var(--surface)}
+.notice.soft{border-color:var(--neutral-30);background:var(--neutral-10)}
+.progress{height:10px;border:1px solid var(--neutral-30);background:var(--surface)}
+.progress > span{display:block;height:100%;background:var(--neutral-90)}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--neutral-30);margin-bottom:20px;overflow:auto}
+.tab{background:var(--surface);border:0;border-bottom:3px solid transparent;padding:12px 16px;white-space:nowrap}
+.tab.active{border-bottom-color:var(--neutral-90);font-weight:700}
+.divider{border:0;border-top:1px solid var(--neutral-30);margin:24px 0}
+.placeholder{min-height:120px;background:var(--neutral-10);position:relative;display:grid;place-items:center;color:var(--neutral-50);border:1px solid var(--neutral-30)}
+.placeholder:before,.placeholder:after{content:"";position:absolute;left:0;top:50%;width:100%;border-top:1px solid var(--neutral-30);transform-origin:center}
+.placeholder:before{transform:rotate(17deg)}
+.placeholder:after{transform:rotate(-17deg)}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+.overlay.open{display:flex}
+.modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:var(--surface);border:2px solid var(--neutral-90);padding:24px}
+.modal-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}
+.modal-head h2{margin:0;font-size:24px}
+.icon-btn{width:44px;height:44px;border:1px solid var(--neutral-90);background:var(--surface);font-size:20px}
+.empty{text-align:center;border:1px dashed var(--neutral-30);padding:48px 24px}
+.hidden{display:none!important}
+.toolbar{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+.toolbar .field{min-width:180px;flex:1}
+.stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px}
+.step{border-top:4px solid var(--neutral-30);padding-top:8px;color:var(--neutral-50);font-size:13px}
+.step.active,.step.done{border-top-color:var(--neutral-90);color:var(--neutral-90);font-weight:700}
+.checkbox-row,.radio-row{display:flex;gap:10px;align-items:flex-start}
+input[type="checkbox"],input[type="radio"]{width:18px;height:18px;margin-top:3px;accent-color:#111827}
+.summary-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.summary-list li{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--neutral-30);padding-bottom:10px}
+.summary-list li:last-child{border-bottom:0;padding-bottom:0}
+.inline-status{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--neutral-90)}
+@media(max-width:820px){
+  .shell{padding:16px}
+  .topbar-inner{padding:0 16px}
+  .grid.two,.grid.three,.grid.four{grid-template-columns:1fr}
+  .page-head h1{font-size:28px}
+  .stepper{grid-template-columns:1fr 1fr}
+  .actions{width:100%}
+  .actions .btn{flex:1}
+  table{min-width:640px}
+}
+@media(max-width:520px){
+  .user{display:none}
+  .stepper{grid-template-columns:1fr}
+  .modal{padding:16px}
+}
+</style>
 </head>
 <body>
-  <header class="topbar"><div class="topbar-inner"><div class="brand"><div class="brand-mark" aria-hidden="true">PO</div><span class="brand-text">PO Productos y ofertas</span></div><nav class="topnav" aria-label="Navegación principal"><span>Productos</span><span>Promociones</span><span aria-current="page">Cupones</span><span>Reglas</span></nav></div></header>
-  <main id="app" tabindex="-1"></main>
-  <div id="overlay"></div><div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-  <script>
-    (()=>{
-      const promos = {
-        '10 % en zapatillas seleccionadas': { pricing: false, autoPromos: false, coupons: true, label: 'Combina con cupón; no acumulable con oferta Pricing ni otras promociones automáticas' },
-        'S/ 25 en running': { pricing: true, autoPromos: true, coupons: true, label: 'Combinable con oferta Pricing, otras promociones automáticas y cupones' },
-        '15 % primera compra': { pricing: false, autoPromos: false, coupons: true, label: 'Combina con cupón; no acumulable con oferta Pricing ni otras promociones automáticas' }
-      };
-      const coupons=[
-        {code:'DEPORTE10',promo:'10 % en zapatillas seleccionadas',state:'ACTIVO',min:'S/ 150.00',used:38,limit:100,maxPerClient:1,restitution:'RESTAURAR_EN_CANCELACION'},
-        {code:'RUNNING_25',promo:'S/ 25 en running',state:'ACTIVO',min:'Sin mínimo',used:72,limit:80,maxPerClient:2,restitution:'RESTAURAR_EN_CANCELACION'},
-        {code:'BIENVENIDA',promo:'15 % primera compra',state:'INACTIVO',min:'S/ 100.00',used:210,limit:null,maxPerClient:1,restitution:'RESTAURAR_EN_CANCELACION'}
-      ];
-      const app=document.getElementById('app'),overlay=document.getElementById('overlay'),toastEl=document.getElementById('toast');let toastTimer;
-      const esc=s=>String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-      function toast(msg){clearTimeout(toastTimer);toastEl.textContent=msg;toastEl.hidden=false;toastTimer=setTimeout(()=>toastEl.hidden=true,3000)}
-      function heading(title,copy,action=''){return `<div class="crumbs">Productos y ofertas / Cupones</div><div class="page-head"><div><h1>${title}</h1><p class="lede">${copy}</p></div>${action}</div>`}
-      function list(){location.hash='#lista';const q=new URLSearchParams(location.search).get('q')||'';app.innerHTML=heading('Cupones de descuento','Administra códigos que habilitan promociones configuradas.','<button class="btn btn-primary" data-action="new">Crear cupón</button>')+`
-        <section aria-label="Filtros" class="toolbar"><div class="field"><label for="search">Buscar por código o promoción</label><input id="search" class="input" value="${esc(q)}" placeholder="Ej. DEPORTE10"></div><div class="field"><label for="filter">Estado</label><select id="filter" class="select"><option>Todos</option><option>Activos</option><option>Inactivos</option></select></div><button class="btn" data-action="clear">Limpiar filtros</button></section>
-        <section class="panel" aria-labelledby="list-title"><div class="panel-head"><div><h2 id="list-title">Cupones</h2><p class="muted small" id="count">3 resultados</p></div></div><div id="results"></div></section>`;bindList();renderRows()}
-      function renderRows(){const term=(document.getElementById('search')?.value||'').trim().toUpperCase(),state=document.getElementById('filter')?.value;const rows=coupons.filter(c=>(!term||(c.code+' '+c.promo).toUpperCase().includes(term))&&(state==='Todos'||(state==='Activos'&&c.state==='ACTIVO')||(state==='Inactivos'&&c.state==='INACTIVO')));document.getElementById('count').textContent=`${rows.length} resultado${rows.length===1?'':'s'}`;document.getElementById('results').innerHTML=rows.length?`<div class="table-wrap"><table><thead><tr><th>Código</th><th>Promoción asociada</th><th>Estado</th><th>Uso total</th><th>Límite cliente</th><th>Compra mínima</th><th><span class="sr-only">Acciones</span></th></tr></thead><tbody>${rows.map((c,i)=>`<tr><td class="code">${c.code}</td><td>${c.promo}</td><td><span class="status ${c.state==='ACTIVO'?'active':''}"><span class="dot"></span>${c.state}</span></td><td>${c.used} / ${c.limit??'Sin límite'}${c.limit?`<div class="hint">${c.limit-c.used} disponibles</div>`:''}</td><td>${c.maxPerClient ? `${c.maxPerClient} uso${c.maxPerClient>1?'s':''}/cliente` : 'Sin límite'}</td><td>${c.min}</td><td class="actions"><button class="btn btn-link" data-action="detail" data-index="${coupons.indexOf(c)}">Ver detalle</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty"><h3>No hay cupones que coincidan</h3><p class="muted">Prueba con otro código o estado.</p></div>'}
-      function bindList(){document.getElementById('search').addEventListener('input',renderRows);document.getElementById('filter').addEventListener('change',renderRows)}
-      function form(edit=null){location.hash=edit===null?'#nuevo':'#editar';const c=edit===null?{code:'',promo:'',state:'ACTIVO',min:'',used:0,limit:'',maxPerClient:1,restitution:'RESTAURAR_EN_CANCELACION'}:coupons[edit];const curPromo=promos[c.promo];app.innerHTML=heading(edit===null?'Crear cupón':'Editar cupón','El beneficio, los productos y la vigencia provienen de la promoción asociada.')+`
-        <form id="coupon-form" class="panel" novalidate><div class="panel-head"><div><h2>Datos del cupón</h2><p class="muted small">Los campos marcados con * son obligatorios.</p></div></div><div class="form-grid">
-          <div class="field"><label for="code">Código *</label><input id="code" class="input code" maxlength="40" value="${esc(c.code)}" placeholder="DEPORTE10" autocomplete="off"><span class="hint">Letras, números, guion y guion bajo. Se guardará en mayúsculas.</span><span id="code-error" class="error" hidden></span></div>
-          <div class="field"><label for="promo">Promoción asociada *</label><select id="promo" class="select"><option value="">Seleccionar promoción</option><option value="10 % en zapatillas seleccionadas" ${c.promo.includes('10 %')?'selected':''}>10 % en zapatillas seleccionadas</option><option value="S/ 25 en running" ${c.promo.includes('S/ 25')?'selected':''}>S/ 25 en running</option><option value="15 % primera compra" ${c.promo.includes('15 %')?'selected':''}>15 % primera compra</option></select><span id="promo-error" class="error" hidden></span></div>
-          <div class="field"><label for="minimum">Monto mínimo de compra</label><input id="minimum" class="input" type="number" min="0.01" step="0.01" value="${c.min.startsWith('S/')?c.min.replace('S/ ',''):''}" placeholder="Sin mínimo"><span class="hint">Opcional. Debe ser mayor que 0.</span><span id="minimum-error" class="error" hidden></span></div>
-          <div class="field"><label for="limit">Límite global de usos</label><input id="limit" class="input" type="number" min="1" step="1" value="${c.limit??''}" placeholder="Sin límite"><span class="hint">Opcional${edit!==null?`; no puede ser menor que ${c.used} usos consumidos`:'.'}</span><span id="limit-error" class="error" hidden></span></div>
-          <div class="field"><label for="maxPerClient">Límite de usos por cliente</label><input id="maxPerClient" class="input" type="number" min="1" step="1" value="${c.maxPerClient??1}" placeholder="1"><span class="hint">Cantidad máxima de veces que un mismo cliente puede canjear el cupón.</span><span id="client-limit-error" class="error" hidden></span></div>
-          <div class="field"><label for="restitution">Política de restitución ante cancelación</label><select id="restitution" class="select"><option value="RESTAURAR_EN_CANCELACION" ${c.restitution==='RESTAURAR_EN_CANCELACION'?'selected':''}>Restaurar uso si el pedido se cancela</option><option value="NO_RESTAURAR" ${c.restitution==='NO_RESTAURAR'?'selected':''}>No restaurar (consumo definitivo)</option></select><span class="hint">Comportamiento cuando un pedido canjeado es cancelado.</span></div>
-          <div class="span-2 field"><label>Política de combinación</label><input id="combinability-display" class="input" readonly disabled value="${curPromo ? curPromo.label : 'Selecciona una promoción para consultar su política'}"><span class="hint">La política de combinación se define en la promoción seleccionada y se aplica automáticamente.</span></div>
-          <div class="span-2 switch-row"><div><strong>Estado del cupón</strong><div class="hint" id="state-copy">${c.state==='ACTIVO'?'Disponible para nuevas validaciones':'No participa en nuevas validaciones'}</div></div><button type="button" class="switch ${c.state==='ACTIVO'?'':'off'}" data-action="toggle" role="switch" aria-checked="${c.state==='ACTIVO'}"><span class="sr-only">Cambiar estado</span></button></div>
-          ${edit!==null?`<div class="span-2 summary"><div><span class="small muted">Usos consumidos</span><strong>${c.used}</strong></div><div><span class="small muted">Usos disponibles</span><strong>${c.limit?c.limit-c.used:'Sin límite'}</strong></div><div><span class="small muted">Límite por cliente</span><strong>${c.maxPerClient??1} uso(s)</strong></div></div>`:''}
-        </div><div class="form-actions"><button type="button" class="btn" data-action="back">Cancelar</button><button class="btn btn-primary" type="submit">Guardar cupón</button></div></form>`;
-        document.getElementById('promo')?.addEventListener('change',e=>{const p=promos[e.target.value];const disp=document.getElementById('combinability-display');if(disp)disp.value=p?p.label:'Selecciona una promoción para consultar su política'});
-        document.getElementById('coupon-form').addEventListener('submit',e=>save(e,edit));document.getElementById('code').addEventListener('blur',e=>e.target.value=e.target.value.trim().toUpperCase())}
-      function save(e,edit){e.preventDefault();const code=document.getElementById('code'),promo=document.getElementById('promo'),limit=document.getElementById('limit'),minimum=document.getElementById('minimum'),maxPerClient=document.getElementById('maxPerClient'),restitution=document.getElementById('restitution');document.querySelectorAll('.error').forEach(x=>x.hidden=true);[code,promo,limit,minimum,maxPerClient].forEach(x=>x?.removeAttribute('aria-invalid'));let bad=false;const norm=code.value.trim().toUpperCase();if(!/^[A-Z0-9_-]+$/.test(norm)){showError(code,'code-error','Ingresa un código válido.');bad=true}else if(coupons.some((c,i)=>c.code===norm&&i!==edit)){showError(code,'code-error','Este código ya existe. Prueba con uno diferente.');bad=true}if(!promo.value){showError(promo,'promo-error','Selecciona una promoción mediante cupón.');bad=true}if(minimum.value&&Number(minimum.value)<=0){showError(minimum,'minimum-error','Ingresa un monto mayor que 0.');bad=true}if(limit.value&&(Number(limit.value)<1||!Number.isInteger(Number(limit.value))||(edit!==null&&Number(limit.value)<coupons[edit].used))){showError(limit,'limit-error',edit!==null?`El límite no puede ser menor que ${coupons[edit].used}.`:'Ingresa un entero mayor que 0.');bad=true}if(maxPerClient.value&&(Number(maxPerClient.value)<1||!Number.isInteger(Number(maxPerClient.value)))){showError(maxPerClient,'client-limit-error','Ingresa un entero mayor o igual a 1.');bad=true}if(bad)return;const saved={code:norm,promo:promo.value,state:document.querySelector('[role=switch]').getAttribute('aria-checked')==='true'?'ACTIVO':'INACTIVO',min:minimum.value?`S/ ${Number(minimum.value).toFixed(2)}`:'Sin mínimo',used:edit===null?0:coupons[edit].used,limit:limit.value?Number(limit.value):null,maxPerClient:maxPerClient.value?Number(maxPerClient.value):1,restitution:restitution.value};if(edit===null)coupons.unshift(saved);else coupons[edit]=saved;toast(edit===null?'Cupón creado correctamente.':'Cambios guardados.');setTimeout(list,500)}
-      function showError(input,id,msg){input.setAttribute('aria-invalid','true');const el=document.getElementById(id);el.textContent=msg;el.hidden=false}
-      function detail(i){const c=coupons[i];const curPromo=promos[c.promo];location.hash='#detalle';app.innerHTML=heading(c.code,'Detalle y uso operacional del cupón.',`<button class="btn" data-action="edit" data-index="${i}">Editar</button>`)+`<section class="panel"><div class="panel-head"><div><h2>Resumen</h2><p class="muted small">La validación de una compra no consume usos.</p></div><span class="status ${c.state==='ACTIVO'?'active':''}"><span class="dot"></span>${c.state}</span></div><div class="summary"><div><span class="small muted">Promoción asociada</span><strong class="small">${c.promo}</strong></div><div><span class="small muted">Compra mínima</span><strong>${c.min}</strong></div><div><span class="small muted">Usos globales</span><strong>${c.used} / ${c.limit??'∞'}</strong></div></div><div class="summary" style="margin-top:12px"><div><span class="small muted">Límite por cliente</span><strong>${c.maxPerClient??1} uso(s)</strong></div><div><span class="small muted">Restitución</span><strong>${c.restitution==='RESTAURAR_EN_CANCELACION'?'Restaurar en cancelación':'No restaurar'}</strong></div><div><span class="small muted">Combinabilidad (Promociones)</span><strong class="small">${curPromo ? curPromo.label : 'Consultar política de combinación de la promoción'}</strong></div></div><div class="notice" style="margin-top:18px"><span aria-hidden="true">i</span><div><strong>Condiciones del beneficio</strong><span class="small">Consulta descuento, productos elegibles y vigencia en la promoción asociada.</span></div></div><div class="form-actions"><button class="btn" data-action="back">Volver al listado</button><button class="btn" data-action="confirm-state" data-index="${i}">${c.state==='ACTIVO'?'Desactivar cupón':'Activar cupón'}</button></div></section>`}
-      function confirmState(i){const c=coupons[i];overlay.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><h2 id="dialog-title">${c.state==='ACTIVO'?'Desactivar':'Activar'} ${c.code}</h2><p>${c.state==='ACTIVO'?'El cupón dejará de participar en nuevas validaciones. Los usos ya consumidos se conservarán.':'El cupón volverá a participar cuando su promoción asociada sea válida.'}</p><div class="dialog-actions"><button class="btn" data-action="close">Cancelar</button><button class="btn btn-primary" data-action="apply-state" data-index="${i}">Confirmar</button></div></section></div>`;overlay.querySelector('[data-action=close]').focus()}
-      document.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action,i=Number(b.dataset.index);if(a==='new')form();if(a==='back'||a==='clear'){if(a==='clear'){document.getElementById('search').value='';document.getElementById('filter').value='Todos';renderRows()}else list()}if(a==='detail')detail(i);if(a==='edit')form(i);if(a==='toggle'){const on=b.getAttribute('aria-checked')==='true';b.setAttribute('aria-checked',String(!on));b.classList.toggle('off',on);document.getElementById('state-copy').textContent=on?'No participa en nuevas validaciones':'Disponible para nuevas validaciones'}if(a==='confirm-state')confirmState(i);if(a==='close')overlay.innerHTML='';if(a==='apply-state'){coupons[i].state=coupons[i].state==='ACTIVO'?'INACTIVO':'ACTIVO';overlay.innerHTML='';toast('Estado actualizado.');detail(i)}});
-      list();
-    })();
-  </script>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="brand-mark">PO</span><span>Productos y ofertas</span></div>
+    <div class="user">Gestor comercial</div>
+  </div>
+</header>
+<main class="shell">
+  <div class="breadcrumb">Productos / Cupones</div>
+  
+<div class="page-head"><div><h1>Gestión de cupones de descuento</h1><p>Crea cupones, configura límites y define qué ocurre con su uso cuando un pedido se cancela.</p></div><div class="actions"><button class="btn primary" onclick="openForm()">Crear cupón</button></div></div>
+<div class="notice soft" style="margin-bottom:16px">La validación de un cupón durante una compra no consume su uso. El consumo y la restitución se realizan automáticamente desde el pedido.</div>
+<div class="table-wrap"><table><thead><tr><th>Código</th><th>Promoción</th><th>Estado</th><th>Uso global</th><th>Límite por cliente</th><th>Restitución</th><th>Acciones</th></tr></thead><tbody>
+<tr><td><strong>BIENVENIDA20</strong></td><td>20% primera compra</td><td><span class="badge dark">Activo</span></td><td>83 / 500</td><td>1</td><td>Restaurar al cancelar</td><td><button class="btn ghost" onclick="detail()">Ver</button></td></tr>
+<tr><td><strong>SETIEMBRE10</strong></td><td>10% temporada</td><td><span class="badge">Inactivo</span></td><td>Sin límite</td><td>2</td><td>No restaurar</td><td><button class="btn ghost" onclick="detail()">Ver</button></td></tr>
+</tbody></table></div>
+<div id="couponModal" class="overlay"><div class="modal"><div class="modal-head"><div><h2 id="modalTitle">Crear cupón</h2><p class="muted" id="modalDesc">Configura reglas de uso del cupón.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Cerrar">×</button></div>
+<form id="couponForm" class="stack" onsubmit="saveCoupon(event)">
+<div class="grid two"><div class="field"><label>Código</label><input class="input" value="NUEVO15"></div><div class="field"><label>Promoción</label><select class="select"><option>15% accesorios</option><option>20% primera compra</option></select></div><div class="field"><label>Monto mínimo</label><input class="input" type="number" value="80"></div><div class="field"><label>Límite global</label><input class="input" type="number" placeholder="Sin límite"></div><div class="field"><label>Límite por cliente</label><input class="input" type="number" value="1"></div><div class="field"><label>Restitución</label><select class="select"><option>Restaurar uso al cancelar</option><option>No restaurar</option></select></div></div>
+<div class="actions"><button type="button" class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary">Guardar</button></div></form>
+<div id="couponDetail" class="hidden stack"><ul class="summary-list"><li><span>Código</span><strong>BIENVENIDA20</strong></li><li><span>Límite global</span><strong>500 usos</strong></li><li><span>Límite por cliente</span><strong>1 uso</strong></li><li><span>Al cancelar</span><strong>Restaurar uso</strong></li></ul><div class="notice soft">No hay acciones manuales para consumir o devolver usos. Esas operaciones se ejecutan automáticamente cuando el pedido cambia de estado.</div><button class="btn" onclick="closeModal()">Volver</button></div>
+</div></div>
+<div id="toast5" class="notice hidden" style="position:fixed;right:20px;bottom:20px">Cupón guardado para la demostración.</div>
+
+</main>
+<script>
+function openForm(){document.getElementById('modalTitle').textContent='Crear cupón';document.getElementById('couponForm').classList.remove('hidden');document.getElementById('couponDetail').classList.add('hidden');document.getElementById('couponModal').classList.add('open')}
+function detail(){document.getElementById('modalTitle').textContent='Detalle del cupón';document.getElementById('couponForm').classList.add('hidden');document.getElementById('couponDetail').classList.remove('hidden');document.getElementById('couponModal').classList.add('open')}
+function closeModal(){document.getElementById('couponModal').classList.remove('open')}
+function saveCoupon(e){e.preventDefault();closeModal();const t=document.getElementById('toast5');t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),1500)}
+</script>
 </body>
 </html>

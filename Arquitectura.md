@@ -1,428 +1,282 @@
 # Arquitectura del Módulo de Productos y Ofertas
 
-**Repositorio:** `Taller-SW-Web/Productos-y-Ofertas-docs`  
-**Ruta recomendada:** `architecture/arquitectura-modulo-productos-ofertas.md`  
+**Fecha de actualización:** 2026-09-30  
+**Repositorio de documentación:** `Taller-SW-Web/Productos-y-Ofertas-docs`  
+**Archivo:** `Arquitectura.md`  
+**Contrato HTTP canónico:** `api/openapi.yaml` (`0.4.0`)  
+**Contrato asíncrono canónico:** `asyncapi/asyncapi.yaml` (`0.4.0`)  
+**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.4.0`)  
+**Catálogo canónico de errores:** `api/catalogo-errores.md` (`0.4.0`)  
+**Contrato humano de integración:** `Contrato_Api.md`  
+**Modelo conceptual:** `Modelo_Conceptual.md`  
+**Estado contractual consolidado:** OpenAPI `0.4.0` + AsyncAPI `0.4.0` + topología RabbitMQ consolidada.
 
-Esta arquitectura se deriva de las 16 especificaciones en `specs/`, las 16 historias de usuario en `hu/` y los 16 flujos funcionales en `wireframes/flows/`.
-
----
-
-## 0. Objetivo y alcance
-
-Esta arquitectura organiza el módulo de **Productos y Ofertas** de un marketplace multicanal deportivo y cubre las 16 funcionalidades documentadas:
-
-1. Carga y exportación masiva de productos.
-2. Gestión de combos de productos.
-3. Gestión de productos CRUD.
-4. Gestión de variantes y SKUs.
-5. Gestión de cupones de descuento.
-6. Gestión de ofertas y promociones.
-7. Reglas de venta cruzada y upselling.
-8. Gestión de categorías y subcategorías.
-9. Gestión de características y valores.
-10. Asociación Tipo de Producto–Característica.
-11. Gestión de marcas.
-12. SEO y metadatos de categorías.
-13. Gestión de precios individuales y masivos.
-14. Historial y auditoría de precios.
-15. Control de stock y disponibilidad.
-16. Dashboard y alertas de stock.
-
-La arquitectura mantiene **ocho bounded contexts de negocio**, más un **API Gateway/BFF** como contenedor de acceso y lectura agregada. El gateway no es un noveno bounded context y no posee reglas de negocio maestras.
-
-### 0.1 Decisiones arquitectónicas base
-
-1. El módulo se mantiene separado en repositorios de **documentación**, **frontend** y **backend**, según la organización del proyecto.
-2. El backend se implementa como workspace/monorepo NestJS con ocho aplicaciones de dominio y un gateway/BFF.
-3. Cada bounded context es propietario exclusivo de sus datos. **No existen joins ni escrituras directas sobre el esquema de otro contexto.**
-4. Las mutaciones interdominio y los procesos largos usan mensajería asíncrona, idempotencia, Outbox/Inbox y correlación por `operation_id`/`batch_id` cuando corresponda.
-5. Las consultas autoritativas de solo lectura que las SPEC declaran como API interna pueden exponerse por HTTP. Esto **no** autoriza escrituras cruzadas ni acceso directo a la base de otro servicio.
-6. El frontend consume HTTP/HTTPS. Las lecturas agregadas pueden resolverse mediante BFF/read model alimentado por eventos para evitar fan-out innecesario.
-7. Los contratos con Ventas/Postventa permanecen **provisionales** hasta su homologación. La arquitectura no supone reservas de stock ni reembolsos no definidos por las SPEC.
-8. Los límites configurables (`MAX_CATEGORY_DEPTH`, `MAX_PRODUCT_TYPE_ATTRIBUTES`, etc.) se modelan como configuración; sus valores iniciales del MVP no se convierten en invariantes permanentes.
+> Esta arquitectura es la guía de implementación del backend y de sus integraciones.  
+> Las SPEC son la fuente de verdad para reglas funcionales; `api/openapi.yaml` gobierna HTTP; `asyncapi/asyncapi.yaml` gobierna mensajería; `api/catalogo-errores.md` gobierna la semántica estable de `code`.
 
 ---
 
-## 1. Descomposición DDD
+# 0. Objetivo
 
-### 1.1 Bounded contexts
+El módulo **Productos y Ofertas** administra las capacidades comerciales compartidas por Marketplace, Chatbot, Retail, Ventas/Postventa y Despacho:
 
-| Aplicación | Contexto | Responsabilidades principales |
+1. carga y exportación masiva;
+2. combos;
+3. productos;
+4. variantes y SKU;
+5. cupones;
+6. promociones;
+7. cross-sell y upsell;
+8. categorías;
+9. características;
+10. tipo de producto–característica;
+11. marcas;
+12. SEO;
+13. precios;
+14. auditoría de precios;
+15. inventario y disponibilidad;
+16. dashboard y alertas de stock.
+
+La arquitectura debe permitir que estas capacidades evolucionen de forma independiente sin:
+
+- compartir tablas entre bounded contexts;
+- acoplar reglas de negocio al framework;
+- duplicar contratos;
+- depender de llamadas síncronas innecesarias;
+- convertir `api-gateway` en un “microservicio dios”;
+- compartir entidades ORM;
+- propagar detalles de infraestructura al dominio;
+- romper consumidores cuando cambie una implementación interna.
+
+---
+
+# 1. Decisiones arquitectónicas
+
+## 1.1. Bounded contexts
+
+Se mantienen **ocho bounded contexts de negocio**:
+
+| Aplicación | Bounded context | Responsabilidad |
 |---|---|---|
-| `taxonomy-svc` | Taxonomía, maestros y SEO de categorías | Categorías/subcategorías, marcas, características/valores, tipos de producto ligeros, asociación Tipo de Producto–Característica, SEO/meta de categorías, historial de slugs y bajas seguras de maestros. |
-| `catalog-svc` | Catálogo | Producto base, `sku_base`, variantes, `variant_id`, SKU comercial, atributos, imágenes, estados BORRADOR/ACTIVO/INACTIVO, slug de producto y validaciones de activación. |
-| `pricing-svc` | Pricing | Precio regular, precio oferta opcional, vigencias, scope/canal, herencia/fallback producto→variante, importación propia de precios y publicación de cambios. |
-| `price-audit-svc` | Auditoría de precios | Registro append-only de cambios de precio, filtros, exportaciones y retención/archivo configurable. |
-| `promotions-svc` | Promociones, cupones y recomendaciones | Promociones automáticas/CUPÓN, políticas granulares de combinación, cupones/consumos, Cross-sell/Upsell y evaluación de beneficios. |
-| `combos-svc` | Combos | Definición de combo, componentes SKU/cantidad, precio del combo, disponibilidad proyectada y desactivación por componentes. No es propietario del stock. |
-| `inventory-svc` | Inventario | Saldos por `(sku, location_id)`, `on_hand`, `reserved`, `available`, umbrales, reserve/release/consume, ajustes, Kardex y dashboard operativo de stock. |
-| `bulk-svc` | Carga/exportación masiva | Plantilla v2, validación XLSX/CSV, importaciones/exportaciones asíncronas, coordinación por fila entre Catálogo/Pricing/Inventario, reintentos y conciliación. |
+| `taxonomy-svc` | Taxonomía | Categorías, marcas, características, valores, tipos de producto, asociaciones y SEO de categoría. |
+| `catalog-svc` | Catálogo | Productos, variantes, SKU, atributos, imágenes, estados, slug de producto y perfil físico por SKU. |
+| `pricing-svc` | Pricing | Precios regulares/oferta, vigencias, canal, versión y programación. |
+| `price-audit-svc` | Auditoría de precios | Registro append-only, consulta, exportación y archivo. |
+| `promotions-svc` | Promociones | Promociones, cupones, consumo de cupón, cross-sell y upsell. |
+| `combos-svc` | Combos | Definición, composición, precio y disponibilidad proyectada de combos. |
+| `inventory-svc` | Inventario | Saldos, reservas, consumo, liberación, expiración, ajustes, Kardex y dashboard. |
+| `bulk-svc` | Bulk | Importación/exportación, validación, coordinación por fila, reintentos y conciliación. |
 
-### 1.2 Gateway/BFF
-
-`api-gateway` es un contenedor de infraestructura de acceso con estas responsabilidades:
-
-- exponer lecturas agregadas cuando una vista requiere datos de varios contextos;
-- mantener read models/proyecciones alimentadas por eventos;
-- exponer estado de operaciones asíncronas;
-- validar autenticación/autorización de sus propias rutas;
-- actuar como adaptador anti-corrupción para integraciones externas cuando sea necesario.
-
-No debe:
-
-- poseer reglas de dominio que pertenecen a un bounded context;
-- escribir directamente en esquemas de servicios;
-- convertirse en base de datos maestra de catálogo, precios, promociones o stock.
-
----
-
-## 2. Trazabilidad de las 16 funcionalidades
-
-| WF | SPEC / HU | Propietario arquitectónico |
-|---|---|---|
-| WF-001 | `SPEC-001-carga-exportacion-masiva-productos.md` / `HU-001-carga-exportacion-masiva-productos.md` | `bulk-svc` |
-| WF-002 | `SPEC-002-gestion-combos-productos.md` / `HU-002-gestion-combos-productos.md` | `combos-svc` |
-| WF-003 | `SPEC-003-gestion-productos-crud.md` / `HU-003-gestion-productos-crud.md` | `catalog-svc` |
-| WF-004 | `SPEC-004-gestion-variantes-skus.md` / `HU-004-gestion-variantes-skus.md` | `catalog-svc` |
-| WF-005 | `SPEC-005-gestion-cupones-descuento.md` / `HU-005-gestion-cupones-descuento.md` | `promotions-svc` |
-| WF-006 | `SPEC-006-gestion-ofertas-promociones.md` / `HU-006-gestion-ofertas-promociones.md` | `promotions-svc` |
-| WF-007 | `SPEC-007-reglas-venta-cruzada-upselling.md` / `HU-007-reglas-venta-cruzada-upselling.md` | `promotions-svc` |
-| WF-008 | `SPEC-008-gestion-categorias.md` / `HU-008-gestion-categorias.md` | `taxonomy-svc` |
-| WF-009 | `SPEC-009-gestion-caracteristicas.md` / `HU-009-gestion-caracteristicas.md` | `taxonomy-svc` |
-| WF-010 | `SPEC-010-asociacion-tipo-producto-caracteristica.md` / `HU-010-asociacion-tipo-producto-caracteristica.md` | `taxonomy-svc` |
-| WF-011 | `SPEC-011-gestion-marcas.md` / `HU-011-gestion-marcas.md` | `taxonomy-svc` |
-| WF-012 | `SPEC-012-seo-metadatos.md` / `HU-012-seo-metadatos.md` | `taxonomy-svc` |
-| WF-013 | `SPEC-013-gestion-precios-individuales-masivos.md` / `HU-013-gestion-precios-individuales-masivos.md` | `pricing-svc` |
-| WF-014 | `SPEC-014-historial-auditoria-precios.md` / `HU-014-historial-auditoria-precios.md` | `price-audit-svc` |
-| WF-015 | `SPEC-015-control-stock-disponibilidad.md` / `HU-015-control-stock-disponibilidad.md` | `inventory-svc` |
-| WF-016 | `SPEC-016-dashboard-alertas-stock.md` / `HU-016-dashboard-alertas-stock.md` | `inventory-svc` |
-
----
-
-## 3. Reglas transversales que condicionan la arquitectura
-
-### 3.1 Taxonomía, categorías y tipos de producto
-
-- Una categoría sirve para **navegación/clasificación**. No define ni hereda características.
-- En el MVP, cada producto mantiene una sola `categoria_id`.
-- El esquema de atributos se determina exclusivamente por `tipo_producto_id`.
-- `taxonomy-svc` mantiene tipos de producto ligeros con `tipo_producto_id`, nombre y estado.
-- La asociación Tipo de Producto–Característica define si cada característica es `OBLIGATORIA` u `OPCIONAL`.
-- `MAX_PRODUCT_TYPE_ATTRIBUTES` es configurable; valor inicial del MVP: 20.
-- `MAX_CATEGORY_DEPTH` es configurable; valor inicial del MVP: 2.
-- Características soportadas: `TEXTO`, `NUMERO`, `LISTA`.
-- Límites configurables iniciales adicionales: `MAX_ACTIVE_LIST_VALUES=50` y `MAX_TEXT_ATTRIBUTE_LENGTH=100`.
-- Desactivar categorías, marcas o valores LISTA utilizados requiere verificación segura; no se elimina físicamente ni se reescriben históricos.
-
-### 3.2 Catálogo, producto, variante y SKU
-
-- Producto y variante se crean inicialmente en BORRADOR cuando corresponda.
-- `variant_id` es el identificador interno estable de la variante y **no es el SKU comercial**.
-- `sku_base` identifica al producto; para producto simple también es el SKU vendible.
-- El SKU comercial de variante es globalmente único y generalmente inmutable una vez publicada la identidad.
-- Los atributos identificadores de una variante son inmutables después de crear identidad comercial; los no identificadores e imagen pueden editarse según contrato.
-- `tipo_producto_id` define atributos requeridos. Si el tipo no tiene atributos obligatorios, no se impone artificialmente “al menos una característica”.
-- Un producto con variantes no mantiene stock propio; el stock corresponde a sus SKUs vendibles.
-- El slug de producto pertenece a `catalog-svc`.
-- La activación de producto exige categoría/tipo/marca vigentes, atributos obligatorios, imagen y preparación confirmada de Pricing/Inventario; si maneja variantes, requiere al menos una variante ACTIVA válida.
-- Desactivar la última variante ACTIVA puede inactivar el padre según la regla del catálogo; reactivar una variante no reactiva automáticamente al padre.
-
-### 3.3 SEO de categorías
-
-- El slug de categoría y sus metadatos pertenecen a `taxonomy-svc` (capacidad SEO).
-- Durante creación de categoría, WF-008 consume la generación de slug y muestra **el slug final antes de confirmar**.
-- En colisión automática se permite sufijo incremental visible (`slug-2`, `slug-3`, ...).
-- En edición manual, un slug duplicado se rechaza; no se corrige silenciosamente.
-- Se registra `old_slug → new_slug` como resolución permanente.
-- Marketplace/canal público es responsable de materializar la respuesta HTTP 301; Taxonomía solo expone la resolución.
-
-### 3.4 Pricing y política de beneficios
-
-`pricing-svc` es propietario de:
-
-- `precio_regular`;
-- `precio_oferta` opcional;
-- moneda;
-- vigencia;
-- scope/canal;
-- `price_version`.
-
-No decide la combinación de promociones/cupones.
-
-`promotions-svc` administra una política granular de compatibilidad con:
-
-- `OFERTA_PRICING`;
-- `PROMOCION_AUTOMATICA`;
-- `CUPON`.
-
-Reglas compartidas:
-
-1. Solo se evalúan combinaciones expresamente autorizadas.
-2. Se selecciona el menor importe final para la misma cesta.
-3. En empate exacto: primero la alternativa que **no consuma cupón**; luego menor `prioridad`; finalmente identificador estable.
-4. La etiqueta “Exclusiva” puede derivarse cuando las tres compatibilidades están deshabilitadas; no sustituye al contrato granular.
-5. Un cupón solo consume uso si forma parte de la alternativa finalmente seleccionada.
-
-### 3.5 Combos
-
-- Un combo contiene al menos dos SKUs vendibles distintos, con cantidades positivas.
-- No se permiten combos anidados.
-- El precio del combo es mayor que cero y menor tanto que la suma regular de componentes como que la suma de sus precios públicos vigentes individuales.
-- La disponibilidad estimada se calcula como `min(floor(available_i / cantidad_i))`.
-- `combos-svc` no descuenta stock; el propietario del stock sigue siendo `inventory-svc`.
-- La existencia de un combo no impone por arquitectura una exclusividad universal con otros beneficios. La coexistencia comercial se rige por la política correspondiente.
-- La baja de un SKU componente debe hacer que el combo deje de considerarse vendible.
-
-### 3.6 Inventario
-
-La unidad operativa es `(sku, location_id)`.
+Además existe:
 
 ```text
-available = max(on_hand - reserved, 0)
-
-available = 0                         -> AGOTADO
-0 < available <= umbral_resuelto     -> STOCK_BAJO
-available > umbral_resuelto           -> DISPONIBLE
+api-gateway
 ```
 
-- Existe un umbral global configurable y override opcional por SKU.
-- El valor 5 utilizado en ejemplos **no es un default contractual**.
-- Inventario ofrece capacidades idempotentes `reserve`, `release` y `consume`.
-- Sales/Postventa decide cuándo solicitar reserva si algún día se homologa esa fase.
-- En el alcance vigente, `order.created` por sí solo no reserva ni descuenta.
-- Provisionalmente, `order.confirmed` dispara consumo.
-- Despacho no produce un segundo consumo.
-- Cancelación compensa solo cuando corresponde al estado previo acordado.
-- Una devolución repone exclusivamente cantidades físicamente aceptadas y reintegrables en una ubicación.
-- `inventory.stock.changed` es el evento canónico para proyecciones/dashboard; `inventory.stock.adjusted` expresa un ajuste persistido/Kardex.
-- WF-016 muestra métricas operativas de inventario; **no** rankings de ventas ni Top 5 comerciales.
-
-### 3.7 Bulk
-
-- Plantilla contractual: `template_version=2`.
-- Importación: máximo 5.000 filas o 10 MB.
-- Exportación completa: asíncrona y **no truncada** por el límite de importación.
-- Operaciones: `CREAR_PRODUCTO_SIMPLE | CREAR_VARIANTE | ACTUALIZAR`.
-- La plantilla v2 usa exactamente estas 25 columnas, en este orden:
-
-```text
-operacion
-product_id
-variant_id
-sku_base
-sku
-nombre
-descripcion
-categoria_id
-tipo_producto_id
-marca_id
-tiene_variantes
-caracteristicas_identificadoras
-atributos_identificadores
-atributos_no_identificadores
-imagen_url
-precio_regular
-precio_oferta
-accion_precio_oferta
-location_id
-stock
-catalog_version
-price_version
-stock_version
-estado
-motivo_cambio
-```
-
-- `variant_id` siempre es identidad interna generada por Catálogo; no se deriva del SKU.
-- Stock informado representa conteo absoluto y usa `stock_version` para concurrencia optimista.
-- No existe transacción distribuida global entre Catálogo, Pricing e Inventario.
-- Una fila solo queda `COMPLETED` cuando todos los dominios requeridos confirman.
-- Un fallo parcial registra `applied_domains[]`, `failed_domain` y `needs_reconciliation` cuando corresponde.
-- Reintentos transitorios usan idempotencia; un lote fallido puede reanudar operaciones pendientes con el mismo `batch_id` sin repetir pasos ya confirmados.
-
-### 3.8 Auditoría de precios
-
-- `price-audit-svc` consume cambios confirmados de Pricing y registra una bitácora append-only.
-- El primer precio se audita como `CREACION`, con `precio_anterior=null`.
-- Retirar una oferta se registra como `RETIRO_OFERTA`, con nuevo valor de oferta `null`.
-- Límites de exportación: CSV hasta 100.000 registros; PDF hasta 500.
-- Retención configurable con `AUDIT_HOT_RETENTION_MONTHS` y `AUDIT_ARCHIVE_RETENTION_YEARS`.
-- Valores iniciales del MVP: 24 meses en caliente y 5 años en archivo; son configuración, no una obligación legal universal.
-- Auditoría no ejecuta rollback de precios.
+como contenedor de acceso/BFF, **no como bounded context de negocio**.
 
 ---
 
-## 4. Persistencia y aislamiento
+## 1.2. Ownership externo
 
-### 4.1 Principio
-
-Cada servicio posee su esquema PostgreSQL y sus migraciones. Puede utilizarse una única instancia física durante el proyecto, pero con aislamiento lógico por roles/esquemas. Ningún servicio consulta tablas ajenas.
-
-### 4.2 Esquemas sugeridos
-
-| Servicio | Esquema | Entidades/tablas conceptuales |
-|---|---|---|
-| `taxonomy-svc` | `taxonomy` | `categories`, `brands`, `characteristics`, `characteristic_values`, `product_types`, `product_type_characteristics`, `category_seo`, `slug_history`, `master_deactivation_operations`, `outbox`, `inbox` |
-| `catalog-svc` | `catalog` | `products`, `variants`, `product_attribute_values`, `variant_attribute_values`, `activation_checks`, `master_barriers`, `outbox`, `inbox` |
-| `pricing-svc` | `pricing` | `prices`, `price_validities`, `scheduled_prices`, `bulk_price_jobs`, `outbox`, `inbox` |
-| `price-audit-svc` | `price_audit` | `price_audit_log`, `export_jobs`, `archive_manifests`, `inbox` |
-| `promotions-svc` | `promotions` | `promotions`, `promotion_scopes`, `combination_policy`, `coupons`, `coupon_uses`, `recommendation_rules`, `catalog_projection`, `outbox`, `inbox` |
-| `combos-svc` | `combos` | `combos`, `combo_items`, `component_projection`, `outbox`, `inbox` |
-| `inventory-svc` | `inventory` | `stock_balance`, `stock_threshold_override`, `kardex`, `inventory_operations`, `dashboard_projection`, `outbox`, `inbox` |
-| `bulk-svc` | `bulk` | `batch_jobs`, `batch_rows`, `row_domain_steps`, `export_jobs`, `file_manifests`, `outbox`, `inbox` |
-| `api-gateway` | `read_model` | `product_listing`, `product_detail_view`, `combo_view`, `operation_status`, `event_offsets`, `inbox` |
-
-Estas tablas son una propuesta física inicial; los **límites de propiedad** sí son arquitectónicos, los nombres concretos de tablas no.
-
----
-
-## 5. Topología de integración
-
-### 5.1 Patrones
-
-- **HTTP/HTTPS:** frontend → gateway/servicio propietario; consultas autoritativas de solo lectura entre servicios cuando una SPEC las exige.
-- **Mensajería asíncrona:** mutaciones cross-context, coordinación, eventos y trabajos largos.
-- **Outbox:** publicación posterior al commit local.
-- **Inbox:** deduplicación/idempotencia del consumidor.
-- **Optimistic concurrency:** versiones de catálogo/precio/stock donde las SPEC lo exigen.
-- **Read models:** vistas agregadas no autoritativas.
-
-### 5.2 Mensajes principales
-
-| Productor | Mensaje / contrato | Consumidores principales | Semántica |
-|---|---|---|---|
-| Taxonomía | `taxonomy.master.deactivation.check.requested` | Catálogo | Solicita verificación y barrera para baja segura. |
-| Catálogo | `catalog.master.deactivation.checked` | Taxonomía | `CLEAR` o `HAS_ACTIVE_PRODUCTS` correlacionado por `operation_id`. |
-| Taxonomía | `taxonomy.master.deactivated` / `.rejected` | Catálogo, proyecciones | Resultado final de la baja maestra. |
-| Taxonomía | `taxonomy.category.updated` | Catálogo/BFF/canales | Hecho de actualización de categoría. |
-| Catálogo | `catalog.product.deactivated` | consumidores | Hecho posterior a baja lógica. |
-| Catálogo | `catalog.sku.deactivated` | Combos/Promociones/BFF | Retira componentes/candidatos vendibles. |
-| Pricing | `pricing.price.changed` | Auditoría, Promociones, BFF | Hecho confirmado; nunca comando de cambio. |
-| Inventario | `inventory.stock.changed` | Dashboard, Combos, Promociones/BFF | Actualización de proyecciones. |
-| Inventario | `inventory.stock.adjusted` | Bulk/BFF/auditoría operativa | Ajuste confirmado después de Kardex. |
-| Bulk | `catalog.bulk.upsert.requested` | Catálogo | Comando idempotente por fila. |
-| Catálogo | `catalog.bulk.upsert.completed|rejected` | Bulk | Resultado de dominio. |
-| Bulk | `pricing.bulk.price.apply.requested` | Pricing | Aplicación de cambio de precio posterior cuando corresponda. |
-| Pricing | `pricing.bulk.price.apply.completed|rejected` | Bulk | Resultado de Pricing. |
-| Bulk | `inventory.bulk.stock.adjust.requested` | Inventario | Ajuste absoluto condicionado por versión. |
-| Inventario | `inventory.bulk.stock.adjust.completed|rejected` | Bulk | Resultado de Inventario. |
-| Promociones | `promotions.coupon.consumption.completed|rejected` | Ventas/Postventa provisional | Resultado idempotente de consumo de cupón. |
-
-Los nombres que una SPEC identifica como “propuestos” siguen tratándose como contratos internos versionados, no como contratos externos definitivamente homologados.
-
-### 5.3 Sobre de mensaje recomendado
-
-```json
-{
-  "message_id": "uuid",
-  "kind": "command|event|result",
-  "name": "inventory.bulk.stock.adjust.requested",
-  "schema_version": 1,
-  "operation_id": "uuid",
-  "correlation_id": "uuid",
-  "causation_id": "uuid-or-null",
-  "occurred_at": "ISO-8601",
-  "producer": "bulk-svc",
-  "actor": {
-    "user_id": "opaque-id",
-    "channel": "BULK_IMPORT"
-  },
-  "data": {}
-}
-```
-
----
-
-## 6. Flujos arquitectónicos críticos
-
-### 6.1 Alta de producto simple
-
-1. `catalog-svc` valida datos mínimos y crea producto BORRADOR.
-2. Catálogo genera `product_id`, `sku_base` y slug de producto.
-3. Solicita de forma idempotente el precio inicial a `pricing-svc`.
-4. Solicita inicialización del SKU vendible en `inventory-svc` con saldo 0 y versión inicial.
-5. Pricing e Inventario confirman sus preparaciones.
-6. La activación solo se permite cuando se cumplen todas las condiciones de SPEC-003.
-
-### 6.2 Alta de variante
-
-1. Catálogo valida padre `tiene_variantes=true` y esquema del `tipo_producto_id`.
-2. Genera `variant_id` interno.
-3. Valida o genera SKU comercial único.
-4. Persiste atributos identificadores y no identificadores.
-5. Inventario inicializa el SKU de variante.
-6. Pricing resuelve precio mediante override de variante o fallback al producto padre.
-7. La variante pasa a ACTIVA únicamente cuando cumple imagen, precio aplicable e inventario inicializado.
-
-### 6.3 Baja segura de categoría/marca/valor LISTA
-
-1. Taxonomía crea operación `PENDING_DEACTIVATION` con `operation_id`.
-2. Publica solicitud de verificación.
-3. Catálogo instala barrera de escritura sobre la entidad y verifica usos activos.
-4. Devuelve `CLEAR` o `HAS_ACTIVE_PRODUCTS`.
-5. Taxonomía confirma o rechaza la baja.
-6. Catálogo libera la barrera tras procesar el resultado final.
-7. Timeout/error nunca se interpreta como autorización para desactivar.
-
-### 6.4 Evaluación de precio/promoción/cupón
-
-1. Pricing resuelve precio regular y, si existe, oferta pública vigente.
-2. Promociones obtiene promociones automáticas/cupón válidos para la cesta.
-3. Construye únicamente combinaciones autorizadas por la política granular.
-4. Calcula cada alternativa con aritmética decimal exacta.
-5. Selecciona el menor importe final.
-6. Empate: sin cupón → menor prioridad → identificador estable.
-7. El cupón no se consume durante validación; se consume únicamente si fue seleccionado y Ventas/Postventa confirma el pedido según el contrato vigente.
-
-### 6.5 Pedido y stock — contrato externo provisional
-
-Hasta homologación con Ventas/Postventa:
-
-- `order.created` no modifica inventario por sí mismo.
-- `order.confirmed` puede disparar `consume` de forma provisional.
-- `order.cancelled` compensa según el estado previo acordado.
-- despacho no vuelve a consumir;
-- `order.returned`/equivalente solo repone cantidades físicamente aceptadas y reintegrables.
-
-Si en el futuro se homologa una fase de reserva, Ventas/Postventa podrá solicitar `reserve` y posteriormente `release`/`consume`, sin cambiar la propiedad de Inventario.
-
-### 6.6 Importación masiva
-
-1. `bulk-svc` recibe archivo y devuelve `202 + batch_id`.
-2. Valida tamaño, estructura, `template_version=2`, fórmulas/macros y reglas de formato.
-3. Asigna `row_id` y determina qué dominios requiere cada fila.
-4. Emite comandos idempotentes a Catálogo/Pricing/Inventario respetando dependencias.
-5. Cada dominio persiste localmente y devuelve `completed|rejected`.
-6. Bulk marca fila `COMPLETED` solo con todos los resultados requeridos.
-7. Fallo parcial registra los dominios ya aplicados y activa conciliación, sin rollback global ficticio.
-
----
-
-## 7. Stack tecnológico propuesto
-
-Las decisiones siguientes son arquitectónicas/técnicas y no sustituyen requisitos funcionales:
-
-| Capa | Tecnología |
+| Dato / proceso | Owner |
 |---|---|
-| Backend | NestJS + TypeScript + Node.js |
-| Gestión de paquetes | pnpm |
-| Frontend | React + TypeScript + Vite |
-| Routing frontend | React Router |
-| Server state | TanStack Query |
-| Estado cliente | Zustand |
-| Formularios | React Hook Form |
-| Validación frontend | Zod |
-| Persistencia | PostgreSQL; Supabase puede utilizarse como proveedor durante el proyecto |
-| Mensajería | RabbitMQ |
-| Caché/rate limiting | Valkey, solo como optimización |
-| Contratos HTTP | OpenAPI |
-| Contratos asíncronos | AsyncAPI + JSON Schema |
-| Observabilidad | Logs estructurados + OpenTelemetry |
-| Unit/integration | Jest/Vitest + Testcontainers |
-| E2E | Playwright |
-| CI/CD | GitHub Actions |
+| Usuario, roles y autenticación | Seguridad y Usuarios |
+| Pedido y estado comercial | Ventas y Postventa |
+| Producto, SKU, precio, promociones y stock | Productos y Ofertas |
+| Despacho, empaque y entrega | Despacho y Entrega |
 
-### 7.1 Estructura backend sugerida
+---
+
+## 1.3. Flujo oficial de inventario
+
+Flujo comercial normal:
+
+```text
+Canal
+  -> Ventas crea CREADO
+  -> Ventas RESERVA
+  -> pago aprobado / PAGADO
+  -> Ventas confirma CONSUMO
+```
+
+Compensaciones:
+
+```text
+anulación pre-consumo -> LIBERACIÓN
+retorno físico aceptado -> REINTEGRO
+venta Retail offline registrada -> CONCILIACIÓN
+```
+
+Hechos físicos de tienda:
+
+```text
+Retail -> reporta/resuelve INCIDENCIA -> inventory-svc
+```
+
+Consecuencias:
+
+- Marketplace y Chatbot solo consultan.
+- Retail no muta stock por una venta; solo reporta/resuelve hechos físicos mediante scopes dedicados.
+- Ventas/Postventa orquesta las mutaciones comerciales.
+- Inventario mantiene el saldo autoritativo.
+- Despacho no produce un segundo consumo.
+- La reserva conserva TTL configurable.
+
+---
+
+## 1.4. Datos físicos y Despacho
+
+`catalog-svc` es owner de las propiedades físicas intrínsecas del SKU:
+
+```text
+pesoKg
+largoCm
+anchoCm
+altoCm
+actualizadoEn
+```
+
+Despacho es owner de:
+
+```text
+tipo de empaque
+agrupación de unidades
+cantidad de paquetes
+volumen logístico final
+capacidad de transporte
+```
+
+Productos no debe incorporar reglas de empaquetado.
+
+---
+
+# 2. Principios de diseño para mantenibilidad
+
+## 2.1. Dependency Rule
+
+Cada servicio sigue una arquitectura por capas/puertos:
+
+```text
+interfaces/adapters
+        |
+        v
+application
+        |
+        v
+domain
+```
+
+`infrastructure` implementa puertos definidos hacia adentro:
+
+```text
+domain <- application <- interfaces
+             ^
+             |
+      infrastructure
+```
+
+Reglas:
+
+1. `domain` no importa NestJS.
+2. `domain` no importa PostgreSQL, RabbitMQ, HTTP ni OpenAPI.
+3. `application` no importa implementaciones concretas de persistencia.
+4. `interfaces` traduce HTTP/mensajería a casos de uso.
+5. `infrastructure` implementa repositorios, broker, storage y clientes externos.
+6. Ningún servicio importa código desde `apps/<otro-servicio>`.
+7. Los contratos compartidos viven en `libs/contracts`, no en los dominios.
+
+---
+
+## 2.2. Regla contra el “shared kernel” accidental
+
+No crear una librería común con:
+
+```text
+ProductEntity
+VariantEntity
+PriceEntity
+StockEntity
+PromotionEntity
+```
+
+El código común se limita a capacidades técnicas estables:
+
+```text
+auth
+messaging
+observability
+problem-details
+configuration
+testing helpers
+```
+
+Los conceptos de negocio pertenecen a su bounded context.
+
+---
+
+## 2.3. Contrato ≠ modelo de dominio
+
+Los DTO HTTP y schemas asíncronos no son entidades de dominio.
+
+Ejemplo:
+
+```text
+ReservaInventarioRequest (OpenAPI)
+        |
+        v mapper
+CreateReservationCommand
+        |
+        v
+InventoryReservation (dominio)
+```
+
+Esto permite cambiar:
+
+- nombres externos;
+- serialización;
+- headers;
+- versión HTTP;
+
+sin modificar las invariantes internas.
+
+---
+
+## 2.4. Una razón de cambio por módulo
+
+Un archivo/clase no debe mezclar:
+
+- transporte;
+- autorización;
+- reglas de negocio;
+- persistencia;
+- publicación de eventos.
+
+Ejemplo incorrecto:
+
+```text
+InventoryController
+  -> valida JWT
+  -> ejecuta SQL
+  -> calcula stock
+  -> escribe Kardex
+  -> publica RabbitMQ
+```
+
+Ejemplo correcto:
+
+```text
+InventoryController
+  -> ConfirmReservationUseCase
+       -> ReservationRepository
+       -> StockRepository
+       -> UnitOfWork
+       -> OutboxPort
+```
+
+---
+
+# 3. Estructura del monorepo backend
 
 ```text
 backend/
@@ -436,407 +290,2823 @@ backend/
 │   ├── combos-svc/
 │   ├── inventory-svc/
 │   └── bulk-svc/
+│
 ├── libs/
-│   ├── common/
-│   │   ├── auth/
-│   │   ├── messaging/
-│   │   ├── observability/
-│   │   └── errors/
-│   └── contracts/
-│       ├── taxonomy/
-│       ├── catalog/
-│       ├── pricing/
-│       ├── promotions/
-│       ├── combos/
-│       ├── inventory/
-│       ├── bulk/
-│       └── sales/provisional-v0/
+│   ├── contracts/
+│   │   ├── http/
+│   │   ├── events/
+│   │   └── schemas/
+│   └── platform/
+│       ├── auth/
+│       ├── config/
+│       ├── messaging/
+│       ├── observability/
+│       ├── problem-details/
+│       └── testing/
+│
 ├── infra/
+│   ├── docker/
+│   ├── rabbitmq/
+│   ├── postgres/
+│   └── local/
+│
+├── scripts/
+├── test/
+├── package.json
+├── pnpm-workspace.yaml
+├── tsconfig.base.json
 └── .github/workflows/
 ```
 
-No deben compartirse entidades ORM ni repositorios entre bounded contexts. `libs/contracts` comparte DTOs/esquemas versionados, no modelos de persistencia.
+## 3.1. Qué puede vivir en `libs/contracts`
+
+Solo artefactos de intercambio:
+
+- DTO generados o mantenidos desde OpenAPI;
+- JSON Schema;
+- schemas AsyncAPI;
+- tipos de envelopes;
+- enumeraciones contractuales versionadas;
+- códigos de error publicados.
+
+No contiene:
+
+- servicios de dominio;
+- entidades ORM;
+- repositorios;
+- lógica de negocio.
 
 ---
 
-## 8. Seguridad
+## 3.2. Qué puede vivir en `libs/platform`
 
-- JWT emitido por el módulo/equipo de Seguridad y Usuarios.
-- Validación local en cada entrada HTTP mediante JWKS y algoritmo permitido.
-- Autorización mediante permisos/claims acordados; el frontend no es autoridad de seguridad.
-- Mensajería usa identidades/credenciales de servicio y permisos por exchange/queue.
-- No propagar JWT de usuario como mecanismo de autenticación de jobs largos.
-- No registrar JWT, secretos o archivos completos en logs.
-- Operaciones de negocio sensibles deben fallar de forma segura si no pueden validar identidad/autorización.
-- Nunca utilizar credenciales administrativas de base de datos desde el frontend.
+Solo infraestructura reusable transversal.
+
+Ejemplos:
+
+```text
+JwtVerifier
+CorrelationIdMiddleware
+ProblemDetailsMapper
+OutboxRelayBase
+InboxDeduplicator
+StructuredLogger
+TelemetryModule
+ConfigLoader
+```
+
+Una utilidad pasa a `platform` únicamente si:
+
+1. no pertenece a un bounded context;
+2. tiene al menos dos consumidores reales;
+3. su semántica no depende de reglas de negocio.
 
 ---
 
-## 9. C4 — Nivel 1: contexto
+# 4. Estructura interna estándar de cada servicio
 
-```mermaid
-flowchart LR
-  gestor["Persona: Gestor comercial"]
-  auditor["Persona: Auditor"]
-  operador["Persona: Operador de inventario"]
-  canales["Marketplace / Chatbot / Retail"]
-  ventas["Ventas y Postventa\nContrato provisional"]
-  auth["Seguridad y Usuarios"]
+Ejemplo `inventory-svc`:
 
-  subgraph PO["Sistema: Productos y Ofertas"]
-    sistema["Catálogo, Taxonomía, Pricing, Promociones, Combos, Inventario y Bulk"]
-  end
+```text
+apps/inventory-svc/src/
+├── main.ts
+├── inventory.module.ts
+│
+├── domain/
+│   ├── entities/
+│   │   ├── stock-balance.ts
+│   │   ├── inventory-reservation.ts
+│   │   └── inventory-operation.ts
+│   ├── value-objects/
+│   │   ├── sku.ts
+│   │   ├── location-id.ts
+│   │   └── quantity.ts
+│   ├── services/
+│   ├── events/
+│   ├── errors/
+│   └── ports/
+│       └── repositories/
+│
+├── application/
+│   ├── commands/
+│   ├── queries/
+│   ├── handlers/
+│   ├── ports/
+│   └── policies/
+│
+├── interfaces/
+│   ├── http/
+│   │   ├── controllers/
+│   │   ├── dto/
+│   │   └── mappers/
+│   └── messaging/
+│       ├── consumers/
+│       └── mappers/
+│
+├── infrastructure/
+│   ├── persistence/
+│   │   ├── repositories/
+│   │   ├── entities/
+│   │   └── migrations/
+│   ├── messaging/
+│   ├── config/
+│   └── clock/
+│
+└── health/
+```
 
-  gestor -->|"Gestiona catálogo y ofertas"| sistema
-  auditor -->|"Consulta auditoría"| sistema
-  operador -->|"Gestiona/consulta inventario"| sistema
-  canales <-->|"Consulta catálogo, precios y beneficios"| sistema
-  ventas <-->|"Confirmaciones/cancelaciones/devoluciones - provisional"| sistema
-  auth -->|"Identidad, permisos, JWKS"| sistema
+Todos los servicios deben usar esta misma plantilla salvo una justificación explícita.
+
+---
+
+# 5. Reglas de dependencias entre paquetes
+
+Permitido:
+
+```text
+interfaces -> application
+infrastructure -> application/domain ports
+application -> domain
+domain -> nada externo
+```
+
+Prohibido:
+
+```text
+domain -> NestJS
+domain -> ORM
+domain -> RabbitMQ
+domain -> Axios/fetch
+catalog-svc -> inventory-svc source code
+inventory-svc -> sales source code
+```
+
+La CI debe bloquear imports ilegales mediante reglas ESLint (`no-restricted-imports` / boundaries).
+
+---
+
+# 6. API Gateway / BFF
+
+## 6.1. Responsabilidades
+
+El gateway puede:
+
+- autenticar requests externos;
+- aplicar rate limiting;
+- propagar `X-Correlation-Id`;
+- enrutar al servicio owner;
+- servir read models;
+- agregar lecturas cuando una pantalla requiere varios dominios;
+- exponer estado de operaciones asíncronas.
+
+---
+
+## 6.2. Prohibiciones
+
+No debe:
+
+- implementar descuentos;
+- determinar stock;
+- crear SKU;
+- cambiar precios;
+- decidir activación;
+- escribir tablas de servicios;
+- convertirse en orquestador de cada proceso interno.
+
+---
+
+## 6.3. Acceso externo
+
+Las APIs externas se publican detrás de:
+
+```text
+Ingress / Reverse Proxy
+          |
+          v
+API Gateway
+```
+
+Los servicios de dominio permanecen privados siempre que el despliegue lo permita.
+
+Las rutas públicas siguen `api/openapi.yaml`.
+
+---
+
+# 7. Persistencia
+
+## 7.1. PostgreSQL
+
+Cada servicio tiene schema y credenciales propias.
+
+| Servicio | Schema |
+|---|---|
+| `taxonomy-svc` | `taxonomy` |
+| `catalog-svc` | `catalog` |
+| `pricing-svc` | `pricing` |
+| `price-audit-svc` | `price_audit` || `promotions-svc` | `promotions` |
+| `combos-svc` | `combos` |
+| `inventory-svc` | `inventory` |
+| `bulk-svc` | `bulk` |
+| `api-gateway` | `read_model` |
+
+Una sola instancia PostgreSQL puede utilizarse para el curso, pero:
+
+```text
+un schema físico compartido != un modelo compartido
 ```
 
 ---
 
-## 10. C4 — Nivel 2: contenedores
+## 7.2. Tablas conceptuales revisadas
+
+### `taxonomy`
+
+```text
+categories
+brands
+characteristics
+characteristic_values
+product_types
+product_type_characteristics
+category_seo
+slug_history
+master_deactivation_operations
+outbox
+inbox
+```
+
+### `catalog`
+
+```text
+products
+variants
+product_images
+variant_images
+product_attribute_values
+variant_attribute_values
+product_identifying_characteristics
+sku_physical_profiles
+activation_checks
+master_barriers
+outbox
+inbox
+```
+
+### `pricing`
+
+```text
+prices
+price_validities
+scheduled_prices
+bulk_price_jobs
+outbox
+inbox
+```
+
+### `price_audit`
+
+```text
+price_audit_log
+export_jobs
+archive_manifests
+inbox
+```
+
+### `promotions`
+
+```text
+promotions
+promotion_scopes
+combination_policy
+coupons
+coupon_uses
+recommendation_rules
+recommendation_items
+catalog_projection
+price_projection
+stock_projection
+outbox
+inbox
+```
+
+### `combos`
+
+```text
+combos
+combo_items
+component_projection
+outbox
+inbox
+```
+
+### `inventory`
+
+```text
+stock_balance
+reservations
+reservation_lines
+inventory_operations
+kardex
+stock_threshold_override
+inventory_config
+dashboard_projection
+outbox
+inbox
+```
+
+### `bulk`
+
+```text
+batch_jobs
+batch_rows
+row_domain_steps
+export_jobs
+file_manifests
+outbox
+inbox
+```
+
+### `read_model`
+
+```text
+product_listing
+product_detail_view
+combo_view
+operation_status
+event_offsets
+inbox
+```
+
+Los nombres físicos pueden evolucionar; el ownership no.
+
+---
+
+# 8. Migraciones
+
+Cada servicio es dueño de sus migraciones.
+
+Reglas:
+
+1. una migración nunca modifica el schema de otro servicio;
+2. las migraciones deben ser reproducibles desde cero;
+3. no editar migraciones ya aplicadas en ambientes compartidos;
+4. cambios destructivos se realizan con estrategia expand/contract;
+5. las migraciones se ejecutan antes de iniciar la nueva versión;
+6. despliegues no deben depender de creación automática de tablas del ORM.
+
+Ejemplo expand/contract:
+
+```text
+v1: añadir columna nueva nullable
+v2: escribir campo viejo + nuevo
+v3: migrar datos históricos
+v4: leer solo nuevo
+v5: retirar campo viejo
+```
+
+---
+
+# 9. Transacciones
+
+## 9.1. ACID local
+
+Debe usarse para invariantes del mismo servicio.
+
+Ejemplos:
+
+```text
+Reserva + líneas + saldos + Outbox
+Consumo + Kardex + saldos + Outbox
+Liberación + Kardex + saldos + Outbox
+Precio + vigencia + Outbox
+Cupón + contador + Outbox
+```
+
+---
+
+## 9.2. Prohibición de transacción distribuida
+
+No existe una transacción SQL que abarque:
+
+```text
+Ventas + Inventario
+Catálogo + Pricing
+Catálogo + Inventario
+Pricing + Auditoría
+Bulk + Catálogo + Pricing + Inventario
+```
+
+La coordinación se implementa con:
+
+- mensajes;
+- estados explícitos;
+- idempotencia;
+- reintentos;
+- compensación;
+- conciliación.
+
+---
+
+# 10. Mensajería asíncrona
+
+## 10.1. RabbitMQ
+
+P2 fija una topología física estable en el vhost:
+
+```text
+/marketplace
+```
+
+Exchanges:
+
+```text
+po.commands.x  topic
+po.events.x    topic
+po.results.x   topic
+po.retry.x     direct
+po.dlx.x       direct
+po.unrouted.x  fanout
+```
+
+Las routing keys son exactamente los nombres AsyncAPI.
+
+Colas principales:
+
+```text
+po.catalog.q
+po.gateway.q
+po.promotions.q
+po.combos.q
+po.inventory.q
+po.pricing.q
+po.price-audit.q
+po.sales.q
+po.taxonomy.q
+po.bulk.q
+```
+
+Cada cola principal tiene:
+
+```text
+<main>.retry
+<main>.dlq
+```
+
+Características:
+
+- quorum + durable;
+- manual ack;
+- publisher confirms;
+- prefetch inicial 20;
+- at-least-once;
+- dedupe por `message_id`;
+- idempotencia de negocio por `operation_id`;
+- Outbox/Inbox obligatorios.
+
+Retry técnico:
+
+```text
+fallo transitorio
+-> po.retry.x
+-> <main>.retry
+-> TTL 30 s
+-> default exchange
+-> <main>
+```
+
+Máximo 3 retries de aplicación. Después:
+
+```text
+po.dlx.x -> <main>.dlq
+```
+
+Rechazos de negocio (`STOCK_INSUFICIENTE`, cupón sin cupo, etc.) se ACKean y producen resultado `...rejected`; no van a DLQ.
+
+Publicaciones sin binding terminan en `po.unrouted.x` / `po.unrouted.q` y el publisher usa `mandatory=true`.
+
+La matriz completa de bindings está en `api/rabbitmq-topologia.md` y en `asyncapi/asyncapi.yaml`.
+
+## 10.2. Envelope estándar
+
+```json
+{
+  "message_id": "uuid",
+  "kind": "command|event|result",
+  "name": "inventory.reservation.created",
+  "schema_version": 1,
+  "operation_id": "uuid",
+  "correlation_id": "uuid",
+  "causation_id": "uuid-or-null",
+  "occurred_at": "ISO-8601",
+  "producer": "inventory-svc",
+  "actor": {
+    "user_id": "opaque-or-null",
+    "service_id": "modulo-ventas",
+    "channel": "MARKETPLACE"
+  },
+  "data": {}
+}
+```
+
+---
+
+## 10.3. Reglas de publicación
+
+Un evento de dominio:
+
+1. se registra en Outbox en la misma transacción del cambio;
+2. se publica después del commit;
+3. puede ser entregado más de una vez;
+4. debe ser procesable idempotentemente;
+5. no garantiza orden global.
+
+---
+
+## 10.4. Inbox
+
+Todo consumidor que cause efectos debe registrar:
+
+```text
+message_id
+processed_at
+handler
+result
+```
+
+con unicidad por `message_id` o clave semántica equivalente.
+
+---
+
+## 10.5. Reintentos
+
+Diferenciar:
+
+### Error transitorio
+
+Ejemplos:
+
+```text
+timeout
+broker no disponible
+DB temporalmente indisponible
+HTTP 503
+```
+
+Puede reintentarse con backoff.
+
+### Rechazo de negocio
+
+Ejemplos:
+
+```text
+STOCK_INSUFICIENTE
+VERSION_CONFLICT
+SKU_INACTIVO
+CUPON_AGOTADO
+```
+
+No debe reintentarse automáticamente como si fuera un error técnico.
+
+---
+
+## 10.6. DLQ
+
+DLQ/cuarentena se reserva para:
+
+- mensajes malformados;
+- schema incompatible;
+- errores técnicos persistentes;
+- poison messages.
+
+Un rechazo de negocio válido no es poison message.
+
+---
+
+# 11. Contratos
+
+## 11.1. HTTP
+
+Fuente canónica:
+
+```text
+api/openapi.yaml
+```
+
+La línea base vigente es OpenAPI `3.1.0`, contrato `0.4.0`. El contrato contiene **101 paths, 128 operaciones y 155 schemas**, con cobertura consolidada para las 16 funcionalidades del módulo.
+
+Entre los cierres incorporados a esta línea base están:
+
+- resolución previa del slug de categoría mediante `POST /api/v1/seo/categorias/slug/resolver`;
+- creación de categoría con `slugConfirmado`, revalidado al persistir para evitar cambios silenciosos ante carreras;
+- CRUD/consulta administrativa de tipos de producto y sus asociaciones de características;
+- consulta del estado de una baja segura mediante `GET /api/v1/taxonomia/operaciones/{operationId}`;
+- consulta y exportación administrativa de Auditoría de precios;
+- códigos HTTP específicos para recurso inexistente, conflicto y límites funcionales de exportación.
+
+Cambios incompatibles requieren nueva versión de la interfaz; los cambios compatibles dentro de `v1` deben actualizar primero OpenAPI y después los documentos humanos derivados.
+
+---
+
+## 11.2. Asíncronos
+
+Fuente canónica:
+
+```text
+asyncapi/asyncapi.yaml
+```
+
+El contrato AsyncAPI P0 ya formaliza:
+
+- envelope estándar;
+- `message_id`;
+- `operation_id`;
+- `correlation_id`;
+- `causation_id`;
+- `schema_version`;
+- productor y consumidores previstos;
+- payload de cada mensaje;
+- semántica `command | event | result`;
+- entrega `at-least-once`;
+- deduplicación por `message_id`.
+
+El catálogo de eventos correspondiente es:
+
+```text
+api/catalogo-eventos.md
+```
+
+AsyncAPI P2 documenta **39 mensajes lógicos**, distribuidos entre:
+
+- Taxonomía;
+- Catálogo;
+- Pricing;
+- Inventario;
+- Bulk;
+- Promociones/Cupones.
+
+Además de la baja segura de entidades maestras, AsyncAPI `0.4.0` formaliza:
+
+```text
+taxonomy.product-type-schema.changed
+taxonomy.characteristic-value.updated
+```
+
+El primero propaga a Catálogo cambios confirmados del esquema asociado a un `tipo_producto_id`; el segundo propaga renombres confirmados de valores `LISTA`. El flujo genérico de baja segura cubre también `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC`.
+
+P2 fija los nombres físicos de exchange, queue, retry y DLQ en `api/rabbitmq-topologia.md`.
+
+Los contratos Catálogo → Pricing, Catálogo → Inventario, consumo/restitución de cupón y reintegro físico ya están formalizados en OpenAPI/AsyncAPI según corresponda.
+## 11.3. Catálogos humanos
+
+Dos documentos complementan los contratos ejecutables:
+
+```text
+api/catalogo-eventos.md
+api/catalogo-errores.md
+```
+
+`catalogo-eventos.md` explica productores, consumidores, correlación, idempotencia, retries y relación OpenAPI ↔ AsyncAPI.
+
+`catalogo-errores.md` centraliza:
+
+- `Problem.code`;
+- códigos de rechazo asíncrono;
+- `401 TOKEN_INVALIDO`;
+- `403 SCOPE_INSUFICIENTE`;
+- `IDEMPOTENCY_CONFLICT`;
+- códigos funcionales por dominio.
+
+La implementación no debe inventar códigos desde controllers/consumers fuera de este catálogo.
+
+---
+
+## 11.4. Contratos generados
+
+Si se usa generación de tipos desde OpenAPI/JSON Schema:
+
+- los tipos generados son DTOs;
+- no deben importarse dentro del dominio;
+- deben mapearse en adapters.
+
+---
+
+# 12. Catálogo y perfil físico
+
+## 12.1. Producto y variante
+
+- `variant_id` es identidad interna.
+- `sku` es identidad comercial.
+- Producto simple usa `sku_base` como SKU vendible.
+- Producto con variantes no posee stock propio.
+
+---
+
+## 12.2. Perfil físico
+
+`catalog-svc` administra:
+
+```text
+sku
+pesoKg
+largoCm
+anchoCm
+altoCm
+actualizadoEn
+```
+
+El perfil se asocia al SKU vendible.
+
+No contiene:
+
+```text
+tipoEmpaque
+cantidadPaquetes
+volumenLogisticoFinal
+```
+
+---
+
+## 12.3. Consulta de Despacho
+
+Contrato:
+
+```http
+POST /api/v1/productos/datos-fisicos/consulta
+```
+
+Características:
+
+- request en lote;
+- consumidor técnico `modulo-despacho`;
+- no consulta base de Catálogo directamente;
+- scope propuesto `productos:fisicos:leer`;
+- no incluye stock;
+- no decide empaque.
+
+---
+
+# 13. Inventario
+
+## 13.1. Modelo autoritativo
+
+Unidad:
+
+```text
+(sku, location_id)
+```
+
+Estado:
+
+```text
+on_hand
+reserved
+blocked
+available
+stock_version
+```
+
+Regla:
+
+```text
+available = max(on_hand - reserved - blocked, 0)
+```
+
+Invariantes:
+
+```text
+reserved + blocked <= on_hand
+on_hand >= 0
+reserved >= 0
+blocked >= 0
+available >= 0
+```
+
+`blocked` representa unidades físicamente presentes pero temporalmente fuera de venta por incidencia/cuarentena.
+
+---
+
+## 13.2. Consulta
+
+```http
+GET /api/v1/inventario/disponibilidad
+```
+
+Consumidores:
+
+```text
+Marketplace
+Chatbot
+Retail
+Ventas/Postventa
+```
+
+Para llamadas módulo-a-módulo, la consulta utiliza la audiencia `api-productos` y propone el scope `inventario:disponibilidad:leer`.
+
+La consulta:
+
+- no crea reserva;
+- no garantiza stock futuro;
+- no habilita mutaciones de canal.
+
+---
+
+# 14. Reserva de inventario
+
+## 14.1. Creación
+
+Cuando Ventas registra el pedido en:
+
+```text
+CREADO
+```
+
+solicita:
+
+```http
+POST /api/v1/inventario/reservas
+```
+
+La operación:
+
+1. valida el comando;
+2. comprueba idempotencia;
+3. bloquea únicamente los saldos necesarios durante la transacción;
+4. verifica disponibilidad;
+5. crea reserva + líneas;
+6. incrementa `reserved`;
+7. recalcula `available`;
+8. registra Outbox;
+9. confirma la transacción;
+10. publica resultado.
+
+---
+
+## 14.2. Confirmación
+
+Cuando Ventas cambia el pedido a:
+
+```text
+PAGADO
+```
+
+solicita:
+
+```http
+POST /api/v1/inventario/reservas/{reservaId}/confirmar
+```
+
+Inventario:
+
+```text
+on_hand -= cantidad
+reserved -= cantidad
+blocked no cambia
+available = max(on_hand - reserved - blocked, 0)
+```
+
+y registra Kardex.
+
+La operación debe ser idempotente.
+
+---
+
+## 14.3. Liberación
+
+Ante:
+
+```text
+PAGO_NO_COMPLETADO
+anulación aplicable
+```
+
+Ventas solicita:
+
+```http
+POST /api/v1/inventario/reservas/{reservaId}/liberar
+```
+
+Inventario:
+
+```text
+reserved -= cantidad
+available += cantidad
+```
+
+sin modificar `on_hand`.
+
+---
+
+## 14.4. Expiración
+
+Una reserva activa contiene:
+
+```text
+expires_at
+```
+
+El TTL es configurable por canal/entorno.
+
+Un worker periódico o scheduler de Inventario:
+
+1. localiza reservas expirables;
+2. reclama un lote con locking seguro;
+3. libera cantidades;
+4. registra operación;
+5. publica `inventory.reservation.expired`.
+
+Debe tolerar que al mismo tiempo llegue confirmación o liberación explícita.
+
+Solo una transición final puede ganar.
+
+---
+
+## 14.5. Máquina de estados
+
+```text
+             +------------+
+             |   ACTIVA   |
+             +-----+------+
+                   |
+       +-----------+-----------+
+       |           |           |
+       v           v           v
+  CONSUMIDA    LIBERADA    EXPIRADA
+```
+
+Una repetición de la **misma operación lógica**, con la misma identidad idempotente y el mismo payload semántico, reutiliza el resultado previo sin repetir efectos.
+
+Una **operación distinta** que intenta ejecutar una transición incompatible desde un estado terminal se rechaza con el código funcional correspondiente (`RESERVA_NO_ACTIVA`, `RESERVA_EXPIRADA`, etc.).
+
+Reutilizar la misma identidad idempotente para una intención distinta produce:
+
+```text
+409 IDEMPOTENCY_CONFLICT
+```
+
+Nunca se vuelve a `ACTIVA`.
+
+---
+
+## 14.6. Incidencias físicas y cuarentena
+
+Retail no escribe el saldo directamente. Reporta:
+
+```http
+POST /api/v1/inventario/incidencias
+```
+
+`inventory-svc` bloquea de forma transaccional únicamente unidades `available`:
+
+```text
+blocked += quantity
+available = max(on_hand - reserved - blocked, 0)
+```
+
+La resolución se realiza mediante:
+
+```http
+POST /api/v1/inventario/incidencias/{incidenciaId}/resolver
+```
+
+Una rehabilitación reduce `blocked`. Una merma/faltante confirmado reduce `blocked` y `on_hand`.
+
+## 14.7. Reintegro postventa
+
+Solo `modulo-ventas` puede invocar:
+
+```http
+POST /api/v1/inventario/reintegros
+```
+
+Precondición de integración:
+
+```text
+retorno comercial aceptado
++
+recepción física confirmada
++
+unidad reintegrable
+```
+
+El reintegro incrementa `on_hand`, recalcula `available`, registra Kardex y es idempotente.
+
+## 14.8. Conciliación Retail offline
+
+La venta offline se registra primero en Ventas/Postventa.
+
+Luego:
+
+```http
+POST /api/v1/inventario/conciliaciones-offline
+```
+
+Inventario aplica:
+
+```text
+applied = min(requested, available)
+unresolved = requested - applied
+```
+
+Nunca consume unidades reservadas/bloqueadas para ocultar una discrepancia ni permite saldos negativos.
+
+Resultado:
+
+```text
+unresolved = 0 -> COMPLETED
+unresolved > 0 -> REQUIRES_REVIEW
+```
+
+## 14.9. Sincronía de capacidades de inventario e incidencias
+
+Incidencias, reintegro y conciliación se confirman en la respuesta HTTP después del commit local. Esto evita crear nuevos mensajes asíncronos que dupliquen un resultado ya autoritativo.
+
+Después del commit pueden publicar:
+
+```text
+inventory.stock.changed
+inventory.stock.adjusted
+```
+
+según corresponda.
+
+---
+
+# 15. Concurrencia de inventario
+
+## 15.1. Regla
+
+Dos operaciones concurrentes nunca pueden comprometer las mismas unidades.
+
+---
+
+## 15.2. Estrategia
+
+Dentro de una transacción local:
+
+- bloquear únicamente filas `(sku, location_id)` afectadas;
+- adquirir locks en orden determinista para evitar deadlocks;
+- validar disponibilidad después del lock;
+- actualizar saldo;
+- incrementar `stock_version`;
+- registrar Kardex/Outbox;
+- commit rápido.
+
+No usar:
+
+- lock global del inventario;
+- transacciones largas;
+- locks mientras se llama a otro servicio.
+
+---
+
+## 15.3. Ajustes absolutos
+
+Bulk usa:
+
+```text
+stock_version
+```
+
+Un ajuste con versión obsoleta produce:
+
+```text
+VERSION_CONFLICT
+```
+
+y no sobrescribe ventas/reservas recientes.
+
+---
+
+# 16. Pricing
+
+`pricing-svc` posee:
+
+```text
+precio_regular
+precio_oferta
+currency
+channel_id
+valid_from
+valid_until
+price_version
+```
+
+Reglas:
+
+- aritmética decimal;
+- optimistic concurrency por `price_version`;
+- cambio confirmado publica `pricing.price.changed`;
+- auditoría consume el evento después del commit;
+- Pricing no conoce reglas completas de combinabilidad.
+
+---
+
+# 17. Promociones y cupones
+
+`promotions-svc` resuelve:
+
+- promoción automática;
+- CUPÓN;
+- combinabilidad;
+- mejor beneficio;
+- cross-sell;
+- upsell.
+
+Regla:
+
+```text
+validar cupón != consumir cupón
+```
+
+La evaluación HTTP es side-effect free.
+
+El consumo definitivo de cupón debe correlacionarse con el pedido y ser idempotente.
+
+---
+
+# 18. Combos
+
+`combos-svc` posee la definición comercial.
+
+No posee:
+
+- stock;
+- precio autoritativo de cada componente;
+- producto.
+
+Mantiene proyecciones locales reconstruibles.
+
+Disponibilidad informativa:
+
+```text
+min(floor(available_i / cantidad_i))
+```
+
+La reserva real ocurre en Inventario sobre los SKU componentes.
+
+---
+
+# 19. Bulk
+
+## 19.1. Responsabilidad
+
+`bulk-svc` es un process manager, no un dueño de catálogo/precio/stock.
+
+---
+
+## 19.2. Flujo
+
+```text
+archivo
+  |
+  v
+prevalidación
+  |
+  v
+batch + rows
+  |
+  +--> Catálogo
+  +--> Pricing
+  +--> Inventario
+       |
+       v
+resultados correlacionados
+       |
+       v
+COMPLETED / FAILED / RECONCILIATION_REQUIRED
+```
+
+---
+
+## 19.3. Estado durable
+
+Cada fila registra:
+
+```text
+required_domains[]
+applied_domains[]
+failed_domain
+needs_reconciliation
+```
+
+Un ACK de RabbitMQ no equivale a éxito de dominio.
+
+---
+
+# 20. Auditoría
+
+`price-audit-svc`:
+
+- consume `pricing.price.changed`;
+- deduplica por `event_id/message_id`;
+- escribe append-only;
+- no modifica Pricing;
+- expone consulta administrativa paginada y detalle por `auditId`;
+- permite exportación asíncrona y descarga del archivo generado;
+- aplica retención configurable.
+
+La superficie HTTP vigente incluye:
+
+```text
+GET  /api/v1/auditoria-precios
+GET  /api/v1/auditoria-precios/{auditId}
+POST /api/v1/auditoria-precios/exportaciones
+GET  /api/v1/auditoria-precios/exportaciones/{exportId}
+GET  /api/v1/auditoria-precios/exportaciones/{exportId}/archivo
+```
+
+Reglas de exportación:
+
+```text
+CSV <= 100000 filas
+PDF <= 500 filas
+```
+
+Si una solicitud válida excede el límite funcional, se rechaza con:
+
+```text
+422 LIMITE_EXPORTACION_AUDITORIA_EXCEDIDO
+```
+
+y no se crea `export_id`. Un registro inexistente usa:
+
+```text
+404 AUDITORIA_PRECIO_NO_ENCONTRADA
+```
+
+La bitácora continúa siendo estrictamente append-only; ninguna de estas rutas introduce edición o borrado del histórico.
+
+---
+
+# 21. Seguridad
+
+## 21.1. Proveedor de identidad y rol comercial
+
+Productos adopta el contrato publicado por `Taller-SW-Web/Modulo-de-Seguridad`.
+
+Identidad técnica del módulo:
+
+```text
+client_id = modulo-productos
+```
+
+Scopes concedidos a este cliente para consumir Seguridad:
+
+```text
+tokens:introspeccion
+roles:leer
+```
+
+Seguridad publica además el rol global:
+
+```text
+GESTOR_COMERCIAL
+```
+
+que cubre administración de catálogo, precios y promociones. Productos y Ofertas autoriza esas operaciones a partir del claim `roles`; el claim `permisos` pertenece a permisos internos de Seguridad y no es el repositorio de permisos de negocio de Productos.
+
+Los perfiles que no forman parte de los seis roles globales —por ejemplo, un responsable operativo de inventario— pueden modelarse localmente y enlazarse al `sub` del usuario.
+
+---
+
+## 21.2. Validación JWT de usuario
+
+Tráfico ordinario:
+
+```text
+JWT de usuario
+  -> validar firma/iss/exp localmente
+  -> JWKS cacheado
+  -> comprobar roles y reglas propias
+```
+
+Endpoints de Seguridad:
+
+```http
+GET /api/v1/auth/.well-known/openid-configuration
+GET /api/v1/auth/.well-known/jwks.json
+```
+
+Claims relevantes:
+
+```text
+sub
+email
+roles
+permisos
+tipo
+iss
+exp
+jti
+```
+
+`permisos` no se usa para esperar capacidades internas de Productos.
+
+---
+
+## 21.3. Introspección
+
+Seguridad define introspección para operaciones sensibles y documenta explícitamente el **cambio de precio** como operación sensible. En la integración vigente, `modulo-productos` recibe `tokens:introspeccion` para autorizar cambios de precio.
+
+Antes de admitir una mutación que cambie o programe precios:
+
+```http
+POST /api/v1/auth/introspeccion
+```
+
+Flujo:
+
+```text
+JWT usuario
+  -> validación local
+  -> rol GESTOR_COMERCIAL
+  -> introspección
+  -> activo=true
+  -> ejecutar/admitir cambio de precio
+```
+
+Las lecturas y operaciones no clasificadas como sensibles permanecen en la vía local con JWKS.
+
+---
+
+## 21.4. Tokens de servicio hacia `api-productos`
+
+La audiencia contractual de esta API es:
+
+```text
+api-productos
+```
+
+Un token técnico entrante debe validar:
+
+```text
+iss
+aud contiene api-productos
+tipo = servicio
+exp vigente
+scope requerido por la operación
+```
+
+El `sub` identifica al `client_id` del módulo consumidor. Los scopes viajan en `scope` separados por espacios.
+
+La validación de `aud` evita que un token emitido para otra API pueda reutilizarse contra Productos y Ofertas.
+
+---
+
+## 21.5. Scopes propios de Productos y Ofertas
+
+`0.4.0` conserva 16 scopes técnicos bajo `aud=api-productos`.
+
+```text
+catalogo:leer
+precios:leer
+promociones:leer
+promociones:evaluar
+cupones:validar
+recomendaciones:leer
+combos:leer
+inventario:disponibilidad:leer
+inventario:reservar
+inventario:consumir
+inventario:liberar
+inventario:reintegrar
+inventario:conciliar-offline
+inventario:incidencias:reportar
+inventario:incidencias:resolver
+productos:fisicos:leer
+```
+
+Agrupación:
+
+```text
+catalog/taxonomy:
+  catalogo:leer
+
+pricing:
+  precios:leer
+
+promotions:
+  promociones:leer
+  promociones:evaluar
+  cupones:validar
+
+recommendations:
+  recomendaciones:leer
+
+combos:
+  combos:leer
+
+inventory:
+  inventario:disponibilidad:leer
+  inventario:reservar
+  inventario:consumir
+  inventario:liberar
+  inventario:reintegrar
+  inventario:conciliar-offline
+  inventario:incidencias:reportar
+  inventario:incidencias:resolver
+
+catalog physical projection:
+  productos:fisicos:leer
+```
+
+Mínimo privilegio:
+
+```text
+Marketplace -> lectura/evaluación + disponibilidad
+Chatbot     -> lectura/evaluación + recomendaciones + disponibilidad
+Retail      -> lectura/evaluación + disponibilidad + incidencias físicas
+Ventas      -> disponibilidad + ciclo comercial completo de Inventario
+Despacho    -> datos físicos
+```
+
+`combos:leer` permanece sin concesión externa inicial.
+
+Hasta que Seguridad registre el catálogo y grants:
+
+```text
+x-scope-registration-status: pending-security-registration
+```
+
+continúa siendo obligatorio.
+
+
+# 22. Errores
+
+Fuente canónica de códigos:
+
+```text
+api/catalogo-errores.md
+```
+
+Fuente canónica de respuestas por endpoint:
+
+```text
+api/openapi.yaml
+```
+
+Todos los adapters HTTP producen:
+
+```text
+application/problem+json
+```
+
+Formato:
+
+```json
+{
+  "type": "/errores/stock-insuficiente",
+  "title": "Stock insuficiente",
+  "status": 409,
+  "detail": "No existe disponibilidad suficiente.",
+  "instance": "/api/v1/inventario/reservas",
+  "code": "STOCK_INSUFICIENTE",
+  "correlationId": "uuid",
+  "details": {}
+}
+```
+
+`Problem.code` ya no es un `string` libre. OpenAPI lo restringe mediante `ErrorCode` y cada operación limita el subconjunto aplicable mediante `x-error-codes`.
+
+La línea base `0.4.0` contiene **95 códigos globales**. Entre las armonizaciones recientes:
+
+```text
+TIPO_PRODUCTO_NO_ENCONTRADO          -> 404
+TIPO_PRODUCTO_INVALIDO               -> 422
+PRODUCTO_NO_ADMITE_VARIANTES         -> 409
+SLUG_DUPLICADO                       -> 409
+OPERACION_MAESTRA_NO_ENCONTRADA      -> 404
+AUDITORIA_PRECIO_NO_ENCONTRADA       -> 404
+LIMITE_EXPORTACION_AUDITORIA_EXCEDIDO -> 422
+```
+
+La separación entre “no encontrado”, “estado/semántica inválida” y “conflicto” debe conservarse en controllers, pruebas de contrato y consumidores.
+
+Reglas:
+
+```text
+401 -> TOKEN_INVALIDO
+403 -> SCOPE_INSUFICIENTE
+```
+
+`SIN_AUTORIZACION` queda retirado de contratos nuevos.
+
+Para idempotencia:
+
+```text
+misma identidad + misma intención
+-> replay sin efectos adicionales
+
+misma identidad + intención distinta
+-> 409 IDEMPOTENCY_CONFLICT
+```
+
+`OPERACION_DUPLICADA` queda retirado de contratos nuevos.
+
+El dominio no conoce códigos HTTP:
+
+```textDomainError
+   |
+   v
+ProblemDetailsMapper
+   |
+   v
+Problem.code + HTTP status
+```
+
+Los consumidores ramifican por `code`, nunca por `title` ni `detail`.
+
+Un rechazo funcional posterior a `202 Accepted` se expresa mediante el `result` AsyncAPI correspondiente; no debe confundirse con un error de transporte.
+
+# 23. Configuración
+
+Toda configuración se valida al arrancar.
+
+No acceder directamente a:
+
+```ts
+process.env.X
+```
+
+desde lógica de negocio.
+
+Debe existir un `ConfigService` tipado por aplicación.
+
+Ejemplos:
+
+```text
+DATABASE_URL
+RABBITMQ_URL
+AUTH_ISSUER
+AUTH_JWKS_URL
+RESERVATION_TTL_*
+MAX_CATEGORY_DEPTH
+MAX_PRODUCT_TYPE_ATTRIBUTES
+AUDIT_HOT_RETENTION_MONTHS
+AUDIT_ARCHIVE_RETENTION_YEARS
+```
+
+La aplicación debe fallar rápido al arrancar si falta una variable obligatoria.
+
+---
+
+# 24. Observabilidad
+
+## 24.1. Correlación
+
+Toda request genera o preserva:
+
+```text
+X-Correlation-Id
+```
+
+Toda operación asíncrona conserva:
+
+```text
+correlation_id
+causation_id
+operation_id
+```
+
+---
+
+## 24.2. Logs
+
+Logs estructurados JSON.
+
+Campos recomendados:
+
+```text
+timestamp
+level
+service
+environment
+correlation_id
+operation_id
+message_id
+route/event
+code
+duration_ms
+```
+
+No registrar:
+
+- JWT;
+- client secrets;
+- contraseñas;
+- archivo completo de importación;
+- PII innecesaria.
+
+---
+
+## 24.3. Métricas
+
+Mínimas:
+
+```text
+HTTP latency/error rate
+DB latency
+consumer lag
+messages processed/rejected/retried
+outbox backlog
+DLQ size
+reservation success/rejection/expiration
+bulk processing duration
+```
+
+---
+
+## 24.4. Tracing
+
+OpenTelemetry propaga contexto entre:
+
+```text
+HTTP
+RabbitMQ
+workers
+DB
+```
+
+Los spans no sustituyen logs de auditoría de negocio.
+
+---
+
+# 25. Health checks
+
+Cada servicio expone:
+
+```text
+/health/live
+/health/ready
+```
+
+`live`:
+
+- confirma que el proceso está vivo;
+- no depende de cada servicio remoto.
+
+`ready`:
+
+- verifica dependencias necesarias para aceptar trabajo;
+- DB;
+- broker cuando la operación lo requiere.
+
+No realizar fan-out a todos los microservicios en cada health check.
+
+---
+
+# 26. Resiliencia
+
+| Riesgo | Respuesta |
+|---|---|
+| Broker temporalmente caído | Outbox mantiene eventos pendientes |
+| Mensaje duplicado | Inbox/idempotencia |
+| Mensaje fuera de orden | versión + estado + reconciliación |
+| Dependencia HTTP lenta | timeout corto y explícito |
+| Dependencia caída | error 503/circuit breaker cuando aplique |
+| Proyección atrasada | `source_version` / `updated_at`; escritura revalida owner |
+| Worker reiniciado | estado durable y reanudable |
+| Poison message | DLQ |
+| Retry storm | backoff + jitter + límite |
+
+No aplicar retries automáticos indiscriminados a mutaciones HTTP sin idempotency key.
+
+---
+
+# 27. API externa vs llamadas internas
+
+## Externa
+
+Definida en:
+
+```text
+api/openapi.yaml
+```
+
+---
+
+## Interna
+
+Solo crear una llamada síncrona entre microservicios cuando:
+
+1. se necesita respuesta inmediata;
+2. el owner es autoritativo;
+3. la operación es de lectura;
+4. no existe una proyección suficientemente fresca.
+
+Las mutaciones cross-context deben preferir comandos asíncronos.
+
+---
+
+# 28. Caching
+
+Valkey es opcional.
+
+Puede utilizarse para:
+
+- catálogo agregado;
+- read models;
+- rate limiting;
+- metadata poco cambiante.
+
+No utilizar caché como autoridad para:
+
+- reserva;
+- consumo;
+- stock final;
+- límites de cupón;
+- concurrencia de precio.
+
+La invalidación debe basarse en eventos o TTL explícito.
+
+---
+
+# 29. C4 — Nivel 1: contexto actualizado
+
+```mermaid
+flowchart LR
+  gestor["Gestor comercial<br/>GESTOR_COMERCIAL"]
+  auditor["Auditor"]
+  operador["Operador de inventario<br/>perfil local"]
+
+  market["Marketplace"]
+  chatbot["Chatbot"]
+  retail["Retail"]
+  ventas["Ventas y Postventa"]
+  despacho["Despacho y Entrega"]
+  seguridad["Seguridad y Usuarios"]
+
+  po["Productos y Ofertas"]
+
+  gestor -->|"Administra catálogo, precios y ofertas"| po
+  auditor -->|"Consulta auditoría"| po
+  operador -->|"Gestiona inventario"| po
+
+  market -->|"Consulta catálogo/precio/promos/stock"| po
+  chatbot -->|"Consulta catálogo/precio/promos/stock"| po
+  retail -->|"Consulta catálogo/precio/promos/stock"| po
+
+  ventas -->|"Reserva / confirma / libera inventario"| po
+  po -->|"Resultados de inventario/cupón"| ventas
+
+  despacho -->|"Consulta datos físicos por SKU"| po
+
+  seguridad -->|"JWT, JWKS, introspección"| po
+```
+
+---
+
+# 30. C4 — Nivel 2: contenedores
 
 ```mermaid
 flowchart TB
-  user["Usuarios / Canales"]
-  sales["Ventas/Postventa\nPROVISIONAL"]
-  auth["Seguridad y Usuarios"]
+  channels["Marketplace / Chatbot / Retail"]
+  sales["Ventas/Postventa"]
+  dispatch["Despacho"]
+  security["Seguridad"]
 
-  subgraph module["Módulo Productos y Ofertas"]
+  subgraph module["Productos y Ofertas"]
     fe["React SPA"]
-    edge["Reverse proxy / ingress"]
-    bff["api-gateway / BFF\nread model"]
-    tax["taxonomy-svc"]
-    cat["catalog-svc"]
-    pri["pricing-svc"]
-    aud["price-audit-svc"]
-    pro["promotions-svc"]
-    com["combos-svc"]
-    inv["inventory-svc"]
-    bul["bulk-svc"]
+    ingress["Ingress / Reverse Proxy"]
+    gateway["API Gateway / BFF"]
+
+    taxonomy["taxonomy-svc"]
+    catalog["catalog-svc"]
+    pricing["pricing-svc"]
+    audit["price-audit-svc"]
+    promotions["promotions-svc"]
+    combos["combos-svc"]
+    inventory["inventory-svc"]
+    bulk["bulk-svc"]
+
     mq[("RabbitMQ")]
-    db[("PostgreSQL\nesquemas aislados")]
-    cache[("Valkey\noptimización")]
+    db[("PostgreSQL<br/>schemas aislados")]
+    cache[("Valkey<br/>opcional")]
+    storage[("Object Storage")]
   end
 
-  user -->|HTTPS| fe -->|HTTPS| edge
-  edge --> bff
-  edge --> tax & cat & pri & aud & pro & com & inv & bul
+  fe -->|HTTPS| ingress
+  channels -->|HTTPS| ingress
+  sales -->|HTTPS comandos + async results| ingress
+  dispatch -->|HTTPS| ingress
 
-  tax & cat & pri & aud & pro & com & inv & bul & bff <-->|"Comandos / eventos"| mq
-  tax & cat & pri & aud & pro & com & inv & bul & bff -->|"Solo esquema propio"| db
-  bff --> cache
+  ingress --> gateway
 
-  sales <-->|"Contratos provisionales"| mq
-  auth -->|"JWT/JWKS"| edge
+  gateway --> taxonomy
+  gateway --> catalog
+  gateway --> pricing
+  gateway --> audit
+  gateway --> promotions
+  gateway --> combos
+  gateway --> inventory
+  gateway --> bulk
+
+  taxonomy <--> mq
+  catalog <--> mq
+  pricing <--> mq
+  audit <--> mq
+  promotions <--> mq
+  combos <--> mq
+  inventory <--> mq
+  bulk <--> mq
+  gateway <--> mq
+
+  taxonomy -->|"taxonomy schema"| db
+  catalog -->|"catalog schema"| db
+  pricing -->|"pricing schema"| db
+  audit -->|"price_audit schema"| db
+  promotions -->|"promotions schema"| db
+  combos -->|"combos schema"| db
+  inventory -->|"inventory schema"| db
+  bulk -->|"bulk schema"| db
+  gateway -->|"read_model schema"| db
+
+  gateway --> cache
+  bulk --> storage
+  audit --> storage
+
+  security -->|"JWKS / introspección"| ingress
 ```
 
 ---
 
-## 11. C4 — Nivel 3 por bounded context
-
-### 11.1 `taxonomy-svc`
+# 31. C4 — Nivel 3: `taxonomy-svc`
 
 ```mermaid
 flowchart LR
-  http["HTTP"]
+  http["HTTP adapters"]
   bus[("RabbitMQ")]
   db[("taxonomy schema")]
 
   subgraph svc["taxonomy-svc"]
-    ctl["Category / Brand / Characteristic / ProductType / SEO Controllers"]
-    app["Taxonomy Application Services"]
-    types["ProductTypeCharacteristicService"]
-    seo["CategorySeoSlugService"]
-    deact["MasterDeactivationCoordinator"]
-    listeners["Catalog result listeners"]
-    outbox["Outbox publisher"]
-    repo["Repositories"]
+    controllers["Category / Brand / Characteristic / ProductType / SEO Controllers"]
+    usecases["Application Use Cases"]
+    domain["Taxonomy Domain"]
+    deactivation["MasterDeactivationCoordinator"]
+    seo["SeoSlugPolicy"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Message Consumers"]
+    outbox["Outbox Relay"]
   end
 
-  http --> ctl --> app
-  app --> types
-  app --> seo
-  app --> deact
-  listeners --> deact
-  app --> repo
-  types --> repo
-  seo --> repo
-  deact --> repo --> db
-  deact --> outbox --> bus
-  bus --> listeners
+  http --> controllers --> usecases --> domain
+  usecases --> deactivation
+  usecases --> seo
+  usecases --> repos
+  repos --> adapters --> db
+  bus --> consumers --> usecases
+  usecases --> outbox --> bus
 ```
 
-### 11.2 `catalog-svc`
+Reglas contractuales adicionales del componente SEO/Taxonomía:
+
+- `SeoSlugPolicy` genera una propuesta de slug sin reservarla;
+- la creación de categoría recibe `slugConfirmado` y revalida unicidad al persistir;
+- una carrera de unicidad devuelve `409 SLUG_DUPLICADO`; nunca se sustituye silenciosamente el slug ya confirmado por el gestor;
+- `MasterDeactivationCoordinator` persiste/expone el estado consultable por `operationId`;
+- cambios confirmados del esquema de tipo y de valores `LISTA` se publican por los eventos canónicos de AsyncAPI `0.4.0`.
+
+---
+
+# 32. C4 — Nivel 3: `catalog-svc`
 
 ```mermaid
 flowchart LR
-  http["HTTP"]
+  http["HTTP adapters"]
   bus[("RabbitMQ")]
   db[("catalog schema")]
 
   subgraph svc["catalog-svc"]
-    ctl["Product / Variant Controllers"]
-    app["ProductService / VariantService"]
-    attrs["TypeSchemaValidation"]
-    activation["ActivationCoordinator"]
+    controllers["Product / Variant / Physical Data Controllers"]
+    usecases["Application Use Cases"]
+    domain["Catalog Domain"]
+    schema["AttributeSchemaValidator"]
+    activation["ActivationPolicy"]
+    physical["SkuPhysicalProfileService"]
     barriers["MasterWriteBarrier"]
-    listeners["Taxonomy / Pricing / Inventory listeners"]
-    outbox["Outbox publisher"]
-    repo["Repositories"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Message Consumers"]
+    outbox["Outbox Relay"]
   end
 
-  http --> ctl --> app
-  app --> attrs
-  app --> activation
-  app --> barriers
-  listeners --> activation & barriers
-  app --> repo
-  activation --> repo
-  barriers --> repo --> db
-  activation --> outbox --> bus
-  bus --> listeners
+  http --> controllers --> usecases --> domain
+  usecases --> schema
+  usecases --> activation
+  usecases --> physical
+  usecases --> barriers
+  usecases --> repos --> adapters --> db
+  bus --> consumers --> usecases
+  usecases --> outbox --> bus
 ```
 
-### 11.3 `pricing-svc`
+---
+
+# 33. C4 — Nivel 3: `pricing-svc`
 
 ```mermaid
 flowchart LR
-  http["HTTP"]
+  http["HTTP adapters"]
   bus[("RabbitMQ")]
   db[("pricing schema")]
 
   subgraph svc["pricing-svc"]
-    ctl["Price / Bulk Price Controllers"]
-    app["PriceApplicationService"]
-    resolve["EffectivePriceResolver"]
-    schedule["ScheduledPriceWorker"]
-    listeners["Catalog / Bulk command listeners"]
-    outbox["PriceChanged / result publisher"]
-    repo["Repositories"]
+    controllers["Price Controllers"]
+    usecases["Application Use Cases"]
+    domain["Pricing Domain"]
+    resolver["EffectivePriceResolver"]
+    scheduler["ScheduledPriceWorker"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Message Consumers"]
+    outbox["Outbox Relay"]
   end
 
-  http --> ctl --> app
-  app --> resolve
-  schedule --> app
-  bus --> listeners --> app
-  app --> repo --> db
-  app --> outbox --> bus
+  http --> controllers --> usecases --> domain
+  usecases --> resolver
+  scheduler --> usecases
+  usecases --> repos --> adapters --> db
+  bus --> consumers --> usecases
+  usecases --> outbox --> bus
 ```
 
-### 11.4 `price-audit-svc`
+---
+
+# 34. C4 — Nivel 3: `price-audit-svc`
 
 ```mermaid
 flowchart LR
-  http["HTTP"]
+  http["HTTP adapters"]
   bus[("RabbitMQ")]
   db[("price_audit schema")]
-  archive[("Archivo protegido")]
+  storage[("Archive Storage")]
 
   subgraph svc["price-audit-svc"]
-    ctl["Audit Query / Export Controllers"]
-    listener["pricing.price.changed listener"]
-    writer["AppendOnlyAuditWriter"]
-    query["AuditQueryService"]
-    worker["Export / Archive Worker"]
-    repo["Repositories"]
+    controllers["Audit Query / Export Controllers"]
+    query["AuditQueryUseCases"]
+    consumer["PriceChanged Consumer"]
+    writer["AppendOnlyWriter"]
+    export["Export / Archive Workers"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
   end
 
-  http --> ctl --> query --> repo --> db
-  bus --> listener --> writer --> repo
-  worker --> repo
-  worker --> archive
+  http --> controllers --> query --> repos
+  bus --> consumer --> writer --> repos
+  export --> repos
+  repos --> adapters --> db
+  export --> storage
 ```
 
-### 11.5 `promotions-svc`
+---
+
+# 35. C4 — Nivel 3: `promotions-svc`
 
 ```mermaid
 flowchart LR
-  http["HTTP"]
+  http["HTTP adapters"]
   bus[("RabbitMQ")]
   db[("promotions schema")]
 
   subgraph svc["promotions-svc"]
-    ctl["Promotion / Coupon / Recommendation Controllers"]
-    promo["PromotionService"]
-    eval["BenefitCombinationEvaluator"]
-    coupon["CouponConsumptionService"]
-    rec["RecommendationRuleService"]
-    projections["Catalog / Pricing / Stock projections"]
-    sales["Sales provisional adapter"]
-    outbox["Outbox publisher"]
-    repo["Repositories"]
+    controllers["Promotion / Coupon / Recommendation Controllers"]
+    usecases["Application Use Cases"]
+    domain["Promotions Domain"]
+    evaluator["BenefitCombinationEvaluator"]
+    coupon["CouponConsumptionPolicy"]
+    recommendations["RecommendationPolicy"]
+    projections["Read Projections"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Message Consumers"]
+    outbox["Outbox Relay"]
   end
 
-  http --> ctl --> promo
-  promo --> eval
-  ctl --> rec
-  projections --> eval & rec
-  sales --> coupon
-  promo --> repo
-  coupon --> repo
-  rec --> repo --> db
-  coupon --> outbox --> bus
-  bus --> projections & sales
+  http --> controllers --> usecases --> domain
+  usecases --> evaluator
+  usecases --> coupon
+  usecases --> recommendations
+  projections --> evaluator
+  projections --> recommendations
+  usecases --> repos --> adapters --> db
+  bus --> consumers --> usecases
+  usecases --> outbox --> bus
 ```
 
-### 11.6 `combos-svc`
+---
+
+# 36. C4 — Nivel 3: `combos-svc`
 
 ```mermaid
 flowchart LR
-  http["HTTP"]
+  http["HTTP adapters"]
   bus[("RabbitMQ")]
   db[("combos schema")]
 
   subgraph svc["combos-svc"]
-    ctl["Combo Controllers"]
-    app["ComboDefinitionService"]
-    price["ComboPriceValidator"]
-    availability["ProjectedAvailabilityService"]
-    listeners["Catalog / Pricing / Inventory listeners"]
-    outbox["Outbox publisher"]
-    repo["Repositories"]
+    controllers["Combo Controllers"]
+    usecases["Application Use Cases"]
+    domain["Combo Domain"]
+    pricing["ComboPricePolicy"]
+    availability["ProjectedAvailability"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Message Consumers"]outbox["Outbox Relay"]
   end
 
-  http --> ctl --> app
-  app --> price
-  listeners --> price & availability & app
-  app --> repo
-  availability --> repo --> db
-  app --> outbox --> bus
-  bus --> listeners
+  http --> controllers --> usecases --> domain
+  usecases --> pricing
+  usecases --> availability
+  usecases --> repos --> adapters --> db
+  bus --> consumers --> usecases
+  usecases --> outbox --> bus
 ```
 
-### 11.7 `inventory-svc`
+---
+
+# 37. C4 — Nivel 3: `inventory-svc`
 
 ```mermaid
 flowchart LR
-  http["HTTP"]
+  http["HTTP adapters"]
   bus[("RabbitMQ")]
   db[("inventory schema")]
 
   subgraph svc["inventory-svc"]
-    ctl["Stock / Dashboard Controllers"]
-    stock["StockBalanceService"]
-    ops["Reserve / Release / Consume Service"]
-    adjust["VersionedStockAdjustmentService"]
-    kardex["KardexWriter"]
-    dash["InventoryDashboardProjection"]
-    listeners["Catalog / Bulk / Sales provisional listeners"]
-    outbox["Outbox publisher"]
-    repo["Repositories"]
+    controllers["Availability / Reservation / Dashboard Controllers"]
+    queries["Inventory Queries"]
+    reservation["Reservation Use Cases"]
+    adjustment["Adjustment Use Cases"]
+    domain["Inventory Domain"]
+    expiry["ReservationExpiryWorker"]
+    kardex["Kardex Policy"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Message Consumers"]
+    outbox["Outbox Relay"]
   end
 
-  http --> ctl --> stock
-  ctl --> dash
-  listeners --> ops & adjust
-  ops --> kardex
-  adjust --> kardex
-  stock --> repo
-  kardex --> repo
-  dash --> repo --> db
-  ops --> outbox --> bus
-  adjust --> outbox
-  bus --> listeners
+  http --> controllers
+  controllers --> queries
+  controllers --> reservation
+  controllers --> adjustment
+
+  queries --> repos
+  reservation --> domain
+  adjustment --> domain
+  expiry --> reservation
+
+  reservation --> kardex
+  adjustment --> kardex
+
+  reservation --> repos
+  adjustment --> repos
+  repos --> adapters --> db
+
+  bus --> consumers --> reservation
+
+  reservation --> outbox --> bus
+  adjustment --> outbox
 ```
 
-### 11.8 `bulk-svc`
+---
+
+# 38. C4 — Nivel 3: `bulk-svc`
 
 ```mermaid
 flowchart LR
-  http["HTTP"]
+  http["HTTP adapters"]
   bus[("RabbitMQ")]
   db[("bulk schema")]
-  files[("Storage protegido")]
+  storage[("File Storage")]
 
   subgraph svc["bulk-svc"]
-    ctl["Import / Export Controllers"]
-    template["TemplateV2Validator"]
-    saga["RowDomainCoordinator"]
+    controllers["Import / Export Controllers"]
+    validation["TemplateV2Validator"]
+    coordinator["RowDomainCoordinator"]
     retry["Retry / Reconciliation Worker"]
-    export["AsyncExportWorker"]
-    listeners["Catalog / Pricing / Inventory result listeners"]
-    outbox["Outbox command publisher"]
-    repo["Repositories"]
+    export["Export Worker"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Result Consumers"]
+    outbox["Outbox Relay"]
   end
 
-  http --> ctl --> template
-  template --> saga
-  listeners --> saga & export
-  saga --> repo
-  retry --> repo
-  export --> repo --> db
-  saga --> outbox --> bus
-  export --> outbox
-  bus --> listeners
-  export --> files
+  http --> controllers --> validation --> coordinator
+  coordinator --> repos --> adapters --> db
+  coordinator --> outbox --> bus
+  bus --> consumers --> coordinator
+  retry --> coordinator
+  export --> repos
+  export --> storage
 ```
 
 ---
 
-## 12. Resiliencia, idempotencia y concurrencia
+# 39. Flujos críticos
 
-| Riesgo | Respuesta arquitectónica |
-|---|---|
-| Evento perdido después de commit | Outbox en la misma transacción local + relay reintentable. |
-| Mensaje duplicado | Inbox/clave idempotente por `message_id` y/o `operation_id`. |
-| Mensajes fuera de orden | Versiones de agregado, correlación y estados pendientes recuperables. |
-| Stock concurrente | Operación por `(sku, location_id)` y `stock_version`; no locks globales. |
-| Cupón concurrente | Consumo transaccional e idempotente por `order_id + cupon_id`. |
-| Precio concurrente | `price_version` y validación optimista. |
-| Bulk parcialmente aplicado | `applied_domains[]`, `failed_domain`, `needs_reconciliation`; no rollback global inventado. |
-| Baja maestra concurrente | Barrera en Catálogo durante verificación asíncrona. |
-| Proyección desactualizada | `source_version`, `as_of`/`updated_at`; nunca autorizar una escritura crítica solo con read model. |
-| Poison message | DLQ/cuarentena y runbook de replay. |
+## 39.1. Alta de producto simple
 
----
+1. Catálogo crea producto BORRADOR.
+2. Genera `product_id`, `sku_base` y slug.
+3. Valida Taxonomía mediante contrato/proyección.
+4. Solicita preparación de Pricing.
+5. Solicita inicialización de Inventario con saldo 0.
+6. Espera confirmaciones.
+7. Solo activa al cumplir invariantes funcionales.
 
-## 13. Testing y CI/CD
-
-### 13.1 Capas de prueba
-
-1. **Unitarias:** invariantes de cada bounded context.
-2. **Integración:** PostgreSQL real y broker mediante Testcontainers.
-3. **Contratos:** OpenAPI/AsyncAPI/JSON Schema y compatibilidad productor-consumidor.
-4. **Concurrencia:** último cupón, `stock_version`, `price_version`, replay de mensajes.
-5. **E2E:** WF-001..WF-016 sobre frontend y backend/mocks contractuales.
-6. **Resiliencia:** broker caído, duplicados, orden invertido, worker reiniciado, proyección atrasada.
-
-### 13.2 Casos críticos mínimos
-
-- dos consumos para el último uso de cupón → uno debe rechazarse;
-- dos ajustes con la misma `stock_version` → uno debe producir conflicto;
-- precio rechazado → no se emite `pricing.price.changed`;
-- replay de `pricing.price.changed` → un solo asiento de auditoría;
-- archivo con 5.001 filas → importación rechazada por límite, exportación no truncada;
-- fallo de Pricing después de Catálogo en bulk → fila fallida/parcial con conciliación, sin afirmar rollback global;
-- categoría con productos activos → baja rechazada y barrera liberada de forma segura;
-- tipo de producto sin atributos obligatorios → activación no exige atributo ficticio;
-- variante nueva → `variant_id` distinto del SKU comercial;
-- `order.created` → no modifica stock en el contrato actual.
-
-### 13.3 CI sugerido
-
-- `pnpm install --frozen-lockfile`;
-- lint + typecheck;
-- unit tests por servicio afectado;
-- integration/contract tests para productor y consumidores cuando cambia `libs/contracts/**`;
-- build NestJS por app afectada;
-- build Vite frontend;
-- Playwright para flujos críticos;
-- Markdown lint + verificación de Mermaid y enlaces en repo docs.
+No existe escritura directa en schemas de Pricing/Inventario.
 
 ---
 
-## 14. Decisiones que quedan provisionales
+## 39.2. Alta de variante
 
-1. Nombre y esquema definitivo de eventos de Ventas/Postventa.
-2. Hito exacto en el que una venta autoriza `consume` de Inventario.
-3. Si existirá una fase futura de reserva previa (`reserve`/TTL) y su expiración.
-4. Semántica final de cancelación después de despacho y devoluciones parciales.
-5. Tratamiento financiero ante fallo de stock/cupón después de un pago confirmado.
-6. Infraestructura cloud definitiva y presupuesto real para broker, observabilidad y archivo de auditoría.
-7. Valores operativos finales de parámetros configurables del despliegue.
+1. valida producto padre;
+2. valida esquema de tipo;
+3. genera `variant_id`;
+4. valida/genera SKU;
+5. persiste atributos;
+6. registra perfil físico cuando corresponda;
+7. inicializa Inventario;
+8. resuelve Pricing;
+9. activa únicamente con requisitos completos.
+
+---
+
+## 39.3. Pedido `CREADO`
+
+```text
+Ventas
+  |
+  | POST /inventario/reservas
+  | Idempotency-Key + operation_id
+  v
+API / Inventory admission
+  |
+  +-- autenticación/autorización
+  +-- validación de request
+  +-- conflicto de idempotencia
+  |
+  v
+202 Accepted
+  |
+  v
+Procesamiento asíncrono de Inventario
+  |
+  +-- locks de saldos
+  +-- validación de disponibilidad
+  +-- reserva + líneas
+  +-- Kardex cuando corresponda
+  +-- Outbox en la misma transacción
+  |
+  v
+commit
+  |
+  +--> inventory.reservation.created
+  |
+  └--> inventory.consumption.rejected
+       operation_type = RESERVAR
+```
+
+`202 Accepted` significa **comando admitido**, no reserva completada.
+
+Un retry con la misma identidad y la misma intención no produce una segunda reserva.
+
+## 39.4. Pedido `PAGADO`
+
+```text
+Ventas
+  |
+  | POST /inventario/reservas/{reservaId}/confirmar
+  | Idempotency-Key + operation_id
+  v
+API / Inventory admission
+  |
+  v
+202 Accepted
+  |
+  v
+Procesamiento asíncrono
+  |
+  +-- ACTIVA -> CONSUMIDA
+  +-- on_hand--
+  +-- reserved--
+  +-- Kardex
+  +-- Outbox en transacción local
+  |
+  v
+commit
+  |
+  +--> inventory.reservation.consumed
+  +--> inventory.consumption.completed
+  |
+  └--> inventory.consumption.rejected
+```
+
+La misma confirmación reintentada no vuelve a consumir.
+
+## 39.5. Pago fallido / anulación
+
+```text
+Ventas
+  |
+  | POST /inventario/reservas/{reservaId}/liberar
+  | Idempotency-Key + operation_id
+  v
+API / Inventory admission
+  |
+  v
+202 Accepted
+  |
+  v
+Procesamiento asíncrono
+  |
+  +-- ACTIVA -> LIBERADA
+  +-- reserved--
+  +-- available recalculado
+  +-- Kardex
+  +-- Outbox
+  |
+  v
+inventory.reservation.released
+```
+
+La misma liberación reintentada reutiliza el resultado previo sin incrementar disponibilidad otra vez.
+
+## 39.6. Expiración
+
+```text
+ExpiryWorker
+  |
+  | busca ACTIVA con expires_at <= now
+  v
+ReservationUseCase
+  |
+  +-- lock
+  +-- revalidar estado
+  +-- EXPIRADA
+  +-- liberar reserved
+  +-- evento
+```
+
+---
+
+## 39.7. Despacho
+
+```text
+Despacho
+   |
+   | consulta lote de SKU
+   v
+Catalog
+   |
+   +-- peso
+   +-- dimensiones
+   |
+   v
+Despacho
+   |
+   +-- decide empaque
+   +-- calcula volumen logístico
+```
+
+---
+
+
+## 39.8. Devolución físicamente reintegrable
+
+```text
+Postventa confirma recepción física
+  -> modulo-ventas
+  -> POST /inventario/reintegros
+  -> inventory-svc
+  -> on_hand aumenta
+  -> Kardex + stock.changed
+```
+
+## 39.9. Incidencia de tienda
+
+```text
+Retail detecta daño/no ubicación
+  -> POST /inventario/incidencias
+  -> blocked aumenta
+  -> available disminuye
+  -> todos los canales dejan de ver esas unidades como disponibles
+```
+
+## 39.11. Traslado Retail → almacén central
+
+```text
+Retail resuelve incidencia como TRASLADO_ALMACEN_CENTRAL
+  -> inventory-svc crea traslado EN_TRANSITO
+  -> origen: on_hand y blocked disminuyen
+  -> transporte físico fuera del saldo de destino
+  -> operador local de Inventario confirma recepción
+  -> disponible | bloqueado | merma
+  -> COMPLETADO | COMPLETADO_CON_DISCREPANCIA
+```
+
+La recepción no pertenece a Despacho. Despacho puede certificar retornos de sus propios paquetes, pero no es owner del reingreso de stock.
+
+Autorización del receptor:
+
+```text
+JWT de usuario validado por JWKS
+sub vinculado a perfil local
+INVENTARIO_TRASLADOS_LEER
+INVENTARIO_TRASLADOS_RECIBIR
+```
+
+No se crea un rol global adicional en Seguridad.
+
+## 39.11. Venta Retail offline
+
+```text
+Retail offline
+  -> ventaLocalUuid
+  -> sincroniza con Ventas
+  -> Ventas registra pedido/venta
+  -> POST /inventario/conciliaciones-offline
+  -> COMPLETED | REQUIRES_REVIEW
+```
+
+
+## 39.12. Preparación de cupón antes del pago
+
+```text
+pedido CREADO
+  -> reserva de stock confirmada
+  -> snapshot comercial de cupón fijado
+  -> promotions.coupon.consumption.requested
+  -> completed
+  -> pago habilitado
+```
+
+Si el pedido se cancela después del consumo:
+
+```text
+promotions.coupon.restoration.requested
+```
+
+Esta secuencia evita cobrar primero y descubrir después que el último uso del cupón ya fue tomado por otro pedido.
+
+## 39.13. Inicialización de Pricing
+
+```text
+catalog-svc
+  -> pricing.product.initialization.requested
+  -> pricing-svc
+  -> completed | rejected
+```
+
+La unidad inicial de Pricing es el producto:
+
+- el producto simple usa ese precio mediante su `sku_base`;
+- la variante sin override hereda ese precio;
+- una variante con override se gestiona posteriormente desde Pricing.
+
+## 39.14. Inicialización de Inventario
+
+```text
+catalog-svc
+  -> inventory.sku.initialization.requested
+  -> inventory-svc
+  -> completed | rejected
+```
+
+La unidad inicial de Inventario es el SKU vendible.
+
+No existe transacción distribuida Catálogo+Pricing+Inventario. El producto/variante permanece `BORRADOR` hasta reunir las confirmaciones requeridas y los reintentos son idempotentes.
+
+## 39.15. `customer_ref`
+
+```text
+Security.sub UUID
+      |
+      +-> canal -> Productos (validación)
+      |
+      +-> Ventas.contacto.clienteId
+                  |
+                  +-> consumo/restitución de cupón
+```
+
+La referencia se trata como identificador opaco y no como copia del perfil del usuario.
+
+
+# 40. Pruebas
+
+## 40.1. Pirámide
+
+### Unitarias
+
+Probar dominio sin NestJS ni DB.
+
+Ejemplos:
+
+- reserva con stock suficiente;
+- reserva insuficiente;
+- transición inválida;
+- TTL;
+- price policy;
+- combinabilidad;
+- SKU identity;
+- reglas de categoría.
+
+### Integración
+
+Con Testcontainers:
+
+- PostgreSQL real;
+- RabbitMQ real;
+- repositorios;
+- Outbox/Inbox;
+- migrations.
+
+### Contract tests
+
+Validar:
+
+```text
+OpenAPI
+JSON Schema
+AsyncAPI
+```
+
+Consumidores externos deben probar contra mocks contractuales.
+
+### E2E
+
+Frontend + gateway + servicios relevantes.
+
+---
+
+## 40.2. Casos críticos mínimos
+
+Inventario:
+
+1. dos reservas simultáneas sobre últimas unidades;
+2. confirmar misma reserva dos veces;
+3. liberar misma reserva dos veces;
+4. confirmación y expiración concurrentes;
+5. confirmación y liberación concurrentes;
+6. ajuste Bulk contra `stock_version` obsoleta;
+7. mensaje duplicado;
+8. Outbox relay reintentado;
+9. evento fuera de orden.
+
+Pricing:
+
+10. `price_version` concurrente;
+11. precio inválido no publica evento;
+12. replay de `pricing.price.changed` no duplica auditoría.
+
+Bulk:
+
+13. 5.001 filas rechazadas;
+14. worker reiniciado;
+15. fila parcialmente aplicada;
+16. reanudar mismo batch sin duplicar cambios.
+
+Catálogo:
+
+17. `variant_id != sku`;
+18. SKU duplicado;
+19. activación incompleta;
+20. perfil físico inválido.
+
+---
+
+# 41. Testing de arquitectura
+
+La CI debe comprobar límites de dependencias.
+
+Ejemplos de reglas:
+
+```text
+domain/** no importa @nestjs/*
+domain/** no importa infrastructure/**
+apps/catalog-svc/** no importa apps/inventory-svc/**
+apps/** no importa ORM entities de otro servicio
+```
+
+Esto evita que el diseño se degrade gradualmente.
+
+---
+
+# 42. CI/CD
+
+Pipeline mínimo:
+
+```text
+1. install
+2. lint
+3. architecture-boundary checks
+4. typecheck
+5. unit tests
+6. OpenAPI/AsyncAPI validation
+7. integration tests
+8. build affected apps
+9. security/dependency scan
+10. Docker build
+11. E2E/contract tests según alcance
+12. deploy
+13. smoke tests
+```
+
+---
+
+## 42.1. Pull requests
+
+Todo cambio contractual debe indicar:
+
+```text
+¿cambia OpenAPI?
+¿cambia AsyncAPI?
+¿cambia schema?
+¿requiere migración?
+¿es compatible?
+¿qué consumidores afecta?
+```
+
+---
+
+# 43. Versionado y compatibilidad
+
+## HTTP
+
+```text
+/api/v1
+```
+
+No introducir breaking changes dentro de `v1`.
+
+---
+
+## Eventos
+
+Cada evento contiene:
+
+```text
+schema_version
+```
+
+Un nuevo campo opcional puede ser compatible.
+
+Cambios de semántica o campos obligatorios requieren nueva versión.
+
+---
+
+# 44. Desarrollo local
+
+El repositorio backend debe permitir:
+
+```text
+pnpm install
+docker compose up -d postgres rabbitmq
+pnpm dev:<servicio>
+```
+
+y un modo para levantar todo el módulo cuando sea necesario.
+
+No exigir servicios cloud para ejecutar unit/integration tests localmente.
+
+---
+
+# 45. Despliegue
+
+Cada aplicación debe poder construirse como artefacto independiente.
+
+Requisitos:
+
+- Dockerfile reproducible;
+- variables de entorno externas;
+- migraciones controladas;
+- readiness/liveness;
+- graceful shutdown;
+- cierre ordenado de consumers;
+- no pérdida de mensajes ya aceptados;
+- logging estructurado.
+
+---
+
+# 46. Graceful shutdown
+
+Al recibir señal de terminación:
+
+1. dejar de aceptar nuevos requests;
+2. dejar de reclamar nuevos mensajes;
+3. completar o abortar limpiamente trabajo en curso;
+4. cerrar conexiones;
+5. confirmar ACK únicamente después de persistir resultado;
+6. terminar proceso.
+
+---
+
+# 47. Política de timeouts
+
+Toda dependencia remota debe tener timeout explícito.
+
+No usar timeouts infinitos.
+
+La configuración se centraliza por adaptador.
+
+Un timeout no se traduce automáticamente en retry de negocio.
+
+---
+
+# 48. Reloj y tiempo
+
+Reglas dependientes del tiempo no deben llamar directamente a:
+
+```ts
+new Date()
+```
+
+desde el dominio.
+
+Definir:
+
+```text
+Clock
+```
+
+como puerto inyectable para:- vigencia;
+- expiración de reserva;
+- promociones;
+- pricing;
+- auditoría.
+
+Esto vuelve deterministas las pruebas.
+
+---
+
+# 49. Identificadores
+
+Usar value objects internos cuando aporten validación:
+
+```text
+Sku
+ProductId
+VariantId
+ReservationId
+OrderId
+LocationId
+OperationId
+```
+
+Los adaptadores convierten strings externos a value objects.
+
+Evitar transportar strings desnudos por todo el dominio sin validación.
+
+---
+
+# 50. Dinero y cantidades
+
+Dinero:
+
+- no utilizar `float`;
+- usar decimal exacto;
+- currency explícita.
+
+Cantidad de inventario:
+
+```text
+integer >= 0
+```
+
+Dimensiones/peso:
+
+- validar positivos;
+- unidad contractual fija: kg y cm;
+- convertir únicamente en adapters cuando un consumidor necesite otra representación.
+
+---
+
+# 51. Nomenclatura del código
+
+Para evitar mezcla arbitraria:
+
+- API pública: nombres definidos por OpenAPI en español.
+- Eventos: nomenclatura contractual existente (`inventory.*`, `pricing.*`, etc.).
+- Código interno: un único idioma consistente por repositorio; se recomienda inglés técnico por coherencia con framework/librerías.
+- Los adapters realizan el mapeo entre contrato externo y modelo interno.
+
+No mezclar en una misma capa:
+
+```text
+crearReserva()
+confirmReservation()
+liberarStock()
+```
+
+Elegir una convención y aplicarla sistemáticamente.
+
+---
+
+# 52. ADRs obligatorios para decisiones de alto impacto
+
+Crear `docs/adr/`.
+
+ADRs iniciales recomendados:
+
+```text
+001-bounded-contexts.md
+002-database-per-schema.md
+003-outbox-inbox.md
+004-api-language-spanish.md
+005-sales-owned-inventory-orchestration.md
+006-sku-physical-profile.md
+007-dispatch-owns-packaging.md
+008-openapi-as-http-source-of-truth.md
+009-clean-architecture-service-template.md
+```
+
+Un ADR explica:
+
+- contexto;
+- decisión;
+- alternativas;
+- consecuencias.
+
+---
+
+# 53. Definición de terminado arquitectónica
+
+Una funcionalidad backend no está terminada si solo “funciona”.
+
+Debe cumplir:
+
+- regla de negocio en domain/application;
+- controller/consumer delgado;
+- persistencia detrás de repository port;
+- errores mapeados;
+- idempotencia cuando corresponda;
+- correlación;
+- logs;
+- pruebas unitarias;
+- integración cuando toque DB/broker;
+- contrato actualizado;
+- migración si cambia schema;
+- ninguna dependencia prohibida.
+
+---
+
+# 54. Pendientes de integración arquitectónica
+
+P2 cerró:
+
+- exchanges, queues, bindings, retry y DLQ;
+- recepción y discrepancias de traslados a almacén central;
+- capacidades locales del operador de Inventario.
+
+Pendientes que requieren código/infra real:
+
+1. Registrar scopes/grants en Seguridad.
+2. Crear políticas/recursos RabbitMQ del entorno desde IaC/configuración.
+3. Ejecutar contract tests runtime.
+4. Sincronizar prototipos HTML después del freeze documental.
+
+No queda pendiente de definición arquitectónica la topología lógica/física de mensajería.
+# 55. Decisiones deliberadamente NO fijadas
+
+Para evitar acoplamiento prematuro, esta arquitectura no obliga todavía a:
+
+- TypeORM vs Prisma vs SQL directo;
+- proveedor cloud específico;
+- Kubernetes;
+- proveedor de object storage;
+- Valkey obligatorio;
+- número fijo de réplicas;
+- valores definitivos de TTL.
+
+Estas decisiones pueden tomarse más tarde sin alterar los bounded contexts ni los contratos externos.
+
+---
+
+# 56. Conclusión
+
+La arquitectura resultante mantiene ocho bounded contexts con ownership explícito y establece una disciplina de implementación que evita el acoplamiento accidental.
+
+Los principios arquitectónicos principales son:
+
+1. **Ventas/Postventa orquesta Inventario**.
+2. `CREADO` produce reserva.
+3. `PAGADO` produce consumo.
+4. pago fallido/anulación pre-consumo libera; una reserva consumida nunca se libera.
+5. reservas expiran por TTL configurable.
+6. devoluciones físicas reintegrables y ventas offline se procesan por contratos explícitos de Ventas/Postventa.
+7. Marketplace/Chatbot solo consultan; Retail además reporta/resuelve incidencias físicas sin orquestar ventas.
+8. Catálogo mantiene perfil físico por SKU.
+9. Despacho mantiene ownership del empaque.
+10. OpenAPI `0.4.0` gobierna la interfaz HTTP de integración y administración.
+11. AsyncAPI `0.4.0` gobierna la mensajería lógica consolidada y sus 39 mensajes.
+12. `api/catalogo-errores.md` gobierna los códigos estables y `api/catalogo-eventos.md` la lectura humana de mensajería.
+13. cada servicio aplica arquitectura por capas/puertos.
+14. no se comparten entidades ORM, repositorios ni schemas.
+15. Outbox/Inbox, idempotencia, correlación y pruebas de contrato forman parte de la arquitectura, no son mejoras opcionales.
+16. la CI debe proteger automáticamente los límites de dependencias.
+17. la autorización comercial usa `GESTOR_COMERCIAL`; la integración técnica valida `aud=api-productos` y scopes propios por operación.
+18. los cambios de precio usan introspección; el resto del tráfico de usuario usa validación local con JWKS salvo ampliación contractual futura.
+
+Esta estructura permite implementar cada bounded context de forma independiente, probarlo en aislamiento, desplegarlo por separado y evolucionar contratos sin convertir el monorepo en una aplicación monolítica fuertemente acoplada.

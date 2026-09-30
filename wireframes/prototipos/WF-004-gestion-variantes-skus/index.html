@@ -1,397 +1,161 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WF-004 — Gestión avanzada de variantes (SKUs)</title>
-  <style>
-    :root {
-      --surface:#fff; --neutral-10:#f3f4f6; --neutral-20:#e5e7eb; --neutral-30:#d1d5db;
-      --neutral-50:#6b7280; --neutral-70:#374151; --neutral-90:#111827; --gutter:24px;
-      --radius-sm:4px; --radius-md:8px; --content:1200px;
-    }
-    * { box-sizing:border-box; }
-    input[type="checkbox"], input[type="radio"] { accent-color:var(--neutral-90); }
-    html { color-scheme:light; }
-    body { margin:0; background:var(--surface); color:var(--neutral-90); font:16px/1.5 Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-    button,input,select,textarea { font:inherit; }
-    button,select,a,input { -webkit-tap-highlight-color:transparent; }
-    button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible,[tabindex]:focus-visible { outline:3px solid var(--neutral-90); outline-offset:2px; }
-    [hidden] { display:none !important; }
-    h1,h2,h3,p { margin-top:0; }
-    h1 { margin-bottom:0; font-size:clamp(30px,4vw,48px); line-height:1.1; letter-spacing:-.025em; }
-    h2 { margin-bottom:0; font-size:24px; line-height:1.2; }
-    h3 { margin-bottom:0; font-size:18px; line-height:1.3; }
-
-    .app-header { border-bottom:1px solid var(--neutral-30); }
-    .header-inner { max-width:var(--content); margin:auto; padding:14px var(--gutter); display:flex; align-items:center; justify-content:space-between; gap:20px; }
-    .brand { display:flex; align-items:center; gap:12px; min-width:0; font-weight:750; }
-    .brand-mark { width:34px; height:34px; border:2px solid var(--neutral-90); display:grid; place-items:center; flex:0 0 auto; font-size:12px; }
-    .brand-text { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .header-nav { display:flex; gap:20px; color:var(--neutral-50); font-size:14px; }
-    .header-nav [aria-current="page"] { color:var(--neutral-90); font-weight:750; }
-    .user-chip { border:1px solid var(--neutral-30); border-radius:999px; padding:6px 12px; white-space:nowrap; }
-    .offline-banner { border-bottom:1px solid var(--neutral-90); background:var(--neutral-10); padding:10px var(--gutter); text-align:center; font-weight:700; }
-    main { max-width:var(--content); margin:auto; padding:40px var(--gutter) 72px; outline:none; }
-    .breadcrumbs { margin:0 0 24px; color:var(--neutral-50); font-size:14px; }
-    .breadcrumb-button { border:0; padding:0; color:inherit; background:transparent; cursor:pointer; text-decoration:underline; }
-    .page-heading { margin-bottom:32px; }
-    .heading-row { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }
-    .lede { margin:14px 0 0; max-width:780px; color:var(--neutral-50); font-size:18px; }
-    .muted { color:var(--neutral-50); }
-    .small { font-size:14px; }
-    .mono { font-family:"Roboto Mono",ui-monospace,SFMono-Regular,Consolas,monospace; }
-
-    .btn { min-height:44px; border:1px solid var(--neutral-90); border-radius:var(--radius-sm); padding:10px 16px; background:var(--surface); color:var(--neutral-90); cursor:pointer; font-weight:650; display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; }
-    .btn:hover:not(:disabled) { background:var(--neutral-10); }
-    .btn-primary { background:var(--neutral-90); color:var(--surface); }
-    .btn-primary:hover:not(:disabled) { background:#000; }
-    .btn-danger { border-width:2px; }
-    .btn:disabled { color:var(--neutral-50); border-color:var(--neutral-30); background:var(--neutral-10); cursor:not-allowed; }
-    .button-row { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
-
-    .product-context { border:1px solid var(--neutral-90); padding:18px 20px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; gap:20px; }
-    .context-label { margin:0 0 4px; color:var(--neutral-50); font-size:12px; font-weight:750; text-transform:uppercase; letter-spacing:.06em; }
-    .context-name { margin:0; font-size:18px; font-weight:750; }
-    .context-meta { display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:4px; color:var(--neutral-50); font-size:14px; }
-
-    .filters { border:1px solid var(--neutral-30); padding:20px; margin-bottom:20px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)) auto; gap:16px; align-items:end; }
-    .field { min-width:0; }
-    .field label,.field-label { display:block; margin-bottom:7px; font-size:14px; font-weight:750; }
-    .required::after { content:" *"; }
-    .control { width:100%; min-height:44px; border:1px solid var(--neutral-30); border-radius:var(--radius-sm); background:var(--surface); color:var(--neutral-90); padding:10px 12px; }
-    textarea.control { min-height:110px; resize:vertical; }
-    .control[aria-invalid="true"] { border:2px solid var(--neutral-90); }
-    .control[readonly] { background:var(--neutral-10); color:var(--neutral-50); }
-    .field-help { margin:6px 0 0; color:var(--neutral-50); font-size:13px; }
-    .field-error { margin:6px 0 0; font-size:14px; font-weight:750; }
-
-    .results-head { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:12px; }
-    .table-wrap { border:1px solid var(--neutral-30); overflow-x:auto; }
-    table { width:100%; min-width:900px; border-collapse:collapse; }
-    th,td { padding:14px; border-bottom:1px solid var(--neutral-30); text-align:left; vertical-align:middle; }
-    th { background:var(--neutral-10); font-size:13px; text-transform:uppercase; letter-spacing:.04em; }
-    tbody tr:last-child td { border-bottom:0; }
-    tbody tr:hover { background:var(--neutral-10); }
-    .variant-link { border:0; padding:0; background:transparent; color:var(--neutral-90); cursor:pointer; font-weight:750; text-align:left; text-decoration:underline; }
-    .thumb,.image-placeholder { width:76px; height:58px; border:1px solid var(--neutral-50); background:var(--neutral-10); position:relative; display:block; flex:0 0 auto; }
-    .thumb::before,.thumb::after,.image-placeholder::before,.image-placeholder::after { content:""; position:absolute; left:8px; right:8px; top:50%; height:1px; background:var(--neutral-50); }
-    .thumb::before,.image-placeholder::before { transform:rotate(31deg); }
-    .thumb::after,.image-placeholder::after { transform:rotate(-31deg); }
-    .status { display:inline-flex; align-items:center; gap:7px; border:1px solid var(--neutral-90); border-radius:999px; padding:4px 9px; font-size:13px; font-weight:750; white-space:nowrap; }
-    .status::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--neutral-90); }
-    .status.draft::before { background:var(--neutral-50); }
-    .status.inactive { border-style:dashed; }
-    .row-actions { display:flex; justify-content:flex-end; gap:8px; }
-    .row-actions .btn { min-height:36px; padding:6px 10px; font-size:14px; }
-
-    .panel { border:1px solid var(--neutral-30); padding:24px; background:var(--surface); }
-    .panel + .panel { margin-top:16px; }
-    .panel-heading { margin-bottom:20px; }
-    .panel-heading p { margin:6px 0 0; }
-    .form-grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:20px 24px; }
-    .span-12 { grid-column:span 12; } .span-8 { grid-column:span 8; } .span-6 { grid-column:span 6; } .span-4 { grid-column:span 4; }
-    .readonly-group { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
-    .readonly-box { min-height:72px; border:1px solid var(--neutral-30); background:var(--neutral-10); padding:12px; }
-    .readonly-label { display:block; color:var(--neutral-50); font-size:12px; font-weight:750; text-transform:uppercase; letter-spacing:.04em; }
-    .readonly-value { display:block; margin-top:5px; font-weight:750; overflow-wrap:anywhere; }
-    .upload-box { border:1px dashed var(--neutral-50); background:var(--neutral-10); padding:22px; }
-    .upload-box input { margin-top:12px; max-width:100%; }
-    .image-preview { margin-top:14px; display:flex; align-items:center; gap:12px; }
-    .actions-bar { margin-top:24px; border-top:1px solid var(--neutral-30); padding-top:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-
-    .notice { border:1px solid var(--neutral-90); padding:16px; display:flex; align-items:flex-start; gap:12px; }
-    .notice + .notice { margin-top:12px; }
-    .notice-icon { width:26px; height:26px; border:1px solid var(--neutral-90); border-radius:50%; display:grid; place-items:center; flex:0 0 auto; font-weight:850; }
-    .notice-title { margin:0; font-weight:800; }
-    .notice p + p { margin-top:4px; }
-    .error-summary { border:2px solid var(--neutral-90); padding:18px; margin-bottom:20px; }
-    .error-summary h2 { font-size:20px; }
-    .error-summary ul { margin-bottom:0; }
-    .error-summary a { color:inherit; font-weight:750; }
-
-    .detail-header { padding-bottom:24px; margin-bottom:24px; border-bottom:1px solid var(--neutral-30); }
-    .title-with-status { display:flex; align-items:center; flex-wrap:wrap; gap:14px; }
-    .detail-grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(280px,1fr); gap:24px; align-items:start; }
-    .definition-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; }
-    .definition { padding:16px 0; border-bottom:1px solid var(--neutral-30); }
-    .definition-label { color:var(--neutral-50); font-size:13px; font-weight:750; text-transform:uppercase; letter-spacing:.04em; }
-    .definition-value { margin-top:5px; font-weight:650; overflow-wrap:anywhere; }
-    .hero-image { min-height:250px; border:1px solid var(--neutral-50); background:var(--neutral-10); position:relative; display:grid; place-items:center; }
-    .hero-image::before,.hero-image::after { content:""; position:absolute; left:18%; right:18%; top:50%; height:1px; background:var(--neutral-50); }
-    .hero-image::before { transform:rotate(22deg); } .hero-image::after { transform:rotate(-22deg); }
-    .hero-image span { position:relative; z-index:1; padding:6px 10px; background:var(--surface); font-weight:700; }
-    .meta-list { margin:0; padding:0; list-style:none; }
-    .meta-list li { padding:10px 0; border-bottom:1px solid var(--neutral-30); }
-
-    .empty-state,.global-state { border:1px solid var(--neutral-30); padding:56px 24px; text-align:center; }
-    .empty-symbol { width:52px; height:52px; margin:0 auto 18px; border:2px solid var(--neutral-90); display:grid; place-items:center; font-weight:850; }
-    .empty-state p,.global-state p { max-width:620px; margin:12px auto 22px; color:var(--neutral-50); }
-    .skeleton { min-height:18px; background:var(--neutral-10); animation:pulse 1.3s ease-in-out infinite; }
-    .skeleton + .skeleton { margin-top:14px; }
-    @keyframes pulse { 50% { opacity:.45; } }
-
-    .modal-backdrop { position:fixed; inset:0; z-index:30; display:grid; place-items:center; padding:20px; background:rgb(17 24 39 / 50%); }
-    .modal { width:min(580px,100%); max-height:calc(100vh - 40px); overflow:auto; border:2px solid var(--neutral-90); background:var(--surface); padding:28px; }
-    .modal p { margin:12px 0 0; }
-    .modal-actions { margin-top:24px; display:flex; justify-content:flex-end; flex-wrap:wrap; gap:12px; }
-    .toast { position:fixed; right:24px; bottom:24px; z-index:40; max-width:430px; border:2px solid var(--neutral-90); background:var(--surface); padding:14px 18px; font-weight:750; }
-    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-
-    @media (max-width:900px) {
-      .header-nav { display:none; }
-      .filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
-      .filters .button-row { grid-column:span 2; }
-      .detail-grid { grid-template-columns:1fr; }
-      .span-8,.span-6,.span-4 { grid-column:span 12; }
-      .readonly-group { grid-template-columns:1fr; }
-    }
-    @media (max-width:600px) {
-      :root { --gutter:16px; }
-      main { padding-top:28px; }
-      .user-chip { display:none; }
-      .heading-row,.product-context,.actions-bar { flex-direction:column; align-items:stretch; }
-      .heading-row .btn,.actions-bar .btn { width:100%; }
-      .filters { grid-template-columns:1fr; }
-      .filters .button-row { grid-column:auto; }
-      .definition-grid { grid-template-columns:1fr; }
-      .panel { padding:18px; }
-      .modal { padding:22px; }
-      .modal-actions { flex-direction:column-reverse; }
-      .modal-actions .btn { width:100%; }
-      .toast { left:16px; right:16px; bottom:16px; }
-    }
-    @media (prefers-reduced-motion:reduce) { .skeleton { animation:none; } }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestión de variantes y SKU</title>
+<style>
+:root{
+  --surface:#FFFFFF;
+  --neutral-10:#F3F4F6;
+  --neutral-30:#D1D5DB;
+  --neutral-50:#6B7280;
+  --neutral-90:#111827;
+  --primary:#111827;
+  --space-xs:4px;
+  --space-sm:8px;
+  --space-md:16px;
+  --space-lg:32px;
+  --space-xl:64px;
+  --radius-sm:4px;
+  --radius-md:8px;
+}
+*{box-sizing:border-box}
+html{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--neutral-90);background:var(--surface)}
+body{margin:0;background:var(--surface);line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+button{min-height:44px;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--neutral-90);outline-offset:2px}
+.topbar{border-bottom:1px solid var(--neutral-30);background:var(--surface)}
+.topbar-inner{max-width:1200px;margin:auto;min-height:64px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700}
+.brand-mark{width:36px;height:36px;border:2px solid var(--neutral-90);display:grid;place-items:center;font-weight:700}
+.user{font-size:14px;color:var(--neutral-50)}
+.shell{max-width:1200px;margin:auto;padding:24px}
+.breadcrumb{font-size:14px;color:var(--neutral-50);margin-bottom:8px}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px;flex-wrap:wrap}
+.page-head h1{font-size:32px;line-height:1.2;margin:0 0 8px}
+.page-head p{margin:0;color:var(--neutral-50);max-width:760px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--neutral-90);background:var(--surface);padding:10px 16px;border-radius:var(--radius-sm);font-weight:600;min-height:44px}
+.btn.primary{background:var(--neutral-90);color:var(--surface)}
+.btn.ghost{border-color:var(--neutral-30)}
+.btn[disabled]{color:var(--neutral-50);border-color:var(--neutral-30);background:var(--neutral-10);cursor:not-allowed}
+.card{border:1px solid var(--neutral-30);border-radius:var(--radius-md);padding:20px;background:var(--surface)}
+.card h2{font-size:20px;margin:0 0 8px}
+.card h3{font-size:16px;margin:0 0 8px}
+.muted{color:var(--neutral-50)}
+.small{font-size:14px}
+.mono{font-family:"Roboto Mono",ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;letter-spacing:.02em}
+.grid{display:grid;gap:16px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stack{display:grid;gap:16px}
+.field{display:grid;gap:6px}
+.field label{font-size:14px;font-weight:600}
+.input,.select,.textarea{width:100%;border:1px solid var(--neutral-30);border-radius:var(--radius-sm);background:var(--surface);padding:11px 12px;min-height:44px}
+.textarea{min-height:110px;resize:vertical}
+.help{font-size:13px;color:var(--neutral-50)}
+.section-title{font-size:20px;margin:8px 0 12px}
+.table-wrap{overflow:auto;border:1px solid var(--neutral-30);border-radius:var(--radius-md)}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--neutral-30);vertical-align:top}
+th{font-size:12px;font-family:"Roboto Mono",ui-monospace,monospace;letter-spacing:.04em;text-transform:uppercase;background:var(--neutral-10)}
+tbody tr:last-child td{border-bottom:0}
+.badge{display:inline-flex;align-items:center;min-height:28px;border:1px solid var(--neutral-30);border-radius:9999px;padding:3px 10px;font-size:13px;background:var(--surface)}
+.badge.dark{background:var(--neutral-90);color:var(--surface);border-color:var(--neutral-90)}
+.badge.soft{background:var(--neutral-10)}
+.kpi{border:1px solid var(--neutral-30);padding:16px;border-radius:var(--radius-md)}
+.kpi .value{font-size:28px;font-weight:700;line-height:1.1;margin-top:8px}
+.notice{border:1px solid var(--neutral-90);padding:14px 16px;border-radius:var(--radius-sm);background:var(--surface)}
+.notice.soft{border-color:var(--neutral-30);background:var(--neutral-10)}
+.progress{height:10px;border:1px solid var(--neutral-30);background:var(--surface)}
+.progress > span{display:block;height:100%;background:var(--neutral-90)}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--neutral-30);margin-bottom:20px;overflow:auto}
+.tab{background:var(--surface);border:0;border-bottom:3px solid transparent;padding:12px 16px;white-space:nowrap}
+.tab.active{border-bottom-color:var(--neutral-90);font-weight:700}
+.divider{border:0;border-top:1px solid var(--neutral-30);margin:24px 0}
+.placeholder{min-height:120px;background:var(--neutral-10);position:relative;display:grid;place-items:center;color:var(--neutral-50);border:1px solid var(--neutral-30)}
+.placeholder:before,.placeholder:after{content:"";position:absolute;left:0;top:50%;width:100%;border-top:1px solid var(--neutral-30);transform-origin:center}
+.placeholder:before{transform:rotate(17deg)}
+.placeholder:after{transform:rotate(-17deg)}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+.overlay.open{display:flex}
+.modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:var(--surface);border:2px solid var(--neutral-90);padding:24px}
+.modal-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}
+.modal-head h2{margin:0;font-size:24px}
+.icon-btn{width:44px;height:44px;border:1px solid var(--neutral-90);background:var(--surface);font-size:20px}
+.empty{text-align:center;border:1px dashed var(--neutral-30);padding:48px 24px}
+.hidden{display:none!important}
+.toolbar{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+.toolbar .field{min-width:180px;flex:1}
+.stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px}
+.step{border-top:4px solid var(--neutral-30);padding-top:8px;color:var(--neutral-50);font-size:13px}
+.step.active,.step.done{border-top-color:var(--neutral-90);color:var(--neutral-90);font-weight:700}
+.checkbox-row,.radio-row{display:flex;gap:10px;align-items:flex-start}
+input[type="checkbox"],input[type="radio"]{width:18px;height:18px;margin-top:3px;accent-color:#111827}
+.summary-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.summary-list li{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--neutral-30);padding-bottom:10px}
+.summary-list li:last-child{border-bottom:0;padding-bottom:0}
+.inline-status{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--neutral-90)}
+@media(max-width:820px){
+  .shell{padding:16px}
+  .topbar-inner{padding:0 16px}
+  .grid.two,.grid.three,.grid.four{grid-template-columns:1fr}
+  .page-head h1{font-size:28px}
+  .stepper{grid-template-columns:1fr 1fr}
+  .actions{width:100%}
+  .actions .btn{flex:1}
+  table{min-width:640px}
+}
+@media(max-width:520px){
+  .user{display:none}
+  .stepper{grid-template-columns:1fr}
+  .modal{padding:16px}
+}
+</style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="header-inner">
-      <div class="brand"><div class="brand-mark" aria-hidden="true">PO</div><span class="brand-text">PO Productos y ofertas</span></div><nav class="header-nav" aria-label="Navegación principal"><span>Inicio</span><span aria-current="page">Productos</span><span>Ofertas</span></nav>
-      <span class="user-chip">Gestor comercial</span>
-    </div>
-  </header>
-  <div id="offline-banner" class="offline-banner" role="status" hidden>Sin conexión. Los cambios no se guardarán hasta recuperar la conexión.</div>
-  <main id="main" tabindex="-1"></main>
-  <div id="modal-root"></div>
-  <div id="toast" class="toast" role="status" hidden></div>
-  <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="brand-mark">PO</span><span>Productos y ofertas</span></div>
+    <div class="user">Gestor comercial</div>
+  </div>
+</header>
+<main class="shell">
+  <div class="breadcrumb">Productos / Variantes</div>
+  
+<div class="page-head">
+  <div><h1>Gestión de variantes y SKU</h1><p>Administra las unidades vendibles de un producto. Las variantes heredan el precio del producto salvo que se configure un precio específico posteriormente.</p></div>
+  <div class="actions"><button class="btn primary" onclick="show('form')">Nueva variante</button></div>
+</div>
+<section id="list" class="stack">
+  <div class="notice soft"><strong>Producto:</strong> Camisa Oxford · Precio del producto: S/ 89.90</div>
+  <div class="toolbar"><div class="field"><label>Buscar</label><input class="input" placeholder="SKU o atributo"></div><div class="field"><label>Estado</label><select class="select"><option>Todos</option><option>Activa</option><option>Preparando inventario</option></select></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Variante</th><th>SKU</th><th>Precio</th><th>Datos físicos</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+    <tr><td><strong>Talla M · Blanco</strong></td><td>CAM-OXF-M-BLA</td><td>Hereda S/ 89.90</td><td>Completo</td><td><span class="badge dark">Activa</span></td><td><button class="btn ghost" onclick="detail('CAM-OXF-M-BLA','Activa')">Ver detalle</button></td></tr>
+    <tr><td><strong>Talla L · Blanco</strong></td><td>CAM-OXF-L-BLA</td><td>Hereda S/ 89.90</td><td>Completo</td><td><span class="badge soft">Preparando inventario</span></td><td><button class="btn ghost" onclick="detail('CAM-OXF-L-BLA','Preparando inventario')">Ver detalle</button></td></tr>
+  </tbody></table></div>
+</section>
+<section id="form" class="hidden stack">
+  <div class="card stack">
+    <h2>Nueva variante</h2>
+    <div class="grid two"><div class="field"><label>Talla</label><select class="select"><option>S</option><option selected>M</option><option>L</option></select></div><div class="field"><label>Color</label><select class="select"><option>Blanco</option><option>Negro</option></select></div><div class="field"><label>SKU comercial</label><input id="variantSku" class="input" value="CAM-OXF-M-NEG"></div><div class="field"><label>Material</label><input class="input" value="Algodón"></div></div>
+  </div>
+  <div class="card stack"><h2>Datos físicos para despacho</h2><div class="grid four"><div class="field"><label>Peso (kg)</label><input class="input" type="number" step=".01" value=".35"></div><div class="field"><label>Largo (cm)</label><input class="input" type="number" value="30"></div><div class="field"><label>Ancho (cm)</label><input class="input" type="number" value="25"></div><div class="field"><label>Alto (cm)</label><input class="input" type="number" value="3"></div></div></div>
+  <div class="card"><h2>Precio</h2><p><strong>Hereda el precio del producto: S/ 89.90</strong></p><p class="muted">No necesitas crear un precio base para esta variante. Si más adelante requiere un precio específico, se configura desde Gestión de precios.</p></div>
+  <div class="actions"><button class="btn" onclick="show('list')">Cancelar</button><button class="btn primary" onclick="saveVariant()">Crear variante</button></div>
+</section>
+<section id="prep" class="hidden"><div class="card stack"><h2>Variante creada</h2><p class="muted">La variante se guardó y está preparando su disponibilidad de inventario.</p><div class="inline-status"><span class="dot"></span><strong id="prepText">Preparando inventario…</strong></div><button id="backVariant" class="btn primary" disabled onclick="show('list')">Volver a variantes</button></div></section>
+<section id="detail" class="hidden stack"><div class="card"><div class="page-head"><div><h2 id="skuTitle">SKU</h2><p class="muted">Talla M · Blanco</p></div><span id="variantState" class="badge"></span></div><div class="grid three"><div class="kpi"><span class="muted">Precio</span><div><strong>Hereda S/ 89.90</strong></div></div><div class="kpi"><span class="muted">Inventario</span><div><strong id="stockState">—</strong></div></div><div class="kpi"><span class="muted">Datos físicos</span><div><strong>Completos</strong></div></div></div></div><button class="btn" onclick="show('list')">Volver a variantes</button></section>
 
-  <script>
-    (() => {
-      'use strict';
-
-      const products = {
-        variants: { id:'p-001', name:'Zapatillas Running ProSpeed X', skuBase:'ZAP-PSX', status:'Activo', category:'Calzado', brand:'ProSpeed', hasVariants:true },
-        simple: { id:'p-003', name:'Botella térmica 750 ml', skuBase:'BOT-750', status:'Activo', category:'Accesorios', brand:'UrbanFit', hasVariants:false }
-      };
-
-      const initialVariants = [
-        { id:'v-001', variantId:'var_8f9a1b2c', size:'42', color:'Negro', sku:'ZAP-PSX-42-NEG', status:'Activa', material:'Malla técnica', image:'zapatilla-negra-42.jpg', price:'S/ 329.90', priceSource:'Precio base del producto', availability:'12 unidades disponibles', updated:'17/09/2026, 10:12' },
-        { id:'v-002', variantId:'var_7d8e9f0a', size:'41', color:'Negro', sku:'ZAP-PSX-41-NEG', status:'Activa', material:'Malla técnica', image:'zapatilla-negra-41.jpg', price:'S/ 329.90', priceSource:'Precio base del producto', availability:'8 unidades disponibles', updated:'16/09/2026, 15:32' },
-        { id:'v-003', variantId:'var_6c7b8a9d', size:'42', color:'Blanco', sku:'ZAP-PSX-42-BLA', status:'Activa', material:'Malla técnica', image:'zapatilla-blanca-42.jpg', price:'S/ 349.90', priceSource:'Precio específico de la variante', availability:'5 unidades disponibles', updated:'15/09/2026, 12:08' },
-        { id:'v-004', variantId:'var_5b6a7c8e', size:'40', color:'Azul', sku:'ZAP-PSX-40-AZU', status:'Borrador', material:'Malla técnica', image:'zapatilla-azul-40.jpg', price:'S/ 329.90', priceSource:'Precio base del producto', availability:'Stock inicial pendiente', updated:'14/09/2026, 09:41' },
-        { id:'v-005', variantId:'var_4a5b6c7d', size:'39', color:'Negro', sku:'ZAP-PSX-39-NEG', status:'Inactiva', material:'Malla técnica', image:'zapatilla-negra-39.jpg', price:'S/ 329.90', priceSource:'Precio base del producto', availability:'No disponible para nuevas ventas', updated:'10/09/2026, 17:05' }
-      ];
-
-      const state = {
-        product:products.variants,
-        variants:initialVariants.map(v=>({...v})),
-        screen:'list', selectedId:null, filters:{size:'',color:'',status:''}, listMode:'normal',
-        errors:{}, formDirty:false, saving:false, modal:null, modalReturn:null, toastTimer:null,
-        simulatedImageError:'', formDraft:{size:'',color:'',material:'',commercialSku:''}
-      };
-
-      const main=document.getElementById('main');
-      const modalRoot=document.getElementById('modal-root');
-      const toastEl=document.getElementById('toast');
-      const announcer=document.getElementById('announcer');
-      const offlineBanner=document.getElementById('offline-banner');
-
-      const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
-      function announce(message){announcer.textContent='';window.setTimeout(()=>{announcer.textContent=message;},20);}
-      function toast(message){window.clearTimeout(state.toastTimer);toastEl.textContent=message;toastEl.hidden=false;state.toastTimer=window.setTimeout(()=>toastEl.hidden=true,3400);}
-      function currentVariant(){return state.variants.find(v=>v.id===state.selectedId)||null;}
-      function statusClass(status){return status==='Borrador'?'draft':status==='Inactiva'?'inactive':'active';}
-      function statusBadge(status){return `<span class="status ${statusClass(status)}">${escapeHtml(status)}</span>`;}
-      function breadcrumbs(items){return `<nav class="breadcrumbs" aria-label="Ruta de navegación">${items.map((item,index)=>index===items.length-1?`<span aria-current="page">${escapeHtml(item.label)}</span>`:`<button class="breadcrumb-button" type="button" data-action="${escapeHtml(item.action)}">${escapeHtml(item.label)}</button><span aria-hidden="true"> / </span>`).join('')}</nav>`;}
-      function pageHeading(title,description,action=''){return `<div class="page-heading"><div class="heading-row"><div><h1>${escapeHtml(title)}</h1><p class="lede">${escapeHtml(description)}</p></div>${action}</div></div>`;}
-      function productContext(){const p=state.product;return `<section class="product-context" aria-label="Producto seleccionado"><div><p class="context-label">Producto</p><p class="context-name">${escapeHtml(p.name)}</p><div class="context-meta"><span class="mono">${escapeHtml(p.skuBase)}</span><span>${escapeHtml(p.category)}</span><span>${escapeHtml(p.brand)}</span><span>${escapeHtml(p.status)}</span></div></div><button class="btn" type="button" data-action="back-product">Volver al producto</button></section>`;}
-
-      function navigate(screen,id=null,hash=''){
-        state.screen=screen;if(id)state.selectedId=id;state.errors={};state.simulatedImageError='';state.modal=null;modalRoot.innerHTML='';
-        const target=hash||(screen==='list'?'#variantes':screen==='create'?'#variante-nueva':`#variante-${state.selectedId||''}-${screen}`);
-        history.replaceState(null,'',target);render();main.focus();
-      }
-
-      function filteredVariants(){return state.variants.filter(v=>(!state.filters.size||v.size===state.filters.size)&&(!state.filters.color||v.color===state.filters.color)&&(!state.filters.status||v.status===state.filters.status));}
-
-      function renderList(){
-        if(!state.product.hasVariants){renderIncompatibleProduct();return;}
-        const variants=filteredVariants();const hasFilters=Object.values(state.filters).some(Boolean);const activeCount=state.variants.filter(v=>v.status==='Activa').length;
-        main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:state.product.name,action:'back-product'},{label:'Variantes'}])}${productContext()}
-          ${pageHeading('Variantes del producto','Administra las combinaciones vendibles, sus identificadores y su estado.','<button class="btn btn-primary" type="button" data-action="new-variant">Nueva variante</button>')}
-          ${!activeCount?`<div class="notice" role="status" style="margin-bottom:20px"><span class="notice-icon" aria-hidden="true">!</span><div><p class="notice-title">Este producto no tiene variantes activas</p><p class="muted">Necesita al menos una variante activa con SKU e imagen válidos para poder estar disponible en los canales de venta.</p></div></div>`:''}
-          ${state.listMode==='loading'?renderLoading():state.listMode==='error'?renderListError():`<section class="filters" aria-label="Filtros de variantes">
-            ${selectFilter('filter-size','Talla','size',['39','40','41','42'])}${selectFilter('filter-color','Color','color',['Negro','Blanco','Azul'])}${selectFilter('filter-status','Estado','status',['Borrador','Activa','Inactiva'])}
-            <div class="button-row"><button class="btn" type="button" data-action="clear-filters" ${hasFilters?'':'disabled'}>Limpiar filtros</button></div>
-          </section>${variants.length?renderTable(variants):renderEmpty(hasFilters)}`}`;
-      }
-
-      function selectFilter(id,label,key,values){return `<div class="field"><label for="${id}">${label}</label><select id="${id}" class="control" data-filter="${key}"><option value="">Todos</option>${values.map(v=>`<option ${state.filters[key]===v?'selected':''}>${escapeHtml(v)}</option>`).join('')}</select></div>`;}
-      function renderLoading(){return `<section class="panel" aria-label="Cargando variantes" aria-busy="true"><div class="skeleton" style="width:35%"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton" style="width:70%"></div></section>`;}
-      function renderListError(){return `<section class="global-state" aria-labelledby="load-error-title"><div class="empty-symbol" aria-hidden="true">!</div><h2 id="load-error-title">No pudimos cargar las variantes</h2><p>La información no está disponible en este momento. Intenta nuevamente.</p><button class="btn btn-primary" type="button" data-action="retry-list">Reintentar</button></section>`;}
-      function renderEmpty(filtered){return `<section class="empty-state" aria-labelledby="empty-title"><div class="empty-symbol" aria-hidden="true">${filtered?'0':'+'}</div><h2 id="empty-title">${filtered?'Ninguna variante coincide con estos filtros':'Este producto todavía no tiene variantes'}</h2><p>${filtered?'Prueba otra combinación o limpia los filtros aplicados.':'Crea la primera combinación con su imagen propia y SKU comercial suministrado o generado.'}</p><button class="btn btn-primary" type="button" data-action="${filtered?'clear-filters':'new-variant'}">${filtered?'Limpiar filtros':'Crear primera variante'}</button></section>`;}
-      function renderTable(variants){return `<section aria-labelledby="results-title"><div class="results-head"><h2 id="results-title">Variantes registradas</h2><span class="muted" aria-live="polite">${variants.length} ${variants.length===1?'variante':'variantes'}</span></div><div class="table-wrap"><table><thead><tr><th>Imagen</th><th>Combinación</th><th>Variant ID</th><th>SKU Comercial</th><th>Estado</th><th>Disponibilidad</th><th><span class="sr-only">Acciones</span></th></tr></thead><tbody>${variants.map(v=>`<tr><td><span class="thumb" role="img" aria-label="Imagen de ${escapeHtml(v.color)}, talla ${escapeHtml(v.size)}"></span></td><td><button class="variant-link" type="button" data-action="view-variant" data-id="${v.id}">Talla ${escapeHtml(v.size)} · ${escapeHtml(v.color)}</button></td><td class="mono small muted">${escapeHtml(v.variantId||v.id)}</td><td class="mono">${escapeHtml(v.sku)}</td><td>${statusBadge(v.status)}</td><td>${escapeHtml(v.availability)}</td><td><div class="row-actions"><button class="btn" type="button" data-action="view-variant" data-id="${v.id}">Ver</button><button class="btn" type="button" data-action="edit-variant" data-id="${v.id}">Editar</button></div></td></tr>`).join('')}</tbody></table></div></section>`;}
-
-      function renderIncompatibleProduct(){main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:state.product.name,action:'back-product'},{label:'Variantes'}])}${productContext()}<section class="global-state" aria-labelledby="incompatible-title"><div class="empty-symbol" aria-hidden="true">!</div><h1 id="incompatible-title">Este producto no maneja variantes</h1><p>Se configuró como producto simple. Su SKU base identifica directamente la unidad vendible y esta configuración no puede modificarse.</p><button class="btn btn-primary" type="button" data-action="back-product">Volver al producto</button></section>`;}
-
-      function renderForm(mode){
-        const editing=mode==='edit';const v=editing?currentVariant():null;if(editing&&!v){renderNotFound();return;}const e=state.errors;
-        const draft=editing?{size:v.size,color:v.color,material:v.material,commercialSku:v.sku}:state.formDraft;
-        main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:state.product.name,action:'back-product'},{label:'Variantes',action:'back-list'},{label:editing?'Editar variante':'Nueva variante'}])}${productContext()}
-          ${pageHeading(editing?'Editar variante':'Nueva variante',editing?'Puedes cambiar la imagen y los atributos no identificadores. La identidad de la variante no se modifica.':'Define la combinación exacta, ingresa o autogenera el SKU comercial y agrega una imagen propia.')}
-          ${Object.keys(e).length?renderErrorSummary(e):''}
-          ${state.simulatedImageError?`<div class="notice" role="alert" style="margin-bottom:20px"><span class="notice-icon" aria-hidden="true">!</span><div><p class="notice-title">No pudimos usar esa imagen</p><p class="muted">${escapeHtml(state.simulatedImageError)}</p></div></div>`:''}
-          <form id="variant-form" novalidate>
-            <section class="panel" aria-labelledby="identity-title"><div class="panel-heading"><h2 id="identity-title">Identidad de la variante</h2><p class="muted">${editing?'Estos datos son inmutables. Para corregirlos, desactiva esta variante y crea una nueva.':'Selecciona un valor para cada característica identificadora.'}</p></div>
-              ${editing?`<div class="readonly-group"><div class="readonly-box"><span class="readonly-label">Variant ID</span><span class="readonly-value mono">${escapeHtml(v.variantId||v.id)}</span></div><div class="readonly-box"><span class="readonly-label">SKU Comercial</span><span class="readonly-value mono">${escapeHtml(v.sku)}</span></div><div class="readonly-box"><span class="readonly-label">Talla</span><span class="readonly-value">${escapeHtml(v.size)}</span></div><div class="readonly-box"><span class="readonly-label">Color</span><span class="readonly-value">${escapeHtml(v.color)}</span></div></div>`:`<div class="form-grid"><div class="field span-6"><label class="required" for="size">Talla</label><select id="size" name="size" class="control" aria-invalid="${e.size?'true':'false'}" ${e.size?'aria-describedby="size-error"':''}><option value="">Selecciona una talla</option>${['39','40','41','42','43'].map(x=>`<option ${draft.size===x?'selected':''}>${x}</option>`).join('')}</select>${errorText('size',e.size)}</div><div class="field span-6"><label class="required" for="color">Color</label><select id="color" name="color" class="control" aria-invalid="${e.color?'true':'false'}" ${e.color?'aria-describedby="color-error"':''}><option value="">Selecciona un color</option>${['Negro','Blanco','Azul'].map(x=>`<option ${draft.color===x?'selected':''}>${x}</option>`).join('')}</select>${errorText('color',e.color)}</div><div class="field span-12"><label for="commercialSku">SKU comercial (opcional)</label><input id="commercialSku" name="commercialSku" class="control mono" type="text" value="${escapeHtml(draft.commercialSku||'')}" placeholder="Ejemplo: PRO-ZAP-42-BLK (deja vacío para autogenerar)" aria-invalid="${e.commercialSku?'true':'false'}" ${e.commercialSku?'aria-describedby="commercialSku-error"':''}><p class="field-help">Puedes ingresar un código de proveedor/ERP o dejarlo en blanco para que el sistema lo genere automáticamente.</p>${errorText('commercialSku',e.commercialSku)}</div></div>`}
-            </section>
-            <section class="panel" aria-labelledby="details-title"><div class="panel-heading"><h2 id="details-title">Datos propios de la variante</h2></div><div class="form-grid"><div class="field span-12"><label for="material">Material</label><input id="material" name="material" class="control" type="text" value="${escapeHtml(draft.material||'')}" placeholder="Ejemplo: Malla técnica"><p class="field-help">Atributo no identificador; puede modificarse sin alterar el SKU.</p></div><div id="image" class="field span-12"><span class="field-label ${editing?'':'required'}">Imagen propia</span><div class="upload-box"><strong>${editing?'Imagen actual de la variante':'Selecciona una imagen para esta variante'}</strong><p class="field-help">La imagen general del producto no sustituye este requisito.</p><input id="image-input" name="image" type="file" accept="image/*" ${e.image?'aria-describedby="image-error"':''}><div id="image-preview" class="image-preview" ${editing?'':'hidden'}><span class="image-placeholder" aria-hidden="true"></span><span>${editing?escapeHtml(v.image):''}</span></div>${errorText('image',e.image)}</div></div></div></section>
-            <div class="actions-bar"><button class="btn" type="button" data-action="cancel-form">Cancelar</button><button class="btn btn-primary" type="submit" ${state.saving?'disabled':''}>${state.saving?'Guardando…':editing?'Guardar cambios':'Crear variante'}</button></div>
-          </form>`;
-      }
-
-      function renderErrorSummary(errors){return `<section class="error-summary" role="alert" aria-labelledby="error-title" tabindex="-1"><h2 id="error-title">Revisa los datos antes de continuar</h2><ul>${Object.entries(errors).map(([key,value])=>`<li><a href="#${escapeHtml(key)}">${escapeHtml(value)}</a></li>`).join('')}</ul></section>`;}
-      function errorText(name,error){return error?`<p class="field-error" id="${name}-error">${escapeHtml(error)}</p>`:'';}
-
-      function validateForm(form,editing){
-        const data=new FormData(form);const size=editing?currentVariant().size:String(data.get('size')||'');const color=editing?currentVariant().color:String(data.get('color')||'');const material=String(data.get('material')||'').trim();const commercialSku=String(data.get('commercialSku')||'').trim().toUpperCase();const file=document.getElementById('image-input')?.files?.[0]||null;const errors={};
-        if(!editing)state.formDraft={size,color,material,commercialSku};
-        if(!editing&&!size)errors.size='Selecciona una talla.';if(!editing&&!color)errors.color='Selecciona un color.';if(!editing&&!file)errors.image='Agrega una imagen propia para la variante.';
-        if(file&&!String(file.type).startsWith('image/'))errors.image='Selecciona un archivo de imagen válido.';
-        if(!editing&&size&&color&&state.variants.some(v=>v.size===size&&v.color===color))errors.size='Ya existe una variante con esta combinación de talla y color.';
-        if(!editing&&commercialSku&&state.variants.some(v=>v.sku.toUpperCase()===commercialSku))errors.commercialSku='Este SKU comercial ya está registrado en otra variante.';
-        return {values:{size,color,material,commercialSku,file},errors};
-      }
-
-      function saveForm(form){
-        const editing=state.screen==='edit';const {values,errors}=validateForm(form,editing);state.errors=errors;
-        if(Object.keys(errors).length){renderForm(editing?'edit':'create');document.querySelector('.error-summary')?.focus();announce('El formulario contiene errores.');return;}
-        if(!navigator.onLine){toast('No se pudo guardar. Revisa tu conexión e intenta nuevamente.');return;}
-        state.saving=true;renderForm(editing?'edit':'create');window.setTimeout(()=>{
-          if(editing){const v=currentVariant();v.material=values.material;if(values.file)v.image=values.file.name;v.updated='17/09/2026, 15:04';state.saving=false;state.formDirty=false;navigate('detail',v.id);toast('Los cambios de la variante fueron guardados. El SKU no cambió.');}
-          else {
-            const id=`v-${String(state.variants.length+1).padStart(3,'0')}`;
-            const variantId=`var_${Math.random().toString(36).substr(2,8)}`;
-            const sku=values.commercialSku || `${state.product.skuBase}-${values.size}-${values.color.slice(0,3).toUpperCase()}`;
-            const v={id,variantId,size:values.size,color:values.color,sku,status:'Borrador',material:values.material||'No especificado',image:values.file.name,price:'S/ 329.90',priceSource:'Precio base del producto',availability:'Stock inicial pendiente',updated:'17/09/2026, 15:04'};
-            state.variants.unshift(v);state.saving=false;state.formDirty=false;state.formDraft={size:'',color:'',material:'',commercialSku:''};navigate('detail',id);toast(`Variante creada con Variant ID ${variantId}. SKU: ${sku}.`);
-          }
-        },550);
-      }
-
-      function renderDetail(){
-        const v=currentVariant();if(!v){renderNotFound();return;}
-        main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:state.product.name,action:'back-product'},{label:'Variantes',action:'back-list'},{label:v.sku}])}${productContext()}
-          <section class="detail-header"><div class="heading-row"><div><div class="title-with-status"><h1>Talla ${escapeHtml(v.size)} · ${escapeHtml(v.color)}</h1>${statusBadge(v.status)}</div><p class="lede mono">${escapeHtml(v.sku)}</p></div><div class="button-row"><button class="btn" type="button" data-action="edit-current">Editar</button>${v.status==='Activa'?'<button class="btn btn-danger" type="button" data-action="request-deactivate">Desactivar variante</button>':`<button class="btn btn-primary" type="button" data-action="request-activate">${v.status==='Inactiva'?'Reactivar variante':'Activar variante'}</button>`}</div></div></section>
-          ${v.status==='Inactiva'?`<div class="notice" role="status" style="margin-bottom:20px"><span class="notice-icon" aria-hidden="true">i</span><div><p class="notice-title">Esta variante está inactiva</p><p class="muted">No está disponible para nuevas ventas, pero su registro se conserva para pedidos históricos. Puedes reactivarla si mantiene sus condiciones válidas.</p></div></div>`:''}
-          ${v.status==='Borrador'?`<div class="notice" role="status" style="margin-bottom:20px"><span class="notice-icon" aria-hidden="true">i</span><div><p class="notice-title">Esta variante todavía es un borrador</p><p class="muted">Revisa su identidad e imagen propia antes de activarla para nuevas ventas.</p></div></div>`:''}
-          <div class="detail-grid"><div><section class="panel" aria-labelledby="image-title"><div class="panel-heading"><h2 id="image-title">Imagen propia</h2></div><div class="hero-image" role="img" aria-label="Imagen de ${escapeHtml(state.product.name)}, talla ${escapeHtml(v.size)}, color ${escapeHtml(v.color)}"><span>Imagen de la variante</span></div></section>
-            <section class="panel" aria-labelledby="variant-data-title"><div class="panel-heading"><h2 id="variant-data-title">Información de la variante</h2></div><div class="definition-grid">${definition('Variant ID (inmutable)',v.variantId||v.id,true)}${definition('SKU Comercial',v.sku,true)}${definition('Estado',v.status)}${definition('Talla',v.size)}${definition('Color',v.color)}${definition('Material',v.material)}${definition('Imagen asociada',v.image)}</div></section>
-            <section class="panel" aria-labelledby="inherited-title"><div class="panel-heading"><h2 id="inherited-title">Datos heredados del producto</h2><p class="muted">Estos valores se administran desde el producto padre.</p></div><div class="definition-grid">${definition('Producto',state.product.name)}${definition('Categoría',state.product.category)}${definition('Marca',state.product.brand)}${definition('SKU base',state.product.skuBase,true)}</div></section></div>
-            <aside><section class="panel" aria-labelledby="commercial-title"><h2 id="commercial-title">Información comercial</h2><div class="definition">${definitionInner('Precio vigente',v.price)}<p class="field-help">${escapeHtml(v.priceSource)}. El precio se administra fuera de esta pantalla.</p></div><div class="definition">${definitionInner('Disponibilidad',v.availability)}<p class="field-help">Información consultada a Inventario. No se edita aquí.</p></div></section><section class="panel" aria-labelledby="meta-title"><h2 id="meta-title">Información administrativa</h2><ul class="meta-list"><li><span class="muted small">Variant ID</span><br><span class="mono">${escapeHtml(v.variantId||v.id)}</span></li><li><span class="muted small">Identificador de fila</span><br><span class="mono">${escapeHtml(v.id.toUpperCase())}</span></li><li><span class="muted small">Última modificación</span><br>${escapeHtml(v.updated)}</li></ul></section></aside></div>`;
-      }
-
-      function definition(label,value,mono=false){return `<div class="definition">${definitionInner(label,value,mono)}</div>`;}
-      function definitionInner(label,value,mono=false){return `<div class="definition-label">${escapeHtml(label)}</div><div class="definition-value ${mono?'mono':''}">${escapeHtml(value)}</div>`;}
-
-      function activationIssues(v){
-        const issues=[];
-        if(!state.product.hasVariants)issues.push('El producto no está configurado para manejar variantes.');
-        if(!v.sku)issues.push('La variante no tiene un SKU generado.');
-        if(!v.image)issues.push('La variante no tiene una imagen propia válida.');
-        return issues;
-      }
-
-      function requestActivate(trigger){
-        const v=currentVariant();if(!v||v.status==='Activa')return;
-        const issues=activationIssues(v);const reactivating=v.status==='Inactiva';
-        state.modal={type:'activate',reactivating,issues};state.modalReturn=trigger;
-        modalRoot.innerHTML=`<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description"><h2 id="modal-title" tabindex="-1">${reactivating?'Reactivar':'Activar'} variante ${escapeHtml(v.sku)}</h2><p id="modal-description">${reactivating?'La variante volverá a estar disponible para nuevas ventas.':'La variante dejará de ser borrador y podrá estar disponible para nuevas ventas.'}</p><div class="readonly-box" style="margin-top:18px"><span class="readonly-label">Combinación</span><span class="readonly-value">Talla ${escapeHtml(v.size)} · ${escapeHtml(v.color)}</span></div>${issues.length?`<div class="notice" role="alert" style="margin-top:18px"><span class="notice-icon" aria-hidden="true">!</span><div><p class="notice-title">No se puede ${reactivating?'reactivar':'activar'} todavía</p><ul>${issues.map(issue=>`<li>${escapeHtml(issue)}</li>`).join('')}</ul></div></div>`:`<div class="notice" role="status" style="margin-top:18px"><span class="notice-icon" aria-hidden="true">✓</span><div><p class="notice-title">Condiciones verificadas</p><p class="muted">La variante tiene SKU, imagen propia y pertenece a un producto configurado para manejar variantes.</p></div></div>`}<div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Cancelar</button>${issues.length?'':`<button class="btn btn-primary" type="button" data-action="confirm-activate">${reactivating?'Reactivar variante':'Activar variante'}</button>`}</div></section></div>`;
-        window.setTimeout(()=>document.getElementById('modal-title')?.focus(),0);
-      }
-
-      function confirmActivate(){
-        const v=currentVariant();if(!v||activationIssues(v).length)return;
-        const reactivating=v.status==='Inactiva';
-        v.status='Activa';
-        if(v.availability==='No disponible para nuevas ventas'||v.availability==='Stock inicial pendiente')v.availability='Disponibilidad pendiente de actualización';
-        v.updated=new Date().toLocaleString('es-PE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-        closeModal();renderDetail();main.focus();toast(reactivating?'Variante reactivada correctamente.':'Variante activada correctamente.');
-      }
-
-      function requestDeactivate(trigger){const v=currentVariant();if(!v)return;const activeCount=state.variants.filter(x=>x.status==='Activa').length;state.modal={type:'deactivate',lastActive:activeCount===1};state.modalReturn=trigger;modalRoot.innerHTML=`<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description"><h2 id="modal-title" tabindex="-1">Desactivar variante ${escapeHtml(v.sku)}</h2><p id="modal-description">Dejará de estar disponible para nuevas ventas. El producto, las demás variantes y los pedidos confirmados no se modificarán.</p>${state.modal.lastActive?'<div class="notice" style="margin-top:18px"><span class="notice-icon" aria-hidden="true">!</span><div><p class="notice-title">Es la última variante activa</p><p class="muted">El producto dejará de cumplir la condición necesaria para estar disponible en los canales de venta.</p></div></div>':''}<div class="readonly-box" style="margin-top:18px"><span class="readonly-label">Combinación</span><span class="readonly-value">Talla ${escapeHtml(v.size)} · ${escapeHtml(v.color)}</span></div><div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Cancelar</button><button class="btn btn-danger" type="button" data-action="confirm-deactivate">Desactivar variante</button></div></section></div>`;window.setTimeout(()=>document.getElementById('modal-title')?.focus(),0);}
-      function closeModal(){state.modal=null;modalRoot.innerHTML='';state.modalReturn?.focus?.();}
-      function confirmDeactivate(){const v=currentVariant();if(!v)return;v.status='Inactiva';v.availability='No disponible para nuevas ventas';v.updated=new Date().toLocaleString('es-PE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});closeModal();renderDetail();main.focus();toast('Variante desactivada. El producto y las demás variantes no cambiaron.');}
-
-      function renderNotFound(){main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:'Variantes',action:'back-list'},{label:'Variante no encontrada'}])}${productContext()}<section class="global-state"><div class="empty-symbol" aria-hidden="true">?</div><h1>Variante no encontrada</h1><p>La variante pudo haber cambiado o ya no estar disponible.</p><button class="btn btn-primary" type="button" data-action="back-list">Volver a variantes</button></section>`;}
-      function renderNoPermission(){main.innerHTML=`<section class="global-state" aria-labelledby="permission-title"><div class="empty-symbol" aria-hidden="true">!</div><h1 id="permission-title">No tienes permiso para realizar esta acción</h1><p>Tu sesión no permite crear, modificar ni cambiar el estado de variantes.</p><button class="btn btn-primary" type="button" data-action="back-list">Volver a variantes</button></section>`;}
-      function renderSessionExpired(){main.innerHTML=`<section class="global-state" aria-labelledby="session-title"><div class="empty-symbol" aria-hidden="true">!</div><h1 id="session-title">Tu sesión expiró</h1><p>Inicia sesión nuevamente para continuar. Intentaremos devolverte al producto seleccionado.</p><button class="btn btn-primary" type="button" data-action="login">Iniciar sesión</button></section>`;}
-      function renderConflict(){const v=currentVariant()||state.variants[0];main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:'Variantes',action:'back-list'},{label:v.sku,action:'view-current'},{label:'Datos actualizados'}])}${productContext()}${pageHeading('La variante cambió mientras la editabas','Recarga la información vigente antes de volver a guardar.')}<section class="panel"><div class="notice"><span class="notice-icon" aria-hidden="true">!</span><div><p class="notice-title">Tus cambios no se guardaron</p><p class="muted">Otra actualización modificó esta variante. El SKU y la versión vigente se conservan.</p></div></div><div class="actions-bar"><button class="btn" type="button" data-action="back-list">Volver a variantes</button><button class="btn btn-primary" type="button" data-action="reload-variant">Recargar variante</button></div></section>`;}
-      function renderCollision(){main.innerHTML=`${breadcrumbs([{label:'Productos',action:'back-product'},{label:'Variantes',action:'back-list'},{label:'No se pudo crear'}])}${productContext()}${pageHeading('No pudimos crear la variante','El código generado coincidió con un SKU existente y la variante no fue guardada.')}<section class="panel"><div class="notice" role="alert"><span class="notice-icon" aria-hidden="true">!</span><div><p class="notice-title">La operación fue rechazada de forma segura</p><p class="muted">Intenta nuevamente más tarde. Si el problema continúa, solicita soporte e indica la referencia VAR-20260917-01.</p></div></div><div class="actions-bar"><button class="btn" type="button" data-action="back-list">Volver a variantes</button><button class="btn btn-primary" type="button" data-action="new-variant">Intentar otra vez</button></div></section>`;}
-
-      function render(){modalRoot.innerHTML='';if(state.screen==='list')renderList();else if(state.screen==='create')renderForm('create');else if(state.screen==='edit')renderForm('edit');else if(state.screen==='detail')renderDetail();else if(state.screen==='no-permission')renderNoPermission();else if(state.screen==='session-expired')renderSessionExpired();else if(state.screen==='conflict')renderConflict();else if(state.screen==='collision')renderCollision();else renderNotFound();}
-
-      function parseHash(){const hash=location.hash.replace('#','');state.product=products.variants;
-        if(hash==='producto-simple'){state.product=products.simple;state.screen='list';}
-        else if(hash==='no-permission')state.screen='no-permission';
-        else if(hash==='session-expired')state.screen='session-expired';
-        else if(hash==='list-loading'){state.screen='list';state.listMode='loading';}
-        else if(hash==='list-error'){state.screen='list';state.listMode='error';}
-        else if(hash==='list-empty'){state.screen='list';state.variants=[];state.listMode='normal';}
-        else if(hash==='conflict'){state.screen='conflict';state.selectedId='v-001';}
-        else if(hash==='sku-collision')state.screen='collision';
-        else if(hash==='imagen-invalida'){state.screen='edit';state.selectedId='v-001';state.simulatedImageError='El archivo no cumple el formato permitido. La imagen anterior se conserva.';}
-        else if(hash==='variante-nueva')state.screen='create';
-        else {const match=hash.match(/^variante-(v-\d+)-(detail|edit)$/);if(match){state.selectedId=match[1];state.screen=match[2];}else{state.screen='list';state.listMode='normal';}}
-        render();
-      }
-
-      document.addEventListener('click',event=>{const el=event.target.closest('[data-action]');if(!el)return;const action=el.dataset.action;
-        if(action==='new-variant'){state.formDirty=false;state.formDraft={size:'',color:'',material:''};navigate('create');}
-        else if(action==='view-variant')navigate('detail',el.dataset.id);
-        else if(action==='edit-variant'){state.formDirty=false;navigate('edit',el.dataset.id);}
-        else if(action==='edit-current'){state.formDirty=false;navigate('edit',state.selectedId);}
-        else if(action==='back-list')navigate('list');
-        else if(action==='view-current')navigate('detail',state.selectedId);
-        else if(action==='back-product')toast('Volviendo al detalle del producto.');
-        else if(action==='clear-filters'){state.filters={size:'',color:'',status:''};renderList();announce(`${state.variants.length} variantes.`);}
-        else if(action==='retry-list'){state.listMode='loading';renderList();window.setTimeout(()=>{state.listMode='normal';renderList();announce('Variantes cargadas.');},600);}
-        else if(action==='cancel-form'){if(state.formDirty){state.modal={type:'discard'};state.modalReturn=el;modalRoot.innerHTML=`<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><h2 id="modal-title" tabindex="-1">¿Descartar cambios?</h2><p>Los datos que ingresaste no se guardarán.</p><div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Seguir editando</button><button class="btn btn-primary" type="button" data-action="discard-form">Descartar cambios</button></div></section></div>`;window.setTimeout(()=>document.getElementById('modal-title')?.focus(),0);}else navigate(state.screen==='edit'?'detail':'list',state.selectedId);}
-        else if(action==='discard-form'){const target=state.screen==='edit'?'detail':'list';state.formDirty=false;navigate(target,state.selectedId);}
-        else if(action==='request-activate')requestActivate(el);
-        else if(action==='request-deactivate')requestDeactivate(el);
-        else if(action==='close-modal')closeModal();
-        else if(action==='confirm-activate')confirmActivate();
-        else if(action==='confirm-deactivate')confirmDeactivate();
-        else if(action==='reload-variant')navigate('detail',state.selectedId);
-        else if(action==='login')toast('Redirigiendo al inicio de sesión.');
-      });
-
-      document.addEventListener('change',event=>{
-        if(event.target.matches('[data-filter]')){state.filters[event.target.dataset.filter]=event.target.value;renderList();announce(`${filteredVariants().length} variantes encontradas.`);}
-        else if(event.target.id==='image-input'){const file=event.target.files?.[0];const preview=document.getElementById('image-preview');state.simulatedImageError='';if(state.screen==='create'){state.formDraft={size:document.getElementById('size')?.value||'',color:document.getElementById('color')?.value||'',material:document.getElementById('material')?.value||''};}if(file&&preview){if(!String(file.type).startsWith('image/')){state.simulatedImageError='El archivo seleccionado no es una imagen válida. La imagen anterior se conserva.';renderForm(state.screen==='edit'?'edit':'create');return;}preview.hidden=false;preview.lastElementChild.textContent=file.name;}state.formDirty=true;}
-        else if(event.target.closest('#variant-form'))state.formDirty=true;
-      });
-      document.addEventListener('input',event=>{if(event.target.closest('#variant-form'))state.formDirty=true;});
-      document.addEventListener('submit',event=>{if(event.target.id!=='variant-form')return;event.preventDefault();saveForm(event.target);});
-      document.addEventListener('keydown',event=>{const modal=modalRoot.querySelector('.modal');if(!modal)return;if(event.key==='Escape'){event.preventDefault();closeModal();return;}if(event.key==='Tab'){const items=[...modal.querySelectorAll('button:not(:disabled),a[href],[tabindex]:not([tabindex="-1"])')];if(!items.length)return;const first=items[0],last=items[items.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
-      window.addEventListener('online',()=>{offlineBanner.hidden=true;announce('Conexión recuperada.');});
-      window.addEventListener('offline',()=>{offlineBanner.hidden=false;announce('Sin conexión.');});
-      window.addEventListener('hashchange',parseHash);
-      offlineBanner.hidden=navigator.onLine;parseHash();
-    })();
-  </script>
+</main>
+<script>
+function show(id){['list','form','prep','detail'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));}
+function saveVariant(){show('prep');setTimeout(()=>{document.getElementById('prepText').textContent='Inventario preparado. La variante ya puede activarse.';document.getElementById('backVariant').disabled=false},1200)}
+function detail(sku,state){document.getElementById('skuTitle').textContent=sku;const b=document.getElementById('variantState');b.textContent=state;b.className='badge '+(state==='Activa'?'dark':'soft');document.getElementById('stockState').textContent=state==='Activa'?'Preparado':'En preparación';show('detail')}
+</script>
 </body>
 </html>

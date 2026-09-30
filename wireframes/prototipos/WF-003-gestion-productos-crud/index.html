@@ -1,1213 +1,202 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WF-003 — Gestión de productos</title>
-  <style>
-    :root {
-      --surface: #ffffff;
-      --neutral-10: #f3f4f6;
-      --neutral-20: #e5e7eb;
-      --neutral-30: #d1d5db;
-      --neutral-50: #6b7280;
-      --neutral-70: #374151;
-      --neutral-90: #111827;
-      --space-xs: 4px;
-      --space-sm: 8px;
-      --space-md: 16px;
-      --space-lg: 32px;
-      --space-xl: 64px;
-      --gutter: 24px;
-      --radius-sm: 4px;
-      --radius-md: 8px;
-      --content: 1200px;
-    }
-
-    * { box-sizing: border-box; }
-    input[type="checkbox"], input[type="radio"] { accent-color: var(--neutral-90); }
-    html { color-scheme: light; }
-    body {
-      margin: 0;
-      background: var(--surface);
-      color: var(--neutral-90);
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 16px;
-      line-height: 1.5;
-    }
-    button, input, select, textarea { font: inherit; }
-    button, select, a, input { -webkit-tap-highlight-color: transparent; }
-    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible,
-    a:focus-visible, [tabindex]:focus-visible {
-      outline: 3px solid var(--neutral-90);
-      outline-offset: 2px;
-    }
-    [hidden] { display: none !important; }
-    a { color: inherit; }
-    h1, h2, h3, p { margin-top: 0; }
-    h1 { margin-bottom: 0; font-size: clamp(30px, 4vw, 48px); line-height: 1.1; letter-spacing: -.025em; }
-    h2 { margin-bottom: 0; font-size: 24px; line-height: 1.2; }
-    h3 { margin-bottom: 0; font-size: 18px; line-height: 1.3; }
-
-    .app-header { border-bottom: 1px solid var(--neutral-30); background: var(--surface); }
-    .header-inner {
-      max-width: var(--content);
-      margin: 0 auto;
-      padding: 14px var(--gutter);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-    }
-    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; font-weight: 700; }
-    .brand-mark {
-      width: 34px; height: 34px; border: 2px solid var(--neutral-90);
-      display: grid; place-items: center; flex: 0 0 auto; font-size: 12px;
-    }
-    .brand-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .header-nav { display: flex; gap: 20px; color: var(--neutral-50); font-size: 14px; }
-    .header-nav span[aria-current="page"] { color: var(--neutral-90); font-weight: 700; }
-    .user-chip { border: 1px solid var(--neutral-30); border-radius: 999px; padding: 6px 12px; white-space: nowrap; }
-
-    .offline-banner {
-      border-bottom: 1px solid var(--neutral-90); background: var(--neutral-10);
-      padding: 10px var(--gutter); text-align: center; font-weight: 700;
-    }
-    main { max-width: var(--content); margin: 0 auto; padding: 40px var(--gutter) 72px; outline: none; }
-    .breadcrumbs { margin: 0 0 24px; color: var(--neutral-50); font-size: 14px; }
-    .breadcrumb-button { border: 0; padding: 0; background: transparent; color: inherit; cursor: pointer; text-decoration: underline; }
-    .page-heading { margin-bottom: 32px; }
-    .heading-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
-    .lede { margin: 14px 0 0; max-width: 760px; color: var(--neutral-50); font-size: 18px; }
-    .muted { color: var(--neutral-50); }
-    .small { font-size: 14px; }
-    .mono { font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Consolas, monospace; }
-
-    .btn {
-      min-height: 44px; border: 1px solid var(--neutral-90); border-radius: var(--radius-sm);
-      padding: 10px 16px; background: var(--surface); color: var(--neutral-90); cursor: pointer;
-      font-weight: 650; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      text-decoration: none;
-    }
-    .btn:hover:not(:disabled) { background: var(--neutral-10); }
-    .btn-primary { background: var(--neutral-90); color: var(--surface); }
-    .btn-primary:hover:not(:disabled) { background: #000; }
-    .btn-quiet { border-color: transparent; padding-inline: 8px; }
-    .btn-danger { border-width: 2px; }
-    .btn:disabled { color: var(--neutral-50); border-color: var(--neutral-30); background: var(--neutral-10); cursor: not-allowed; }
-    .button-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
-    .button-row.end { justify-content: flex-end; }
-
-    .filters {
-      border: 1px solid var(--neutral-30); padding: 20px; margin-bottom: 20px;
-      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 16px; align-items: end;
-    }
-    .field { min-width: 0; }
-    .field label, .field-label { display: block; margin-bottom: 7px; font-size: 14px; font-weight: 700; }
-    .required::after { content: " *"; }
-    .control {
-      width: 100%; min-height: 44px; border: 1px solid var(--neutral-30); border-radius: var(--radius-sm);
-      background: var(--surface); color: var(--neutral-90); padding: 10px 12px;
-    }
-    textarea.control { min-height: 120px; resize: vertical; }
-    .control[aria-invalid="true"] { border: 2px solid var(--neutral-90); }
-    .control[readonly] { background: var(--neutral-10); color: var(--neutral-50); }
-    .field-help { margin: 6px 0 0; color: var(--neutral-50); font-size: 13px; }
-    .field-error { margin: 6px 0 0; font-size: 14px; font-weight: 700; }
-
-    .results-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 12px; }
-    .table-wrap { border: 1px solid var(--neutral-30); overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 850px; }
-    th, td { padding: 15px 14px; text-align: left; border-bottom: 1px solid var(--neutral-30); vertical-align: middle; }
-    th { background: var(--neutral-10); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
-    tbody tr:last-child td { border-bottom: 0; }
-    tbody tr:hover { background: var(--neutral-10); }
-    .product-link { border: 0; padding: 0; background: transparent; color: var(--neutral-90); font-weight: 750; cursor: pointer; text-align: left; text-decoration: underline; }
-    .status {
-      display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--neutral-90);
-      border-radius: 999px; padding: 4px 9px; font-size: 13px; font-weight: 700; white-space: nowrap;
-    }
-    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--neutral-90); }
-    .status.draft::before { background: var(--neutral-50); }
-    .status.inactive { border-style: dashed; }
-    .row-actions { display: flex; gap: 8px; justify-content: flex-end; }
-    .row-actions .btn { min-height: 36px; padding: 6px 10px; font-size: 14px; }
-    .pagination { margin-top: 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-
-    .panel { border: 1px solid var(--neutral-30); background: var(--surface); padding: 24px; }
-    .panel + .panel { margin-top: 16px; }
-    .panel-heading { margin-bottom: 20px; }
-    .panel-heading p { margin: 6px 0 0; }
-    .form-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 20px 24px; }
-    .span-12 { grid-column: span 12; }
-    .span-8 { grid-column: span 8; }
-    .span-6 { grid-column: span 6; }
-    .span-4 { grid-column: span 4; }
-    .radio-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-    .radio-card { border: 1px solid var(--neutral-30); padding: 14px; display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
-    .radio-card:has(input:checked) { border: 2px solid var(--neutral-90); padding: 13px; }
-    .radio-card input { margin-top: 4px; }
-    .readonly-box { min-height: 44px; border: 1px solid var(--neutral-30); background: var(--neutral-10); padding: 12px; }
-    .upload-box { border: 1px dashed var(--neutral-50); background: var(--neutral-10); padding: 20px; }
-    .upload-box input { margin-top: 12px; max-width: 100%; }
-    .image-preview { margin-top: 14px; display: flex; align-items: center; gap: 12px; }
-    .image-placeholder { width: 84px; height: 64px; background: var(--neutral-10); border: 1px solid var(--neutral-50); position: relative; flex: 0 0 auto; }
-    .image-placeholder::before, .image-placeholder::after { content: ""; position: absolute; left: 8px; right: 8px; top: 50%; height: 1px; background: var(--neutral-50); }
-    .image-placeholder::before { transform: rotate(31deg); }
-    .image-placeholder::after { transform: rotate(-31deg); }
-    .actions-bar {
-      margin-top: 24px; border-top: 1px solid var(--neutral-30); padding-top: 20px;
-      display: flex; justify-content: space-between; gap: 16px; align-items: center;
-    }
-
-    .tag-attr { font-size: 11px; font-weight: 700; padding: 2px 6px; border: 1px solid var(--neutral-90); border-radius: 3px; }
-    .tag-attr.mandatory { background: var(--neutral-90); color: var(--surface); }
-    .tag-attr.optional { background: var(--neutral-10); color: var(--neutral-70); border-color: var(--neutral-50); }
-
-    .notice { border: 1px solid var(--neutral-90); padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
-    .notice + .notice { margin-top: 12px; }
-    .notice-icon { width: 26px; height: 26px; border: 1px solid var(--neutral-90); border-radius: 50%; display: grid; place-items: center; flex: 0 0 auto; font-weight: 800; }
-    .notice-title { margin: 0; font-weight: 800; }
-    .notice p + p { margin-top: 4px; }
-    .error-summary { border: 2px solid var(--neutral-90); padding: 18px; margin-bottom: 20px; }
-    .error-summary h2 { font-size: 20px; }
-    .error-summary ul { margin-bottom: 0; }
-    .error-summary a { font-weight: 700; }
-
-    .detail-header { border-bottom: 1px solid var(--neutral-30); padding-bottom: 24px; margin-bottom: 24px; }
-    .title-with-status { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
-    .detail-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); gap: 24px; align-items: start; }
-    .definition-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; }
-    .definition { padding: 16px 0; border-bottom: 1px solid var(--neutral-30); }
-    .definition-label { color: var(--neutral-50); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-    .definition-value { margin-top: 5px; font-weight: 650; overflow-wrap: anywhere; }
-    .requirements { list-style: none; margin: 18px 0 0; padding: 0; }
-    .requirements li { padding: 10px 0 10px 30px; position: relative; border-top: 1px solid var(--neutral-30); }
-    .requirements li:first-child { border-top: 0; }
-    .requirements li::before { position: absolute; left: 2px; top: 10px; font-weight: 900; }
-    .requirements .met::before { content: "✓"; }
-    .requirements .missing::before { content: "×"; }
-    .requirements .missing { font-weight: 700; color: var(--neutral-90); }
-    .meta-list { margin: 0; padding: 0; list-style: none; }
-    .meta-list li { padding: 10px 0; border-bottom: 1px solid var(--neutral-30); }
-
-    .empty-state, .global-state { border: 1px solid var(--neutral-30); padding: 56px 24px; text-align: center; }
-    .empty-symbol { width: 52px; height: 52px; margin: 0 auto 18px; border: 2px solid var(--neutral-90); display: grid; place-items: center; font-weight: 800; }
-    .empty-state p, .global-state p { max-width: 600px; margin: 12px auto 22px; color: var(--neutral-50); }
-    .skeleton { background: var(--neutral-10); min-height: 18px; animation: pulse 1.3s ease-in-out infinite; }
-    .skeleton + .skeleton { margin-top: 14px; }
-    @keyframes pulse { 50% { opacity: .45; } }
-
-    .modal-backdrop { position: fixed; inset: 0; z-index: 30; background: rgb(17 24 39 / 50%); display: grid; place-items: center; padding: 20px; }
-    .modal { width: min(560px, 100%); max-height: calc(100vh - 40px); overflow: auto; border: 2px solid var(--neutral-90); background: var(--surface); padding: 28px; }
-    .modal p { margin: 12px 0 0; }
-    .modal-actions { margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
-    .toast { position: fixed; right: 24px; bottom: 24px; z-index: 40; max-width: 420px; border: 2px solid var(--neutral-90); background: var(--surface); padding: 14px 18px; font-weight: 700; }
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-
-    @media (max-width: 900px) {
-      .header-nav { display: none; }
-      .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .filters .button-row { grid-column: span 2; }
-      .detail-grid { grid-template-columns: 1fr; }
-      .span-8, .span-6, .span-4 { grid-column: span 12; }
-    }
-    @media (max-width: 600px) {
-      :root { --gutter: 16px; }
-      main { padding-top: 28px; }
-      .user-chip { display: none; }
-      .heading-row, .actions-bar, .pagination { align-items: stretch; flex-direction: column; }
-      .heading-row .btn, .actions-bar .btn { width: 100%; }
-      .filters { grid-template-columns: 1fr; }
-      .filters .button-row { grid-column: auto; }
-      .definition-grid { grid-template-columns: 1fr; }
-      .radio-group { grid-template-columns: 1fr; }
-      .panel { padding: 18px; }
-      .modal { padding: 22px; }
-      .modal-actions { flex-direction: column-reverse; }
-      .modal-actions .btn { width: 100%; }
-      .toast { left: 16px; right: 16px; bottom: 16px; }
-    }
-    @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestión de productos</title>
+<style>
+:root{
+  --surface:#FFFFFF;
+  --neutral-10:#F3F4F6;
+  --neutral-30:#D1D5DB;
+  --neutral-50:#6B7280;
+  --neutral-90:#111827;
+  --primary:#111827;
+  --space-xs:4px;
+  --space-sm:8px;
+  --space-md:16px;
+  --space-lg:32px;
+  --space-xl:64px;
+  --radius-sm:4px;
+  --radius-md:8px;
+}
+*{box-sizing:border-box}
+html{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--neutral-90);background:var(--surface)}
+body{margin:0;background:var(--surface);line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+button{min-height:44px;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--neutral-90);outline-offset:2px}
+.topbar{border-bottom:1px solid var(--neutral-30);background:var(--surface)}
+.topbar-inner{max-width:1200px;margin:auto;min-height:64px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700}
+.brand-mark{width:36px;height:36px;border:2px solid var(--neutral-90);display:grid;place-items:center;font-weight:700}
+.user{font-size:14px;color:var(--neutral-50)}
+.shell{max-width:1200px;margin:auto;padding:24px}
+.breadcrumb{font-size:14px;color:var(--neutral-50);margin-bottom:8px}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px;flex-wrap:wrap}
+.page-head h1{font-size:32px;line-height:1.2;margin:0 0 8px}
+.page-head p{margin:0;color:var(--neutral-50);max-width:760px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--neutral-90);background:var(--surface);padding:10px 16px;border-radius:var(--radius-sm);font-weight:600;min-height:44px}
+.btn.primary{background:var(--neutral-90);color:var(--surface)}
+.btn.ghost{border-color:var(--neutral-30)}
+.btn[disabled]{color:var(--neutral-50);border-color:var(--neutral-30);background:var(--neutral-10);cursor:not-allowed}
+.card{border:1px solid var(--neutral-30);border-radius:var(--radius-md);padding:20px;background:var(--surface)}
+.card h2{font-size:20px;margin:0 0 8px}
+.card h3{font-size:16px;margin:0 0 8px}
+.muted{color:var(--neutral-50)}
+.small{font-size:14px}
+.mono{font-family:"Roboto Mono",ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;letter-spacing:.02em}
+.grid{display:grid;gap:16px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stack{display:grid;gap:16px}
+.field{display:grid;gap:6px}
+.field label{font-size:14px;font-weight:600}
+.input,.select,.textarea{width:100%;border:1px solid var(--neutral-30);border-radius:var(--radius-sm);background:var(--surface);padding:11px 12px;min-height:44px}
+.textarea{min-height:110px;resize:vertical}
+.help{font-size:13px;color:var(--neutral-50)}
+.section-title{font-size:20px;margin:8px 0 12px}
+.table-wrap{overflow:auto;border:1px solid var(--neutral-30);border-radius:var(--radius-md)}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--neutral-30);vertical-align:top}
+th{font-size:12px;font-family:"Roboto Mono",ui-monospace,monospace;letter-spacing:.04em;text-transform:uppercase;background:var(--neutral-10)}
+tbody tr:last-child td{border-bottom:0}
+.badge{display:inline-flex;align-items:center;min-height:28px;border:1px solid var(--neutral-30);border-radius:9999px;padding:3px 10px;font-size:13px;background:var(--surface)}
+.badge.dark{background:var(--neutral-90);color:var(--surface);border-color:var(--neutral-90)}
+.badge.soft{background:var(--neutral-10)}
+.kpi{border:1px solid var(--neutral-30);padding:16px;border-radius:var(--radius-md)}
+.kpi .value{font-size:28px;font-weight:700;line-height:1.1;margin-top:8px}
+.notice{border:1px solid var(--neutral-90);padding:14px 16px;border-radius:var(--radius-sm);background:var(--surface)}
+.notice.soft{border-color:var(--neutral-30);background:var(--neutral-10)}
+.progress{height:10px;border:1px solid var(--neutral-30);background:var(--surface)}
+.progress > span{display:block;height:100%;background:var(--neutral-90)}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--neutral-30);margin-bottom:20px;overflow:auto}
+.tab{background:var(--surface);border:0;border-bottom:3px solid transparent;padding:12px 16px;white-space:nowrap}
+.tab.active{border-bottom-color:var(--neutral-90);font-weight:700}
+.divider{border:0;border-top:1px solid var(--neutral-30);margin:24px 0}
+.placeholder{min-height:120px;background:var(--neutral-10);position:relative;display:grid;place-items:center;color:var(--neutral-50);border:1px solid var(--neutral-30)}
+.placeholder:before,.placeholder:after{content:"";position:absolute;left:0;top:50%;width:100%;border-top:1px solid var(--neutral-30);transform-origin:center}
+.placeholder:before{transform:rotate(17deg)}
+.placeholder:after{transform:rotate(-17deg)}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+.overlay.open{display:flex}
+.modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:var(--surface);border:2px solid var(--neutral-90);padding:24px}
+.modal-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}
+.modal-head h2{margin:0;font-size:24px}
+.icon-btn{width:44px;height:44px;border:1px solid var(--neutral-90);background:var(--surface);font-size:20px}
+.empty{text-align:center;border:1px dashed var(--neutral-30);padding:48px 24px}
+.hidden{display:none!important}
+.toolbar{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+.toolbar .field{min-width:180px;flex:1}
+.stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px}
+.step{border-top:4px solid var(--neutral-30);padding-top:8px;color:var(--neutral-50);font-size:13px}
+.step.active,.step.done{border-top-color:var(--neutral-90);color:var(--neutral-90);font-weight:700}
+.checkbox-row,.radio-row{display:flex;gap:10px;align-items:flex-start}
+input[type="checkbox"],input[type="radio"]{width:18px;height:18px;margin-top:3px;accent-color:#111827}
+.summary-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.summary-list li{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--neutral-30);padding-bottom:10px}
+.summary-list li:last-child{border-bottom:0;padding-bottom:0}
+.inline-status{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--neutral-90)}
+@media(max-width:820px){
+  .shell{padding:16px}
+  .topbar-inner{padding:0 16px}
+  .grid.two,.grid.three,.grid.four{grid-template-columns:1fr}
+  .page-head h1{font-size:28px}
+  .stepper{grid-template-columns:1fr 1fr}
+  .actions{width:100%}
+  .actions .btn{flex:1}
+  table{min-width:640px}
+}
+@media(max-width:520px){
+  .user{display:none}
+  .stepper{grid-template-columns:1fr}
+  .modal{padding:16px}
+}
+</style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="header-inner">
-      <div class="brand"><div class="brand-mark" aria-hidden="true">PO</div><span class="brand-text">PO Productos y ofertas</span></div>
-      <nav class="header-nav" aria-label="Navegación principal">
-        <span>Inicio</span>
-        <span aria-current="page">Productos</span>
-        <span>Ofertas</span>
-      </nav>
-      <span class="user-chip">Gestor comercial</span>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="brand-mark">PO</span><span>Productos y ofertas</span></div>
+    <div class="user">Gestor comercial</div>
+  </div>
+</header>
+<main class="shell">
+  <div class="breadcrumb">Productos / Gestión</div>
+  
+<div class="page-head">
+  <div><h1>Gestión de productos</h1><p>Administra la información comercial y publica productos solo cuando su preparación esté completa.</p></div>
+  <div class="actions"><button class="btn primary" onclick="show('form')">Nuevo producto</button></div>
+</div>
+<section id="list" class="stack">
+  <div class="toolbar">
+    <div class="field"><label for="productSearch">Buscar</label><input id="productSearch" class="input" placeholder="Nombre o SKU"></div>
+    <div class="field"><label for="productStatus">Estado</label><select id="productStatus" class="select"><option>Todos</option><option>Borrador</option><option>Preparando</option><option>Activo</option></select></div>
+  </div>
+  <div class="table-wrap"><table><thead><tr><th>Producto</th><th>SKU base</th><th>Modelo</th><th>Preparación</th><th>Estado</th><th>Acciones</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Camisa Oxford</strong><div class="small muted">Ropa / Camisas</div></td><td>CAM-OXF</td><td>Con variantes</td><td><span class="badge dark">Lista</span></td><td><span class="badge dark">Activo</span></td><td><button class="btn ghost" onclick="detail('Camisa Oxford','Lista','Activo')">Ver</button></td></tr>
+    <tr><td><strong>Mochila urbana</strong><div class="small muted">Accesorios</div></td><td>MOC-URB-01</td><td>Simple</td><td><span class="badge soft">Preparando precio e inventario</span></td><td><span class="badge">Borrador</span></td><td><button class="btn ghost" onclick="detail('Mochila urbana','Preparando precio e inventario','Borrador')">Ver</button></td></tr>
+    <tr><td><strong>Casaca ligera</strong><div class="small muted">Ropa / Casacas</div></td><td>CAS-LIG</td><td>Con variantes</td><td><span class="badge">Pendiente de variantes</span></td><td><span class="badge">Borrador</span></td><td><button class="btn ghost" onclick="detail('Casaca ligera','Pendiente de variantes','Borrador')">Ver</button></td></tr>
+  </tbody></table></div>
+</section>
+
+<section id="form" class="hidden stack">
+  <div class="page-head"><div><h2>Nuevo producto</h2><p class="muted">Guarda primero un borrador. La preparación de precio e inventario se completará después.</p></div></div>
+  <form class="stack" onsubmit="saveProduct(event)">
+    <div class="card stack">
+      <h2>Datos generales</h2>
+      <div class="grid two">
+        <div class="field"><label for="name">Nombre</label><input required class="input" id="name" value="Bolso compacto"></div>
+        <div class="field"><label for="baseSku">SKU base</label><input required class="input" id="baseSku" value="BOL-COM-01"></div>
+        <div class="field"><label for="category">Categoría</label><select class="select" id="category"><option>Accesorios</option><option>Ropa</option></select></div>
+        <div class="field"><label for="brand">Marca</label><select class="select" id="brand"><option>Marca urbana</option><option>Marca clásica</option></select></div>
+      </div>
+      <div class="field"><label for="desc">Descripción</label><textarea class="textarea" id="desc">Bolso compacto para uso diario.</textarea></div>
     </div>
-  </header>
-  <div id="offline-banner" class="offline-banner" role="status" hidden>Sin conexión. Los cambios no se guardarán hasta recuperar la conexión.</div>
-  <main id="main" tabindex="-1"></main>
-  <div id="modal-root"></div>
-  <div id="toast" class="toast" role="status" hidden></div>
-  <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-
-  <script>
-    (() => {
-      'use strict';
-
-      // Catálogo canónico de Tipos de Producto (autoridad normativa de esquema de atributos)
-      const productTypes = [
-        {
-          id: 'TP-01',
-          name: 'Calzado Deportivo',
-          status: 'active',
-          attrs: [
-            { id: 'C-01', name: 'Talla', type: 'LISTA', mandatory: true, options: ['38','39','40','41','42','43'] },
-            { id: 'C-02', name: 'Color', type: 'LISTA', mandatory: true, options: ['Negro','Blanco','Azul','Rojo'] },
-            { id: 'C-03', name: 'Material de Capellada', type: 'TEXTO', mandatory: false }
-          ]
-        },
-        {
-          id: 'TP-02',
-          name: 'Ropa de Entrenamiento',
-          status: 'active',
-          attrs: [
-            { id: 'C-01', name: 'Talla', type: 'LISTA', mandatory: true, options: ['XS','S','M','L','XL'] },
-            { id: 'C-02', name: 'Color', type: 'LISTA', mandatory: true, options: ['Negro','Gris','Azul','Verde'] },
-            { id: 'C-04', name: 'Género', type: 'LISTA', mandatory: true, options: ['Masculino','Femenino','Unisex'] },
-            { id: 'C-05', name: 'Composición Textil', type: 'TEXTO', mandatory: false }
-          ]
-        },
-        {
-          id: 'TP-03',
-          name: 'Balones y Accesorios',
-          status: 'active',
-          attrs: [
-            { id: 'C-06', name: 'Tamaño / Número', type: 'LISTA', mandatory: true, options: ['Número 4','Número 5','Estándar'] },
-            { id: 'C-07', name: 'Material de Cubierta', type: 'TEXTO', mandatory: false }
-          ]
-        },
-        {
-          id: 'TP-04',
-          name: 'Accesorio Genérico',
-          status: 'active',
-          attrs: [
-            { id: 'C-08', name: 'Instrucciones de Cuidado', type: 'TEXTO', mandatory: false }
-          ] // 0 atributos obligatorios!
-        }
-      ];
-
-      const initialProducts = [
-        {
-          id: 'p-001', name: 'Zapatillas Running ProSpeed X', description: 'Zapatillas ligeras para entrenamiento diario.',
-          category: 'Calzado', productTypeId: 'TP-01', brand: 'ProSpeed', price: '329.90', sku: 'ZAP-PSX', variants: true,
-          status: 'Activo', slug: 'zapatillas-running-prospeed-x',
-          attributes: { 'Talla': '42', 'Color': 'Azul', 'Material de Capellada': 'Malla transpirable' },
-          images: 2, validRelations: true, activeVariants: 6, pricingReady: true, inventoryReady: true, updated: '17/09/2026, 09:42'
-        },
-        {
-          id: 'p-002', name: 'Camiseta Training Essential', description: 'Camiseta deportiva transpirable para entrenamiento.',
-          category: 'Ropa deportiva', productTypeId: 'TP-02', brand: 'NorthPeak', price: '89.90', sku: 'CAM-ESS', variants: true,
-          status: 'Borrador', slug: 'camiseta-training-essential',
-          attributes: { 'Talla': 'M' }, // falta Color y Género
-          images: 1, validRelations: true, activeVariants: 0, pricingReady: false, inventoryReady: false, updated: '16/09/2026, 16:18'
-        },
-        {
-          id: 'p-003', name: 'Botella térmica 750 ml', description: 'Botella térmica de acero con tapa hermética.',
-          category: 'Accesorios', productTypeId: 'TP-04', brand: 'UrbanFit', price: '74.50', sku: 'BOT-750', variants: false,
-          status: 'Activo', slug: 'botella-termica-750-ml',
-          attributes: { 'Instrucciones de Cuidado': 'Lavar a mano' },
-          images: 1, validRelations: true, activeVariants: 0, pricingReady: true, inventoryReady: true, updated: '15/09/2026, 11:06'
-        },
-        {
-          id: 'p-004', name: 'Mochila Trail 18L', description: 'Mochila compacta para rutas cortas y entrenamiento.',
-          category: 'Accesorios', productTypeId: 'TP-04', brand: 'NorthPeak', price: '159.00', sku: 'MOC-T18', variants: false,
-          status: 'Inactivo', slug: 'mochila-trail-18l',
-          attributes: {},
-          images: 1, validRelations: true, activeVariants: 0, pricingReady: true, inventoryReady: true, updated: '12/09/2026, 14:30'
-        },
-        {
-          id: 'p-005', name: 'Balón de fútbol Match', description: 'Balón de entrenamiento con cubierta resistente.',
-          category: 'Equipamiento', productTypeId: 'TP-03', brand: 'Arena', price: '119.00', sku: 'BAL-MAT', variants: false,
-          status: 'Borrador', slug: 'balon-de-futbol-match',
-          attributes: {},
-          images: 0, validRelations: true, activeVariants: 0, pricingReady: false, inventoryReady: false, updated: '11/09/2026, 10:15'
-        },
-        {
-          id: 'p-006', name: 'Casaca Outdoor Shield', description: 'Casaca ligera para actividades al aire libre.',
-          category: 'Outdoor', productTypeId: 'TP-02', brand: 'UrbanFit', price: '249.00', sku: 'CAS-OUT', variants: false,
-          status: 'Inactivo', slug: 'casaca-outdoor-shield',
-          attributes: { 'Talla': 'L', 'Color': 'Negro', 'Género': 'Unisex' },
-          images: 1, validRelations: false, activeVariants: 0, pricingReady: true, inventoryReady: true, updated: '09/09/2026, 08:54'
-        }
-      ];
-
-      const state = {
-        screen: 'list',
-        products: initialProducts.map(p => ({ ...p, attributes: { ...p.attributes } })),
-        selectedId: null,
-        formMode: 'create',
-        formSelectedTypeId: 'TP-01',
-        filters: { category: '', brand: '', status: '' },
-        listMode: 'normal',
-        modal: null,
-        modalReturn: null,
-        formDirty: false,
-        errors: {},
-        saving: false,
-        toastTimer: null
-      };
-
-      const main = document.getElementById('main');
-      const modalRoot = document.getElementById('modal-root');
-      const toastEl = document.getElementById('toast');
-      const announcer = document.getElementById('announcer');
-      const offlineBanner = document.getElementById('offline-banner');
-
-      const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-      }[char]));
-
-      const slugify = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-      function announce(message) {
-        announcer.textContent = '';
-        window.setTimeout(() => { announcer.textContent = message; }, 20);
-      }
-
-      function toast(message) {
-        window.clearTimeout(state.toastTimer);
-        toastEl.textContent = message;
-        toastEl.hidden = false;
-        state.toastTimer = window.setTimeout(() => { toastEl.hidden = true; }, 3200);
-      }
-
-      function statusClass(status) {
-        if (status === 'Borrador') return 'draft';
-        if (status === 'Inactivo') return 'inactive';
-        return 'active';
-      }
-
-      function statusBadge(status) {
-        return `<span class="status ${statusClass(status)}">${escapeHtml(status)}</span>`;
-      }
-
-      function currentProduct() {
-        return state.products.find(p => p.id === state.selectedId) || null;
-      }
-
-      function getProductType(id) {
-        return productTypes.find(t => t.id === id) || null;
-      }
-
-      function breadcrumbs(items) {
-        return `<nav class="breadcrumbs" aria-label="Ruta de navegación">${items.map((item, index) => {
-          const last = index === items.length - 1;
-          return last ? `<span aria-current="page">${escapeHtml(item.label)}</span>` :
-            `<button class="breadcrumb-button" type="button" data-action="${escapeHtml(item.action)}">${escapeHtml(item.label)}</button><span aria-hidden="true"> / </span>`;
-        }).join('')}</nav>`;
-      }
-
-      function pageHeading(title, description, action = '') {
-        return `<div class="page-heading"><div class="heading-row"><div><h1>${escapeHtml(title)}</h1><p class="lede">${escapeHtml(description)}</p></div>${action}</div></div>`;
-      }
-
-      function navigate(screen, id = null, hash = '') {
-        state.screen = screen;
-        if (id) state.selectedId = id;
-        state.errors = {};
-        state.modal = null;
-        modalRoot.innerHTML = '';
-        const targetHash = hash || (screen === 'list' ? '#productos' : screen === 'create' ? '#producto-nuevo' : `#producto-${state.selectedId || ''}-${screen}`);
-        history.replaceState(null, '', targetHash);
-        render();
-        main.focus();
-      }
-
-      function filteredProducts() {
-        return state.products.filter(p =>
-          (!state.filters.category || p.category === state.filters.category) &&
-          (!state.filters.brand || p.brand === state.filters.brand) &&
-          (!state.filters.status || p.status === state.filters.status)
-        );
-      }
-
-      function renderList() {
-        const products = filteredProducts();
-        const activeFilters = Object.values(state.filters).some(Boolean);
-        main.innerHTML = `
-          ${breadcrumbs([{ label: 'Productos' }])}
-          ${pageHeading('Productos', 'Administra el catálogo central de productos, variantes y precios base.', '<button class="btn btn-primary" type="button" data-action="new-product">Nuevo producto</button>')}
-          ${state.listMode === 'loading' ? renderLoadingList() : state.listMode === 'error' ? renderListError() : `
-            <section class="filters" aria-label="Filtros de productos">
-              <div class="field">
-                <label for="filter-category">Categoría de navegación</label>
-                <select id="filter-category" class="control" data-filter="category">
-                  <option value="">Todas</option>${['Calzado','Ropa deportiva','Accesorios','Equipamiento','Outdoor'].map(v => `<option ${state.filters.category === v ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('')}
-                </select>
-              </div>
-              <div class="field">
-                <label for="filter-brand">Marca</label>
-                <select id="filter-brand" class="control" data-filter="brand">
-                  <option value="">Todas</option>${['ProSpeed','NorthPeak','UrbanFit','Arena'].map(v => `<option ${state.filters.brand === v ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('')}
-                </select>
-              </div>
-              <div class="field">
-                <label for="filter-status">Estado</label>
-                <select id="filter-status" class="control" data-filter="status">
-                  <option value="">Todos</option>${['Borrador','Activo','Inactivo'].map(v => `<option ${state.filters.status === v ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('')}
-                </select>
-              </div>
-              <div class="button-row"><button class="btn" type="button" data-action="clear-filters" ${activeFilters ? '' : 'disabled'}>Limpiar filtros</button></div>
-            </section>
-            ${products.length ? renderProductTable(products) : renderEmptyList(activeFilters)}
-          `}`;
-      }
-
-      function renderLoadingList() {
-        return `<section class="panel" aria-label="Cargando productos" aria-busy="true">
-          <div class="skeleton" style="width:35%"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton" style="width:72%"></div>
-        </section>`;
-      }
-
-      function renderListError() {
-        return `<section class="global-state" aria-labelledby="load-error-title">
-          <div class="empty-symbol" aria-hidden="true">!</div><h2 id="load-error-title">No pudimos cargar los productos</h2>
-          <p>La información no está disponible en este momento. Intenta nuevamente.</p>
-          <button class="btn btn-primary" type="button" data-action="retry-list">Reintentar</button>
-        </section>`;
-      }
-
-      function renderEmptyList(filtered) {
-        return `<section class="empty-state" aria-labelledby="empty-title">
-          <div class="empty-symbol" aria-hidden="true">${filtered ? '0' : '+'}</div>
-          <h2 id="empty-title">${filtered ? 'No hay productos que coincidan con estos filtros' : 'Aún no hay productos registrados'}</h2>
-          <p>${filtered ? 'Prueba otra combinación o limpia los filtros aplicados.' : 'Registra el primer producto para comenzar a construir el catálogo.'}</p>
-          <button class="btn btn-primary" type="button" data-action="${filtered ? 'clear-filters' : 'new-product'}">${filtered ? 'Limpiar filtros' : 'Nuevo producto'}</button>
-        </section>`;
-      }
-
-      function renderProductTable(products) {
-        return `<section aria-labelledby="results-title">
-          <div class="results-head"><h2 id="results-title">Resultados</h2><span class="muted" aria-live="polite">${products.length} ${products.length === 1 ? 'producto' : 'productos'}</span></div>
-          <div class="table-wrap"><table>
-            <thead><tr><th>Producto</th><th>SKU base</th><th>Categoría</th><th>Tipo de producto</th><th>Marca</th><th>Variantes</th><th>Estado</th><th><span class="sr-only">Acciones</span></th></tr></thead>
-            <tbody>${products.map(p => {
-              const pType = getProductType(p.productTypeId);
-              return `<tr>
-              <td><button class="product-link" type="button" data-action="view-product" data-id="${p.id}">${escapeHtml(p.name)}</button></td>
-              <td class="mono">${escapeHtml(p.sku)}</td>
-              <td>${escapeHtml(p.category)}</td>
-              <td>${pType ? escapeHtml(pType.name) : '—'}</td>
-              <td>${escapeHtml(p.brand)}</td>
-              <td>${p.variants ? 'Con variantes' : 'Simple'}</td>
-              <td>${statusBadge(p.status)}</td>
-              <td><div class="row-actions"><button class="btn" type="button" data-action="view-product" data-id="${p.id}">Ver</button><button class="btn" type="button" data-action="edit-product" data-id="${p.id}">Editar</button></div></td>
-            </tr>`;}).join('')}</tbody>
-          </table></div>
-          <div class="pagination"><span class="muted small">Página 1 de 1</span><div class="button-row"><button class="btn" type="button" disabled>Anterior</button><button class="btn" type="button" disabled>Siguiente</button></div></div>
-        </section>`;
-      }
-
-      function formValues(product) {
-        return product || {
-          name: '', description: '', category: '', productTypeId: state.formSelectedTypeId || 'TP-01',
-          brand: '', price: '', sku: '', variants: null, attributes: {}, images: 0
-        };
-      }
-
-      function renderAttributesFields(pType, values, errors) {
-        if (!pType) return `<p class="muted">Selecciona un tipo de producto para cargar sus atributos.</p>`;
-        if (!pType.attrs || pType.attrs.length === 0) {
-          return `<p class="muted">Este tipo de producto no tiene características asociadas.</p>`;
-        }
-        const hasMandatory = pType.attrs.some(a => a.mandatory);
-        const noticeZeroMandatory = '';
-
-        const fieldsHtml = pType.attrs.map(a => {
-          const val = values.attributes?.[a.name] || '';
-          const isErr = errors[`attr_${a.name}`];
-          const badge = a.mandatory
-            ? `<span class="tag-attr mandatory">Obligatoria</span>`
-            : `<span class="tag-attr optional">Opcional</span>`;
-
-          if (a.type === 'LISTA' && a.options) {
-            return `<div class="field span-6">
-              <label class="${a.mandatory ? 'required' : ''}" for="attr_${escapeHtml(a.name)}">${escapeHtml(a.name)} ${badge} <span class="muted mono small">(LISTA)</span></label>
-              <select class="control" id="attr_${escapeHtml(a.name)}" name="attr_${escapeHtml(a.name)}" aria-invalid="${isErr ? 'true' : 'false'}">
-                <option value="">Selecciona una opción...</option>
-                ${a.options.map(opt => `<option value="${escapeHtml(opt)}" ${val === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
-              </select>
-              ${errorText(`attr_${a.name}`, isErr)}
-            </div>`;
-          }
-
-          return `<div class="field span-6">
-            <label class="${a.mandatory ? 'required' : ''}" for="attr_${escapeHtml(a.name)}">${escapeHtml(a.name)} ${badge} <span class="muted mono small">(${escapeHtml(a.type)})</span></label>
-            <input class="control" id="attr_${escapeHtml(a.name)}" name="attr_${escapeHtml(a.name)}" type="${a.type === 'NUMERO' ? 'number' : 'text'}" value="${escapeHtml(val)}" placeholder="${a.mandatory ? 'Requerido para activar' : 'Opcional'}" aria-invalid="${isErr ? 'true' : 'false'}">
-            ${errorText(`attr_${a.name}`, isErr)}
-          </div>`;
-        }).join('');
-
-        return noticeZeroMandatory + `<div class="form-grid">${fieldsHtml}</div>`;
-      }
-
-      function renderForm(mode) {
-        const editing = mode === 'edit';
-        const product = editing ? currentProduct() : null;
-        if (editing && !product) return renderNotFound();
-        const data = formValues(product);
-        const selectedTypeId = editing ? product.productTypeId : (state.formSelectedTypeId || data.productTypeId || 'TP-01');
-        const pType = getProductType(selectedTypeId);
-        const errors = state.errors;
-        const title = editing ? 'Editar producto' : 'Nuevo producto';
-        const description = editing ? 'Actualiza los datos permitidos. Los cambios válidos de un producto activo se publican inmediatamente.' : 'Completa los datos mínimos (nombre, descripción, categoría, tipo de producto, marca, precio referencial, SKU base y manejo de variantes) para guardar el borrador.';
-
-        main.innerHTML = `
-          ${breadcrumbs([{ label: 'Productos', action: 'back-list' }, { label: title }])}
-          ${pageHeading(title, description)}
-          ${Object.keys(errors).length ? renderErrorSummary(errors) : ''}
-          <form id="product-form" novalidate>
-            <section class="panel" aria-labelledby="general-title">
-              <div class="panel-heading"><h2 id="general-title">Datos generales</h2><p class="muted">Los campos marcados con * son obligatorios para guardar el borrador.</p></div>
-              <div class="form-grid">
-                ${field('name','Nombre del producto','text',data.name,errors.name,'span-8',true)}
-                ${field('sku','SKU base','text',data.sku,errors.sku,'span-4',true, editing ? 'Identificador único del producto en el catálogo. Inmutable.' : 'Identificador único en todo el catálogo.', editing)}
-                <div class="field span-12"><label class="required" for="description">Descripción</label><textarea class="control" id="description" name="description" aria-invalid="${errors.description ? 'true' : 'false'}" ${errors.description ? 'aria-describedby="description-error"' : ''}>${escapeHtml(data.description)}</textarea>${errorText('description', errors.description)}</div>
-                ${field('price','Precio base referencial','number',data.price,errors.price,'span-4',true, editing ? 'Los cambios posteriores de precio se gestionan en el módulo de Precios.' : 'Precio base inicial para el catálogo.', editing)}
-                
-                <div class="field span-4">
-                  <label class="required" for="category">Categoría</label>
-                  <select class="control" id="category" name="category" aria-invalid="${errors.category ? 'true' : 'false'}" ${errors.category ? 'aria-describedby="category-error"' : ''}>
-                    <option value="">Selecciona categoría...</option>
-                    ${['Calzado','Ropa deportiva','Accesorios','Equipamiento'].map(v => `<option ${data.category === v ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('')}
-                    <option disabled>Outdoor — no disponible</option>
-                  </select>
-                  ${errorText('category', errors.category)}
-                </div>
-
-                <div class="field span-4">
-                  <label class="required" for="brand">Marca</label>
-                  <select class="control" id="brand" name="brand" aria-invalid="${errors.brand ? 'true' : 'false'}" ${errors.brand ? 'aria-describedby="brand-error"' : ''}>
-                    <option value="">Selecciona una marca...</option>
-                    ${['ProSpeed','NorthPeak','UrbanFit','Arena'].map(v => `<option ${data.brand === v ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('')}
-                  </select>
-                  ${errorText('brand', errors.brand)}
-                </div>
-              </div>
-            </section>
-
-            <!-- Sección de Tipo de Producto -->
-            <section class="panel" aria-labelledby="type-scheme-title">
-              <div class="panel-heading">
-                <h2 id="type-scheme-title">Tipo de producto</h2>
-              </div>
-              <div class="form-grid">
-                <div class="field span-12">
-                  <label class="required" for="productTypeId">Tipo de producto</label>
-                  ${editing ? `
-                    <div class="readonly-box">
-                      <strong>${escapeHtml(pType?.name || data.productTypeId)}</strong> <span class="mono">(${escapeHtml(data.productTypeId)})</span>
-                      <input type="hidden" id="productTypeId" name="productTypeId" value="${escapeHtml(data.productTypeId)}" />
-                      <p class="field-help">No modificable una vez creado el producto.</p>
-                    </div>
-                  ` : `
-                    <select class="control" id="productTypeId" name="productTypeId" aria-invalid="${errors.productTypeId ? 'true' : 'false'}">
-                      ${productTypes.map(t => `<option value="${t.id}" ${selectedTypeId === t.id ? 'selected' : ''}>${escapeHtml(t.name)} (${t.attrs.length} atributos asociados)</option>`).join('')}
-                    </select>
-                    <p class="field-help">Determina las características asociadas a este tipo de producto.</p>
-                    ${errorText('productTypeId', errors.productTypeId)}
-                  `}
-                </div>
-              </div>
-            </section>
-
-            <!-- Sección de Manejo de Variantes -->
-            <section class="panel" aria-labelledby="variants-model-title">
-              <div class="panel-heading">
-                <h2 id="variants-model-title">Manejo de variantes</h2>
-              </div>
-              ${editing ? `
-                <div class="readonly-box">
-                  <strong>${data.variants ? 'Producto con variantes' : 'Producto simple'}</strong>
-                  <p class="field-help">Inmutable después de la creación.</p>
-                </div>
-              ` : `
-                <div class="radio-group" role="radiogroup" aria-describedby="variants-help">
-                  <label class="radio-card">
-                    <input type="radio" name="variants" value="false" ${data.variants === false ? 'checked' : ''}>
-                    <span><strong>Producto simple</strong><br><span class="muted small">El SKU base identifica la unidad vendible directa.</span></span>
-                  </label>
-                  <label class="radio-card">
-                    <input type="radio" name="variants" value="true" ${data.variants === true ? 'checked' : ''}>
-                    <span><strong>Producto con variantes</strong><br><span class="muted small">El SKU base agrupa variantes identificadas por características LISTA.</span></span>
-                  </label>
-                </div>
-                <p id="variants-help" class="field-help">Esta elección no podrá modificarse una vez registrado el producto.</p>
-                ${errorText('variants', errors.variants)}
-              `}
-            </section>
-
-            <!-- Sección dinámica de Atributos del Tipo de Producto -->
-            <section class="panel" aria-labelledby="attrs-title">
-              <div class="panel-heading">
-                <h2 id="attrs-title">Atributos técnicos del tipo: ${escapeHtml(pType?.name || '')}</h2>
-                <p class="muted">Valores opcionales para guardar el borrador; los marcados como obligatorios se exigirán para pasar a estado ACTIVO.</p>
-              </div>
-              <div id="dynamic-attrs-container">
-                ${renderAttributesFields(pType, data, errors)}
-              </div>
-            </section>
-
-            <!-- Sección de Imágenes -->
-            <section class="panel" aria-labelledby="images-title">
-              <div class="panel-heading">
-                <h2 id="images-title">Imágenes del producto</h2>
-                <p class="muted">Opcionales al guardar un borrador; se exige al menos una imagen asociada para la activación comercial.</p>
-              </div>
-              <div class="form-grid">
-                <div id="image" class="field span-12">
-                  <span class="field-label">Fotografía o vista del producto</span>
-                  <div class="upload-box">
-                    <strong>${data.images ? `${data.images} ${data.images === 1 ? 'imagen asociada' : 'imágenes asociadas'}` : 'Aún no hay imágenes'}</strong>
-                    <p class="field-help">Formatos admitidos: JPG, PNG o WebP. Tamaño máximo: 5 MB.</p>
-                    <input id="image-input" name="image" type="file" accept="image/*">
-                    <div id="image-name" class="image-preview" ${data.images ? '' : 'hidden'}>
-                      <span class="image-placeholder" aria-hidden="true"></span>
-                      <span>${data.images ? 'Imagen principal cargada' : ''}</span>
-                    </div>
-                    ${errorText('image', errors.image)}
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <div class="actions-bar">
-              <button class="btn" type="button" data-action="cancel-form">Cancelar</button>
-              <button class="btn btn-primary" type="submit" ${state.saving ? 'disabled' : ''}>
-                ${state.saving ? 'Guardando…' : editing ? 'Guardar cambios' : 'Guardar borrador'}
-              </button>
-            </div>
-          </form>`;
-
-        const typeSelect = document.getElementById('productTypeId');
-        if (typeSelect && !editing) {
-          typeSelect.addEventListener('change', e => {
-            state.formSelectedTypeId = e.target.value;
-            const updatedType = getProductType(e.target.value);
-            const container = document.getElementById('dynamic-attrs-container');
-            const heading = document.getElementById('attrs-title');
-            if (heading) heading.textContent = `Atributos técnicos del tipo: ${updatedType?.name || ''}`;
-            if (container) container.innerHTML = renderAttributesFields(updatedType, data, errors);
-          });
-        }
-      }
-
-      function field(name, label, type, value, error, span, required, help = '', readonly = false) {
-        return `<div class="field ${span}"><label class="${required ? 'required' : ''}" for="${name}">${label}</label><input class="control" id="${name}" name="${name}" type="${type}" value="${escapeHtml(value)}" ${type === 'number' ? 'step="0.01" min="0"' : ''} ${readonly ? 'readonly' : ''} aria-invalid="${error ? 'true' : 'false'}" ${error ? `aria-describedby="${name}-error"` : ''}>${help ? `<p class="field-help">${escapeHtml(help)}</p>` : ''}${errorText(name,error)}</div>`;
-      }
-
-      function errorText(name, error) {
-        return error ? `<p class="field-error" id="${name}-error">${escapeHtml(error)}</p>` : '';
-      }
-
-      function renderErrorSummary(errors) {
-        return `<section class="error-summary" role="alert" aria-labelledby="error-title" tabindex="-1"><h2 id="error-title">Revisa los datos antes de continuar</h2><ul>${Object.entries(errors).map(([key,value]) => `<li><a href="#${escapeHtml(key)}">${escapeHtml(value)}</a></li>`).join('')}</ul></section>`;
-      }
-
-      function validateForm(form, editing) {
-        const data = new FormData(form);
-        const productTypeId = String(data.get('productTypeId') || state.formSelectedTypeId || 'TP-01');
-        const pType = getProductType(productTypeId);
-
-        const attributes = {};
-        if (pType && pType.attrs) {
-          pType.attrs.forEach(a => {
-            const val = data.get(`attr_${a.name}`);
-            if (val !== null && String(val).trim() !== '') {
-              attributes[a.name] = String(val).trim();
-            }
-          });
-        }
-
-        const values = {
-          name: String(data.get('name') || '').trim(),
-          description: String(data.get('description') || '').trim(),
-          category: String(data.get('category') || ''),
-          productTypeId: productTypeId,
-          brand: String(data.get('brand') || ''),
-          price: String(data.get('price') || ''),
-          sku: String(data.get('sku') || '').trim().toUpperCase(),
-          variants: editing ? currentProduct().variants : data.get('variants') === null ? null : data.get('variants') === 'true',
-          attributes: attributes,
-          imageSelected: Boolean(document.getElementById('image-input')?.files?.length)
-        };
-
-        const errors = {};
-        if (!values.name) errors.name = 'Ingresa el nombre del producto.';
-        if (!values.description) errors.description = 'Ingresa una descripción.';
-        if (!values.category) errors.category = 'Selecciona una categoría activa.';
-        if (!values.productTypeId) errors.productTypeId = 'Selecciona un tipo de producto activo.';
-        if (!values.brand) errors.brand = 'Selecciona una marca activa.';
-        if (!values.price || Number(values.price) <= 0) errors.price = 'Ingresa un precio base válido.';
-        if (!values.sku) errors.sku = 'Ingresa un SKU base.';
-        if (values.variants === null) errors.variants = 'Indica si el producto manejará variantes.';
-
-        const currentId = editing ? currentProduct().id : null;
-        if (values.sku && state.products.some(p => p.id !== currentId && p.sku.toLowerCase() === values.sku.toLowerCase())) {
-          errors.sku = 'Este SKU base ya está en uso.';
-        }
-
-        const hasDuplicateNameBrand = values.name && values.brand && state.products.some(p => p.id !== currentId && p.name.toLowerCase() === values.name.toLowerCase() && p.brand === values.brand);
-
-        const product = currentProduct();
-        const resultingImages = (editing ? product.images : 0) + (values.imageSelected ? 1 : 0);
-
-        // Si se edita un producto que YA está Activo, debe conservar condiciones de CA-05
-        if (editing && product.status === 'Activo') {
-          if (pType && pType.attrs) {
-            pType.attrs.filter(a => a.mandatory).forEach(a => {
-              if (!values.attributes[a.name]) {
-                errors[`attr_${a.name}`] = `El atributo "${a.name}" es obligatorio para productos activos.`;
-              }
-            });
-          }
-          if (!resultingImages) errors.image = 'Un producto activo debe conservar al menos una imagen.';
-        }
-
-        return { values, errors, resultingImages, hasDuplicateNameBrand };
-      }
-
-      function executeProductPersist(values, editing, resultingImages) {
-        if (!navigator.onLine) { toast('No se pudo guardar. Revisa tu conexión e intenta nuevamente.'); return; }
-        state.saving = true;
-        renderForm(editing ? 'edit' : 'create');
-        window.setTimeout(() => {
-          if (editing) {
-            const product = currentProduct();
-            Object.assign(product, {
-              name: values.name,
-              description: values.description,
-              category: values.category,
-              brand: values.brand,
-              sku: values.sku,
-              attributes: values.attributes,
-              images: resultingImages,
-              slug: slugify(values.name),
-              updated: '17/09/2026, 15:10'
-            });
-            state.saving = false; state.formDirty = false; navigate('detail', product.id);
-            toast('Los cambios del producto fueron guardados.');
-          } else {
-            const id = `p-${String(state.products.length + 1).padStart(3,'0')}`;
-            const product = {
-              id,
-              name: values.name,
-              description: values.description,
-              category: values.category,
-              productTypeId: values.productTypeId,
-              brand: values.brand,
-              price: Number(values.price).toFixed(2),
-              sku: values.sku,
-              variants: values.variants,
-              status: 'Borrador',
-              slug: slugify(values.name),
-              attributes: values.attributes,
-              images: resultingImages,
-              validRelations: true,
-              activeVariants: 0,
-              pricingReady: false,
-              inventoryReady: false,
-              updated: '17/09/2026, 15:10'
-            };
-            state.products.unshift(product);
-            state.saving = false; state.formDirty = false; navigate('detail', id);
-            toast('Producto guardado como borrador.');
-          }
-        }, 500);
-      }
-
-      function saveForm(form) {
-        const editing = state.screen === 'edit';
-        const { values, errors, resultingImages, hasDuplicateNameBrand } = validateForm(form, editing);
-        state.errors = errors;
-        if (Object.keys(errors).length) {
-          renderForm(editing ? 'edit' : 'create');
-          document.querySelector('.error-summary')?.focus();
-          announce('El formulario contiene errores.');
-          return;
-        }
-        if (hasDuplicateNameBrand && !state.duplicateConfirmed) {
-          state.modal = { type: 'duplicate-warning', values, editing, resultingImages };
-          state.modalReturn = document.querySelector('button[type="submit"]');
-          renderModal();
-          return;
-        }
-        state.duplicateConfirmed = false;
-        executeProductPersist(values, editing, resultingImages);
-      }
-
-      function activationChecks(product) {
-        const pType = getProductType(product.productTypeId);
-        const mandatoryAttrs = pType ? pType.attrs.filter(a => a.mandatory) : [];
-        const missingAttrs = mandatoryAttrs.filter(a => !product.attributes || !product.attributes[a.name] || String(product.attributes[a.name]).trim() === '');
-
-        return [
-          { label: 'Categoría de navegación activa', met: product.validRelations },
-          { label: 'Tipo de producto activo', met: Boolean(pType && pType.status === 'active') },
-          { label: 'Marca activa', met: product.validRelations },
-          {
-            label: mandatoryAttrs.length > 0
-              ? `Atributos obligatorios del tipo (${mandatoryAttrs.map(a => a.name).join(', ')})`
-              : 'Atributos obligatorios del tipo (el tipo no exige obligatorios)',
-            met: missingAttrs.length === 0
-          },
-          { label: 'Al menos una imagen asociada', met: product.images > 0 },
-          ...(product.variants ? [{ label: 'Al menos una variante activa con SKU e imagen', met: product.activeVariants > 0 }] : []),
-          { label: 'Confirmación de preparación de Pricing', met: Boolean(product.pricingReady) },
-          { label: 'Confirmación de inicialización de Inventario', met: Boolean(product.inventoryReady) }
-        ];
-      }
-
-      function renderDetail() {
-        const p = currentProduct();
-        if (!p) return renderNotFound();
-        const pType = getProductType(p.productTypeId);
-        const checks = activationChecks(p);
-        const canActivate = checks.every(c => c.met);
-        const action = p.status === 'Borrador'
-          ? `<button class="btn btn-primary" type="button" data-action="request-status" data-status="Activo">Activar producto</button>`
-          : p.status === 'Inactivo'
-          ? `<button class="btn btn-primary" type="button" data-action="request-status" data-status="Activo">Reactivar producto</button>`
-          : '';
-
-        const attrList = pType?.attrs?.length
-          ? pType.attrs.map(a => {
-              const val = p.attributes?.[a.name];
-              const tag = a.mandatory ? '<span class="tag-attr mandatory">Obligatoria</span>' : '<span class="tag-attr optional">Opcional</span>';
-              return `<tr>
-                <td><strong>${escapeHtml(a.name)}</strong></td>
-                <td><span class="mono">${escapeHtml(a.type)}</span></td>
-                <td>${tag}</td>
-                <td>${val ? `<strong>${escapeHtml(val)}</strong>` : '<span class="muted">Sin valor</span>'}</td>
-              </tr>`;
-            }).join('')
-          : '<tr><td colspan="4" class="muted">No hay características definidas para este tipo de producto.</td></tr>';
-
-        main.innerHTML = `
-          ${breadcrumbs([{ label: 'Productos', action: 'back-list' }, { label: p.name }])}
-          <section class="detail-header">
-            <div class="heading-row">
-              <div>
-                <div class="title-with-status">
-                  <h1>${escapeHtml(p.name)}</h1>
-                  ${statusBadge(p.status)}
-                </div>
-                <p class="lede mono">${escapeHtml(p.sku)}</p>
-              </div>
-              <div class="button-row">
-                ${action}
-                <button class="btn" type="button" data-action="edit-current">Editar</button>
-                ${p.status === 'Activo' ? '<button class="btn btn-danger" type="button" data-action="request-status" data-status="Inactivo">Desactivar</button>' : ''}
-              </div>
-            </div>
-          </section>
-
-          ${p.status === 'Borrador' && !canActivate ? `
-            <div class="notice" role="status" style="margin-bottom:20px">
-              <span class="notice-icon" aria-hidden="true">!</span>
-              <div>
-                <p class="notice-title">Este producto aún no puede activarse</p>
-                <p class="muted">Revisa la lista de requisitos pendientes en la barra lateral antes de solicitar la activación.</p>
-              </div>
-            </div>` : ''}
-
-          ${p.status === 'Inactivo' && !canActivate ? `
-            <div class="notice" role="status" style="margin-bottom:20px">
-              <span class="notice-icon" aria-hidden="true">!</span>
-              <div>
-                <p class="notice-title">La reactivación requiere validación previa</p>
-                <p class="muted">Una o más condiciones dejaron de ser válidas (categoría, tipo, marca o atributos obligatorios).</p>
-              </div>
-            </div>` : ''}
-
-          <div class="detail-grid">
-            <div>
-              <section class="panel" aria-labelledby="product-data-title">
-                <div class="panel-heading"><h2 id="product-data-title">Información del producto</h2></div>
-                <div class="definition-grid">
-                  ${definition('Descripción', p.description)}
-                  ${definition('Categoría de navegación', p.category)}
-                  ${definition('Tipo de producto', pType ? `${pType.name} (${p.productTypeId})` : p.productTypeId)}
-                  ${definition('Marca', p.brand)}
-                  ${definition('Precio base referencial', `S/ ${Number(p.price).toFixed(2)}`)}
-                  ${definition('Slug público', `/producto/${p.slug}`, true)}
-                  ${definition('Manejo de variantes', p.variants ? 'Con variantes' : 'Producto simple')}
-                </div>
-              </section>
-
-              <section class="panel" aria-labelledby="configuration-title">
-                <div class="panel-heading">
-                  <h2 id="configuration-title">Características (${escapeHtml(pType?.name || '')})</h2>
-                </div>
-                <div class="table-wrap">
-                  <table>
-                    <thead>
-                      <tr><th>Característica</th><th>Tipo</th><th>Condición</th><th>Valor asignado</th></tr>
-                    </thead>
-                    <tbody>${attrList}</tbody>
-                  </table>
-                </div>
-              </section>
-
-              <section class="panel" aria-labelledby="images-detail-title">
-                <div class="panel-heading">
-                  <h2 id="images-detail-title">Imágenes asociadas</h2>
-                  <p class="muted">${p.images ? `${p.images} ${p.images === 1 ? 'imagen registrada' : 'imágenes registradas'}` : 'Sin imágenes registradas.'}</p>
-                </div>
-                ${p.images ? `<div class="image-preview"><span class="image-placeholder" aria-hidden="true"></span><span class="muted">Vista referencial de la imagen principal</span></div>` : ''}
-              </section>
-
-              ${p.variants ? `
-                <section class="panel" aria-labelledby="variants-title">
-                  <div class="panel-heading">
-                    <h2 id="variants-title">Variantes del producto</h2>
-                    <p class="muted">${p.activeVariants ? `${p.activeVariants} variantes activas registradas` : 'Todavía no hay variantes activas válidas.'}</p>
-                  </div>
-                  <button class="btn" type="button" data-action="manage-variants">Gestionar variantes</button>
-                </section>` : ''}
-            </div>
-
-            <aside>
-              <section class="panel" aria-labelledby="requirements-title">
-                <h2 id="requirements-title">Requisitos de activación</h2>
-                <ul class="requirements">
-                  ${checks.map(c => `<li class="${c.met ? 'met' : 'missing'}">${escapeHtml(c.label)} — ${c.met ? 'Cumplido' : 'Pendiente'}</li>`).join('')}
-                </ul>
-              </section>
-
-              <section class="panel" aria-labelledby="integrations-title">
-                <h2 id="integrations-title">Estado de preparación para publicación</h2>
-                <ul class="meta-list">
-                  <li>
-                    <span class="muted small">Precio</span><br>
-                    ${p.pricingReady ? '<span class="status active" style="margin-top:4px">Listo</span>' : '<span class="status draft" style="margin-top:4px">Pendiente</span>'}
-                  </li>
-                  <li>
-                    <span class="muted small">Inventario</span><br>
-                    ${p.inventoryReady ? '<span class="status active" style="margin-top:4px">Listo</span>' : '<span class="status draft" style="margin-top:4px">Pendiente</span>'}
-                  </li>
-                </ul>
-              </section>
-
-              <section class="panel" aria-labelledby="metadata-title">
-                <h2 id="metadata-title">Información administrativa</h2>
-                <ul class="meta-list">
-                  <li><span class="muted small">Identificador de producto</span><br><span class="mono">${escapeHtml(p.id.toUpperCase())}</span></li>
-                  <li><span class="muted small">Tipo de producto</span><br><span class="mono">${escapeHtml(p.productTypeId)}</span></li>
-                  <li><span class="muted small">Última modificación</span><br>${escapeHtml(p.updated)}</li>
-                </ul>
-              </section>
-            </aside>
-          </div>`;
-      }
-
-      function definition(label, value, mono = false) {
-        return `<div class="definition"><div class="definition-label">${escapeHtml(label)}</div><div class="definition-value ${mono ? 'mono' : ''}">${escapeHtml(value)}</div></div>`;
-      }
-
-      function requestStatus(nextStatus, trigger) {
-        const p = currentProduct();
-        if (!p) return;
-        const operation = nextStatus === 'Inactivo' ? 'desactivar' : p.status === 'Inactivo' ? 'reactivar' : 'activar';
-        if (nextStatus === 'Activo') {
-          const missing = activationChecks(p).filter(c => !c.met);
-          if (missing.length) {
-            state.modal = { type: 'blocked', operation, missing };
-            state.modalReturn = trigger;
-            renderModal();
-            return;
-          }
-        }
-        state.modal = { type: 'confirm', operation, nextStatus };
-        state.modalReturn = trigger;
-        renderModal();
-      }
-
-      function renderModal() {
-        if (!state.modal) { modalRoot.innerHTML = ''; return; }
-        if (state.modal.type === 'duplicate-warning') {
-          modalRoot.innerHTML = `<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description"><h2 id="modal-title" tabindex="-1">Posible producto duplicado</h2><p id="modal-description">Ya existe un producto registrado con el nombre <strong>${escapeHtml(state.modal.values.name)}</strong> y la marca seleccionada. ¿Deseas registrar este producto de todos modos?</p><div class="notice" style="margin-top:14px"><span class="notice-icon" aria-hidden="true">i</span><div><p class="notice-title">Advertencia comercial</p><p class="muted">El sistema permite productos con el mismo nombre si tienen SKU base distinto.</p></div></div><div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Revisar formulario</button><button class="btn btn-primary" type="button" data-action="confirm-duplicate-save">Confirmar y registrar</button></div></section></div>`;
-          window.setTimeout(() => document.getElementById('modal-title')?.focus(), 0);
-          return;
-        }
-        const p = currentProduct();
-        if (!p) { modalRoot.innerHTML = ''; return; }
-        if (state.modal.type === 'blocked') {
-          modalRoot.innerHTML = `<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description"><h2 id="modal-title" tabindex="-1">No se puede ${state.modal.operation} el producto</h2><p id="modal-description">Revisa los siguientes requisitos pendientes antes de continuar:</p><ul>${state.modal.missing.map(item => `<li>${escapeHtml(item.label)}</li>`).join('')}</ul><div class="modal-actions"><button class="btn btn-primary" type="button" data-action="close-modal">Entendido</button></div></section></div>`;
-        } else {
-          const op = state.modal.operation;
-          const content = op === 'desactivar' ? {
-            title: 'Desactivar producto', text: 'El producto dejará de estar disponible para nuevas ventas. Su registro, snapshot histórico y pedidos se conservarán.', action: 'Desactivar producto'
-          } : op === 'reactivar' ? {
-            title: 'Reactivar producto', text: 'El producto volverá a estar disponible para los canales de venta tras verificar sus condiciones activas.', action: 'Reactivar producto'
-          } : { title: 'Activar producto', text: 'El producto será visible y estará disponible comercialmente para los canales de venta.', action: 'Activar producto' };
-          modalRoot.innerHTML = `<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description"><h2 id="modal-title" tabindex="-1">${content.title}</h2><p id="modal-description">${content.text}</p><div class="notice" style="margin-top:18px"><span class="notice-icon" aria-hidden="true">i</span><div><p class="notice-title">${escapeHtml(p.name)}</p><p class="muted mono">${escapeHtml(p.sku)}</p></div></div><div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Cancelar</button><button class="btn ${op === 'desactivar' ? 'btn-danger' : 'btn-primary'}" type="button" data-action="confirm-status">${content.action}</button></div></section></div>`;
-        }
-        window.setTimeout(() => document.getElementById('modal-title')?.focus(), 0);
-      }
-
-      function closeModal() {
-        state.modal = null;
-        modalRoot.innerHTML = '';
-        state.modalReturn?.focus?.();
-      }
-
-      function confirmStatus() {
-        const p = currentProduct();
-        if (!p || !state.modal) return;
-        p.status = state.modal.nextStatus;
-        p.updated = '17/09/2026, 15:15';
-        const message = p.status === 'Activo' ? 'Producto activo y disponible para los canales de venta.' : 'Producto desactivado. Su historial se conserva.';
-        closeModal(); renderDetail(); main.focus(); toast(message); announce(message);
-      }
-
-      function renderNotFound() {
-        main.innerHTML = `${breadcrumbs([{ label: 'Productos', action: 'back-list' }, { label: 'Producto no encontrado' }])}<section class="global-state"><div class="empty-symbol" aria-hidden="true">?</div><h1>Producto no encontrado</h1><p>El producto pudo haber cambiado o ya no estar disponible.</p><div class="button-row" style="justify-content:center"><button class="btn btn-primary" type="button" data-action="back-list">Volver a productos</button></div></section>`;
-      }
-
-      function renderNoPermission() {
-        main.innerHTML = `<section class="global-state" aria-labelledby="permission-title"><div class="empty-symbol" aria-hidden="true">!</div><h1 id="permission-title">No tienes permiso para realizar esta acción</h1><p>Tu sesión no permite modificar productos. Puedes volver al listado administrativo.</p><button class="btn btn-primary" type="button" data-action="back-list">Volver a productos</button></section>`;
-      }
-
-      function renderSessionExpired() {
-        main.innerHTML = `<section class="global-state" aria-labelledby="session-title"><div class="empty-symbol" aria-hidden="true">!</div><h1 id="session-title">Tu sesión expiró</h1><p>Inicia sesión nuevamente para continuar. Intentaremos devolverte al producto que estabas consultando.</p><button class="btn btn-primary" type="button" data-action="login">Iniciar sesión</button></section>`;
-      }
-
-      function renderConflict() {
-        const p = currentProduct() || state.products[0];
-        main.innerHTML = `${breadcrumbs([{ label: 'Productos', action: 'back-list' }, { label: p.name, action: 'view-current' }, { label: 'Datos actualizados' }])}${pageHeading('El producto cambió mientras lo editabas', 'Recarga la información vigente antes de volver a guardar.')}<section class="panel"><div class="notice"><span class="notice-icon" aria-hidden="true">!</span><div><p class="notice-title">Tus cambios no se guardaron</p><p class="muted">Otra actualización modificó este producto. La versión vigente se conserva.</p></div></div><div class="actions-bar"><button class="btn" type="button" data-action="back-list">Volver a productos</button><button class="btn btn-primary" type="button" data-action="reload-product">Recargar producto</button></div></section>`;
-      }
-
-      function render() {
-        modalRoot.innerHTML = '';
-        if (state.screen === 'list') renderList();
-        else if (state.screen === 'create') renderForm('create');
-        else if (state.screen === 'edit') renderForm('edit');
-        else if (state.screen === 'detail') renderDetail();
-        else if (state.screen === 'no-permission') renderNoPermission();
-        else if (state.screen === 'session-expired') renderSessionExpired();
-        else if (state.screen === 'conflict') renderConflict();
-        else renderNotFound();
-      }
-
-      function parseHash() {
-        const hash = location.hash.replace('#','');
-        if (hash === 'no-permission') state.screen = 'no-permission';
-        else if (hash === 'session-expired') state.screen = 'session-expired';
-        else if (hash === 'list-loading') { state.screen = 'list'; state.listMode = 'loading'; }
-        else if (hash === 'list-error') { state.screen = 'list'; state.listMode = 'error'; }
-        else if (hash === 'list-empty') { state.screen = 'list'; state.products = []; state.listMode = 'normal'; }
-        else if (hash === 'conflict') { state.screen = 'conflict'; state.selectedId = 'p-001'; }
-        else if (hash === 'producto-nuevo') state.screen = 'create';
-        else {
-          const match = hash.match(/^producto-(p-\d+)-(detail|edit)$/);
-          if (match) { state.selectedId = match[1]; state.screen = match[2]; }
-          else { state.screen = 'list'; state.listMode = 'normal'; }
-        }
-        render();
-      }
-
-      document.addEventListener('click', event => {
-        const el = event.target.closest('[data-action]');
-        if (!el) return;
-        const action = el.dataset.action;
-        if (action === 'new-product') { state.formMode = 'create'; state.formDirty = false; state.formSelectedTypeId = 'TP-01'; navigate('create'); }
-        else if (action === 'view-product') navigate('detail', el.dataset.id);
-        else if (action === 'edit-product') { state.formDirty = false; navigate('edit', el.dataset.id); }
-        else if (action === 'edit-current') { state.formDirty = false; navigate('edit', state.selectedId); }
-        else if (action === 'back-list') navigate('list');
-        else if (action === 'view-current') navigate('detail', state.selectedId);
-        else if (action === 'clear-filters') { state.filters = { category: '', brand: '', status: '' }; renderList(); announce(`${state.products.length} productos.`); }
-        else if (action === 'retry-list') { state.listMode = 'loading'; renderList(); window.setTimeout(() => { state.listMode = 'normal'; renderList(); announce('Productos cargados.'); }, 600); }
-        else if (action === 'cancel-form') {
-          if (state.formDirty) {
-            state.modal = { type: 'discard' };
-            state.modalReturn = el;
-            modalRoot.innerHTML = `<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><h2 id="modal-title" tabindex="-1">¿Descartar cambios?</h2><p>Los datos que ingresaste no se guardarán.</p><div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Seguir editando</button><button class="btn btn-primary" type="button" data-action="discard-form">Descartar cambios</button></div></section></div>`;
-            window.setTimeout(() => document.getElementById('modal-title')?.focus(), 0);
-          } else {
-            navigate(state.screen === 'edit' ? 'detail' : 'list', state.selectedId);
-          }
-        }
-        else if (action === 'discard-form') { const target = state.screen === 'edit' ? 'detail' : 'list'; state.formDirty = false; navigate(target, state.selectedId); }
-        else if (action === 'request-status') requestStatus(el.dataset.status, el);
-        else if (action === 'close-modal') closeModal();
-        else if (action === 'confirm-status') confirmStatus();
-        else if (action === 'confirm-duplicate-save') {
-          if (state.modal?.values) {
-            const { values, editing, resultingImages } = state.modal;
-            state.duplicateConfirmed = true;
-            closeModal();
-            executeProductPersist(values, editing, resultingImages);
-          }
-        }
-        else if (action === 'manage-variants') toast('Abriendo la gestión de variantes de este producto.');
-        else if (action === 'simulate-confirmations') {
-          const p = currentProduct();
-          if (p) {
-            p.pricingReady = true;
-            p.inventoryReady = true;
-            toast('Confirmaciones recibidas de Pricing e Inventario.');
-            announce('Preparaciones confirmadas.');
-            renderDetail();
-          }
-        }
-        else if (action === 'reload-product') navigate('detail', state.selectedId);
-        else if (action === 'login') toast('Redirigiendo al inicio de sesión.');
-      });
-
-      document.addEventListener('change', event => {
-        if (event.target.matches('[data-filter]')) {
-          state.filters[event.target.dataset.filter] = event.target.value;
-          renderList();
-          announce(`${filteredProducts().length} productos encontrados.`);
-        } else if (event.target.id === 'image-input') {
-          const preview = document.getElementById('image-name');
-          const file = event.target.files?.[0];
-          if (file && preview) { preview.hidden = false; preview.lastElementChild.textContent = file.name; }
-          state.formDirty = true;
-        } else if (event.target.closest('#product-form')) {
-          state.formDirty = true;
-        }
-      });
-
-      document.addEventListener('input', event => { if (event.target.closest('#product-form')) state.formDirty = true; });
-
-      document.addEventListener('submit', event => {
-        if (event.target.id !== 'product-form') return;
-        event.preventDefault();
-        saveForm(event.target);
-      });
-
-      document.addEventListener('keydown', event => {
-        const modal = modalRoot.querySelector('.modal');
-        if (!modal) return;
-        if (event.key === 'Escape') { event.preventDefault(); closeModal(); return; }
-        if (event.key === 'Tab') {
-          const items = [...modal.querySelectorAll('button:not(:disabled),a[href],[tabindex]:not([tabindex="-1"])')];
-          if (!items.length) return;
-          const first = items[0], last = items[items.length - 1];
-          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-        }
-      });
-
-      window.addEventListener('online', () => { offlineBanner.hidden = true; announce('Conexión recuperada.'); });
-      window.addEventListener('offline', () => { offlineBanner.hidden = false; announce('Sin conexión.'); });
-      window.addEventListener('hashchange', parseHash);
-      offlineBanner.hidden = navigator.onLine;
-      parseHash();
-    })();
-  </script>
+    <div class="card stack">
+      <h2>Modelo de venta</h2>
+      <label class="radio-row"><input type="radio" name="model" value="simple" checked onchange="togglePhysical()"> <span><strong>Producto simple</strong><br><span class="muted small">Se vende directamente mediante su SKU base.</span></span></label>
+      <label class="radio-row"><input type="radio" name="model" value="variants" onchange="togglePhysical()"> <span><strong>Producto con variantes</strong><br><span class="muted small">Las unidades vendibles se administran como variantes.</span></span></label>
+    </div>
+    <div id="physical" class="card stack">
+      <h2>Datos físicos para despacho</h2><p class="muted">Completa estas medidas solo para productos simples.</p>
+      <div class="grid four"><div class="field"><label>Peso (kg)</label><input class="input" type="number" step=".01" value=".65"></div><div class="field"><label>Largo (cm)</label><input class="input" type="number" value="28"></div><div class="field"><label>Ancho (cm)</label><input class="input" type="number" value="20"></div><div class="field"><label>Alto (cm)</label><input class="input" type="number" value="8"></div></div>
+    </div>
+    <div class="actions"><button type="button" class="btn" onclick="show('list')">Cancelar</button><button class="btn primary">Guardar borrador</button></div>
+  </form>
+</section>
+
+<section id="prep" class="hidden stack">
+  <div class="card stack">
+    <h2>Borrador guardado</h2>
+    <p class="muted">Estamos preparando el precio base y la unidad vendible de inventario. El producto seguirá como borrador hasta que ambos estén listos.</p>
+    <div class="grid two">
+      <div class="card"><h3>Precio</h3><p id="pricePrep"><span class="badge soft">Preparando</span></p></div>
+      <div class="card"><h3>Inventario</h3><p id="stockPrep"><span class="badge soft">Preparando</span></p></div>
+    </div>
+    <div class="actions"><button id="activateBtn" class="btn primary" disabled onclick="activate()">Activar producto</button><button class="btn" onclick="show('list')">Volver a productos</button></div>
+  </div>
+</section>
+
+<section id="detail" class="hidden stack">
+  <div class="card">
+    <div class="page-head"><div><h2 id="detailName">Producto</h2><p id="detailState" class="muted"></p></div><span id="detailBadge" class="badge"></span></div>
+    <div class="grid three"><div class="kpi"><span class="muted">Categoría</span><div><strong>Accesorios</strong></div></div><div class="kpi"><span class="muted">Modelo</span><div><strong>Simple</strong></div></div><div class="kpi"><span class="muted">Preparación</span><div><strong id="detailPrep">—</strong></div></div></div>
+  </div>
+  <div class="actions"><button class="btn" onclick="show('list')">Volver a productos</button><button class="btn">Editar</button></div>
+</section>
+
+</main>
+<script>
+function show(id){['list','form','prep','detail'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));}
+function togglePhysical(){const val=document.querySelector('input[name=model]:checked').value; document.getElementById('physical').classList.toggle('hidden',val==='variants');}
+function saveProduct(e){e.preventDefault(); show('prep'); const p=document.getElementById('pricePrep'),s=document.getElementById('stockPrep'),b=document.getElementById('activateBtn'); setTimeout(()=>p.innerHTML='<span class="badge dark">Lista</span>',800); setTimeout(()=>{s.innerHTML='<span class="badge dark">Lista</span>';b.disabled=false},1450);}
+function activate(){document.getElementById('activateBtn').textContent='Producto activado';document.getElementById('activateBtn').disabled=true;}
+function detail(name,prep,state){document.getElementById('detailName').textContent=name;document.getElementById('detailPrep').textContent=prep;document.getElementById('detailState').textContent='Consulta la información y su estado de preparación.';const b=document.getElementById('detailBadge');b.textContent=state;b.className='badge '+(state==='Activo'?'dark':'');show('detail');}
+</script>
 </body>
 </html>

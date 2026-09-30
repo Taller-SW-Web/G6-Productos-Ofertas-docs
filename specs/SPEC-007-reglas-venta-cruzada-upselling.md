@@ -2,135 +2,67 @@
 
 **Responsable:** Axel Andree Cueva Alcalá  
 **Rama:** cueva  
-**Trazabilidad:** HU [HU-007](../hu/HU-007-reglas-venta-cruzada-upselling.md) | Wireframe [WF-007](../wireframes/flows/WF-007-reglas-venta-cruzada-upselling.md)
+**Trazabilidad:** HU [HU-007](./hu/HU-007-reglas-venta-cruzada-upselling.md) | Wireframe [WF-007](./wireframes/flows/WF-007-reglas-venta-cruzada-upselling.md)
 
 ## 1. Contexto
-
-La capacidad permite configurar manualmente reglas de merchandising Cross-sell y Upsell para exponer **candidatos comerciales** a Marketplace, Chatbot y Retail. No sustituye la recomendación conversacional ni la personalización por intención del cliente que pueda implementar el canal Chatbot.
+Esta capacidad configura manualmente candidatos comerciales Cross-sell y Upsell para Marketplace, Chatbot y Retail. No sustituye la interpretación conversacional ni la personalización propia del canal.
 
 ## 2. Propósito
-
-Permitir al Gestor Comercial definir recomendaciones basadas en producto o categoría, ordenarlas de forma determinista y exponer únicamente alternativas vigentes y disponibles.
+Definir recomendaciones por producto/categoría, ordenarlas de forma determinista y exponer solo candidatos vigentes y disponibles.
 
 ## 3. Alcance
+Registrar Cross-sell/Upsell; origen por producto/categoría; recomendados; prioridad; orden; vigencia; estado; criterio de superioridad; justificación opcional; filtro de disponibilidad; deduplicación; consulta API.
 
-Incluye:
-- Registrar reglas Cross-sell y Upsell.
-- Clasificar cada Upsell con un `criterio_superioridad` controlado y permitir una `justificacion_comercial` opcional para revisión administrativa.
-- Definir origen por producto o por categoría.
-- Asociar uno o más productos recomendados.
-- Definir prioridad de la regla.
-- Definir orden de los productos dentro de la regla.
-- Definir periodo de vigencia.
-- Activar y desactivar reglas.
-- Validar existencia y estado activo de productos.
-- Filtrar por stock.
-- Deduplicar recomendaciones.
-- Devolver precio vigente y disponibilidad.
-- Consultar recomendaciones mediante API.
+## 4. Prioridad y orden
+Prioridad `1` es la mayor. La salida se ordena por prioridad ascendente y luego por orden ascendente. Duplicados conservan la primera aparición.
 
-## 4. Modelo de prioridad y orden
-
-Cada regla posee `prioridad`, donde `1` representa la mayor prioridad.
-
-Cada producto relacionado dentro de una regla posee `orden`.
-
-La salida se ordena primero por `prioridad` ascendente y luego por `orden` ascendente.
-
-Si el mismo producto recomendado aparece por múltiples reglas, se conserva una sola aparición: la primera según el orden anterior.
-
-### Interpretación del precio en recomendaciones
-El «precio vigente» expuesto por una recomendación es el precio público informativo del SKU vendible elegible (regular u oferta vigente de Pricing, si existe), sin aplicar por anticipado una promoción de carrito ni consumir cupones. En productos con variantes se puede mostrar rango o precio «desde» de SKUs activos con stock; el detalle comercial final se recalcula al cotizar el SKU elegido. La recomendación no garantiza disponibilidad ni precio inmutable hasta confirmar el pedido.
+El precio es informativo (regular u oferta pública vigente de Pricing) y no congela el precio del pedido ni reserva stock.
 
 ## 5. Requisitos
+### Requisito 1: Cross-sell
+Relacionar un origen con uno o más productos complementarios.
 
-### Requisito 1: Registrar reglas de Cross-sell
+### Requisito 2: Upsell
+Cada recomendado `UPSELL` requiere un `criterio_superioridad` controlado. Catálogo inicial:
 
-El sistema DEBE permitir relacionar un origen —producto o categoría— con uno o más productos complementarios.
+```text
+MAYOR_RENDIMIENTO
+MEJOR_MATERIAL
+MAYOR_CAPACIDAD
+FUNCIONALIDAD_ADICIONAL
+```
 
-### Requisito 2: Registrar reglas de Upsell
-El sistema DEBE permitir relacionar un origen (producto o categoría) con uno o más productos clasificados por el Gestor Comercial como alternativas superiores.
+`justificacion_comercial` es opcional. El sistema no infiere superioridad ni usa precio mayor como criterio suficiente.
 
-La superioridad es una **clasificación comercial manual**, no una inferencia del sistema. Cada recomendado UPSELL debe seleccionar un `criterio_superioridad` de un catálogo controlado —por ejemplo `MAYOR_RENDIMIENTO`, `MEJOR_MATERIAL`, `MAYOR_CAPACIDAD` o `FUNCIONALIDAD_ADICIONAL`— y puede añadir una `justificacion_comercial` breve para uso interno. El sistema no intenta demostrar automáticamente la afirmación, no calcula una puntuación y no considera el precio más alto como criterio suficiente por sí solo.
+### Requisito 3: Productos válidos
+Origen y recomendados existen y están activos. No se recomienda el propio origen ni se repite un producto en una regla.
 
-La API de candidatos para canales no necesita exponer la justificación interna. Marketplace, Retail o Chatbot deciden cómo presentar los candidatos según su propia experiencia de usuario; en particular, Chatbot conserva la responsabilidad de interpretar lenguaje natural, necesidades y contexto conversacional.
+### Requisito 4: Prioridad y orden
+Enteros positivos.
 
-### Requisito 3: Validar productos
+### Requisito 5: Vigencia/estado
+Inicio < fin; `ACTIVA | INACTIVA`; solo activas/vigentes participan.
 
-Todos los productos configurados como origen específico o recomendados DEBEN existir y estar activos.
+### Requisito 6: Coincidencia
+Origen por producto específico o categoría.
 
-No se permite recomendar el mismo producto de origen ni repetir un producto dentro de una misma regla.
+### Requisito 7: Disponibilidad
+Excluir inexistentes, inactivos y sin stock.
 
-### Requisito 4: Definir prioridad y orden
+### Requisito 8: Deduplicación
+Una sola aparición por producto, respetando prioridad/orden.
 
-Cada regla DEBE tener una prioridad válida.
+### Requisito 9: API
+Devuelve producto, tipo, prioridad, orden, precio vigente y disponibilidad; lista vacía si no hay resultados.
 
-Cada producto recomendado DEBE tener un orden de presentación dentro de la regla.
+### Requisito 10: Backoffice
+Muestra configuración, criterio y justificación. **No existe una pantalla administrativa “Probar recomendaciones”.**
 
-### Requisito 5: Validar vigencia y estado
-
-Cada regla DEBE incluir fecha/hora de inicio y fin, con inicio anterior al fin, además de estado ACTIVA o INACTIVA.
-
-Solo las reglas activas y vigentes participan en las consultas.
-
-### Requisito 6: Evaluar reglas por producto o categoría
-
-Una regla puede activarse:
-- por coincidencia con un producto origen específico; o
-- porque el producto consultado pertenece a la categoría configurada como origen.
-
-### Requisito 7: Filtrar disponibilidad
-
-Antes de devolver recomendaciones, el sistema DEBE excluir productos:
-- inactivos;
-- inexistentes;
-- sin stock disponible.
-
-### Requisito 8: Deduplicar
-
-Si varias reglas producen el mismo producto recomendado, la salida DEBE contenerlo una sola vez, conservando la primera aparición de acuerdo con prioridad y orden.
-
-### Requisito 9: Consultar recomendaciones por API
-
-La respuesta DEBE incluir como mínimo:
-- identificador del producto recomendado;
-- tipo CROSS_SELL o UPSELL;
-- prioridad de la regla;
-- orden de presentación;
-- precio vigente;
-- disponibilidad.
-
-Si no existen resultados válidos, se devuelve una lista vacía.
-
-### Requisito 10: Consultar reglas configuradas
-
-La consulta administrativa DEBE mostrar como mínimo:
-- nombre;
-- tipo;
-- origen;
-- prioridad;
-- estado;
-- fecha/hora de inicio y fin;
-- productos recomendados y su orden;
-- criterio de superioridad y justificación comercial opcional de cada producto recomendado cuando la regla sea UPSELL.
-
-## 6. Requisitos no funcionales
-
-- Rendimiento: respuesta adecuada para interacción en tiempo real.
-- Seguridad: solo Gestor Comercial autorizado administra reglas.
-- Auditoría: registrar creación y última modificación.
-- Integración: recomendaciones expuestas por API.
-- Escalabilidad: permitir incorporar nuevas reglas sin modificar la lógica de los canales consumidores.
+## 6. NFR
+Administración autorizada; auditoría de creación/modificación; respuesta apta para interacción en tiempo real.
 
 ## 7. Fuera de alcance
-
-- Inteligencia artificial o machine learning.
-- Interpretación de lenguaje natural, intención conversacional o personalización específica del Chatbot; esta capacidad solo entrega candidatos de merchandising.
-- Historial de navegación o compras.
-- Determinar o verificar automáticamente si una alternativa es “superior”.
-- Agregar o reemplazar automáticamente productos en una compra.
-- Pantalla administrativa «Probar recomendaciones»; las recomendaciones se consultan mediante la API y son consumidas por los canales.
+IA/ML, lenguaje natural, personalización histórica, verificación automática de superioridad, reemplazo automático de productos y simulador administrativo.
 
 ## Criterio de completitud
-
-La capacidad se considera correctamente implementada cuando todos los requisitos anteriores se cumplen.
+Se cumplen origen, criterio, prioridad, orden, vigencia, filtrado y deduplicación sin añadir simulación administrativa.

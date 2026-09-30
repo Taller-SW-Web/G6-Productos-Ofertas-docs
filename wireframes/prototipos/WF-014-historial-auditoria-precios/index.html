@@ -1,1139 +1,253 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WF-014 — Historial de auditoría de precios</title>
-  <style>
-    :root {
-      --surface: #ffffff;
-      --neutral-10: #f3f4f6;
-      --neutral-20: #e5e7eb;
-      --neutral-30: #d1d5db;
-      --neutral-50: #6b7280;
-      --neutral-70: #374151;
-      --neutral-90: #111827;
-      --radius: 4px;
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: var(--neutral-90);
-      background: var(--surface);
-    }
-    * { box-sizing: border-box; }
-    html { min-width: 320px; }
-    body {
-      margin: 0;
-      background: var(--surface);
-      font-size: 16px;
-      line-height: 1.5;
-    }
-    button, input, select, textarea { font: inherit; color: inherit; }
-    button { min-height: 44px; cursor: pointer; }
-    button:disabled {
-      cursor: not-allowed;
-      color: var(--neutral-50);
-      border-color: var(--neutral-30);
-      background: var(--neutral-10);
-    }
-    a, button, input, select, textarea { outline-offset: 3px; }
-    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
-      outline: 3px solid var(--neutral-90);
-    }
-    input[type="checkbox"], input[type="radio"] { accent-color: var(--neutral-90); }
-    .app-shell { min-height: 100vh; display: flex; flex-direction: column; }
-    .topbar { border-bottom: 1px solid var(--neutral-30); background: var(--surface); }
-    .topbar-inner {
-      max-width: 1200px;
-      margin: auto;
-      padding: 14px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; font-weight: 700; }
-    .brand-mark {
-      width: 34px;
-      height: 34px;
-      border: 2px solid var(--neutral-90);
-      display: grid;
-      place-items: center;
-      flex: 0 0 auto;
-      font-family: "Roboto Mono", monospace;
-      font-size: 12px;
-    }
-    .brand-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
-    .crumb { color: var(--neutral-50); font-size: 14px; }
-    .page { max-width: 1200px; margin: auto; padding: 32px 24px 64px; width: 100%; flex: 1; }
-    .page-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 24px;
-      margin-bottom: 24px;
-    }
-    .page-header h1 { font-size: 30px; line-height: 1.15; margin: 0 0 8px; font-weight: 700; }
-    .page-header p { margin: 0; color: var(--neutral-50); max-width: 780px; }
-    h2 { font-size: 22px; line-height: 1.2; margin: 0 0 16px; }
-    h3 { font-size: 18px; line-height: 1.3; margin: 0 0 12px; }
-    .mono { font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
-    .btn {
-      border: 1px solid var(--neutral-90);
-      background: var(--surface);
-      padding: 10px 16px;
-      border-radius: var(--radius);
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      text-decoration: none;
-      white-space: nowrap;
-    }
-    .btn-primary { background: var(--neutral-90); color: var(--surface); }
-    .btn-quiet { border-color: var(--neutral-30); font-weight: 500; }
-    .button-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .button-row.end { justify-content: flex-end; }
-    .card { border: 1px solid var(--neutral-30); background: var(--surface); padding: 24px; margin-bottom: 20px; }
-    .card-title { font-size: 18px; font-weight: 600; margin: 0 0 16px; }
-    .muted { color: var(--neutral-50); }
-    .small { font-size: 14px; }
-    .tag {
-      border: 1px solid var(--neutral-30);
-      padding: 3px 8px;
-      font-size: 12px;
-      font-family: "Roboto Mono", monospace;
-      font-weight: 600;
-      display: inline-block;
-      background: var(--neutral-10);
-    }
-    .tag.strong { border-color: var(--neutral-90); background: var(--surface); }
-    .notice {
-      border: 1px solid var(--neutral-90);
-      padding: 16px;
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      background: var(--surface);
-      margin-bottom: 20px;
-    }
-    .notice-icon {
-      width: 24px;
-      height: 24px;
-      min-width: 24px;
-      border: 1px solid var(--neutral-90);
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      font-weight: 700;
-      font-size: 13px;
-    }
-    .notice.error { border-width: 2px; }
-    .notice.warn { border-color: var(--neutral-50); }
-    .toast {
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      border: 2px solid var(--neutral-90);
-      background: var(--surface);
-      padding: 14px 18px;
-      max-width: 380px;
-      z-index: 100;
-      display: none;
-      font-weight: 600;
-    }
-    .toast.show { display: block; }
-
-    /* Formulario de Filtros */
-    .filter-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-    .field { margin-bottom: 12px; }
-    label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 13px; }
-    input[type="text"], input[type="datetime-local"], select {
-      width: 100%;
-      border: 1px solid var(--neutral-30);
-      background: var(--surface);
-      padding: 8px 12px;
-      border-radius: var(--radius);
-      min-height: 44px;
-    }
-    .field-error {
-      display: block;
-      color: var(--neutral-90);
-      background: var(--neutral-10);
-      border: 1px solid var(--neutral-90);
-      padding: 6px 10px;
-      margin-top: 6px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    /* Tabla de Auditoría */
-    .table-wrap {
-      border: 1px solid var(--neutral-30);
-      overflow-x: auto;
-      background: var(--surface);
-      margin-bottom: 16px;
-    }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th, td { padding: 12px 14px; border-bottom: 1px solid var(--neutral-30); vertical-align: middle; }
-    th {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      font-family: "Roboto Mono", monospace;
-      font-weight: 600;
-      color: var(--neutral-70);
-      background: var(--neutral-10);
-      white-space: nowrap;
-    }
-    tbody tr:last-child td { border-bottom: 0; }
-    tbody tr:hover { background: var(--neutral-10); cursor: pointer; }
-    .col-nowrap { white-space: nowrap; }
-
-    /* Variación porcentual */
-    .diff-neg { font-family: "Roboto Mono", monospace; font-weight: 700; color: var(--neutral-90); }
-    .diff-pos { font-family: "Roboto Mono", monospace; font-weight: 700; color: var(--neutral-90); }
-
-    /* Modales */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(17,24,39,.5);
-      z-index: 90;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-    .overlay.open { display: flex; }
-    .dialog {
-      width: min(640px, 100%);
-      max-height: calc(100vh - 48px);
-      overflow-y: auto;
-      background: var(--surface);
-      border: 2px solid var(--neutral-90);
-      padding: 24px;
-    }
-    .dialog-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: flex-start;
-      margin-bottom: 18px;
-      border-bottom: 1px solid var(--neutral-30);
-      padding-bottom: 12px;
-    }
-    .dialog-header h2 { margin: 0; font-size: 20px; }
-    .icon-button {
-      width: 44px;
-      height: 44px;
-      border: 1px solid var(--neutral-90);
-      background: var(--surface);
-      font-size: 20px;
-      line-height: 1;
-    }
-    .spinner {
-      display: inline-block;
-      width: 18px;
-      height: 18px;
-      border: 2px solid var(--neutral-30);
-      border-top-color: var(--neutral-90);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      vertical-align: -3px;
-      margin-right: 8px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Detalle Key-Value */
-    .kv-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 16px;
-    }
-    .kv-item {
-      background: var(--neutral-10);
-      padding: 10px 14px;
-      border: 1px solid var(--neutral-30);
-    }
-    .kv-item.full { grid-column: 1 / -1; }
-    .kv-lbl {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      color: var(--neutral-50);
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .kv-val { font-size: 14px; font-weight: 600; word-break: break-all; }
-
-    /* Paginación */
-    .pagination-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    /* Membrete reporte PDF */
-    .pdf-preview-box {
-      border: 2px solid var(--neutral-90);
-      background: var(--surface);
-      padding: 24px;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-    .pdf-header {
-      border-bottom: 2px solid var(--neutral-90);
-      padding-bottom: 14px;
-      margin-bottom: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    @media (max-width: 900px) {
-      .kv-grid { grid-template-columns: 1fr; }
-      .page-header { flex-direction: column; }
-    }
-    @media (max-width: 600px) {
-      .topbar-inner { padding: 10px 16px; }
-      .crumb { display: none; }
-      .page { padding: 20px 16px 48px; }
-      .page-header h1 { font-size: 24px; }
-      .filter-grid { grid-template-columns: 1fr; }
-      .button-row { display: grid; grid-template-columns: 1fr; width: 100%; }
-      .button-row .btn { width: 100%; min-height: 44px; }
-      .dialog { padding: 16px; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Historial de auditoría de precios</title>
+<style>
+:root{
+  --surface:#FFFFFF;
+  --n10:#F3F4F6;
+  --n30:#D1D5DB;
+  --n50:#6B7280;
+  --n90:#111827;
+}
+*{box-sizing:border-box}
+html{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--n90);background:var(--surface)}
+body{margin:0;background:var(--surface);line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit;min-height:44px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{
+  outline:3px solid var(--n90);outline-offset:2px
+}
+.top{border-bottom:1px solid var(--n30);background:var(--surface)}
+.topin,.wrap{max-width:1200px;margin:auto;padding-left:24px;padding-right:24px}
+.topin{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.wrap{padding-top:32px;padding-bottom:64px}
+.brand{font-weight:700}.crumb,.muted{color:var(--n50)}.small{font-size:13px}
+.head{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap}
+.head h1{font-size:clamp(28px,4vw,36px);line-height:1.15;margin:0 0 8px}
+.head h2{margin:0 0 8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--n90);background:var(--surface);padding:10px 14px;border-radius:4px;cursor:pointer}
+.btn.primary{background:var(--n90);color:var(--surface)}
+.btn[disabled]{color:var(--n50);border-color:var(--n30);background:var(--n10);cursor:not-allowed}
+.panel{border:1px solid var(--n30);padding:16px;margin-bottom:16px;background:var(--surface)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.wide{grid-column:1/-1}
+label{display:block;font-weight:600;margin-bottom:6px}
+.field{margin-bottom:16px}
+.input,select,textarea{width:100%;border:1px solid var(--n30);border-radius:4px;background:var(--surface);padding:10px 12px}
+textarea{min-height:110px;resize:vertical}
+.help,.count{font-size:13px;color:var(--n50)}
+.over{font-weight:700;text-decoration:underline;color:var(--n90)}
+.notice{border:1px solid var(--n90);padding:14px 16px;background:var(--surface)}
+.notice.soft{border-color:var(--n30);background:var(--n10)}
+.preview{border:1px solid var(--n30);padding:16px;background:var(--surface)}
+.preview .url{font-family:"Roboto Mono",ui-monospace,monospace;font-size:13px;color:var(--n50);word-break:break-all}
+.preview .title{font-size:20px;font-weight:700;margin:6px 0}
+.preview .desc{color:var(--n50)}
+.tablewrap{overflow:auto;border:1px solid var(--n30)}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th,td{padding:12px;border-bottom:1px solid var(--n30);text-align:left;vertical-align:top}
+th{background:var(--n10);font-size:13px}
+tbody tr:last-child td{border-bottom:0}
+.badge{display:inline-flex;align-items:center;border:1px solid var(--n30);padding:3px 9px;border-radius:999px;font-size:13px}
+.mono{font-family:"Roboto Mono",ui-monospace,monospace}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:30}
+.overlay.open{display:flex}
+.dialog{background:var(--surface);border:2px solid var(--n90);width:min(720px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:20px}
+.dialog h2{margin-top:0}
+.empty{text-align:center;border:1px dashed var(--n30);padding:48px 20px}
+.hidden{display:none!important}
+.statusbox{border:1px solid var(--n30);padding:16px;background:var(--n10)}
+.progress{height:10px;border:1px solid var(--n30);background:var(--surface)}
+.progress span{display:block;height:100%;background:var(--n90)}
+.filters{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:900px){
+  .grid,.grid3,.filters{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .topin,.wrap{padding-left:16px;padding-right:16px}
+  .topin,.head{display:block}
+  .grid,.grid3,.filters{grid-template-columns:1fr}
+  .row>.btn{flex:1 1 100%}
+  table{min-width:680px}
+}
+</style>
 </head>
 <body>
-<div class="app-shell">
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <div class="brand-mark" aria-hidden="true">PO</div>
-        <span class="brand-text">PO Productos y ofertas</span>
-      </div>
-      <div class="crumb">Control interno / Auditoría de precios</div> (docs: sincronizacion y correccion integral de specs, hu y wireframes segun nueva version consolidada)
-    </div>
-  </header>
+<header class="top"><div class="topin"><div class="brand">PO Productos y ofertas</div><div class="crumb">Control interno / Auditoría de precios</div></div></header>
+<main class="wrap" id="app"></main>
 
-  <main id="app" class="page" tabindex="-1"></main>
-</div>
-
-<!-- Modal S-02: Detalle de un registro de auditoría -->
-<div id="detailOverlay" class="overlay" aria-hidden="true">
+<div class="overlay" id="detailModal" aria-hidden="true">
   <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
-    <div class="dialog-header">
-      <div>
-        <h2 id="detailTitle">Detalle del registro de auditoría</h2>
-        <p class="muted small">Trazabilidad inmutable (Append-Only) registrada en el servicio de auditoría.</p>
-      </div>
-      <button class="icon-button" type="button" id="detailCloseBtn" aria-label="Cerrar modal">×</button>
-    </div>
+    <h2 id="detailTitle">Detalle de auditoría</h2>
     <div id="detailBody"></div>
+    <button class="btn" id="detailClose">Cerrar</button>
   </section>
 </div>
 
-<!-- Modal S-03: Exportar CSV -->
-<div id="csvOverlay" class="overlay" aria-hidden="true">
-  <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="csvTitle">
-    <div class="dialog-header">
-      <div>
-        <h2 id="csvTitle">Exportar a CSV</h2>
-        <p class="muted small">Generación de archivo de auditoría tabulado.</p>
-      </div>
-      <button class="icon-button" type="button" id="csvCloseBtn" aria-label="Cerrar modal">×</button>
+<div class="overlay" id="exportModal" aria-hidden="true">
+  <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+    <h2 id="exportTitle">Exportación</h2>
+    <div id="exportBody"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:16px">
+      <button class="btn" id="exportClose">Cerrar</button>
     </div>
-    <div id="csvBody"></div>
   </section>
 </div>
-
-<!-- Modal S-04: Exportar PDF -->
-<div id="pdfOverlay" class="overlay" aria-hidden="true">
-  <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="pdfTitle">
-    <div class="dialog-header">
-      <div>
-        <h2 id="pdfTitle">Exportar a PDF</h2>
-        <p class="muted small">Documento formal con membrete de control interno.</p>
-      </div>
-      <button class="icon-button" type="button" id="pdfCloseBtn" aria-label="Cerrar modal">×</button>
-    </div>
-    <div id="pdfBody"></div>
-  </section>
-</div>
-
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
-(() => {
-  'use strict';
+const rows=[
+  {id:'A1',sku:'RUN-42',type:'Precio regular',op:'Modificación de precio',old:349.90,newp:319.90,varp:-8.57,user:'gestor@tienda.com',ip:'190.10.10.1',channel:'Gestión interna',batch:null,reason:'Ajuste comercial',ts:'2026-09-28T14:00:00Z'},
+  {id:'A2',sku:'NUEVO-01',type:'Precio regular',op:'Creación de precio',old:null,newp:129.90,varp:null,user:'gestor@tienda.com',ip:'190.10.10.1',channel:'Gestión interna',batch:null,reason:'Alta de producto',ts:'2026-09-28T13:00:00Z'},
+  {id:'A3',sku:'RUN-41',type:'Oferta',op:'Retiro de oferta',old:170.00,newp:null,varp:null,user:'admin@tienda.com',ip:'190.10.10.2',channel:'Carga masiva',batch:'B-44',reason:'Fin de oferta',ts:'2026-09-28T12:00:00Z'}
+];
+const app=document.getElementById('app');
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const price=(v,kind)=>v==null?(kind==='old'?'Sin precio anterior':'Sin oferta'):`S/ ${v.toFixed(2)}`;
+const variation=v=>v==null?'No aplicable':`${v>0?'+':''}${v.toFixed(2)} %`;
+const params=new URLSearchParams(location.search);
+const demoState=params.get('state')||'normal';
 
-  /*
-    WF-014 — Historial de auditoría de precios
-    Estados documentales inspeccionables vía query param:
-      ?state=no-permission    -> usuario sin permisos requeridos (PRICING_AUDIT_READ o PRICING_AUDIT_EXPORT)
-      ?state=session-expired  -> sesión expirada
-      ?state=s01-e            -> error temporal de consulta (S-01-E)
-  */
+function render(){
+  if(demoState==='no-permission'){
+    app.innerHTML=`<div class="head"><div><h1>Historial de auditoría de precios</h1></div></div><div class="notice">No tienes permiso para consultar esta información.</div>`;
+    return;
+  }
+  if(demoState==='session-expired'){
+    app.innerHTML=`<div class="head"><div><h1>Historial de auditoría de precios</h1></div></div><div class="notice">Tu sesión finalizó. Ingresa nuevamente para continuar.</div>`;
+    return;
+  }
+  const visibleRows=demoState==='empty'?[]:rows;
+  app.innerHTML=`
+  <div class="head">
+    <div><h1>Historial de auditoría de precios</h1><p class="muted">Bitácora inmutable de cambios confirmados.</p></div>
+    <div class="row"><button class="btn" id="exportCsv">Exportar CSV</button><button class="btn primary" id="exportPdf">Exportar PDF</button></div>
+  </div>
 
-  // Base de datos inmutable de auditoría (registros simulados ordenados descendentemente)
-  const auditRecords = [
-    {
-      id_auditoria: 'AUD-2026-0918-001',
-      product_id: 'PROD-RUN-ULTRALIGHT',
-      sku: 'SKU-RUN-001-42',
-      tipo_precio: 'Regular',
-      precio_anterior: 349.90,
-      precio_nuevo: 319.90,
-      variacion: -8.57,
-      currency: 'PEN',
-      usuario_id: 'USR-8172',
-      usuario_email: 'gestor.precios@tienda.com',
-      ip_origen: '190.234.12.89',
-      canal_origen: 'BACKOFFICE',
-      batch_id: null,
-      motivo_cambio: 'Ajuste por inicio de campaña primavera según orden comercial #2026-B.',
-      timestamp: '2026-09-18T14:32:10Z'
-    },
-    {
-      id_auditoria: 'AUD-2026-0918-002',
-      product_id: 'PROD-RUN-ULTRALIGHT',
-      sku: 'SKU-RUN-001-42',
-      tipo_precio: 'Oferta',
-      precio_anterior: 289.90,
-      precio_nuevo: 269.90,
-      variacion: -6.90,
-      currency: 'PEN',
-      usuario_id: 'USR-8172',
-      usuario_email: 'gestor.precios@tienda.com',
-      ip_origen: '190.234.12.89',
-      canal_origen: 'BACKOFFICE',
-      batch_id: null,
-      motivo_cambio: 'Descuento adicional flash para suscriptores.',
-      timestamp: '2026-09-18T14:35:00Z'
-    },
-    {
-      id_auditoria: 'AUD-2026-0917-045',
-      product_id: 'PROD-FUT-OFICIAL',
-      sku: 'SKU-FUT-010-M',
-      tipo_precio: 'Regular',
-      precio_anterior: 179.00,
-      precio_nuevo: 199.00,
-      variacion: 11.17,
-      currency: 'PEN',
-      usuario_id: 'USR-9011',
-      usuario_email: 'admin.catalogo@tienda.com',
-      ip_origen: '200.48.91.14',
-      canal_origen: 'BULK_IMPORT',
-      batch_id: 'BATCH-20260917-0911',
-      motivo_cambio: 'Actualización trimestral por costo de importación de proveedor deportivo.',
-      timestamp: '2026-09-17T09:12:44Z'
-    },
-    {
-      id_auditoria: 'AUD-2026-0916-102',
-      product_id: 'PROD-BAL-PROF',
-      sku: 'SKU-BAL-005',
-      tipo_precio: 'Regular',
-      precio_anterior: 135.00,
-      precio_nuevo: 120.00,
-      variacion: -11.11,
-      currency: 'PEN',
-      usuario_id: 'USR-9011',
-      usuario_email: 'admin.catalogo@tienda.com',
-      ip_origen: '200.48.91.14',
-      canal_origen: 'BULK_IMPORT',
-      batch_id: 'BATCH-20260916-0442',
-      motivo_cambio: 'Liquidación de inventario remanente balones clausura.',
-      timestamp: '2026-09-16T16:04:22Z'
-    },
-    {
-      id_auditoria: 'AUD-2026-0915-088',
-      product_id: 'PROD-ZAP-TRAIL',
-      sku: 'SKU-TRL-088-41',
-      tipo_precio: 'Regular',
-      precio_anterior: 420.00,
-      precio_nuevo: 449.00,
-      variacion: 6.90,
-      currency: 'PEN',
-      usuario_id: 'USR-SYSTEM-API',
-      usuario_email: 'integracion.erp@tienda.com',
-      ip_origen: '10.0.12.5',
-      canal_origen: 'API',
-      batch_id: null,
-      motivo_cambio: 'Sincronización nocturna automática con ERP SAP - Lista Venta Mayorista.',
-      timestamp: '2026-09-15T23:59:01Z'
-    },
-    {
-      id_auditoria: 'AUD-2026-0914-012',
-      product_id: 'PROD-ACC-MEDIAS',
-      sku: 'SKU-ACC-004-U',
-      tipo_precio: 'Regular',
-      precio_anterior: 25.00,
-      precio_nuevo: 28.00,
-      variacion: 12.00,
-      currency: 'PEN',
-      usuario_id: 'USR-8172',
-      usuario_email: 'gestor.precios@tienda.com',
-      ip_origen: '190.234.12.89',
-      canal_origen: 'BACKOFFICE',
-      batch_id: null,
-      motivo_cambio: 'Corrección de tarifa mínima de accesorios según nueva directriz comercial.',
-      timestamp: '2026-09-14T11:20:18Z'
-    }
-  ];
+  <section class="panel">
+    <h2>Filtros</h2>
+    <div class="filters">
+      <div class="field"><label for="skuFilter">SKU</label><input id="skuFilter" class="input" placeholder="Ej. RUN-42"></div>
+      <div class="field"><label for="userFilter">Usuario</label><input id="userFilter" class="input" placeholder="Correo o identificador"></div>
+      <div class="field"><label for="channelFilter">Canal</label><select id="channelFilter"><option>Todos los canales</option><option>Gestión interna</option><option>Carga masiva</option><option>Integración externa</option></select></div>
+      <div class="field"><label for="fromFilter">Fecha desde</label><input id="fromFilter" class="input" type="date"></div>
+      <div class="field"><label for="toFilter">Fecha hasta</label><input id="toFilter" class="input" type="date"></div>
+      <div class="field"><label for="batchFilter">Lote</label><input id="batchFilter" class="input" placeholder="Ej. B-44"></div>
+    </div>
+    <div class="row"><button class="btn primary" id="applyFilters">Aplicar filtros</button><button class="btn" id="clearFilters">Limpiar</button></div>
+  </section>
 
-  // Estado local del visor
-  const state = {
-    filters: {
-      sku: '',
-      desde: '',
-      hasta: '',
-      usuario: '',
-      canal: 'Todos',
-      batch_id: ''
-    },
-    filterError: null,
-    queryState: new URLSearchParams(location.search).get('state') || '',
-    currentPage: 1,
-    pageSize: 10,
-    selectedRecord: null,
-    simulatedTotalCount: null // para simular casos >500 en PDF
-  };
+  <div id="resultArea">
+    ${visibleRows.length?renderTable(visibleRows):`<div class="empty"><h2>Sin resultados</h2><p class="muted">No encontramos registros con los filtros seleccionados.</p></div>`}
+  </div>`;
+  bind();
+  if(demoState==='not-found')openMissingDetail();
+}
 
-  const app = document.getElementById('app');
-  const toast = document.getElementById('toast');
-  let toastTimer = null;
+function renderTable(data){
+  return `<div class="tablewrap"><table>
+    <thead><tr><th>Fecha</th><th>SKU</th><th>Operación</th><th>Precio anterior</th><th>Precio nuevo</th><th>Variación</th><th>Usuario</th><th>Lote</th><th>Acciones</th></tr></thead>
+    <tbody>${data.map(r=>`<tr>
+      <td>${new Date(r.ts).toLocaleString('es-PE')}</td>
+      <td class="mono">${esc(r.sku)}</td>
+      <td>${esc(r.op)}</td>
+      <td>${price(r.old,'old')}</td>
+      <td>${price(r.newp,'new')}</td>
+      <td>${variation(r.varp)}</td>
+      <td>${esc(r.user)}</td>
+      <td>${esc(r.batch??'No aplica')}</td>
+      <td><button class="btn" data-id="${r.id}">Ver detalle</button></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
 
-  function escapeHtml(v) {
-    return String(v ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch]));
+function bind(){
+  document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>openDetail(b.dataset.id));
+  applyFilters.onclick=applyFilterValues;
+  clearFilters.onclick=()=>{['skuFilter','userFilter','fromFilter','toFilter','batchFilter'].forEach(id=>document.getElementById(id).value='');channelFilter.selectedIndex=0;applyFilterValues()};
+  exportCsv.onclick=()=>startExport('CSV');
+  exportPdf.onclick=()=>startExport('PDF');
+}
+
+function applyFilterValues(){
+  const sku=skuFilter.value.trim().toLowerCase();
+  const user=userFilter.value.trim().toLowerCase();
+  const channel=channelFilter.value;
+  const from=fromFilter.value?new Date(fromFilter.value+'T00:00:00'):null;
+  const to=toFilter.value?new Date(toFilter.value+'T23:59:59'):null;
+  const batch=batchFilter.value.trim().toLowerCase();
+
+  const filtered=rows.filter(r=>{
+    const ts=new Date(r.ts);
+    return (!sku||r.sku.toLowerCase().includes(sku))
+      &&(!user||r.user.toLowerCase().includes(user))
+      &&(channel==='Todos los canales'||r.channel===channel)
+      &&(!from||ts>=from)
+      &&(!to||ts<=to)
+      &&(!batch||(r.batch||'').toLowerCase().includes(batch));
+  });
+
+  resultArea.innerHTML=filtered.length?renderTable(filtered):`<div class="empty"><h2>Sin resultados</h2><p class="muted">No encontramos registros con los filtros seleccionados.</p></div>`;
+  document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>openDetail(b.dataset.id));
+}
+
+function openDetail(id){
+  const r=rows.find(x=>x.id===id);
+  if(!r){openMissingDetail();return}
+  detailTitle.textContent='Detalle de auditoría';
+  detailBody.innerHTML=`<dl>
+    <dt>SKU</dt><dd class="mono">${esc(r.sku)}</dd>
+    <dt>Tipo de precio / cambio</dt><dd>${esc(r.type)} / ${esc(r.op)}</dd>
+    <dt>Precio anterior</dt><dd>${price(r.old,'old')}</dd>
+    <dt>Precio nuevo</dt><dd>${price(r.newp,'new')}</dd>
+    <dt>Variación</dt><dd>${variation(r.varp)}</dd>
+    <dt>Usuario</dt><dd>${esc(r.user)}</dd>
+    <dt>IP de origen</dt><dd class="mono">${esc(r.ip)}</dd>
+    <dt>Origen del cambio</dt><dd>${esc(r.channel)}</dd>
+    <dt>Lote</dt><dd>${esc(r.batch??'No aplica')}</dd>
+    <dt>Motivo</dt><dd>${esc(r.reason)}</dd>
+  </dl><div class="notice soft">Este registro es de solo lectura y no puede editarse desde esta interfaz.</div>`;
+  detailModal.classList.add('open');detailModal.setAttribute('aria-hidden','false');
+}
+
+function openMissingDetail(){
+  detailTitle.textContent='No encontramos este registro de auditoría';
+  detailBody.innerHTML=`<p class="muted">El registro pudo dejar de estar disponible o el enlace no corresponde a un asiento existente.</p><div class="notice soft">Vuelve al listado para continuar.</div>`;
+  detailModal.classList.add('open');detailModal.setAttribute('aria-hidden','false');
+}
+
+detailClose.onclick=()=>{detailModal.classList.remove('open');detailModal.setAttribute('aria-hidden','true')};
+exportClose.onclick=()=>{exportModal.classList.remove('open');exportModal.setAttribute('aria-hidden','true')};
+
+function startExport(format){
+  exportModal.classList.add('open');exportModal.setAttribute('aria-hidden','false');
+  exportTitle.textContent=`Exportar ${format}`;
+
+  const forced=demoState;
+  if(forced==='export-error'){
+    exportBody.innerHTML=`<div class="notice"><strong>No pudimos generar la exportación.</strong><p>Inténtalo nuevamente o ajusta los filtros.</p></div>`;
+    return;
   }
 
-  function showToast(msg) {
-    clearTimeout(toastTimer);
-    toast.textContent = msg;
-    toast.classList.add('show');
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+  const simulatedCount = forced==='csv-limit' ? 120000 : forced==='pdf-limit' ? 820 : rows.length;
+  const max = format==='CSV' ? 100000 : 500;
+
+  if(simulatedCount>max){
+    exportBody.innerHTML=`<div class="notice"><strong>El resultado es demasiado grande para ${format}.</strong><p>${format==='CSV'?'CSV admite hasta 100,000 registros.':'PDF admite hasta 500 registros.'} Acota los filtros${format==='PDF'?' o utiliza CSV':''}.</p></div>`;
+    return;
   }
 
-  function formatUtcDate(isoStr) {
-    if (!isoStr) return '—';
-    const d = new Date(isoStr);
-    return isNaN(d.getTime()) ? isoStr : d.toLocaleString('es-PE', { timeZone: 'UTC', hour12: false }) + ' UTC';
-  }
-
-  function formatVariacion(val) {
-    const sign = val > 0 ? '+' : '';
-    const cls = val < 0 ? 'diff-neg' : 'diff-pos';
-    return `<span class="${cls}">${sign}${val.toFixed(2)}%</span>`;
-  }
-
-  // --- Render Global Guards ---
-  function renderGlobalState() {
-    if (state.queryState === 'no-permission') {
-      app.innerHTML = `
-        <div class="page-header">
-          <div>
-            <h1>Historial de auditoría de precios</h1>
-            <p>Bitácora inmutable de cambios de precio.</p>
-          </div>
-        </div>
-        <div class="notice error">
-          <span class="notice-icon" aria-hidden="true">!</span>
-          <div>
-            <h3>Acceso restringido</h3>
-            <p>No tienes permiso para consultar el historial de auditoría. Se requiere el permiso <code>PRICING_AUDIT_READ</code> o <code>PRICING_AUDIT_EXPORT</code>.</p>
-          </div>
-        </div>
-        <button class="btn" type="button" onclick="location.search=''">Volver al historial</button>
-      `;
-      return true;
-    }
-    if (state.queryState === 'session-expired') {
-      app.innerHTML = `
-        <div class="page-header">
-          <div>
-            <h1>Historial de auditoría de precios</h1>
-            <p>Bitácora inmutable de cambios de precio.</p>
-          </div>
-        </div>
-        <div class="notice error">
-          <span class="notice-icon" aria-hidden="true">!</span>
-          <div>
-            <h3>Tu sesión expiró</h3>
-            <p>Inicia sesión nuevamente para continuar consultando la bitácora de auditoría.</p>
-          </div>
-        </div>
-        <button class="btn btn-primary" type="button" onclick="location.search=''">Iniciar sesión</button>
-      `;
-      return true;
-    }
-    if (state.queryState === 's01-e' || state.queryState === 'query-error') {
-      app.innerHTML = `
-        <div class="page-header">
-          <div>
-            <h1>Historial de auditoría de precios</h1>
-            <p>Bitácora inmutable de cambios de precio.</p>
-          </div>
-        </div>
-        <div class="notice error">
-          <span class="notice-icon" aria-hidden="true">!</span>
-          <div>
-            <h3>Error de consulta</h3>
-            <p>No se pudo consultar el historial de auditoría en este momento debido a un fallo transitorio de conexión con el almacén inmutable.</p>
-          </div>
-        </div>
-        <div class="button-row">
-          <button class="btn btn-primary" type="button" onclick="location.search=''">Reintentar consulta</button>
-        </div>
-      `;
-      return true;
-    }
-    return false;
-  }
-
-  // Filtrado de registros
-  function getFilteredRecords() {
-    const f = state.filters;
-    return auditRecords.filter(r => {
-      if (f.sku && !r.sku.toLowerCase().includes(f.sku.toLowerCase())) return false;
-      if (f.usuario && !r.usuario_email.toLowerCase().includes(f.usuario.toLowerCase()) && !r.usuario_id.toLowerCase().includes(f.usuario.toLowerCase())) return false;
-      if (f.canal !== 'Todos' && r.canal_origen !== f.canal) return false;
-      if (f.batch_id && (!r.batch_id || !r.batch_id.toLowerCase().includes(f.batch_id.toLowerCase()))) return false;
-      if (f.desde) {
-        const d = new Date(f.desde).toISOString();
-        if (r.timestamp < d) return false;
-      }
-      if (f.hasta) {
-        const h = new Date(f.hasta).toISOString();
-        if (r.timestamp > h) return false;
-      }
-      return true;
-    });
-  }
-
-  // --- S-01: Historial de auditoría de precios ---
-  function renderHistory() {
-    const f = state.filters;
-    const records = getFilteredRecords();
-    const effectiveTotal = state.simulatedTotalCount !== null ? state.simulatedTotalCount : records.length;
-
-    let contentHtml = '';
-
-    if (records.length === 0) {
-      // S-01-V: Sin resultados
-      contentHtml = `
-        <div class="notice" style="margin-top:20px; border-width:2px;">
-          <span class="notice-icon" aria-hidden="true">i</span>
-          <div>
-            <h3>Sin resultados de auditoría</h3>
-            <p>No se registraron cambios de precio bajo los criterios seleccionados.</p>
-            <p class="small muted" style="margin-top:6px;">Modifica o limpia los filtros para ampliar la búsqueda en el histórico inmutable.</p>
-          </div>
-        </div>
-      `;
-    } else {
-      // S-01: Tabla con datos
-      contentHtml = `
-        <div class="table-wrap" tabindex="0" role="region" aria-label="Tabla de registros de auditoría">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Fecha / Hora (UTC)</th>
-                <th scope="col">SKU</th>
-                <th scope="col">Tipo</th>
-                <th scope="col">Precio anterior → Nuevo</th>
-                <th scope="col">Variación %</th>
-                <th scope="col">Usuario</th>
-                <th scope="col">Canal</th>
-                <th scope="col">Motivo del cambio</th>
-                <th scope="col">Batch ID</th>
-                <th scope="col">Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${records.map(r => `
-                <tr data-id="${r.id_auditoria}" tabindex="0" role="button" aria-label="Ver detalle de auditoría del SKU ${r.sku}">
-                  <td class="mono col-nowrap">${formatUtcDate(r.timestamp)}</td>
-                  <td class="mono"><strong>${escapeHtml(r.sku)}</strong></td>
-                  <td>${escapeHtml(r.tipo_precio)}</td>
-                  <td class="mono col-nowrap">S/ ${r.precio_anterior.toFixed(2)} → <strong>S/ ${r.precio_nuevo.toFixed(2)}</strong></td>
-                  <td class="col-nowrap">${formatVariacion(r.variacion)}</td>
-                  <td class="small">${escapeHtml(r.usuario_email)}</td>
-                  <td><span class="tag">${escapeHtml(r.canal_origen)}</span></td>
-                  <td class="small" style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(r.motivo_cambio)}">
-                    ${escapeHtml(r.motivo_cambio)}
-                  </td>
-                  <td class="mono small">${r.batch_id ? escapeHtml(r.batch_id) : '<span class="muted">—</span>'}</td>
-                  <td class="col-nowrap">
-                    <button class="btn btn-quiet small btn-view-detail" data-id="${r.id_auditoria}" type="button">Ver detalle</button>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-
-        <div class="pagination-bar">
-          <div class="small muted">
-            Mostrando <strong>${records.length}</strong> registro(s) encontrados (Orden cronológico descendente estricto).
-          </div>
-          <div class="button-row">
-            <button class="btn btn-quiet small" disabled type="button">← Anterior</button>
-            <span class="small mono" style="padding:0 8px;">Página 1 de 1</span>
-            <button class="btn btn-quiet small" disabled type="button">Siguiente →</button>
-          </div>
-        </div>
-      `;
-    }
-
-    app.innerHTML = `
-      <div class="page-header">
-        <div>
-          <h1>Historial de auditoría de precios</h1>
-          <p class="muted">Bitácora inmutable (Append-Only) para trazabilidad, política configurable de retención y archivado, y resolución de reclamos comerciales.</p>
-        </div>
-        <div class="button-row">
-          <button class="btn btn-quiet" id="btn-open-csv" type="button" ${records.length === 0 ? 'disabled' : ''}>Exportar a CSV</button>
-          <button class="btn btn-primary" id="btn-open-pdf" type="button" ${records.length === 0 ? 'disabled' : ''}>Exportar a PDF</button>
-        </div>
-      </div>
-
-      <!-- Panel de Filtros -->
-      <section class="card" aria-labelledby="filter-section-title">
-        <div class="card-title" id="filter-section-title">Filtros de búsqueda</div>
-        
-        <form id="filter-form">
-          <div class="filter-grid">
-            <div class="field">
-              <label for="flt-sku">SKU</label>
-              <input type="text" id="flt-sku" class="mono" value="${escapeHtml(f.sku)}" placeholder="Ej. SKU-RUN-001">
-            </div>
-
-            <div class="field">
-              <label for="flt-desde">Fecha inicial (Desde)</label>
-              <input type="datetime-local" id="flt-desde" value="${escapeHtml(f.desde)}">
-            </div>
-
-            <div class="field">
-              <label for="flt-hasta">Fecha final (Hasta)</label>
-              <input type="datetime-local" id="flt-hasta" value="${escapeHtml(f.hasta)}">
-            </div>
-
-            <div class="field">
-              <label for="flt-user">Usuario (Email o ID)</label>
-              <input type="text" id="flt-user" value="${escapeHtml(f.usuario)}" placeholder="Ej. gestor@tienda.com">
-            </div>
-
-            <div class="field">
-              <label for="flt-canal">Canal de origen</label>
-              <select id="flt-canal">
-                <option value="Todos" ${f.canal === 'Todos' ? 'selected' : ''}>Todos los canales</option>
-                <option value="BACKOFFICE" ${f.canal === 'BACKOFFICE' ? 'selected' : ''}>Backoffice</option>
-                <option value="BULK_IMPORT" ${f.canal === 'BULK_IMPORT' ? 'selected' : ''}>Carga masiva (BULK_IMPORT)</option>
-                <option value="API" ${f.canal === 'API' ? 'selected' : ''}>Integración API</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="flt-batch">Batch ID (Lote)</label>
-              <input type="text" id="flt-batch" class="mono" value="${escapeHtml(f.batch_id)}" placeholder="Ej. BATCH-20260917">
-            </div>
-          </div>
-
-          ${state.filterError ? `<div class="field-error" role="alert" style="margin-bottom:12px;">${escapeHtml(state.filterError)}</div>` : ''}
-
-          <div class="button-row end">
-            <button class="btn btn-quiet" id="btn-clear-filters" type="button">Limpiar filtros</button>
-            <button class="btn btn-primary" type="submit">Buscar</button>
-          </div>
-        </form>
-      </section>
-
-      ${contentHtml}
-    `;
-
-    // Eventos de formulario de filtros
-    const form = document.getElementById('filter-form');
-    form?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const desdeVal = document.getElementById('flt-desde').value;
-      const hastaVal = document.getElementById('flt-hasta').value;
-
-      if (desdeVal && hastaVal && new Date(desdeVal) > new Date(hastaVal)) {
-        state.filterError = 'La fecha inicial no puede ser posterior a la fecha final.';
-        render();
-        return;
-      }
-
-      state.filterError = null;
-      state.simulatedTotalCount = null;
-      state.filters = {
-        sku: document.getElementById('flt-sku').value.trim(),
-        desde: desdeVal,
-        hasta: hastaVal,
-        usuario: document.getElementById('flt-user').value.trim(),
-        canal: document.getElementById('flt-canal').value,
-        batch_id: document.getElementById('flt-batch').value.trim()
-      };
-      render();
-    });
-
-    document.getElementById('btn-clear-filters')?.addEventListener('click', () => {
-      state.filterError = null;
-      state.simulatedTotalCount = null;
-      state.filters = { sku: '', desde: '', hasta: '', usuario: '', canal: 'Todos', batch_id: '' };
-      render();
-    });
-
-    // Filas clickeables y botones "Ver detalle"
-    document.querySelectorAll('.btn-view-detail').forEach(b => {
-      b.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openDetailModal(b.dataset.id);
-      });
-    });
-
-    document.querySelectorAll('tbody tr').forEach(row => {
-      row.addEventListener('click', () => openDetailModal(row.dataset.id));
-      row.addEventListener('keydown', (e) => { if (e.key === 'Enter') openDetailModal(row.dataset.id); });
-    });
-
-    // Modales de exportación
-    document.getElementById('btn-open-csv')?.addEventListener('click', openCsvModal);
-    document.getElementById('btn-open-pdf')?.addEventListener('click', openPdfModal);
-
-    // Demos
-    document.getElementById('demo-filter-empty')?.addEventListener('click', () => {
-      state.filters = { sku: 'SKU-INEXISTENTE-999', desde: '', hasta: '', usuario: '', canal: 'Todos', batch_id: '' };
-      state.simulatedTotalCount = null;
-      render();
-    });
-    document.getElementById('demo-filter-pdf-limit')?.addEventListener('click', () => {
-      state.simulatedTotalCount = 842; // supera 500 para probar S-04-R
-      render();
-      
-    });
-    document.getElementById('demo-filter-reset')?.addEventListener('click', () => {
-      state.filters = { sku: '', desde: '', hasta: '', usuario: '', canal: 'Todos', batch_id: '' };
-      state.simulatedTotalCount = null;
-      render();
-    });
-  }
-
-  // --- S-02: Detalle de un registro de auditoría (Modal) ---
-  function openDetailModal(id) {
-    const record = auditRecords.find(r => r.id_auditoria === id);
-    if (!record) return;
-
-    state.selectedRecord = record;
-    const overlay = document.getElementById('detailOverlay');
-    const body = document.getElementById('detailBody');
-
-    body.innerHTML = `
-      <div class="kv-grid">
-        <div class="kv-item">
-          <div class="kv-lbl">ID de Auditoría</div>
-          <div class="kv-val mono">${escapeHtml(record.id_auditoria)}</div>
-        </div>
-        <div class="kv-item">
-          <div class="kv-lbl">Fecha y hora de registro</div>
-          <div class="kv-val mono">${formatUtcDate(record.timestamp)}</div>
-        </div>
-
-        <div class="kv-item">
-          <div class="kv-lbl">SKU afectado</div>
-          <div class="kv-val mono"><strong>${escapeHtml(record.sku)}</strong></div>
-        </div>
-        <div class="kv-item">
-          <div class="kv-lbl">Product ID (Catálogo)</div>
-          <div class="kv-val mono">${escapeHtml(record.product_id)}</div>
-        </div>
-
-        <div class="kv-item">
-          <div class="kv-lbl">Tipo de precio</div>
-          <div class="kv-val">${escapeHtml(record.tipo_precio)}</div>
-        </div>
-        <div class="kv-item">
-          <div class="kv-lbl">Cambio y variación</div>
-          <div class="kv-val mono">
-            S/ ${record.precio_anterior.toFixed(2)} → <strong>S/ ${record.precio_nuevo.toFixed(2)}</strong> (${formatVariacion(record.variacion)})
-          </div>
-        </div>
-
-        <div class="kv-item">
-          <div class="kv-lbl">Usuario responsable</div>
-          <div class="kv-val">${escapeHtml(record.usuario_email)} <span class="muted small mono">(${record.usuario_id})</span></div>
-        </div>
-        <div class="kv-item">
-          <div class="kv-lbl">IP de origen registrada</div>
-          <div class="kv-val mono">${escapeHtml(record.ip_origen)}</div>
-        </div>
-
-        <div class="kv-item">
-          <div class="kv-lbl">Canal de origen</div>
-          <div class="kv-val"><span class="tag strong">${escapeHtml(record.canal_origen)}</span></div>
-        </div>
-        <div class="kv-item">
-          <div class="kv-lbl">Batch ID de lote</div>
-          <div class="kv-val mono">${record.batch_id ? escapeHtml(record.batch_id) : '<span class="muted">No aplica (Operación individual)</span>'}</div>
-        </div>
-
-        <div class="kv-item full">
-          <div class="kv-lbl">Motivo completo del cambio (Mandatorio)</div>
-          <div class="kv-val" style="font-weight:normal; font-size:15px; line-height:1.5;">${escapeHtml(record.motivo_cambio)}</div>
-        </div>
-      </div>
-
-      <div class="notice" style="margin-bottom:0; background:var(--neutral-10);">
-        <span class="notice-icon" aria-hidden="true">🔒</span>
-        <div>
-          <h3 style="font-size:14px; margin:0 0 2px;">Registro inmutable y protegido</h3>
-          <p class="small muted" style="margin:0;">Los registros de auditoría no pueden ser editados ni eliminados bajo ninguna circunstancia (Append-Only).</p>
-        </div>
-      </div>
-
-      <div class="button-row end" style="margin-top:20px; border-top:1px solid var(--neutral-30); padding-top:16px;">
-        <button class="btn btn-primary" id="btn-close-detail-modal" type="button">Cerrar</button>
-      </div>
-    `;
-
-    overlay.classList.add('open');
-    overlay.setAttribute('aria-hidden', 'false');
-
-    const close = () => {
-      overlay.classList.remove('open');
-      overlay.setAttribute('aria-hidden', 'true');
-    };
-
-    document.getElementById('detailCloseBtn').onclick = close;
-    document.getElementById('btn-close-detail-modal').onclick = close;
-  }
-
-  // --- S-03: Exportar a CSV ---
-  function openCsvModal() {
-    const overlay = document.getElementById('csvOverlay');
-    const body = document.getElementById('csvBody');
-    const count = state.simulatedTotalCount !== null ? state.simulatedTotalCount : getFilteredRecords().length;
-
-    body.innerHTML = `
-      <p style="margin-bottom:14px;">
-        Se generará un archivo CSV estructurado con todas las columnas de auditoría para los <strong>${count} registros</strong> resultantes de los filtros actuales.
-      </p>
-
-      <div class="notice" style="background:var(--neutral-10);">
-        <span class="notice-icon" aria-hidden="true">ℹ</span>
-        <div>
-          <h3>Límite de capacidad CSV</h3>
-          <p class="small">El formato CSV admite hasta 100,000 registros para análisis masivo en hojas de cálculo.</p>
-        </div>
-      </div>
-
-      <div class="button-row end" style="margin-top:20px; border-top:1px solid var(--neutral-30); padding-top:16px;">
-        <button class="btn btn-quiet" id="csv-modal-cancel" type="button">Cancelar</button>
-        <button class="btn btn-primary" id="csv-modal-confirm" type="button">Confirmar exportación</button>
-      </div>
-    `;
-
-    overlay.classList.add('open');
-    overlay.setAttribute('aria-hidden', 'false');
-
-    const close = () => {
-      overlay.classList.remove('open');
-      overlay.setAttribute('aria-hidden', 'true');
-    };
-
-    document.getElementById('csvCloseBtn').onclick = close;
-    document.getElementById('csv-modal-cancel').onclick = close;
-
-    const confBtn = document.getElementById('csv-modal-confirm');
-    confBtn.onclick = () => {
-      // S-03-P: Generando
-      confBtn.disabled = true;
-      confBtn.innerHTML = '<span class="spinner"></span> Generando archivo CSV...';
-      document.getElementById('csv-modal-cancel').disabled = true;
-
-      body.innerHTML = `
-        <div style="text-align:center; padding:24px 12px;">
-          <div class="spinner" style="width:32px; height:32px; border-width:3px; margin:0 auto 16px; display:block;"></div>
-          <h3>Generando exportación CSV...</h3>
-          <p class="muted small">Puede salir de esta pantalla; le notificaremos cuando esté listo.</p>
-        </div>
-      `;
-
-      setTimeout(() => {
-        // S-03-L: Listo
-        body.innerHTML = `
-          <div class="notice">
-            <span class="notice-icon" aria-hidden="true">✓</span>
-            <div>
-              <h3>El archivo CSV está listo para descargar.</h3>
-              <p class="small">Contiene ${count} registros correspondientes a la consulta actual.</p>
-            </div>
-          </div>
-
-          <div class="button-row end" style="margin-top:24px; border-top:1px solid var(--neutral-30); padding-top:16px;">
-            <button class="btn btn-quiet" id="csv-done-close" type="button">Volver al historial</button>
-            <button class="btn btn-primary" id="csv-done-download" type="button">Descargar archivo CSV</button>
-          </div>
-        `;
-
-        document.getElementById('csv-done-close').onclick = close;
-        document.getElementById('csv-done-download').onclick = () => {
-          triggerCsvDownload();
-          close();
-        };
-      }, 1500);
-    };
-  }
-
-  function triggerCsvDownload() {
-    const records = getFilteredRecords();
-    let csv = 'id_auditoria,product_id,sku,tipo_precio,precio_anterior,precio_nuevo,variacion_pct,usuario_email,ip_origen,canal_origen,batch_id,motivo_cambio,timestamp_utc\n';
-    records.forEach(r => {
-      csv += `"${r.id_auditoria}","${r.product_id}","${r.sku}","${r.tipo_precio}",${r.precio_anterior},${r.precio_nuevo},${r.variacion},"${r.usuario_email}","${r.ip_origen}","${r.canal_origen}","${r.batch_id || ''}","${r.motivo_cambio.replace(/"/g, '""')}","${r.timestamp}"\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `auditoria_precios_${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    showToast('Descarga de CSV completada.');
-  }
-
-  // --- S-04: Exportar a PDF ---
-  function openPdfModal() {
-    const overlay = document.getElementById('pdfOverlay');
-    const body = document.getElementById('pdfBody');
-    const count = state.simulatedTotalCount !== null ? state.simulatedTotalCount : getFilteredRecords().length;
-
-    const close = () => {
-      overlay.classList.remove('open');
-      overlay.setAttribute('aria-hidden', 'true');
-    };
-
-    document.getElementById('pdfCloseBtn').onclick = close;
-
-    if (count > 500) {
-      // S-04-R: Rechazo por exceso de filas
-      body.innerHTML = `
-        <div class="notice error">
-          <span class="notice-icon" aria-hidden="true">!</span>
-          <div>
-            <h3>Límite de registros para PDF excedido</h3>
-            <p>La exportación en PDF admite un máximo de 500 registros. Por favor acote el rango de búsqueda o utilice la exportación en CSV.</p>
-            <p class="small muted" style="margin-top:6px;">Registros encontrados con los filtros actuales: <strong>${count}</strong>.</p>
-          </div>
-        </div>
-
-        <div class="button-row end" style="margin-top:20px; border-top:1px solid var(--neutral-30); padding-top:16px;">
-          <button class="btn btn-quiet" id="pdf-cancel-adjust" type="button">Ajustar filtros de búsqueda</button>
-          <button class="btn btn-primary" id="pdf-switch-to-csv" type="button">Exportar en CSV en su lugar</button>
-        </div>
-      `;
-
-      document.getElementById('pdf-cancel-adjust').onclick = close;
-      document.getElementById('pdf-switch-to-csv').onclick = () => {
-        close();
-        openCsvModal();
-      };
-      overlay.classList.add('open');
-      overlay.setAttribute('aria-hidden', 'false');
-      return;
-    }
-
-    // S-04: Confirmación PDF (<= 500 filas)
-    body.innerHTML = `
-      <p style="margin-bottom:14px;">
-        Se generará un documento formal de control interno con membrete institucional para los <strong>${count} registros</strong> consultados.
-      </p>
-
-      <div class="notice" style="background:var(--neutral-10);">
-        <span class="notice-icon" aria-hidden="true">ℹ</span>
-        <div>
-          <h3>Límite de informe ejecutivo</h3>
-          <p class="small">El formato PDF admite hasta 500 registros para reportes ejecutivos con marcas temporales auditadas.</p>
-        </div>
-      </div>
-
-      <div class="button-row end" style="margin-top:20px; border-top:1px solid var(--neutral-30); padding-top:16px;">
-        <button class="btn btn-quiet" id="pdf-cancel-btn" type="button">Cancelar</button>
-        <button class="btn btn-primary" id="pdf-confirm-btn" type="button">Confirmar exportación</button>
-      </div>
-    `;
-
-    overlay.classList.add('open');
-    overlay.setAttribute('aria-hidden', 'false');
-
-    document.getElementById('pdf-cancel-btn').onclick = close;
-
-    const confBtn = document.getElementById('pdf-confirm-btn');
-    confBtn.onclick = () => {
-      // S-04-P: Generando
-      confBtn.disabled = true;
-      confBtn.innerHTML = '<span class="spinner"></span> Generando documento PDF...';
-      document.getElementById('pdf-cancel-btn').disabled = true;
-
-      setTimeout(() => {
-        // S-04-L: Documento PDF listo
-        body.innerHTML = `
-          <div class="notice">
-            <span class="notice-icon" aria-hidden="true">✓</span>
-            <div>
-              <h3>El documento PDF está listo para descargar.</h3>
-              <p class="small">Informe emitido con marcas de auditoría y membrete de control interno (${count} registros).</p>
-            </div>
-          </div>
-
-          <div class="pdf-preview-box" style="margin:16px 0;">
-            <div class="pdf-header">
-              <div>
-                <strong>MARKETPLACE DEPORTIVO — REPORTE DE AUDITORÍA</strong><br>
-                <span class="small muted">Oficina de Control Interno y Precios</span>
-              </div>
-              <div style="text-align:right;" class="mono small">
-                Fecha emisión: ${new Date().toISOString().slice(0,10)}<br>
-                Registros: ${count}
-              </div>
-            </div>
-            <div class="small muted">
-              Documento estructurado con sello de inmutabilidad criptográfica y trazabilidad de usuario/IP.
-            </div>
-          </div>
-
-          <div class="button-row end" style="margin-top:20px; border-top:1px solid var(--neutral-30); padding-top:16px;">
-            <button class="btn btn-quiet" id="pdf-done-close" type="button">Volver al historial</button>
-            <button class="btn btn-primary" id="pdf-done-dl" type="button">Descargar documento PDF</button>
-          </div>
-        `;
-
-        document.getElementById('pdf-done-close').onclick = close;
-        document.getElementById('pdf-done-dl').onclick = () => {
-          showToast('Generando vista de impresión / descarga de PDF...');
-          window.print();
-          close();
-        };
-      }, 1200);
-    };
-  }
-
-  // Router general
-  function render() {
-    if (renderGlobalState()) return;
-    renderHistory();
-  }
-
-  // Inicio
-  render();
-})();
+  exportBody.innerHTML=`<div class="statusbox"><strong>Preparando exportación…</strong><p class="muted">La generación puede continuar mientras revisas otros registros.</p><div class="progress"><span id="exportBar" style="width:18%"></span></div></div>`;
+  setTimeout(()=>{if(document.getElementById('exportBar'))exportBar.style.width='62%'},500);
+  setTimeout(()=>{
+    exportBody.innerHTML=`<div class="notice soft"><strong>Exportación lista</strong><p>El archivo ${format} está preparado con ${simulatedCount} registros.</p><button class="btn primary" type="button">Descargar ${format}</button></div>`;
+  },1100);
+}
+
+render();
 </script>
 </body>
 </html>
