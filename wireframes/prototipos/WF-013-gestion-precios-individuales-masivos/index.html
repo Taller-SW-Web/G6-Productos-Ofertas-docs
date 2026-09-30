@@ -1,167 +1,149 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gestión de precios individuales y masivos</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestión de precios</title>
 <style>
-:root{--s:#fff;--n10:#f3f4f6;--n20:#D1D5DB;--n30:#d1d5db;--n50:#6b7280;--n70:#6B7280;--n90:#111827}
-*{box-sizing:border-box}html{min-width:320px}body{margin:0;background:#fff;color:var(--n90);font:16px/1.5 Inter,system-ui,sans-serif}
-button,input,select,textarea{font:inherit;color:inherit;min-height:44px}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--n90);outline-offset:2px}
-.top{border-bottom:1px solid var(--n30)}.topin,.wrap{max-width:1200px;margin:auto;padding:16px 24px}.topin{display:flex;justify-content:space-between;gap:16px}.brand{font-weight:700}.crumb,.muted{color:var(--n50)}.small{font-size:13px}.mono{font-family:"Roboto Mono",monospace}
-.wrap{padding-top:24px;padding-bottom:64px}.tabs{display:flex;gap:4px;border-bottom:1px solid var(--n30);margin-bottom:28px}.tab{border:0;border-bottom:3px solid transparent;background:#fff;padding:10px 14px}.tab.active{border-bottom-color:var(--n90);font-weight:700}
-h1{font-size:clamp(26px,4vw,36px);line-height:1.15;margin:0 0 8px}h2{font-size:24px;margin:0 0 12px}h3{margin:0 0 6px}.pagehead{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:24px}.pagehead p{margin:0;color:var(--n50)}
-.btn{border:1px solid var(--n90);background:#fff;border-radius:4px;padding:10px 14px;cursor:pointer}.btn.primary{background:var(--n90);color:#fff}.btn[disabled]{border-color:var(--n30);color:var(--n50);background:var(--n10);cursor:not-allowed}.row{display:flex;gap:8px;flex-wrap:wrap}
-.panel{border:1px solid var(--n30);padding:16px;margin-bottom:16px}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}.span6{grid-column:span 6}.span12{grid-column:1/-1}.metric{border:1px solid var(--n30);padding:16px}.metric strong{font-size:26px;display:block}.status,.badge{display:inline-block;border:1px solid var(--n70);border-radius:999px;padding:3px 9px;font-size:13px}
-.field{margin-bottom:16px}label{display:block;font-weight:600;margin-bottom:6px}.input,select,textarea{width:100%;border:1px solid var(--n30);border-radius:4px;background:#fff;padding:10px 12px}textarea{min-height:90px}.error{font-size:13px;font-weight:600;margin-top:5px}.invalid{border:2px solid var(--n90)}
-.notice{border:2px solid var(--n90);padding:14px;margin-bottom:16px}.notice p{margin:4px 0 0}.helpbox{border-left:3px solid var(--n90);background:var(--n10);padding:12px;margin:12px 0}
-.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:720px}th,td{padding:12px;text-align:left;border-bottom:1px solid var(--n20);vertical-align:top}th{background:var(--n10);font-size:13px;color:var(--n70)}
-.filebox{border:2px dashed var(--n50);padding:28px;text-align:center}.radio{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--n30);padding:12px;margin-bottom:8px}.radio input{min-height:auto;margin-top:4px;accent-color:var(--n90)}
-.overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}.overlay.open{display:flex}.dialog{width:min(720px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;background:#fff;border:2px solid var(--n90);padding:20px}
-.toast{position:fixed;right:16px;bottom:16px;border:2px solid var(--n90);background:#fff;padding:12px 16px;display:none;z-index:30}.toast.show{display:block}
-@media(max-width:900px){.span6{grid-column:1/-1}.desktop-only{display:none}}
-@media(max-width:600px){.topin,.wrap{padding-left:16px;padding-right:16px}.topin,.pagehead{display:block}.tabs{overflow-x:auto}.tab{white-space:nowrap}.pagehead .row{margin-top:14px}.row>.btn{flex:1 1 100%}.grid{display:block}.metric{margin-bottom:10px}.dialog .row{flex-direction:column}.dialog .btn{width:100%}}
+:root{
+  --surface:#FFFFFF;
+  --neutral-10:#F3F4F6;
+  --neutral-30:#D1D5DB;
+  --neutral-50:#6B7280;
+  --neutral-90:#111827;
+  --primary:#111827;
+  --space-xs:4px;
+  --space-sm:8px;
+  --space-md:16px;
+  --space-lg:32px;
+  --space-xl:64px;
+  --radius-sm:4px;
+  --radius-md:8px;
+}
+*{box-sizing:border-box}
+html{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--neutral-90);background:var(--surface)}
+body{margin:0;background:var(--surface);line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+button{min-height:44px;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--neutral-90);outline-offset:2px}
+.topbar{border-bottom:1px solid var(--neutral-30);background:var(--surface)}
+.topbar-inner{max-width:1200px;margin:auto;min-height:64px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700}
+.brand-mark{width:36px;height:36px;border:2px solid var(--neutral-90);display:grid;place-items:center;font-weight:700}
+.user{font-size:14px;color:var(--neutral-50)}
+.shell{max-width:1200px;margin:auto;padding:24px}
+.breadcrumb{font-size:14px;color:var(--neutral-50);margin-bottom:8px}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px;flex-wrap:wrap}
+.page-head h1{font-size:32px;line-height:1.2;margin:0 0 8px}
+.page-head p{margin:0;color:var(--neutral-50);max-width:760px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--neutral-90);background:var(--surface);padding:10px 16px;border-radius:var(--radius-sm);font-weight:600;min-height:44px}
+.btn.primary{background:var(--neutral-90);color:var(--surface)}
+.btn.ghost{border-color:var(--neutral-30)}
+.btn[disabled]{color:var(--neutral-50);border-color:var(--neutral-30);background:var(--neutral-10);cursor:not-allowed}
+.card{border:1px solid var(--neutral-30);border-radius:var(--radius-md);padding:20px;background:var(--surface)}
+.card h2{font-size:20px;margin:0 0 8px}
+.card h3{font-size:16px;margin:0 0 8px}
+.muted{color:var(--neutral-50)}
+.small{font-size:14px}
+.mono{font-family:"Roboto Mono",ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;letter-spacing:.02em}
+.grid{display:grid;gap:16px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stack{display:grid;gap:16px}
+.field{display:grid;gap:6px}
+.field label{font-size:14px;font-weight:600}
+.input,.select,.textarea{width:100%;border:1px solid var(--neutral-30);border-radius:var(--radius-sm);background:var(--surface);padding:11px 12px;min-height:44px}
+.textarea{min-height:110px;resize:vertical}
+.help{font-size:13px;color:var(--neutral-50)}
+.section-title{font-size:20px;margin:8px 0 12px}
+.table-wrap{overflow:auto;border:1px solid var(--neutral-30);border-radius:var(--radius-md)}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--neutral-30);vertical-align:top}
+th{font-size:12px;font-family:"Roboto Mono",ui-monospace,monospace;letter-spacing:.04em;text-transform:uppercase;background:var(--neutral-10)}
+tbody tr:last-child td{border-bottom:0}
+.badge{display:inline-flex;align-items:center;min-height:28px;border:1px solid var(--neutral-30);border-radius:9999px;padding:3px 10px;font-size:13px;background:var(--surface)}
+.badge.dark{background:var(--neutral-90);color:var(--surface);border-color:var(--neutral-90)}
+.badge.soft{background:var(--neutral-10)}
+.kpi{border:1px solid var(--neutral-30);padding:16px;border-radius:var(--radius-md)}
+.kpi .value{font-size:28px;font-weight:700;line-height:1.1;margin-top:8px}
+.notice{border:1px solid var(--neutral-90);padding:14px 16px;border-radius:var(--radius-sm);background:var(--surface)}
+.notice.soft{border-color:var(--neutral-30);background:var(--neutral-10)}
+.progress{height:10px;border:1px solid var(--neutral-30);background:var(--surface)}
+.progress > span{display:block;height:100%;background:var(--neutral-90)}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--neutral-30);margin-bottom:20px;overflow:auto}
+.tab{background:var(--surface);border:0;border-bottom:3px solid transparent;padding:12px 16px;white-space:nowrap}
+.tab.active{border-bottom-color:var(--neutral-90);font-weight:700}
+.divider{border:0;border-top:1px solid var(--neutral-30);margin:24px 0}
+.placeholder{min-height:120px;background:var(--neutral-10);position:relative;display:grid;place-items:center;color:var(--neutral-50);border:1px solid var(--neutral-30)}
+.placeholder:before,.placeholder:after{content:"";position:absolute;left:0;top:50%;width:100%;border-top:1px solid var(--neutral-30);transform-origin:center}
+.placeholder:before{transform:rotate(17deg)}
+.placeholder:after{transform:rotate(-17deg)}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+.overlay.open{display:flex}
+.modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:var(--surface);border:2px solid var(--neutral-90);padding:24px}
+.modal-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}
+.modal-head h2{margin:0;font-size:24px}
+.icon-btn{width:44px;height:44px;border:1px solid var(--neutral-90);background:var(--surface);font-size:20px}
+.empty{text-align:center;border:1px dashed var(--neutral-30);padding:48px 24px}
+.hidden{display:none!important}
+.toolbar{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+.toolbar .field{min-width:180px;flex:1}
+.stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px}
+.step{border-top:4px solid var(--neutral-30);padding-top:8px;color:var(--neutral-50);font-size:13px}
+.step.active,.step.done{border-top-color:var(--neutral-90);color:var(--neutral-90);font-weight:700}
+.checkbox-row,.radio-row{display:flex;gap:10px;align-items:flex-start}
+input[type="checkbox"],input[type="radio"]{width:18px;height:18px;margin-top:3px;accent-color:#111827}
+.summary-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.summary-list li{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--neutral-30);padding-bottom:10px}
+.summary-list li:last-child{border-bottom:0;padding-bottom:0}
+.inline-status{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--neutral-90)}
+@media(max-width:820px){
+  .shell{padding:16px}
+  .topbar-inner{padding:0 16px}
+  .grid.two,.grid.three,.grid.four{grid-template-columns:1fr}
+  .page-head h1{font-size:28px}
+  .stepper{grid-template-columns:1fr 1fr}
+  .actions{width:100%}
+  .actions .btn{flex:1}
+  table{min-width:640px}
+}
+@media(max-width:520px){
+  .user{display:none}
+  .stepper{grid-template-columns:1fr}
+  .modal{padding:16px}
+}
 </style>
 </head>
 <body>
-<header class="top"><div class="topin"><div class="brand">PO Productos y ofertas</div><div class="crumb">Catálogo / Precios</div></div></header>
-<main class="wrap">
-<nav class="tabs" aria-label="Secciones de precios"><button class="tab active" data-tab="detail">Precio vigente</button><button class="tab" data-tab="history">Consulta histórica</button><button class="tab" data-tab="bulk">Carga masiva</button></nav>
-<div id="app"></div>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="brand-mark">PO</span><span>Productos y ofertas</span></div>
+    <div class="user">Gestor comercial</div>
+  </div>
+</header>
+<main class="shell">
+  <div class="breadcrumb">Catálogo / Precios</div>
+  
+<div class="page-head"><div><h1>Gestión de precios individuales y masivos</h1><p>Consulta precios vigentes, administra cambios y distingue cuándo una variante hereda el precio del producto.</p></div></div>
+<div class="tabs"><button class="tab active" data-tab="current" onclick="tab('current',this)">Precio vigente</button><button class="tab" data-tab="history" onclick="tab('history',this)">Consulta histórica</button><button class="tab" data-tab="bulk" onclick="tab('bulk',this)">Carga masiva</button></div>
+<section id="current" class="stack">
+  <div class="toolbar"><div class="field"><label>Producto o SKU</label><select id="priceItem" class="select" onchange="renderPrice()"><option value="product">Camisa Oxford — producto</option><option value="inherit">CAM-OXF-M-BLA — variante</option><option value="specific">CAM-OXF-L-NEG — variante con precio específico</option></select></div></div>
+  <div class="card stack"><div class="page-head"><div><h2 id="priceTitle">Camisa Oxford</h2><p id="priceNote" class="muted">Precio base del producto.</p></div><span id="priceBadge" class="badge dark">Precio del producto</span></div>
+  <div class="grid three"><div class="kpi"><span class="muted">Precio regular</span><div class="value" id="regularValue">S/ 89.90</div></div><div class="kpi"><span class="muted">Oferta</span><div class="value" id="offerValue">—</div></div><div class="kpi"><span class="muted">Alcance</span><div><strong id="scopeValue">Global</strong></div></div></div>
+  <div class="actions"><button class="btn primary" onclick="openEdit()">Actualizar o programar</button></div></div>
+</section>
+<section id="history" class="hidden stack"><div class="card"><h2>Consulta histórica</h2><div class="grid two"><div class="field"><label>Producto o SKU</label><input class="input" value="CAM-OXF-M-BLA"></div><div class="field"><label>Fecha y hora</label><input class="input" type="datetime-local"></div></div><button class="btn primary" style="margin-top:16px">Consultar</button></div></section>
+<section id="bulk" class="hidden stack"><div class="card stack"><h2>Carga masiva de precios</h2><div class="field"><label>Selecciona CSV o XLSX</label><input class="input" type="file" accept=".csv,.xlsx"></div><div class="radio-row"><input type="radio" checked><span><strong>Todo o nada</strong><br><span class="muted small">Si una fila es inválida, no se aplica ninguna.</span></span></div><div class="radio-row"><input type="radio"><span><strong>Tolerante a fallos</strong><br><span class="muted small">Aplica filas válidas y reporta las rechazadas.</span></span></div><button class="btn primary">Continuar</button></div></section>
+<div id="priceModal" class="overlay"><div class="modal"><div class="modal-head"><div><h2>Actualizar precio</h2><p id="editInfo" class="muted">Edita el precio seleccionado.</p></div><button class="icon-btn" onclick="closeEdit()">×</button></div><div class="stack"><div class="grid two"><div class="field"><label>Precio regular</label><input class="input" type="number" value="89.90"></div><div class="field"><label>Precio de oferta (opcional)</label><input class="input" type="number"></div></div><div class="field"><label>Motivo del cambio</label><textarea class="textarea">Ajuste comercial programado.</textarea></div><div class="actions"><button class="btn" onclick="closeEdit()">Cancelar</button><button class="btn primary" onclick="closeEdit()">Revisar cambio</button></div></div></div></div>
+
 </main>
-<div class="overlay" id="confirmPrice" aria-hidden="true"><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="cpTitle"><h2 id="cpTitle">Confirmar cambio de precio</h2><div id="cpBody"></div><div class="row" style="justify-content:flex-end"><button class="btn" data-close="confirmPrice">Cancelar</button><button class="btn primary" id="applyPrice">Confirmar</button></div></section></div>
-<div class="overlay" id="confirmBulk" aria-hidden="true"><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="cbTitle"><h2 id="cbTitle">Confirmar carga masiva</h2><div id="cbBody"></div><div class="row" style="justify-content:flex-end"><button class="btn" data-close="confirmBulk">Volver</button><button class="btn primary" id="applyBulk">Crear proceso</button></div></section></div>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
-const prices=[
- {sku:'RUN-001-42',product:'Zapatillas Ultralight Running',regular:349.90,offer:289.90,currency:'PEN',channel:null,origin:'SKU_OVERRIDE',version:8,from:'2026-09-15T10:14',until:null,validity:'VIG-2026-09-RUN'},
- {sku:'FUT-010-M',product:'Camiseta Oficial Fútbol',regular:199,offer:null,currency:'PEN',channel:null,origin:'PRODUCTO',version:3,from:'2026-08-02T16:30',until:null,validity:'VIG-2026-08-FUT'},
- {sku:'BAL-005',product:'Balón Fútbol N5',regular:120,offer:null,currency:'PEN',channel:'RETAIL',origin:'PRODUCTO',version:6,from:'2026-09-10T09:00',until:null,validity:'VIG-2026-09-BAL'}
-];
-const history=[
- {sku:'RUN-001-42',from:'2026-01-01T00:00',to:'2026-06-30T23:59',regular:320,offer:null,channel:null,validity:'VIG-2026-01-RUN'},
- {sku:'RUN-001-42',from:'2026-07-01T00:00',to:'2026-09-15T10:13',regular:360,offer:330,channel:null,validity:'VIG-2026-07-RUN'},
- {sku:'RUN-001-42',from:'2026-09-15T10:14',to:'2099-12-31T23:59',regular:349.90,offer:289.90,channel:null,validity:'VIG-2026-09-RUN'},
- {sku:'BAL-005',from:'2026-01-01T00:00',to:'2099-12-31T23:59',regular:120,offer:null,channel:'RETAIL',validity:'VIG-2026-01-BAL'}
-];
-const scheduled=[
- {sku:'RUN-001-42',channel:null,from:'2026-10-01T00:00',to:'2026-10-31T23:59',regular:330},
- {sku:'RUN-001-42',channel:'MARKETPLACE',from:'2026-11-15T00:00',to:'2026-11-30T23:59',regular:320}
-];
-const state={tab:'detail',sku:'RUN-001-42',view:'detail',edit:null,historySku:'RUN-001-42',historyAt:'2026-05-15T14:30',historyChannel:'',bulkMode:'atomic',file:null,batch:null};
-const app=document.getElementById('app'),toast=document.getElementById('toast');
-const current=()=>prices.find(x=>x.sku===state.sku);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const money=n=>`S/ ${Number(n).toFixed(2)}`;
-const ch=c=>c==null||c===''?'Todos los canales':c==='MARKETPLACE'?'Marketplace':c==='CHATBOT'?'Chatbot':c==='RETAIL'?'Retail':c;
-function notify(m){toast.textContent=m;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2200)}
-function head(t,c,a=''){return `<div class="pagehead"><div><h1>${t}</h1><p>${c}</p></div><div class="row">${a}</div></div>`}
-function openModal(id){const o=document.getElementById(id);o.classList.add('open');o.setAttribute('aria-hidden','false');o.querySelector('button,input')?.focus()}
-function closeModal(id){const o=document.getElementById(id);o.classList.remove('open');o.setAttribute('aria-hidden','true')}
-function setTab(tab){state.tab=tab;state.view=tab;document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));render()}
-function render(){
- if(location.hash==='#no-permission'){app.innerHTML=head('Gestión de precios','Consulta y administra precios oficiales.')+`<div class="notice"><h3>Acceso restringido</h3><p>No tienes permiso para realizar esta operación.</p></div>`;return}
- if(location.hash==='#session-expired'){app.innerHTML=head('Gestión de precios','Consulta y administra precios oficiales.')+`<div class="notice"><h3>Sesión finalizada</h3><p>Ingresa nuevamente para continuar.</p></div>`;return}
- if(state.view==='detail')renderDetail();
- else if(state.view==='edit')renderEdit();
- else if(state.view==='history')renderHistory();
- else if(state.view==='bulk')renderBulk();
- else if(state.view==='prevalidate')renderPrevalidate();
- else if(state.view==='processing')renderProcessing();
- else if(state.view==='success')renderSuccess(false);
- else if(state.view==='partial')renderSuccess(true);
- else if(state.view==='rejected')renderRejected();
-}
-function renderDetail(){
- const p=current();
- app.innerHTML=head('Precio vigente',`${esc(p.product)} · ${esc(p.sku)}`,`<button class="btn primary" id="editBtn">Actualizar o programar</button>`)+
- `<section class="panel"><div class="row"><span class="status">${p.origin==='SKU_OVERRIDE'?'Precio propio del SKU':'Precio del producto'}</span><span class="badge">${ch(p.channel)}</span></div>
- <div class="grid" style="margin-top:16px"><div class="metric span6"><span class="muted small">Precio regular</span><strong>${money(p.regular)}</strong></div><div class="metric span6"><span class="muted small">Oferta vigente</span><strong>${p.offer==null?'Sin oferta':money(p.offer)}</strong></div>
- <div class="span6"><strong>Vigencia</strong><div>${p.from.replace('T',' ')} — ${p.until?p.until.replace('T',' '):'Sin fecha de fin'}</div></div><div class="span6"><strong>Versión</strong><div>${p.version}</div></div></div></section>
- <section class="panel"><label for="skuSelect">Consultar otro SKU</label><select id="skuSelect">${prices.map(x=>`<option value="${x.sku}" ${x.sku===p.sku?'selected':''}>${esc(x.sku)} — ${esc(x.product)}</option>`).join('')}</select></section>`;
- document.getElementById('editBtn').onclick=()=>{state.edit={regular:String(p.regular),offer:p.offer==null?'':String(p.offer),channel:p.channel||'',until:p.until||'',reason:'',mode:'now',from:'',expectedVersion:p.version};state.view='edit';render()}
- document.getElementById('skuSelect').onchange=e=>{state.sku=e.target.value;render()}
-}
-function validateEdit(){
- const f=state.edit,e={};const r=Number(f.regular),o=f.offer===''?null:Number(f.offer);
- if(!(r>0))e.regular='El precio regular debe ser mayor que cero.';
- if(o!=null&&(!(o>0)||o>=r))e.offer='La oferta debe ser mayor que cero y menor que el precio regular.';
- if(!f.reason.trim())e.reason='Ingresa el motivo del cambio.';
- if(f.mode==='scheduled'&&!f.from)e.from='Indica la fecha de inicio.';
- if(f.mode==='scheduled'&&f.from){
-  const end=f.until||'9999-12-31T23:59';const overlap=scheduled.find(x=>x.sku===state.sku&&(x.channel||'')===(f.channel||'')&&f.from<=x.to&&end>=x.from);
-  if(overlap)e.overlap=`Ya existe una programación para ${ch(overlap.channel)} entre ${overlap.from.replace('T',' ')} y ${overlap.to.replace('T',' ')}.`;
- }
- if(f.until&&f.mode==='scheduled'&&f.from&&f.until<=f.from)e.until='La fecha de fin debe ser posterior al inicio.';
- return e;
-}
-function renderEdit(){
- const p=current(),f=state.edit,e=validateEdit();const variance=((Number(f.regular||p.regular)-p.regular)/p.regular)*100;
- app.innerHTML=head('Actualizar o programar precio',`${esc(p.product)} · ${esc(p.sku)}`)+
- `${e.overlap?`<div class="notice"><h3>Vigencia superpuesta</h3><p>${esc(e.overlap)}</p></div>`:''}
- <section class="panel"><div class="grid">
- <div class="field span6"><label for="regular">Precio regular</label><input class="input ${e.regular?'invalid':''}" id="regular" type="number" step="0.01" value="${esc(f.regular)}"><div class="error">${esc(e.regular||'')}</div></div>
- <div class="field span6"><label for="offer">Precio de oferta <span class="muted">(opcional)</span></label><input class="input ${e.offer?'invalid':''}" id="offer" type="number" step="0.01" value="${esc(f.offer)}"><div class="error">${esc(e.offer||'')}</div></div>
- <div class="field span6"><label for="channel">Canal <span class="muted">(opcional)</span></label><select id="channel"><option value="" ${f.channel===''?'selected':''}>Todos los canales</option><option value="MARKETPLACE" ${f.channel==='MARKETPLACE'?'selected':''}>Marketplace</option><option value="CHATBOT" ${f.channel==='CHATBOT'?'selected':''}>Chatbot</option><option value="RETAIL" ${f.channel==='RETAIL'?'selected':''}>Retail</option></select><div class="small muted">Sin canal específico se utiliza el alcance global.</div></div>
- <div class="field span6"><label for="until">Vigente hasta <span class="muted">(opcional)</span></label><input class="input ${e.until?'invalid':''}" id="until" type="datetime-local" value="${esc(f.until)}"><div class="error">${esc(e.until||'')}</div></div>
- <div class="span12"><fieldset style="border:0;padding:0"><legend style="font-weight:600;margin-bottom:8px">Aplicación</legend><label class="radio"><input type="radio" name="mode" value="now" ${f.mode==='now'?'checked':''}><span><strong>Aplicar ahora</strong></span></label><label class="radio"><input type="radio" name="mode" value="scheduled" ${f.mode==='scheduled'?'checked':''}><span><strong>Programar</strong><br><span class="small muted">Entrará en vigor en la fecha indicada.</span></span></label></fieldset></div>
- ${f.mode==='scheduled'?`<div class="field span6"><label for="from">Inicio programado</label><input class="input ${e.from?'invalid':''}" id="from" type="datetime-local" value="${esc(f.from)}"><div class="error">${esc(e.from||'')}</div></div>`:''}
- <div class="field span12"><label for="reason">Motivo del cambio</label><textarea class="${e.reason?'invalid':''}" id="reason">${esc(f.reason)}</textarea><div class="error">${esc(e.reason||'')}</div></div>
- </div>
- ${Math.abs(variance)>=50?`<div class="notice"><h3>Cambio de precio extraordinario</h3><p>La variación es ${variance>0?'+':''}${variance.toFixed(1)} %. Revisa el importe y el motivo antes de confirmar.</p></div>`:''}
- <div class="row" style="justify-content:flex-end"><button class="btn" id="cancelEdit">Cancelar</button><button class="btn primary" id="reviewEdit">Revisar cambio</button></div></section>`;
- ['regular','offer','channel','until','reason','from'].forEach(id=>{const el=document.getElementById(id);if(el)el.oninput=()=>{state.edit[id==='reason'?'reason':id]=el.value;renderEdit()}});
- document.querySelectorAll('input[name="mode"]').forEach(x=>x.onchange=e2=>{state.edit.mode=e2.target.value;renderEdit()});
- document.getElementById('cancelEdit').onclick=()=>{state.view='detail';render()};
- document.getElementById('reviewEdit').onclick=()=>{syncEdit();const er=validateEdit();if(Object.keys(er).length){renderEdit();return}showPriceConfirm()}
-}
-function syncEdit(){const f=state.edit;['regular','offer','channel','until','reason','from'].forEach(id=>{const el=document.getElementById(id);if(el)f[id]=el.value});f.mode=document.querySelector('input[name="mode"]:checked')?.value||f.mode}
-function showPriceConfirm(){
- const p=current(),f=state.edit;document.getElementById('cpTitle').textContent=f.mode==='scheduled'?'Confirmar programación':'Confirmar actualización';
- document.getElementById('cpBody').innerHTML=`<div class="tablewrap"><table><tbody><tr><th>Precio regular actual</th><td>${money(p.regular)}</td></tr><tr><th>Nuevo precio regular</th><td>${money(Number(f.regular))}</td></tr><tr><th>Oferta</th><td>${f.offer===''?'Sin oferta':money(Number(f.offer))}</td></tr><tr><th>Alcance</th><td>${ch(f.channel)}</td></tr><tr><th>Motivo</th><td>${esc(f.reason)}</td></tr></tbody></table></div>`;openModal('confirmPrice')
-}
-document.getElementById('applyPrice').onclick=()=>{const p=current(),f=state.edit;if(p.version!==f.expectedVersion){closeModal('confirmPrice');p.version++;notify('El precio cambió mientras editabas. Actualizamos la información; revisa antes de guardar.');state.view='detail';render();return}
- if(f.mode==='now'){p.regular=Number(f.regular);p.offer=f.offer===''?null:Number(f.offer);p.channel=f.channel||null;p.until=f.until||null;p.version++;p.from=new Date().toISOString().slice(0,16);notify('Precio actualizado.')}else{scheduled.push({sku:p.sku,channel:f.channel||null,from:f.from,to:f.until||'9999-12-31T23:59',regular:Number(f.regular)});notify('Precio programado.')}
- closeModal('confirmPrice');state.view='detail';render()}
-function renderHistory(){
- let result=null;if(state.historySku&&state.historyAt){const at=state.historyAt;result=history.find(h=>h.sku===state.historySku&&at>=h.from&&at<=h.to&&((state.historyChannel===''&&h.channel==null)||(state.historyChannel!==''&&(h.channel===state.historyChannel||h.channel==null))));}
- app.innerHTML=head('Consulta histórica','Consulta el precio oficial que estuvo vigente en una fecha y hora.')+
- `<section class="panel"><div class="grid"><div class="field span6"><label for="histSku">SKU</label><input class="input mono" id="histSku" value="${esc(state.historySku)}"></div><div class="field span6"><label for="histAt">Fecha y hora</label><input class="input" id="histAt" type="datetime-local" value="${esc(state.historyAt)}"></div><div class="field span6"><label for="histChannel">Canal <span class="muted">(opcional)</span></label><select id="histChannel"><option value="" ${state.historyChannel===''?'selected':''}>Todos los canales</option><option value="MARKETPLACE" ${state.historyChannel==='MARKETPLACE'?'selected':''}>Marketplace</option><option value="CHATBOT" ${state.historyChannel==='CHATBOT'?'selected':''}>Chatbot</option><option value="RETAIL" ${state.historyChannel==='RETAIL'?'selected':''}>Retail</option></select></div></div><button class="btn primary" id="histSearch">Consultar</button></section>
- ${result?`<section class="panel"><h2>Precio oficial en ese instante</h2><div class="grid"><div class="metric span6"><span class="muted small">Regular</span><strong>${money(result.regular)}</strong></div><div class="metric span6"><span class="muted small">Oferta</span><strong>${result.offer==null?'Sin oferta':money(result.offer)}</strong></div><div class="span6"><strong>Alcance efectivo</strong><div>${ch(result.channel)}</div></div><div class="span6"><strong>Referencia de vigencia</strong><div class="mono">${esc(result.validity)}</div></div><div class="span12 small muted">Vigencia: ${result.from.replace('T',' ')} — ${result.to.replace('T',' ')}</div></div></section>`:`<div class="notice"><h3>Sin resultado para esa consulta</h3><p>Verifica el SKU, la fecha/hora o el canal.</p></div>`}`;
- document.getElementById('histSearch').onclick=()=>{state.historySku=document.getElementById('histSku').value.trim();state.historyAt=document.getElementById('histAt').value;state.historyChannel=document.getElementById('histChannel').value;renderHistory()}
-}
-function renderBulk(){
- app.innerHTML=head('Carga masiva de precios','Prevalida un archivo antes de crear el proceso asíncrono.')+
- `<div class="helpbox"><strong>Oferta opcional</strong><p>Si dejas vacía la oferta, se conservará. Para crear o cambiar una oferta, usa la acción “Establecer oferta” e indica el importe. Para retirarla, usa “Quitar oferta” y deja vacío el importe. Si el nuevo precio regular invalida una oferta que se conservaría, la fila se rechazará.</p></div>
- <section class="panel"><h2>Modo de procesamiento</h2><label class="radio"><input type="radio" name="bulkMode" value="atomic" ${state.bulkMode==='atomic'?'checked':''}><span><strong>Todo o nada</strong><br><span class="small muted">Si una fila es inválida, no se aplica ninguna.</span></span></label><label class="radio"><input type="radio" name="bulkMode" value="partial" ${state.bulkMode==='partial'?'checked':''}><span><strong>Tolerante a fallos</strong><br><span class="small muted">Aplica filas válidas y reporta las rechazadas.</span></span></label></section>
- <section class="filebox"><h2>Selecciona CSV o XLSX</h2><p class="muted">Hasta 10 MB. El archivo debe incluir SKU, precio regular y motivo del cambio. La plantilla descargable conserva los encabezados exactos requeridos para la importación.</p><div class="row" style="justify-content:center"><button class="btn primary" id="fileOk">Usar archivo válido de ejemplo</button><button class="btn" id="filePartial">Usar archivo con filas inválidas</button></div></section>`;
- document.querySelectorAll('input[name="bulkMode"]').forEach(x=>x.onchange=e=>{state.bulkMode=e.target.value});
- document.getElementById('fileOk').onclick=()=>{state.file={name:'precios_campana.xlsx',size:'1.2 MB',rows:142,scenario:'ok'};state.view='prevalidate';render()}
- document.getElementById('filePartial').onclick=()=>{state.file={name:'precios_revision.csv',size:'0.8 MB',rows:142,scenario:'partial'};state.view='prevalidate';render()}
-}
-function renderPrevalidate(){
- const f=state.file;app.innerHTML=head('Archivo prevalidado','La prevalidación no aplica cambios.')+
- `<section class="panel"><h2>Resumen</h2><div class="tablewrap"><table><tbody><tr><th>Archivo</th><td>${esc(f.name)}</td></tr><tr><th>Tamaño</th><td>${esc(f.size)}</td></tr><tr><th>Filas detectadas</th><td>${f.rows}</td></tr><tr><th>Estructura</th><td>Válida</td></tr><tr><th>Modo</th><td>${state.bulkMode==='atomic'?'Todo o nada':'Tolerante a fallos'}</td></tr></tbody></table></div></section><div class="row"><button class="btn" id="replaceFile">Reemplazar archivo</button><button class="btn primary" id="confirmFile">Continuar</button></div>`;
- document.getElementById('replaceFile').onclick=()=>{state.view='bulk';render()};document.getElementById('confirmFile').onclick=()=>{document.getElementById('cbBody').innerHTML=`<p>Se creará un proceso en segundo plano para <strong>${f.rows}</strong> filas.</p><p>La respuesta inicial solo confirma que la solicitud fue admitida; el resultado se consultará después.</p>`;openModal('confirmBulk')}
-}
-document.getElementById('applyBulk').onclick=()=>{closeModal('confirmBulk');state.batch={ref:'PROC-20260928-1841',file:state.file.name,rows:state.file.rows,mode:state.bulkMode,status:'processing'};state.view='processing';render();setTimeout(()=>{if(state.view==='processing'){if(state.file.scenario==='partial'&&state.bulkMode==='atomic')state.view='rejected';else if(state.file.scenario==='partial')state.view='partial';else state.view='success';render()}},1800)}
-function renderProcessing(){
- const b=state.batch;app.innerHTML=head('Procesando precios','El trabajo continúa en segundo plano.')+`<div class="notice" role="status"><h3>Procesamiento en curso</h3><p>Puedes salir de esta pantalla y consultar el resultado después.</p></div><section class="panel"><div><strong>Referencia del proceso</strong><div class="mono">${esc(b.ref)}</div></div><div style="margin-top:12px"><strong>Archivo</strong><div>${esc(b.file)}</div></div><div style="margin-top:12px"><strong>Filas</strong><div>${b.rows}</div></div></section><button class="btn" id="leaveProcess">Volver a precios</button>`;
- document.getElementById('leaveProcess').onclick=()=>setTab('detail')
-}
-function renderSuccess(partial){
- const b=state.batch;const failed=partial?4:0,ok=b.rows-failed;
- app.innerHTML=head(partial?'Completado con filas rechazadas':'Completado','Resultado final del proceso.')+`${partial?`<div class="notice"><h3>Se aplicaron las filas válidas</h3><p>Revisa el reporte de las filas que no pudieron aplicarse.</p></div>`:`<div class="notice"><h3>Proceso finalizado</h3><p>Todas las filas fueron aplicadas correctamente.</p></div>`}<div class="grid"><div class="metric span6"><span class="muted small">Aplicadas</span><strong>${ok}</strong></div><div class="metric span6"><span class="muted small">Rechazadas</span><strong>${failed}</strong></div></div>${partial?`<section class="panel" style="margin-top:16px"><h2>Muestra de errores</h2><div class="tablewrap"><table><thead><tr><th>Fila</th><th>SKU</th><th>Motivo</th></tr></thead><tbody><tr><td>12</td><td>SKU-INEXISTENTE</td><td>El SKU no existe</td></tr><tr><td>35</td><td>RUN-038</td><td>La oferta no puede ser mayor o igual al regular</td></tr></tbody></table></div><button class="btn primary" style="margin-top:12px">Descargar errores CSV</button></section>`:''}<div class="row" style="margin-top:16px"><button class="btn" id="anotherBulk">Cargar otro archivo</button><button class="btn primary" id="backPrice">Volver a precios</button></div>`;
- document.getElementById('anotherBulk').onclick=()=>{state.file=null;state.view='bulk';render()};document.getElementById('backPrice').onclick=()=>setTab('detail')
-}
-function renderRejected(){
- const b=state.batch;app.innerHTML=head('No se aplicó ningún cambio','El modo Todo o nada detectó filas inválidas.')+`<div class="notice"><h3>Proceso rechazado</h3><p>Ninguna fila fue aplicada.</p></div><div class="grid"><div class="metric span6"><span class="muted small">Aplicadas</span><strong>0</strong></div><div class="metric span6"><span class="muted small">Filas del archivo</span><strong>${b.rows}</strong></div></div><div class="row" style="margin-top:16px"><button class="btn">Descargar errores CSV</button><button class="btn primary" id="retryPartial">Reintentar como tolerante</button></div>`;
- document.getElementById('retryPartial').onclick=()=>{state.bulkMode='partial';state.view='prevalidate';render()}
-}
-document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
-document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
-document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.overlay.open').forEach(o=>closeModal(o.id))});
-window.addEventListener('hashchange',render);
-render();
+function tab(id,btn){['current','history','bulk'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active')}
+function renderPrice(){const v=document.getElementById('priceItem').value;const data={product:['Camisa Oxford','Precio base del producto.','Precio del producto','S/ 89.90','—','Global'],inherit:['CAM-OXF-M-BLA','Esta variante hereda el precio vigente del producto.','Hereda precio del producto','S/ 89.90','—','Heredado'],specific:['CAM-OXF-L-NEG','Esta variante tiene un precio específico configurado.','Precio específico','S/ 94.90','S/ 84.90','SKU específico']};const d=data[v];document.getElementById('priceTitle').textContent=d[0];document.getElementById('priceNote').textContent=d[1];document.getElementById('priceBadge').textContent=d[2];document.getElementById('regularValue').textContent=d[3];document.getElementById('offerValue').textContent=d[4];document.getElementById('scopeValue').textContent=d[5]}
+function openEdit(){document.getElementById('priceModal').classList.add('open')}function closeEdit(){document.getElementById('priceModal').classList.remove('open')}
 </script>
 </body>
 </html>
