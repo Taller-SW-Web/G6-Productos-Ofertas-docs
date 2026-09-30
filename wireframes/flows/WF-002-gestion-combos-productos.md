@@ -7,7 +7,7 @@ Gestor comercial.
 Crear y editar combos con componentes válidos, garantizando una propuesta económica con ventaja frente a la compra individual y una lectura comercial transparente.
 
 ## Pantallas
-- **Lista:** catálogo de combos creados con indicador de estado (activo, borrador, inactivo) y disponibilidad estimada informativa.
+- **Lista:** catálogo de combos creados con indicador de estado (activo, inactivo) y disponibilidad estimada informativa.
 - **Crear/editar:** formulario con datos generales, selector de componentes SKU directos (mínimo 2), comparación automática contra sumas de precios regulares/vigentes y cálculo de aporte de disponibilidad.
 - **Detalle:** ficha informativa completa del combo, componentes vinculados y estado comercial.
 - **Estado no disponible:** vista que informa la no elegibilidad para compra cuando un componente fue desactivado o se encuentra sin existencias.

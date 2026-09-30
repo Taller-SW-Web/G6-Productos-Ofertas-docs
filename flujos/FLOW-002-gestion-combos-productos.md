@@ -53,7 +53,7 @@ flowchart LR
         C4["Validar regla de beneficio de precio"]
         D2{"¿Precio combo < suma regular y suma pública?"}
         C5["Calcular disponibilidad estimada informativa"]
-        C6["Persistir combo en estado BORRADOR o ACTIVO"]
+        C6["Persistir combo en estado ACTIVO o INACTIVO"]
         C7["Retornar error COMBO_PRECIO_INVALIDO o de estructura"]
     end
 

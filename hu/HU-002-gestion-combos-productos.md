@@ -30,7 +30,7 @@
 
 DADO dos componentes SKU con precios y existencias vigentes,  
 CUANDO el gestor ingresa un precio promocional menor que la suma de sus precios por separado,  
-ENTONCES el combo se registra exitosamente como activo o borrador, mostrando la disponibilidad estimada informativa.
+ENTONCES el combo se registra exitosamente como activo, mostrando la disponibilidad estimada informativa.
 
 ## Escenario — Rechazo por precio sin ventaja económica
 
