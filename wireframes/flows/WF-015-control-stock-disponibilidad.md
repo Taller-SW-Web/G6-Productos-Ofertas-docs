@@ -31,9 +31,9 @@ Reglas de producción:
 - La unidad operativa de inventario es el saldo por **`(sku, location_id)`**. El producto es agrupador comercial y no tiene stock propio; el inventario reside en los SKUs vendibles (incluido `sku_base` en producto simple).
 - Se controlan tres magnitudes: stock físico (`on_hand`), unidades reservadas (`reserved`) y unidades disponibles para venta (`available = max(on_hand - reserved, 0)`).
 - El stock **nunca puede quedar negativo** (`available >= 0`).
-- Determinación de estados: `available = 0 → AGOTADO`; `0 < available <= umbral_resuelto → STOCK_BAJO`; `available > umbral_resuelto → DISPONIBLE`.
-- Modelo de umbrales: existe un **umbral global por defecto** configurable a nivel de sistema (`umbral_stock_bajo_default`) y un **override opcional por SKU**. El umbral resuelto aplica `override SKU ?? umbral_global` (en ejemplos ilustrativos se usa 5 unidades, pero el valor contractual del sistema es configurable). No se definen umbrales por ubicación.
-- Inventario provee capacidades internas idempotentes de movimiento: `reserve`, `release` y `consume` sobre `(sku, location_id)`. Los movimientos por venta se coordinan mediante eventos externos provisionales (`order.confirmed`, `order.cancelled`, `order.returned`); `order.created` por sí solo no reserva ni descuenta en el MVP salvo futura homologación de un contrato de reservas. Despacho no genera consumos adicionales ni modifica directamente el stock.
+- Determinación de estados: `available = 0 → AGOTADO`; `0 < available <= umbral_efectivo → STOCK_BAJO`; `available > umbral_efectivo → DISPONIBLE`.
+- Modelo de umbrales: existe un **umbral global por defecto** configurable a nivel de sistema (`umbral_global`) y un **override opcional por SKU**. El umbral resuelto aplica `override SKU ?? umbral_global` (en ejemplos ilustrativos se usa 5 unidades, pero el valor contractual del sistema es configurable). No se definen umbrales por ubicación.
+- Inventario provee capacidades internas idempotentes de movimiento: `reserve`, `release` y `consume` sobre `(sku, location_id)`. Ciclo operativo: pedido **CREADO** → `reserve` (modifica `reserved`/`available`, no `on_hand`); pedido **PAGADO**/confirmado → `consume` (reduce `on_hand` y `reserved`); **PAGO_NO_COMPLETADO**/anulación → `release` (recupera `available` sin incrementar `on_hand`); **TTL vencido** → expiración/liberación. Estados terminales `CONSUMIDA`, `LIBERADA` y `EXPIRADA` que no vuelven a `ACTIVA`. Los hitos externos (`order.confirmed`, `order.cancelled`, `order.returned`) y la fase de reserva son contratos provisionales; sin reserva, `order.created` no afecta stock y el consumo ocurre con la confirmación acordada. Despacho no genera consumos adicionales ni modifica directamente el stock.
 - Tras cada mutación persistida por eventos o carga masiva se emite el evento de dominio `inventory.stock.changed`.
 - No elijas una librería de UI ni una estrategia CSS.
 - Usa datos ficticios y no consumas APIs reales.
@@ -70,18 +70,18 @@ Genera un prototipo navegable con HTML, CSS y JavaScript estáticos:
 |---|---|
 | ID del wireframe | WF-015 |
 | Nombre del flujo | Control de stock y disponibilidad |
-| Versión | 0.5 |
+| Versión | 0.6 |
 | Estado | Borrador |
 | Responsable | Miguel Ángel Taco Zavala |
 | Fecha | 2026-09-17 |
-| Última actualización | 2026-09-21 |
+| Última actualización | 2026-09-30 |
 
 ## 2. Trazabilidad
 
 | Fuente | Identificador o sección | Aporte al flujo |
 |---|---|---|
 | Spec | SPEC-015-control-stock-disponibilidad.md, secciones 1–6 | Modelo `(sku, location_id)`, saldos `on_hand`/`reserved`/`available`, umbrales y consumo |
-| Historia de usuario | HU-015-control-stock-disponibilidad.md, CA-01 a CA-10 | Criterios de aceptación y escenarios Gherkin |
+| Historia de usuario | HU-015-control-stock-disponibilidad.md, CA-01 a CA-19 | Criterios de aceptación y escenarios Gherkin |
 | Diseño | DESIGN.md | Lenguaje visual monocromático de baja fidelidad |
 | Backlog | No proporcionado | No se asignan IDs de backlog |
 
@@ -89,7 +89,7 @@ Genera un prototipo navegable con HTML, CSS y JavaScript estáticos:
 
 - Consultar existencias por SKU y ubicación con desglose de `on_hand`, `reserved` y `available`.
 - Determinar estado de stock (Disponible, Stock bajo, Agotado) según umbral resuelto.
-- Configurar el umbral global por defecto (`umbral_stock_bajo_default`).
+- Configurar el umbral global por defecto (`umbral_global`).
 - Configurar y eliminar overrides de umbral de stock bajo por SKU.
 - Reflejar la actualización automática de saldos y emisión reactiva de `inventory.stock.changed`.
 
@@ -170,7 +170,7 @@ y notifica reactivamente los cambios de disponibilidad a los canales.
 ### Flujo B — Configurar umbral global por defecto
 
 1. El usuario pulsa "Configuración de Umbrales" (S-02).
-2. En la sección "Umbral Global", modifica el valor de `umbral_stock_bajo_default` (ej. 5 unidades).
+2. En la sección "Umbral Global", modifica el valor de `umbral_global` (ej. 5 unidades).
 3. Guarda los cambios; el sistema actualiza el fallback global para todos los SKUs sin override.
 
 ### Flujo C — Configurar o eliminar override por SKU
@@ -245,7 +245,7 @@ Administrar el valor por defecto del sistema y los overrides específicos aplica
 #### Regiones y componentes
 | Región | Componente neutral | Contenido | Comportamiento |
 |---|---|---|---|
-| Umbral Global | Formulario | Campo `umbral_stock_bajo_default` + Botón "Guardar global" | Aplica a todos los SKUs sin override |
+| Umbral Global | Formulario | Campo `umbral_global` + Botón "Guardar global" | Aplica a todos los SKUs sin override |
 | Override por SKU | Formulario de búsqueda | Buscador de SKU + Campo de umbral específico + Botones "Establecer" / "Eliminar override" | Sobrescribe el valor global para el SKU |
 | Resumen | Tabla de overrides | Listado de SKUs con override activo y su valor configurado | Permite editar o retirar override |
 
@@ -327,8 +327,8 @@ Aplicar DESIGN.md como única fuente de representación visual monocromática.
 | Componente / Servicio | Tipo de integración | Contrato / Evento | Estado del contrato | Descripción e impacto en Stock |
 |---|---|---|---|---|
 | Catálogo de productos y variantes (WF-003, WF-004) | Interna (dependencia) | API interna / datos de variantes | Interno / definido por SPEC | Provee SKUs vendibles válidos (`sku_base` en producto simple o SKU de variante). Sin SKU válido no opera inventario. |
-| Ventas / Checkout | Externa (entrada asíncrona) | `order.confirmed` | **Provisional no homologado** | Solicita confirmación definitiva de consumo tras venta confirmada. Aplica débito ACID y registra Kardex. `order.created` no afecta stock en MVP mientras no exista homologación de reserva. |
-| Ventas / Cancelaciones | Externa (entrada asíncrona) | `order.cancelled` | **Provisional no homologado** | Si la venta confirmada se cancela antes del despacho, compensa únicamente consumos previos exitosos no compensados. |
+| Ventas / Checkout | Externa (entrada asíncrona) | `CREADO`→`inventory.reserve`; `PAGADO`→`inventory.consume` | **Provisional no homologado** | Al crear el pedido solicita reserva con TTL (modifica `reserved`/`available`, no `on_hand`); al confirmar el pago solicita consumo que confirma la reserva (reduce `on_hand` y `reserved`). Aplica el movimiento ACID y registra Kardex. Sin la fase de reserva, `order.created` no afecta stock en MVP. |
+| Ventas / Cancelaciones | Externa (entrada asíncrona) | `PAGO_NO_COMPLETADO`→`inventory.release`; `order.cancelled` | **Provisional no homologado** | Ante pago no completado o anulación libera la reserva pendiente (recupera `available` sin incrementar `on_hand`); si la venta confirmada se cancela antes del despacho, compensa únicamente consumos previos exitosos no compensados. |
 | Postventa / Devoluciones | Externa (entrada asíncrona) | `order.returned` | **Provisional no homologado** | Reintegra stock únicamente para unidades devueltas aceptadas y físicamente reintegrables en la ubicación de destino. |
 | Despacho / Fulfillment | Externa (delimitación) | N/A | Regla de delimitación | No genera consumo adicional ni altera stock; únicamente entrega unidades de ventas previamente confirmadas. |
 | Canales (Marketplace, Retail, Chatbot) y Dashboard (WF-016) | Externa / Interna (salida) | `inventory.stock.changed` | Contrato interno definido | Notificación asíncrona de cambio persistido de stock (consumo o ajuste) para actualizar proyecciones de disponibilidad y alertas. |
@@ -357,7 +357,7 @@ Aplicar DESIGN.md como única fuente de representación visual monocromática.
 |---|---|
 | CA-01 | S-01, consulta de saldos y disponibilidad por SKU y ubicación |
 | CA-02 | S-01, estados Disponible, Stock bajo y Agotado |
-| CA-03 | S-01 y S-02, cálculo con `umbral_stock_bajo_default` y override por SKU |
+| CA-03 | S-01 y S-02, cálculo con `umbral_global` y override por SKU |
 | CA-04 | S-01, actualización por eventos y prevención de stock negativo |
 | CA-05 | S-01, validación de stock disponible frente a reservas |
 | CA-06 | S-01, emisión y recepción reactiva de `inventory.stock.changed` |
@@ -365,6 +365,15 @@ Aplicar DESIGN.md como única fuente de representación visual monocromática.
 | CA-08 | S-01, soporte de `(sku, location_id)` con fallback a ubicación `DEFAULT` |
 | CA-09 | S-02, administración y eliminación de overrides de umbral |
 | CA-10 | S-01, persistencia desacoplada e inmutabilidad de registros |
+| CA-11 | Contratos, ciclo operativo `CREADO→reserve`, `PAGADO→consume`, `PAGO_NO_COMPLETADO`/anulación→`release` y TTL→expiración (reglas de producción y §14) |
+| CA-12 | Contratos, cancelación/devolución con reposición solo de unidades aceptadas físicamente (reglas de producción y §14) |
+| CA-13 | Contratos, `order.confirmed` con líneas ACID y resultado idempotente (reglas de producción y §14) |
+| CA-14 | Reglas de producción, rechazo por stock insuficiente sin afirmar venta exitosa ni revertir pagos |
+| CA-15 | Contratos, compensaciones idempotentes sin doble acreditación (reglas de producción y §14) |
+| CA-16 | Reglas de producción, ajuste absoluto con `stock_version` y `VERSION_CONFLICT` |
+| CA-17 | Reglas de producción, inicialización idempotente de SKU nuevo con `stock_version=0` |
+| CA-18 | Contratos, ciclo `CREADO→reserve`, `PAGADO→consume`, `release`/TTL y estados terminales (reglas de producción y §14) |
+| CA-19 | Contratos, idempotencia e `IDEMPOTENCY_CONFLICT` (reglas de producción y §14) |
 
 ---
 
@@ -401,6 +410,7 @@ Aplicar DESIGN.md como única fuente de representación visual monocromática.
 | 0.3 | 2026-09-18 | Asistente | Incorporación del modelo (sku, location_id) y eventos asíncronos | Pendiente |
 | 0.4 | 2026-09-21 | Asistente | Reconstitución del wireframe con estructura canónica | Pendiente |
 | 0.5 | 2026-09-21 | Asistente | Ajuste de alcance al requerimiento del curso (consulta, umbrales y actualización por consumo) | Aprobado |
+| 0.6 | 2026-09-30 | Asistente | Incorporación del ciclo de reserva homologado (`CREADO`→reserve, `PAGADO`→consume, liberación/TTL, estados terminales e idempotencia) en reglas de producción y contratos | Pendiente de revisión del equipo |
 
 ---
 
@@ -409,7 +419,7 @@ Aplicar DESIGN.md como única fuente de representación visual monocromática.
 - [x] Las fuentes funcionales están identificadas.
 - [x] El alcance y fuera de alcance están claros.
 - [x] Las pantallas y variantes están inventariadas (S-01 a S-02).
-- [x] Los criterios CA-01 a CA-10 están cubiertos.
+- [x] Los criterios CA-01 a CA-19 están cubiertos.
 - [x] Los saldos on_hand, reserved, available y la regla de no saldo negativo están documentados.
 - [x] El modelo de umbrales (global + override por SKU) está documentado.
 - [x] Los supuestos y preguntas están registrados.

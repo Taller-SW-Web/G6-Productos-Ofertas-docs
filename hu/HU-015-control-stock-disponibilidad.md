@@ -19,20 +19,22 @@ El inventario se controla por **SKU vendible + ubicación (`location_id`)**. Un 
 | **CA-01** | Cada unidad vendible debe tener un SKU comercial único y el inventario se identifica por `(sku, location_id)`. Un producto simple usa `sku_base`; una variante usa su SKU suministrado o generado por Catálogo. |
 | **CA-02** | El sistema debe permitir consultar inventario proporcionando SKU y, cuando aplique, `location_id`; la consulta devuelve como mínimo `on_hand`, `reserved` y `available`. Si el canal consulta disponibilidad global, Inventario agrega únicamente ubicaciones elegibles según el contrato acordado. |
 | **CA-03** | El estado se calcula sobre `available`: `available=0 → Agotado`, `0 < available <= umbral_efectivo → Stock bajo`, `available > umbral_efectivo → Disponible`. El umbral efectivo usa override por SKU cuando existe y, en caso contrario, un valor global configurable; puede evolucionar a reglas por categoría/ubicación sin cambiar el contrato base. |
-| **CA-04** | Inventario debe permitir las operaciones idempotentes `reserve`, `release` y `consume` sobre SKU + ubicación. Ventas/Postventa es dueño de decidir **cuándo** reservar o confirmar una venta; Productos y Ofertas solo ejecuta el movimiento autorizado y no cambia el estado del pedido. |
+| **CA-04** | Inventario debe permitir las operaciones idempotentes `reserve`, `release` y `consume` sobre SKU + ubicación. El ciclo operativo alineado con Ventas/Postventa es: pedido **CREADO** → `reserve` (con TTL); pedido **PAGADO**/confirmado → `consume` (confirmación de la reserva); **PAGO_NO_COMPLETADO**/anulación aplicable → `release`; TTL vencido → expiración/liberación. Productos y Ofertas solo ejecuta el movimiento autorizado y no cambia el estado del pedido. |
 | **CA-05** | Antes de actualizar el stock, el sistema debe validar que la variante exista, que la cantidad consumida sea válida y que exista stock suficiente. |
-| **CA-06** | Cuando exista disponibilidad suficiente, `reserve` aumenta `reserved` y reduce `available` sin alterar `on_hand`; `release` revierte la reserva; `consume` confirmado reduce `on_hand` y la reserva asociada cuando exista, manteniendo invariantes y Kardex. |
+| **CA-06** | Cuando exista disponibilidad suficiente: `reserve` aumenta `reserved` y reduce `available` sin alterar `on_hand`; `release` libera `reserved` y recupera `available` sin incrementar `on_hand`; `consume` confirmado reduce `on_hand` y la reserva asociada cuando exista, manteniendo invariantes (`on_hand >= 0`, `reserved >= 0`, `available >= 0`) y Kardex. |
 | **CA-07** | El sistema no debe permitir que el stock de una variante sea negativo. Si no existe stock suficiente, debe rechazar el consumo y conservar el stock actual. |
 | **CA-08** | Después de cada movimiento se recalcula el estado con `available` y el umbral efectivo de la unidad/ubicación. Una reserva puede llevar temporalmente a Stock bajo o Agotado aunque `on_hand` siga siendo mayor que cero. |
 | **CA-09** | El saldo confirmado se devuelve autoritativamente desde Inventario; las vistas replicadas de canales se actualizan por eventos y pueden presentar retraso temporal identificable. |
 | **CA-10** | Ante reservas/consumos concurrentes sobre el mismo `(sku, location_id)`, el sistema garantiza `on_hand >= 0`, `reserved >= 0` y `available = on_hand - reserved >= 0`. Las mutaciones usan actualización condicional/versionado y bloqueos transaccionales breves por registro, nunca un bloqueo global. |
-| **CA-11** | Los nombres `order.created`/`order.confirmed` siguen siendo contratos provisionales. Si Ventas/Postventa homologa una fase de reserva, puede solicitar `inventory.reserve` con TTL/referencia de operación y luego `release` o `consume`; si no la usa, `order.created` no afecta stock y el consumo ocurre con la confirmación acordada. Despacho no genera un segundo consumo. |
-| **CA-12** | Una cancelación libera reservas pendientes o compensa consumos previos según el estado comunicado por Ventas/Postventa. Una devolución repone **solo los SKU, cantidades y ubicación de reintegro aceptados físicamente**; la política de si un combo puede devolverse total o parcialmente pertenece a Postventa. |
+| **CA-11** | El ciclo de reserva es la lógica operativa interna: Ventas/Postventa solicita `inventory.reserve` al crear el pedido (`CREADO`, con TTL/referencia de operación), `inventory.consume` al confirmar el pago (`PAGADO`) y `inventory.release` ante `PAGO_NO_COMPLETADO`/anulación. Los nombres de los hitos externos constituyen contratos provisionales pendientes de homologación; mientras no se utilice la fase de reserva, `order.created` no afecta stock y el consumo ocurre con la confirmación acordada. Despacho no genera un segundo consumo. |
+| **CA-12** | Una cancelación o `PAGO_NO_COMPLETADO` libera reservas pendientes de forma idempotente; una cancelación posterior a un consumo efectivo compensa el consumo previo no compensado (previo a despacho). Una devolución repone **solo los SKU, cantidades y ubicación de reintegro aceptados físicamente**; la política de si un combo puede devolverse total o parcialmente pertenece a Postventa. |
 | **CA-13** | `order.confirmed` es un contrato externo provisional con `order_id`, `operation_id`, SKUs y cantidades (y snapshot de componentes para combo). Inventario consume todas las líneas de la operación en ACID y emite resultado idempotente aceptado o rechazado. |
 | **CA-14** | Un rechazo por stock insuficiente nunca marca la venta como exitosa ni revierte pagos en Inventario; Ventas/Postventa define el tratamiento comercial y financiero. |
 | **CA-15** | `order.cancelled` y `order.returned` solo compensan consumos previos efectivos, no repuestos anteriormente; los eventos duplicados no acreditan dos veces, y el retorno requiere aceptación física. |
 | **CA-16** | Un ajuste absoluto masivo lleva `location_id` y `stock_version`, se rechaza ante conflicto y solo Inventario emite `inventory.stock.adjusted`/`inventory.stock.changed` después del Kardex de la ubicación. |
 | **CA-17** | Un SKU nuevo se inicializa idempotentemente en la ubicación `DEFAULT` (o ubicaciones acordadas) con `on_hand=0`, `reserved=0`, `available=0` y `stock_version=0` antes de admitir movimientos. |
+| **CA-18** | Las reservas tienen un estado transicional `ACTIVA` y estados terminales `CONSUMIDA`, `LIBERADA` y `EXPIRADA`; una reserva terminal no vuelve a `ACTIVA` ni puede confirmarse o liberarse dos veces. |
+| **CA-19** | Las operaciones de reserva/confirmación/liberación son idempotentes por `(order_id/operation_id + tipo_operacion + sku)`; los duplicados son no-op y una segunda intención contradictoria con el estado vigente responde `IDEMPOTENCY_CONFLICT` sin alterar saldos. |
 
 ## Escenarios dado-cuando-entonces
 
@@ -122,6 +124,36 @@ El inventario se controla por **SKU vendible + ubicación (`location_id`)**. Un 
 * **CUANDO** Ventas/Postventa solicita idempotentemente reservar 2 unidades mediante el contrato homologado,
 * **ENTONCES** Inventario conserva `on_hand=5`, actualiza `reserved=3` y `available=2`; si la venta expira o falla, `release` devuelve la disponibilidad sin crear unidades nuevas.
 
+### Escenario 16: Confirmar reserva y consumir al confirmar el pago
+
+* **DADO** una reserva `ACTIVA` del SKU `NK-AM-BLK-40` por 2 unidades con `on_hand=5`, `reserved=2` y `available=3`,
+* **CUANDO** el pedido pasa a `PAGADO` y Ventas/Postventa solicita `inventory.consume`,
+* **ENTONCES** Inventario reduce `on_hand` a 3 y `reserved` a 0, la reserva pasa a estado terminal `CONSUMIDA` y se publica `inventory.stock.changed` tras el commit local.
+
+### Escenario 17: Liberar reserva por pago no completado o anulación
+
+* **DADO** una reserva `ACTIVA` de 2 unidades con `on_hand=5`, `reserved=2` y `available=3`,
+* **CUANDO** Ventas/Postventa comunica `PAGO_NO_COMPLETADO` y solicita `inventory.release`,
+* **ENTONCES** Inventario libera la reserva quedando `reserved=0` y `available=5` sin modificar `on_hand`, y la reserva pasa a estado terminal `LIBERADA`.
+
+### Escenario 18: Expirar reserva por TTL
+
+* **DADO** una reserva `ACTIVA` del SKU `NK-AM-BLK-40` con TTL configurado,
+* **CUANDO** transcurre el tiempo de vida de la reserva sin confirmación ni liberación,
+* **ENTONCES** Inventario expira la reserva liberándola y la marca con estado terminal `EXPIRADA`; las unidades vuelven a `available` sin incrementar `on_hand`.
+
+### Escenario 19: Reintento idempotente de confirmación
+
+* **DADO** un consumo confirmado del SKU `NK-AM-BLK-40` con estado terminal `CONSUMIDA`,
+* **CUANDO** llega nuevamente la misma confirmación (mismo `order_id + tipo_operacion + sku`),
+* **ENTONCES** Inventario responde el resultado previo sin volver a descontar stock ni crear Kardex adicional.
+
+### Escenario 20: Conflicto de intención por operación contradictoria
+
+* **DADO** una reserva ya consumida (estado terminal `CONSUMIDA`) del SKU `NK-AM-BLK-40`,
+* **CUANDO** Ventas/Postventa solicita liberar esa misma reserva,
+* **ENTONCES** Inventario responde `IDEMPOTENCY_CONFLICT` sin alterar los saldos.
+
 ## Interacción con otros módulos
 
 | **Módulo** | **Necesidad de interacción** | **Información que esta funcionalidad recibe** | **Información que esta funcionalidad entrega** |
@@ -149,7 +181,8 @@ Los eventos `order.confirmed`, `order.cancelled` y `order.returned` y las respue
 ## Reglas consolidadas
 
 * El `umbral_stock_bajo` efectivo usa override por SKU cuando existe y un valor global configurable como fallback; futuras reglas por categoría/ubicación pueden extenderlo.
-* La reserva previa es una capacidad de Inventario, pero solo se ejecuta si Ventas/Postventa homologa y solicita ese paso. Sin contrato de reserva, `order.created` no afecta stock y el consumo ocurre con la confirmación acordada.
+* El ciclo de reserva es la lógica operativa interna: `CREADO` → `reserve` (TTL), `PAGADO` → `consume`, `PAGO_NO_COMPLETADO`/anulación → `release`, TTL → expiración. Los hitos externos son contratos provisionales; sin la fase de reserva, `order.created` no afecta stock y el consumo ocurre con la confirmación acordada.
+* La reserva modifica `reserved`/`available` sin tocar `on_hand`; el consumo reduce `on_hand` y `reserved`; la liberación/expiración recupera `available` sin incrementar `on_hand`. Los estados terminales `CONSUMIDA`, `LIBERADA` y `EXPIRADA` no vuelven a `ACTIVA`.
 * La generación del SKU corresponde a Gestión de Variantes/Productos según el tipo de producto.
 
-> Nota: la identidad interna y el SKU comercial los define **Gestión de variantes/SKUs**; Inventario usa el SKU vendible y no asume que siempre sea autogenerado. Los contratos de reserva/consumo y compensación continúan pendientes de homologación con Ventas/Postventa.
+> Nota: la identidad interna y el SKU comercial los define **Gestión de variantes/SKUs**; Inventario usa el SKU vendible y no asume que siempre sea autogenerado. El ciclo de reserva/consumo descrito y las compensaciones son la lógica interna que implementará Productos y Ofertas; su homologación final con Ventas/Postventa sigue pendiente.

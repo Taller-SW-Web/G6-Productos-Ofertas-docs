@@ -53,14 +53,14 @@ Las reglas de determinación del estado son las siguientes:
 available = 0
 → AGOTADO
 
-0 < available <= umbral_stock_bajo_resuelto
+0 < available <= umbral_efectivo
 → STOCK_BAJO
 
-available > umbral_stock_bajo_resuelto
+available > umbral_efectivo
 → DISPONIBLE
 ```
 
-Inventario mantiene un `umbral_stock_bajo_default` global configurable y permite un `umbral_stock_bajo` específico por SKU como override. El `umbral_stock_bajo_resuelto` usa primero el override del SKU y, si no existe, el valor global. Esto evita tener que configurar manualmente miles de SKUs sin perder la capacidad de ajustar artículos sensibles. Gestión de Variantes puede consultar el valor resuelto, pero no lo edita.
+Inventario mantiene un `umbral_global` global configurable y permite un `umbral_stock_bajo` específico por SKU como override. El `umbral_efectivo` usa primero el override del SKU y, si no existe, el valor global. Esto evita tener que configurar manualmente miles de SKUs sin perder la capacidad de ajustar artículos sensibles. Gestión de Variantes puede consultar el valor resuelto, pero no lo edita.
 
 ### Ejemplo
 
@@ -175,23 +175,39 @@ La **actualización por consumo** permitirá reflejar las unidades utilizadas en
 
 **Delimitación de Ventas y Despacho:**
 
-* La **confirmación definitiva del consumo** se solicita mediante el contrato **provisional `order.confirmed`**, cuya existencia, nombre y campos deberán homologarse con **Ventas y Postventa**, cuando la venta queda confirmada (pago aprobado o estado equivalente para un canal sin pago electrónico). Sin `order.confirmed` no se aplica consumo definitivo.
+Si Ventas/Postventa utiliza la fase de reserva, la **lógica operativa homologada** del ciclo pedido → stock es la siguiente:
+
+* **Pedido `CREADO`** → Ventas/Postventa solicita `inventory.reserve` de los SKUs con TTL y referencia de operación. La reserva modifica `reserved` y `available`, pero **no** altera `on_hand`.
+* **Pedido `PAGADO` / venta confirmada** → Ventas/Postventa solicita `inventory.consume`, que **confirma la reserva** y descuenta simultáneamente `on_hand` y `reserved`. Sin esta confirmación no se aplica consumo definitivo.
+* **`PAGO_NO_COMPLETADO` o anulación aplicable** → Ventas/Postventa solicita `inventory.release`: se libera `reserved` y se recupera `available` **sin incrementar `on_hand`**.
+* **TTL vencido** → la reserva se **expira/libera automáticamente**.
+* Las reservas tienen un estado transicional **`ACTIVA`** y estados terminales **`CONSUMIDA`**, **`LIBERADA`** y **`EXPIRADA`**; una vez alcanzado un estado terminal no se vuelve a `ACTIVA`.
+* Todas las operaciones son **idempotentes** por `(order_id/operation_id + tipo_operacion + sku)`. Una operación duplicada responde con el resultado previo (no-op); si la intención del segundo mensaje **contradice** el estado vigente, Inventario responde `IDEMPOTENCY_CONFLICT`.
+* Un **HTTP 202 Accepted** al recibir una solicitud solo significa solicitud admitida, no operación de inventario terminada; el resultado se confirma con el procesamiento asíncrono correspondiente.
+
+Si Ventas/Postventa **no** utiliza la fase de reserva:
+
+* `order.created` por sí solo no reserva ni descuenta y `reserved` puede permanecer en cero en el MVP; el consumo ocurre **únicamente con la confirmación acordada** (pago aprobado o estado equivalente para un canal sin pago electrónico) y el débito se valida **directamente contra `available`**.
+
+Reglas comunes a ambos modelos:
+
 * El módulo de **Despacho no genera consumo adicional ni modifica directamente el stock**: se limita a entregar las unidades correspondientes a ventas ya confirmadas, cuyos consumos ya fueron aplicados y validados bajo la misma regla de consumo.
-* El dominio de Inventario **soporta `reserved` y contratos idempotentes de `reserve/release/consume`**, pero Ventas/Postventa decide en qué momento del ciclo del pedido solicitar una reserva. Mientras ese contrato no esté homologado, `order.created` por sí solo no reserva ni descuenta y `reserved` puede permanecer en cero en el MVP.
-* Si una venta confirmada es anulada **antes del despacho**, el evento provisional `order.cancelled` solicita compensar únicamente un consumo previo exitoso y no compensado.
+* Si una venta confirmada es anulada **antes del despacho**, el evento provisional `order.cancelled` solicita compensar únicamente un consumo previo exitoso y no compensado, o liberar la reserva pendiente según el estado comunicado.
 * Si la mercadería ya fue entregada, la reposición solo ocurre ante una **devolución aceptada y físicamente reintegrable**, comunicada mediante el contrato provisional `order.returned` con SKU, `location_id` de reintegro y cantidades aceptadas. La política de devolución total o parcial —incluidos combos— pertenece a Ventas/Postventa.
 * Una anulación administrativa posterior al despacho que no implique devolución física no repone stock.
 
-Después de cada actualización de stock (por consumo o ajuste), la gestión de inventario **notificará el cambio de stock** de la variante mediante el contrato de evento `inventory.stock.changed`, que será consumido por el dashboard analítico y por otros componentes interesados para mantenerse actualizados.
+Después de cada actualización de stock (por consumo, reserva, liberación o ajuste), la gestión de inventario **notificará el cambio de stock** de la variante mediante el contrato de evento `inventory.stock.changed`, que será consumido por el dashboard analítico y por otros componentes interesados para mantenerse actualizados.
 
 La comunicación entre módulos se realizará mediante las interfaces de integración establecidas para el proyecto, manteniendo la separación entre los diferentes componentes.
 
 ---
 
-### Contrato provisional de consumo, compensación y venta sin stock
-Ventas/Postventa aún no ha homologado eventos. Como hipótesis interna se acepta `order.confirmed` con `order_id`, `operation_id`, `occurred_at`, SKUs y cantidades por línea, referencia/snapshot de componentes de combo cuando aplique, y versión del contrato. Inventario verifica existencia, elegibilidad, stock y deduplicación por `order_id + tipo_operacion + sku`, aplica el débito ACID para **todas las líneas de la misma operación** y registra Kardex y Outbox en la misma transacción local. Publica `inventory.consumption.completed` o `inventory.consumption.rejected` con `order_id`, `operation_id`, SKUs y motivo; no decide ni altera estados del pedido o pagos. Si el stock es insuficiente tras un pedido/pago confirmado, Ventas/Postventa resuelve la anulación, sustitución o reembolso mediante su propio proceso pendiente de coordinación. La consulta anterior a la venta no constituye reserva ni garantía de stock.
+### Contrato provisional de reserva, consumo, compensación y venta sin stock
+Los nombres y payloads de los hitos de pedido (creación, pago confirmado, pago no completado, anulación, devolución) y de los resultados de Inventario constituyen un **contrato de integración propuesto**, pendiente de homologación final con Ventas y Postventa. Los mensajes mencionados en esta SPEC (`CREADO`/`order.created`, `PAGADO`/`order.confirmed`, `PAGO_NO_COMPLETADO`, `order.cancelled`, `order.returned`, y los resultados `inventory.reserve.completed|rejected`, `inventory.consumption.completed|rejected`, `inventory.release.completed|rejected`) son la interpretación interna que implementará Productos y Ofertas cuando reciba una comunicación equivalente acordada; ninguna implementación puede presumir que el equipo externo ya publica tales mensajes, ni que el pago queda automáticamente revertido ante un rechazo de Inventario.
 
-Las compensaciones `order.cancelled`/`order.returned` deben referenciar `order_id`, operación previa, `location_id` y líneas/cantidades aceptadas. `order.cancelled` revierte solamente consumos efectivos y previos a despacho; `order.returned` registra solo unidades realmente aceptadas y físicamente reintegrables. El procesamiento es idempotente, tolera llegada desordenada con estado pendiente/reconciliación y evita acreditar dos veces el mismo consumo. Ningún evento de Despacho ocasiona débito adicional ni decide disponibilidad.
+El ciclo de reserva solicita `inventory.reserve` en `CREADO` con `order_id`, `operation_id`, `occurred_at`, SKUs y cantidades por línea, `location_id` y TTL; `inventory.consume` en `PAGADO` confirma la reserva descontando `on_hand` y `reserved`; `inventory.release` libera la reserva ante `PAGO_NO_COMPLETADO`/anulación. Inventario verifica existencia, elegibilidad, stock y deduplicación por `order_id + tipo_operacion + sku`, aplica el movimiento ACID para **todas las líneas de la misma operación** y registra Kardex y Outbox en la misma transacción local. Publica el resultado correspondiente (aceptado o rechazado, incluido `IDEMPOTENCY_CONFLICT`) sin decidir ni alterar estados del pedido o pagos. Si el stock es insuficiente tras un pedido/pago confirmado, Ventas/Postventa resuelve la anulación, sustitución o reembolso mediante su propio proceso pendiente de coordinación. La consulta anterior a la venta no constituye reserva ni garantía de stock.
+
+Las compensaciones `order.cancelled`/`order.returned` deben referenciar `order_id`, operación previa, `location_id` y líneas/cantidades aceptadas. `order.cancelled` revierte solamente consumos efectivos y previos a despacho o libera la reserva pendiente; `order.returned` registra solo unidades realmente aceptadas y físicamente reintegrables. El procesamiento es idempotente, tolera llegada desordenada con estado pendiente/reconciliación, evita acreditar dos veces el mismo consumo y responde `IDEMPOTENCY_CONFLICT` ante intenciones contradictorias. Ningún evento de Despacho ocasiona débito adicional ni decide disponibilidad.
 
 ### Ajuste masivo y control de concurrencia
 Inventario inicializa cada nuevo SKU vendible con saldo 0 y `stock_version=0` en la ubicación predeterminada, de forma idempotente. Los conteos absolutos de `SPEC-001-carga-exportacion-masiva-productos.md` identifican `(sku, location_id)` y requieren `stock_version`. Inventario es el único dueño del ajuste; registra Kardex con valores anteriores/nuevos de `on_hand`, `reserved` y `available` cuando corresponda. Si hubo consumo, reserva o ajuste concurrente que cambió la versión, publica `VERSION_CONFLICT` y no reaplica un conteo obsoleto. Solo después del commit emite `inventory.stock.adjusted` y `inventory.stock.changed`. Se permiten bloqueos transaccionales breves por `(sku, location_id)`, nunca un bloqueo global del inventario.
@@ -209,6 +225,7 @@ En términos generales, permitirá:
 * Conocer el estado actual del stock de cada variante.
 * Identificar SKUs disponibles, con stock bajo o agotados mediante el umbral resuelto global/SKU y, cuando aplique, por ubicación.
 * Registrar el consumo de unidades sobre una variante.
+* Reservar, confirmar o liberar unidades según el hito del pedido comunicado por Ventas/Postventa (`CREADO` → reserva, `PAGADO` → confirmación/consumo, `PAGO_NO_COMPLETADO`/anulación/TTL → liberación), con estados terminales `CONSUMIDA`, `LIBERADA` y `EXPIRADA`.
 * Actualizar la cantidad disponible después de cada consumo.
 * Evitar consumos superiores al stock existente y consumos concurrentes sobre las mismas unidades.
 * Aplicar el consumo únicamente cuando exista una venta confirmada, quedando Despacho limitado a la entrega de unidades ya vendidas.

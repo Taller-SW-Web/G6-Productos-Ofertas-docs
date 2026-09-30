@@ -27,6 +27,7 @@ La unidad primaria de inventario del dashboard es el **SKU vendible**. El Produc
 | **CA-07** | Los indicadores y alertas deben actualizarse cuando la gestión de inventario notifique un cambio de stock de una variante mediante el contrato de evento `inventory.stock.changed`; la actualización debe reflejar el saldo y el estado vigentes. |
 | **CA-08** | Después de un consumo correctamente registrado, el estado del SKU debe reflejarse correctamente en el dashboard: si pasa de **Disponible → Stock bajo**, debe verse como **Stock bajo**; si pasa de **Stock bajo → Agotado**, debe verse como **Agotado**. |
 | **CA-09** | El dashboard permite filtrar por `location_id` y comparar ubicaciones habilitadas. Si solo existe `DEFAULT`, mantiene una vista única sin inventar tiendas o almacenes no configurados. |
+| **CA-10** | El dashboard es estrictamente de lectura: consume `inventory.stock.changed` para recalcular indicadores y alertas, **no lo publica** ni ajusta, reserva o consume stock desde la pantalla. |
 
 ## Escenarios dado-cuando-entonces
 
@@ -91,5 +92,5 @@ La unidad primaria de inventario del dashboard es el **SKU vendible**. El Produc
 
 * **Indicadores mínimos:** total de SKUs vendibles, total de unidades disponibles y cantidad de SKUs por estado (Disponible, Stock bajo y Agotado).
 * **Umbral:** se usa un umbral global configurable como fallback y override por SKU cuando exista.
-* **Filtros:** el dashboard permite filtrar por producto, categoría, marca, SKU y estado de inventario.
+* **Filtros:** el dashboard permite filtrar por producto, categoría, marca, SKU, ubicación (`location_id`) y estado de inventario.
 * **Distribución:** la vista por ubicación muestra `on_hand`, `reserved`, `available` y estados de stock; los rankings de ventas quedan fuera del alcance y pertenecen a Ventas/Postventa.

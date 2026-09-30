@@ -76,18 +76,18 @@ Genera un prototipo navegable con HTML, CSS y JavaScript estáticos:
 |---|---|
 | ID del wireframe | WF-016 |
 | Nombre del flujo | Dashboard analítico y alertas de stock |
-| Versión | 0.4 |
+| Versión | 0.5 |
 | Estado | Borrador |
 | Responsable | Miguel Ángel Taco Zavala |
 | Fecha | 2026-09-17 |
-| Última actualización | 2026-09-21 |
+| Última actualización | 2026-09-30 |
 
 ## 2. Trazabilidad
 
 | Fuente | Identificador o sección | Aporte al flujo |
 |---|---|---|
 | Spec | SPEC-016-dashboard-alertas-stock.md, secciones 1–5 | Indicadores, alertas, distribución por ubicación y actualización reactiva |
-| Historia de usuario | HU-016-dashboard-alertas-stock.md, CA-01 a CA-09 | Criterios y escenarios |
+| Historia de usuario | HU-016-dashboard-alertas-stock.md, CA-01 a CA-10 | Criterios y escenarios |
 | Diseño | DESIGN.md | Lenguaje visual monocromático de baja fidelidad |
 | Backlog | No proporcionado | No se asignan IDs de backlog |
 
@@ -396,6 +396,7 @@ Aplicar DESIGN.md como única fuente de representación visual.
 | CA-07 | S-01, reactividad ante `inventory.stock.changed` (A-04) |
 | CA-08 | S-01, transición de estados tras consumo |
 | CA-09 | S-01, filtro por `location_id` y vista DEFAULT |
+| CA-10 | S-01, dashboard estrictamente de lectura (reactivo a `inventory.stock.changed` sin republicarlo ni mutar stock) |
 
 ## 17. Supuestos
 
@@ -428,6 +429,7 @@ Aplicar DESIGN.md como única fuente de representación visual.
 | 0.1 | 2026-09-17 | Asistente | Borrador inicial basado en spec, HU, template y DESIGN.md | Pendiente |
 | 0.3 | 2026-09-18 | Asistente | Alineación de wireframe con Specs/HU definitivos y contratos externos provisionales | Pendiente de revisión del equipo |
 | 0.4 | 2026-09-21 | Asistente | Purgado de Top 5 productos más vendidos, ventas confirmadas y selectores de período; incorporación de distribución operativa por ubicación y fórmula de umbral efectivo | Aprobado |
+| 0.5 | 2026-09-30 | Asistente | Incorporación de CA-10 (dashboard estrictamente de lectura: consume `inventory.stock.changed`, no lo republica ni muta stock) y trazabilidad actualizada | Pendiente de revisión del equipo |
 
 ---
 
@@ -436,7 +438,7 @@ Aplicar DESIGN.md como única fuente de representación visual.
 - [x] Las fuentes funcionales están identificadas.
 - [x] El alcance y fuera de alcance están claros.
 - [x] Las pantallas y variantes están inventariadas.
-- [x] Los criterios CA-01 a CA-09 están cubiertos.
+- [x] Los criterios CA-01 a CA-10 están cubiertos.
 - [x] La distribución por ubicación, los filtros y la reactividad están documentados.
 - [x] Se eliminaron rankings de ventas y Top 5 según SPEC-016 y HU-016.
 - [x] Los supuestos y preguntas están registrados.
