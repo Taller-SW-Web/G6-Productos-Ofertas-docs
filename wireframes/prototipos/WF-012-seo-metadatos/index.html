@@ -1,5 +1,197 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gestión de SEO y metadatos</title><style>
-:root{--a:#f3f4f6;--b:#D1D5DB;--c:#d1d5db;--m:#6b7280;--k:#111827}*{box-sizing:border-box}body{margin:0;color:var(--k);font:16px/1.5 Inter,system-ui,sans-serif}button,input,textarea{font:inherit;min-height:44px}.top{border-bottom:1px solid var(--c)}.topin,.wrap{max-width:1200px;margin:auto;padding:16px 24px}.topin,.head,.row{display:flex;justify-content:space-between;gap:12px}.brand{font-weight:700}.muted{color:var(--m)}.wrap{padding-top:32px}.head h1{font-size:clamp(26px,4vw,36px);margin:0}.btn{border:1px solid var(--k);background:#fff;padding:10px 14px;border-radius:4px}.primary{background:var(--k);color:#fff}.panel{border:1px solid var(--c);padding:16px;margin:14px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.wide{grid-column:1/-1}label{font-weight:600;display:block}.input,textarea{width:100%;border:1px solid var(--c);padding:10px;background:#fff}.count{color:var(--m);font-size:13px}.over{font-weight:700;text-decoration:underline}.notice{border:2px solid var(--k);padding:14px;margin:12px 0}.tablewrap{overflow:auto}table{width:100%;min-width:650px;border-collapse:collapse}th,td{padding:12px;border-bottom:1px solid var(--b);text-align:left}th{background:var(--a)}.slug{font-family:monospace}.cards{display:none}@media(max-width:900px){.grid{grid-template-columns:1fr}.desktop{display:none}.cards{display:block}}@media(max-width:600px){.topin,.wrap{padding-left:16px;padding-right:16px}.topin,.head{display:block}.row{flex-wrap:wrap}.row>.btn{flex:1 1 100%}}
-</style></head><body><header class="top"><div class="topin"><div class="brand">PO Productos y ofertas</div><div class="muted">Productos / SEO</div></div></header><main class="wrap" id="app"></main><script>
-const LT=70,LD=160;let cats=[{id:'cal',name:'Calzado',slug:'calzado',title:'Calzado deportivo | Tienda oficial',desc:'Encuentra calzado deportivo original.',history:[]},{id:'fut',name:'Fútbol',slug:'futbol',title:'Fútbol: balones y equipamiento',desc:'Todo para la cancha.',history:[]},{id:'bot',name:'Botines',slug:'botines',title:'Botines deportivos',desc:'Botines para distintas superficies.',history:[{old:'botin-antiguo',date:'2026-08-02'}]},{id:'run',name:'Running',slug:null,title:'',desc:'',history:[]}];const s={view:'list',id:null,form:null},app=document.getElementById('app');const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const norm=x=>x.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');function used(x,id){return cats.some(c=>c.id!==id&&c.slug===x)}function unique(b,id){let x=b,n=2;while(used(x,id))x=`${b}-${n++}`;return x}function head(t){return `<div class="head"><h1>${t}</h1></div>`}function render(){s.view==='list'?list():s.view==='edit'?edit():history()}function list(){app.innerHTML=head('SEO por categoría')+`<div class="desktop tablewrap"><table><thead><tr><th>Categoría</th><th>Slug</th><th>Meta-título</th><th></th></tr></thead><tbody>${cats.map(c=>`<tr><td>${esc(c.name)}</td><td class="slug">${c.slug||'Pendiente'}</td><td>${esc(c.title||'Pendiente')}</td><td><button class="btn" data-a="edit" data-id="${c.id}">${c.slug?'Editar':'Configurar'}</button> <button class="btn" data-a="history" data-id="${c.id}">Historial</button></td></tr>`).join('')}</tbody></table></div><div class="cards">${cats.map(c=>`<article class="panel"><strong>${esc(c.name)}</strong><div class="slug">${c.slug||'Pendiente'}</div><div class="row"><button class="btn" data-a="edit" data-id="${c.id}">Editar</button><button class="btn" data-a="history" data-id="${c.id}">Historial</button></div></article>`).join('')}</div>`;bind()}function edit(){const c=cats.find(x=>x.id===s.id),f=s.form;app.innerHTML=head('SEO · '+c.name)+`<section class="panel"><div class="grid"><div class="wide"><label>Slug</label><input class="input slug" id="slug" value="${esc(f.slug)}"><div id="err"></div><button class="btn" id="regen">Regenerar desde el nombre</button>${f.auto?`<div class="notice">Slug automático: <strong>/categoria/${esc(f.slug)}</strong>${f.slug!==norm(c.name)?'<br>Se aplicó un sufijo porque el slug base ya estaba en uso.':''}</div>`:''}</div><div class="wide"><label>Meta-título</label><input class="input" id="title" value="${esc(f.title)}"><div class="count ${f.title.length>LT?'over':''}" id="tc">${f.title.length} / ${LT}</div></div><div class="wide"><label>Meta-descripción</label><textarea id="desc">${esc(f.desc)}</textarea><div class="count ${f.desc.length>LD?'over':''}" id="dc">${f.desc.length} / ${LD}</div></div></div><div class="row"><button class="btn" data-a="back">Cancelar</button><button class="btn primary" id="save">Guardar SEO</button></div></section>`;slug.oninput=e=>{f.slug=e.target.value.trim();f.auto=false};title.oninput=e=>{f.title=e.target.value;tc.textContent=`${f.title.length} / ${LT}`;tc.classList.toggle('over',f.title.length>LT)};desc.oninput=e=>{f.desc=e.target.value;dc.textContent=`${f.desc.length} / ${LD}`;dc.classList.toggle('over',f.desc.length>LD)};regen.onclick=()=>{f.slug=unique(norm(c.name),c.id);f.auto=true;render()};save.onclick=()=>{const x=f.slug.trim();if(!x)return;if(used(x,c.id)&&!f.auto){err.textContent='El slug indicado ya está en uso.';return}const old=c.slug;c.slug=x;c.title=f.title;c.desc=f.desc;if(old&&old!==x)c.history.push({old,date:new Date().toISOString().slice(0,10)});s.view='list';render()};bind()}function history(){const c=cats.find(x=>x.id===s.id);app.innerHTML=head('Historial · '+c.name)+`<section class="panel"><p>Slug actual: <span class="slug">${c.slug||'Pendiente'}</span></p>${c.history.length?`<div class="tablewrap"><table><thead><tr><th>Slug anterior</th><th>Resuelve a</th><th>Fecha</th></tr></thead><tbody>${c.history.map(h=>`<tr><td class="slug">${esc(h.old)}</td><td class="slug">${esc(c.slug)}</td><td>${h.date}</td></tr>`).join('')}</tbody></table></div>`:'<p>Sin historial.</p>'}<div class="notice">Marketplace utiliza esta resolución para responder la redirección permanente en la URL pública.</div><button class="btn" data-a="back">Volver</button></section>`;bind()}function bind(){document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a,id=b.dataset.id;if(a==='edit'){s.id=id;const c=cats.find(x=>x.id===id);s.form={slug:c.slug||unique(norm(c.name),c.id),title:c.title,desc:c.desc,auto:!c.slug};s.view='edit';render()}if(a==='history'){s.id=id;s.view='history';render()}if(a==='back'){s.view='list';render()}})}render();
-</script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestión de SEO y metadatos</title>
+<style>
+:root{
+  --surface:#FFFFFF;
+  --n10:#F3F4F6;
+  --n30:#D1D5DB;
+  --n50:#6B7280;
+  --n90:#111827;
+}
+*{box-sizing:border-box}
+html{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--n90);background:var(--surface)}
+body{margin:0;background:var(--surface);line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit;min-height:44px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{
+  outline:3px solid var(--n90);outline-offset:2px
+}
+.top{border-bottom:1px solid var(--n30);background:var(--surface)}
+.topin,.wrap{max-width:1200px;margin:auto;padding-left:24px;padding-right:24px}
+.topin{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.wrap{padding-top:32px;padding-bottom:64px}
+.brand{font-weight:700}.crumb,.muted{color:var(--n50)}.small{font-size:13px}
+.head{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap}
+.head h1{font-size:clamp(28px,4vw,36px);line-height:1.15;margin:0 0 8px}
+.head h2{margin:0 0 8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--n90);background:var(--surface);padding:10px 14px;border-radius:4px;cursor:pointer}
+.btn.primary{background:var(--n90);color:var(--surface)}
+.btn[disabled]{color:var(--n50);border-color:var(--n30);background:var(--n10);cursor:not-allowed}
+.panel{border:1px solid var(--n30);padding:16px;margin-bottom:16px;background:var(--surface)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.wide{grid-column:1/-1}
+label{display:block;font-weight:600;margin-bottom:6px}
+.field{margin-bottom:16px}
+.input,select,textarea{width:100%;border:1px solid var(--n30);border-radius:4px;background:var(--surface);padding:10px 12px}
+textarea{min-height:110px;resize:vertical}
+.help,.count{font-size:13px;color:var(--n50)}
+.over{font-weight:700;text-decoration:underline;color:var(--n90)}
+.notice{border:1px solid var(--n90);padding:14px 16px;background:var(--surface)}
+.notice.soft{border-color:var(--n30);background:var(--n10)}
+.preview{border:1px solid var(--n30);padding:16px;background:var(--surface)}
+.preview .url{font-family:"Roboto Mono",ui-monospace,monospace;font-size:13px;color:var(--n50);word-break:break-all}
+.preview .title{font-size:20px;font-weight:700;margin:6px 0}
+.preview .desc{color:var(--n50)}
+.tablewrap{overflow:auto;border:1px solid var(--n30)}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th,td{padding:12px;border-bottom:1px solid var(--n30);text-align:left;vertical-align:top}
+th{background:var(--n10);font-size:13px}
+tbody tr:last-child td{border-bottom:0}
+.badge{display:inline-flex;align-items:center;border:1px solid var(--n30);padding:3px 9px;border-radius:999px;font-size:13px}
+.mono{font-family:"Roboto Mono",ui-monospace,monospace}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:30}
+.overlay.open{display:flex}
+.dialog{background:var(--surface);border:2px solid var(--n90);width:min(720px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:20px}
+.dialog h2{margin-top:0}
+.empty{text-align:center;border:1px dashed var(--n30);padding:48px 20px}
+.hidden{display:none!important}
+.statusbox{border:1px solid var(--n30);padding:16px;background:var(--n10)}
+.progress{height:10px;border:1px solid var(--n30);background:var(--surface)}
+.progress span{display:block;height:100%;background:var(--n90)}
+.filters{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:900px){
+  .grid,.grid3,.filters{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .topin,.wrap{padding-left:16px;padding-right:16px}
+  .topin,.head{display:block}
+  .grid,.grid3,.filters{grid-template-columns:1fr}
+  .row>.btn{flex:1 1 100%}
+  table{min-width:680px}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin"><div class="brand">PO Productos y ofertas</div><div class="crumb">Productos / SEO</div></div></header>
+<main class="wrap" id="app"></main>
+<script>
+const TITLE_LIMIT=70, DESC_LIMIT=160;
+let categories=[
+  {id:'cal',name:'Calzado',slug:'calzado',title:'Calzado deportivo | Tienda oficial',desc:'Encuentra calzado deportivo original.',history:[]},
+  {id:'fut',name:'Fútbol',slug:'futbol',title:'Fútbol: balones y equipamiento',desc:'Todo para la cancha.',history:[]},
+  {id:'bot',name:'Botines',slug:'botines',title:'Botines deportivos',desc:'Botines para distintas superficies.',history:[{old:'botin-antiguo',date:'2026-08-02'}]},
+  {id:'run',name:'Running',slug:null,title:'',desc:'',history:[]}
+];
+const state={view:'list',id:null,form:null};
+const app=document.getElementById('app');
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=x=>x.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const used=(slug,id)=>categories.some(c=>c.id!==id&&c.slug===slug);
+function unique(base,id){let candidate=base,n=2;while(used(candidate,id))candidate=`${base}-${n++}`;return candidate}
+function head(title,copy=''){return `<div class="head"><div><h1>${title}</h1>${copy?`<p class="muted">${copy}</p>`:''}</div></div>`}
+function render(){state.view==='list'?renderList():state.view==='edit'?renderEdit():renderHistory()}
+function renderList(){
+  app.innerHTML=head('SEO por categoría','Administra slug y metadatos sin simular el comportamiento público del Marketplace.')+
+  `<div class="tablewrap"><table><thead><tr><th>Categoría</th><th>Slug</th><th>Meta-título</th><th>Acciones</th></tr></thead><tbody>
+  ${categories.map(c=>`<tr><td><strong>${esc(c.name)}</strong></td><td class="mono">${esc(c.slug||'Pendiente')}</td><td>${esc(c.title||'Pendiente')}</td><td><div class="row"><button class="btn" data-action="edit" data-id="${c.id}">${c.slug?'Editar':'Configurar'}</button><button class="btn" data-action="history" data-id="${c.id}">Historial</button></div></td></tr>`).join('')}
+  </tbody></table></div>`;
+  bindList();
+}
+function bindList(){
+  document.querySelectorAll('[data-action]').forEach(btn=>btn.onclick=()=>{
+    const c=categories.find(x=>x.id===btn.dataset.id);
+    if(btn.dataset.action==='edit'){
+      state.id=c.id;
+      state.form={slug:c.slug||unique(norm(c.name),c.id),title:c.title,desc:c.desc,auto:!c.slug};
+      state.view='edit';render();
+    } else {
+      state.id=c.id;state.view='history';render();
+    }
+  });
+}
+function previewBlock(form){
+  return `<div class="preview" aria-live="polite">
+    <div class="small muted"><strong>Vista previa</strong></div>
+    <div class="url">/categoria/${esc(form.slug||'slug-pendiente')}</div>
+    <div class="title">${esc(form.title||'Título de la categoría')}</div>
+    <div class="desc">${esc(form.desc||'La descripción aparecerá aquí mientras editas.') }</div>
+  </div>`;
+}
+function renderEdit(){
+  const c=categories.find(x=>x.id===state.id),f=state.form;
+  app.innerHTML=head('SEO · '+c.name,'Configura los metadatos y revisa cómo quedará la información antes de guardar.')+
+  `<section class="panel">
+    <div class="grid">
+      <div class="wide field">
+        <label for="slug">Slug</label>
+        <input class="input mono" id="slug" value="${esc(f.slug)}">
+        <div class="help">URL pública: /categoria/<span id="slugHelp">${esc(f.slug)}</span></div>
+        <div id="slugError" class="help"></div>
+        <button class="btn" id="regen" type="button" style="margin-top:8px">Regenerar desde el nombre</button>
+        ${f.auto?`<div class="notice soft" style="margin-top:12px">Slug automático: <strong>/categoria/${esc(f.slug)}</strong>${f.slug!==norm(c.name)?'<br>Se añadió un sufijo porque el slug base ya estaba en uso.':''}</div>`:''}
+      </div>
+      <div class="wide field">
+        <label for="title">Meta-título</label>
+        <input class="input" id="title" value="${esc(f.title)}">
+        <div class="count ${f.title.length>TITLE_LIMIT?'over':''}" id="titleCount">${f.title.length} / ${TITLE_LIMIT}</div>
+      </div>
+      <div class="wide field">
+        <label for="desc">Meta-descripción</label>
+        <textarea id="desc">${esc(f.desc)}</textarea>
+        <div class="count ${f.desc.length>DESC_LIMIT?'over':''}" id="descCount">${f.desc.length} / ${DESC_LIMIT}</div>
+      </div>
+      <div class="wide">
+        <div id="previewWrap">${previewBlock(f)}</div>
+      </div>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:16px">
+      <button class="btn" id="cancel">Cancelar</button>
+      <button class="btn primary" id="save">Guardar SEO</button>
+    </div>
+  </section>`;
+  bindEdit(c);
+}
+function refreshPreview(){
+  const f=state.form;
+  document.getElementById('previewWrap').innerHTML=previewBlock(f);
+  document.getElementById('slugHelp').textContent=f.slug||'slug-pendiente';
+  const tc=document.getElementById('titleCount');
+  tc.textContent=`${f.title.length} / ${TITLE_LIMIT}`;tc.classList.toggle('over',f.title.length>TITLE_LIMIT);
+  const dc=document.getElementById('descCount');
+  dc.textContent=`${f.desc.length} / ${DESC_LIMIT}`;dc.classList.toggle('over',f.desc.length>DESC_LIMIT);
+}
+function bindEdit(c){
+  slug.oninput=e=>{state.form.slug=e.target.value.trim();state.form.auto=false;slugError.textContent='';refreshPreview()};
+  title.oninput=e=>{state.form.title=e.target.value;refreshPreview()};
+  desc.oninput=e=>{state.form.desc=e.target.value;refreshPreview()};
+  regen.onclick=()=>{state.form.slug=unique(norm(c.name),c.id);state.form.auto=true;render()};
+  cancel.onclick=()=>{state.view='list';render()};
+  save.onclick=()=>{
+    const candidate=state.form.slug.trim();
+    if(!candidate){slugError.textContent='Ingresa un slug.';return}
+    if(used(candidate,c.id)&&!state.form.auto){slugError.textContent='El slug indicado ya está en uso.';return}
+    const old=c.slug;
+    c.slug=candidate;c.title=state.form.title;c.desc=state.form.desc;
+    if(old&&old!==candidate)c.history.push({old,date:new Date().toISOString().slice(0,10)});
+    state.view='list';render();
+  };
+}
+function renderHistory(){
+  const c=categories.find(x=>x.id===state.id);
+  app.innerHTML=head('Historial · '+c.name,'Consulta las resoluciones anteriores del slug.')+
+  `<section class="panel">
+    <p>Slug actual: <span class="mono">${esc(c.slug||'Pendiente')}</span></p>
+    ${c.history.length?`<div class="tablewrap"><table><thead><tr><th>Slug anterior</th><th>Resuelve a</th><th>Fecha</th></tr></thead><tbody>${c.history.map(h=>`<tr><td class="mono">${esc(h.old)}</td><td class="mono">${esc(c.slug)}</td><td>${h.date}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Sin historial de cambios.</div>'}
+    <div class="notice soft" style="margin-top:16px">Marketplace utiliza esta resolución para responder la redirección permanente en la URL pública.</div>
+    <button class="btn" id="back" style="margin-top:16px">Volver</button>
+  </section>`;
+  back.onclick=()=>{state.view='list';render()};
+}
+render();
+</script>
+</body></html>
