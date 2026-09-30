@@ -154,7 +154,8 @@ flowchart LR
         direction TB
         INICIO_CHK((Iniciar checkout))
         CHK1["Seleccionar combo elegible y agregar al carrito"]
-        CHK2["Ingresar cupón de descuento opcional"]
+        D_ING_CUP{"¿Cliente ingresa cupón?"}
+        CHK2["Ingresar código de cupón"]
         CHK3["Confirmar intención de compra"]
         CHK4["Completar pago en pasarela"]
         CHK5["Visualizar confirmación de pedido"]
@@ -197,9 +198,11 @@ flowchart LR
     FIN_COMPRA_FAIL(((Pedido cancelado y recursos gestionados)))
 
     INICIO_CHK --> CHK1
-    CHK1 --> CHK2
+    CHK1 --> D_ING_CUP
+    D_ING_CUP -->|"Sí"| CHK2
     CHK2 --> PR1
     PR1 --> CHK3
+    D_ING_CUP -->|"No"| CHK3
     CHK3 --> V1
     V1 --> V2
     V2 --> INV1
