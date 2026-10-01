@@ -1,14 +1,14 @@
-﻿# LAB â€” cueva
+# LAB — cueva
 
 > Rama temporal: `lab/cueva`  
 > Rama oficial: `cueva`  
-> **Regla inmutable: Nunca hacer merge de esta rama hacia una rama oficial ni abrir Pull Request.**
+> **Regla inmutable: Nunca hacer merge de esta rama hacia cualquier rama oficial ni abrir Pull Request.**
 
 ## Finalidad
 
 Iterar y experimentar mockups con Stitch MCP y asistentes en un entorno aislado.
 
-La UX no se define aquÃ­. Stitch **no estÃ¡ autorizado a redefinir la UX del mÃ³dulo**. Esta rama debe aplicar obligatoriamente:
+La UX no se define aquí. Stitch **no está autorizado a redefinir la UX del módulo**. Esta rama debe aplicar obligatoriamente:
 
 ```text
 mockups/ux/propuesta-ux.md
@@ -16,7 +16,7 @@ mockups/ux/ux-decisions.md
 mockups/ux/ux-guidelines.md
 ```
 
-Cada funcionalidad se guÃ­a por:
+Cada funcionalidad se guía por:
 
 ```text
 mockups/MK-XXX/component-spec.md
@@ -27,45 +27,49 @@ mockups/MK-XXX/tasks.md
 ## Regla Conceptual
 
 ```text
-3 propuestas UX del mÃ³dulo â†’ comparaciÃ³n y consolidaciÃ³n â†’ Propuesta UX Integral Adoptada
-                                      â†“
+3 propuestas UX del módulo → comparación y consolidación → Propuesta UX Integral Adoptada
+                                      ↓
+                               UX Decisions (UXD-XXX)
+                                      ↓
+                               UX Guidelines
+                                      ↓
                                16 funcionalidades
-                                      â†“
+                                      ↓
                                1 MK por funcionalidad
-                                      â†“
+                                      ↓
                                N pantallas por MK
 ```
 
-Stitch puede generar candidatos de implementaciÃ³n para perfeccionar una pantalla, pero esos candidatos **nunca son propuestas UX**.
+Stitch puede generar candidatos de implementación para perfeccionar una pantalla, pero esos candidatos **nunca son propuestas UX**.
 
 ## Solo Web Desktop
 
 - Entorno: Web Desktop exclusivamente.
 - `deviceType = DESKTOP` en Stitch MCP.
-- Viewport canÃ³nico de generaciÃ³n y revisiÃ³n: 1440 px (sin considerarlo un ancho rÃ­gido).
-- No diseÃ±ar ni generar variantes mobile o tablet.
+- Viewport canónico de generación y revisión: 1440 px (sin considerarlo un ancho rígido).
+- No diseñar ni generar variantes mobile o tablet.
 
 ## Trabajo Permitido en `lab/cueva`
 
 - Pantallas y componentes temporales de prototipado.
-- Variantes y candidatos de implementaciÃ³n.
-- Versionado de artefactos experimentales livianos en `.stitch/` (prompts, IDs de pantalla generados, notas de sesiÃ³n, HTML/cÃ³digo de prueba).
-- Commits y pruebas iterativas rÃ¡pidas.
+- Variantes y candidatos de implementación.
+- Versionado de artefactos experimentales livianos en `.stitch/` (prompts, IDs de pantalla generados, notas de sesión, HTML/código de prueba).
+- Commits y pruebas iterativas rápidas.
 
 ## Trabajo Prohibido en `lab/cueva`
 
-- Modificar la UX transversal sin aprobaciÃ³n oficial en `master`.
+- Modificar la UX transversal sin aprobación oficial en `master`.
 - Abrir Pull Request desde `lab/cueva`.
-- Fusionar (`git merge`) `lab/cueva` hacia ramas oficiales (`cueva`, `master`, `testing`).
-- Promover carpetas `.stitch/`, cachÃ©s o prompts temporales a la rama oficial.
+- Fusionar (`git merge`) `lab/cueva` hacia cualquier rama oficial (`cueva`, `master`).
+- Promover carpetas `.stitch/`, cachés o prompts temporales a la rama oficial.
 
-## PolÃ­tica de `.stitch/`
+## Política de `.stitch/`
 
-- **Versionar en `lab/cueva` (livianos):** prompts enviados, notas de sesiÃ³n (`stitch-session.json`), IDs de pantalla y cÃ³digo HTML preliminar generado para conservar la trazabilidad de iteraciones.
-- **Ignorar (pesados/regenerables):** cachÃ©s de herramientas, dependencias locales y screenshots redundantes.
-- **En ramas oficiales:** NingÃºn archivo de `.stitch/` puede promoverse.
+- **Versionar en `lab/cueva` (livianos):** prompts enviados (`.stitch/prompts/`), notas de sesión (`.stitch/sesiones/`), metadata ligera, IDs de pantalla y código HTML preliminar generado para conservar la trazabilidad de iteraciones.
+- **Ignorar (pesados/regenerables):** cachés de herramientas, dependencias locales (`node_modules`), screenshots redundantes/pesados, outputs regenerables grandes y payloads temporales.
+- **En ramas oficiales:** Ningún archivo de `.stitch/` puede promoverse.
 
-## Flujo de ExperimentaciÃ³n con Stitch MCP
+## Flujo de Experimentación con Stitch MCP
 
 ```mermaid
 flowchart TD
@@ -74,27 +78,27 @@ flowchart TD
     C["Generar candidato con Stitch DESKTOP"]
     D["Revisar cumplimiento"]
     E["Editar de forma focalizada edit_screens"]
-    F{"Â¿Cumple criterios?"}
+    F{"¿Cumple criterios?"}
     G["Seguir refinando"]
-    H["Normalizar cÃ³digo en prototipo/src/pantallas/"]
+    H["Normalizar código en prototipo/src/pantallas/"]
     I["Completar validation-report.md"]
     J["Promover selectivamente a cueva"]
 
     A --> B --> C --> D --> E --> F
     F -- "No" --> G --> E
-    F -- "SÃ­" --> H --> I --> J
+    F -- "Sí" --> H --> I --> J
 ```
 
-## PromociÃ³n Selectiva hacia la Rama Oficial
+## Promoción Selectiva hacia la Rama Oficial
 
-Cuando una funcionalidad (`MK-XXX`) estÃ© finalizada y cuente con `validation-report.md` con dictamen **APROBADO**:
+Cuando una funcionalidad (`MK-XXX`) esté finalizada y cuente con `validation-report.md` con dictamen **APROBADO**:
 
 ```bash
 # 1. Posicionarse en la rama oficial limpia y actualizada
 git switch cueva
 git pull --ff-only origin cueva
 
-# 2. Restaurar selectivamente ÃšNICAMENTE el cÃ³digo normalizado y validation-report.md
+# 2. Restaurar selectivamente ÚNICAMENTE el código normalizado y validation-report.md
 git restore --source lab/cueva -- \
   mockups/MK-XXX/validation-report.md \
   mockups/prototipo/src/pantallas/MKXXX
@@ -103,20 +107,20 @@ git restore --source lab/cueva -- \
 git status
 git diff
 
-# 4. Agregar explÃ­citamente Ãºnicamente las rutas aprobadas
+# 4. Agregar explícitamente únicamente las rutas aprobadas
 git add mockups/MK-XXX/validation-report.md mockups/prototipo/src/pantallas/MKXXX
 
 # 5. Auditar minuciosamente el staging (sin .stitch/, prompts ni residuos experimentales)
 git diff --cached
 
 # 6. Commit y push a la rama oficial
-git commit -m "feat(mockups): promover cÃ³digo y reporte de MK-XXX aprobado desde lab/cueva"
+git commit -m "feat(mockups): promover código y reporte de MK-XXX aprobado desde lab/cueva"
 git push origin cueva
 ```
 
-> **Aviso:** `component-spec.md`, `plan.md` y `tasks.md` no se sobrescriben masivamente desde `lab/`. Si requirieron ajustes justificados, se restauran individualmente tras revisiÃ³n explÃ­cita.
+> **Aviso:** `component-spec.md`, `plan.md` y `tasks.md` no se sobrescriben masivamente desde `lab/`. Si requirieron ajustes justificados, se restauran individualmente tras revisión explícita.
 
-## SincronizaciÃ³n desde la Rama Oficial
+## Sincronización desde la Rama Oficial
 
 Para incorporar actualizaciones provenientes de `cueva` hacia `lab/cueva`:
 
@@ -127,9 +131,9 @@ git merge origin/cueva
 git push origin lab/cueva
 ```
 
-## Cierre y EliminaciÃ³n
+## Cierre y Eliminación
 
-Al finalizar la validaciÃ³n de todos los mockups asignados:
+Al finalizar la validación de todos los mockups asignados:
 
 ```bash
 git push origin --delete lab/cueva

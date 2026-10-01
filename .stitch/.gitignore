@@ -1,0 +1,23 @@
+# Reglas de exclusión para experimentación en .stitch/
+# Solo se permite versionar en lab/* artefactos livianos de trazabilidad:
+# - .stitch/prompts/
+# - .stitch/sesiones/
+# - metadata ligera y screen IDs
+
+# Ignorar dependencias y cachés
+node_modules/
+.cache/
+tmp/
+*.log
+
+# Ignorar capturas y artefactos binarios pesados o redundantes
+screenshots/
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# Ignorar outputs y payloads temporales grandes
+payloads/
+outputs/
+*.tmp

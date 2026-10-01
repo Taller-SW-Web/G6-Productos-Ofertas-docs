@@ -1,129 +1,123 @@
-# Propuesta UX del Módulo — Productos y Ofertas
+# Propuesta UX del Módulo — [Nombre del Módulo]
 
 > Documento único y transversal para todo el módulo.
 
-## 1. Identificación
+## 1. Identificación y Objetivos del Módulo
 
-- **Módulo:** Productos y Ofertas
+- **Módulo:** [Nombre del Módulo]
 - **Versión:** [vX.Y]
 - **Responsables:** [Nombres]
 - **Fecha:** [AAAA-MM-DD]
-- **Estado:** Borrador | En revisión | Aprobado
+- **Estado:** En revisión | Aprobado
+- **Actor Principal Canónico:** [Rol canónico, ej. Gestor Comercial]
+- **Alcance de Plataforma:** Web Desktop exclusivamente.
+- **Viewport canónico de generación y revisión:** 1440 px de ancho (utilizado como estándar de verificación, sin implicar un diseño de ancho rígido).
 
-## 2. Objetivo
+### Objetivo General
+[Definir la experiencia general que debe mantenerse coherente a través de todas las funcionalidades del módulo.]
 
-Definir la experiencia general que debe mantenerse coherente a través de todas las funcionalidades del módulo.
+---
 
-Esta propuesta **no describe una funcionalidad específica** ni reemplaza SPEC, HU, WF, Flow o Design System.
+## 2. Propuesta UX 1 — [Nombre del Enfoque 1, ej. Operativo / Denso en Datos]
 
-## 3. Fuentes revisadas
+*(Preservada como evidencia académica)*
 
-| Fuente | Referencia | Aporte |
-|---|---|---|
-| SPEC | [Rutas/IDs] | Reglas funcionales |
-| HU | [Rutas/IDs] | Necesidades del usuario |
-| Wireframes | [Rutas] | Estructuras base |
-| Flows | [Rutas] | Recorridos |
-| API Contract | [Ruta] | Datos e integraciones |
-| Design System | [Ruta/Figma] | Foundations y componentes |
+### Filosofía y Concepto
+[Describir los principios y la postura de diseño de este enfoque.]
 
-## 4. Usuarios del módulo
+### Fortalezas
+- [Fortaleza 1 y funcionalidades donde destaca]
+- [Fortaleza 2]
 
-| Usuario | Objetivos principales | Tareas frecuentes |
-|---|---|---|
-| [Rol] | [Objetivos] | [Tareas] |
+### Riesgos y Limitaciones
+- [Riesgo 1]
+- [Riesgo 2]
 
-## 5. Principios UX del módulo
+---
 
-### PUX-01 — [Nombre]
+## 3. Propuesta UX 2 — [Nombre del Enfoque 2, ej. Guiado / Asistido por Pasos]
 
-**Principio**  
-[Regla conceptual.]
+*(Preservada como evidencia académica)*
 
-**Aplicación**  
-[Cómo debe reflejarse en las funcionalidades.]
+### Filosofía y Concepto
+[Describir los principios y la postura de diseño de este enfoque.]
 
-**Evitar**  
-[Antipatrón.]
+### Fortalezas
+- [Fortaleza 1 y funcionalidades donde destaca]
+- [Fortaleza 2]
 
-Repetir según sea necesario.
+### Riesgos y Limitaciones
+- [Riesgo 1]
+- [Riesgo 2]
 
-## 6. Modelo general de interacción
+---
 
-Describir cómo se espera que el usuario:
+## 4. Propuesta UX 3 — [Nombre del Enfoque 3, ej. Modular / Paneles Contextuales]
 
-- Navegue dentro del módulo.
-- Encuentre información.
-- Filtre o busque.
-- Comprenda disponibilidad.
-- Comprenda precios/promociones.
-- Ejecute acciones.
-- Reciba feedback.
-- Se recupere de errores.
+*(Preservada como evidencia académica)*
 
-## 7. Jerarquía de información
+### Filosofía y Concepto
+[Describir los principios y la postura de diseño de este enfoque.]
 
-Definir prioridades transversales.
+### Fortalezas
+- [Fortaleza 1 y funcionalidades donde destaca]
+- [Fortaleza 2]
 
-1. **Primaria:** [Ej. tarea/estado actual].
-2. **Secundaria:** [Ej. datos de apoyo].
-3. **Complementaria:** [Ej. metadatos].
+### Riesgos y Limitaciones
+- [Riesgo 1]
+- [Riesgo 2]
 
-## 8. Patrones transversales
+---
 
-| Área | Enfoque UX |
-|---|---|
-| Navegación | [Definición] |
-| Búsqueda | [Definición] |
-| Filtros | [Definición] |
-| Formularios | [Definición] |
-| Carga | [Definición] |
-| Error | [Definición] |
-| Empty state | [Definición] |
-| Confirmaciones | [Definición] |
-| Acciones destructivas | [Definición] |
-| Disponibilidad | [Definición] |
-| Precios/promociones | [Definición] |
+## 5. Comparación Transversal de las Propuestas
 
-Las decisiones que requieran defensa explícita deben registrarse en `ux-decisions.md`.
+*(Preservada como evidencia académica)*
 
-## 9. UX Writing
-
-- Tono: [Reglas].
-- CTAs: [Reglas].
-- Errores: [Reglas].
-- Confirmaciones: [Reglas].
-- Terminología permitida: [Lista].
-- Terminología a evitar: [Lista].
-
-## 10. Accesibilidad transversal
-
-- No depender únicamente del color.
-- Mantener foco visible.
-- Controles de icono con nombre accesible.
-- Labels visibles cuando corresponda.
-- Mensajes de error accionables.
-- [Otras reglas].
-
-## 11. Alcance de plataforma
-
-- Web.
-- Solo PC / desktop.
-- No se diseñan variantes mobile/tablet en esta etapa.
-
-## 12. Historial de perfeccionamiento
-
-La propuesta UX puede evolucionar; no se crean propuestas paralelas.
-
-| Versión | Cambio | Motivo | Impacto |
+### Matriz Comparativa
+| Criterio UX | Propuesta 1 | Propuesta 2 | Propuesta 3 |
 |---|---|---|---|
-| v0.1 | Propuesta inicial | [Motivo] | [Impacto] |
-| v0.2 | [Cambio] | [Motivo] | [Impacto] |
+| [Criterio 1: Velocidad en tareas masivas] | [Evaluación] | [Evaluación] | [Evaluación] |
+| [Criterio 2: Prevención de errores] | [Evaluación] | [Evaluación] | [Evaluación] |
+| [Criterio 3: Preservación de contexto] | [Evaluación] | [Evaluación] | [Evaluación] |
+| [Criterio 4: Curva de aprendizaje] | [Evaluación] | [Evaluación] | [Evaluación] |
+| [Criterio 5: Aprovechamiento Desktop (1440 px)]| [Evaluación] | [Evaluación] | [Evaluación] |
 
-## 13. Criterios de aceptación
+### Análisis de Trade-offs
+[Evaluar qué cubre y qué compromete cada enfoque en relación a las funcionalidades del módulo.]
 
-- [ ] Aplica al módulo completo.
-- [ ] No contradice Design System.
-- [ ] No inventa reglas funcionales.
-- [ ] Define criterios suficientemente claros para orientar los 16 mockups.
-- [ ] Las decisiones discutibles están derivadas a `ux-decisions.md`.
+---
+
+## 6. Selección y Combinación Justificada de Elementos
+
+[Explicar cómo converge la arquitectura de experiencia, qué elementos se rescatan de cada propuesta y la justificación técnica de la selección.]
+
+1. **Elemento / Patrón rescatado de Propuesta A:** [Justificación y funcionalidades destino]
+2. **Elemento / Patrón rescatado de Propuesta B:** [Justificación y funcionalidades destino]
+3. **Elemento / Patrón rescatado de Propuesta C:** [Justificación y funcionalidades destino]
+
+---
+
+## 7. Propuesta UX Integral Adoptada (Definición Oficial Vigente)
+
+### 7.1. Principios Rectores
+1. **[Principio 1]:** [Regla conceptual y aplicación en el módulo]
+2. **[Principio 2]:** [Regla conceptual y aplicación en el módulo]
+3. **[Principio 3]:** [Regla conceptual y aplicación en el módulo]
+
+### 7.2. Modelo General de Interacción y Navegación
+- **Estructura Desktop:** [Disposición de barras, cabeceras y área principal de 1440 px]
+- **Acciones Primarias:** [Ubicación consistente de botones de acción principal]
+- **Transiciones:** [Uso de drawers, modales o cambios de vista guiados]
+
+### 7.3. Jerarquía de Información
+1. **Nivel Primario:** [Datos críticos y estado operativo]
+2. **Nivel Secundario:** [Parámetros comerciales y de soporte]
+3. **Nivel Complementario:** [Metadatos técnicos y auditoría]
+
+### 7.4. Patrones Transversales
+- **Búsqueda y Filtros:** [Reglas de debounce, filtros facetados y tags activos]
+- **Formularios:** [Distribución de campos, validación en blur y mensajes]
+- **Feedback:** [Skeletons, empty states accionables y toasts]
+
+### 7.5. Derivación hacia Decisiones y Reglas
+[Explicar cómo esta propuesta integral alimenta formalmente `ux-decisions.md` (UXD-XXX) y consecuentemente `ux-guidelines.md`.]
