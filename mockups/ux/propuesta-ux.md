@@ -109,9 +109,9 @@ Se adopta una **arquitectura híbrida convergente** que integra lo mejor de cada
 
 1. **Marco Contenedor Contextual con Drawers (de la Propuesta 3):**
    - Vistas maestras de catálogo y taxonomía con panel lateral deslizable (drawer) para consultar detalles y ejecutar ediciones rápidas sin perder la posición en la tabla (MK-003, MK-004, MK-008, MK-009, MK-011).
-   - Dashboard analítico con widgets y navegación contextual a alertas (MK-016).
+   - Dashboard analítico con widgets y navegación contextual a alertas (MK-016 como marco modular principal).
 2. **Tablas Densas con Operación Masiva (de la Propuesta 1):**
-   - Grids de alta densidad con selección múltiple, cabecera fija y barra de acciones por lote para operaciones críticas y de auditoría (MK-001, MK-013, MK-014, MK-015).
+   - Grids de alta densidad con selección múltiple, cabecera fija y barra de acciones por lote para operaciones críticas y de auditoría (MK-001, MK-013, MK-014, MK-015, y el listado tabular denso para la supervisión y resolución de alertas dentro de MK-016).
 3. **Flujos Secuenciales Guiados (de la Propuesta 2):**
    - Wizards paso a paso con validaciones previas para la creación y parametrización de entidades con lógica de negocio compuesta (MK-001, MK-002, MK-005, MK-006, MK-007, MK-010, MK-012).
 
