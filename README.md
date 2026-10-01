@@ -31,23 +31,42 @@ Productos y Ofertas cubre 16 funcionalidades principales:
 | 015 | Control de stock y disponibilidad |
 | 016 | Dashboard analítico y alertas de stock |
 
-Cada funcionalidad se mantiene mediante dos cadenas coordinadas: una funcional/UX y otra contractual/técnica.
+### 1.1. Cadenas de evolución documental
 
+Cada funcionalidad se mantiene mediante dos cadenas coordinadas: una funcional/UX (con etapas de baja y alta fidelidad) y otra contractual/técnica.
+
+#### Baja fidelidad (Wireframes):
 ```mermaid
-flowchart TD
+flowchart LR
     SPEC["SPEC"] --> HU["Historia de Usuario"]
     HU --> WF["Wireframe / flujo UX"]
-    WF --> HTML["Prototipo HTML"]
+    WF --> HTML["Prototipo HTML de wireframe"]
+```
+El prototipo HTML valida el comportamiento y la representación estructural del wireframe; **no es la fuente del contrato API**.
 
-    SPEC --> API["OpenAPI / AsyncAPI<br/>cuando corresponda"]
-    SPEC --> MODEL["Modelo de datos<br/>cuando corresponda"]
-    API --> ARQ["Arquitectura e implementación"]
-    MODEL --> ARQ
+#### Alta fidelidad (Mockups definitivos):
+```mermaid
+flowchart TD
+    A["SPEC + HU + WF + Flow + API Contract + Design System"]
+    B["3 propuestas UX del módulo (Evidencia académica)"]
+    C["Comparación y consolidación"]
+    D["Propuesta UX integral del módulo"]
+    E["UX Decisions (UXD-XXX)"]
+    F["UX Guidelines"]
+
+    A --> B --> C --> D --> E --> F
+
+    subgraph MK["Nivel Funcionalidad (MK-XXX)"]
+        G["Component Spec"] --> H["Plan"]
+        H --> I["Tasks"]
+        I --> J["Mockup normalizado (prototipo/)"]
+        J --> K["Validación (validation-report.md)"]
+        K --> L["Figma"]
+    end
+    F --> MK
 ```
 
-El prototipo HTML valida el comportamiento y la representación del wireframe; **no es la fuente del contrato API**.
-
-El inventario detallado de funcionalidades, responsables y artefactos se encuentra en [`wireframes/INDEX.md`](wireframes/INDEX.md).
+El inventario detallado de funcionalidades, responsables y artefactos canónicos se encuentra en [`wireframes/INDEX.md`](wireframes/INDEX.md) y en [`mockups/README.md`](mockups/README.md).
 
 ---
 
@@ -58,11 +77,12 @@ El inventario detallado de funcionalidades, responsables y artefactos se encuent
 | Especificaciones funcionales | [`specs/`](specs/) | Reglas de negocio y comportamiento esperado |
 | Historias de usuario | [`hu/`](hu/) | Necesidades del usuario y criterios funcionales |
 | Flujos funcionales complementarios | [`flujos/`](flujos/) | Flujos detallados de procesos relevantes |
-| Wireframes | [`wireframes/flows/`](wireframes/flows/) | Definición funcional de las interfaces |
-| Prototipos HTML | [`wireframes/prototipos/`](wireframes/prototipos/) | Representaciones navegables de los wireframes |
-| Guía visual de wireframes | [`wireframes/DESIGN.md`](wireframes/DESIGN.md) | Lineamientos visuales aplicables exclusivamente a los wireframes |
-| Índice funcional | [`wireframes/INDEX.md`](wireframes/INDEX.md) | Mapeo de las 16 funcionalidades y responsables |
-| Visor de prototipos | [`wireframes/Visor_Prototipos_PO.html`](wireframes/Visor_Prototipos_PO.html) | Acceso unificado a los prototipos de wireframes |
+| Wireframes (Baja fidelidad) | [`wireframes/flows/`](wireframes/flows/) | Definición funcional y estructural de interfaces |
+| Prototipos HTML de wireframe | [`wireframes/prototipos/`](wireframes/prototipos/) | Representaciones navegables de los wireframes |
+| Guía visual de wireframes | [`wireframes/DESIGN.md`](wireframes/DESIGN.md) | Lineamientos visuales aplicables exclusivamente a wireframes |
+| Índice funcional canónico | [`wireframes/INDEX.md`](wireframes/INDEX.md) | Mapeo de las 16 funcionalidades y responsables |
+| Visor de prototipos | [`wireframes/Visor_Prototipos_PO.html`](wireframes/Visor_Prototipos_PO.html) | Acceso unificado a prototipos de wireframes |
+| Pipeline de Mockups (Alta fidelidad) | [`mockups/`](mockups/) | UX transversal, decisiones, plantillas y código de prototipado |
 | Arquitectura | [`Arquitectura.md`](Arquitectura.md) | Diseño técnico y decisiones arquitectónicas |
 | Modelo conceptual | [`Modelo_Conceptual.md`](Modelo_Conceptual.md) | Ownership y relaciones conceptuales de datos |
 | Contrato de integración | [`Contrato_Api.md`](Contrato_Api.md) | Responsabilidades e integración con otros módulos |
@@ -84,8 +104,10 @@ No todos los documentos tienen la misma autoridad.
 |---|---|
 | Reglas funcionales | `specs/SPEC-XXX-*.md` |
 | Necesidad y comportamiento desde usuario | `hu/HU-XXX-*.md` |
-| Comportamiento de interfaz | `wireframes/flows/WF-XXX-*.md` |
+| Comportamiento de interfaz (Baja fidelidad) | `wireframes/flows/WF-XXX-*.md` |
 | Representación visual de wireframes | `wireframes/DESIGN.md` |
+| UX transversal y decisiones de mockups | `mockups/ux/propuesta-ux.md` y `mockups/ux/ux-decisions.md` |
+| Reglas operativas de mockups | `mockups/ux/ux-guidelines.md` |
 | Contrato HTTP | `api/openapi.yaml` |
 | Mensajería asíncrona | `asyncapi/asyncapi.yaml` |
 | Topología física RabbitMQ | `api/rabbitmq-topologia.md` |
@@ -97,7 +119,7 @@ No todos los documentos tienen la misma autoridad.
 
 Ante una diferencia entre documentación narrativa y un contrato ejecutable, se debe revisar primero la fuente de verdad correspondiente y posteriormente propagar la corrección a los documentos derivados.
 
-> **Nota sobre diseño:** `wireframes/DESIGN.md` gobierna únicamente la representación visual de los wireframes actuales. Los mockups de mayor fidelidad tendrán su propio documento de diseño y no deberán utilizar `wireframes/DESIGN.md` como fuente visual canónica.
+> **Nota sobre diseño:** `wireframes/DESIGN.md` gobierna únicamente la representación visual de baja fidelidad de los wireframes históricos. Los mockups de alta fidelidad se rigen exclusivamente por la Propuesta UX Integral del módulo, las UX Decisions, las UX Guidelines y el Design System correspondiente bajo [`mockups/`](mockups/).
 
 ---
 
