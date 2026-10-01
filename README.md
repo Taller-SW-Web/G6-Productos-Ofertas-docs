@@ -259,41 +259,51 @@ La explicación humana de responsabilidades e integración se mantiene en:
 
 ## 9. Diseño y experiencia de usuario
 
-Las 16 funcionalidades cuentan con definición de wireframe y prototipo HTML.
+El módulo cuenta con dos niveles de diseño formalmente articulados:
 
-La guía visual vigente para estos artefactos se encuentra en:
+### 9.1. Baja fidelidad (Wireframes)
+Las 16 funcionalidades disponen de definición de wireframe funcional y prototipo HTML navegable gobernados por:
 
 [`wireframes/DESIGN.md`](wireframes/DESIGN.md)
 
-Este documento define exclusivamente los lineamientos de los **wireframes de baja fidelidad** actuales.
-
-Los futuros **mockups de mayor fidelidad** contarán con un documento de diseño independiente, de modo que las reglas visuales de los wireframes no se mezclen con las decisiones visuales de los mockups.
-
-Los prototipos HTML actuales son artefactos de documentación y validación de wireframes. No constituyen el frontend productivo.
-
-La cadena actual de diseño es:
-
-```mermaid
-flowchart TD
-    A["SPEC + HU"] --> B["WF"]
-    B --> C["Prototipo HTML del wireframe"]
-    C --> D["Validación contra<br/>wireframes/DESIGN.md"]
-```
-
-La evolución posterior hacia mockups seguirá una cadena independiente:
-
-```mermaid
-flowchart TD
-    A["Wireframe validado"] --> B["Propuesta visual / mockup"]
-    B --> C["Guía de diseño de mockups"]
-    C --> D["Refinamiento y consistencia"]
-    D --> E["Mockup final"]
-    E --> F["Implementación frontend"]
-```
+Este documento define exclusivamente los lineamientos de los **wireframes de baja fidelidad**. Los prototipos HTML correspondientes son artefactos estáticos de documentación y validación estructural; no constituyen el frontend productivo.
 
 Para recorrer los wireframes desde un único punto puede utilizarse:
-
 [`wireframes/Visor_Prototipos_PO.html`](wireframes/Visor_Prototipos_PO.html)
+
+### 9.2. Alta fidelidad (Pipeline de Mockups)
+La evolución hacia mockups de alta fidelidad se rige de forma estricta por la gobernanza transversal del módulo documentada en:
+
+[`mockups/`](mockups/)
+
+Este pipeline no mezcla las reglas visuales de los wireframes con las decisiones de alta fidelidad. Se fundamenta en:
+- [`mockups/ux/propuesta-ux.md`](mockups/ux/propuesta-ux.md): Las 3 propuestas UX preservadas como evidencia académica y la Propuesta UX Integral Adoptada para el Gestor Comercial.
+- [`mockups/ux/ux-decisions.md`](mockups/ux/ux-decisions.md): Decisiones transversales justificadas (`UXD-001` a `UXD-006`).
+- [`mockups/ux/ux-guidelines.md`](mockups/ux/ux-guidelines.md): Reglas normativas operativas y accesibilidad en PC Desktop (viewport canónico de 1440 px).
+- [`mockups/prototipo/`](mockups/prototipo/): Código interactivo normalizado de prototipado (bajo `src/pantallas/MKXXX`).
+
+La cadena completa de diseño de alta fidelidad es:
+
+```mermaid
+flowchart TD
+    A["SPEC + HU + WF + Flow + API Contract + Design System"]
+    B["3 propuestas UX del módulo (Evidencia académica)"]
+    C["Comparación y consolidación"]
+    D["Propuesta UX integral del módulo"]
+    E["UX Decisions (UXD-XXX)"]
+    F["UX Guidelines"]
+
+    A --> B --> C --> D --> E --> F
+
+    subgraph MK["Nivel Funcionalidad (MK-XXX)"]
+        G["Component Spec"] --> H["Plan"]
+        H --> I["Tasks"]
+        I --> J["Mockup normalizado (prototipo/)"]
+        J --> K["Validación (validation-report.md)"]
+        K --> L["Figma"]
+    end
+    F --> MK
+```
 
 ---
 
@@ -308,7 +318,7 @@ Para recorrer los wireframes desde un único punto puede utilizarse:
 | `vera` | Leonardo Vera Rodríguez | Precios y auditoría de precios |
 | `taco` | Miguel Ángel Taco Zavala | Inventario, analítica y alertas |
 
-La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`wireframes/INDEX.md`](wireframes/INDEX.md).
+La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`wireframes/INDEX.md`](wireframes/INDEX.md) y [`mockups/README.md`](mockups/README.md).
 
 ---
 
@@ -320,7 +330,8 @@ La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`
 | 16 historias de usuario | Consolidado |
 | 16 wireframes funcionales | Consolidado |
 | 16 prototipos HTML de wireframes | Consolidado |
-| Guía visual de wireframes | Consolidado |
+| Guía visual de wireframes (`wireframes/DESIGN.md`) | Consolidado |
+| Pipeline de mockups y gobernanza UX transversal (`mockups/`) | Aprobado y en ejecución |
 | Arquitectura | Consolidado |
 | Modelo conceptual | Consolidado |
 | Contrato de integración | Consolidado |
@@ -328,7 +339,6 @@ La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`
 | AsyncAPI | Disponible |
 | Catálogo de errores | Disponible |
 | Catálogo de eventos | Disponible |
-| Diseño y mockups de mayor fidelidad | En evolución para Hito 2 |
 | Modelo lógico/físico de BD | En evolución para Hito 2 |
 | Implementación de BD / Supabase | En evolución para Hito 2 |
 | Matriz de trazabilidad integral | Pendiente de consolidación |
@@ -350,6 +360,7 @@ flowchart TD
     SPEC --> AA["AsyncAPI"]
     SPEC --> MD["Modelo de datos"]
     SPEC --> ARQ["Arquitectura"]
+    SPEC --> MK["Mockups (Component Spec, Prototipo y Reporte)"]
 ```
 
 Solo deben modificarse los artefactos afectados por el cambio, pero todos deben ser revisados para verificar consistencia.
@@ -375,30 +386,28 @@ Este repositorio busca mantener:
 
 ## 14. Próxima evolución documental
 
-Sin modificar por ahora la estructura actual del repositorio, los siguientes artefactos ampliarán la trazabilidad hacia el Hito 2:
+Los siguientes artefactos ampliarán la trazabilidad hacia el Hito 2:
 
-- Documento de diseño específico para mockups.
-- Tres propuestas de experiencia de usuario.
-- Mockups refinados y finales.
+- Implementación incremental y validación de los 16 mockups (`mockups/MK-001` a `MK-016`).
 - Modelo lógico de base de datos.
 - Modelo físico de base de datos.
 - Scripts SQL y migraciones.
 - Evidencia de implementación en Supabase.
 - Matriz integral de trazabilidad.
-- Evidencia de pruebas y validación.
+- Evidencia de pruebas y validación funcional.
 
 La evolución esperada de la documentación será:
 
 ```mermaid
 flowchart TD
     A["Requisitos"] --> B["Wireframes"]
-    B --> C["Mockups"]
+    B --> C["Mockups (mockups/)"]
     C --> D["Arquitectura y contratos"]
     D --> E["Modelo lógico"]
     E --> F["Modelo físico"]
     F --> G["SQL / migraciones"]
     G --> H["Supabase"]
-    H --> I["Implementación"]
+    H --> I["Implementación frontend / backend"]
     I --> J["Pruebas y evidencia"]
 ```
 
