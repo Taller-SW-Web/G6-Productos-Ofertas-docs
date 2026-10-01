@@ -6,7 +6,7 @@
 - **Funcionalidad:** Historial de auditoría de precios
 - **Relacionado con:** [HU-014](../hu/HU-014-historial-auditoria-precios.md) / [SPEC-014](../specs/SPEC-014-historial-auditoria-precios.md) / [WF-014](../wireframes/flows/WF-014-historial-auditoria-precios.md)
 - **Responsable:** Leonardo Vera Rodríguez
-- **Última actualización:** 2026-09-29
+- **Última actualización:** 2026-09-30
 
 ---
 
@@ -20,11 +20,11 @@ Representar la captura asíncrona desacoplada de eventos de cambio de precios me
 
 - **Auditor comercial / Gestor:** consulta registros cronológicos, aplica filtros combinables, visualiza detalles completos y solicita exportaciones en CSV o PDF.
 - **Sistema de Pricing (Emisor):** procesa mutaciones operativas de precios y publica el evento desacoplado `pricing.price.changed` solo tras confirmar transacciones exitosas (las operaciones fallidas no emiten eventos).
-- **Servicio de auditoría de precios:** consume eventos asíncronos del broker, deduplica por `event_id`, valida inmutabilidad estricta y expone endpoints de consulta y exportación.
+- **Servicio de auditoría de precios:** consume eventos asíncronos del broker, deduplica por `message_id` del envelope AsyncAPI 0.4.0, valida inmutabilidad estricta y expone endpoints de consulta y exportación.
 - **Almacén de auditoría (Base operativa / Almacenamiento caliente):** base relacional configurada exclusivamente con permisos `INSERT` y `SELECT`, que retiene las mutaciones durante el período caliente configurado (`AUDIT_HOT_RETENTION_MONTHS`, MVP 24 meses).
 - **Worker de archivado y Almacenamiento en frío:** tarea batch mensual que genera particiones Parquet, valida checksum y recuperabilidad antes del retiro, y conserva los datos en frío durante `AUDIT_ARCHIVE_RETENTION_YEARS` (MVP 5 años).
 
-> **Autorización:** La consulta y exportación requieren acceso autorizado. `PRICING_AUDIT_READ` y `PRICING_AUDIT_EXPORT` son identificadores propuestos, pendientes de homologación con Seguridad y Usuarios; no se presentan como permisos oficiales.
+> **Autorización vigente:** La consulta, el detalle y la exportación requieren JWT de usuario autorizado con rol humano global `GESTOR_COMERCIAL`, validado localmente mediante JWKS según el [kit de integración 0.4.0](../api/kit-integracion.md). `PRICING_AUDIT_READ` y `PRICING_AUDIT_EXPORT`, si se conservan, son capacidades internas del módulo; no permisos externos pendientes de homologación con Seguridad. Estas operaciones no modifican precios; la introspección de mutaciones sensibles se representa en FLOW-013. Ante acceso no autorizado se deniega la operación sin exponer registros ni crear exportaciones. Esta regla contractual prevalece sobre las referencias antiguas a permisos pendientes en HU/SPEC-014.
 
 ---
 
@@ -37,17 +37,17 @@ flowchart LR
 
     subgraph PRICING["Sistema de Pricing (Emisor)"]
         direction TB
-        INICIO_PRICING((Mutación de precio persistida))
+        INICIO_PRICING((Mutación de precio validada))
         P1["Confirmar commit transaccional local"]
-        P2["Construir payload con contrato de auditoría"]
+        P2["Persistir cambio y payload de auditoría en Outbox dentro de la transacción local"]
         E1(("Publicar pricing.price.changed vía Outbox"))
     end
 
     subgraph AUDIT_SVC["Servicio de Auditoría"]
         direction TB
         E2(("Consumir evento pricing.price.changed"))
-        A1["Verificar unicidad de event_id"]
-        D1{"¿event_id ya fue procesado?"}
+        A1["Verificar unicidad de message_id del envelope"]
+        D1{"¿message_id ya fue procesado?"}
         A2["Descartar evento duplicado sin reinsertar"]
         A3["Clasificar según tipo_operacion"]
         D2{"¿Qué tipo de operación se audita?"}
@@ -62,16 +62,16 @@ flowchart LR
 
     subgraph DB_AUDIT["Almacén de Auditoría (Append-Only)"]
         direction TB
-        D3["Ejecutar INSERT con credenciales de solo inserción"]
+        D3["Insertar asiento y registrar message_id procesado atómicamente con permisos INSERT/SELECT"]
     end
 
     FIN_AUDIT_OK(((Registro persistido inmutablemente)))
     FIN_DUPLICADO(((Evento omitido por idempotencia)))
     FIN_BLOQUEO(((Mutación directa denegada)))
 
-    INICIO_PRICING --> P1
-    P1 --> P2
-    P2 --> E1
+    INICIO_PRICING --> P2
+    P2 --> P1
+    P1 --> E1
     E1 --> E2
     E2 --> A1
     A1 --> D1
