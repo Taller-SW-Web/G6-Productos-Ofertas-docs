@@ -23,7 +23,7 @@ El módulo centraliza la administración y publicación del catálogo de product
 Orientada a la máxima productividad y agilidad del Gestor Comercial en operaciones masivas y auditoría de datos. Prioriza la visualización de grandes volúmenes de registros en tablas avanzadas con controles por lote, edición rápida, atajos de teclado y minimización de desplazamientos verticales.
 
 ### Fortalezas
-- Agilidad superior en consultas y modificaciones de precios masivos (MK-013) y control de stock en tiempo real (MK-015).
+- Agilidad superior en consultas y modificaciones de precios masivos (MK-013) y supervisión de la disponibilidad autoritativa de stock (MK-015).
 - Eficiencia en la revisión de bitácoras extensas como el historial de auditoría de precios (MK-014) y monitoreo de importaciones masivas (MK-001).
 - Aprovechamiento exhaustivo del ancho del viewport en monitores de escritorio (1440 px).
 - Acceso directo a acciones operativas por lote sin navegación multinivel.
@@ -39,7 +39,7 @@ Orientada a la máxima productividad y agilidad del Gestor Comercial en operacio
 *(Preservada como evidencia académica)*
 
 ### Filosofía y Concepto
-Enfocada en la reducción sistemática de errores humanos mediante procesos guiados secuenciales (wizards) con validaciones en tiempo real, estricta separación de etapas y ayudas contextuales prominentes para la parametrización de reglas complejas.
+Enfocada en la reducción sistemática de errores humanos mediante procesos guiados secuenciales (wizards) con validaciones progresivas y contextuales, estricta separación de etapas y ayudas contextuales prominentes para la parametrización de reglas complejas.
 
 ### Fortalezas
 - Alta tasa de éxito y prevención de inconsistencias en configuraciones con dependencias lógicas:
