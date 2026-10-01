@@ -2,7 +2,7 @@
 
 **Responsable:** Leonardo Vera Rodríguez  
 **Rama:** vera  
-**Trazabilidad:** HU [HU-014](./hu/HU-014-historial-auditoria-precios.md) | Wireframe [WF-014](./wireframes/flows/WF-014-historial-auditoria-precios.md)
+**Trazabilidad:** HU [HU-014](../hu/HU-014-historial-auditoria-precios.md) | Wireframe [WF-014](../wireframes/flows/WF-014-historial-auditoria-precios.md)
 
 ## 1. Contexto
 La plataforma necesita una bitácora inmutable de cada cambio de precio confirmado para trazabilidad, control y análisis posterior.
@@ -53,13 +53,16 @@ Nunca se representa un valor inexistente como `0`.
 ### Requisito 5: Archivo verificable
 `AUDIT_HOT_RETENTION_MONTHS` y `AUDIT_ARCHIVE_RETENTION_YEARS` son configuración administrativa. Valores iniciales MVP: 24 meses y 5 años adicionales. Antes de retirar la copia caliente se valida conteo/checksum/recuperabilidad. Fallo conserva originales.
 
-### Requisito 6: Permisos de consulta/exportación
-Los nombres `PRICING_AUDIT_READ` y `PRICING_AUDIT_EXPORT` se conservan como **propuesta interna pendiente de homologación con Seguridad y Usuarios**.
+### Requisito 6: Autorización de consulta/exportación
+La autenticación y el rol humano global provienen de **Seguridad y Usuarios**. El acceso administrativo a esta capacidad requiere `GESTOR_COMERCIAL`.
 
-Hasta que Seguridad los publique oficialmente:
-- no se presentan como scopes confirmados;
-- la UI solo muestra mensajes genéricos de acceso restringido;
-- la asignación de roles/permisos pertenece a Seguridad.
+Los identificadores `PRICING_AUDIT_READ` y `PRICING_AUDIT_EXPORT`, si se conservan, son **capacidades internas de Productos y Ofertas** asociadas al usuario autenticado; no se modelan como roles globales adicionales ni como scopes externos que Seguridad deba publicar.
+
+Reglas:
+- Seguridad valida identidad y publica el rol global `GESTOR_COMERCIAL`.
+- Productos y Ofertas aplica la granularidad interna necesaria para lectura y exportación de auditoría.
+- La UI solo muestra mensajes genéricos de acceso restringido y no expone nombres internos de capacidades.
+- Consulta y exportación no modifican precios; la introspección de cambios sensibles de Pricing se trata en la funcionalidad de gestión de precios.
 
 ## 5. Requisitos no funcionales
 - Consulta <800 ms de referencia.
@@ -72,4 +75,4 @@ Hasta que Seguridad los publique oficialmente:
 Auditoría de autenticación, bitácora de catálogo, rollback de precios y edición/borrado del histórico.
 
 ## Criterio de completitud
-La bitácora es append-only, representa correctamente valores nulos, exporta dentro de límites, distingue un registro inexistente mediante `AUDITORIA_PRECIO_NO_ENCONTRADA`, rechaza excesos con `LIMITE_EXPORTACION_AUDITORIA_EXCEDIDO` sin crear un trabajo y no presenta permisos de Pricing-Audit como homologados antes de Seguridad.
+La bitácora es append-only, representa correctamente valores nulos, exporta dentro de límites, distingue un registro inexistente mediante `AUDITORIA_PRECIO_NO_ENCONTRADA`, rechaza excesos con `LIMITE_EXPORTACION_AUDITORIA_EXCEDIDO` sin crear un trabajo y autoriza consulta/exportación bajo el rol global `GESTOR_COMERCIAL` con granularidad interna del módulo cuando corresponda.

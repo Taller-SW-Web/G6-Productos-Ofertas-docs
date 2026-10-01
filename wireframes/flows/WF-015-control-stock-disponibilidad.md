@@ -1,8 +1,7 @@
 # WF-015 — Control de stock y disponibilidad
 
-
 ## Usuario objetivo
-Responsable de inventario.
+Gestor comercial (`GESTOR_COMERCIAL`) con capacidades de gestión de inventario.
 
 ## Objetivo
 Consultar saldos por SKU/ubicación y entender qué parte está física, reservada, bloqueada y disponible.
@@ -65,10 +64,9 @@ No incluir botones visibles para ejecutar esas operaciones.
 ## No mostrar
 `on_hand`, `reserved`, `blocked`, `available`, `operation_id`, eventos, endpoint, pedido o cliente.
 
-
 ## Recepción de traslados
 
-Añadir al flujo operativo de Inventario:
+Esta sección es accesible únicamente para un Gestor Comercial con la capacidad local de recepción de inventario correspondiente. No se modela un rol independiente de Operador de inventario.
 
 ### S-04 — Traslados pendientes
 - SKU.

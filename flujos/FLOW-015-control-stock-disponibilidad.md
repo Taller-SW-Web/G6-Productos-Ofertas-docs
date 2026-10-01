@@ -8,7 +8,7 @@
 - **Funcionalidad:** Control de stock y disponibilidad
 - **Relacionado con:** HU-015 / SPEC-015 / WF-015
 - **Responsable:** Miguel Ángel Taco Zavala
-- **Última actualización:** 2026-09-30
+- **Última actualización:** 2026-10-01
 
 ---
 
@@ -20,10 +20,10 @@ Representar el ciclo de inventario por `(sku, location_id)`: consulta determiní
 
 ## 3. Actores participantes
 
+- Gestor comercial con capacidades de inventario
 - Ventas/Postventa
 - Retail
 - Carga masiva (Bulk)
-- Operador de inventario
 - Worker de expiración
 - Sistema de Inventario
 - Catálogo
@@ -36,7 +36,7 @@ Representar el ciclo de inventario por `(sku, location_id)`: consulta determiní
 
 ```mermaid
 flowchart LR
-    subgraph RESP["Responsable de inventario"]
+    subgraph GESTOR["Gestor comercial"]
         direction TB
         INICIO((Inicio de consulta))
         A1["Consultar saldo por SKU y ubicación"]
@@ -467,7 +467,7 @@ flowchart LR
         A2["Crear traslado EN_TRANSITO sin acreditar destino"]
     end
 
-    subgraph OP["Operador de inventario"]
+    subgraph GESTOR["Gestor comercial autorizado"]
         direction TB
         A3["Registrar recepción con cantidad, disposición y final_receipt"]
     end
@@ -558,6 +558,7 @@ flowchart LR
 
 ## 5. Notas generales
 
+- **Actor humano:** el usuario del backoffice en este flujo es el `GESTOR_COMERCIAL`; la granularidad de inventario se expresa mediante capacidades locales asociadas a su `sub`, no mediante un rol global independiente.
 - **Idempotencia:** repetir un comando con la misma identidad y la misma intención responde el resultado previo sin efectos secundarios; reutilizar la identidad con otra intención produce `409 IDEMPOTENCY_CONFLICT` (HU-015 CA-14, SPEC-015 §30).
 - **202 Accepted:** es la admisión del comando, no el resultado final. Los resultados asíncronos se correlacionan mediante `order_id`, `operation_id`, `correlation_id` y `reservation_id` (SPEC-015 §30).
 - **Kardex y Outbox:** toda mutación autoritativa registra Kardex con saldos anterior/posterior, operación, SKU y ubicación, y persiste el Outbox en la misma transacción local; la publicación de eventos ocurre después del commit (HU-015 CA-16/CA-19, SPEC-015 §27).

@@ -6,7 +6,7 @@
 - **Funcionalidad:** Historial de auditoría de precios
 - **Relacionado con:** [HU-014](../hu/HU-014-historial-auditoria-precios.md) / [SPEC-014](../specs/SPEC-014-historial-auditoria-precios.md) / [WF-014](../wireframes/flows/WF-014-historial-auditoria-precios.md)
 - **Responsable:** Leonardo Vera Rodríguez
-- **Última actualización:** 2026-09-30
+- **Última actualización:** 2026-10-01
 
 ---
 
@@ -18,13 +18,13 @@ Representar la captura asíncrona desacoplada de eventos de cambio de precios me
 
 ## 3. Actores participantes
 
-- **Auditor comercial / Gestor:** consulta registros cronológicos, aplica filtros combinables, visualiza detalles completos y solicita exportaciones en CSV o PDF.
+- **Gestor comercial autorizado para auditoría:** consulta registros cronológicos, aplica filtros combinables, visualiza detalles completos y solicita exportaciones en CSV o PDF.
 - **Sistema de Pricing (Emisor):** procesa mutaciones operativas de precios y publica el evento desacoplado `pricing.price.changed` solo tras confirmar transacciones exitosas (las operaciones fallidas no emiten eventos).
 - **Servicio de auditoría de precios:** consume eventos asíncronos del broker, deduplica por `message_id` del envelope AsyncAPI 0.4.0, valida inmutabilidad estricta y expone endpoints de consulta y exportación.
 - **Almacén de auditoría (Base operativa / Almacenamiento caliente):** base relacional configurada exclusivamente con permisos `INSERT` y `SELECT`, que retiene las mutaciones durante el período caliente configurado (`AUDIT_HOT_RETENTION_MONTHS`, MVP 24 meses).
 - **Worker de archivado y Almacenamiento en frío:** tarea batch mensual que genera particiones Parquet, valida checksum y recuperabilidad antes del retiro, y conserva los datos en frío durante `AUDIT_ARCHIVE_RETENTION_YEARS` (MVP 5 años).
 
-> **Autorización vigente:** La consulta, el detalle y la exportación requieren JWT de usuario autorizado con rol humano global `GESTOR_COMERCIAL`, validado localmente mediante JWKS según el [kit de integración 0.4.0](../api/kit-integracion.md). `PRICING_AUDIT_READ` y `PRICING_AUDIT_EXPORT`, si se conservan, son capacidades internas del módulo; no permisos externos pendientes de homologación con Seguridad. Estas operaciones no modifican precios; la introspección de mutaciones sensibles se representa en FLOW-013. Ante acceso no autorizado se deniega la operación sin exponer registros ni crear exportaciones. Esta regla contractual prevalece sobre las referencias antiguas a permisos pendientes en HU/SPEC-014.
+> **Autorización vigente:** La consulta, el detalle y la exportación requieren JWT de usuario autorizado con rol humano global `GESTOR_COMERCIAL`, validado localmente mediante JWKS según el [kit de integración 0.4.0](../api/kit-integracion.md). La granularidad adicional de auditoría, si se requiere, se modela como capacidad interna asociada al `sub` del Gestor Comercial; no se crea un rol global `AUDITOR_COMERCIAL`. Estas operaciones no modifican precios; la introspección de mutaciones sensibles se representa en FLOW-013. Ante acceso no autorizado se deniega la operación sin exponer registros ni crear exportaciones.
 
 ---
 
@@ -104,7 +104,7 @@ flowchart LR
 ```mermaid
 flowchart LR
 
-    subgraph AUDITOR["Auditor comercial / Gestor"]
+    subgraph GESTOR["Gestor comercial autorizado"]
         direction TB
         INICIO((Acceso a auditoría de precios))
         INICIO_DETALLE((Solicitud de detalle por auditId))
@@ -183,7 +183,7 @@ flowchart LR
 ```mermaid
 flowchart LR
 
-    subgraph AUDITOR["Auditor comercial / Gestor"]
+    subgraph GESTOR["Gestor comercial autorizado"]
         direction TB
         INICIO((Solicitud de exportación))
         D1{"¿Qué formato de exportación solicita?"}

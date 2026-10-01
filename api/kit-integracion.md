@@ -1060,7 +1060,7 @@ y reutilizarlo en el comando de consumo; no debe derivarlo del token técnico.
 
 `TRASLADO_ALMACEN_CENTRAL` no crea un endpoint de Retail ni de Despacho para acreditar stock.
 
-Operador de Inventario:
+Gestor Comercial con capacidad local de inventario:
 
 ```http
 GET /api/v1/inventario/traslados

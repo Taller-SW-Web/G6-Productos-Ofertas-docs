@@ -6,10 +6,9 @@
 
 ---
 
-
 ## Historia principal
 
-**Como** responsable del inventario,
+**Como** gestor comercial con capacidades de gestión de inventario,
 
 **quiero** mantener por SKU y ubicación un saldo consistente que distinga unidades físicas, reservadas, bloqueadas y disponibles,
 
@@ -69,7 +68,7 @@ available = max(on_hand - reserved - blocked, 0)
 | **CA-34** | `modulo-retail` usa `inventario:incidencias:reportar` e `inventario:incidencias:resolver`, además de la consulta de disponibilidad. |
 | **CA-35** | Una operación técnica sin token utilizable responde `401 TOKEN_INVALIDO`; una identidad sin scope responde `403 SCOPE_INSUFICIENTE`. |
 | **CA-36** | Resolver una incidencia como `TRASLADO_ALMACEN_CENTRAL` descuenta origen y crea un traslado `EN_TRANSITO`, sin acreditar destino. |
-| **CA-37** | La recepción del traslado la ejecuta un operador de Inventario con capacidad local, no Retail ni Despacho. |
+| **CA-37** | La recepción del traslado la ejecuta un gestor comercial con capacidad local de inventario, no Retail ni Despacho. |
 | **CA-38** | `REINGRESAR_DISPONIBLE` acredita unidades disponibles; `REINGRESAR_BLOQUEADO` conserva cuarentena; `CONFIRMAR_MERMA` no acredita stock. |
 | **CA-39** | Una recepción nunca supera la cantidad pendiente del traslado. |
 | **CA-40** | Una recepción parcial con `final_receipt=false` deja `RECIBIDO_PARCIAL`. |
@@ -130,11 +129,10 @@ available = max(on_hand - reserved - blocked, 0)
 
 ---
 
-
 ## Escenario 9 — Traslado recibido completo
 
 - **DADO** un traslado de 3 unidades `EN_TRANSITO`,
-- **CUANDO** el operador recibe 3 como `REINGRESAR_DISPONIBLE` con `final_receipt=true`,
+- **CUANDO** el gestor comercial autorizado recibe 3 como `REINGRESAR_DISPONIBLE` con `final_receipt=true`,
 - **ENTONCES** el destino aumenta 3 unidades disponibles y el traslado queda `COMPLETADO`.
 
 ## Escenario 10 — Recepción parcial
@@ -146,7 +144,7 @@ available = max(on_hand - reserved - blocked, 0)
 ## Escenario 11 — Cierre con discrepancia
 
 - **DADO** un traslado de 5 con 3 ya recibidas,
-- **CUANDO** el operador cierra la recepción sin recibir las 2 restantes,
+- **CUANDO** el gestor comercial autorizado cierra la recepción sin recibir las 2 restantes,
 - **ENTONCES** queda `COMPLETADO_CON_DISCREPANCIA`, `missing_quantity=2` y ninguna unidad faltante se acredita.
 
 # Dependencias

@@ -6,7 +6,7 @@
 
 ---
 
-**Como** responsable de inventario,  
+**Como** gestor comercial con capacidades de consulta de inventario,  
 **quiero** visualizar indicadores y alertas por ubicación,  
 **para** detectar disponibilidad baja, unidades bloqueadas y traslados con problemas.
 

@@ -31,16 +31,21 @@ Productos y Ofertas cubre 16 funcionalidades principales:
 | 015 | Control de stock y disponibilidad |
 | 016 | Dashboard analítico y alertas de stock |
 
-Cada funcionalidad mantiene una cadena documental formada por:
+Cada funcionalidad se mantiene mediante dos cadenas coordinadas: una funcional/UX y otra contractual/técnica.
 
 ```mermaid
 flowchart TD
     SPEC["SPEC"] --> HU["Historia de Usuario"]
     HU --> WF["Wireframe / flujo UX"]
     WF --> HTML["Prototipo HTML"]
-    HTML --> API["Contrato API / Evento<br/>cuando corresponde"]
+
+    SPEC --> API["OpenAPI / AsyncAPI<br/>cuando corresponda"]
+    SPEC --> MODEL["Modelo de datos<br/>cuando corresponda"]
     API --> ARQ["Arquitectura e implementación"]
+    MODEL --> ARQ
 ```
+
+El prototipo HTML valida el comportamiento y la representación del wireframe; **no es la fuente del contrato API**.
 
 El inventario detallado de funcionalidades, responsables y artefactos se encuentra en [`wireframes/INDEX.md`](wireframes/INDEX.md).
 
@@ -108,7 +113,7 @@ El módulo se divide en ocho bounded contexts de negocio.
 | `price-audit-svc` | Historial y auditoría de cambios de precio |
 | `promotions-svc` | Promociones, cupones, cross-sell y upselling |
 | `combos-svc` | Definición y composición de combos |
-| `inventory-svc` | Stock, reservas, consumo, liberación, ajustes y disponibilidad |
+| `inventory-svc` | Saldos, reservas, consumo, liberación, expiración, ajustes, incidencias y cuarentenas, reintegros, conciliación offline, traslados y recepciones, Kardex, disponibilidad y dashboard |
 | `bulk-svc` | Importación, exportación y procesamiento masivo |
 
 Adicionalmente existe un `api-gateway` / BFF como punto de acceso, pero no constituye un bounded context de negocio.
@@ -158,7 +163,7 @@ flowchart TD
     L --> INV
 ```
 
-Los canales como Marketplace, Chatbot y Retail consultan disponibilidad, pero no realizan directamente el consumo definitivo de inventario.
+Marketplace y Chatbot consultan disponibilidad. Retail también puede reportar y resolver incidencias físicas mediante sus capacidades autorizadas, pero no realiza directamente las mutaciones comerciales de reserva, consumo, liberación, reintegro o conciliación de una venta.
 
 Ventas/Postventa coordina el ciclo asociado al pedido y Productos y Ofertas mantiene el estado autoritativo del inventario.
 
