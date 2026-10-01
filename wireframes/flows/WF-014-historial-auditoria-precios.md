@@ -9,18 +9,21 @@
 - `CREACION`: mostrar “Sin precio anterior” y “No aplicable”.
 - `RETIRO_OFERTA`: mostrar “Sin oferta” y “No aplicable”.
 - Nunca convertir nulos en S/ 0.00.
-- La UI no muestra los nombres de permisos pendientes.
+- La UI no muestra los nombres de capacidades internas.
 - No afirmar sello criptográfico ni mecanismo de integridad no definido.
 - Estilo monocromático.
+
+## 0.1. Usuario objetivo
+Gestor comercial (`GESTOR_COMERCIAL`) autorizado para consultar y exportar la auditoría de precios. Si existe granularidad adicional, se aplica como capacidad interna asociada al usuario y no como un rol humano independiente.
 
 ## 1. Metadatos
 | Campo | Valor |
 |---|---|
 | ID | WF-014 |
-| Versión | 0.6 |
+| Versión | 0.7 |
 | Estado | Alineado |
 | Responsable | Leonardo Vera Rodríguez |
-| Última actualización | 2026-09-28 |
+| Última actualización | 2026-10-01 |
 
 ## 2. Pantallas
 S-01 listado/filtros; S-02 detalle; S-02-N detalle no encontrado; S-03 exportar CSV; S-04 exportar PDF; variantes de generación, listo, límite, error, permisos y sesión.
@@ -51,7 +54,7 @@ Estas constantes pertenecen al contrato/dominio y no deben aparecer como copy pa
 
 ## 4. Seguridad
 Copy: `No tienes permiso para consultar esta información.`  
-No renderizar códigos `PRICING_AUDIT_*` hasta homologación.
+La identidad humana requerida es `GESTOR_COMERCIAL`. No renderizar nombres de capacidades internas ni presentar `AUDITOR_COMERCIAL` como rol independiente.
 
 ## 5. Exportación
 CSV asíncrono hasta 100,000 filas. PDF limitado a 500. Si se supera el máximo, no mostrar una exportación como creada: mantener al usuario en el flujo y explicar que debe acotar filtros o elegir un formato compatible. No renderizar el código técnico `LIMITE_EXPORTACION_AUDITORIA_EXCEDIDO`. Sin sellos/garantías criptográficas no documentadas.
@@ -60,6 +63,8 @@ CSV asíncrono hasta 100,000 filas. PDF limitado a 500. Si se supera el máximo,
 Si el registro consultado ya no existe o el identificador no es válido para un asiento disponible, mostrar `No encontramos este registro de auditoría` y ofrecer volver al listado. La interfaz no expone `AUDITORIA_PRECIO_NO_ENCONTRADA` como texto de usuario.
 
 ## 6. Registro
+v0.7 alinea el usuario objetivo con el actor humano canónico `GESTOR_COMERCIAL` y elimina la interpretación de Auditor como rol independiente.
+
 v0.6 humaniza operaciones, tipos de precio y origen del cambio; los enums internos dejan de mostrarse en filtros, tabla y detalle.
 
 v0.5 alinea los estados de detalle inexistente y exceso de exportación con los códigos HTTP canónicos, manteniendo copy humano en la UI.

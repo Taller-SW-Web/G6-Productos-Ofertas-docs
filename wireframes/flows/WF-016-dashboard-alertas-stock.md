@@ -1,5 +1,7 @@
 # WF-016 — Dashboard analítico y alertas de stock
 
+## Usuario objetivo
+Gestor comercial (`GESTOR_COMERCIAL`) con capacidades de consulta de inventario.
 
 ## Objetivo
 Monitorear el inventario confirmado por SKU y ubicación sin exponer detalles técnicos.
@@ -53,7 +55,7 @@ Panel de resumen:
 - Recibidos parcialmente.
 - Con discrepancia.
 
-Puede enlazar a la pantalla de recepción de WF-015, pero no registrar recepción desde el dashboard.
+Puede enlazar a la pantalla de recepción de WF-015 cuando el Gestor Comercial tenga la capacidad correspondiente, pero no registrar recepción desde el dashboard.
 
 ## Actualización reactiva
 

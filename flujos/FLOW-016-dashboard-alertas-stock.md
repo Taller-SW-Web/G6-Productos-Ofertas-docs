@@ -8,7 +8,7 @@
 - **Funcionalidad:** Dashboard analítico y alertas de stock
 - **Relacionado con:** HU-016 / SPEC-016 / WF-016
 - **Responsable:** Miguel Ángel Taco Zavala
-- **Última actualización:** 2026-09-30
+- **Última actualización:** 2026-10-01
 
 ---
 
@@ -20,7 +20,7 @@ Representar la carga, agrupación y actualización de las proyecciones del dashb
 
 ## 3. Actores participantes
 
-- Responsable de inventario
+- Gestor comercial con capacidades de consulta de inventario
 - Sistema de Inventario (autoridad del saldo y flujo WF-015)
 - Dashboard (proyección de solo lectura)
 
@@ -182,6 +182,6 @@ flowchart LR
 ## 5. Notas generales
 
 - **Solo lectura:** el dashboard no publica eventos de Inventario ni modifica saldos ni Kardex (HU-016 CA-10, SPEC-016 §4).
-- **Traslados:** no existe evento contractual de traslados; los KPIs se obtienen por consulta del estado confirmado y la recepción la ejecuta un operador en WF-015, no desde el dashboard (SPEC-016 §6). Un traslado con discrepancia no altera por sí mismo las unidades disponibles (HU-016 CA-11).
+- **Traslados:** no existe evento contractual de traslados; los KPIs se obtienen por consulta del estado confirmado y la recepción la ejecuta un gestor comercial autorizado en WF-015, no desde el dashboard (SPEC-016 §6). Un traslado con discrepancia no altera por sí mismo las unidades disponibles (HU-016 CA-11).
 - **Estados:** `available = max(on_hand - reserved - blocked, 0)`; `AGOTADO` cuando `available = 0`, `STOCK_BAJO` cuando `0 < available <= umbral_efectivo` y `DISPONIBLE` en el resto (SPEC-016 §3).
 - **Actualización:** la proyección se recalcula ante mutaciones confirmadas de reserva, consumo, liberación, incidencia/bloqueo, rehabilitación, merma, reintegro, conciliación offline y recepción de traslados (SPEC-016 §4, HU-016 CA-07).

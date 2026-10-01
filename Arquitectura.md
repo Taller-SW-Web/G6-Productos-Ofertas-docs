@@ -1,6 +1,6 @@
 # Arquitectura del Módulo de Productos y Ofertas
 
-**Fecha de actualización:** 2026-09-30  
+**Fecha de actualización:** 2026-10-01  
 **Repositorio de documentación:** `Taller-SW-Web/Productos-y-Ofertas-docs`  
 **Archivo:** `Arquitectura.md`  
 **Contrato HTTP canónico:** `api/openapi.yaml` (`0.4.0`)  
@@ -85,6 +85,14 @@ como contenedor de acceso/BFF, **no como bounded context de negocio**.
 | Pedido y estado comercial | Ventas y Postventa |
 | Producto, SKU, precio, promociones y stock | Productos y Ofertas |
 | Despacho, empaque y entrega | Despacho y Entrega |
+
+### 1.2.1. Actor humano canónico
+
+El actor humano canónico del módulo **Productos y Ofertas** es el **Gestor Comercial** (`GESTOR_COMERCIAL`).
+
+Auditoría de precios, operación de inventario y consulta analítica son **capacidades funcionales del Gestor Comercial**, no roles humanos globales independientes. Cuando una operación requiera granularidad adicional, el módulo puede asociar capacidades locales al `sub` del Gestor Comercial autenticado, sin introducir nuevas personas en el C4 ni nuevos roles globales en Seguridad.
+
+Por tanto, la documentación del módulo no debe modelar como roles globales independientes a `Auditor`, `Auditor Comercial`, `Responsable de inventario`, `Operador de inventario` o `Trabajador`. Esos términos solo pueden utilizarse como descripción de una responsabilidad operativa, nunca como identidad de autorización separada del `GESTOR_COMERCIAL`.
 
 ---
 
@@ -317,7 +325,6 @@ backend/
 ├── tsconfig.base.json
 └── .github/workflows/
 ```
-
 ## 3.1. Qué puede vivir en `libs/contracts`
 
 Solo artefactos de intercambio:
@@ -1277,7 +1284,6 @@ Solo `modulo-ventas` puede invocar:
 ```http
 POST /api/v1/inventario/reintegros
 ```
-
 Precondición de integración:
 
 ```text
@@ -1565,7 +1571,7 @@ GESTOR_COMERCIAL
 
 que cubre administración de catálogo, precios y promociones. Productos y Ofertas autoriza esas operaciones a partir del claim `roles`; el claim `permisos` pertenece a permisos internos de Seguridad y no es el repositorio de permisos de negocio de Productos.
 
-Los perfiles que no forman parte de los seis roles globales —por ejemplo, un responsable operativo de inventario— pueden modelarse localmente y enlazarse al `sub` del usuario.
+El único actor humano canónico de Productos y Ofertas es `GESTOR_COMERCIAL`. Las capacidades de auditoría, inventario y consulta analítica se asignan dentro del módulo al `sub` de un Gestor Comercial cuando se necesite granularidad adicional; no crean roles globales adicionales ni nuevas personas en los diagramas C4.
 
 ---
 
@@ -2025,33 +2031,29 @@ La invalidación debe basarse en eventos o TTL explícito.
 
 ```mermaid
 flowchart LR
-  gestor["Gestor comercial<br/>GESTOR_COMERCIAL"]
-  auditor["Auditor"]
-  operador["Operador de inventario<br/>perfil local"]
+  gestor["Persona: Gestor comercial<br/>GESTOR_COMERCIAL"]
 
-  market["Marketplace"]
-  chatbot["Chatbot"]
-  retail["Retail"]
-  ventas["Ventas y Postventa"]
-  despacho["Despacho y Entrega"]
-  seguridad["Seguridad y Usuarios"]
+  market["Sistema externo: Marketplace"]
+  chatbot["Sistema externo: Chatbot"]
+  retail["Sistema externo: Retail"]
+  ventas["Sistema externo: Ventas y Postventa"]
+  despacho["Sistema externo: Despacho y Entrega"]
+  seguridad["Sistema externo: Seguridad y Usuarios"]
 
-  po["Productos y Ofertas"]
+  po["Sistema: Productos y Ofertas"]
 
-  gestor -->|"Administra catálogo, precios y ofertas"| po
-  auditor -->|"Consulta auditoría"| po
-  operador -->|"Gestiona inventario"| po
+  gestor -->|"Administra catálogo, taxonomía, precios, promociones, combos e inventario"| po
 
-  market -->|"Consulta catálogo/precio/promos/stock"| po
-  chatbot -->|"Consulta catálogo/precio/promos/stock"| po
-  retail -->|"Consulta catálogo/precio/promos/stock"| po
+  market -->|"Consulta catálogo, precios, promociones y disponibilidad"| po
+  chatbot -->|"Consulta catálogo, precios, promociones, recomendaciones y disponibilidad"| po
+  retail -->|"Consulta oferta y disponibilidad; reporta incidencias físicas autorizadas"| po
 
-  ventas -->|"Reserva / confirma / libera inventario"| po
-  po -->|"Resultados de inventario/cupón"| ventas
+  ventas -->|"Reserva, confirma consumo, libera, reintegra y concilia inventario"| po
+  po -->|"Resultados de inventario y cupones"| ventas
 
   despacho -->|"Consulta datos físicos por SKU"| po
 
-  seguridad -->|"JWT, JWKS, introspección"| po
+  po -->|"Valida identidad, roles e introspección de operaciones sensibles"| seguridad
 ```
 
 ---
@@ -2060,10 +2062,13 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  channels["Marketplace / Chatbot / Retail"]
+  gestor["Persona: Gestor comercial"]
+  market["Marketplace"]
+  chatbot["Chatbot"]
+  retail["Retail"]
   sales["Ventas/Postventa"]
   dispatch["Despacho"]
-  security["Seguridad"]
+  security["Seguridad y Usuarios"]
 
   subgraph module["Productos y Ofertas"]
     fe["React SPA"]
@@ -2085,10 +2090,13 @@ flowchart TB
     storage[("Object Storage")]
   end
 
+  gestor -->|"Usa backoffice"| fe
   fe -->|HTTPS| ingress
-  channels -->|HTTPS| ingress
-  sales -->|HTTPS comandos + async results| ingress
-  dispatch -->|HTTPS| ingress
+  market -->|HTTPS lectura/evaluación| ingress
+  chatbot -->|HTTPS lectura/evaluación| ingress
+  retail -->|HTTPS lectura + incidencias físicas| ingress
+  sales -->|HTTPS comandos y consultas| ingress
+  dispatch -->|HTTPS datos físicos| ingress
 
   ingress --> gateway
 
@@ -2110,6 +2118,7 @@ flowchart TB
   inventory <--> mq
   bulk <--> mq
   gateway <--> mq
+  sales <-->|"AsyncAPI: eventos y resultados"| mq
 
   taxonomy -->|"taxonomy schema"| db
   catalog -->|"catalog schema"| db
@@ -2125,7 +2134,7 @@ flowchart TB
   bulk --> storage
   audit --> storage
 
-  security -->|"JWKS / introspección"| ingress
+  gateway -->|"JWKS / introspección"| security
 ```
 
 ---
@@ -2335,10 +2344,14 @@ flowchart LR
   db[("inventory schema")]
 
   subgraph svc["inventory-svc"]
-    controllers["Availability / Reservation / Dashboard Controllers"]
-    queries["Inventory Queries"]
-    reservation["Reservation Use Cases"]
-    adjustment["Adjustment Use Cases"]
+    controllers["Availability / Reservation / Incident / Reintegration / Reconciliation / Transfer / Dashboard Controllers"]
+    queries["Inventory Queries / Dashboard Queries"]
+    reservation["Reservation / Consumption / Release Use Cases"]
+    adjustment["Adjustment / Initialization Use Cases"]
+    incidents["Incident / Blocked Stock Use Cases"]
+    reintegration["Reintegration Use Cases"]
+    reconciliation["Offline Reconciliation Use Cases"]
+    transfers["Transfer / Reception Use Cases"]
     domain["Inventory Domain"]
     expiry["ReservationExpiryWorker"]
     kardex["Kardex Policy"]
@@ -2352,23 +2365,44 @@ flowchart LR
   controllers --> queries
   controllers --> reservation
   controllers --> adjustment
+  controllers --> incidents
+  controllers --> reintegration
+  controllers --> reconciliation
+  controllers --> transfers
 
   queries --> repos
   reservation --> domain
   adjustment --> domain
+  incidents --> domain
+  reintegration --> domain
+  reconciliation --> domain
+  transfers --> domain
   expiry --> reservation
 
   reservation --> kardex
   adjustment --> kardex
+  incidents --> kardex
+  reintegration --> kardex
+  reconciliation --> kardex
+  transfers --> kardex
 
   reservation --> repos
   adjustment --> repos
+  incidents --> repos
+  reintegration --> repos
+  reconciliation --> repos
+  transfers --> repos
   repos --> adapters --> db
 
   bus --> consumers --> reservation
+  consumers --> adjustment
 
   reservation --> outbox --> bus
   adjustment --> outbox
+  incidents --> outbox
+  reintegration --> outbox
+  reconciliation --> outbox
+  transfers --> outbox
 ```
 
 ---
@@ -2603,7 +2637,7 @@ Retail resuelve incidencia como TRASLADO_ALMACEN_CENTRAL
   -> inventory-svc crea traslado EN_TRANSITO
   -> origen: on_hand y blocked disminuyen
   -> transporte físico fuera del saldo de destino
-  -> operador local de Inventario confirma recepción
+  -> Gestor Comercial con capacidad local de inventario confirma recepción
   -> disponible | bloqueado | merma
   -> COMPLETADO | COMPLETADO_CON_DISCREPANCIA
 ```
@@ -2614,7 +2648,8 @@ Autorización del receptor:
 
 ```text
 JWT de usuario validado por JWKS
-sub vinculado a perfil local
+rol GESTOR_COMERCIAL
+sub vinculado a capacidades locales de inventario
 INVENTARIO_TRASLADOS_LEER
 INVENTARIO_TRASLADOS_RECIBIR
 ```
@@ -3059,7 +3094,7 @@ P2 cerró:
 
 - exchanges, queues, bindings, retry y DLQ;
 - recepción y discrepancias de traslados a almacén central;
-- capacidades locales del operador de Inventario.
+- capacidades locales de inventario asociadas al `GESTOR_COMERCIAL`.
 
 Pendientes que requieren código/infra real:
 
