@@ -2,7 +2,7 @@
 
 **Responsable:** Leonardo Vera Rodríguez  
 **Rama:** vera  
-**Trazabilidad:** Spec [SPEC-014](./specs/SPEC-014-historial-auditoria-precios.md) | Flow [WF-014](./wireframes/flows/WF-014-historial-auditoria-precios.md)
+**Trazabilidad:** Spec [SPEC-014](../specs/SPEC-014-historial-auditoria-precios.md) | Flow [WF-014](../wireframes/flows/WF-014-historial-auditoria-precios.md)
 
 **Como** gestor comercial autorizado para auditoría de precios, **quiero** consultar y exportar una bitácora inmutable, **para** contar con trazabilidad de cambios confirmados.
 

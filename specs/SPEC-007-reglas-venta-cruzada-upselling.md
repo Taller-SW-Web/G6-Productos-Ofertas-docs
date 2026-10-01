@@ -2,7 +2,7 @@
 
 **Responsable:** Axel Andree Cueva Alcalá  
 **Rama:** cueva  
-**Trazabilidad:** HU [HU-007](./hu/HU-007-reglas-venta-cruzada-upselling.md) | Wireframe [WF-007](./wireframes/flows/WF-007-reglas-venta-cruzada-upselling.md)
+**Trazabilidad:** HU [HU-007](../hu/HU-007-reglas-venta-cruzada-upselling.md) | Wireframe [WF-007](../wireframes/flows/WF-007-reglas-venta-cruzada-upselling.md)
 
 ## 1. Contexto
 Esta capacidad configura manualmente candidatos comerciales Cross-sell y Upsell para Marketplace, Chatbot y Retail. No sustituye la interpretación conversacional ni la personalización propia del canal.

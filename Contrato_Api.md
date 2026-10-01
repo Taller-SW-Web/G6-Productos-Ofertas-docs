@@ -2241,7 +2241,7 @@ Cerrados en P2:
 
 - topología RabbitMQ física;
 - recepción total/parcial de traslado a almacén central;
-- autorización local del operador de recepción.
+- autorización local del Gestor Comercial con capacidad de recepción de inventario.
 
 Pendientes externos/de implementación:
 

@@ -2,7 +2,7 @@
 
 **Responsable:** Axel Andree Cueva Alcalá  
 **Rama:** cueva  
-**Trazabilidad:** Spec [SPEC-006](./specs/SPEC-006-gestion-ofertas-promociones.md) | Flow [WF-006](./wireframes/flows/WF-006-gestion-ofertas-promociones.md)
+**Trazabilidad:** Spec [SPEC-006](../specs/SPEC-006-gestion-ofertas-promociones.md) | Flow [WF-006](../wireframes/flows/WF-006-gestion-ofertas-promociones.md)
 
 ## Funcionalidad
 

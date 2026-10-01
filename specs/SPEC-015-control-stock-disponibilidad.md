@@ -332,7 +332,7 @@ Para cada línea:
 reserved_nuevo = reserved_anterior + quantity
 
 available_nuevo =
-  on_hand - reserved_nuevo
+  max(on_hand - reserved_nuevo - blocked, 0)
 ```
 
 `on_hand` no cambia al reservar.
@@ -432,7 +432,7 @@ reserved_nuevo =
   reserved_anterior - quantity
 
 available_nuevo =
-  on_hand_nuevo - reserved_nuevo
+  max(on_hand_nuevo - reserved_nuevo - blocked, 0)
 ```
 
 La reserva pasa a:
@@ -495,7 +495,7 @@ reserved_nuevo =
   reserved_anterior - quantity
 
 available_nuevo =
-  on_hand - reserved_nuevo
+  max(on_hand - reserved_nuevo - blocked, 0)
 ```
 
 La reserva pasa a:
@@ -670,8 +670,9 @@ Inventario DEBE garantizar:
 ```text
 on_hand >= 0
 reserved >= 0
+blocked >= 0
+reserved + blocked <= on_hand
 available >= 0
-reserved <= on_hand
 ```
 
 cuando corresponda al modelo de saldo.
@@ -937,7 +938,7 @@ Toda resolución exige referencia de acta (`act_ref`) y queda en Kardex.
 
 ## 24.4. Recepción de traslado
 
-La recepción pertenece a Inventario y la ejecuta un operador humano autorizado.
+La recepción pertenece a Inventario y la ejecuta un **Gestor Comercial con capacidad local de recepción de inventario**.
 
 Estados:
 
@@ -1061,6 +1062,7 @@ Estado inicial:
 ```text
 on_hand = 0
 reserved = 0
+blocked = 0
 available = 0
 stock_version = 0
 ```
@@ -1522,7 +1524,7 @@ Al completarse esta funcionalidad:
 
 - cada SKU vendible tiene disponibilidad autoritativa por ubicación;
 - Marketplace, Chatbot y Retail pueden consultar stock;
-- los canales no mutan inventario;
+- Marketplace y Chatbot no mutan Inventario; Retail solo reporta/resuelve incidencias físicas mediante contratos autorizados;
 - Ventas reserva al crear el pedido;
 - Ventas confirma consumo al quedar pagado;
 - Ventas libera ante pago fallido/anulación aplicable;
@@ -1557,4 +1559,4 @@ SPEC-015 se considera implementada cuando:
 - las rutas coinciden con `api/openapi.yaml`;
 - los contratos asíncronos coinciden con `asyncapi/asyncapi.yaml`;
 - Ventas/Postventa tiene pruebas de contrato sobre reserva/consumo/liberación;
-- los canales no poseen permisos de mutación de inventario.
+- Marketplace y Chatbot no poseen permisos de mutación; Retail solo posee capacidades de incidencias físicas; Ventas/Postventa concentra las mutaciones comerciales.

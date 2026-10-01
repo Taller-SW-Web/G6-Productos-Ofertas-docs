@@ -2,7 +2,7 @@
 
 **Responsable:** Axel Andree Cueva Alcalá  
 **Rama:** cueva  
-**Trazabilidad:** Spec [SPEC-007](./specs/SPEC-007-reglas-venta-cruzada-upselling.md) | Flow [WF-007](./wireframes/flows/WF-007-reglas-venta-cruzada-upselling.md)
+**Trazabilidad:** Spec [SPEC-007](../specs/SPEC-007-reglas-venta-cruzada-upselling.md) | Flow [WF-007](../wireframes/flows/WF-007-reglas-venta-cruzada-upselling.md)
 
 **Como** gestor comercial, **quiero** configurar relaciones manuales de Cross-sell y Upsell, **para** que los canales presenten complementos o alternativas superiores.
 

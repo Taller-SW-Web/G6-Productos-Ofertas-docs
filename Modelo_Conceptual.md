@@ -1,6 +1,6 @@
 # Modelos conceptuales de datos — Módulo de Productos y Ofertas
 
-**Fecha de actualización:** 2026-09-30  
+**Fecha de actualización:** 2026-10-01  
 **Repositorio:** `Taller-SW-Web/Productos-y-Ofertas-docs`  
 **Archivo:** `Modelo_Conceptual.md`  
 **Arquitectura de referencia:** `Arquitectura.md`  
@@ -12,6 +12,31 @@
 
 > **Alcance:** este documento define los modelos conceptuales de datos de los ocho bounded contexts del módulo Productos y Ofertas.  
 > Las relaciones entre bounded contexts son conceptuales y **no implican foreign keys ni acceso directo cross-schema**.
+
+---
+
+# 0. Convención de modelado conceptual
+
+Los diagramas usan notación Chen simplificada sobre Mermaid `flowchart`:
+
+- Rectángulo → entidad o concepto.
+- Rombo → relación.
+- Borde discontinuo → concepto cuyo ownership pertenece a otro bounded context o módulo.
+- Las etiquetas de las líneas expresan cardinalidad.
+- No se muestran PK, FK, tipos SQL ni atributos físicos salvo cuando una sección textual los utiliza para explicar una regla.
+
+Cardinalidades canónicas:
+
+| Notación | Significado |
+|---|---|
+| `1` | exactamente uno |
+| `0..1` | cero o uno |
+| `1..N` | uno o muchos |
+| `0..N` | cero o muchos |
+| `2..N` | dos o muchos |
+| `1..3` | entre uno y tres |
+
+No utilizar variantes como `0.N`, `1.N`, `0.1`, `2.N` o `1.3` en los diagramas.
 
 ---
 
@@ -41,6 +66,7 @@ Esta versión incorpora las decisiones de diseño del modelo de datos:
 13. Taxonomía expone operaciones observables de **baja maestra segura** para recursos con dependencias.
 14. Una operación de baja maestra puede permanecer pendiente después de un `202 Accepted`; su resultado definitivo se resuelve de forma asíncrona.
 15. La operación de baja pertenece a Taxonomía y no implica acceso directo a las tablas del bounded context consumidor.
+16. El actor humano canónico de administración del módulo es `GESTOR_COMERCIAL`; capacidades de auditoría o inventario no crean roles globales adicionales.
 
 ---
 
@@ -87,57 +113,57 @@ flowchart LR
   R15{"GENERA CAMBIO AUDITADO"}
   R16{"COORDINA CAMBIOS SOBRE"}
 
-  PRODUCT ---|"0.N"| R1
+  PRODUCT ---|"0..N"| R1
   R1 ---|"1"| CAT
 
-  PRODUCT ---|"0.N"| R2
+  PRODUCT ---|"0..N"| R2
   R2 ---|"1"| BRAND
 
-  PRODUCT ---|"0.N"| R3
+  PRODUCT ---|"0..N"| R3
   R3 ---|"1"| TYPE
 
   PRODUCT ---|"1"| R4
-  R4 ---|"0.N"| VARIANT
+  R4 ---|"0..N"| VARIANT
 
   PRODUCT ---|"1"| R5
-  R5 ---|"1.N"| SKU
+  R5 ---|"1..N"| SKU
 
   VARIANT ---|"1"| R6
   R6 ---|"1"| SKU
 
   SKU ---|"1"| R7
-  R7 ---|"0.1"| PHYSICAL
+  R7 ---|"0..1"| PHYSICAL
 
   PRODUCT ---|"1"| R8
-  SKU ---|"0.1"| R8
-  R8 ---|"0.N"| PRICE
+  SKU ---|"0..1"| R8
+  R8 ---|"0..N"| PRICE
 
-  PRODUCT ---|"0.N"| R9
-  SKU ---|"0.N"| R9
-  R9 ---|"0.N"| PROMO
+  PRODUCT ---|"0..N"| R9
+  SKU ---|"0..N"| R9
+  R9 ---|"0..N"| PROMO
 
-  SKU ---|"0.N"| R10
-  R10 ---|"2.N componentes"| COMBO
+  SKU ---|"0..N"| R10
+  R10 ---|"2..N componentes"| COMBO
 
   SKU ---|"1"| R11
-  R11 ---|"1.N ubicaciones"| STOCK
+  R11 ---|"1..N ubicaciones"| STOCK
 
-  STOCK ---|"0.N"| R12
-  R12 ---|"0.N"| RESERVATION
+  STOCK ---|"0..N"| R12
+  R12 ---|"0..N"| RESERVATION
 
-  RESERVATION ---|"0.N"| R13
+  RESERVATION ---|"0..N"| R13
   R13 ---|"1"| ORDER
 
-  PHYSICAL ---|"0.N consultas"| R14
+  PHYSICAL ---|"0..N consultas"| R14
   R14 ---|"1"| DISPATCH
 
   PRICE ---|"1"| R15
-  R15 ---|"0.N"| AUDIT
+  R15 ---|"0..N"| AUDIT
 
   BATCH ---|"1"| R16
-  R16 ---|"1.N"| PRODUCT
-  R16 ---|"0.N"| PRICE
-  R16 ---|"0.N"| STOCK
+  R16 ---|"1..N"| PRODUCT
+  R16 ---|"0..N"| PRICE
+  R16 ---|"0..N"| STOCK
 
   classDef external stroke-dasharray: 5 5;
   class ORDER,DISPATCH external;
@@ -209,21 +235,21 @@ flowchart LR
   R_DEACT{"TRAMITA BAJA SEGURA DE"}
 
   CAT_PARENT ---|"1"| R_HIER
-  R_HIER ---|"0.N"| CAT_CHILD
+  R_HIER ---|"0..N"| CAT_CHILD
 
   CHAR ---|"1"| R_VALUES
-  R_VALUES ---|"0.N"| VALUE
+  R_VALUES ---|"0..N"| VALUE
 
-  TYPE ---|"0.N"| R_SCHEMA
-  R_SCHEMA ---|"0.N"| CHAR
+  TYPE ---|"0..N"| R_SCHEMA
+  R_SCHEMA ---|"0..N"| CHAR
 
   CAT_PARENT ---|"1"| R_SEO
-  R_SEO ---|"0.1"| SEO
+  R_SEO ---|"0..1"| SEO
 
   SEO ---|"1"| R_HISTORY
-  R_HISTORY ---|"0.N"| SLUG
+  R_HISTORY ---|"0..N"| SLUG
 
-  DEACT_OP ---|"0.N"| R_DEACT
+  DEACT_OP ---|"0..N"| R_DEACT
   R_DEACT ---|"1"| MASTER_TARGET
 ```
 
@@ -317,40 +343,40 @@ flowchart TB
   R_VATTR{"SE IDENTIFICA POR"}
 
   PRODUCT ---|"1"| R_VARIANTS
-  R_VARIANTS ---|"0.N"| VARIANT
+  R_VARIANTS ---|"0..N"| VARIANT
 
   PRODUCT ---|"1"| R_SKUS
-  R_SKUS ---|"1.N"| SKU
+  R_SKUS ---|"1..N"| SKU
 
   VARIANT ---|"1"| R_VARIANT_SKU
   R_VARIANT_SKU ---|"1"| SKU
 
   PRODUCT ---|"1"| R_PIMG
-  R_PIMG ---|"0.N"| PIMAGE
+  R_PIMG ---|"0..N"| PIMAGE
 
   VARIANT ---|"1"| R_VIMG
-  R_VIMG ---|"1.N"| VIMAGE
+  R_VIMG ---|"1..N"| VIMAGE
 
   SKU ---|"1"| R_PHYSICAL
-  R_PHYSICAL ---|"0.1"| PHYSICAL
+  R_PHYSICAL ---|"0..1"| PHYSICAL
 
-  PRODUCT ---|"0.N"| R_CATEGORY
+  PRODUCT ---|"0..N"| R_CATEGORY
   R_CATEGORY ---|"1"| CATEGORY
 
-  PRODUCT ---|"0.N"| R_BRAND
+  PRODUCT ---|"0..N"| R_BRAND
   R_BRAND ---|"1"| BRAND
 
-  PRODUCT ---|"0.N"| R_TYPE
+  PRODUCT ---|"0..N"| R_TYPE
   R_TYPE ---|"1"| TYPE
 
-  PRODUCT ---|"0.N"| R_PATTR
-  R_PATTR ---|"0.N"| CHAR
+  PRODUCT ---|"0..N"| R_PATTR
+  R_PATTR ---|"0..N"| CHAR
 
-  PRODUCT ---|"0.N"| R_IDCHAR
-  R_IDCHAR ---|"0.N"| CHAR
+  PRODUCT ---|"0..N"| R_IDCHAR
+  R_IDCHAR ---|"0..N"| CHAR
 
-  VARIANT ---|"1.N identificadores"| R_VATTR
-  R_VATTR ---|"0.N usos"| VALUE
+  VARIANT ---|"1..N identificadores"| R_VATTR
+  R_VATTR ---|"0..N usos"| VALUE
 
   classDef external stroke-dasharray: 5 5;
   class CATEGORY,BRAND,TYPE,CHAR,VALUE external;
@@ -463,16 +489,16 @@ flowchart LR
   R_BATCH{"ACTUALIZA"}
 
   PRODUCT ---|"1"| R_BASE
-  R_BASE ---|"0.N"| PRICE
+  R_BASE ---|"0..N"| PRICE
 
   SKU ---|"1"| R_OVERRIDE
-  R_OVERRIDE ---|"0.N"| PRICE
+  R_OVERRIDE ---|"0..N"| PRICE
 
   PRICE ---|"1"| R_PERIOD
-  R_PERIOD ---|"1.N"| PERIOD
+  R_PERIOD ---|"1..N"| PERIOD
 
   BATCH ---|"1"| R_BATCH
-  R_BATCH ---|"1.N"| SKU
+  R_BATCH ---|"1..N"| SKU
 
   classDef external stroke-dasharray: 5 5;
   class PRODUCT,SKU external;
@@ -512,23 +538,23 @@ flowchart TB
   R_EXPORT{"EXPORTA"}
   R_ARCHIVE{"ARCHIVA"}
 
-  AUDIT ---|"0.N"| R_PRODUCT
+  AUDIT ---|"0..N"| R_PRODUCT
   R_PRODUCT ---|"1"| PRODUCT
 
-  AUDIT ---|"0.N"| R_SKU
+  AUDIT ---|"0..N"| R_SKU
   R_SKU ---|"1"| SKU
 
-  AUDIT ---|"0.N"| R_USER
+  AUDIT ---|"0..N"| R_USER
   R_USER ---|"1"| USER
 
-  AUDIT ---|"0.N"| R_BATCH
-  R_BATCH ---|"0.1"| BATCH
+  AUDIT ---|"0..N"| R_BATCH
+  R_BATCH ---|"0..1"| BATCH
 
   EXPORT ---|"1"| R_EXPORT
-  R_EXPORT ---|"0.N"| AUDIT
+  R_EXPORT ---|"0..N"| AUDIT
 
   ARCHIVE ---|"1"| R_ARCHIVE
-  R_ARCHIVE ---|"1.N"| AUDIT
+  R_ARCHIVE ---|"1..N"| AUDIT
 
   classDef external stroke-dasharray: 5 5;
   class PRODUCT,SKU,USER,BATCH external;
@@ -570,19 +596,19 @@ flowchart LR
   R_USE{"REGISTRA"}
   R_ORDER{"CORRESPONDE A"}
 
-  PROMO ---|"0.N"| R_PRODUCT
-  R_PRODUCT ---|"0.N"| PRODUCT
+  PROMO ---|"0..N"| R_PRODUCT
+  R_PRODUCT ---|"0..N"| PRODUCT
 
-  PROMO ---|"0.N"| R_SKU
-  R_SKU ---|"0.N"| SKU
+  PROMO ---|"0..N"| R_SKU
+  R_SKU ---|"0..N"| SKU
 
   PROMO ---|"1"| R_COUPON
-  R_COUPON ---|"0.N"| COUPON
+  R_COUPON ---|"0..N"| COUPON
 
   COUPON ---|"1"| R_USE
-  R_USE ---|"0.N"| USE
+  R_USE ---|"0..N"| USE
 
-  USE ---|"0.N"| R_ORDER
+  USE ---|"0..N"| R_ORDER
   R_ORDER ---|"1"| ORDER
 
   classDef external stroke-dasharray: 5 5;
@@ -609,14 +635,14 @@ flowchart LR
   R_OC{"PUEDE ORIGINARSE EN"}
   R_REC{"RECOMIENDA"}
 
-  RULE ---|"0.1"| R_OP
-  R_OP ---|"0.N reglas"| ORIGIN_PRODUCT
+  RULE ---|"0..1"| R_OP
+  R_OP ---|"0..N reglas"| ORIGIN_PRODUCT
 
-  RULE ---|"0.1"| R_OC
-  R_OC ---|"0.N reglas"| ORIGIN_CATEGORY
+  RULE ---|"0..1"| R_OC
+  R_OC ---|"0..N reglas"| ORIGIN_CATEGORY
 
   RULE ---|"1"| R_REC
-  R_REC ---|"1.N"| RECOMMENDED
+  R_REC ---|"1..N"| RECOMMENDED
 
   classDef external stroke-dasharray: 5 5;
   class ORIGIN_PRODUCT,ORIGIN_CATEGORY,RECOMMENDED external;
@@ -647,8 +673,8 @@ flowchart LR
 
   R_COMPONENT{"SE COMPONE DE"}
 
-  COMBO ---|"2.N componentes"| R_COMPONENT
-  R_COMPONENT ---|"0.N combos"| SKU
+  COMBO ---|"2..N componentes"| R_COMPONENT
+  R_COMPONENT ---|"0..N combos"| SKU
 
   classDef external stroke-dasharray: 5 5;
   class SKU external;
@@ -676,6 +702,7 @@ Inventario es autoridad de:
 - idempotencia;
 - expiración de reserva;
 - configuración de umbral;
+- traslados y recepciones;
 - dashboard operativo.
 
 No es autoridad del pedido.
@@ -720,49 +747,49 @@ flowchart TB
   R_DEFAULT{"DEFINE UMBRAL GLOBAL"}
 
   SKU ---|"1"| R_SKU_BAL
-  R_SKU_BAL ---|"1.N"| BALANCE
+  R_SKU_BAL ---|"1..N"| BALANCE
 
   LOCATION ---|"1"| R_LOC_BAL
-  R_LOC_BAL ---|"0.N"| BALANCE
+  R_LOC_BAL ---|"0..N"| BALANCE
 
   RESERVATION ---|"1"| R_RES_LINES
-  R_RES_LINES ---|"1.N"| RLINE
+  R_RES_LINES ---|"1..N"| RLINE
 
-  RLINE ---|"0.N"| R_LINE_BAL
+  RLINE ---|"0..N"| R_LINE_BAL
   R_LINE_BAL ---|"1"| BALANCE
 
-  RESERVATION ---|"0.N"| R_ORDER_RES
+  RESERVATION ---|"0..N"| R_ORDER_RES
   R_ORDER_RES ---|"1"| ORDER
 
   BALANCE ---|"1"| R_BAL_MOV
-  R_BAL_MOV ---|"0.N"| MOVEMENT
+  R_BAL_MOV ---|"0..N"| MOVEMENT
 
   OP ---|"1"| R_OP_MOV
-  R_OP_MOV ---|"1.N"| MOVEMENT
+  R_OP_MOV ---|"1..N"| MOVEMENT
 
   RESERVATION ---|"1"| R_RES_OP
-  R_RES_OP ---|"1.N"| OP
+  R_RES_OP ---|"1..N"| OP
 
-  INCIDENT ---|"0.N"| R_INC_BAL
+  INCIDENT ---|"0..N"| R_INC_BAL
   R_INC_BAL ---|"1"| BALANCE
 
   INCIDENT ---|"1"| R_INC_OP
-  R_INC_OP ---|"1.N"| OP
+  R_INC_OP ---|"1..N"| OP
 
-  INCIDENT ---|"0.1"| R_INC_TRANSFER
+  INCIDENT ---|"0..1"| R_INC_TRANSFER
   R_INC_TRANSFER ---|"1"| TRANSFER
 
   TRANSFER ---|"1"| R_TRANSFER_RECEIPT
-  R_TRANSFER_RECEIPT ---|"0.N"| RECEIPT
+  R_TRANSFER_RECEIPT ---|"0..N"| RECEIPT
 
-  TRANSFER ---|"0.N"| R_TRANSFER_TARGET
+  TRANSFER ---|"0..N"| R_TRANSFER_TARGET
   R_TRANSFER_TARGET ---|"1 destino"| LOCATION
 
   SKU ---|"1"| R_OVERRIDE
-  R_OVERRIDE ---|"0.1"| OVERRIDE
+  R_OVERRIDE ---|"0..1"| OVERRIDE
 
   CONFIG ---|"1"| R_DEFAULT
-  R_DEFAULT ---|"0.N saldos"| BALANCE
+  R_DEFAULT ---|"0..N saldos"| BALANCE
 
   classDef external stroke-dasharray: 5 5;
   class SKU,ORDER external;
@@ -984,7 +1011,7 @@ REINGRESAR_BLOQUEADO
 CONFIRMAR_MERMA
 ```
 
-La recepción se vincula al `sub` del operador mediante autorización local, sin crear una entidad Usuario propia.
+La recepción se vincula al `sub` del **gestor comercial autorizado para gestión de inventario**, sin crear una entidad Usuario propia ni un rol global adicional.
 
 Una recepción parcial final conserva:
 
@@ -1047,7 +1074,8 @@ Puede mostrar:
 - total bloqueado;
 - stock bajo;
 - agotados;
-- distribución por ubicación.
+- distribución por ubicación;
+- traslados pendientes y con discrepancia.
 
 No se crea un bounded context adicional.
 
@@ -1076,19 +1104,19 @@ flowchart TB
   R_EXPORT{"GENERA"}
 
   FILE ---|"1"| R_INPUT
-  R_INPUT ---|"0.N"| BATCH
+  R_INPUT ---|"0..N"| BATCH
 
   BATCH ---|"1"| R_ROWS
-  R_ROWS ---|"1.N"| ROW
+  R_ROWS ---|"1..N"| ROW
 
   ROW ---|"1"| R_STEPS
-  R_STEPS ---|"1.3"| STEP
+  R_STEPS ---|"1..3"| STEP
 
-  BATCH ---|"0.1"| R_REPORT
-  R_REPORT ---|"0.1"| FILE
+  BATCH ---|"0..1"| R_REPORT
+  R_REPORT ---|"0..1"| FILE
 
   EXPORT ---|"1"| R_EXPORT
-  R_EXPORT ---|"0.1"| FILE
+  R_EXPORT ---|"0..1"| FILE
 ```
 
 Bulk coordina mediante contratos, nunca mediante joins cross-schema.
@@ -1182,7 +1210,7 @@ Persistencia técnica probable:
 | Price Audit | exportación/archivo |
 | Promociones | proyecciones comerciales |
 | Combos | proyección de componentes |
-| Inventario | idempotencia, reservas, expiración, dashboard |
+| Inventario | idempotencia, reservas, expiración, incidencias, traslados y dashboard |
 | Bulk | reintentos, conciliación y manifiestos |
 | BFF | offsets y read models |
 
@@ -1211,11 +1239,11 @@ Incluso si todos los schemas viven en una sola instancia PostgreSQL/Supabase, se
 | Relación conceptual | Cardinalidad | Posible materialización lógica |
 |---|---:|---|
 | Tipo Producto — Característica | N:M | `product_type_characteristics` |
-| Objetivo maestro — Operación de baja maestra | 1:0.N | `master_deactivation_operations` con referencia estable al objetivo, sin FK cross-context |
+| Objetivo maestro — Operación de baja maestra | 1:0..N | `master_deactivation_operations` con referencia estable al objetivo, sin FK cross-context |
 | Producto — Característica identificadora | N:M | `product_identifying_characteristics` |
 | Producto — Valor de atributo | N:M | `product_attribute_values` |
 | Variante — Valor identificador | N:M | `variant_attribute_values` |
-| SKU vendible — Perfil físico | 1:0.1 | `sku_physical_profiles` o equivalente referenciado por `sku` |
+| SKU vendible — Perfil físico | 1:0..1 | `sku_physical_profiles` o equivalente referenciado por `sku` |
 | Promoción — Producto/SKU | N:M | `promotion_scopes` |
 | Regla recomendación — Producto | N:M | `recommendation_items` |
 | Combo — SKU | N:M | `combo_items` |
@@ -1304,7 +1332,6 @@ No se comparten entidades ORM ni repositorios.
 
 ---
 
-
 ## 17.1. Decisiones de referencias interdominio
 
 ### Cliente
@@ -1338,13 +1365,14 @@ Inventario reconoce cada SKU vendible:
 ```text
 SKU VENDIBLE
   -> INICIALIZACIÓN DE SKU
-  -> 0.N SALDOS POR UBICACIÓN
+  -> 0..N SALDOS POR UBICACIÓN
 ```
 
 Una inicialización sin `default_location_id` no necesita inventar un saldo en una ubicación ficticia.
 
 El producto padre con variantes no genera un saldo físico.
 
+---
 
 # 18. Proyecciones locales
 
@@ -1410,29 +1438,31 @@ Las decisiones conceptuales principales ya fueron propagadas.
 
 | Artefacto | Estado |
 |---|---|
-| `Arquitectura.md` | Actualizado con Ventas como orquestador, datos físicos, AsyncAPI, errores e idempotencia |
-| `Contrato_Api.md` | Actualizado con OpenAPI/AsyncAPI, catálogos humanos y pendientes reales |
+| `Arquitectura.md` | Actualizado con `GESTOR_COMERCIAL` como actor humano canónico, Ventas como orquestador, inventario extendido, datos físicos, AsyncAPI, errores e idempotencia |
+| `Contrato_Api.md` | Baseline `0.4.0`, ownership e integración consolidados |
 | `SPEC/HU/WF-003` | Actualizados: perfil físico de producto simple y Seguridad |
 | `SPEC/HU/WF-004` | Actualizados: perfil físico de variante/SKU y Seguridad |
-| `SPEC/HU/WF-015` | Actualizados: reserva/consumo/liberación, TTL e idempotencia |
+| `SPEC/HU/WF-014` | Auditoría alineada con `GESTOR_COMERCIAL` y capacidades internas, sin rol global de Auditor |
+| `SPEC/HU/WF-015` | Reserva/consumo/liberación, TTL, idempotencia, incidencias, reintegros, conciliación y traslados |
+| `HU/WF-016` | Dashboard y alertas alineados con Gestor Comercial autorizado y proyección de solo lectura |
 | `api/openapi.yaml` | `0.4.0`: contrato HTTP consolidado P0/P1/P2 |
 | `asyncapi/asyncapi.yaml` | `0.4.0`: mensajería consolidada y topología RabbitMQ consolidada |
 | `api/catalogo-eventos.md` | `0.4.0`: referencia humana alineada con 39 mensajes y consumidores |
 | `api/catalogo-errores.md` | `0.4.0`: catálogo consolidado, incluidos errores de traslados |
 | Operación de baja maestra | Incorporada conceptualmente en Taxonomía y observable por `GET /api/v1/taxonomia/operaciones/{operationId}` |
 
-Pendientes que sí pueden afectar el modelo lógico futuro:
+Los contratos Catálogo → Pricing, Catálogo → Inventario y el reintegro físico ya están formalizados en el baseline `0.4.0`; no se mantienen como pendientes del modelo conceptual.
+
+Pendientes que sí pueden afectar el modelo lógico o la implementación futura:
 
 1. decisión final sobre tabla/abstracción física para representar SKU vendible dentro de Catálogo;
-2. contrato de reintegro por devolución aceptada;
-3. contratos de preparación inicial Catálogo → Pricing e inicialización Catálogo → Inventario;
-4. scopes técnicos de `api-productos` registrados con Seguridad.
+2. registro definitivo de scopes/grants técnicos de `api-productos` en Seguridad.
 
 Ninguno requiere compartir schemas entre bounded contexts.
 
 # 21. Conclusión
 
-La actualización P0 confirma que:
+La actualización confirma que:
 
 1. Los ocho bounded contexts continúan correctamente separados.
 2. No es necesario compartir schemas entre microservicios.
@@ -1440,9 +1470,10 @@ La actualización P0 confirma que:
 4. Despacho es owner del empaque y de la logística final.
 5. Inventario es owner de saldo y reserva.
 6. Ventas es owner del Pedido y orquesta el ciclo de reserva/consumo.
-7. Los canales no mutan Inventario.
+7. Marketplace y Chatbot no mutan Inventario; Retail tampoco ejecuta mutaciones comerciales de venta, aunque puede reportar/resolver incidencias físicas mediante contratos dedicados.
 8. Una Reserva pertenece conceptualmente a un Pedido externo, pero no existe FK cross-module.
 9. La reserva tiene ciclo propio y debe modelarse explícitamente.
-10. `on_hand`, `reserved` y `available` siguen perteneciendo al saldo por `(sku, location_id)`.
+10. `on_hand`, `reserved`, `blocked` y `available` pertenecen al saldo por `(sku, location_id)`.
 11. Taxonomía modela explícitamente la operación de baja maestra segura como concepto observable, sin compartir schema ni convertir el `202 Accepted` en resultado definitivo.
-12. Arquitectura, Contrato API y las funcionalidades 003/004/015 ya reflejan estas decisiones; los pendientes restantes son de homologación/implementación, no de ownership conceptual.
+12. La autorización humana del módulo se apoya en `GESTOR_COMERCIAL`; la granularidad adicional de auditoría o inventario se modela como capacidad interna, no como rol global independiente.
+13. Arquitectura, Contrato API, OpenAPI/AsyncAPI `0.4.0` y las funcionalidades relacionadas reflejan estas decisiones; los pendientes restantes son de modelo lógico/implementación o registro de grants, no de ownership conceptual.

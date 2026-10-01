@@ -64,7 +64,7 @@ Se mantienen **ocho bounded contexts de negocio**:
 | `price-audit-svc` | Auditoría de precios | Registro append-only, consulta, exportación y archivo. |
 | `promotions-svc` | Promociones | Promociones, cupones, consumo de cupón, cross-sell y upsell. |
 | `combos-svc` | Combos | Definición, composición, precio y disponibilidad proyectada de combos. |
-| `inventory-svc` | Inventario | Saldos, reservas, consumo, liberación, expiración, ajustes, Kardex y dashboard. |
+| `inventory-svc` | Inventario | Saldos, reservas, consumo, liberación, expiración, ajustes, incidencias y cuarentenas, reintegros, conciliación offline, traslados y recepciones, Kardex y dashboard. |
 | `bulk-svc` | Bulk | Importación/exportación, validación, coordinación por fila, reintentos y conciliación. |
 
 Además existe:
@@ -510,7 +510,8 @@ Cada servicio tiene schema y credenciales propias.
 | `taxonomy-svc` | `taxonomy` |
 | `catalog-svc` | `catalog` |
 | `pricing-svc` | `pricing` |
-| `price-audit-svc` | `price_audit` || `promotions-svc` | `promotions` |
+| `price-audit-svc` | `price_audit` |
+| `promotions-svc` | `promotions` |
 | `combos-svc` | `combos` |
 | `inventory-svc` | `inventory` |
 | `bulk-svc` | `bulk` |
