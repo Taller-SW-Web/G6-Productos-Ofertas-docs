@@ -1,383 +1,137 @@
-# Productos y Ofertas
+﻿# LAB â€” taco
 
-Repositorio de documentación del módulo **Productos y Ofertas** del proyecto de Taller de Construcción de Software Web.
+> Rama temporal: `lab/taco`  
+> Rama oficial: `taco`  
+> **Regla inmutable: Nunca hacer merge de esta rama hacia una rama oficial ni abrir Pull Request.**
 
-El módulo concentra las capacidades compartidas de catálogo, taxonomía, precios, promociones, combos, inventario y operaciones masivas que son consumidas por otros módulos del sistema, entre ellos Marketplace, Chatbot, Retail, Ventas/Postventa y Despacho.
+## Finalidad
 
-La documentación sigue un enfoque **contract-first**: las reglas funcionales, contratos HTTP, eventos y responsabilidades de cada módulo se mantienen explícitamente separados para evitar duplicación de ownership y acoplamiento entre módulos.
+Iterar y experimentar mockups con Stitch MCP y asistentes en un entorno aislado.
 
----
-
-## 1. Alcance del módulo
-
-Productos y Ofertas cubre 16 funcionalidades principales:
-
-| ID | Funcionalidad |
-|---|---|
-| 001 | Carga y exportación masiva de productos |
-| 002 | Gestión de combos de productos |
-| 003 | Gestión de productos |
-| 004 | Gestión de variantes y SKU |
-| 005 | Gestión de cupones de descuento |
-| 006 | Gestión de ofertas y promociones |
-| 007 | Reglas de venta cruzada y upselling |
-| 008 | Gestión de categorías y subcategorías |
-| 009 | Gestión de características y valores |
-| 010 | Asociación entre tipos de producto y características |
-| 011 | Gestión de marcas |
-| 012 | Gestión de SEO y metadatos |
-| 013 | Gestión de precios individuales y masivos |
-| 014 | Historial y auditoría de precios |
-| 015 | Control de stock y disponibilidad |
-| 016 | Dashboard analítico y alertas de stock |
-
-Cada funcionalidad se mantiene mediante dos cadenas coordinadas: una funcional/UX y otra contractual/técnica.
-
-```mermaid
-flowchart TD
-    SPEC["SPEC"] --> HU["Historia de Usuario"]
-    HU --> WF["Wireframe / flujo UX"]
-    WF --> HTML["Prototipo HTML"]
-
-    SPEC --> API["OpenAPI / AsyncAPI<br/>cuando corresponda"]
-    SPEC --> MODEL["Modelo de datos<br/>cuando corresponda"]
-    API --> ARQ["Arquitectura e implementación"]
-    MODEL --> ARQ
-```
-
-El prototipo HTML valida el comportamiento y la representación del wireframe; **no es la fuente del contrato API**.
-
-El inventario detallado de funcionalidades, responsables y artefactos se encuentra en [`wireframes/INDEX.md`](wireframes/INDEX.md).
-
----
-
-## 2. Cómo navegar este repositorio
-
-| Artefacto | Ubicación | Propósito |
-|---|---|---|
-| Especificaciones funcionales | [`specs/`](specs/) | Reglas de negocio y comportamiento esperado |
-| Historias de usuario | [`hu/`](hu/) | Necesidades del usuario y criterios funcionales |
-| Flujos funcionales complementarios | [`flujos/`](flujos/) | Flujos detallados de procesos relevantes |
-| Wireframes | [`wireframes/flows/`](wireframes/flows/) | Definición funcional de las interfaces |
-| Prototipos HTML | [`wireframes/prototipos/`](wireframes/prototipos/) | Representaciones navegables de los wireframes |
-| Guía visual de wireframes | [`wireframes/DESIGN.md`](wireframes/DESIGN.md) | Lineamientos visuales aplicables exclusivamente a los wireframes |
-| Índice funcional | [`wireframes/INDEX.md`](wireframes/INDEX.md) | Mapeo de las 16 funcionalidades y responsables |
-| Visor de prototipos | [`wireframes/Visor_Prototipos_PO.html`](wireframes/Visor_Prototipos_PO.html) | Acceso unificado a los prototipos de wireframes |
-| Arquitectura | [`Arquitectura.md`](Arquitectura.md) | Diseño técnico y decisiones arquitectónicas |
-| Modelo conceptual | [`Modelo_Conceptual.md`](Modelo_Conceptual.md) | Ownership y relaciones conceptuales de datos |
-| Contrato de integración | [`Contrato_Api.md`](Contrato_Api.md) | Responsabilidades e integración con otros módulos |
-| OpenAPI | [`api/openapi.yaml`](api/openapi.yaml) | Contrato HTTP ejecutable |
-| AsyncAPI | [`asyncapi/asyncapi.yaml`](asyncapi/asyncapi.yaml) | Contrato de mensajería asíncrona |
-| Catálogo de errores | [`api/catalogo-errores.md`](api/catalogo-errores.md) | Semántica estable de errores del módulo |
-| Catálogo de eventos | [`api/catalogo-eventos.md`](api/catalogo-eventos.md) | Eventos publicados y consumidos |
-| Topología RabbitMQ | [`api/rabbitmq-topologia.md`](api/rabbitmq-topologia.md) | Definición física de exchanges, colas y retries |
-| Kit de integración | [`api/kit-integracion.md`](api/kit-integracion.md) | Guía práctica de integración para otros módulos |
-| Acuerdos de integración | [`integraciones/`](integraciones/) | Acuerdos homologados con Chatbot, Ventas y Despacho |
-
----
-
-## 3. Fuentes de verdad
-
-No todos los documentos tienen la misma autoridad.
-
-| Tema | Fuente de verdad |
-|---|---|
-| Reglas funcionales | `specs/SPEC-XXX-*.md` |
-| Necesidad y comportamiento desde usuario | `hu/HU-XXX-*.md` |
-| Comportamiento de interfaz | `wireframes/flows/WF-XXX-*.md` |
-| Representación visual de wireframes | `wireframes/DESIGN.md` |
-| Contrato HTTP | `api/openapi.yaml` |
-| Mensajería asíncrona | `asyncapi/asyncapi.yaml` |
-| Topología física RabbitMQ | `api/rabbitmq-topologia.md` |
-| Códigos de error | `api/catalogo-errores.md` |
-| Eventos | `api/catalogo-eventos.md` |
-| Ownership e integración entre módulos | `Contrato_Api.md` |
-| Arquitectura interna | `Arquitectura.md` |
-| Ownership conceptual de datos | `Modelo_Conceptual.md` |
-
-Ante una diferencia entre documentación narrativa y un contrato ejecutable, se debe revisar primero la fuente de verdad correspondiente y posteriormente propagar la corrección a los documentos derivados.
-
-> **Nota sobre diseño:** `wireframes/DESIGN.md` gobierna únicamente la representación visual de los wireframes actuales. Los mockups de mayor fidelidad tendrán su propio documento de diseño y no deberán utilizar `wireframes/DESIGN.md` como fuente visual canónica.
-
----
-
-## 4. Arquitectura
-
-El módulo se divide en ocho bounded contexts de negocio.
-
-| Servicio | Responsabilidad |
-|---|---|
-| `taxonomy-svc` | Categorías, marcas, características, valores, tipos de producto y asociaciones |
-| `catalog-svc` | Productos, variantes, SKU, imágenes, atributos y perfil físico |
-| `pricing-svc` | Precios, vigencias, canales y programación |
-| `price-audit-svc` | Historial y auditoría de cambios de precio |
-| `promotions-svc` | Promociones, cupones, cross-sell y upselling |
-| `combos-svc` | Definición y composición de combos |
-| `inventory-svc` | Saldos, reservas, consumo, liberación, expiración, ajustes, incidencias y cuarentenas, reintegros, conciliación offline, traslados y recepciones, Kardex, disponibilidad y dashboard |
-| `bulk-svc` | Importación, exportación y procesamiento masivo |
-
-Adicionalmente existe un `api-gateway` / BFF como punto de acceso, pero no constituye un bounded context de negocio.
-
-La descripción completa, reglas de dependencias, persistencia, mensajería, resiliencia, seguridad, observabilidad y diagramas C4 se encuentran en [`Arquitectura.md`](Arquitectura.md).
-
----
-
-## 5. Ownership de negocio
-
-El sistema evita compartir directamente bases de datos o entidades entre módulos.
-
-| Información / proceso | Módulo propietario |
-|---|---|
-| Producto, variante y SKU | Productos y Ofertas |
-| Categoría, marca y características | Productos y Ofertas |
-| Precio | Productos y Ofertas |
-| Promoción y cupón | Productos y Ofertas |
-| Combo | Productos y Ofertas |
-| Stock y reservas | Productos y Ofertas |
-| Usuario, identidad, roles y autenticación | Seguridad y Usuarios |
-| Pedido, pago y estado comercial | Ventas y Postventa |
-| Devolución comercial y reembolso | Ventas y Postventa |
-| Despacho, empaque y entrega | Despacho y Entrega |
-
-No se permiten foreign keys ni consultas SQL directas entre bases de datos pertenecientes a módulos diferentes.
-
-La integración se realiza mediante contratos HTTP y mensajería asíncrona publicada.
-
----
-
-## 6. Integración con Ventas/Postventa
-
-El flujo homologado de inventario es:
-
-```mermaid
-flowchart TD
-    C["Canal"] -->|Consulta disponibilidad| PO["Productos y Ofertas"]
-    C -->|Crea pedido| VP["Ventas/Postventa"]
-
-    VP -->|Pedido = CREADO| R["Solicita reserva"]
-    VP -->|Pedido = PAGADO| CO["Confirma consumo"]
-    VP -->|Cancelación o PAGO_NO_COMPLETADO| L["Solicita liberación"]
-
-    R --> INV["Inventario<br/>Productos y Ofertas"]
-    CO --> INV
-    L --> INV
-```
-
-Marketplace y Chatbot consultan disponibilidad. Retail también puede reportar y resolver incidencias físicas mediante sus capacidades autorizadas, pero no realiza directamente las mutaciones comerciales de reserva, consumo, liberación, reintegro o conciliación de una venta.
-
-Ventas/Postventa coordina el ciclo asociado al pedido y Productos y Ofertas mantiene el estado autoritativo del inventario.
-
-Las reservas pueden expirar mediante un TTL configurable.
-
----
-
-## 7. Integración con Despacho
-
-Productos y Ofertas es propietario de las propiedades físicas intrínsecas de cada SKU, como peso y dimensiones.
-
-Despacho y Entrega es propietario de las decisiones logísticas derivadas de esos datos, entre ellas:
-
-- Tipo de empaque.
-- Agrupación de unidades.
-- Cantidad de paquetes.
-- Volumen logístico final.
-- Capacidad de transporte.
-
-El módulo de Productos y Ofertas no incorpora reglas propias de empaquetado.
-
----
-
-## 8. Contratos de API
-
-La API HTTP utiliza como prefijo:
+La UX no se define aquÃ­. Stitch **no estÃ¡ autorizado a redefinir la UX del mÃ³dulo**. Esta rama debe aplicar obligatoriamente:
 
 ```text
-/api/v1
+mockups/ux/propuesta-ux.md
+mockups/ux/ux-decisions.md
+mockups/ux/ux-guidelines.md
 ```
 
-Los recursos se organizan por dominio y se publican en español.
-
-Ejemplos:
+Cada funcionalidad se guÃ­a por:
 
 ```text
-/api/v1/productos
-/api/v1/categorias
-/api/v1/marcas
-/api/v1/precios
-/api/v1/promociones
-/api/v1/cupones
-/api/v1/combos
-/api/v1/inventario
+mockups/MK-XXX/component-spec.md
+mockups/MK-XXX/plan.md
+mockups/MK-XXX/tasks.md
 ```
 
-El contrato HTTP completo se encuentra en:
+## Regla Conceptual
 
-[`api/openapi.yaml`](api/openapi.yaml)
+```text
+3 propuestas UX del mÃ³dulo â†’ comparaciÃ³n y consolidaciÃ³n â†’ Propuesta UX Integral Adoptada
+                                      â†“
+                               16 funcionalidades
+                                      â†“
+                               1 MK por funcionalidad
+                                      â†“
+                               N pantallas por MK
+```
 
-La mensajería asíncrona se encuentra en:
+Stitch puede generar candidatos de implementaciÃ³n para perfeccionar una pantalla, pero esos candidatos **nunca son propuestas UX**.
 
-[`asyncapi/asyncapi.yaml`](asyncapi/asyncapi.yaml)
+## Solo Web Desktop
 
-La explicación humana de responsabilidades e integración se mantiene en:
+- Entorno: Web Desktop exclusivamente.
+- `deviceType = DESKTOP` en Stitch MCP.
+- Viewport canÃ³nico de generaciÃ³n y revisiÃ³n: 1440 px (sin considerarlo un ancho rÃ­gido).
+- No diseÃ±ar ni generar variantes mobile o tablet.
 
-[`Contrato_Api.md`](Contrato_Api.md)
+## Trabajo Permitido en `lab/taco`
 
-### Versiones contractuales actuales
+- Pantallas y componentes temporales de prototipado.
+- Variantes y candidatos de implementaciÃ³n.
+- Versionado de artefactos experimentales livianos en `.stitch/` (prompts, IDs de pantalla generados, notas de sesiÃ³n, HTML/cÃ³digo de prueba).
+- Commits y pruebas iterativas rÃ¡pidas.
 
-| Artefacto | Versión |
-|---|---|
-| OpenAPI | `0.4.0` |
-| AsyncAPI | `0.4.0` |
-| Catálogo de errores | `0.4.0` |
-| Catálogo de eventos | `0.4.0` |
-| Topología RabbitMQ | `0.4.0` |
-| Kit de integración | `0.4.0` |
+## Trabajo Prohibido en `lab/taco`
 
----
+- Modificar la UX transversal sin aprobaciÃ³n oficial en `master`.
+- Abrir Pull Request desde `lab/taco`.
+- Fusionar (`git merge`) `lab/taco` hacia ramas oficiales (`taco`, `master`, `testing`).
+- Promover carpetas `.stitch/`, cachÃ©s o prompts temporales a la rama oficial.
 
-## 9. Diseño y experiencia de usuario
+## PolÃ­tica de `.stitch/`
 
-Las 16 funcionalidades cuentan con definición de wireframe y prototipo HTML.
+- **Versionar en `lab/taco` (livianos):** prompts enviados, notas de sesiÃ³n (`stitch-session.json`), IDs de pantalla y cÃ³digo HTML preliminar generado para conservar la trazabilidad de iteraciones.
+- **Ignorar (pesados/regenerables):** cachÃ©s de herramientas, dependencias locales y screenshots redundantes.
+- **En ramas oficiales:** NingÃºn archivo de `.stitch/` puede promoverse.
 
-La guía visual vigente para estos artefactos se encuentra en:
-
-[`wireframes/DESIGN.md`](wireframes/DESIGN.md)
-
-Este documento define exclusivamente los lineamientos de los **wireframes de baja fidelidad** actuales.
-
-Los futuros **mockups de mayor fidelidad** contarán con un documento de diseño independiente, de modo que las reglas visuales de los wireframes no se mezclen con las decisiones visuales de los mockups.
-
-Los prototipos HTML actuales son artefactos de documentación y validación de wireframes. No constituyen el frontend productivo.
-
-La cadena actual de diseño es:
+## Flujo de ExperimentaciÃ³n con Stitch MCP
 
 ```mermaid
 flowchart TD
-    A["SPEC + HU"] --> B["WF"]
-    B --> C["Prototipo HTML del wireframe"]
-    C --> D["Validación contra<br/>wireframes/DESIGN.md"]
+    A["Leer UX global + fuentes del MK"]
+    B["Elegir pantalla ancla"]
+    C["Generar candidato con Stitch DESKTOP"]
+    D["Revisar cumplimiento"]
+    E["Editar de forma focalizada edit_screens"]
+    F{"Â¿Cumple criterios?"}
+    G["Seguir refinando"]
+    H["Normalizar cÃ³digo en prototipo/src/pantallas/"]
+    I["Completar validation-report.md"]
+    J["Promover selectivamente a taco"]
+
+    A --> B --> C --> D --> E --> F
+    F -- "No" --> G --> E
+    F -- "SÃ­" --> H --> I --> J
 ```
 
-La evolución posterior hacia mockups seguirá una cadena independiente:
+## PromociÃ³n Selectiva hacia la Rama Oficial
 
-```mermaid
-flowchart TD
-    A["Wireframe validado"] --> B["Propuesta visual / mockup"]
-    B --> C["Guía de diseño de mockups"]
-    C --> D["Refinamiento y consistencia"]
-    D --> E["Mockup final"]
-    E --> F["Implementación frontend"]
+Cuando una funcionalidad (`MK-XXX`) estÃ© finalizada y cuente con `validation-report.md` con dictamen **APROBADO**:
+
+```bash
+# 1. Posicionarse en la rama oficial limpia y actualizada
+git switch taco
+git pull --ff-only origin taco
+
+# 2. Restaurar selectivamente ÃšNICAMENTE el cÃ³digo normalizado y validation-report.md
+git restore --source lab/taco -- \
+  mockups/MK-XXX/validation-report.md \
+  mockups/prototipo/src/pantallas/MKXXX
+
+# 3. Inspeccionar el estado de los archivos restaurados (unstaged)
+git status
+git diff
+
+# 4. Agregar explÃ­citamente Ãºnicamente las rutas aprobadas
+git add mockups/MK-XXX/validation-report.md mockups/prototipo/src/pantallas/MKXXX
+
+# 5. Auditar minuciosamente el staging (sin .stitch/, prompts ni residuos experimentales)
+git diff --cached
+
+# 6. Commit y push a la rama oficial
+git commit -m "feat(mockups): promover cÃ³digo y reporte de MK-XXX aprobado desde lab/taco"
+git push origin taco
 ```
 
-Para recorrer los wireframes desde un único punto puede utilizarse:
+> **Aviso:** `component-spec.md`, `plan.md` y `tasks.md` no se sobrescriben masivamente desde `lab/`. Si requirieron ajustes justificados, se restauran individualmente tras revisiÃ³n explÃ­cita.
 
-[`wireframes/Visor_Prototipos_PO.html`](wireframes/Visor_Prototipos_PO.html)
+## SincronizaciÃ³n desde la Rama Oficial
 
----
+Para incorporar actualizaciones provenientes de `taco` hacia `lab/taco`:
 
-## 10. Equipo y responsabilidades
-
-| Rama | Responsable | Área principal |
-|---|---|---|
-| `castilla` | Marco Renato Castilla Huanca | Carga/exportación masiva y combos |
-| `poma` | Gabriel Poma Gutierrez | Productos y variantes SKU |
-| `cueva` | Axel Andree Cueva Alcalá | Cupones, promociones y venta cruzada |
-| `lopez` | Leonardo Lopez | Taxonomía, características, marcas y SEO |
-| `vera` | Leonardo Vera Rodríguez | Precios y auditoría de precios |
-| `taco` | Miguel Ángel Taco Zavala | Inventario, analítica y alertas |
-
-La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`wireframes/INDEX.md`](wireframes/INDEX.md).
-
----
-
-## 11. Estado documental
-
-| Área | Estado |
-|---|---|
-| 16 especificaciones funcionales | Consolidado |
-| 16 historias de usuario | Consolidado |
-| 16 wireframes funcionales | Consolidado |
-| 16 prototipos HTML de wireframes | Consolidado |
-| Guía visual de wireframes | Consolidado |
-| Arquitectura | Consolidado |
-| Modelo conceptual | Consolidado |
-| Contrato de integración | Consolidado |
-| OpenAPI | Disponible |
-| AsyncAPI | Disponible |
-| Catálogo de errores | Disponible |
-| Catálogo de eventos | Disponible |
-| Diseño y mockups de mayor fidelidad | En evolución para Hito 2 |
-| Modelo lógico/físico de BD | En evolución para Hito 2 |
-| Implementación de BD / Supabase | En evolución para Hito 2 |
-| Matriz de trazabilidad integral | Pendiente de consolidación |
-
----
-
-## 12. Regla de mantenimiento documental
-
-Cuando una funcionalidad cambie, la modificación no debe limitarse a un único archivo.
-
-Debe revisarse la cadena completa:
-
-```mermaid
-flowchart TD
-    SPEC["SPEC"] --> HU["HU"]
-    SPEC --> WF["WF"]
-    WF --> HTML["Prototipo HTML del wireframe"]
-    SPEC --> OA["OpenAPI"]
-    SPEC --> AA["AsyncAPI"]
-    SPEC --> MD["Modelo de datos"]
-    SPEC --> ARQ["Arquitectura"]
+```bash
+git switch lab/taco
+git fetch origin
+git merge origin/taco
+git push origin lab/taco
 ```
 
-Solo deben modificarse los artefactos afectados por el cambio, pero todos deben ser revisados para verificar consistencia.
+## Cierre y EliminaciÃ³n
 
-Los contratos ejecutables no deben duplicarse manualmente dentro de otros documentos.
+Al finalizar la validaciÃ³n de todos los mockups asignados:
 
----
-
-## 13. Principios del repositorio
-
-Este repositorio busca mantener:
-
-- Una única fuente de verdad para cada tipo de información.
-- Trazabilidad entre requisitos, experiencia de usuario, arquitectura y contratos.
-- Separación de ownership entre módulos.
-- Contratos independientes de la implementación.
-- Documentación navegable y auditable.
-- Evidencia clara de responsabilidad por funcionalidad.
-- Compatibilidad entre especificaciones, APIs, eventos y modelos de datos.
-- Evolución controlada de los contratos.
-
----
-
-## 14. Próxima evolución documental
-
-Sin modificar por ahora la estructura actual del repositorio, los siguientes artefactos ampliarán la trazabilidad hacia el Hito 2:
-
-- Documento de diseño específico para mockups.
-- Tres propuestas de experiencia de usuario.
-- Mockups refinados y finales.
-- Modelo lógico de base de datos.
-- Modelo físico de base de datos.
-- Scripts SQL y migraciones.
-- Evidencia de implementación en Supabase.
-- Matriz integral de trazabilidad.
-- Evidencia de pruebas y validación.
-
-La evolución esperada de la documentación será:
-
-```mermaid
-flowchart TD
-    A["Requisitos"] --> B["Wireframes"]
-    B --> C["Mockups"]
-    C --> D["Arquitectura y contratos"]
-    D --> E["Modelo lógico"]
-    E --> F["Modelo físico"]
-    F --> G["SQL / migraciones"]
-    G --> H["Supabase"]
-    H --> I["Implementación"]
-    I --> J["Pruebas y evidencia"]
+```bash
+git push origin --delete lab/taco
+git branch -D lab/taco
 ```
-
-El objetivo es mantener una cadena verificable desde la necesidad funcional hasta la implementación técnica.
