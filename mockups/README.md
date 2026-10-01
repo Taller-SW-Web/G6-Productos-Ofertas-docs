@@ -6,7 +6,7 @@ Esta carpeta contiene la documentación permanente y la arquitectura base de la 
 
 La experiencia de usuario (UX) se establece transversalmente a nivel del módulo y orienta de forma consistente la construcción de todas las funcionalidades:
 
-$$\text{3 propuestas UX del módulo} \longrightarrow \text{comparación y consolidación} \longrightarrow \text{Propuesta UX Integral Adoptada} \longrightarrow \text{16 funcionalidades} \longrightarrow \text{N pantallas por funcionalidad}$$
+$$\text{3 propuestas UX del módulo} \longrightarrow \text{comparación y consolidación} \longrightarrow \text{Propuesta UX Integral Adoptada} \longrightarrow \text{UX Decisions} \longrightarrow \text{UX Guidelines} \longrightarrow \text{16 funcionalidades} \longrightarrow \text{N pantallas por funcionalidad}$$
 
 ## 2. Estructura del Directorio
 
@@ -156,23 +156,25 @@ Una funcionalidad `MK-XXX` se considera terminada cuando:
 - [ ] El `validation-report.md` cuenta con dictamen **APROBADO**.
 - [ ] Las pantallas finales están reflejadas en Figma.
 
-## 11. Matriz de Trazabilidad e Índice de Funcionalidades
+## 11. Matriz de Trazabilidad e Índice Canónico de Funcionalidades
 
-| Mockup | Funcionalidad | Responsable | Pantallas | Spec | Plan | Tasks | Validación | Figma | Estado |
-|---|---|---|:---:|---|---|---|---|---|---|
-| MK-001 | Carga y exportación masiva | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-002 | Gestión de combos de productos | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-003 | Catálogo y visualización de productos | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-004 | Búsqueda y filtrado avanzado | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-005 | Detalle y ficha técnica de producto | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-006 | Gestión de ofertas y promociones | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-007 | Reglas de venta cruzada y upselling | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-008 | Gestión de categorías y taxonomía | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-009 | Gestión de características y atributos | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-010 | Asociación tipo de producto y atributos | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-011 | Gestión de marcas y fabricantes | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-012 | Configuración SEO y metadatos | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-013 | Gestión de precios individuales y masivos | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-014 | Historial y auditoría de precios | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-015 | Control de stock y disponibilidad | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-016 | Dashboard y alertas de inventario | [Asignado] | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+Fuente de verdad canónica: [`wireframes/INDEX.md`](../wireframes/INDEX.md).
+
+| Mockup | Funcionalidad | Rama | Responsable | Pantallas | Spec | Plan | Tasks | Validación | Figma | Estado |
+|---|---|---|---|:---:|---|---|---|---|---|---|
+| MK-001 | Carga y exportación masiva de productos | `castilla` | Marco Renato Castilla Huanca | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-002 | Gestión de combos de productos | `castilla` | Marco Renato Castilla Huanca | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-003 | Gestión de productos (CRUD principal) | `poma` | Gabriel Poma Gutierrez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-004 | Gestión avanzada de variantes (SKUs) | `poma` | Gabriel Poma Gutierrez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-005 | Gestión de cupones de descuento | `cueva` | Axel Andree Cueva Alcalá | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-006 | Gestión de ofertas y promociones | `cueva` | Axel Andree Cueva Alcalá | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-007 | Reglas de venta cruzada y upselling | `cueva` | Axel Andree Cueva Alcalá | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-008 | Gestión de categorías y subcategorías | `lopez` | Leonardo Lopez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-009 | Gestión de características y sus valores | `lopez` | Leonardo Lopez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-010 | Asociación entre tipos de producto y características | `lopez` | Leonardo Lopez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-011 | Gestión de marcas | `lopez` | Leonardo Lopez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-012 | Gestión de SEO y metadatos | `lopez` | Leonardo Lopez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-013 | Gestión de precios individuales y masivos | `vera` | Leonardo Vera Rodríguez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-014 | Historial de auditoría de precios | `vera` | Leonardo Vera Rodríguez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-015 | Control de stock y disponibilidad | `taco` | Miguel Ángel Taco Zavala | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-016 | Dashboard analítico y alertas de stock | `taco` | Miguel Ángel Taco Zavala | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
