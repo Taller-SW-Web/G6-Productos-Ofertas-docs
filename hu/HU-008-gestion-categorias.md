@@ -2,7 +2,7 @@
 
 **Responsable:** Leonardo Lopez  
 **Rama:** lopez  
-**Trazabilidad:** Spec [SPEC-008](./specs/SPEC-008-gestion-categorias.md) | Flow [WF-008](./wireframes/flows/WF-008-gestion-categorias.md)
+**Trazabilidad:** Spec [SPEC-008](../specs/SPEC-008-gestion-categorias.md) | Flow [WF-008](../wireframes/flows/WF-008-gestion-categorias.md)
 
 **Como** gestor comercial, **quiero** crear, organizar y mantener categorías/subcategorías, **para** que clientes y canales naveguen y filtren correctamente.
 

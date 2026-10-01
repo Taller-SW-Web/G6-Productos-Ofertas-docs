@@ -2,7 +2,7 @@
 
 **Responsable:** Leonardo Lopez  
 **Rama:** lopez  
-**Trazabilidad:** HU [HU-008](./hu/HU-008-gestion-categorias.md) | Wireframe [WF-008](./wireframes/flows/WF-008-gestion-categorias.md)
+**Trazabilidad:** HU [HU-008](../hu/HU-008-gestion-categorias.md) | Wireframe [WF-008](../wireframes/flows/WF-008-gestion-categorias.md)
 
 ## 1. Contexto
 El Marketplace Multicanal organiza productos en categorías y subcategorías para navegación, filtros y clasificación. La estructura se administra en Taxonomía y se expone por API.
@@ -32,13 +32,28 @@ Si existe padre, debe estar activo.
 
 La creación solicita a la capacidad SEO el slug final mediante `POST /api/v1/seo/categorias/slug/resolver`. Si la normalización colisiona, SEO puede resolver mediante sufijo incremental, pero **Taxonomía no completa silenciosamente la publicación administrativa**: el slug final se devuelve al flujo y debe mostrarse al gestor antes de la confirmación final.
 
-La propuesta no reserva el slug. La confirmación final se envía a `POST /api/v1/categorias` como `slugConfirmado`. La creación revalida unicidad inmediatamente antes de persistir; si otro proceso ocupó el slug desde la resolución previa, responde `409 SLUG_DUPLICADO` y el flujo debe resolver otra propuesta. Nunca se aplica un sufijo distinto sin volver a mostrarlo al gestor.
+La creación sigue la secuencia **resolver → mostrar → confirmar → crear con `slugConfirmado` → revalidar unicidad**.
+
+La propuesta no reserva el slug. La confirmación final se envía a `POST /api/v1/categorias` como `slugConfirmado`. La creación revalida unicidad inmediatamente antes de persistir; si otro proceso ocupó el slug desde la resolución previa, responde `409 SLUG_DUPLICADO`.
+
+Ante ese `409 SLUG_DUPLICADO` la regla es obligatoria y en este orden:
+
+1. **No** aplicar otro sufijo automáticamente;
+2. solicitar una nueva propuesta a `POST /api/v1/seo/categorias/slug/resolver`;
+3. mostrar la nueva propuesta al gestor;
+4. pedir una nueva confirmación;
+5. reintentar el alta con ese nuevo `slugConfirmado`.
+
+Nunca se persiste un slug distinto al confirmado ni se presenta el alta como completada.
 
 #### Escenario: Slug sin colisión
 DADO nombre `Running`, CUANDO SEO devuelve `running`, ENTONCES el gestor puede confirmar la creación con ese slug visible.
 
 #### Escenario: Slug con colisión
 DADO que `futbol` ya está ocupado, CUANDO se crea otra categoría `Fútbol`, ENTONCES SEO propone `futbol-2`, el flujo muestra `/categoria/futbol-2` antes de confirmar y solo después se completa la creación.
+
+#### Escenario: Carrera concurrente de slug
+DADO que el gestor confirmó `futbol-2`, CUANDO otro proceso ocupa ese slug antes de que `POST /api/v1/categorias` persista, ENTONCES la creación responde `409 SLUG_DUPLICADO`, no aplica ningún sufijo por su cuenta, vuelve a resolver una propuesta, la muestra y exige una nueva confirmación antes de reintentar.
 
 ### Requisito 2: Jerarquía
 El modelo usa `categoria_padre_id`, sin ciclos. `MAX_CATEGORY_DEPTH=2` en el MVP: raíz + subcategoría.
@@ -109,7 +124,7 @@ POST /api/v1/categorias
   -> 409 SLUG_DUPLICADO si la propuesta dejó de estar disponible
 ```
 
-La segunda operación no autogenera una alternativa silenciosa: ante conflicto se regresa al paso de resolución/confirmación.
+La segunda operación no autogenera una alternativa silenciosa: ante `409 SLUG_DUPLICADO` se regresa al paso de resolución, se muestra la nueva propuesta y se pide una nueva confirmación antes de reintentar.
 
 ## 5. Requisitos no funcionales
 - Árbol de referencia <1s con hasta 500 categorías.
@@ -123,6 +138,7 @@ La segunda operación no autogenera una alternativa silenciosa: ante conflicto s
 - Esquema de atributos por categoría.
 - Edición de metadatos SEO.
 - Asociación producto-categoría dentro de esta capacidad.
+- Reservar el slug durante la fase de propuesta.
 
 ## Criterio de completitud
-Creación/jerarquía/reubicación/baja/reactivación funcionan y la creación no oculta una colisión de slug resuelta por SEO.
+Creación/jerarquía/reubicación/baja/reactivación funcionan y la creación no oculta una colisión de slug resuelta por SEO, incluida la carrera concurrente: el `409 SLUG_DUPLICADO` no produce ningún sufijo automático y obliga a mostrar y confirmar una nueva propuesta.

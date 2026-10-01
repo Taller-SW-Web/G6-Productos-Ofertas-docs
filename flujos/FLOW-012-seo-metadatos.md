@@ -6,20 +6,21 @@
 - **Funcionalidad:** Gestión de SEO y metadatos
 - **Relacionado con:** [HU-012](../hu/HU-012-seo-metadatos.md) / [SPEC-012](../specs/SPEC-012-seo-metadatos.md) / [WF-012](../wireframes/flows/WF-012-seo-metadatos.md)
 - **Responsable:** Leonardo Lopez
-- **Última actualización:** 2026-09-24
+- **Última actualización:** 2026-10-01
 
 ---
 
 ## 2. Objetivo del flujo
 
-Representar la generación automática y la edición manual del slug de cada categoría, la política de duplicados (sufijo incremental en la creación y error explícito en la edición manual), las advertencias de longitud de metadatos y el historial de redirecciones. El flujo contempla la resolución `old_slug -> new_slug` que el Marketplace ejecuta como HTTP 301 y el endpoint público de metadatos por slug activo.
+Representar la generación automática y la edición manual del slug de cada categoría, la política de duplicados (sufijo incremental en la creación y error explícito en la edición manual), las advertencias de longitud de metadatos y el historial de redirecciones. El flujo separa explícitamente SEO de Categorías: SEO solo resuelve y proporciona la propuesta de slug, el gestor la confirma y Categorías la persiste y revalida su unicidad. El flujo contempla la resolución `old_slug -> new_slug` que el Marketplace ejecuta como HTTP 301 y el endpoint público de metadatos por slug activo.
 
 ---
 
 ## 3. Actores participantes
 
-- **Gestor comercial:** configura el slug y los metadatos SEO de cada categoría.
-- **Sistema SEO:** normaliza slugs, resuelve colisiones, registra el historial y expone el endpoint público.
+- **Gestor comercial:** configura el slug y los metadatos SEO de cada categoría, y confirma la propuesta de slug durante la creación.
+- **Sistema SEO:** normaliza slugs, resuelve colisiones, registra el historial y expone el endpoint público. No persiste el slug de la categoría.
+- **Categorías:** crea la categoría con el `slugConfirmado` y revalida su unicidad.
 - **Marketplace:** canal que sirve la URL pública y ejecuta el HTTP 301.
 - **Consumidor externo:** canal que consulta los metadatos SEO por slug activo.
 
@@ -27,7 +28,7 @@ Representar la generación automática y la edición manual del slug de cada cat
 
 ## 4. Diagramas de flujo
 
-### 4.1 Generación automática de slug al crear una categoría
+### 4.1 Resolución y confirmación del slug al crear una categoría
 
 ```mermaid
 flowchart LR
@@ -35,9 +36,10 @@ flowchart LR
     subgraph GESTOR["Gestor comercial"]
         direction TB
         INICIO((Creación de una categoría))
-        G1["Confirmar el slug final visible"]
-        D2{"¿Se confirma el slug final?"}
+        G1["Ver el slug propuesto y confirmarlo"]
+        D2{"¿Se confirma el slug propuesto?"}
         G2["Volver a editar los datos de la categoría"]
+        G3["Ver la nueva propuesta y confirmarla de nuevo"]
     end
 
     subgraph SEO["Sistema SEO"]
@@ -46,11 +48,20 @@ flowchart LR
         S2["Normalizar el slug: minúsculas, sin tildes ni espacios"]
         D1{"¿El slug ya existe?"}
         S3["Proponer sufijo numérico incremental"]
-        S4["Mostrar el slug final al gestor"]
-        S5["Guardar el slug y los metadatos de la categoría"]
+        S4["Devolver la propuesta con slug y colisionResuelta sin reservarla"]
+        S5["Volver a generar una propuesta cuando se le solicite"]
     end
 
-    FIN_PUBLICADO(((Slug publicado)))
+    subgraph CATEGORIAS["Categorías"]
+        direction TB
+        C1["Enviar el alta a POST /api/v1/categorias con slugConfirmado"]
+        C2["Revalidar la unicidad del slug antes de persistir"]
+        D3{"¿El slug confirmado sigue libre?"}
+        C3["Rechazar con 409 SLUG_DUPLICADO sin aplicar otro sufijo"]
+        C4["Persistir la categoría con exactamente el slug confirmado"]
+    end
+
+    FIN_PUBLICADO(((Categoría creada con el slug confirmado)))
     FIN_CANCELADA(((Creación cancelada)))
 
     INICIO --> S1
@@ -63,11 +74,20 @@ flowchart LR
     G1 --> D2
     D2 -->|"No"| G2
     G2 --> S4
-    D2 -->|"Sí"| S5
-    S5 --> FIN_PUBLICADO
+    D2 -->|"Sí"| C1
+    C1 --> C2
+    C2 --> D3
+    D3 -->|"No"| C3
+    C3 --> S5
+    S5 --> G3
+    G3 --> D2
+    D3 -->|"Sí"| C4
+    C4 --> FIN_PUBLICADO
 ```
 
 > En la creación, la colisión de slugs se resuelve con un sufijo incremental, pero el slug final siempre se muestra al gestor antes de publicar; no hay cambios silenciosos de URL.
+
+> SEO **solo resuelve y proporciona la propuesta**: no persiste el slug de la categoría ni guarda silenciosamente otro valor. Quien crea y revalida la unicidad es Categorías, mediante `slugConfirmado` en `POST /api/v1/categorias`. La propuesta no reserva el slug, por lo que si otro proceso lo ocupa antes del commit la creación responde `409 SLUG_DUPLICADO` y el flujo vuelve a la resolución de SEO, muestra la nueva propuesta y exige una nueva confirmación antes de reintentar.
 
 ### 4.2 Edición manual de un slug
 
@@ -208,3 +228,23 @@ flowchart LR
     D1 -->|"No"| S3
     S3 --> FIN_NO_DISPONIBLE
 ```
+
+## 5. Contratos publicados
+
+```text
+POST /api/v1/seo/categorias/slug/resolver
+  { nombre }
+  -> { slug, colisionResuelta }
+
+POST /api/v1/categorias
+  { .., slugConfirmado }
+  -> 201 con el slug confirmado
+  -> 409 SLUG_DUPLICADO si la propuesta dejó de estar disponible
+
+GET  /api/v1/seo/{slug}
+GET  /api/v1/seo/resoluciones/{slugAnterior}
+GET  /api/v1/categorias/{categoriaId}/seo
+GET  /api/v1/categorias/{categoriaId}/seo/historial
+```
+
+SEO no expone el alta de la categoría: esa operación pertenece a Categorías y exige `slugConfirmado`. El `301 Moved Permanently` sobre la URL pública no forma parte de estos contratos y lo ejecuta Marketplace.

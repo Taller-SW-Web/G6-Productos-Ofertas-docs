@@ -2,7 +2,7 @@
 
 **Responsable:** Leonardo Lopez  
 **Rama:** lopez  
-**Trazabilidad:** Spec [SPEC-011](./specs/SPEC-011-gestion-marcas.md) | Flow [WF-011](./wireframes/flows/WF-011-gestion-marcas.md)
+**Trazabilidad:** Spec [SPEC-011](../specs/SPEC-011-gestion-marcas.md) | Flow [WF-011](../wireframes/flows/WF-011-gestion-marcas.md)
 
 **Como** gestor comercial, **quiero** crear, editar, desactivar y reactivar marcas, **para** clasificar productos y habilitar navegación por marca.
 
@@ -23,6 +23,8 @@
 | CA-12 | Reactivación conserva ID/nombre. |
 | CA-13 | Falta de respuesta conserva la marca activa. |
 | CA-14 | Seguridad asigna acceso; esta HU no declara un rol global como contrato propio. |
+| CA-15 | Crear, editar y reactivar marcas se representan por persistencia y consulta HTTP; no publican ningún mensaje propio. |
+| CA-16 | La única mensajería de Marcas es el protocolo transversal publicado para la baja segura; no existen eventos genéricos de «actualización» ni de «estado» de marca. |
 
 ## Escenarios
 1. Crear Nike válida → Activa.
@@ -33,3 +35,5 @@
 6. Logo >5 MB o MIME no admitido → rechazo.
 7. Reactivación → mismo ID.
 8. Verificación no concluyente → sigue Activa.
+9. Editar una marca → el listado de marcas activas refleja el cambio sin ningún evento de marca.
+10. Reactivar una marca → el canal la vuelve a ver en sus filtros sin ningún evento de estado.

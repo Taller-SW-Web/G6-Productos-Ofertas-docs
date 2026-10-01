@@ -2,7 +2,7 @@
 
 **Responsable:** Leonardo Lopez  
 **Rama:** lopez  
-**Trazabilidad:** HU [HU-010](./hu/HU-010-asociacion-tipo-producto-caracteristica.md) | Wireframe [WF-010](./wireframes/flows/WF-010-asociacion-tipo-producto-caracteristica.md)
+**Trazabilidad:** HU [HU-010](../hu/HU-010-asociacion-tipo-producto-caracteristica.md) | Wireframe [WF-010](../wireframes/flows/WF-010-asociacion-tipo-producto-caracteristica.md)
 
 ## 1. Contexto
 
@@ -164,7 +164,7 @@ Una característica desactivada tampoco se ofrece para nuevas asociaciones o act
 
 ### Requisito 7: Versionado de reglas
 
-Toda modificación confirmada de asociaciones DEBE incrementar `schema_version`.
+`schema_version` forma parte del esquema efectivo y toda modificación confirmada de asociaciones DEBE incrementarla.
 
 Esto incluye:
 
@@ -173,11 +173,15 @@ Esto incluye:
 - desasociar característica cuando la baja se confirma;
 - reactivar una asociación si se habilita mediante el flujo correspondiente.
 
+Un cambio que solo resulta **admitido** (`202 Accepted`) y aún no confirmado no incrementa `schema_version`.
+
 Catálogo valida escrituras contra una versión vigente.
 
 ### Requisito 8: Propagación de cambios del esquema
 
-Cuando el esquema cambia de forma confirmada, el dominio propietario DEBE publicar un **hecho interno versionado** para que Catálogo actualice sus proyecciones sin polling obligatorio.
+Cada modificación confirmada del esquema DEBE publicar `taxonomy.product-type-schema.changed`. La publicación no se limita a la asociación inicial: también corresponde al cambio de obligatoriedad y a la desasociación confirmada.
+
+El dominio propietario publica un **hecho interno versionado** para que Catálogo actualice sus proyecciones sin polling obligatorio.
 
 El mensaje debe transportar como mínimo:
 
@@ -192,7 +196,7 @@ El mensaje debe transportar como mínimo:
 
 La baja segura de `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC` requiere extender el contrato transversal de verificación de entidades maestras para cubrir estas entidades o formalizar un contrato equivalente.
 
-**Contrato publicado:** AsyncAPI 0.2.1-p0 amplía el flujo transversal de baja segura para `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC`. Por tanto:
+**Contrato publicado:** AsyncAPI 0.4.0 amplía el flujo transversal de baja segura para `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC`. Por tanto:
 
 - la regla funcional de fallo cerrado es obligatoria;
 - el endpoint HTTP puede admitir la solicitud con `202`;
@@ -207,7 +211,7 @@ La baja segura de `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC` requiere extend
 - no tenga variantes;
 - no tenga identidad comercial publicada.
 
-Cuando ya existen variantes o identidad publicada, cambiar el tipo puede alterar campos obligatorios e identidad de SKU y se considera una **migración de modelo** fuera del CRUD ordinario.
+Cuando ya existen variantes o identidad publicada, el cambio puede alterar campos obligatorios e identidad de SKU y se considera una **migración de modelo** fuera del CRUD ordinario. En ese caso la edición ordinaria rechaza la operación y deriva el cambio a la migración controlada; no se reescriben identidades SKU ni snapshots históricos.
 
 ## 5. Contratos HTTP relacionados
 
@@ -230,7 +234,13 @@ PATCH /api/v1/tipos-producto/{tipoProductoId}/caracteristicas/{caracteristicaId}
 POST /api/v1/tipos-producto/{tipoProductoId}/caracteristicas/{caracteristicaId}/desasociar
 ```
 
-Las operaciones de baja segura que responden `202 Accepted` representan **admisión**, no resultado final.
+Las operaciones de baja segura que responden `202 Accepted` representan **admisión**, no resultado final. El estado pendiente se consulta con:
+
+```text
+GET /api/v1/taxonomia/operaciones/{operationId}
+```
+
+y una identidad inexistente responde `404 OPERACION_MAESTRA_NO_ENCONTRADA`.
 
 Semántica HTTP de tipo de producto:
 

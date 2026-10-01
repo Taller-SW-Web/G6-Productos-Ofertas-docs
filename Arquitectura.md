@@ -2312,7 +2312,8 @@ flowchart LR
     availability["ProjectedAvailability"]
     repos["Repository Ports"]
     adapters["Persistence Adapters"]
-    consumers["Message Consumers"]outbox["Outbox Relay"]
+    consumers["Message Consumers"]
+    outbox["Outbox Relay"]
   end
 
   http --> controllers --> usecases --> domain

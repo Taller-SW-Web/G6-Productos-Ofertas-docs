@@ -2,7 +2,7 @@
 
 **Responsable:** Leonardo Lopez  
 **Rama:** lopez  
-**Trazabilidad:** HU [HU-012](./hu/HU-012-seo-metadatos.md) | Wireframe [WF-012](./wireframes/flows/WF-012-seo-metadatos.md)
+**Trazabilidad:** HU [HU-012](../hu/HU-012-seo-metadatos.md) | Wireframe [WF-012](../wireframes/flows/WF-012-seo-metadatos.md)
 
 ## 1. Contexto
 Cada categoría necesita slug y metadatos unificados para SEO.
@@ -32,6 +32,12 @@ Lectura por slug activo, sin autenticación y sin operaciones de escritura. Cate
 ### Requisito 5: Contrato de creación con Categorías
 SEO conserva ownership sobre normalización y resolución de colisiones. Categorías consume el contrato sin habilitar edición manual de SEO en WF-008.
 
+La frontera es explícita:
+
+- **SEO** solo resuelve y proporciona la propuesta; no crea la categoría ni persiste su slug;
+- el gestor confirma el slug;
+- **Categorías** envía el `slugConfirmado` a `POST /api/v1/categorias` y revalida la unicidad.
+
 ```text
 POST /api/v1/seo/categorias/slug/resolver
   { nombre }
@@ -43,8 +49,10 @@ POST /api/v1/categorias
 
 La creación debe persistir exactamente `slugConfirmado` o responder `409 SLUG_DUPLICADO` si dejó de estar disponible. Nunca sustituye silenciosamente el valor confirmado.
 
+Ante `409 SLUG_DUPLICADO` el flujo vuelve a esta resolución de SEO, muestra la nueva propuesta al gestor y pide una nueva confirmación antes de reintentar. Está prohibido representar que SEO guarda por su cuenta otro slug.
+
 ## 5. Criterio de completitud
-Las reglas 70/160, duplicados, historial y endpoint quedan correctas sin atribuir el HTTP 301 a Productos y Ofertas.
+Las reglas 70/160, duplicados, historial y endpoint quedan correctas sin atribuir el HTTP 301 a Productos y Ofertas y sin presentar a SEO como quien guarda el slug de la categoría.
 
 ### Contrato administrativo publicado
-`/api/v1/seo/categorias/slug/resolver` recibe `nombre` y devuelve `slug` + `colisionResuelta`. `POST /api/v1/categorias` exige ese valor como `slugConfirmado`; si deja de estar disponible antes del commit, responde `409 SLUG_DUPLICADO` sin aplicar otro sufijo automáticamente.
+`/api/v1/seo/categorias/slug/resolver` recibe `nombre` y devuelve `slug` + `colisionResuelta`; es una propuesta, no una reserva. `POST /api/v1/categorias` exige ese valor como `slugConfirmado`; si deja de estar disponible antes del commit, responde `409 SLUG_DUPLICADO` sin aplicar otro sufijo automáticamente, y el gestor debe volver a confirmar la nueva propuesta.

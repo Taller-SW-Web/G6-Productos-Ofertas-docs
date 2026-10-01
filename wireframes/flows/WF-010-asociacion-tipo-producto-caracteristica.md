@@ -1,6 +1,6 @@
 # WF-010 — Asociación entre tipos de producto y características
 
-> **Fuentes normativas:** `././specs/SPEC-010-asociacion-tipo-producto-caracteristica.md`, `././hu/HU-010-asociacion-tipo-producto-caracteristica.md`, `./DESIGN.md` y `./INDEX.md`. Ante contradicción, prevalece SPEC → HU → WF.
+> **Fuentes normativas:** `../../specs/SPEC-010-asociacion-tipo-producto-caracteristica.md`, `../../hu/HU-010-asociacion-tipo-producto-caracteristica.md`, `../DESIGN.md` y `../INDEX.md`. Ante contradicción, prevalece SPEC → HU → WF.
 
 ## 0. Instrucciones para el agente
 
@@ -16,6 +16,8 @@ Reglas:
 - Una desactivación de tipo potencialmente riesgosa **no es inmediata**.
 - `202 Accepted` se representa como «Verificando»/«Solicitud recibida», nunca «Completado».
 - Ante rechazo o falta de confirmación, conservar el estado previo.
+- La versión del esquema se muestra como dato de soporte y **no** como control editable.
+- Cambiar `tipo_producto_id` desde esta pantalla solo es válido en borrador sin variantes ni identidad publicada; en cualquier otro caso la UI deriva a migración controlada y no ofrece el campo como editable.
 - Usar los contratos AsyncAPI publicados; no mostrar sus nombres técnicos al usuario final.
 - No mostrar detalles de broker, scopes, entidades técnicas o códigos de error al usuario.
 - Escala de grises, sin sombras y responsive según DESIGN.md.
@@ -26,10 +28,10 @@ Reglas:
 |---|---|
 | ID | WF-010 |
 | Nombre | Asociación entre tipos de producto y características |
-| Versión | 0.9 |
+| Versión | 1.0 |
 | Estado | Alineado documentalmente |
 | Responsable | Leonardo Lopez |
-| Última actualización | 2026-09-28 |
+| Última actualización | 2026-10-01 |
 
 ## 2. Trazabilidad
 
@@ -38,8 +40,8 @@ Reglas:
 | SPEC-010 | Esquema, obligatoriedad, límite, versionado y bajas seguras |
 | HU-010 | CA-01 a CA-17 |
 | DESIGN.md | Diseño |
-| OpenAPI `0.3.5-p0` | HTTP administrativo vigente |
-| AsyncAPI `0.2.1-p0` | Baja segura de tipo/asociación y propagación de cambio de esquema |
+| OpenAPI `0.4.0` | HTTP administrativo vigente |
+| AsyncAPI `0.4.0` | Baja segura de tipo/asociación y propagación de cambio de esquema |
 
 ## 3. Incluye
 
@@ -118,6 +120,8 @@ El identificador se genera internamente y no necesita mostrarse al gestor.
 4. Si pasa a obligatoria, informar:
 
 > Se exigirá al volver a guardar o activar los productos que correspondan.
+
+5. La versión del esquema se actualiza solo tras confirmar el cambio; una operación aún en verificación no la modifica.
 
 ### Flujo E — Desasociar
 
@@ -275,11 +279,11 @@ Las bajas seguras devuelven admisión asíncrona. No se presenta como finalizaci
 
 ## 16. Contratos AsyncAPI publicados
 
-AsyncAPI `0.2.1-p0` cierra las dependencias de esta funcionalidad:
+AsyncAPI `0.4.0` cierra las dependencias de esta funcionalidad:
 
 1. `PRODUCT_TYPE` participa en la verificación transversal de baja segura;
 2. `PRODUCT_TYPE_CHARACTERISTIC` participa en la misma verificación para desasociaciones de riesgo;
-3. los cambios confirmados del esquema publican `taxonomy.product-type-schema.changed`.
+3. los cambios confirmados del esquema publican `taxonomy.product-type-schema.changed`, incluidos el cambio de obligatoriedad y la desasociación confirmada, no solo la asociación inicial.
 
 La interfaz continúa mostrando únicamente estados operativos como **Verificando**, **Completado** o **No se pudo completar**; los nombres técnicos de mensajería no forman parte de la UI.
 

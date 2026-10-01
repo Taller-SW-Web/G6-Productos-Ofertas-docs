@@ -6,21 +6,22 @@
 - **Funcionalidad:** Gestión de características y sus valores
 - **Relacionado con:** [HU-009](../hu/HU-009-gestion-caracteristicas.md) / [SPEC-009](../specs/SPEC-009-gestion-caracteristicas.md) / [WF-009](../wireframes/flows/WF-009-gestion-caracteristicas.md)
 - **Responsable:** Leonardo Lopez
-- **Última actualización:** 2026-09-24
+- **Última actualización:** 2026-10-01
 
 ---
 
 ## 2. Objetivo del flujo
 
-Representar la creación de características tipadas (`TEXTO`, `NUMERO`, `LISTA`), la gestión de valores de tipo `LISTA` (agregar, renombrar por ID y baja lógica) y la protección del tipo inmutable. El flujo contempla los límites operativos configurables (`MAX_TEXT_ATTRIBUTE_LENGTH = 100` y `MAX_ACTIVE_LIST_VALUES = 50`) y la verificación asíncrona con Catálogo antes de dar de baja un valor en uso.
+Representar la creación de características tipadas (`TEXTO`, `NUMERO`, `LISTA`), la gestión de valores de tipo `LISTA` (agregar, renombrar por ID y baja lógica), la desactivación lógica y la reactivación de una característica completa conservando su ID, y la protección del tipo inmutable. El flujo contempla los límites operativos configurables (`MAX_TEXT_ATTRIBUTE_LENGTH = 100` y `MAX_ACTIVE_LIST_VALUES = 50`), la propagación del renombrado mediante `taxonomy.characteristic-value.updated` y la verificación asíncrona con Catálogo, mediante el protocolo transversal publicado, antes de dar de baja un valor en uso.
 
 ---
 
 ## 3. Actores participantes
 
-- **Gestor comercial:** crea, consulta, renombra y da de baja características y sus valores.
-- **Taxonomía:** administra características tipadas, valores y sus límites operativos.
+- **Gestor comercial:** crea, consulta, renombra, desactiva y reactiva características y sus valores.
+- **Taxonomía:** administra características tipadas, valores, sus límites operativos y su estado lógico.
 - **Catálogo Core:** verifica el uso de un valor en SKUs o productos activos y confirma la baja segura.
+- **Asociación Tipo de Producto–Característica (FLOW-010):** solo ofrece características activas para nuevas asociaciones.
 
 ---
 
@@ -90,7 +91,7 @@ flowchart LR
         D2{"¿Se supera el límite de valores activos?"}
         T2["Crear el valor con ID estable"]
         T3["Renombrar conservando el ID"]
-        T4["Publicar evento versionado para proyecciones de Catálogo"]
+        T4["Publicar taxonomy.characteristic-value.updated con change_type=RENAMED"]
     end
 
     FIN_LIMITE(((Agregado rechazado por límite)))
@@ -110,9 +111,9 @@ flowchart LR
     T4 --> FIN_RENOMBRADO
 ```
 
-> Renombrar un valor conserva su ID y la actualización de las vistas de Catálogo es por eventos; no se reescriben SKUs existentes ni snapshots de pedidos.
+> Renombrar un valor conserva su ID y la actualización de las vistas de Catálogo es por eventos. El renombrado confirmado de un valor `LISTA` publica explícitamente `taxonomy.characteristic-value.updated`; no se reescriben SKUs existentes ni snapshots de pedidos.
 
-### 4.3 Baja lógica de un valor LISTA
+### 4.3 Baja segura de un valor LISTA
 
 ```mermaid
 flowchart LR
@@ -125,17 +126,17 @@ flowchart LR
     subgraph TAXONOMIA["Taxonomía"]
         direction TB
         T1["Mantener la solicitud pendiente y el valor no seleccionable"]
-        T2["Instalar barrera de escritura"]
-        D2{"¿Resultado CLEAR vigente?"}
-        T3["Confirmar la baja lógica conservando ID e histórico"]
-        T4["Levantar la barrera y rechazar la baja"]
+        T2["Publicar taxonomy.master.deactivation.check.requested e instalar barrera de escritura"]
+        DS1{"¿Resultado CLEAR vigente?"}
+        T3["Confirmar la baja lógica conservando ID e histórico y publicar taxonomy.master.deactivated"]
+        T4["Publicar taxonomy.master.deactivation.rejected, levantar la barrera y rechazar la baja"]
         T5["Restaurar el estado anterior ante falta de confirmación"]
     end
 
     subgraph CATALOGO["Catálogo Core"]
         direction TB
         C1["Verificar uso del valor en SKU ACTIVO o producto ACTIVO"]
-        C2["Publicar resultado correlacionado"]
+        C2["Publicar catalog.master.deactivation.checked correlacionado"]
     end
 
     FIN_CONFIRMADA(((Baja lógica confirmada)))
@@ -145,14 +146,59 @@ flowchart LR
     T1 --> T2
     T2 --> C1
     C1 --> C2
-    C2 --> D2
-    D2 -->|"CLEAR"| T3
+    C2 --> DS1
+    DS1 -->|"CLEAR"| T3
     T3 --> FIN_CONFIRMADA
-    D2 -->|"HAS_ACTIVE_PRODUCTS"| T4
+    DS1 -->|"HAS_ACTIVE_PRODUCTS"| T4
     T4 --> FIN_RECHAZADA
     T2 --> E1(("Time out o error en la verificación"))
     E1 --> T5
     T5 --> FIN_RECHAZADA
 ```
 
-> Durante la comprobación no se asigna el valor a nuevos productos o variantes. Un fallo o la ausencia de respuesta no autoriza la baja; los productos inactivos y pedidos históricos conservan sus referencias y snapshots.
+> La baja de un valor `LISTA` usa únicamente el protocolo transversal publicado para la entidad maestra `CHARACTERISTIC_VALUE`: `taxonomy.master.deactivation.check.requested` → `catalog.master.deactivation.checked` → `taxonomy.master.deactivated` o `taxonomy.master.deactivation.rejected`. El `202 Accepted` de `POST /api/v1/caracteristicas/{caracteristicaId}/valores/{valorId}/desactivar` es solo admisión de la solicitud, no una baja completada; el estado pendiente se consulta con `GET /api/v1/taxonomia/operaciones/{operationId}`. Durante la comprobación no se asigna el valor a nuevos productos o variantes. Un fallo o la ausencia de respuesta no autoriza la baja; los productos inactivos y pedidos históricos conservan sus referencias y snapshots.
+
+### 4.4 Desactivación lógica y reactivación de una característica
+
+```mermaid
+flowchart LR
+
+    subgraph GESTOR["Gestor comercial"]
+        direction TB
+        INICIO((Abrir una característica existente))
+        D1{"¿Está ACTIVA?"}
+        G1["Solicitar desactivación lógica"]
+        G2["Solicitar reactivación"]
+    end
+
+    subgraph TAXONOMIA["Taxonomía"]
+        direction TB
+        T1["Cambiar el estado a INACTIVO conservando ID, tipo y valores"]
+        T2["Volver a ACTIVO conservando ID, tipo y valores"]
+        T3["Excluir la característica de la oferta para nuevas asociaciones"]
+        T4["Admitirla de nuevo para nuevas asociaciones"]
+    end
+
+    subgraph ASOCIACION["Asociación Tipo de Producto–Característica"]
+        direction TB
+        A1["El selector solo ofrece características activas"]
+        A2["Las asociaciones históricas se conservan sin modificación"]
+    end
+
+    FIN_INACTIVA(((Característica inactiva con el mismo ID)))
+    FIN_ACTIVA(((Característica reactivada con el mismo ID)))
+
+    INICIO --> D1
+    D1 -->|"Sí"| G1
+    G1 --> T1
+    T1 --> T3
+    T3 --> A1
+    A1 --> FIN_INACTIVA
+    D1 -->|"No"| G2
+    G2 --> T2
+    T2 --> T4
+    T4 --> A2
+    A2 --> FIN_ACTIVA
+```
+
+> La desactivación de una característica completa es lógica: nunca se borra y su ID se conserva, por lo que la reactivación recupera exactamente la misma identidad junto con su tipo y sus valores. Una característica inactiva no se ofrece para nuevas asociaciones en FLOW-010, pero las asociaciones ya existentes y su histórico permanecen vigentes.

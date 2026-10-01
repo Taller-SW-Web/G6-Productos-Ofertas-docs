@@ -2,7 +2,7 @@
 
 **Responsable:** Leonardo Lopez  
 **Rama:** lopez  
-**Trazabilidad:** HU [HU-009](./hu/HU-009-gestion-caracteristicas.md) | Wireframe [WF-009](./wireframes/flows/WF-009-gestion-caracteristicas.md)
+**Trazabilidad:** HU [HU-009](../hu/HU-009-gestion-caracteristicas.md) | Wireframe [WF-009](../wireframes/flows/WF-009-gestion-caracteristicas.md)
 
 ## 1. Contexto
 Los productos requieren características como color, talla o material. Esta capacidad es propietaria únicamente del catálogo de características y sus valores. La asociación Tipo de Producto–Característica se define en SPEC-010 y Marcas en SPEC-011.
@@ -13,6 +13,7 @@ Mantener características tipadas y valores con IDs estables para consumo de Aso
 ## 3. Alcance
 - CRUD lógico de características `TEXTO`, `NUMERO`, `LISTA`.
 - Consulta por ID/estado.
+- Desactivación y reactivación lógicas de la característica conservando su ID.
 - Valores LISTA.
 - Renombrado por ID.
 - Baja lógica segura de valores.
@@ -60,10 +61,32 @@ Secuencia:
 5. uso activo → rechazo y restauración del estado previo;
 6. error/timeout/falta de confirmación → no se confirma la baja y el valor vuelve al estado anterior.
 
-**Estado contractual:** la baja segura de `CHARACTERISTIC_VALUE` utiliza el contrato transversal publicado en AsyncAPI: `taxonomy.master.deactivation.check.requested` → `catalog.master.deactivation.checked` → `taxonomy.master.deactivated | taxonomy.master.deactivation.rejected`. El `202 Accepted` representa admisión de la solicitud, no finalización.
+La baja segura de valores **usa únicamente el protocolo transversal publicado**, sin mensajes propios de esta capacidad:
+
+```text
+taxonomy.master.deactivation.check.requested
+catalog.master.deactivation.checked
+taxonomy.master.deactivated
+taxonomy.master.deactivation.rejected
+```
+
+`202 Accepted` representa **admisión de la solicitud**, no baja completada. El estado pendiente se consulta con `GET /api/v1/taxonomia/operaciones/{operationId}`; el resultado definitivo depende del flujo asíncrono.
 
 ### Requisito 7: Baja/reactivación de característica
-La característica puede desactivarse lógicamente y reactivarse sin cambiar su ID. Una característica inactiva no se ofrece para nuevas asociaciones.
+La desactivación de una característica completa es lógica y **conserva su ID**. La reactivación recupera la misma identidad, su tipo inmutable y sus valores.
+
+Una característica inactiva:
+
+- no se ofrece para nuevas asociaciones Tipo de Producto–Característica (SPEC-010);
+- no se ofrece para nuevas capturas de valor en productos o variantes;
+- no altera las asociaciones históricas ni los valores ya registrados.
+
+La operación es síncrona sobre el estado de la entidad, sin verificación asíncrona de uso:
+
+```text
+POST /api/v1/caracteristicas/{caracteristicaId}/desactivar
+POST /api/v1/caracteristicas/{caracteristicaId}/reactivar
+```
 
 ## 5. NFR
 - IDs estables.
@@ -79,4 +102,4 @@ La característica puede desactivarse lógicamente y reactivarse sin cambiar su 
 - Definir unilateralmente nuevos mensajes fuera del AsyncAPI canónico.
 
 ## Criterio de completitud
-Se cumplen tipos, límites, IDs estables, tipo inmutable y baja segura asíncrona de valores.
+Se cumplen tipos, límites, IDs estables, tipo inmutable, desactivación/reactivación lógica de la característica con ID conservado y baja segura asíncrona de valores por el protocolo transversal, sin tratar el `202 Accepted` como baja completada.

@@ -6,13 +6,13 @@
 - **Funcionalidad:** Gestión de marcas
 - **Relacionado con:** [HU-011](../hu/HU-011-gestion-marcas.md) / [SPEC-011](../specs/SPEC-011-gestion-marcas.md) / [WF-011](../wireframes/flows/WF-011-gestion-marcas.md)
 - **Responsable:** Leonardo Lopez
-- **Última actualización:** 2026-09-24
+- **Última actualización:** 2026-10-01
 
 ---
 
 ## 2. Objetivo del flujo
 
-Representar la creación, consulta, actualización, desactivación y reactivación de las marcas del catálogo. El flujo contempla la unicidad global del nombre normalizado (activas e inactivas), las validaciones del logo (PNG, JPG/JPEG o WebP de hasta 5 MB) y del país ISO 3166-1, la baja lógica asíncrona bajo barrera de Catálogo y la exposición de marcas activas a los canales.
+Representar la creación, consulta, actualización, desactivación y reactivación de las marcas del catálogo. El flujo contempla la unicidad global del nombre normalizado (activas e inactivas), las validaciones del logo (PNG, JPG/JPEG o WebP de hasta 5 MB) y del país ISO 3166-1, la baja lógica asíncrona bajo barrera de Catálogo y la exposición de marcas activas a los canales. El único contrato de mensajería utilizado es el protocolo transversal publicado de baja segura; la creación, la actualización y la reactivación se representan como persistencia y consulta HTTP ordinarias.
 
 ---
 
@@ -93,7 +93,7 @@ flowchart LR
         T2["Revalidar unicidad del nombre, logo y país"]
         D1{"¿Los datos modificados son válidos?"}
         T3["Actualizar la marca y su updated_at"]
-        T4["Publicar evento de actualización"]
+        T4["Dejar la marca disponible en la consulta de marcas activas"]
     end
 
     FIN_ACTUALIZADA(((Marca actualizada)))
@@ -110,6 +110,8 @@ flowchart LR
     T3 --> T4
     T4 --> FIN_ACTUALIZADA
 ```
+
+> La actualización de una marca es persistencia y consulta HTTP ordinarias. No existe un evento de «actualización de marca» publicado en AsyncAPI 0.4.0, por lo que el flujo no publica mensajería alguna; la propagación hacia canales es simplemente la nueva disponibilidad en `GET /api/v1/marcas`.
 
 ### 4.3 Baja lógica con verificación asíncrona de Catálogo
 
@@ -160,7 +162,7 @@ flowchart LR
     T4 --> FIN_PENDIENTE
 ```
 
-> La desactivación solo concluye tras una confirmación asíncrona `CLEAR` bajo barrera concurrente; un rechazo o la falta de respuesta no desactiva la marca. El nombre y el ID se conservan para una posible reactivación.
+> La desactivación usa únicamente el protocolo transversal publicado para la entidad maestra `BRAND`: `taxonomy.master.deactivation.check.requested` → `catalog.master.deactivation.checked` → `taxonomy.master.deactivated` o `taxonomy.master.deactivation.rejected`. El `202 Accepted` de `POST /api/v1/marcas/{marcaId}/desactivar` es solo admisión de la solicitud; la baja solo concluye ante un resultado `CLEAR` vigente. Un rechazo o la falta de respuesta no desactiva la marca. El nombre y el ID se conservan para una posible reactivación.
 
 ### 4.4 Reactivación de una marca
 
@@ -175,7 +177,8 @@ flowchart LR
     subgraph TAXONOMIA["Taxonomía"]
         direction TB
         T1["Reactivar conservando el ID y el nombre"]
-        T2["Publicar evento de estado"]
+        T2["Revalidar la unicidad global del nombre reservado"]
+        T3["Volver a exponer la marca en la consulta de marcas activas"]
     end
 
     subgraph CANALES["Canales de venta"]
@@ -187,9 +190,12 @@ flowchart LR
 
     INICIO --> T1
     T1 --> T2
-    T2 --> C1
+    T2 --> T3
+    T3 --> C1
     C1 --> FIN_REACTIVADA
 ```
+
+> La reactivación es una persistencia de estado síncrona sobre el recurso, no un evento. No existe un evento de «estado de marca» publicado en AsyncAPI 0.4.0: los canales perciben el cambio al volver a consumir `GET /api/v1/marcas`.
 
 ### 4.5 Consulta de marcas activas
 

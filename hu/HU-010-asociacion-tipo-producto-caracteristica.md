@@ -2,7 +2,7 @@
 
 **Responsable:** Leonardo Lopez  
 **Rama:** lopez  
-**Trazabilidad:** Spec [SPEC-010](./specs/SPEC-010-asociacion-tipo-producto-caracteristica.md) | Flow [WF-010](./wireframes/flows/WF-010-asociacion-tipo-producto-caracteristica.md)
+**Trazabilidad:** Spec [SPEC-010](../specs/SPEC-010-asociacion-tipo-producto-caracteristica.md) | Flow [WF-010](../wireframes/flows/WF-010-asociacion-tipo-producto-caracteristica.md)
 
 **Como** gestor comercial,  
 **quiero** definir qué características son aplicables a cada tipo de producto e indicar si son obligatorias u opcionales,  
@@ -25,8 +25,8 @@
 | **CA-11** | Un tipo de producto con productos activos no se desactiva sin verificación segura confirmada. |
 | **CA-12** | Un tipo inactivo o una característica inactiva no pueden usarse en nuevas altas/activaciones; el histórico no se borra. |
 | **CA-13** | Reactivar un tipo conserva su identidad y permite volver a utilizarlo sujeto a las reglas vigentes. |
-| **CA-14** | Todo cambio confirmado del esquema publica `taxonomy.product-type-schema.changed` hacia Catálogo con `tipo_producto_id`, versión vigente y naturaleza del cambio. |
-| **CA-15** | La baja segura de `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC` usa el flujo transversal publicado en AsyncAPI 0.2.1-p0; la UI continúa tratando `202 Accepted` solo como admisión. |
+| **CA-14** | Todo cambio confirmado del esquema publica `taxonomy.product-type-schema.changed` hacia Catálogo con `tipo_producto_id`, versión vigente y naturaleza del cambio; la publicación incluye el cambio de obligatoriedad y la desasociación confirmada, no solo la asociación inicial. |
+| **CA-15** | La baja segura de `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC` usa el flujo transversal publicado en AsyncAPI 0.4.0; la UI continúa tratando `202 Accepted` solo como admisión. |
 | **CA-16** | Cambiar `tipo_producto_id` de un producto publicado o con variantes es una migración controlada fuera del CRUD ordinario. |
 | **CA-17** | Las escrituras requieren usuario autenticado/autorizado; los nombres exactos de permisos granulares pertenecen a Seguridad. |
 
@@ -121,7 +121,7 @@
 
 ## Estado contractual relevante
 
-AsyncAPI `0.2.1-p0` publica los contratos requeridos por esta HU:
+AsyncAPI `0.4.0` publica los contratos requeridos por esta HU:
 
 - `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC` forman parte del flujo transversal de baja segura;
 - `taxonomy.product-type-schema.changed` propaga cada modificación confirmada del esquema a Catálogo;
