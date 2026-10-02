@@ -6,7 +6,7 @@
 - **Funcionalidad:** Gestión de precios individuales y masivos
 - **Relacionado con:** [HU-013](../hu/HU-013-gestion-precios-individuales-masivos.md) / [SPEC-013](../specs/SPEC-013-gestion-precios-individuales-masivos.md) / [WF-013](../wireframes/flows/WF-013-gestion-precios-individuales-masivos.md)
 - **Responsable:** Leonardo Vera Rodríguez
-- **Última actualización:** 2026-09-30
+- **Última actualización:** 2026-10-01
 
 ## 2. Objetivo del flujo
 
@@ -66,7 +66,7 @@ flowchart LR
     subgraph GESTOR["Gestor comercial"]
         direction TB
         I(("Consulta solicitada"))
-        G1["Seleccionar producto o SKU, canal y fecha"]
+        G1["Seleccionar producto o SKU; canal y fecha cuando aplique"]
         G2["Revisar precio, origen y price_version"]
         G3["Consultar programaciones e histórico"]
     end
@@ -81,7 +81,7 @@ flowchart LR
         D3{"¿Existe precio aplicable?"}
         P5["Devolver precio y vigencia; indicar herencia cuando corresponda"]
         P6["Devolver precio no encontrado"]
-        P7["Listar vigencias y resolver histórico con consulta at"]
+        P7["Listar programaciones; para histórico resolver SKU de referencia y consultar con at"]
         P8["Denegar acceso"]
     end
     F1((("Consulta completada")))
@@ -97,7 +97,7 @@ flowchart LR
     D3 -->|"Sí"| P5 --> G2 --> G3 --> P7 --> F1
 ```
 
-Las consultas usan `/api/v1/precios/productos/{productoId}` o `/api/v1/precios/skus/{sku}` y sus rutas `/programaciones`; `at` permite resolver el precio a una fecha histórica. La bitácora de quién cambió el precio se consulta mediante FLOW-014, separada del histórico de vigencias de Pricing.
+La consulta histórica utiliza `GET /api/v1/precios/skus/{sku}` con el parámetro `at`. Cuando el Gestor Comercial selecciona un producto, el sistema resuelve el SKU de referencia correspondiente para efectuar la consulta histórica: para un producto simple utiliza su `sku_base`; para un producto con variantes utiliza el SKU vendible seleccionado o resuelto por la interfaz. `GET /api/v1/precios/productos/{productoId}` devuelve el precio base administrativo del producto y, en OpenAPI 0.4.0, no publica `at`. Las rutas `/programaciones` listan las vigencias programadas de SKU o producto. La bitácora de quién cambió el precio se consulta mediante FLOW-014, separada del histórico de vigencias de Pricing.
 
 ### 4.3 Actualización individual y programación futura
 

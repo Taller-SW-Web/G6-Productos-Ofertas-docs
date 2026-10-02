@@ -335,7 +335,9 @@ operations:
       $ref: '#/channels/taxonomyCategoryUpdated'
     messages:
     - $ref: '#/channels/taxonomyCategoryUpdated/messages/TaxonomyCategoryUpdated'
-    x-consumers: []
+    x-consumers:
+    - catalog-svc
+    - api-gateway/bff
   sendTaxonomyProductTypeSchemaChanged:
     action: send
     channel:
@@ -379,7 +381,10 @@ operations:
       $ref: '#/channels/catalogProductDeactivated'
     messages:
     - $ref: '#/channels/catalogProductDeactivated/messages/CatalogProductDeactivated'
-    x-consumers: []
+    x-consumers:
+    - promotions-svc
+    - combos-svc
+    - api-gateway/bff
   sendCatalogSkuDeactivated:
     action: send
     channel:
@@ -393,7 +398,11 @@ operations:
       $ref: '#/channels/catalogSkuDeactivated'
     messages:
     - $ref: '#/channels/catalogSkuDeactivated/messages/CatalogSkuDeactivated'
-    x-consumers: []
+    x-consumers:
+    - inventory-svc
+    - pricing-svc
+    - promotions-svc
+    - combos-svc
   sendPricingPriceChanged:
     action: send
     channel:
@@ -407,7 +416,10 @@ operations:
       $ref: '#/channels/pricingPriceChanged'
     messages:
     - $ref: '#/channels/pricingPriceChanged/messages/PricingPriceChanged'
-    x-consumers: []
+    x-consumers:
+    - price-audit-svc
+    - promotions-svc
+    - api-gateway/bff
   sendInventoryStockChanged:
     action: send
     channel:
@@ -421,7 +433,10 @@ operations:
       $ref: '#/channels/inventoryStockChanged'
     messages:
     - $ref: '#/channels/inventoryStockChanged/messages/InventoryStockChanged'
-    x-consumers: []
+    x-consumers:
+    - combos-svc
+    - promotions-svc
+    - api-gateway/bff
   sendInventoryStockAdjusted:
     action: send
     channel:
@@ -435,7 +450,9 @@ operations:
       $ref: '#/channels/inventoryStockAdjusted'
     messages:
     - $ref: '#/channels/inventoryStockAdjusted/messages/InventoryStockAdjusted'
-    x-consumers: []
+    x-consumers:
+    - bulk-svc
+    - api-gateway/bff
   sendInventoryReservationCreated:
     action: send
     channel:
@@ -451,6 +468,7 @@ operations:
     - $ref: '#/channels/inventoryReservationCreated/messages/InventoryReservationCreated'
     x-consumers:
     - modulo-ventas
+    - api-gateway/bff
   sendInventoryReservationConsumed:
     action: send
     channel:
@@ -466,6 +484,7 @@ operations:
     - $ref: '#/channels/inventoryReservationConsumed/messages/InventoryReservationConsumed'
     x-consumers:
     - modulo-ventas
+    - api-gateway/bff
   sendInventoryReservationReleased:
     action: send
     channel:
@@ -481,6 +500,7 @@ operations:
     - $ref: '#/channels/inventoryReservationReleased/messages/InventoryReservationReleased'
     x-consumers:
     - modulo-ventas
+    - api-gateway/bff
   sendInventoryReservationExpired:
     action: send
     channel:
@@ -496,6 +516,7 @@ operations:
     - $ref: '#/channels/inventoryReservationExpired/messages/InventoryReservationExpired'
     x-consumers:
     - modulo-ventas
+    - api-gateway/bff
   sendInventoryConsumptionCompleted:
     action: send
     channel:
@@ -569,7 +590,9 @@ operations:
       $ref: '#/channels/taxonomyMasterDeactivated'
     messages:
     - $ref: '#/channels/taxonomyMasterDeactivated/messages/TaxonomyMasterDeactivated'
-    x-consumers: []
+    x-consumers:
+    - catalog-svc
+    - api-gateway/bff
   sendTaxonomyMasterDeactivationRejected:
     action: send
     channel:
@@ -583,7 +606,8 @@ operations:
       $ref: '#/channels/taxonomyMasterDeactivationRejected'
     messages:
     - $ref: '#/channels/taxonomyMasterDeactivationRejected/messages/TaxonomyMasterDeactivationRejected'
-    x-consumers: []
+    x-consumers:
+    - catalog-svc
   sendCatalogBulkUpsertRequested:
     action: send
     channel:
