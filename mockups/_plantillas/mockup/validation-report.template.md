@@ -4,10 +4,12 @@
 
 - **Mockup:** MK-XXX
 - **Funcionalidad:** [Nombre]
+- **Responsable funcional:** [Nombre]
 - **Commit:** [SHA]
-- **Revisor:** [Nombre]
-- **Fecha:** [AAAA-MM-DD]
-- **Resultado:** Pendiente | Aprobado | Aprobado con observaciones | Rechazado
+- **Autovalidación completada:** Sí | No
+- **Fecha de autovalidación:** [AAAA-MM-DD]
+- **Revisor transversal:** Leonardo Vera Rodríguez
+- **Resultado general:** PENDIENTE | REQUIERE CORRECCIONES | APROBADO
 
 ## 2. Pantallas
 
@@ -60,25 +62,52 @@
 - [ ] Estados no dependen solo del color.
 - [ ] Errores accionables.
 
-## 9. Hallazgos
+## 9. Hallazgos de autovalidación local
 
-| ID | Severidad | Pantalla | Hallazgo | Regla/fuente | Acción | Estado |
+| ID | Severidad | Pantalla | Hallazgo | Regla/fuente | Acción requerida | Estado |
 |---|---|---|---|---|---|---|
-| F-01 | Bloqueante/Importante/Menor | S01 | [Texto] | [Ref] | [Acción] | Abierto |
+| F-01 | Bloqueante/Importante/Menor | S01 | [Texto] | [Ref] | [Acción] | Abierto/Cerrado |
 
-## 10. Figma
+## 10. Revisión transversal final
+
+- **Revisor:** Leonardo Vera Rodríguez
+- **Rol:** Revisor UX transversal de mockups
+- **Fecha:** [AAAA-MM-DD]
+- **Resultado:** PENDIENTE | REQUIERE CORRECCIONES | APROBADO
+
+### Observaciones del revisor
+
+[Observaciones]
+
+### Hallazgos de la revisión transversal
+
+| ID | Severidad | Hallazgo | Acción requerida | Estado |
+|---|---|---|---|---|
+| RV-01 | Bloqueante/Importante/Menor | [Texto] | [Acción] | Abierto/Cerrado |
+
+### Visto bueno
+
+- [ ] Todos los hallazgos bloqueantes están cerrados.
+- [ ] Todos los hallazgos importantes requeridos están cerrados.
+- [ ] El mockup respeta la UX transversal del módulo.
+- [ ] El mockup respeta el Design System.
+- [ ] El mockup puede pasar a Figma.
+
+## 11. Figma
 
 - [ ] Coincide con versión aprobada.
 - [ ] Incluye todas las pantallas P0.
 - [ ] No se alteró materialmente la composición.
 - [ ] Enlace registrado.
 
-## 11. Cierre
+## 12. Cierre y resultado general
 
-**Resultado:** [APROBADO / APROBADO CON OBSERVACIONES / RECHAZADO]
+> **Regla obligatoria de aprobación:** `validation-report.md` NO puede tener **Resultado = APROBADO** mientras la **Revisión transversal final** de Leonardo Vera Rodríguez no cuente con resultado **APROBADO** y su visto bueno formal registrado.
+
+**Resultado general:** [APROBADO / REQUIERE CORRECCIONES / RECHAZADO]
 
 **Justificación:**  
-[Texto.]
+[Texto justificativo del resultado final.]
 
 **Pendientes no bloqueantes**
-- [Pendiente].
+- [Pendiente menor no bloqueante].

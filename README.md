@@ -59,9 +59,15 @@ flowchart TD
     subgraph MK["Nivel Funcionalidad (MK-XXX)"]
         G["Component Spec"] --> H["Plan"]
         H --> I["Tasks"]
-        I --> J["Mockup normalizado (prototipo/)"]
-        J --> K["Validación (validation-report.md)"]
-        K --> L["Figma"]
+        I --> J["Implementación / refinamiento"]
+        J --> K["Normalización mediante código"]
+        K --> L["Autovalidación del responsable"]
+        L --> M["Revisión UX transversal (Leonardo Vera)"]
+        M --> N{"¿Visto bueno?"}
+        N -- "No" --> O["Correcciones del responsable"]
+        O --> M
+        N -- "Sí" --> P["Validation Report APROBADO"]
+        P --> Q["Figma"]
     end
     F --> MK
 ```
@@ -298,9 +304,15 @@ flowchart TD
     subgraph MK["Nivel Funcionalidad (MK-XXX)"]
         G["Component Spec"] --> H["Plan"]
         H --> I["Tasks"]
-        I --> J["Mockup normalizado (prototipo/)"]
-        J --> K["Validación (validation-report.md)"]
-        K --> L["Figma"]
+        I --> J["Implementación / refinamiento"]
+        J --> K["Normalización mediante código"]
+        K --> L["Autovalidación del responsable"]
+        L --> M["Revisión UX transversal (Leonardo Vera)"]
+        M --> N{"¿Visto bueno?"}
+        N -- "No" --> O["Correcciones del responsable"]
+        O --> M
+        N -- "Sí" --> P["Validation Report APROBADO"]
+        P --> Q["Figma"]
     end
     F --> MK
 ```
@@ -315,8 +327,10 @@ flowchart TD
 | `poma` | Gabriel Poma Gutierrez | Productos y variantes SKU |
 | `cueva` | Axel Andree Cueva Alcalá | Cupones, promociones y venta cruzada |
 | `lopez` | Leonardo Lopez | Taxonomía, características, marcas y SEO |
-| `vera` | Leonardo Vera Rodríguez | Precios y auditoría de precios |
+| `vera` | Leonardo Vera Rodríguez | Precios, auditoría de precios y Revisor UX transversal |
 | `taco` | Miguel Ángel Taco Zavala | Inventario, analítica y alertas |
+
+Adicionalmente, Leonardo Vera Rodríguez desempeña el rol transversal de **Revisor UX de mockups**, siendo responsable de auditar la coherencia global del módulo y otorgar el visto bueno obligatorio en `validation-report.md` antes de autorizar el pase a Figma.
 
 La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`wireframes/INDEX.md`](wireframes/INDEX.md) y [`mockups/README.md`](mockups/README.md).
 
