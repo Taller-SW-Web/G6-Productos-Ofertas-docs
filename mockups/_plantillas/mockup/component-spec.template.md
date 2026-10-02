@@ -43,10 +43,17 @@
 
 ## 5. Inventario de pantallas
 
-| ID | Pantalla | Propósito | Entrada | Acción principal | Salida | Prioridad |
-|---|---|---|---|---|---|---|
-| MK-XXX-S01 | [Nombre] | [Propósito] | [Origen] | [Acción] | [Destino] | P0 |
-| MK-XXX-S02 | [Nombre] | [Propósito] | [Origen] | [Acción] | [Destino] | P0 |
+| ID | Pantalla | Propósito | Entrada | Acción principal | Salida | Prioridad | Ruta del prototipo |
+|---|---|---|---|---|---|---|---|
+| MK-XXX-S01 | [Nombre] | [Propósito] | [Origen] | [Acción] | [Destino] | P0 | `/MKXXX/S01` |
+| MK-XXX-S02 | [Nombre] | [Propósito] | [Origen] | [Acción] | [Destino] | P0 | `/MKXXX/S02` |
+
+**Reglas de acceso y enrutamiento:**
+- Toda pantalla inventariada formalmente como `MK-XXX-SXX` debe disponer de una ruta individual relativa dentro del entorno de prototipado.
+- La prioridad (`P0`, `P1`, `P2`, etc.) define la criticidad y obligatoriedad de alcance, mientras que la ruta directa garantiza accesibilidad, trazabilidad, revisión y reproducibilidad independientemente de la prioridad.
+- La ruta debe permitir inspeccionarla directamente sin requerir transitar previamente por un flujo.
+- El identificador de pantalla (`MK-XXX-SXX`) y la ruta del prototipo (`/MKXXX/SXX`) deben mantenerse estrictamente sincronizados.
+- Cualquier cambio, alta o baja en el inventario de pantallas exige revisar y actualizar las rutas correspondientes.
 
 ## 6. Relación entre pantallas
 

@@ -48,8 +48,8 @@ La pantalla ancla no crea una UX independiente; aplica la UX global del módulo 
 2. Implementar y refinar la pantalla ancla conforme al Component Spec.
 3. Validarla contra fuentes y UX transversal del módulo.
 4. Implementar y refinar pantallas restantes conservando coherencia.
-5. Normalizar código (componentes, tokens, layout y tipografía).
-6. Implementar estados interactivos y accesibilidad.
+5. Normalizar código (componentes, tokens, layout y tipografía) y verificar que todas las pantallas inventariadas dispongan de acceso directo mediante su ruta registrada.
+6. Implementar estados interactivos y accesibilidad, asegurando la reproducción determinista de los estados requeridos.
 7. Realizar autovalidación por el responsable funcional.
 8. Someter a revisión transversal de Leonardo Vera Rodríguez.
 9. Corregir hallazgos detectados hasta obtener visto bueno.
@@ -77,6 +77,7 @@ La implementación final debe alinearse a:
 - UX Guidelines.
 - Accesibilidad.
 - PC/desktop únicamente.
+- Verificación de rutas de prototipo: comprobación explícita de que todas las pantallas inventariadas (`MK-XXX-SXX`), independientemente de su prioridad, dispongan de acceso directo mediante su ruta registrada (`/MKXXX/SXX`), estable y determinista.
 
 ## 9. Estados
 
@@ -114,6 +115,8 @@ La implementación final debe alinearse a:
 ### Gate A — Funcional
 - SPEC/HU/WF/Flow cubiertos.
 - Sin reglas inventadas.
+- Todas las pantallas inventariadas disponen de una ruta directa, estable y reproducible dentro del prototipo.
+- Los estados P0 requeridos pueden reproducirse de manera determinista para validación.
 
 ### Gate B — UX
 - Propuesta UX integral del módulo aplicada rigurosamente.
