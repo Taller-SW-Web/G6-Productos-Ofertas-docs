@@ -47,10 +47,10 @@ Define lineamientos que aplican obligatoriamente a todas las funcionalidades:
 
 ### Nivel Funcionalidad / Mockup (`MK-XXX`)
 Cada funcionalidad concreta (`MK-001` a `MK-016`) consume la UX del módulo y define:
-- **`component-spec.md`**: Especificación de componentes, inventario de pantallas (`MK-XXX-S01`, `S02`, etc.) y decisiones locales (`LUX-XX`).
-- **`plan.md`**: Estrategia de implementación incremental.
-- **`tasks.md`**: Desglose de tareas verificables.
-- **`validation-report.md`**: Reporte formal de validación funcional, UI y accesibilidad en PC.
+- **`component-spec.md`**: Especificación principal del resultado esperado del mockup (qué pantallas existen, propósito, estructura, componentes, estados, fixtures y decisiones locales `LUX-XX`), subordinada a las fuentes oficiales de verdad.
+- **`plan.md`**: Estrategia de ejecución técnica guiada por un Contrato de ejecución (entradas, salidas esperadas, restricciones y condiciones de parada/escalamiento).
+- **`tasks.md`**: Desglose de unidades de trabajo ejecutables estructuradas (*Entrada*, *Acción*, *Salida esperada* y *Verificación* comprobable).
+- **`validation-report.md`**: Reporte formal de evidencia y trazabilidad de ejecución (autovalidación del owner, revisión UX transversal posterior, Quality Gates y fidelidad en Figma).
 
 ## 4. Nomenclatura
 
@@ -112,22 +112,32 @@ flowchart TD
     S --> T
 ```
 
-## 6. Fuentes de Verdad
+### Operativa del Pipeline por Funcionalidad
 
-| Fuente | Define |
-|---|---|
-| SPEC | Reglas y validaciones del negocio |
-| HU | Necesidades del usuario e intenciones |
-| WF | Estructura base de distribución |
-| Flow | Navegación, transiciones y flujos alternativos |
-| API Contract | Esquema de datos y modelos de integración |
-| Design System | Foundations, tokens y componentes base |
-| Propuesta UX del módulo | Enfoque global de experiencia y consolidación |
-| UX Decisions | Justificación estructurada de patrones transversales |
-| UX Guidelines | Reglas normativas de interacción y consistencia |
-| Component Spec | Contenido técnico y pantallas por funcionalidad |
-| Plan | Fases e hitos de construcción |
-| Tasks | Unidades de trabajo atómicas |
+1. **Especificación (`component-spec.md`):** Especifica formalmente el resultado esperado (qué debe existir: pantallas, estructura, componentes, estados, fixtures y LUX-XX) sin incluir instrucciones procedimentales paso a paso, manteniéndose subordinado a SPEC, HU, WF y Flow.
+2. **Plan de ejecución (`plan.md`):** Define la estrategia constructiva mediante un Contrato de ejecución con entradas oficiales, salidas esperadas, restricciones estrictas (no inventar reglas ni campos) y condiciones de parada claras ante contradicciones o información faltante.
+3. **Desglose ejecutable (`tasks.md`):** Organiza el trabajo en unidades atómicas estructuradas (*Entrada / Acción / Salida esperada / Verificación*), cerrándose únicamente cuando la evidencia sea comprobable, y registrando formalmente cualquier bloqueo (`BLOCKED`).
+4. **Construcción y normalización:** El owner implementa la pantalla ancla y pantallas subsiguientes en `prototipo/src/pantallas/MKXXX`, normalizando el código con Mantine y Design System.
+5. **Autovalidación y revisión transversal:** El owner funcional realiza la autovalidación de primera línea con fixtures deterministas. A continuación, Leonardo Vera Rodríguez ejecuta la revisión UX transversal posterior a la autovalidación del owner para otorgar el visto bueno (`APROBADO PARA FIGMA`).
+6. **Figma y validación final (`validation-report.md`):** Se traslada fielmente a Figma la versión aprobada, se verifica su fidelidad punto a punto y se registra la trazabilidad de ejecución completa (`Task -> Pantalla -> Evidencia -> Resultado`) para emitir el resultado general `APROBADO`.
+
+## 6. Fuentes de Verdad y Artefactos de Mockup
+
+| Fuente / Artefacto | Define | Rol en el pipeline |
+|---|---|---|
+| SPEC | Reglas y validaciones del negocio | Fuente de verdad funcional primaria |
+| HU | Necesidades del usuario e intenciones | Criterios de aceptación del usuario |
+| WF | Estructura base de distribución | Disposición espacial y volumetría base |
+| Flow | Navegación, transiciones y flujos alternativos | Orquestación de pantallas y caminos |
+| API Contract | Esquema de datos y modelos de integración | Contratos de interfaces y esquemas |
+| Design System | Foundations, tokens y componentes base | Estándar visual y componentes compartidos |
+| Propuesta UX del módulo | Enfoque global de experiencia y consolidación | Experiencia unificada del módulo |
+| UX Decisions | Justificación estructurada de patrones transversales | Decisiones normativas (`UXD-XXX`) |
+| UX Guidelines | Reglas normativas de interacción y consistencia | Reglas obligatorias de interfaz |
+| `component-spec.md` | Especificación principal del resultado esperado del mockup | Qué debe existir (pantallas, estados, componentes, fixtures) |
+| `plan.md` | Estrategia de ejecución y Contrato de ejecución | Cómo construirlo (entradas, salidas, restricciones, paradas, Quality Gates) |
+| `tasks.md` | Unidades de trabajo ejecutables y trazables | Qué acciones completar (Entrada / Acción / Salida / Verificación) |
+| `validation-report.md` | Evidencia objetiva y trazabilidad de ejecución | Demostración de cumplimiento, autovalidación y revisión UX transversal |
 
 ## 7. Regla de Decisiones UX Locales
 

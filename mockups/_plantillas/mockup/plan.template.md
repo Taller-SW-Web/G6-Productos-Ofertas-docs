@@ -1,16 +1,62 @@
 # Plan de Mockup — MK-XXX
 
-> Define cómo ejecutar el Component Spec. No redefine la UX del módulo.
+> **Propósito y rol documental:**
+> Define la estrategia de ejecución (cómo debe construirse la funcionalidad).
+> Establece fases, orden constructivo, restricciones operativas y Quality Gates.
+> Puede ser seguido por un desarrollador o por un agente de forma determinista.
+> No redefine el contenido detallado de las pantallas (especificado en `component-spec.md`) ni la UX del módulo.
 
 ## 1. Identificación
 
 - **Mockup:** MK-XXX
-- **Funcionalidad:** [Nombre]
-- **Responsable:** [Nombre]
+- **Funcionalidad:** [Nombre de la funcionalidad]
+- **Responsable:** [Nombre del owner funcional]
 - **Versión:** [vX.Y]
 - **Estado:** Borrador | Aprobado | En ejecución | Completado | Bloqueado
 
-## 2. Entradas obligatorias
+## 2. Contrato de ejecución
+
+Establece las condiciones formales, compromisos y límites de la ejecución técnica.
+
+### Entradas
+Referencias documentales oficiales que deben consultarse obligatoriamente antes y durante la ejecución del plan:
+- `component-spec.md` (especificación principal del resultado esperado del mockup, subordinada a las fuentes oficiales).
+- UX Guidelines (`mockups/ux/ux-guidelines.md`).
+- UX Decisions (`mockups/ux/ux-decisions.md`).
+- Propuesta UX Integral del módulo (`mockups/ux/propuesta-ux.md`).
+- Wireframe oficial (`WF-XXX`).
+- Flujo de navegación oficial (`FLOW-XXX`).
+- Design System del módulo (`DESIGN.md` / tokens / componentes base).
+
+*(Ver detalle de estados requeridos en la sección 3. Entradas obligatorias).*
+
+### Salidas esperadas
+Entregables concretos y verificables que deben existir al finalizar la ejecución del plan:
+- Todas las pantallas prioritarias P0 implementadas y operativas.
+- Una ruta individual relativa y directa por cada pantalla inventariada (`MK-XXX-SXX` accesible en `/MKXXX/SXX`).
+- Código normalizado y modular en `prototipo/src/pantallas/MKXXX` alineado al Design System y Mantine.
+- Estados P0 operativos y reproducibles de forma determinista (default, loading, error, empty).
+- Autovalidación del owner completada con evidencias objetivas registradas en `validation-report.md`.
+
+### Restricciones de ejecución
+Reglas estrictas que gobiernan la ejecución para preservar la integridad del módulo:
+- **No modificar fuentes de verdad** (SPEC, HU, WF, FLOW, API Contract, Design System) sin una corrección documental explícita y aprobada.
+- **No inventar reglas de negocio** ni asumir lógicas no descritas en los documentos oficiales.
+- **No inventar campos, botones, filtros ni estados funcionales** ausentes en `component-spec.md`.
+- **No crear nuevos patrones UX transversales sin registrarlos** (cualquier excepción justificada debe documentarse como `LUX-XX` en `component-spec.md`).
+- **No modificar otros MK** fuera del alcance asignado a esta funcionalidad (`MK-XXX`).
+- **No introducir dependencias nuevas**, librerías externas ni utilidades ad hoc sin justificación y aprobación técnica.
+- **No redefinir el contenido detallado de pantallas** en este plan si ya reside en `component-spec.md`.
+
+### Condiciones de parada / escalamiento
+Detener inmediatamente la ejecución, marcar la tarea como `BLOCKED` y escalar al responsable correspondiente cuando:
+- Exista contradicción irreconciliable entre fuentes de verdad (ej. discrepancia entre SPEC, WF y Contrato API).
+- Falte información necesaria para tomar una decisión funcional o de negocio crítica.
+- Sea necesario inventar comportamiento de interfaz o flujos alternativos no especificados.
+- Una dependencia externa requerida (servicio, contrato, componente compartido) no esté definida o disponible.
+- Un Quality Gate no pueda verificarse objetivamente debido a ambigüedad en los criterios o bloqueos técnicos.
+
+## 3. Entradas obligatorias
 
 | Entrada | Referencia | Estado requerido |
 |---|---|---|
@@ -23,18 +69,20 @@
 | Flow | [Ref] | Vigente |
 | Design System | [Ref] | Vigente |
 
-## 3. Objetivo
+## 4. Objetivo
 
-[Resultado final.]
+[Resultado final esperado de la construcción del mockup.]
 
-## 4. Pantallas
+## 5. Pantallas
+
+Inventario de pantallas a construir con su orden de ejecución. El contenido detallado se especifica en `component-spec.md`.
 
 | ID | Nombre | Prioridad | Orden |
 |---|---|---|---:|
 | MK-XXX-S01 | [Nombre] | P0 | 1 |
 | MK-XXX-S02 | [Nombre] | P0 | 2 |
 
-## 5. Pantalla ancla
+## 6. Pantalla ancla
 
 - **Pantalla:** [MK-XXX-SXX]
 - **Motivo:** [Por qué fija mejor el lenguaje de esta funcionalidad].
@@ -42,13 +90,13 @@
 
 La pantalla ancla no crea una UX independiente; aplica la UX global del módulo a esta funcionalidad.
 
-## 6. Estrategia
+## 7. Estrategia
 
-1. Preparar contexto y fixtures.
-2. Implementar y refinar la pantalla ancla conforme al Component Spec.
-3. Validarla contra fuentes y UX transversal del módulo.
-4. Implementar y refinar pantallas restantes conservando coherencia.
-5. Normalizar código (componentes, tokens, layout y tipografía) y verificar que todas las pantallas inventariadas dispongan de acceso directo mediante su ruta registrada.
+1. Preparar contexto y fixtures deterministas.
+2. Implementar y refinar la pantalla ancla conforme al `component-spec.md`.
+3. Validarla contra fuentes oficiales y UX transversal del módulo.
+4. Implementar y refinar pantallas restantes conservando coherencia arquitectónica.
+5. Normalizar código (componentes, tokens, layout y tipografía) y verificar que todas las pantallas inventariadas dispongan de acceso directo mediante su ruta registrada (`/MKXXX/SXX`).
 6. Implementar estados interactivos y accesibilidad, asegurando la reproducción determinista de los estados requeridos.
 7. Realizar autovalidación por el responsable funcional.
 8. Someter a revisión transversal de Leonardo Vera Rodríguez.
@@ -58,36 +106,36 @@ La pantalla ancla no crea una UX independiente; aplica la UX global del módulo 
 12. Validar la fidelidad entre Figma y la versión aprobada para Figma.
 13. Registrar el resultado general APROBADO en `validation-report.md` cuando todos los gates estén cerrados.
 
-## 7. Reutilización
+## 8. Reutilización
 
 | Componente | Origen | Pantallas | Acción |
 |---|---|---|---|
-| [Componente] | Design System/shared | [S01,S02] | Reutilizar |
+| [Componente] | Design System / shared | [S01, S02] | Reutilizar |
 
-## 8. Normalización
+## 9. Normalización
 
 La implementación final debe alinearse a:
 
 - React.
 - TypeScript.
 - Mantine.
-- Tema central.
+- Tema central del módulo.
 - Tabler Icons.
 - Design System.
 - UX Guidelines.
-- Accesibilidad.
-- PC/desktop únicamente.
+- Accesibilidad (teclado, foco y contraste).
+- PC / desktop únicamente.
 - Verificación de rutas de prototipo: comprobación explícita de que todas las pantallas inventariadas (`MK-XXX-SXX`), independientemente de su prioridad, dispongan de acceso directo mediante su ruta registrada (`/MKXXX/SXX`), estable y determinista.
 
-## 9. Estados
+## 10. Estados
 
-| Estado | Pantalla | Prioridad | Fixture | Evidencia |
+| Estado | Pantalla | Prioridad | Fixture | Evidencia esperada |
 |---|---|---|---|---|
-| Default | S01 | P0 | default | Render |
-| Loading | S01 | P0 | loading | Render |
-| Error | S01 | P0 | error | Render |
+| Default | S01 | P0 | default | Render con datos representativos |
+| Loading | S01 | P0 | loading | Render con feedback de carga |
+| Error | S01 | P0 | error | Render con mensaje accionable |
 
-## 10. Orden de ejecución
+## 11. Orden de ejecución
 
 | Fase | Salida | Actor / Revisor | Gate |
 |---|---|---|---|
@@ -104,29 +152,29 @@ La implementación final debe alinearse a:
 | Validación Figma | Fidelidad comprobada | Responsable | Todas las verificaciones PASS |
 | Cierre | Validation Report APROBADO | Responsable | Todos los gates cerrados |
 
-## 11. Riesgos
+## 12. Riesgos
 
 | ID | Riesgo | Probabilidad | Impacto | Mitigación |
 |---|---|---|---|---|
-| R-01 | [Riesgo] | Baja/Media/Alta | Bajo/Medio/Alto | [Acción] |
+| R-01 | [Riesgo de ejecución] | Baja / Media / Alta | Bajo / Medio / Alto | [Acción preventiva / reactiva] |
 
-## 12. Quality Gates
+## 13. Quality Gates
 
 ### Gate A — Funcional
 - SPEC/HU/WF/Flow cubiertos.
 - Sin reglas inventadas.
-- Todas las pantallas inventariadas disponen de una ruta directa, estable y reproducible dentro del prototipo.
+- Todas las pantallas inventariadas disponen de una ruta directa, estable y reproducible dentro del prototipo (`/MKXXX/SXX`).
 - Los estados P0 requeridos pueden reproducirse de manera determinista para validación.
 
 ### Gate B — UX
 - Propuesta UX integral del módulo aplicada rigurosamente.
 - UX Decisions (`UXD-XXX`) relevantes aplicadas.
-- Decisiones locales (`LUX-XX`) justificadas.
+- Decisiones locales (`LUX-XX`) justificadas en `component-spec.md`.
 
 ### Gate C — UI
 - Design System respetado.
-- Sin tokens arbitrarios.
-- Componentes reutilizados.
+- Sin tokens arbitrarios ni estilos inline huérfanos.
+- Componentes compartidos reutilizados.
 
 ### Gate D — PC
 - Sin overflow horizontal en viewport canónico de 1440 px.
