@@ -1,145 +1,228 @@
-# Propuesta UX del Módulo — Productos y Ofertas
+# Propuesta UX transversal — Productos y Ofertas
 
-> Documento único y transversal para todo el módulo Productos y Ofertas.
+**Versión:** 2.0 · **Fecha:** 2026-10-02 · **Responsable:** Leonardo Vera Rodríguez (`LeonardoVera`).
 
-## 1. Identificación y Objetivos del Módulo
+**Resultado:** tres propuestas finales consolidadas mediante revisión documental para el [issue #59](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/59). Esta versión sustituye íntegramente el borrador. No acredita pruebas con usuarios, aprobación individual de mockups ni integración en `master`.
 
-- **Módulo:** Productos y Ofertas
-- **Versión:** v1.1
-- **Estado:** Aprobado
-- **Actor Principal Canónico:** Gestor Comercial (con capacidades funcionales específicas según el subdominio: administración de catálogo, taxonomía, políticas de precios, ofertas y recepción/supervisión de inventario).
-- **Alcance de Plataforma:** Web Desktop exclusivamente.
-- **Viewport canónico de generación y revisión:** 1440 px de ancho (utilizado como estándar de verificación, sin implicar un diseño de ancho rígido).
+## 1. Alcance y fuentes
 
-El módulo centraliza la administración y publicación del catálogo de productos, variantes SKU, taxonomía, políticas de precios, cupones, ofertas comerciales y supervisión de existencias. Requiere un balance óptimo entre densidad de información para tareas administrativas masivas ejecutadas por el Gestor Comercial y claridad visual en la parametrización de reglas de negocio complejas.
+Experiencia del **Gestor Comercial**, en web desktop, con viewport canónico de revisión de 1440 px y operación mediante mouse y teclado. Las propuestas resuelven problemas de interacción; no son temas visuales ni layouts alternativos.
 
----
+Se revisaron las 16 SPEC, HU y WF, los 15 FLOW disponibles, los tres borradores UX, el [índice de wireframes](../../wireframes/INDEX.md), [DESIGN de baja fidelidad](../../wireframes/DESIGN.md), [Contrato API](../../Contrato_Api.md), [kit de integración](../../api/kit-integracion.md) y los contratos [OpenAPI](../../api/openapi.yaml) y [AsyncAPI](../../asyncapi/asyncapi.yaml). OpenAPI declara HTTP 0.5.0 y AsyncAPI 0.4.0; sus versiones son independientes. No existe un FLOW-007 separado en esta revisión.
 
-## 2. Propuesta UX 1 — Enfoque Operativo y Denso en Datos
+SPEC y HU determinan requisitos y reglas de negocio; WF y FLOW aportan estructura, navegación y alternativas; los contratos determinan los datos y operaciones publicados. La UX no crea capacidades ausentes. Una diferencia entre fuentes se registra y coordina con el responsable, sin decidir el negocio mediante un patrón visual.
 
-*(Preservada como evidencia académica)*
+Tokens, tipografía, colores, dimensiones y componentes de alta fidelidad corresponden al **#60**. Las reglas gráficas de los wireframes no sustituyen ese Design System. La guía temporal de laboratorios aporta contexto de trabajo y no es fuente normativa de esta propuesta.
 
-### Filosofía y Concepto
-Orientada a la máxima productividad y agilidad del Gestor Comercial en operaciones masivas y auditoría de datos. Prioriza la visualización de grandes volúmenes de registros en tablas avanzadas con controles por lote, edición rápida, atajos de teclado y minimización de desplazamientos verticales.
+## 2. Problemas transversales encontrados
 
-### Fortalezas
-- Agilidad superior en consultas y modificaciones de precios masivos (MK-013) y supervisión de la disponibilidad autoritativa de stock (MK-015).
-- Eficiencia en la revisión de bitácoras extensas como el historial de auditoría de precios (MK-014) y monitoreo de importaciones masivas (MK-001).
-- Aprovechamiento exhaustivo del ancho del viewport en monitores de escritorio (1440 px).
-- Acceso directo a acciones operativas por lote sin navegación multinivel.
+| Problema | Evidencia del módulo | Consecuencia para el usuario |
+|---|---|---|
+| Confusión entre solicitud recibida y resultado confirmado | Lotes, exportaciones, preparación de producto, comprobación de bajas e inventario | Puede repetir envíos o actuar sobre resultados todavía no confirmados |
+| Opciones de casos diferentes presentadas juntas | Producto simple/con variantes; promoción automática/con cupón; característica por tipo; precio producto/SKU | Debe interpretar campos irrelevantes y puede configurar valores incompatibles |
+| Fallo local presentado como fallo total | Importación por dominios, preparación independiente, operaciones parciales, consultas por secciones | Pierde trabajo válido o no identifica qué necesita corregir |
+| Patrones prescritos sin evaluar la tarea | Wizard para SEO, acciones masivas en Auditoría/Dashboard, skeleton universal, errores en toast | La interfaz añade pasos o acciones que el flujo y contrato no requieren |
 
-### Riesgos y Limitaciones
-- Sobrecarga cognitiva si se aplica indiscriminadamente a la configuración de entidades comerciales complejas (como combos en MK-002, cupones en MK-005 o promociones en MK-006).
-- Rigidez visual en formularios extensos de creación conceptual (taxonomía o asociaciones).
+Las candidatas del issue se confirman con límites explícitos. Cada una aborda un problema diferente: **estado**, **decisión** y **recuperación**.
 
----
+<a id="ux-p01"></a>
+## 3. UX-P01 — Carga contextual y progreso verificable
 
-## 3. Propuesta UX 2 — Enfoque Guiado y Asistido por Pasos (Wizards)
+**Problema:** conocer qué información se está recuperando, qué solicitud se recibió y qué resultado está confirmado.
 
-*(Preservada como evidencia académica)*
+**Fundamento:** visibilidad del estado del sistema y feedback cercano a la acción. Referencias: [heurísticas de Nielsen](https://www.nngroup.com/articles/ten-usability-heuristics/) y [mensajes de estado accesibles](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html). El indicador refleja información disponible, sin simular avance ni duración.
 
-### Filosofía y Concepto
-Enfocada en la reducción sistemática de errores humanos mediante procesos guiados secuenciales (wizards) con validaciones progresivas y contextuales, estricta separación de etapas y ayudas contextuales prominentes para la parametrización de reglas complejas.
+**Aplicación:** skeleton en recuperación inicial estructurada; indicador localizado al guardar/consultar; mantener datos anteriores identificados al actualizar; estado persistente y consulta del resultado de trabajos asíncronos. Etapas o porcentajes solo si existen estados o contadores suficientes. Alta en 001, 003, 004, 008, 009, 010, 011, 013, 014, 015 y 016; en las restantes aplica feedback proporcional de lectura/guardado.
 
-### Fortalezas
-- Alta tasa de éxito y prevención de inconsistencias en configuraciones con dependencias lógicas:
-  - Carga masiva de productos y mapeo de columnas (MK-001).
-  - Reglas de armado y cálculo de precios de combos (MK-002).
-  - Condiciones de canje y restricciones de cupones de descuento (MK-005).
-  - Mecánicas de ofertas, descuentos por volumen y promociones (MK-006).
-  - Reglas de venta cruzada y upselling (MK-007).
-  - Asociación entre tipos de producto y características con restricciones de obligatoriedad (MK-010).
-  - Configuración estructurada de SEO y metadatos (MK-012).
-- Facilidad de aprendizaje y validaciones progresivas que impiden guardar estados incompletos.
+**No aplicar:** reemplazar un formulario completo por skeleton al guardar un campo; barras con avance ficticio; loader deliberadamente prolongado; spinner indefinido como único seguimiento; convertir confirmaciones síncronas en espera artificial.
 
-### Riesgos y Limitaciones
-- Fricción y lentitud para operaciones rutinarias frecuentes del Gestor Comercial.
-- Fragmentación de la información global al obligar a transitar pasos secuenciales para modificaciones menores.
+**Representación en MK-001:**
 
----
+```text
+Importación recibida → Procesando → Resultado del lote
+                                    Completado con observaciones
+                                    Filas procesadas: [dato del lote]
+                                    [Ver detalle] [Descargar reporte]
+```
 
-## 4. Propuesta UX 3 — Enfoque Modular Basado en Dashboard y Paneles Contextuales
+«Completado con observaciones» deriva de `COMPLETED` más errores de filas o reconciliación: no añade un enum. Una exportación habilita descarga después de finalizar, no al recibir el `202`.
 
-*(Preservada como evidencia académica)*
+**Ventajas:** ayuda a decidir cuándo esperar o continuar; hace visible la preparación independiente y reduce incentivos para repetir envíos por incertidumbre.
 
-### Filosofía y Concepto
-Estructura la experiencia del Gestor Comercial alrededor de centros de control visuales con paneles laterales deslizables (drawers) que permiten inspeccionar o editar detalles de entidades sin perder el contexto de la vista principal ni forzar navegación destructiva.
+**Riesgos y trade-offs:** exige seguimiento; un skeleton excesivo oculta contexto; avance de filas no equivale necesariamente a avance de todos los dominios. Sin detalle suficiente se informa indisponibilidad, sin deducir rechazo o porcentaje.
 
-### Fortalezas
-- Preservación permanente del contexto operativo en la administración del catálogo central:
-  - Navegación y mantenimiento de productos en el CRUD principal (MK-003).
-  - Edición y visualización de matrices de variantes SKU (MK-004).
-  - Mantenimiento del árbol de categorías y subcategorías (MK-008).
-  - Catálogo de características y sus valores (MK-009).
-  - Gestión del listado de marcas (MK-011).
-  - Panel analítico y alertas de existencias en el dashboard de stock (MK-016).
-- Visibilidad inmediata del estado del catálogo y alertas críticas de inventario.
-- Gran escalabilidad para inspeccionar detalles técnicos sin recargar pantallas.
+**Derivación:** UXD-004, 007, 008 y 012; UXG-007 a 010, 012 y 020 a 022.
 
-### Riesgos y Limitaciones
-- Complejidad en pantallas secundarias cuando se manejan matrices tabulares muy densas dentro de un drawer lateral.
-- Saturación visual si no se delimita estrictamente la profundidad de apertura de paneles superpuestos.
+<a id="ux-p02"></a>
+## 4. UX-P02 — Complejidad progresiva según la decisión
 
----
+**Problema:** configurar reglas diferentes sin interpretar simultáneamente opciones irrelevantes.
 
-## 5. Comparación Transversal de las Propuestas
+**Fundamento:** revelación progresiva, agrupación lógica y reconocimiento en lugar de recuerdo. Referencias: [Progressive Disclosure](https://www.nngroup.com/articles/progressive-disclosure/) y [heurísticas de Nielsen](https://www.nngroup.com/articles/ten-usability-heuristics/). El sistema calcula información derivada autorizada, pero no elige reglas comerciales por el usuario.
 
-*(Preservada como evidencia académica)*
+**Aplicación:** campos condicionales por tipo/modalidad/alcance; información principal separada del detalle; etapas para decisiones realmente dependientes. Alta en 001, 002, 003, 005, 006, 007, 009, 010 y 013; Media en 004, 008, 012, 014, 015 y 016. La creación simple de marca (011) no necesita esta propuesta: un formulario breve y visible basta.
 
-| Criterio UX | Propuesta 1 (Operativo / Denso) | Propuesta 2 (Guiado / Wizards) | Propuesta 3 (Modular / Paneles) |
-|---|---|---|---|
-| **Velocidad en tareas masivas y auditoría** | Muy Alta | Baja | Media-Alta |
-| **Prevención de errores en reglas complejas**| Media | Muy Alta | Alta |
-| **Preservación de contexto del catálogo** | Media | Baja | Muy Alta |
-| **Curva de aprendizaje para el Gestor Comercial**| Exigente | Suave | Media |
-| **Mantenibilidad técnica y modularidad** | Alta | Media | Alta |
-| **Aprovechamiento Desktop (1440 px)** | Excelente | Regular | Excelente |
+**No aplicar:** esconder requisitos de activación; wizard obligatorio para SEO, marca o creación simple de tipo; error dentro de sección cerrada; selección automática de variante, criterio de superioridad o política de restitución.
 
-### Análisis de Trade-offs y Cobertura Funcional
-Ninguna propuesta cubre de forma aislada la totalidad de los 16 flujos del módulo:
-- La **Propuesta 1** es indispensable para tareas operativas de alta densidad y auditoría: Carga masiva (MK-001), Precios individuales y masivos (MK-013), Historial de auditoría de precios (MK-014) y Control de stock y disponibilidad (MK-015). Sin embargo, resulta deficiente para configurar combos o cupones.
-- La **Propuesta 2** resulta óptima para procesos comerciales guiados con validaciones preventivas: Carga masiva por lotes (MK-001), Combos de productos (MK-002), Cupones de descuento (MK-005), Ofertas y promociones (MK-006), Reglas de venta cruzada/upselling (MK-007), Asociación de tipos de producto y características (MK-010) y SEO/metadatos (MK-012). No obstante, es lenta para navegación frecuente.
-- La **Propuesta 3** proporciona el marco de trabajo ideal para la gestión continua del catálogo y taxonomía: Gestión de productos CRUD (MK-003), Variantes SKU (MK-004), Categorías (MK-008), Características y valores (MK-009), Marcas (MK-011) y Dashboard analítico de alertas (MK-016).
+**Representación en MK-009:**
 
----
+```text
+Nombre: [________________]
+Tipo:   [Número ▼]
+Unidad: [________________]  ← aparece para NUMERO
 
-## 6. Selección, Justificación y Combinación de Elementos
+LISTA revela gestión de valores.
+En edición el tipo existente no puede cambiarse.
+```
 
-Se adopta una **arquitectura híbrida convergente** que integra lo mejor de cada enfoque:
+En MK-003 se distinguen requisitos para **guardar borrador** de requisitos adicionales para **activar**. En MK-007 el criterio de superioridad se solicita explícitamente y no se infiere del precio.
 
-1. **Marco Contenedor Contextual con Drawers (de la Propuesta 3):**
-   - Vistas maestras de catálogo y taxonomía con panel lateral deslizable (drawer) para consultar detalles y ejecutar ediciones rápidas sin perder la posición en la tabla (MK-003, MK-004, MK-008, MK-009, MK-011).
-   - Dashboard analítico con widgets y navegación contextual a alertas (MK-016 como marco modular principal).
-2. **Tablas Densas con Operación Masiva (de la Propuesta 1):**
-   - Grids de alta densidad con selección múltiple, cabecera fija y barra de acciones por lote para operaciones críticas y de auditoría (MK-001, MK-013, MK-014, MK-015, y el listado tabular denso para la supervisión y resolución de alertas dentro de MK-016).
-3. **Flujos Secuenciales Guiados (de la Propuesta 2):**
-   - Wizards paso a paso con validaciones previas para la creación y parametrización de entidades con lógica de negocio compuesta (MK-001, MK-002, MK-005, MK-006, MK-007, MK-010, MK-012).
+**Ventajas:** facilita comprender la decisión actual, reduce campos incompatibles y mantiene simples las tareas breves.
 
----
+**Riesgos y trade-offs:** opciones ocultas pueden ser difíciles de descubrir; cambiar modalidad puede invalidar entradas. Explicar qué cambia, conservar valores compatibles, advertir antes de descartar y abrir las secciones con errores.
 
-## 7. Propuesta UX Integral Adoptada (Definición Oficial Vigente)
+**Derivación:** UXD-001, 002, 003, 006 y 012; UXG-001 a 006 y 020 a 022.
 
-### 7.1. Principios Rectores
-1. **Preservación del Contexto:** El Gestor Comercial nunca debe perder de vista su ubicación dentro del catálogo o listado maestro al realizar consultas o ediciones puntuales.
-2. **Eficiencia Proporcional a la Complejidad:** Las tareas rutinarias y de consulta masiva se resuelven en un solo paso con alta densidad; las tareas de configuración comercial crítica se asisten mediante flujos guiados que previenen errores antes de confirmar.
-3. **Claridad del Estado Comercial y Operativo:** La vigencia de precios, el estado de disponibilidad de stock, los topes de cupones y el estado de promociones deben ser evidentes de forma inmediata mediante texto, badges y soporte de accesibilidad.
+<a id="ux-p03"></a>
+## 5. UX-P03 — Recuperación explícita y conservación de lo confirmado
 
-### 7.2. Modelo General de Interacción y Navegación
-- **Estructura Desktop:** Barra lateral izquierda colapsable de navegación modular, cabecera superior con migas de pan funcionales y área de trabajo optimizada para el viewport canónico de 1440 px.
-- **Acciones Primarias:** Botones de acción principal ubicados de manera consistente en la esquina superior derecha del área de contenido.
-- **Transiciones:** Empleo de drawers laterales con fondo atenuado para detalle y edición ágil; cambio a vistas completas únicamente para flujos guiados (wizards) o dashboards especializados.
+**Problema:** un rechazo, conflicto o fallo parcial no debe borrar información válida ni habilitar una operación insegura.
 
-### 7.3. Jerarquía de Información
-1. **Nivel Primario:** Identificadores canónicos (SKU, ID, código), nombre/título de la entidad y badge de estado operativo (Activo, Inactivo, Borrador, Agotado).
-2. **Nivel Secundario:** Parámetros comerciales y de negocio (precios, tipo de descuento, existencias disponibles, categorías asociadas).
-3. **Nivel Complementario:** Metadatos técnicos, marcas, slug SEO, timestamps y bitácora de auditoría.
+**Fundamento:** reconocimiento/corrección de errores, control del usuario y estados parciales. Referencias: [mensajes de error](https://www.nngroup.com/articles/error-message-guidelines/) y [heurísticas de Nielsen](https://www.nngroup.com/articles/ten-usability-heuristics/). La degradación segura conserva lo consultable y confirmado; bloquea la acción que necesita una validación faltante.
 
-### 7.4. Patrones Transversales
-- **Búsqueda y Filtros:** Búsqueda predictiva con debouncing de entrada; filtros facetados en panel colapsable con etiquetas activas fácilmente removibles.
-- **Formularios:** Distribución en cuadrícula limpia de columnas agrupadas lógicamente, con validaciones al perder el foco (blur) y mensajes de asistencia visibles.
-- **Feedback:** Placeholders de carga esqueletales (skeletons), estados vacíos (empty states) con instrucciones orientadoras y notificaciones flotantes (toasts) no intrusivas.
+**Aplicación:** error junto al campo/sección; resultado parcial persistente; conservar filtros y entradas; recuperar según la capacidad contractual. Alta en 001, 003, 004, 008, 009, 010, 011, 012, 013, 014, 015 y 016; Media en 002, 005, 006 y 007, principalmente por validaciones y dependencias de consulta.
 
-### 7.5. Derivación hacia Decisiones y Reglas
-Esta Propuesta UX Integral Adoptada es la base única a partir de la cual se derivan formalmente:
-1. `mockups/ux/ux-decisions.md`: Decisiones técnicas transversales justificadas (`UXD-001` a `UXD-006`).
-2. `mockups/ux/ux-guidelines.md`: Reglas normativas vinculantes que implementan de forma directa dichas decisiones.
+**No aplicar:** repetir escrituras con resultado desconocido; dar de baja por falta de respuesta; sustituir información fallida por cero; ofrecer una recuperación no publicada; activar entidades con requisitos obligatorios incompletos.
+
+**Representación en MK-003:**
+
+```text
+Borrador guardado
+Precio:     preparación confirmada
+Inventario: estado de preparación no disponible
+
+El borrador se conserva. Su activación aún no puede confirmarse.
+[Consultar nuevamente]  ← si existe consulta disponible
+```
+
+Los estados requieren evidencia. Un booleano `false` no distingue por sí solo «pendiente» de «rechazado». Un conflicto de slug en MK-008 exige obtener y confirmar otra propuesta, sin renombrar silenciosamente.
+
+**Ventajas:** conserva trabajo, explica el siguiente paso y muestra éxitos parciales sin prometer una transacción global.
+
+**Riesgos y trade-offs:** exige más estados y mensajes específicos; información antigua sin fecha puede parecer vigente; puede no existir recuperación automática. Reconocer esos límites y ofrecer solo acciones disponibles.
+
+**Derivación:** UXD-001, 005, 007, 008, 009, 010, 011 y 012; UXG-002 y 009 a 022.
+
+## 6. Matriz de aplicabilidad
+
+**Alta:** afecta una tarea principal o resultado crítico. **Media:** mejora consultas, detalle o validación sin exigir estructura nueva. **No aplicable:** no existe una complejidad que justifique esa propuesta en la tarea revisada. Ninguna calificación obliga a usar todos sus patrones.
+
+| WF / MK | UX-P01 | UX-P02 | UX-P03 | Evidencia y aplicación concreta |
+|---|---|---|---|---|
+| 001 Carga/exportación masiva | Alta | Alta | Alta | Etapas y resultado por fila/dominio; distinguir reconciliación; reanudar el mismo lote cuando procede. Exportación de catálogo activo sin filtros inventados |
+| 002 Combos | Media | Alta | Media | Configurar SKUs/cantidades y comparar precio; disponibilidad estimada no reserva stock. Conservar componentes válidos ante rechazo |
+| 003 Productos | Alta | Alta | Alta | Borrador y activación tienen requisitos diferentes; preparación independiente de Pricing/Inventario. Conservar borrador y mostrar solo estados conocidos |
+| 004 Variantes/SKUs | Alta | Media | Alta | Atributos/datos físicos por variante e inicialización de inventario. No exigir precio propio ni stock del padre |
+| 005 Cupones | Media | Alta | Media | Límites opcionales y política de restitución explícitos; «Sin límite» no es cero. No consumir/restaurar usos desde la administración |
+| 006 Promociones | Media | Alta | Media | Modalidad, beneficio y alcance condicionales; preservar entradas al corregir y respetar restricciones de cambio de modalidad |
+| 007 Cross-sell/upselling | Media | Alta | Media | Campos por tipo de regla y criterio explícito de superioridad; errores corregibles sin inferir criterio por precio |
+| 008 Categorías | Alta | Media | Alta | Resolver/confirmar slug, conflicto concurrente y comprobación de uso antes de baja; silencio no confirma baja |
+| 009 Características | Alta | Alta | Alta | TEXTO/NUMERO/LISTA y tipo inmutable; baja de valor LISTA con comprobación distinta de baja síncrona de característica |
+| 010 Tipos/características | Alta | Alta | Alta | Asociaciones obligatorias/opcionales, límite configurable, esquema y comprobación de uso; conservar ante conflicto/inconclusión |
+| 011 Marcas | Alta | No aplicable | Alta | Formulario corto; baja con comprobación de uso y duplicados entre inactivas. Crear/editar/reactivar no requieren la misma espera |
+| 012 SEO/metadatos | Media | Media | Alta | Formulario e historial; longitudes con avisos no bloqueantes. Conflicto manual conserva datos y no renombra sin consentimiento |
+| 013 Precios | Alta | Alta | Alta | Producto/SKU, canal, programación, conflicto de versión/vigencia e importación parcial; sin reanudación de MK-001 |
+| 014 Auditoría | Alta | Media | Alta | Filtros/detalle de lectura; exportación asíncrona CSV/PDF y límites; conservar filtros, ausencia de oferta no es cero |
+| 015 Stock | Alta | Media | Alta | SKU/ubicación y recepción parcial/final; pendiente distinto de recibido, faltantes no acreditados; sin comandos internos de reserva/merma |
+| 016 Dashboard | Alta | Media | Alta | Filtros/ubicación/detalle; refresco por sección si hay consultas independientes; indisponibilidad distinta de cero y enlace a MK-015 |
+
+La selección es cualitativa y documental; no constituye una medición de mejoras ni un ranking estadístico. P01 explica el estado, P02 organiza la decisión y P03 protege la recuperación; se complementan en una misma pantalla.
+
+## 7. Trazabilidad de las 16 funcionalidades
+
+Cada fila anterior se verificó con las siguientes fuentes. El owner mantiene referencias a apartados y estados concretos en su `component-spec.md`.
+
+| MK | SPEC | HU | WF | FLOW |
+|---|---|---|---|---|
+| 001 | [SPEC-001](../../specs/SPEC-001-carga-exportacion-masiva-productos.md) | [HU-001](../../hu/HU-001-carga-exportacion-masiva-productos.md) | [WF-001](../../wireframes/flows/WF-001-carga-exportacion-masiva-productos.md) | [FLOW-001](../../flujos/FLOW-001-carga-exportacion-masiva-productos.md) |
+| 002 | [SPEC-002](../../specs/SPEC-002-gestion-combos-productos.md) | [HU-002](../../hu/HU-002-gestion-combos-productos.md) | [WF-002](../../wireframes/flows/WF-002-gestion-combos-productos.md) | [FLOW-002](../../flujos/FLOW-002-gestion-combos-productos.md) |
+| 003 | [SPEC-003](../../specs/SPEC-003-gestion-productos-crud.md) | [HU-003](../../hu/HU-003-gestion-productos-crud.md) | [WF-003](../../wireframes/flows/WF-003-gestion-productos-crud.md) | [FLOW-003](../../flujos/FLOW-003-gestion-productos-crud.md) |
+| 004 | [SPEC-004](../../specs/SPEC-004-gestion-variantes-skus.md) | [HU-004](../../hu/HU-004-gestion-variantes-skus.md) | [WF-004](../../wireframes/flows/WF-004-gestion-variantes-skus.md) | [FLOW-004](../../flujos/FLOW-004-gestion-variantes-skus.md) |
+| 005 | [SPEC-005](../../specs/SPEC-005-gestion-cupones-descuento.md) | [HU-005](../../hu/HU-005-gestion-cupones-descuento.md) | [WF-005](../../wireframes/flows/WF-005-gestion-cupones-descuento.md) | [FLOW-005](../../flujos/FLOW-005-gestion-cupones-descuento.md) |
+| 006 | [SPEC-006](../../specs/SPEC-006-gestion-ofertas-promociones.md) | [HU-006](../../hu/HU-006-gestion-ofertas-promociones.md) | [WF-006](../../wireframes/flows/WF-006-gestion-ofertas-promociones.md) | [FLOW-006](../../flujos/FLOW-006-gestion-ofertas-promociones.md) |
+| 007 | [SPEC-007](../../specs/SPEC-007-reglas-venta-cruzada-upselling.md) | [HU-007](../../hu/HU-007-reglas-venta-cruzada-upselling.md) | [WF-007](../../wireframes/flows/WF-007-reglas-venta-cruzada-upselling.md) | No publicado |
+| 008 | [SPEC-008](../../specs/SPEC-008-gestion-categorias.md) | [HU-008](../../hu/HU-008-gestion-categorias.md) | [WF-008](../../wireframes/flows/WF-008-gestion-categorias.md) | [FLOW-008](../../flujos/FLOW-008-gestion-categorias.md) |
+| 009 | [SPEC-009](../../specs/SPEC-009-gestion-caracteristicas.md) | [HU-009](../../hu/HU-009-gestion-caracteristicas.md) | [WF-009](../../wireframes/flows/WF-009-gestion-caracteristicas.md) | [FLOW-009](../../flujos/FLOW-009-gestion-caracteristicas.md) |
+| 010 | [SPEC-010](../../specs/SPEC-010-asociacion-tipo-producto-caracteristica.md) | [HU-010](../../hu/HU-010-asociacion-tipo-producto-caracteristica.md) | [WF-010](../../wireframes/flows/WF-010-asociacion-tipo-producto-caracteristica.md) | [FLOW-010](../../flujos/FLOW-010-asociacion-tipo-producto-caracteristica.md) |
+| 011 | [SPEC-011](../../specs/SPEC-011-gestion-marcas.md) | [HU-011](../../hu/HU-011-gestion-marcas.md) | [WF-011](../../wireframes/flows/WF-011-gestion-marcas.md) | [FLOW-011](../../flujos/FLOW-011-gestion-marcas.md) |
+| 012 | [SPEC-012](../../specs/SPEC-012-seo-metadatos.md) | [HU-012](../../hu/HU-012-seo-metadatos.md) | [WF-012](../../wireframes/flows/WF-012-seo-metadatos.md) | [FLOW-012](../../flujos/FLOW-012-seo-metadatos.md) |
+| 013 | [SPEC-013](../../specs/SPEC-013-gestion-precios-individuales-masivos.md) | [HU-013](../../hu/HU-013-gestion-precios-individuales-masivos.md) | [WF-013](../../wireframes/flows/WF-013-gestion-precios-individuales-masivos.md) | [FLOW-013](../../flujos/FLOW-013-gestion-precios-individuales-masivos.md) |
+| 014 | [SPEC-014](../../specs/SPEC-014-historial-auditoria-precios.md) | [HU-014](../../hu/HU-014-historial-auditoria-precios.md) | [WF-014](../../wireframes/flows/WF-014-historial-auditoria-precios.md) | [FLOW-014](../../flujos/FLOW-014-historial-auditoria-precios.md) |
+| 015 | [SPEC-015](../../specs/SPEC-015-control-stock-disponibilidad.md) | [HU-015](../../hu/HU-015-control-stock-disponibilidad.md) | [WF-015](../../wireframes/flows/WF-015-control-stock-disponibilidad.md) | [FLOW-015](../../flujos/FLOW-015-control-stock-disponibilidad.md) |
+| 016 | [SPEC-016](../../specs/SPEC-016-dashboard-alertas-stock.md) | [HU-016](../../hu/HU-016-dashboard-alertas-stock.md) | [WF-016](../../wireframes/flows/WF-016-dashboard-alertas-stock.md) | [FLOW-016](../../flujos/FLOW-016-dashboard-alertas-stock.md) |
+
+## 8. Evaluación de los borradores sustituidos
+
+| Elemento previo | Resultado | Regla vigente |
+|---|---|---|
+| «Operativo y Denso», «Guiado por Wizards», «Modular con Dashboard/Paneles» como propuestas | Reinterpretar | Patrones posibles dentro de P01–P03; dejan de ser alternativas UX vigentes |
+| Drawer obligatorio para 003/004/008/009/011 y anchos fijos | Modificar | Panel contextual para tarea breve; vista completa para compleja. Dimensiones en #60 |
+| Wizard obligatorio para 001/002/005/006/007/010/012 | Retirar obligatoriedad | Etapas solo con dependencia real; SEO, marca y creación simple de tipo no necesitan pasos artificiales |
+| Densidad, checkboxes y acciones masivas universales | Modificar | Tabla legible; selección/acciones según capacidad funcional. Auditoría y Dashboard en lectura |
+| Skeleton universal y prohibición de spinner | Modificar | Skeleton inicial, feedback localizado y seguimiento persistente según tarea |
+| Toast como canal principal y duración universal | Modificar | Complemento de confirmación simple; errores/resultados parciales junto a la tarea y persistentes |
+| Debounce fijo de 300 ms y validación universal al blur | Modificar | Búsqueda según contrato/coste; validación proporcional al campo e intento de guardar/continuar |
+| Vacíos, conservación del contexto y lenguaje de negocio | Conservar y precisar | Vacío, filtro sin coincidencias, ausencia e indisponibilidad distintos; acciones permitidas |
+| Gris, ausencia de sombras y tamaños de baja fidelidad | Reubicar | Permanecen en wireframes; #60 define alta fidelidad |
+| Accesibilidad y consistencia | Conservar | Etiquetas, teclado, foco y estados comprensibles, sin depender solo de color |
+
+UXD-001 a UXD-006 conservan sus identificadores **con contenido revisado**; se agregan UXD-007 a UXD-012. Una referencia antigua por ID no acredita cumplimiento: se consume esta versión.
+
+## 9. Propuesta UX Integral Adoptada
+
+**Operar con estado verificable, complejidad pertinente y recuperación segura.**
+
+La pantalla conserva el contexto y presenta primero la decisión necesaria. Cada acción comunica feedback en su alcance. Lo aceptado permanece pendiente hasta confirmación. Ante fallos locales, lo confirmado sigue visible y la recuperación respeta el contrato. No se habilitan cambios cuya seguridad depende de información faltante.
+
+La cadena es **fuente → problema → propuesta → UXD → UXG → estado/pantalla de MK**. [UX Decisions](ux-decisions.md) justifica los patrones; [UX Guidelines](ux-guidelines.md) define su verificación. Una excepción local se registra como `LUX-XX`, sin alterar negocio ni introducir una UX transversal alternativa.
+
+## 10. Hallazgos de fuentes y límites
+
+No dejan pendiente la selección UX. Requieren alineación funcional/contractual antes de aprobar los estados afectados; un fixture ilustrativo no acredita capacidades del backend.
+
+| Hallazgo | Fuentes / coordinación | Tratamiento y condición del MK |
+|---|---|---|
+| Preparación no descrita completamente | SPEC-003/004 y `ProductoResumen`/`Variante`; Poma + Taco/integración | Booleanos opcionales no distinguen pendiente/rechazo/causa; Variante no publica detalle equivalente. No inventar estados ni reintento de inicialización; identificar fuente antes de especificarlos |
+| Pantalla de prevalidación no equivale a endpoint | WF-001 y rutas de importación; Castilla + integración | Validar formato local no acredita validación completa de negocio previa. No inventar `/prevalidar` para Catálogo; Pricing sí tiene prevalidación propia |
+| FLOW-007 ausente y cobertura administrativa limitada en 006 | SPEC/HU/WF-007 y WF/FLOW-006; Cueva | Trazar configuración a SPEC/HU y completar navegación local; no incorporar checkout como formulario administrativo |
+| Diagrama de baja de tipo ambiguo | FLOW-010 §4.5 frente a texto y SPEC/HU-010; Lopez | Exigir comprobación satisfactoria. Rechazo/sin respuesta no termina en baja confirmada; alinear el recorrido antes de aprobar ese estado |
+| Dashboard sin todos los saldos requeridos | SPEC/HU/WF-016 frente a `DashboardInventario`; Taco + integración | No declara total bloqueado ni bloqueado por ubicación. No reemplazar por cero ni derivar de otros totales; acordar fuente antes de aprobar tarjetas numéricas |
+| Decisiones de HTTP 0.5.0 abiertas | Extensiones de SPEC-003/007/015, Contrato API y kit: D-CAT-01 a 06, D-REC-01/02 y D-INV-01; owners + integración | No decidir elegibilidad comercial, agregación de precio/disponibilidad con variantes, selección de variante ni agregado público multiubicación por UX; mantener detalle de backoffice y reconocer ausencia |
+
+El owner registra fuente, responsable y estado afectado. La aprobación de ese estado espera la alineación; estos documentos no modifican SPEC ni API para satisfacer preferencias de interfaz.
+
+## 11. Validación y habilitación
+
+El análisis confirma **UX-P01, UX-P02 y UX-P03 finales**, con los límites descritos. Los patrones previos fueron reevaluados; no quedan decisiones UX transversales por seleccionar.
+
+- [x] Análisis de las 16 funcionalidades y matriz.
+- [x] Problemas distintos, fundamento y evidencia transversal.
+- [x] Usos, no usos, ejemplos, ventajas y riesgos por propuesta.
+- [x] Sustitución de borradores y coherencia propuesta → decisiones → reglas.
+- [x] Reglas UX compatibles con requisitos y capacidades publicadas; diferencias de fuentes registradas sin inventar soluciones.
+- [x] Capa UX consolidada para documentación funcional.
+- [ ] Alineación de los hallazgos funcionales/contractuales que afectan estados exigidos, antes de declarar cumplido el gate formal.
+
+**Gate UX de #59:** las propuestas, decisiones y reglas están consolidadas en `vera`, pero la habilitación formal queda pendiente de alinear los hallazgos de fuentes y revisar/integrar el cambio. En particular, no se declara ausencia de contradicciones mientras el recorrido de FLOW-010 siga siendo ambiguo o falten datos contractuales para estados exigidos de MK-016. No hay otra propuesta UX por seleccionar. Esto no declara completado #60 ni aprobado un mockup, y tampoco cambia el estado del issue en GitHub.
+
+Una vez alineadas las fuentes, cumplido el gate y adoptado el cambio en la base compartida, cada owner queda habilitado para iniciar **`component-spec.md` → `plan.md` → `tasks.md`**, consumiendo SPEC, HU, WF, FLOW disponible, contratos, Design System y estos tres documentos. La habilitación compartida de #66 requiere además consolidar #60 e integrar las fuentes en `master`. Leonardo Vera no asume los documentos funcionales de otros owners.
+
+La validación posterior requiere evidencia de los estados aplicables: carga/actualización, error corregible, fallo parcial, aceptación sin confirmación, conflictos y teclado. Una futura prueba con usuarios puede medir comprensión y recuperación; aquí no se atribuyen mejoras empíricas no medidas.
+
+## 12. Referencias de apoyo
+
+- [Nielsen Norman Group — 10 Usability Heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/).
+- [Nielsen Norman Group — Progressive Disclosure](https://www.nngroup.com/articles/progressive-disclosure/).
+- [Nielsen Norman Group — Error Message Guidelines](https://www.nngroup.com/articles/error-message-guidelines/).
+- [W3C — Understanding Status Messages, WCAG 2.2](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html).
+- [build-for-good-ux-skill](https://github.com/alper-dev/build-for-good-ux-skill): recopilación secundaria práctica; no sustituye fuentes funcionales ni se incorpora como instrucciones del módulo.

@@ -1,139 +1,195 @@
 # UX Decisions — Productos y Ofertas
 
-> Registro transversal de decisiones UX justificadas para el módulo Productos y Ofertas.
-> Derivadas directamente de la Propuesta UX Integral Adoptada (`mockups/ux/propuesta-ux.md`).
+**Versión:** 2.0 · **Fecha:** 2026-10-02 · **Responsable:** Leonardo Vera Rodríguez.
+**Estado:** decisiones consolidadas mediante revisión documental de #59; sustituyen íntegramente el borrador.
 
-## 1. Reglas de Gobernanza
+## 1. Uso y trazabilidad
 
-Una decisión se documenta bajo el identificador `UXD-XXX` cuando:
-- Afecta a dos o más funcionalidades del módulo.
-- Define un patrón recurrente de interacción, navegación o feedback.
-- Resuelve un trade-off fundamentado entre alternativas viables.
-- Proporciona el sustento metodológico y técnico que respalda las normas de `mockups/ux/ux-guidelines.md`.
+Estas decisiones concretan la [Propuesta UX Integral Adoptada](propuesta-ux.md#9-propuesta-ux-integral-adoptada). Las [UX Guidelines](ux-guidelines.md) contienen las verificaciones operativas. El [registro de fuentes por funcionalidad](propuesta-ux.md#7-trazabilidad-de-las-16-funcionalidades) identifica SPEC, HU, WF y FLOW; los contratos son [OpenAPI](../../api/openapi.yaml) y [AsyncAPI](../../asyncapi/asyncapi.yaml).
 
----
+Los identificadores 001–006 se mantienen con contenido revisado, sin conservar su obligatoriedad anterior. Los nuevos 007–012 cubren estados, recuperación y accesibilidad. Son decisiones de interacción: el #60 debe definir sus componentes y variantes visuales. No fijan tokens, anchuras, duraciones ni presupuestos de latencia.
 
-## 2. Índice de Decisiones Transversales
+| Decisión | Propuesta de origen | Reglas operativas |
+|---|---|---|
+| UXD-001 Contexto y navegación | P02, P03 | UXG-001, UXG-002 |
+| UXD-002 Complejidad pertinente | P02 | UXG-003, UXG-004 |
+| UXD-003 Tablas y acciones | P02 | UXG-005 |
+| UXD-004 Carga contextual | P01 | UXG-007, UXG-008 |
+| UXD-005 Feedback situado | P03 | UXG-011 |
+| UXD-006 Búsqueda y validación | P02 | UXG-006 |
+| UXD-007 Aceptación y confirmación | P01, P03 | UXG-009, UXG-010 |
+| UXD-008 Estados parciales | P01, P03 | UXG-012 |
+| UXD-009 Recuperación válida | P03 | UXG-013, UXG-014, UXG-015, UXG-016 |
+| UXD-010 Semántica de ausencia | P03 | UXG-017 |
+| UXD-011 Acciones críticas | P03 | UXG-018, UXG-019 |
+| UXD-012 Comprensión y accesibilidad | P01, P02, P03 | UXG-020, UXG-021, UXG-022 |
 
-| ID | Decisión | Estado | Funcionalidades Afectadas |
-|---|---|---|---|
-| UXD-001 | Patrón de catálogo con panel lateral de detalle/edición contextual (Drawer) | Aprobado | MK-003, MK-004, MK-008, MK-009, MK-011 |
-| UXD-002 | Vistas guiadas secuenciales (Wizards) para configuración de entidades complejas | Aprobado | MK-001, MK-002, MK-005, MK-006, MK-007, MK-010, MK-012 |
-| UXD-003 | Grids de alta densidad con edición en lote y controles fijos de acción | Aprobado | MK-001, MK-013, MK-014, MK-015, MK-016 |
-| UXD-004 | Patrones de feedback de carga y estados vacíos formativos (Skeleton Loading & Empty States) | Aprobado | Transversal a los 16 MKs |
-| UXD-005 | Notificaciones de respuesta del sistema y confirmación no intrusiva (Toast Feedback) | Aprobado | Transversal a los 16 MKs |
-| UXD-006 | Mecanismos de interacción en formularios: Debounce en búsqueda y validación en evento Blur | Aprobado | Transversal a los 16 MKs |
+<a id="uxd-001"></a>
+## UXD-001 — Conservar contexto y elegir contenedor según la tarea
 
----
+**Problema y evidencia:** navegación desde listados de productos, variantes y maestros, historial de precios y detalle de stock puede perder filtros o trabajo en curso (WF-003/004/008–016).
 
-# UXD-001 — Catálogo con Panel Lateral Contextual (Drawer)
+**Decisión:** conservar filtros, paginación, ubicación y selección válida al consultar un detalle y volver. Un panel/drawer puede servir para detalle o edición breve; una vista completa es adecuada para configuración extensa, etapas o contenido que necesita espacio. Registrar la elección en el component-spec según WF/FLOW.
 
-## Problema
-La navegación hacia pantallas dedicadas completas para tareas rápidas de inspección o edición menor provoca desorientación en el Gestor Comercial, pérdida de la posición en listas paginadas y pérdida de contexto del catálogo.
+**Alternativas y motivo:** mantener el drawer obligatorio del borrador ahorra navegación, pero limita tareas complejas. Navegar siempre a una página completa pierde eficiencia en consultas breves. Se adopta una elección contextual y se conserva el estado en ambos casos.
 
-## Alternativas Consideradas
-- **A — Pantalla completa separada para cada detalle/edición:** Requiere recarga completa de contexto y desorienta en exploraciones sucesivas.
-- **B — Modal flotante central:** Bloquea totalmente la visualización de la lista de productos y satura visualmente con formularios medianos.
-- **C (Seleccionada) — Panel lateral deslizable (Drawer ancho estándar 480 px - extendido 640 px):** Permite inspeccionar o modificar la entidad manteniendo visible el registro seleccionado en la tabla principal. Se adoptan 480 px para formularios simples de una columna y 640 px cuando se integran subtablas o múltiples atributos como compromiso operativo inicial de dimensionamiento, sujeto a validación ergonómica en el prototipo interactivo.
+**Límites y trade-offs:** cerrar un panel no guarda automáticamente ni confirma una operación; si hay cambios sin guardar se permite continuar o descartar expresamente. Un panel largo no debe exigir desplazamientos confusos ni esconder errores. No se fijan aquí anchos.
 
-## Justificación y Trade-offs
-Alineada con la Propuesta UX Integral. Maximiza la agilidad del Gestor Comercial sin pérdida de contexto. Trade-off: Requiere restringir la disposición de campos en el panel a layouts verticales limpios.
+**Verificación:** abrir/cerrar detalle de Auditoría conserva filtros; volver a stock conserva SKU/ubicación; salir de un formulario modificado no destruye entradas sin aviso.
 
-## Criterios de Validación
-- El Gestor Comercial puede abrir y cerrar detalles con tecla `Escape` o botón de cierre.
-- La fila seleccionada en el catálogo permanece destacada mientras el panel esté activo.
+<a id="uxd-002"></a>
+## UXD-002 — Revelar complejidad según tipo, alcance y dependencia
 
----
+**Problema y evidencia:** combos, productos, cupones, promociones, recomendaciones, características, asociaciones y precios tienen configuraciones condicionales (SPEC/HU/WF-002/003/005–010/013).
 
-# UXD-002 — Flujos Secuenciales Guiados (Wizards) para Entidades Complejas
+**Decisión:** agrupar campos por decisión de negocio y revelar los relevantes. Usar etapas solo cuando ayudan a resolver dependencias reales y el flujo las soporta. Los requisitos para guardar un borrador y activar se presentan por separado. Los errores abren sus secciones.
 
-## Problema
-Formularios extensos monolíticos (como creación de combos en MK-002, cupones en MK-005, promociones en MK-006 o reglas de venta cruzada en MK-007) presentan altas tasas de error por abandono, fatiga y validaciones tardías acumuladas.
+**Alternativas y motivo:** todos los campos visibles aumenta carga; wizard universal añade pasos a tareas simples. Se adopta revelación contextual con revisión de lo configurado, conservando formularios directos para marca, SEO y creación simple de tipo.
 
-## Alternativas Consideradas
-- **A — Formulario monolítico largo en una sola página:** Provoca fatiga visual y validaciones acumuladas al final.
-- **B — Pestañas libres no secuenciales:** Permite guardar entidades en estados incompletos o inconsistentes.
-- **C (Seleccionada) — Proceso guiado paso a paso con stepper superior y resumen final:** Pasos atómicos con validación obligatoria para avanzar y vista previa de confirmación.
+**Límites y trade-offs:** cambiar contexto no oculta requisitos ni descarta datos silenciosamente. El criterio de superioridad en upselling no se infiere del precio. «Sin límite» de cupón es una decisión explícita cuando el límite es opcional. Configurar tipo/atributos no corresponde a la categoría.
 
-## Justificación y Trade-offs
-Reduce drásticamente errores humanos en la fijación de reglas comerciales críticas. Trade-off: Mayor número de clics totales, justificado por la alta criticidad del impacto comercial.
+**Verificación:** cambiar TEXTO/NUMERO/LISTA muestra los campos correctos en creación y no habilita cambio de tipo en edición; guardar borrador de producto no exige imágenes o requisitos de activación indebidamente; resumen de promoción identifica modalidad y alcance.
 
-## Criterios de Validación
-- Cada paso valida sus datos antes de habilitar el botón "Siguiente".
-- Existe un paso final de revisión consolidada antes de la confirmación definitiva.
+<a id="uxd-003"></a>
+## UXD-003 — Tablas legibles y acciones respaldadas por la funcionalidad
 
----
+**Problema y evidencia:** lotes, precios, auditoría, stock y Dashboard necesitan comparación de información, pero no tienen los mismos permisos ni operaciones (WF-001/013–016).
 
-# UXD-003 — Grids de Alta Densidad con Acciones por Lote
+**Decisión:** mantener identificación de negocio, encabezados comprensibles, unidades, estados y detalle consultable. Alinear números y permitir recorrer resultados. Selección múltiple, toolbar o acciones masivas existen solo cuando hay una operación funcional/contractual correspondiente.
 
-## Problema
-La administración masiva de stock (MK-015), precios (MK-013), auditoría (MK-014), carga de productos (MK-001) y la gestión de alertas en el dashboard (MK-016) requieren visualizar múltiples atributos simultáneos sin excesivo scroll vertical ni páginas excesivamente cortas.
+**Alternativas y motivo:** la tabla densa con selección universal mezcla consulta con mutación. Se conserva la comparación tabular sin imponer densidad ni inventar acciones. Auditoría y Dashboard permanecen en solo lectura; enlaces a otras funcionalidades no convierten esas pantallas en editor.
 
-## Alternativas Consideradas
-- **A — Tarjetas visuales (Cards):** Muy poco densas, ineficientes para comparar inventarios y precios.
-- **B (Seleccionada) — Tabla densa con cabecera fija (Sticky Header), paginación y barra flotante de lote:** Permite ordenar, filtrar y ejecutar cambios sobre N elementos seleccionados simultáneamente.
+**Límites y trade-offs:** una API de importación no equivale a «editar todas las filas seleccionadas». No añadir borrar, revertir o editar auditoría. El SKU identifica el ítem vendible; no atribuir saldo al padre con variantes.
 
-## Justificación y Trade-offs
-Maximiza la productividad del Gestor Comercial en tareas analíticas y masivas. Trade-off: Exige tipografía compacta y gestión rigurosa de anchos de columna para evitar overflow horizontal en el viewport canónico de 1440 px.
+**Verificación:** MK-014/016 no presentan toolbar de mutación; una tabla distingue null, cero y dato indisponible; cada acción del listado puede trazarse a su operación admitida.
 
-## Criterios de Validación
-- La cabecera permanece fija durante el desplazamiento vertical.
-- Al seleccionar una o más filas, emerge una barra contextual con acciones por lote disponibles.
+<a id="uxd-004"></a>
+## UXD-004 — Ajustar la carga al alcance de la operación
 
----
+**Problema y evidencia:** lectura inicial, guardados breves, preparación y lotes requieren feedback diferente (WF-001/003/004/013–016).
 
-# UXD-004 — Skeleton Loading y Empty States Formativos
+**Decisión:** skeleton para estructura conocida aún sin datos; indicador localizado para una acción; datos previos visibles al refrescar cuando sea seguro y señalando actualización. Procesos duraderos usan seguimiento persistente, sin depender de un spinner. Progreso numérico solo con medición real; de otro modo texto/etapas verificables.
 
-## Problema
-El uso de spinners genéricos o pantallas en blanco durante la carga de catálogos genera sensación de congelamiento y salto de contenido (layout shifts). Asimismo, listados vacíos sin orientación causan incertidumbre sobre si falló el sistema o no existen datos.
+**Alternativas y motivo:** prohibir todos los spinners no aporta claridad; loader global para cualquier acción borra contexto. Se adopta feedback proporcional sin esperas artificiales.
 
-## Alternativas Consideradas
-- **A — Spinners circulares centrados:** No proporcionan estructura previa y provocan saltos visuales al renderizar la tabla o grid.
-- **B (Seleccionada) — Skeletons que replican la estructura y Empty States accionables:** Los placeholders esqueletales mantienen estable el layout mientras se obtienen datos. Los estados vacíos indican claramente la causa y ofrecen la acción correctiva primaria ("Limpiar filtros", "Crear nuevo").
+**Límites y trade-offs:** skeleton no informa finalización de un comando; NFR o tiempo transcurrido no acreditan porcentaje ni éxito. Bloquear únicamente acciones incompatibles con el estado, sin impedir consultar contenido independiente.
 
-## Justificación y Trade-offs
-Proporciona una percepción de rapidez y estabilidad visual superior. Reduce la ansiedad del usuario durante operaciones de red.
+**Verificación:** refrescar una sección no vacía las demás; guardar no reinicia la página; un lote sin contador suficiente no muestra una barra ficticia.
 
-## Criterios de Validación
-- Durante la carga, los esqueletos ocupan las dimensiones exactas de las tablas o formularios esperados.
-- Ningún listado vacío muestra únicamente un área en blanco.
+<a id="uxd-005"></a>
+## UXD-005 — Situar el feedback donde se resuelve la tarea
 
----
+**Problema y evidencia:** validación de formularios, conflicto de slug, resultados de importación y recepción requieren mensajes recuperables (WF-001/008/012/013/015).
 
-# UXD-005 — Notificaciones No Intrusivas (Toasts) para Feedback del Sistema
+**Decisión:** error de campo junto al campo; error de sección junto a su contenido; resultado parcial o crítico en bloque persistente. Un toast puede complementar una confirmación simple, pero no ser la única evidencia de un fallo o trabajo asíncrono. Mensaje: qué ocurrió, qué se conservó y qué acción está disponible.
 
-## Problema
-El uso de diálogos modulares intrusivos (alertas modales) para confirmar operaciones habituales (como guardar un borrador, actualizar un precio o asociar una categoría) interrumpe innecesariamente el ritmo de trabajo del Gestor Comercial.
+**Alternativas y motivo:** toast universal es fácil de perder y aleja la corrección del problema. Un banner global para todo no identifica el campo. Se combinan canales según alcance y relevancia.
 
-## Alternativas Consideradas
-- **A — Modales de confirmación de éxito:** Obligan a hacer clic en "Aceptar" para continuar trabajando.
-- **B — Mensajes de texto estáticos en cabecera:** Pasan desapercibidos tras hacer scroll.
-- **C (Seleccionada) — Toasts flotantes transitorios (duración aproximada 4 a 5 segundos con botón de cierre):** Se muestran en la esquina superior/inferior derecha informando el resultado sin bloquear la interacción con la pantalla. El intervalo de 4 a 5 segundos se establece como compromiso operativo sujeto a validación de legibilidad durante el prototipado.
+**Límites y trade-offs:** no duplicar mensajes que saturan la pantalla ni revelar detalles internos innecesarios. La confirmación no dice «Guardado» si solo hubo admisión. No imponer duración universal del toast.
 
-## Justificación y Trade-offs
-Garantiza confirmación inmediata sin interrumpir el flujo operativo del usuario.
+**Verificación:** el usuario puede localizar el error tras desaparecer una notificación; «Borrador guardado; preparación incompleta» distingue el resultado confirmado del pendiente.
 
-## Criterios de Validación
-- Los toasts de éxito desaparecen automáticamente tras el intervalo establecido.
-- Los toasts de error no se autocierran hasta que el usuario los descarte o resuelva la acción.
+<a id="uxd-006"></a>
+## UXD-006 — Búsqueda y validación proporcionales a la acción
 
----
+**Problema y evidencia:** maestros, productos y auditoría tienen búsquedas/filtros diferentes; SEO distingue avisos de errores (WF-003/008–014).
 
-# UXD-006 — Optimización de Entrada: Debounce en Búsqueda y Validación en Blur
+**Decisión:** búsqueda incremental solo cuando contrato y coste lo permiten, evitando aplicar respuestas antiguas sobre filtros nuevos. Rangos y conjuntos de filtros pueden tener «Aplicar filtros». Validar en el momento útil: formato tras interacción y requisitos al guardar/continuar; mostrar causa y corrección. No bloquear por reglas inexistentes.
 
-## Problema
-Disparar búsquedas con cada pulsación de tecla satura la interfaz con re-renders y peticiones prematuras. Por otro lado, validar formularios en cada tecla mientras el usuario escribe genera frustración por errores prematuros (ej. "correo incompleto" mientras aún se está digitando).
+**Alternativas y motivo:** debounce universal de 300 ms y validación exclusiva al blur no sirven para todas las consultas ni formularios. Una deshabilitación sin motivo tampoco explica requisitos. Se adopta validación contextual.
 
-## Alternativas Consideradas
-- **A — Búsqueda únicamente al presionar Enter:** Fricción innecesaria en la exploración de catálogos.
-- **B — Validación onChange en formularios:** Mensajes de error prematuros y molestos.
-- **C (Seleccionada) — Debounce controlado en búsqueda y validación en onBlur en formularios:**
-  - Se adopta 300 ms como compromiso operativo entre reactividad percibida y reducción de ejecuciones innecesarias; el valor podrá ajustarse durante la validación del prototipo si se detecta latencia o activación excesiva.
-  - La validación al desenfocar el campo (onBlur) permite al usuario completar su entrada sin interrupciones y solo reporta inconsistencias una vez terminada la edición del campo.
+**Límites y trade-offs:** botones deshabilitados requieren explicación visible y accesible; se permite intentar guardar para revelar errores cuando corresponde. SEO mayor de 70/160 caracteres genera aviso, no bloqueo. No aplicar filtros no soportados a exportación de catálogo.
 
-## Justificación y Trade-offs
-Aumenta la fluidez y reduce la fatiga visual en la captura y consulta de datos.
+**Verificación:** una respuesta tardía no cambia el resultado de una búsqueda nueva; aviso de longitud SEO permite guardar; errores aparecen al intentar continuar sin borrar valores.
 
-## Criterios de Validación
-- La búsqueda en tablas y catálogos espera 300 ms de inactividad antes de procesar el filtro.
-- Los mensajes de validación de campo aparecen al abandonar el control o al intentar avanzar al siguiente paso del formulario.
+<a id="uxd-007"></a>
+## UXD-007 — Distinguir admisión, procesamiento y resultado confirmado
+
+**Problema y evidencia:** `202 Accepted` en importaciones/exportaciones y comandos no equivale a negocio completado; las bajas de maestros necesitan comprobación (SPEC/WF-001/008–011/013–015 y contratos).
+
+**Decisión:** presentar «Solicitud recibida», estado conocido de procesamiento y resultado terminal cuando exista confirmación. Guardar referencia de trabajo para consulta cuando el contrato la entregue. Si no se puede confirmar resultado, decirlo y no reenviar automáticamente.
+
+**Alternativas y motivo:** éxito inmediato simplifica la UI pero contradice procesos asíncronos. Espera sin referencia impide retomarlos. Se adopta seguimiento de la operación específica.
+
+**Límites y trade-offs:** no todas las acciones son asíncronas: crear/editar/reactivar marca y la baja de característica completa no heredan el flujo de comprobación de sus casos especiales; recepción de transferencia tiene respuesta `200` que confirma aplicación. No inventar un endpoint común de estado ni suscripción de navegador a eventos internos.
+
+**Verificación:** CSV y PDF de Auditoría muestran generación pendiente después de admisión; comprobación rechazada o sin respuesta nunca termina en baja exitosa; solo la consulta terminal habilita descarga.
+
+<a id="uxd-008"></a>
+## UXD-008 — Mantener resultados parciales y antigüedad identificables
+
+**Problema y evidencia:** lote por dominios, preparación independiente y proyecciones de stock pueden tener éxito parcial (SPEC-001/003/015/016).
+
+**Decisión:** preservar lo confirmado, aislar fallo por fila/dominio/sección y distinguir última información conocida de información actual. Usar fecha de generación/actualización solo si está disponible. Un Dashboard puede degradar por sección si la fuente permite consultas independientes; una respuesta global fallida no acredita datos nuevos de ninguna sección.
+
+**Alternativas y motivo:** error global desperdicia información válida; aparentar éxito completo oculta pendientes. Se adopta resultado mixto explícito y persistente.
+
+**Límites y trade-offs:** no simular transacciones distribuidas ni rollback global; no conservar información vieja como saldo actual. En Dashboard no inventar bloqueados que el esquema no publica. Los booleanos de preparación de producto no acreditan causa ni estados de variante.
+
+**Verificación:** importación identifica dominios aplicados y reconciliación según reporte; la última consulta visible se marca si falla actualización; una tarjeta sin fuente muestra indisponibilidad, no cero.
+
+<a id="uxd-009"></a>
+## UXD-009 — Recuperar según capacidad, versión e identidad de operación
+
+**Problema y evidencia:** reanudación de lote, conflicto de precio y slug, límites de exportación y recepción parcial tienen soluciones distintas (SPEC/WF-001/008/012–015 y contratos).
+
+**Decisión:** recuperar de forma localizada, conservar entradas y consultar primero cuando el resultado de una escritura sea desconocido. Utilizar identidad/idempotencia y versiones exigidas por el contrato; la UI no altera esos valores para vencer un conflicto.
+
+**Alternativas y motivo:** «Reintentar» universal puede duplicar efectos o repetir un error determinista. Se adopta una acción específica:
+- MK-001: reanudar el mismo lote, solo pendientes/reconciliación según operación publicada.
+- MK-013: corregir e importar un nuevo intento; no existe reanudación equivalente de Pricing. Conflicto de versión exige releer, revisar diferencias y confirmar intención.
+- MK-008: volver a resolver slug, mostrar propuesta y confirmar; la propuesta anterior no reservó el nombre.
+- MK-012: corregir slug manual rechazado, sin sufijarlo automáticamente.
+- MK-014: reducir rango/filtros; cambiar a CSV solo si está dentro del límite CSV.
+- MK-015: comprobar resultado previo antes de reenviar recepción y respetar la identidad del contrato.
+
+**Límites y trade-offs:** reintento técnico no equivale a una nueva intención del usuario. `priceVersion` de lectura se usa en edición PATCH; programación futura tiene su contrato propio, sin exigirle ese campo por analogía. No ofrecer reintento de inicialización sin operación publicada.
+
+**Verificación:** conflicto conserva valores propuestos y permite revisión; reanudación de carga no duplica lo confirmado; timeout de recepción no añade un segundo ingreso.
+
+<a id="uxd-010"></a>
+## UXD-010 — Diferenciar vacío, ausencia, cero e indisponibilidad
+
+**Problema y evidencia:** auditoría, filtros y stock requieren interpretar cantidades y null correctamente (SPEC/WF-014–016 y esquemas).
+
+**Decisión:** distinguir «Sin registros», «Sin coincidencias con estos filtros», «No disponible» y cero confirmado. Null se explica según campo: «Sin precio anterior», «Sin oferta» o «No aplicable». Acción del vacío solo si la funcionalidad la permite.
+
+**Alternativas y motivo:** guion universal es ambiguo; cero para errores falsifica información. Se adoptan etiquetas contextuales sin exigir ilustración decorativa.
+
+**Límites y trade-offs:** no inventar moneda, saldo, timestamp o inicialización. Sin resultado conocido no se dice «Sin stock». La auditoría vacía no ofrece «Crear registro».
+
+**Verificación:** fallar consulta no modifica cifras a cero; retiro de oferta se lee «Sin oferta»; filtros vacíos pueden restablecerse sin perder contexto.
+
+<a id="uxd-011"></a>
+## UXD-011 — Confirmar impacto crítico y respetar bloqueos de seguridad
+
+**Problema y evidencia:** activación/baja, cambios de precio y recepción final pueden tener efectos relevantes (SPEC/HU/WF-003/008–011/013/015).
+
+**Decisión:** explicar entidad, alcance y consecuencia antes de acciones que necesiten confirmación según flujo. Confirmación no sustituye precondiciones. La interfaz conserva el estado funcional confirmado hasta recibir resultado definitivo; un estado pendiente se presenta separado.
+
+**Alternativas y motivo:** confirmar todos los clics genera fatiga; omitir impacto crítico favorece errores. Se adopta confirmación proporcional basada en el flujo, sin un modal universal.
+
+**Límites y trade-offs:** comprobación de uso fallida/inconclusa no habilita baja; no crear cuenta regresiva que autorice al vencer. Recibir parcialmente no cierra por sí solo; recepción final identifica faltantes que no se acreditarán. No inventar botón de recepción cero si el contrato exige cantidad positiva.
+
+**Verificación:** confirmación final de transferencia distingue recibido/faltante; combo no se activa sin componentes elegibles; baja rechazada mantiene estado coherente y explicación.
+
+<a id="uxd-012"></a>
+## UXD-012 — Lenguaje de negocio, teclado y mensajes accesibles
+
+**Problema y evidencia:** las 16 funcionalidades necesitan interpretar estados y corregir tareas sin depender de detalles técnicos o de la percepción del color.
+
+**Decisión:** usar nombres, SKU y ubicaciones como identificadores útiles; conservar referencias técnicas solo en detalle de seguimiento cuando ayudan a soporte. Etiquetar controles, presentar estado en texto, mantener foco visible y recorrido de teclado. Anunciar mensajes de estado sin tomar foco innecesariamente; llevar el foco a errores o confirmar su ubicación cuando resulte necesario.
+
+**Alternativas y motivo:** etiquetas como `schema_version` o códigos internos como mensaje principal obligan a interpretar implementación; el color/toast por sí solo no comunica de forma suficiente. Se adopta vocabulario consistente y señalización accesible.
+
+**Límites y trade-offs:** no renombrar estados con pérdida de significado, inventar roles ni prometer accesibilidad certificada sin evaluación. Formularios, paneles y diálogos deben usar los componentes/variantes que defina #60.
+
+**Verificación:** completar tarea con teclado, volver al activador al cerrar diálogo/panel, reconocer error sin color, asociar mensaje al campo y anunciar estado de actualización. Referencia: [W3C — Status Messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html).
+
+## 2. Aplicación y cambios posteriores
+
+Cada owner registra UXD/UXG aplicables, fuentes y fixtures en su component-spec; justifica elección de panel, pasos o detalle como `LUX-XX`. Ningún ID convierte el patrón en obligatorio fuera de sus condiciones.
+
+Los [hallazgos de fuentes](propuesta-ux.md#10-hallazgos-de-fuentes-y-límites) impiden aprobar los estados afectados hasta alineación. No dejan pendiente otra propuesta transversal ni se resuelven con fixtures inventados.
+
+Una nueva regla transversal debe actualizar propuesta, decisión y guideline de forma coherente. El #60 debe mapear componentes a estos comportamientos; no cambiar requisitos de interacción por conveniencia de una librería. El resultado y condiciones de habilitación están en la [validación del #59](propuesta-ux.md#11-validación-y-habilitación).

@@ -287,8 +287,8 @@ La evolución hacia mockups de alta fidelidad se rige de forma estricta por la g
 [`mockups/`](mockups/)
 
 Este pipeline no mezcla las reglas visuales de los wireframes con las decisiones de alta fidelidad. Se fundamenta en:
-- [`mockups/ux/propuesta-ux.md`](mockups/ux/propuesta-ux.md): Las 3 propuestas UX preservadas como evidencia académica y la Propuesta UX Integral Adoptada para el Gestor Comercial.
-- [`mockups/ux/ux-decisions.md`](mockups/ux/ux-decisions.md): Decisiones transversales justificadas (`UXD-001` a `UXD-006`).
+- [`mockups/ux/propuesta-ux.md`](mockups/ux/propuesta-ux.md): Las 3 propuestas UX finales de #59, matriz de las 16 funcionalidades, evaluación de los borradores y Propuesta UX Integral Adoptada para el Gestor Comercial.
+- [`mockups/ux/ux-decisions.md`](mockups/ux/ux-decisions.md): Decisiones transversales justificadas (`UXD-001` a `UXD-012`).
 - [`mockups/ux/ux-guidelines.md`](mockups/ux/ux-guidelines.md): Reglas normativas operativas y accesibilidad en PC Desktop (viewport canónico de 1440 px).
 - [`mockups/prototipo/`](mockups/prototipo/): Código interactivo normalizado de prototipado (bajo `src/pantallas/MKXXX`).
 
