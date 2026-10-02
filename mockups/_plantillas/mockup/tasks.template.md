@@ -50,7 +50,7 @@ Estados: `TODO`, `DOING`, `BLOCKED`, `REVIEW`, `DONE`.
 - [ ] **MK-XXX-T55 — P0:** Eliminar términos técnicos indebidos.
 - [ ] **MK-XXX-T56 — P0:** Revisar semántica y accesibilidad.
 
-## 6. Validación
+## 6. Autovalidación local
 
 - [ ] **MK-XXX-T60 — P0:** Validar SPEC.
 - [ ] **MK-XXX-T61 — P0:** Validar HU.
@@ -61,13 +61,20 @@ Estados: `TODO`, `DOING`, `BLOCKED`, `REVIEW`, `DONE`.
 - [ ] **MK-XXX-T66 — P0:** Validar decisiones LUX locales.
 - [ ] **MK-XXX-T67 — P0:** Validar Design System.
 - [ ] **MK-XXX-T68 — P0:** Validar PC en viewport canónico de 1440 px.
-- [ ] **MK-XXX-T69 — P0:** Completar Validation Report.
+- [ ] **MK-XXX-T69 — P0:** Registrar evidencias y hallazgos de autovalidación local.
 
-## 7. Figma y cierre
+## 7. Revisión transversal y visto bueno
 
-- [ ] **MK-XXX-T70 — P0:** Generar evidencia final.
-- [ ] **MK-XXX-T71 — P0:** Preparar/importar a Figma.
-- [ ] **MK-XXX-T72 — P0:** Verificar fidelidad.
-- [ ] **MK-XXX-T73 — P0:** Registrar enlace.
-- [ ] **MK-XXX-T74 — P0:** Actualizar índice.
-- [ ] **MK-XXX-T75 — P0:** Confirmar cero bloqueantes.
+- [ ] **MK-XXX-T70 — P0:** Confirmar en validation-report.md que la autovalidación local está completa.
+- [ ] **MK-XXX-T71 — P0:** Solicitar revisión transversal a Leonardo Vera Rodríguez.
+- [ ] **MK-XXX-T72 — P0:** Atender todos los hallazgos bloqueantes/importantes indicados en la revisión transversal.
+- [ ] **MK-XXX-T73 — P0:** Obtener visto bueno final de Leonardo Vera Rodríguez.
+- [ ] **MK-XXX-T74 — P0:** Registrar el visto bueno en `validation-report.md`.
+
+## 8. Figma y cierre
+
+- [ ] **MK-XXX-T75 — P0:** Generar evidencia final aprobada.
+- [ ] **MK-XXX-T76 — P0:** Preparar e importar a Figma el diseño aprobado.
+- [ ] **MK-XXX-T77 — P0:** Verificar fidelidad entre código aprobado y Figma.
+- [ ] **MK-XXX-T78 — P0:** Registrar enlace de Figma en la documentación.
+- [ ] **MK-XXX-T79 — P0:** Actualizar índice y confirmar que no existen hallazgos bloqueantes ni importantes requeridos abiertos para el cierre definitivo.
