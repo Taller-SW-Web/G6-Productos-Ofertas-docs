@@ -14,7 +14,7 @@ $$\text{3 propuestas UX del módulo} \longrightarrow \text{comparación y consol
 mockups/
 ├── README.md                                  # Guía del pipeline académico, DoD, DoR y trazabilidad
 ├── ux/                                        # UX transversal a nivel de módulo
-│   ├── propuesta-ux.md                        # 3 propuestas UX preservadas, comparativa y Propuesta UX Integral Adoptada
+│   ├── propuesta-ux.md                        # 3 propuestas finales, matriz de 16 funcionalidades y propuesta integral
 │   ├── ux-decisions.md                        # Decisiones UX justificadas (UXD-XXX)
 │   └── ux-guidelines.md                       # Reglas UX normativas obligatorias
 ├── _plantillas/                               # Plantillas estandarizadas del módulo y funcionalidades
@@ -41,9 +41,11 @@ mockups/
 
 ### Nivel Módulo (Transversal)
 Define lineamientos que aplican obligatoriamente a todas las funcionalidades:
-- **`propuesta-ux.md`**: Integra las 3 propuestas UX originales preservadas como evidencia académica, su comparación transversal con análisis de trade-offs y la **Propuesta UX Integral Adoptada**.
+- **`propuesta-ux.md`**: Documenta las 3 propuestas finales de #59, su matriz de aplicabilidad, evidencia, trade-offs, revisión de los borradores y la **Propuesta UX Integral Adoptada**.
 - **`ux-decisions.md`**: Registro formal de decisiones justificadas (`UXD-XXX`) derivadas de la propuesta integral.
 - **`ux-guidelines.md`**: Reglas normativas operativas derivadas estrictamente de las decisiones en `ux-decisions.md`.
+
+La versión UX 2.0 sustituye los borradores anteriores. El resultado documental, los hallazgos de fuentes y las condiciones de habilitación se registran en [propuesta-ux.md](ux/propuesta-ux.md#11-validación-y-habilitación). La consolidación del Design System corresponde a #60; la habilitación compartida de #66 requiere integrar ambas capas en `master`.
 
 ### Nivel Funcionalidad / Mockup (`MK-XXX`)
 Cada funcionalidad concreta (`MK-001` a `MK-016`) consume la UX del módulo y define:
@@ -157,6 +159,8 @@ Una funcionalidad `MK-XXX` está lista para implementación cuando:
 - [ ] SPEC, HU, WF y Flow correspondientes están identificados y aprobados.
 - [ ] La Propuesta UX Integral del módulo está aprobada y vigente.
 - [ ] Las UX Decisions y UX Guidelines aplicables están consolidadas.
+- [ ] El Design System de mockups de #60 está consolidado y las fuentes transversales están disponibles en la base compartida conforme a #66.
+- [ ] Los hallazgos funcionales/contractuales que afectan las pantallas a implementar están resueltos; no se sustituyen capacidades ausentes por fixtures inventados.
 - [ ] El `component-spec.md` está redactado e inventaría todas las pantallas P0.
 - [ ] El `plan.md` e hitos están definidos.
 - [ ] Las tareas en `tasks.md` son atómicas y ejecutables.

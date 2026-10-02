@@ -1,123 +1,73 @@
-# Propuesta UX del Módulo — [Nombre del Módulo]
+# Propuesta UX transversal — [Módulo]
 
-> Documento único y transversal para todo el módulo.
+> Plantilla para revisiones futuras. La documentación vigente de Productos y Ofertas está en [mockups/ux/propuesta-ux.md](../../ux/propuesta-ux.md); no se reinicia la selección ni se conserva automáticamente el borrador anterior.
 
-## 1. Identificación y Objetivos del Módulo
+**Versión:** [versión] · **Fecha:** [fecha] · **Responsable:** [responsable].
+**Estado y evidencia de validación:** [documental / prueba con usuarios / revisión; indicar qué se realizó realmente].
 
-- **Módulo:** [Nombre del Módulo]
-- **Versión:** [vX.Y]
-- **Responsables:** [Nombres]
-- **Fecha:** [AAAA-MM-DD]
-- **Estado:** En revisión | Aprobado
-- **Actor Principal Canónico:** [Rol canónico, ej. Gestor Comercial]
-- **Alcance de Plataforma:** Web Desktop exclusivamente.
-- **Viewport canónico de generación y revisión:** 1440 px de ancho (utilizado como estándar de verificación, sin implicar un diseño de ancho rígido).
+## 1. Alcance y fuentes
 
-### Objetivo General
-[Definir la experiencia general que debe mantenerse coherente a través de todas las funcionalidades del módulo.]
+[Actor, plataforma y fuentes vigentes: SPEC, HU, WF, FLOW, contratos y Design System. Identificar versiones, faltantes y precedencia. No convertir documentos temporales de operación en reglas permanentes.]
 
----
+## 2. Problemas transversales
 
-## 2. Propuesta UX 1 — [Nombre del Enfoque 1, ej. Operativo / Denso en Datos]
-
-*(Preservada como evidencia académica)*
-
-### Filosofía y Concepto
-[Describir los principios y la postura de diseño de este enfoque.]
-
-### Fortalezas
-- [Fortaleza 1 y funcionalidades donde destaca]
-- [Fortaleza 2]
-
-### Riesgos y Limitaciones
-- [Riesgo 1]
-- [Riesgo 2]
-
----
-
-## 3. Propuesta UX 2 — [Nombre del Enfoque 2, ej. Guiado / Asistido por Pasos]
-
-*(Preservada como evidencia académica)*
-
-### Filosofía y Concepto
-[Describir los principios y la postura de diseño de este enfoque.]
-
-### Fortalezas
-- [Fortaleza 1 y funcionalidades donde destaca]
-- [Fortaleza 2]
-
-### Riesgos y Limitaciones
-- [Riesgo 1]
-- [Riesgo 2]
-
----
-
-## 4. Propuesta UX 3 — [Nombre del Enfoque 3, ej. Modular / Paneles Contextuales]
-
-*(Preservada como evidencia académica)*
-
-### Filosofía y Concepto
-[Describir los principios y la postura de diseño de este enfoque.]
-
-### Fortalezas
-- [Fortaleza 1 y funcionalidades donde destaca]
-- [Fortaleza 2]
-
-### Riesgos y Limitaciones
-- [Riesgo 1]
-- [Riesgo 2]
-
----
-
-## 5. Comparación Transversal de las Propuestas
-
-*(Preservada como evidencia académica)*
-
-### Matriz Comparativa
-| Criterio UX | Propuesta 1 | Propuesta 2 | Propuesta 3 |
+| Problema UX | Fuentes y apartados | Funcionalidades afectadas | Consecuencia para el usuario |
 |---|---|---|---|
-| [Criterio 1: Velocidad en tareas masivas] | [Evaluación] | [Evaluación] | [Evaluación] |
-| [Criterio 2: Prevención de errores] | [Evaluación] | [Evaluación] | [Evaluación] |
-| [Criterio 3: Preservación de contexto] | [Evaluación] | [Evaluación] | [Evaluación] |
-| [Criterio 4: Curva de aprendizaje] | [Evaluación] | [Evaluación] | [Evaluación] |
-| [Criterio 5: Aprovechamiento Desktop (1440 px)]| [Evaluación] | [Evaluación] | [Evaluación] |
+| [Problema] | [Referencias] | [IDs] | [Consecuencia] |
 
-### Análisis de Trade-offs
-[Evaluar qué cubre y qué compromete cada enfoque en relación a las funcionalidades del módulo.]
+## 3. UX-P01 — [Propuesta basada en un problema]
 
----
+- **Problema:** [necesidad observada].
+- **Fundamento:** [principio y fuente primaria; material práctico secundario si corresponde].
+- **Aplicación:** [situaciones y funcionalidades].
+- **No aplicación:** [límites].
+- **Representación:** [ejemplo de interacción/estado].
+- **Ventajas:** [resultado esperado sin atribuir mejora empírica no medida].
+- **Riesgos y trade-offs:** [costes y límites].
+- **Derivación:** [UXD y UXG correspondientes].
 
-## 6. Selección y Combinación Justificada de Elementos
+## 4. UX-P02 — [Propuesta basada en otro problema]
 
-[Explicar cómo converge la arquitectura de experiencia, qué elementos se rescatan de cada propuesta y la justificación técnica de la selección.]
+[Completar los mismos campos de UX-P01; una propuesta no es simplemente otro layout.]
 
-1. **Elemento / Patrón rescatado de Propuesta A:** [Justificación y funcionalidades destino]
-2. **Elemento / Patrón rescatado de Propuesta B:** [Justificación y funcionalidades destino]
-3. **Elemento / Patrón rescatado de Propuesta C:** [Justificación y funcionalidades destino]
+## 5. UX-P03 — [Propuesta basada en otro problema]
 
----
+[Completar los mismos campos de UX-P01.]
 
-## 7. Propuesta UX Integral Adoptada (Definición Oficial Vigente)
+## 6. Matriz de aplicabilidad
 
-### 7.1. Principios Rectores
-1. **[Principio 1]:** [Regla conceptual y aplicación en el módulo]
-2. **[Principio 2]:** [Regla conceptual y aplicación en el módulo]
-3. **[Principio 3]:** [Regla conceptual y aplicación en el módulo]
+Definir Alta, Media y No aplicable antes de evaluar todas las funcionalidades.
 
-### 7.2. Modelo General de Interacción y Navegación
-- **Estructura Desktop:** [Disposición de barras, cabeceras y área principal de 1440 px]
-- **Acciones Primarias:** [Ubicación consistente de botones de acción principal]
-- **Transiciones:** [Uso de drawers, modales o cambios de vista guiados]
+| Funcionalidad | UX-P01 | UX-P02 | UX-P03 | Evidencia y aplicación |
+|---|---|---|---|---|
+| [WF/MK] | [Nivel] | [Nivel] | [Nivel] | [Problema, fuente y límite] |
 
-### 7.3. Jerarquía de Información
-1. **Nivel Primario:** [Datos críticos y estado operativo]
-2. **Nivel Secundario:** [Parámetros comerciales y de soporte]
-3. **Nivel Complementario:** [Metadatos técnicos y auditoría]
+## 7. Trazabilidad
 
-### 7.4. Patrones Transversales
-- **Búsqueda y Filtros:** [Reglas de debounce, filtros facetados y tags activos]
-- **Formularios:** [Distribución de campos, validación en blur y mensajes]
-- **Feedback:** [Skeletons, empty states accionables y toasts]
+[Referencias por funcionalidad a SPEC, HU, WF, FLOW disponible y contratos. Identificar campos/operaciones ausentes; no inventarlos para completar una pantalla.]
 
-### 7.5. Derivación hacia Decisiones y Reglas
-[Explicar cómo esta propuesta integral alimenta formalmente `ux-decisions.md` (UXD-XXX) y consecuentemente `ux-guidelines.md`.]
+## 8. Evaluación de documentación anterior
+
+| Elemento previo | Conservar / reinterpretar / modificar / retirar | Justificación y regla vigente |
+|---|---|---|
+| [Elemento] | [Resultado] | [Evidencia] |
+
+## 9. Propuesta UX Integral Adoptada
+
+[Una sola visión consolidada. Explicar relación problema → propuesta → UXD → UXG → pantalla. Los patrones como drawer, wizard, tabla o toast se eligen por condición, sin obligatoriedad universal.]
+
+## 10. Hallazgos y límites de fuentes
+
+| Diferencia o capacidad ausente | Fuente y responsable | Estado afectado / condición para aprobarlo |
+|---|---|---|
+| [Hallazgo] | [Referencias] | [Tratamiento sin reinterpretar negocio] |
+
+## 11. Validación y habilitación
+
+[Conclusión de selección, coherencia y alcance real de validación. Distinguir gate UX, revisión/integración, Design System y aprobación de mockups. Explicitar dependencias pendientes.]
+
+[Indicar cuándo cada owner puede iniciar component-spec → plan → tasks. No atribuir aprobaciones o pruebas no realizadas.]
+
+## 12. Referencias
+
+[Fuentes primarias de apoyo y referencias secundarias identificadas como tales.]
