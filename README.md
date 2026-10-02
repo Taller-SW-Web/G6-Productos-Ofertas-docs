@@ -66,8 +66,10 @@ flowchart TD
         M --> N{"¿Visto bueno?"}
         N -- "No" --> O["Correcciones del responsable"]
         O --> M
-        N -- "Sí" --> P["Validation Report APROBADO"]
+        N -- "Sí" --> P["APROBADO PARA FIGMA"]
         P --> Q["Figma"]
+        Q --> R["Validación de fidelidad en Figma"]
+        R --> S["Validation Report APROBADO"]
     end
     F --> MK
 ```
@@ -311,8 +313,10 @@ flowchart TD
         M --> N{"¿Visto bueno?"}
         N -- "No" --> O["Correcciones del responsable"]
         O --> M
-        N -- "Sí" --> P["Validation Report APROBADO"]
+        N -- "Sí" --> P["APROBADO PARA FIGMA"]
         P --> Q["Figma"]
+        Q --> R["Validación de fidelidad en Figma"]
+        R --> S["Validation Report APROBADO"]
     end
     F --> MK
 ```
@@ -330,7 +334,7 @@ flowchart TD
 | `vera` | Leonardo Vera Rodríguez | Precios, auditoría de precios y Revisor UX transversal |
 | `taco` | Miguel Ángel Taco Zavala | Inventario, analítica y alertas |
 
-Adicionalmente, Leonardo Vera Rodríguez desempeña el rol transversal de **Revisor UX de mockups**, siendo responsable de auditar la coherencia global del módulo y otorgar el visto bueno obligatorio en `validation-report.md` antes de autorizar el pase a Figma.
+Adicionalmente, Leonardo Vera Rodríguez desempeña el rol transversal de **Revisor UX de mockups**, siendo responsable de auditar la coherencia global del módulo y otorgar el visto bueno obligatorio para autorizar el pase a Figma.
 
 La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`wireframes/INDEX.md`](wireframes/INDEX.md) y [`mockups/README.md`](mockups/README.md).
 

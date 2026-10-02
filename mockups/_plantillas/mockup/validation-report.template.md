@@ -68,12 +68,12 @@
 |---|---|---|---|---|---|---|
 | F-01 | Bloqueante/Importante/Menor | S01 | [Texto] | [Ref] | [Acción] | Abierto/Cerrado |
 
-## 10. Revisión transversal final
+## 10. Revisión transversal previa a Figma
 
 - **Revisor:** Leonardo Vera Rodríguez
 - **Rol:** Revisor UX transversal de mockups
 - **Fecha:** [AAAA-MM-DD]
-- **Resultado:** PENDIENTE | REQUIERE CORRECCIONES | APROBADO
+- **Resultado:** PENDIENTE | REQUIERE CORRECCIONES | APROBADO PARA FIGMA
 
 ### Observaciones del revisor
 
@@ -93,16 +93,23 @@
 - [ ] El mockup respeta el Design System.
 - [ ] El mockup puede pasar a Figma.
 
+Cuando todos los criterios anteriores se cumplen, el resultado de esta sección puede establecerse como **APROBADO PARA FIGMA**.
+
 ## 11. Figma
 
-- [ ] Coincide con versión aprobada.
-- [ ] Incluye todas las pantallas P0.
-- [ ] No se alteró materialmente la composición.
-- [ ] Enlace registrado.
+- [ ] La versión con visto bueno fue reflejada en Figma.
+- [ ] Coincide fielmente con la versión aprobada para Figma.
+- [ ] Incluye todas las pantallas P0 requeridas.
+- [ ] No se alteró materialmente la composición ni la jerarquía.
+- [ ] El enlace de Figma está registrado.
 
 ## 12. Cierre y resultado general
 
-> **Regla obligatoria de aprobación:** `validation-report.md` NO puede tener **Resultado = APROBADO** mientras la **Revisión transversal final** de Leonardo Vera Rodríguez no cuente con resultado **APROBADO** y su visto bueno formal registrado.
+> **Regla obligatoria de aprobación:** `validation-report.md` solo puede tener **Resultado general = APROBADO** cuando:
+> 1. La Revisión transversal previa a Figma de Leonardo Vera Rodríguez tenga resultado **APROBADO PARA FIGMA**.
+> 2. No existan hallazgos bloqueantes ni importantes requeridos abiertos.
+> 3. Todos los criterios de la sección Figma estén completados satisfactoriamente.
+> 4. El enlace de Figma esté registrado.
 
 **Resultado general:** [APROBADO / REQUIERE CORRECCIONES / RECHAZADO]
 
