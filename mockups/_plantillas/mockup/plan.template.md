@@ -52,9 +52,11 @@ La pantalla ancla no crea una UX independiente; aplica la UX global del módulo 
 6. Implementar estados interactivos y accesibilidad.
 7. Realizar autovalidación por el responsable funcional.
 8. Someter a revisión transversal de Leonardo Vera Rodríguez.
-9. Corregir hallazgos detectados (si existen) hasta obtener visto bueno.
-10. Registrar visto bueno formal y dictamen APROBADO en `validation-report.md`.
-11. Reflejar fielmente el diseño aprobado en Figma.
+9. Corregir hallazgos detectados hasta obtener visto bueno.
+10. Registrar el visto bueno y el estado APROBADO PARA FIGMA en `validation-report.md`.
+11. Reflejar fielmente la versión con visto bueno en Figma.
+12. Validar la fidelidad entre Figma y la versión aprobada para Figma.
+13. Registrar el resultado general APROBADO en `validation-report.md` cuando todos los gates estén cerrados.
 
 ## 7. Reutilización
 
@@ -94,10 +96,12 @@ La implementación final debe alinearse a:
 | Normalización | Código alineado al DS | Responsable | UI y tokens normalizados |
 | Estados | Casos requeridos interactivos | Responsable | UX y accesibilidad |
 | Autovalidación | Checklists locales completos | Responsable | Cero hallazgos bloqueantes ni importantes requeridos abiertos |
-| Revisión transversal | Reporte de observaciones | Leonardo Vera Rodríguez | Cero bloqueantes abiertos |
+| Revisión transversal | Reporte de observaciones | Leonardo Vera Rodríguez | Cero hallazgos bloqueantes ni importantes requeridos abiertos |
 | Correcciones | Hallazgos solventados | Responsable | Re-inspección aprobatoria |
-| Aprobación | Visto bueno formal | Leonardo Vera Rodríguez | Dictamen APROBADO en reporte |
-| Figma | Entregable final sincronizado | Responsable | Fiel al código aprobado |
+| Aprobación para Figma | Visto bueno formal | Leonardo Vera Rodríguez | APROBADO PARA FIGMA |
+| Figma | Diseño sincronizado | Responsable | Fiel a versión con visto bueno |
+| Validación Figma | Fidelidad comprobada | Responsable | Todas las verificaciones PASS |
+| Cierre | Validation Report APROBADO | Responsable | Todos los gates cerrados |
 
 ## 11. Riesgos
 
@@ -126,13 +130,17 @@ La implementación final debe alinearse a:
 - Jerarquía visual clara.
 - Teclado y foco funcionales.
 
-### Gate E — Revisión Transversal
+### Gate E — Revisión Transversal y Aprobación para Figma
 - **Revisor:** Leonardo Vera Rodríguez.
-- Revisión transversal de coherencia del módulo completada.
-- Todos los hallazgos bloqueantes e importantes cerrados.
-- Visto bueno formal otorgado por Leonardo Vera Rodríguez.
+- Revisión transversal completada.
+- Todos los hallazgos bloqueantes e importantes requeridos están cerrados.
+- Visto bueno formal otorgado.
+- Estado de revisión transversal: **APROBADO PARA FIGMA**.
 
-### Gate F — Cierre y Figma
-> **Gate explícito:** No se prepara el entregable final en Figma mientras la revisión transversal tenga hallazgos bloqueantes o resultado no aprobado.
-- `validation-report.md` cuenta con dictamen **APROBADO**.
-- Figma corresponde fielmente al resultado aprobado.
+### Gate F — Figma y Cierre
+- La versión con visto bueno fue reflejada en Figma.
+- Figma coincide fielmente con la versión aprobada para Figma.
+- Todas las pantallas P0 requeridas están presentes.
+- El enlace de Figma está registrado.
+
+**Regla de cierre:** Una vez completados satisfactoriamente el Gate E y el Gate F, y sin hallazgos bloqueantes ni importantes requeridos abiertos, `validation-report.md` puede registrar el **Resultado general = APROBADO**.

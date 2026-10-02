@@ -89,8 +89,10 @@ flowchart TD
         N["Revisión UX transversal — Leonardo Vera"]
         O{"¿Visto bueno?"}
         P["Correcciones del responsable"]
-        Q["Validation Report APROBADO"]
+        Q["APROBADO PARA FIGMA"]
         R["Figma"]
+        S["Validación de fidelidad en Figma"]
+        T["Validation Report APROBADO"]
     end
 
     F --> G
@@ -106,6 +108,8 @@ flowchart TD
     P --> N
     O -- "Sí" --> Q
     Q --> R
+    R --> S
+    S --> T
 ```
 
 ## 6. Fuentes de Verdad
@@ -158,9 +162,11 @@ Una funcionalidad `MK-XXX` se considera terminada cuando:
 - [ ] El responsable completó la autovalidación.
 - [ ] No existen hallazgos bloqueantes ni hallazgos importantes requeridos abiertos.
 - [ ] Leonardo Vera Rodríguez realizó la revisión transversal final.
-- [ ] Leonardo Vera Rodríguez otorgó visto bueno.
-- [ ] `validation-report.md` registra el resultado **APROBADO**.
-- [ ] El resultado aprobado está reflejado fielmente en Figma.
+- [ ] Leonardo Vera Rodríguez otorgó visto bueno para pasar a Figma.
+- [ ] La versión con visto bueno fue reflejada en Figma.
+- [ ] Se verificó la fidelidad entre el mockup aprobado para Figma y el diseño en Figma.
+- [ ] El enlace de Figma está registrado.
+- [ ] `validation-report.md` registra el resultado general **APROBADO**.
 
 ## 11. Matriz de Trazabilidad e Índice Canónico de Funcionalidades
 
