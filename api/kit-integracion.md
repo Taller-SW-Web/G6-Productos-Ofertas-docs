@@ -1,6 +1,6 @@
 # Kit de integración — Productos y Ofertas
 
-**Fecha de actualización:** 2026-09-30  
+**Fecha de actualización:** 2026-10-01  
 **Repositorio:** `Taller-SW-Web/Productos-y-Ofertas-docs`  
 **API propietaria:** `api-productos`  
 **Contrato HTTP canónico:** `api/openapi.yaml`  
@@ -759,15 +759,65 @@ Si se conservan esos identificadores, son capacidades internas del módulo.
 
 ---
 
-# 11. Cambios de precio e introspección
+# 11. Pricing: consultas, programaciones e importación
 
-Seguridad define cambiar precios como operación sensible.
+`api/openapi.yaml` es la fuente de verdad HTTP. Esta sección resume la superficie de Pricing publicada en OpenAPI `0.4.0` y su política de autorización.
 
-Las siguientes operaciones de OpenAPI `0.4.0` requieren:
+## 11.1. Consultas
+
+Rutas estables para consumidores:
+
+```http
+GET /api/v1/precios
+GET /api/v1/precios/skus/{sku}
+```
+
+Para llamadas módulo-a-módulo se utiliza:
 
 ```text
-rol = GESTOR_COMERCIAL
-validación = introspección
+scope = precios:leer
+aud = api-productos
+```
+
+La consulta por SKU admite `canal` y `at` para resolver precio vigente o histórico. La consulta múltiple también admite el contexto publicado por OpenAPI.
+
+Consultas administrativas humanas:
+
+```http
+GET /api/v1/precios/productos/{productoId}
+GET /api/v1/precios/skus/{sku}/programaciones
+GET /api/v1/precios/productos/{productoId}/programaciones
+GET /api/v1/precios/importaciones/{batchId}
+GET /api/v1/precios/importaciones/{batchId}/reporte
+```
+
+Las rutas administrativas derivadas de SPEC-013 permanecen `provisional-internal`. Se validan mediante JWT de usuario y la vía ordinaria de JWKS.
+
+En `0.4.0`, `GET /precios/productos/{productoId}` no publica el parámetro `at`; la resolución histórica por `at` pertenece a la consulta por SKU.
+
+## 11.2. Prevalidación de importación
+
+```http
+POST /api/v1/precios/importaciones/prevalidar
+```
+
+La prevalidación:
+
+```text
+no modifica precios
+no publica pricing.price.changed
+devuelve valid, total_rows y errores por fila
+```
+
+Utiliza autenticación de usuario y validación ordinaria local; no es la admisión del lote.
+
+## 11.3. Mutaciones sensibles
+
+Las siguientes operaciones están marcadas en OpenAPI con:
+
+```text
+x-required-role = GESTOR_COMERCIAL
+x-auth-validation = introspection
 ```
 
 Rutas:
@@ -775,24 +825,58 @@ Rutas:
 ```http
 PATCH /api/v1/precios/skus/{sku}
 POST  /api/v1/precios/skus/{sku}/programaciones
-POST  /api/v1/precios/importaciones
 PATCH /api/v1/precios/productos/{productoId}
 POST  /api/v1/precios/productos/{productoId}/programaciones
+POST  /api/v1/precios/importaciones
 ```
 
-Antes de ejecutar/admitir la mutación, Productos y Ofertas consulta a Seguridad:
+Antes de ejecutar o admitir la mutación, Productos y Ofertas consulta:
 
 ```http
 POST /api/v1/auth/introspeccion
 ```
 
-utilizando su token técnico con:
+con su token técnico y:
 
 ```text
 tokens:introspeccion
 ```
 
-Las lecturas y las operaciones no sensibles siguen validándose localmente mediante JWKS.
+La respuesta debe confirmar que el JWT de usuario continúa activo. El actor humano debe conservar el rol global `GESTOR_COMERCIAL`.
+
+`PRICING_READ`, `PRICING_WRITE` y `PRICING_BULK`, si se mantienen en código, son capacidades internas del módulo; no permisos externos pendientes de Seguridad.
+
+## 11.4. Carga masiva exclusiva de Pricing
+
+Flujo contractual:
+
+```text
+prevalidar archivo
+-> confirmar admisión
+-> 202 Accepted + batch_id + QUEUED
+-> consultar estado
+-> COMPLETED | PARTIAL | FAILED
+-> descargar reporte
+```
+
+Rutas:
+
+```http
+POST /api/v1/precios/importaciones/prevalidar
+POST /api/v1/precios/importaciones
+GET  /api/v1/precios/importaciones/{batchId}
+GET  /api/v1/precios/importaciones/{batchId}/reporte
+```
+
+`202 Accepted` confirma admisión, no éxito final.
+
+Una fila rechazada no modifica el precio ni publica evento. Toda mutación confirmada persiste cambio + Outbox y, después del commit, publica:
+
+```text
+pricing.price.changed
+```
+
+Auditoría consume ese hecho; Pricing no escribe directamente `price-audit-svc`.
 
 ---
 
@@ -1133,6 +1217,15 @@ decisión funcional
 ```
 
 No se deben crear rutas nuevas únicamente en documentación de un consumidor.
+
+Sincronización documental 2026-10-01:
+
+```text
+kit-integracion.md se alinea con api/openapi.yaml 0.4.0 para Pricing.
+No se agregan rutas HTTP nuevas.
+Se documentan explícitamente consultas administrativas, prevalidación,
+importación, seguimiento y reporte ya presentes en OpenAPI.
+```
 
 ---
 

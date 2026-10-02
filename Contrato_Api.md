@@ -1,6 +1,6 @@
 # API Contract — Módulo de Productos y Ofertas
 
-**Fecha de actualización:** 2026-09-30  
+**Fecha de actualización:** 2026-10-01  
 **Módulo propietario:** Productos y Ofertas  
 **Documento de integración:** `Contrato_Api.md`  
 **Contrato HTTP canónico:** `api/openapi.yaml` (`0.4.0`)  
@@ -393,30 +393,133 @@ Una identidad de operación inexistente devuelve:
 
 # 7. Precios
 
-## 7.1. Consulta múltiple
+`api/openapi.yaml` (`0.4.0`) es la fuente de verdad HTTP de Pricing. La superficie distingue consultas estables para consumidores y operaciones administrativas internas derivadas de SPEC-013.
+
+## 7.1. Consultas estables para consumidores
 
 ```http
 GET /api/v1/precios
-```
-
-Permite consultar precios de varios SKU según el contrato definido en OpenAPI.
-
----
-
-## 7.2. Precio por SKU
-
-```http
 GET /api/v1/precios/skus/{sku}
 ```
 
-Puede recibir contexto temporal para resolver precio vigente o histórico.
+`GET /api/v1/precios` resuelve precios de varios SKU y admite contexto de canal y fecha (`at`) según OpenAPI.
 
-Pricing es owner de:
+`GET /api/v1/precios/skus/{sku}` resuelve el precio vigente o histórico de un SKU. Puede recibir `canal` y `at`; cuando existe un alcance específico de canal se aplica el fallback global definido por Pricing.
 
-- precio regular;
-- precio oferta;
-- vigencia;
-- versión de precio.
+Estas rutas usan el contrato técnico `precios:leer` cuando son invocadas módulo-a-módulo por consumidores autorizados.
+
+## 7.2. Administración de precio base y override
+
+OpenAPI `0.4.0` publica además:
+
+| Método | Ruta | Estado |
+|---|---|---|
+| `PATCH` | `/api/v1/precios/skus/{sku}` | `stable` |
+| `GET` | `/api/v1/precios/skus/{sku}/programaciones` | `provisional-internal` |
+| `POST` | `/api/v1/precios/skus/{sku}/programaciones` | `provisional-internal` |
+| `GET` | `/api/v1/precios/productos/{productoId}` | `provisional-internal` |
+| `PATCH` | `/api/v1/precios/productos/{productoId}` | `provisional-internal` |
+| `GET` | `/api/v1/precios/productos/{productoId}/programaciones` | `provisional-internal` |
+| `POST` | `/api/v1/precios/productos/{productoId}/programaciones` | `provisional-internal` |
+
+El endpoint de producto devuelve el precio base administrativo del producto. En `0.4.0` no publica el parámetro `at`; el histórico temporal por `at` está definido en la consulta por SKU. Las rutas `/programaciones` permiten consultar las vigencias programadas del SKU o del producto.
+
+Una variante sin override hereda el precio del producto. Un cambio específico del SKU crea o modifica el override administrado por Pricing.
+
+## 7.3. Concurrencia y vigencias
+
+Las actualizaciones de producto/SKU utilizan `priceVersion` de la lectura previa. Si la versión quedó obsoleta:
+
+```text
+409 VERSION_CONFLICT
+```
+
+No se admiten vigencias superpuestas para el mismo objetivo y canal:
+
+```text
+409 VIGENCIA_SUPERPUESTA
+```
+
+Las programaciones usan `validFrom` futuro y `validUntil` opcional. El contrato de programación no exige `priceVersion` en el request.
+
+## 7.4. Carga masiva exclusiva de Pricing
+
+La carga local de Pricing es distinta de la carga general coordinada por SPEC-001.
+
+Prevalidación sin mutar precios:
+
+```http
+POST /api/v1/precios/importaciones/prevalidar
+```
+
+Admisión asíncrona:
+
+```http
+POST /api/v1/precios/importaciones
+```
+
+Una respuesta:
+
+```text
+202 Accepted
+status = QUEUED
+batch_id = <id del lote>
+```
+
+confirma únicamente que el lote fue admitido.
+
+Seguimiento y reporte:
+
+```http
+GET /api/v1/precios/importaciones/{batchId}
+GET /api/v1/precios/importaciones/{batchId}/reporte
+```
+
+Estados del lote:
+
+```text
+QUEUED
+PROCESSING
+COMPLETED
+PARTIAL
+FAILED
+```
+
+Las filas rechazadas no modifican precios ni publican `pricing.price.changed`.
+
+## 7.5. Autorización de Pricing
+
+La administración humana utiliza JWT de usuario y el rol global:
+
+```text
+GESTOR_COMERCIAL
+```
+
+Las lecturas administrativas y la prevalidación siguen la validación ordinaria local mediante JWKS.
+
+Las mutaciones sensibles marcadas por OpenAPI requieren además introspección antes de ejecutar o admitir el cambio:
+
+```http
+PATCH /api/v1/precios/skus/{sku}
+POST  /api/v1/precios/skus/{sku}/programaciones
+PATCH /api/v1/precios/productos/{productoId}
+POST  /api/v1/precios/productos/{productoId}/programaciones
+POST  /api/v1/precios/importaciones
+```
+
+La introspección se realiza contra Seguridad y Usuarios con el scope técnico `tokens:introspeccion`.
+
+`PRICING_READ`, `PRICING_WRITE`, `PRICING_BULK` y equivalentes, si existen en implementación, son capacidades internas de Productos y Ofertas; no son scopes externos que Seguridad deba publicar.
+
+## 7.6. Publicación y auditoría
+
+Toda mutación de precio confirmada persiste su cambio y Outbox en la transacción local. Después del commit, Pricing publica:
+
+```text
+pricing.price.changed
+```
+
+`price-audit-svc` consume el hecho de forma desacoplada. Pricing no escribe directamente la bitácora de auditoría.
 
 Ventas debe conservar el snapshot comercial utilizado para el pedido.
 
@@ -1202,7 +1305,7 @@ Para operaciones ordinarias del Gestor Comercial no se llama a introspección.
 
 El kit de Seguridad establece que las operaciones sensibles usan introspección y documenta explícitamente **cambiar un precio** como operación sensible. Además, la tabla de scopes asigna `tokens:introspeccion` a Productos y Ofertas para **autorizar cambios de precio**.
 
-En el contrato vigente de este módulo, las mutaciones que cambian o programan precios deben introspeccionar el token de usuario antes de ejecutar/admitir el cambio:
+En el contrato vigente de este módulo, las mutaciones que actualizan o programan precios, así como la admisión de la importación exclusiva de Pricing, deben introspeccionar el token de usuario antes de ejecutar/admitir el cambio:
 
 ```http
 POST /api/v1/auth/introspeccion
