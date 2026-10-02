@@ -332,7 +332,7 @@ flowchart TD
 | `poma` | Gabriel Poma Gutierrez | Productos y variantes SKU |
 | `cueva` | Axel Andree Cueva Alcalá | Cupones, promociones y venta cruzada |
 | `lopez` | Leonardo Lopez | Taxonomía, características, marcas y SEO |
-| `vera` | Leonardo Vera Rodríguez | Precios, auditoría de precios y Revisor UX transversal |
+| `vera` | Leonardo Vera Rodríguez | Precios y auditoría de precios |
 | `taco` | Miguel Ángel Taco Zavala | Inventario, analítica y alertas |
 
 La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`wireframes/INDEX.md`](wireframes/INDEX.md) y [`mockups/README.md`](mockups/README.md).
