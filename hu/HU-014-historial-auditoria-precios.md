@@ -19,7 +19,7 @@
 | CA-08 | La auditoría se autoriza sobre el actor global `GESTOR_COMERCIAL`; cualquier granularidad adicional se resuelve mediante capacidades internas del módulo y no crea un rol humano global adicional. |
 | CA-09 | Retención configurable; 24 meses + 5 años son valores iniciales MVP. |
 | CA-10 | `CREACION` muestra anterior/variación nulos; `RETIRO_OFERTA` muestra nuevo/variación nulos. |
-| CA-11 | Duplicados del mismo evento no producen asientos repetidos. |
+| CA-11 | Un mensaje repetido con el mismo `message_id` no produce un asiento adicional; la deduplicación del consumidor usa `message_id`. |
 | CA-12 | Archivado verifica integridad antes de retirar copia caliente. |
 | CA-13 | Consultar un `auditId` inexistente devuelve `AUDITORIA_PRECIO_NO_ENCONTRADA`; no se confunde con listado vacío. |
 

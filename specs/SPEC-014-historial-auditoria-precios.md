@@ -22,7 +22,7 @@ Registrar de forma automática quién realizó un cambio, cuándo, precio anteri
 ## 4. Requisitos
 
 ### Requisito 1: Registro asíncrono
-Solo mutaciones persistidas generan `pricing.price.changed`. Auditoría consume el hecho de forma desacoplada y deduplica por identidad del mensaje/evento.
+Solo mutaciones persistidas generan `pricing.price.changed`. Auditoría consume el hecho de forma desacoplada y deduplica por `message_id` del envelope AsyncAPI. `operation_id`, cuando aplique, conserva la idempotencia de negocio y no sustituye a `message_id` como clave de deduplicación del consumidor.
 
 ### Requisito 2: Consulta/exportación
 Filtros: SKU, fechas, usuario, canal y `batch_id`. Orden descendente. CSV asíncrono; PDF máximo 500.

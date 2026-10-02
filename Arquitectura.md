@@ -1505,7 +1505,7 @@ Un ACK de RabbitMQ no equivale a éxito de dominio.
 `price-audit-svc`:
 
 - consume `pricing.price.changed`;
-- deduplica por `event_id/message_id`;
+- deduplica por `message_id` del envelope; `operation_id` conserva la idempotencia de negocio cuando aplique;
 - escribe append-only;
 - no modifica Pricing;
 - expone consulta administrativa paginada y detalle por `auditId`;
