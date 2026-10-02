@@ -568,7 +568,7 @@ flowchart LR
 
 ### Contratos de referencia
 
-| Endpoint (OpenAPI 0.4.0) | Subflujo |
+| Endpoint (OpenAPI 0.5.0) | Subflujo |
 |---|---|
 | `POST /api/v1/inventario/reservas` | 4.2 — Reserva de unidades |
 | `POST /api/v1/inventario/reservas/{reservaId}/confirmar` | 4.3 — Consumo definitivo |
@@ -581,3 +581,35 @@ flowchart LR
 | `POST /api/v1/inventario/traslados/{trasladoId}/recepciones` | 4.9 — Recepción de traslado |
 
 Los eventos publicados corresponden al catálogo de AsyncAPI (`inventory.reservation.*`, `inventory.consumption.*`, `inventory.stock.changed`, `inventory.stock.adjusted`, `inventory.bulk.stock.adjust.*`, `inventory.sku.initialization.*`).
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Flujos de lectura 0.5.0
+
+### Consulta detallada
+
+```text
+Gestor/Ventas autorizado
+→ leer (sku, location_id)
+→ calcular available
+→ validar invariantes
+→ determinar status
+→ devolver saldo detallado
+```
+
+### Consulta comercial
+
+```text
+Marketplace/Chatbot/Retail
+→ solicitar skus + canal
+→ inventory-svc obtiene disponibilidad autoritativa
+→ resolver disponibilidad comercial según política
+→ proyectar sku + status
+→ responder
+```
+
+La política multiubicación sigue marcada `D-INV-01`; no se inventa suma, máximo ni ubicación por defecto.
+
+Ambas consultas son de solo lectura.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->

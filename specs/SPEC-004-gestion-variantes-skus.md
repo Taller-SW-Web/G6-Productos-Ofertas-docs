@@ -76,3 +76,25 @@ Desactivar una variante publica `catalog.sku.deactivated`. Si era la última var
 - precio master;
 - empaque;
 - pedido.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Extensión 0.5.0 — resolución de variante
+
+Se mantiene:
+
+```text
+variant_id != sku
+```
+
+Cuando un código de barras identifica una unidad vendible de un producto con variantes:
+
+```text
+codigo_barras → sku de la variante
+```
+
+No se devuelve `variant_id` como identidad comercial.
+
+Una variante inactiva o con producto padre no comercialmente vendible no produce una resolución válida. La ausencia temporal de stock **no** cambia la identidad SKU; disponibilidad se consulta separadamente.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->

@@ -100,7 +100,8 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 | Catálogo de eventos | [`api/catalogo-eventos.md`](api/catalogo-eventos.md) | Eventos publicados y consumidos |
 | Topología RabbitMQ | [`api/rabbitmq-topologia.md`](api/rabbitmq-topologia.md) | Definición física de exchanges, colas y retries |
 | Kit de integración | [`api/kit-integracion.md`](api/kit-integracion.md) | Guía práctica de integración para otros módulos |
-| Acuerdos de integración | [`integraciones/`](integraciones/) | Acuerdos homologados con Chatbot, Ventas y Despacho |
+| Matriz de pruebas de contrato | [`api/pruebas-contrato.md`](api/pruebas-contrato.md) | Casos estáticos, provider, consumer/provider, seguridad e integración |
+| Acuerdos de integración | [`integraciones/`](integraciones/) | Acuerdos homologados con Marketplace, Retail, Chatbot y Ventas; las integraciones restantes se documentan en sus artefactos canónicos |
 | Equipo y responsabilidades | [`EQUIPO_Y_RESPONSABILIDADES.md`](EQUIPO_Y_RESPONSABILIDADES.md) | Roles transversales, ownership funcional y mecanismos de revisión del equipo |
 
 ---
@@ -431,3 +432,22 @@ flowchart TD
 ```
 
 El objetivo es mantener una cadena verificable desde la necesidad funcional hasta la implementación técnica.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Homologación HTTP 0.5.0
+
+El contrato HTTP vigente se publica como OpenAPI 0.5.0.
+
+Nuevos acuerdos locales:
+
+```text
+integraciones/ALINEACION_MARKETPLACE.md
+integraciones/ALINEACION_RETAIL.md
+```
+
+Chatbot consume la proyección de disponibilidad comercial. La matriz de pruebas inter-módulo se encuentra en `api/pruebas-contrato.md`.
+
+Las capacidades que dependen de `D-INV-01` o `D-REC-01/02` permanecen explícitamente provisionales; esta documentación no inventa esas decisiones.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->

@@ -1477,3 +1477,18 @@ La actualización confirma que:
 11. Taxonomía modela explícitamente la operación de baja maestra segura como concepto observable, sin compartir schema ni convertir el `202 Accepted` en resultado definitivo.
 12. La autorización humana del módulo se apoya en `GESTOR_COMERCIAL`; la granularidad adicional de auditoría o inventario se modela como capacidad interna, no como rol global independiente.
 13. Arquitectura, Contrato API, OpenAPI/AsyncAPI `0.4.0` y las funcionalidades relacionadas reflejan estas decisiones; los pendientes restantes son de modelo lógico/implementación o registro de grants, no de ownership conceptual.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Alineación conceptual HTTP 0.5.0
+
+- SKU continúa siendo la identidad comercial compartida.
+- `codigo_barras` es un identificador de captura distinto; cada código resoluble identifica exactamente un SKU vendible.
+- No se fija todavía la cardinalidad inversa ni una tabla física para la asociación.
+- La elegibilidad comercial por canal es una regla de Catálogo; su persistencia/default siguen abiertos (`D-CAT-05/06`).
+- Inventario conserva el saldo autoritativo por `(sku, location_id)`.
+- La disponibilidad comercial es una **proyección derivada** `sku + status`, no una segunda autoridad. `D-INV-01` sigue abierta.
+- Recomendaciones siguen siendo producto→producto. `current_price` y `availability` son enriquecimientos derivados; `D-REC-01/02` continúan abiertas.
+- No materializar automáticamente `CODIGO_BARRAS`, `PRODUCTO_CANAL`, `DISPONIBILIDAD_COMERCIAL` o `PRECIO_RECOMENDACION` como entidades maestras.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->
