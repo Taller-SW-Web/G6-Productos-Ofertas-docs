@@ -32,7 +32,7 @@ Define las fuentes oficiales de verdad consumidas por esta funcionalidad. Cualqu
 | UX Decisions | [UXD-XXX] | [Decisión transversal] |
 | UX Guidelines | `mockups/ux/ux-guidelines.md` | [Sección normativa] |
 | API Contract | [Ruta a Contrato_Api.md / OpenAPI] | [Endpoints y esquemas] |
-| Design System | [Ruta a DESIGN.md / Tokens] | [Foundations y componentes base] |
+| Design System | [mockups/DESIGN.md](../../DESIGN.md), versión [versión consumida] | [Apartados, tokens y componentes DS-CXX aplicables] |
 
 ## 3. Objetivo funcional
 
@@ -95,7 +95,7 @@ Componentes transversales del Design System o reutilizados entre pantallas. No r
 
 | Componente | Pantallas | Uso | Variante | Estados |
 |---|---|---|---|---|
-| [Button] | S01, S02 | [Uso concreto] | [Variante DS] | [Estados requeridos] |
+| [DS-C01 / PO/Button] | S01, S02 | [Uso concreto] | [Variante, intent y size de DESIGN.md] | [Estados requeridos] |
 
 ## 9. Componentes específicos
 

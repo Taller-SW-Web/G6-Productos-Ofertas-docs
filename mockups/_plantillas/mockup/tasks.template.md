@@ -45,7 +45,7 @@
   - **Acción:** Crear archivos de datos de prueba en la ruta del prototipo.
   - **Salida esperada:** Datasets para estados default, loading, empty y error listos para consumir.
   - **Verificación:** Fixtures válidos e importables por los componentes de pantalla.
-- [ ] **MK-XXX-T04 — P0:** Identificar componentes compartidos del Design System a reutilizar. `[TODO]`
+- [ ] **MK-XXX-T04 — P0:** Confirmar versión de [mockups/DESIGN.md](../../DESIGN.md) e identificar componentes DS-CXX, variantes y tokens a reutilizar conforme al component-spec. `[TODO]`
 - [ ] **MK-XXX-T05 — P0:** Identificar pantalla ancla (`MK-XXX-SXX`) y alinear patrones visuales comunes. `[TODO]`
 
 ## 4. Implementación por pantalla
