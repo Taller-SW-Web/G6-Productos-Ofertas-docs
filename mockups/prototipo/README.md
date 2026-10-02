@@ -31,6 +31,7 @@ prototipo/
 1. **Modularidad:** Cada funcionalidad se ubica en su subcarpeta dentro de `src/pantallas/MKXXX/` (sin guiones en el nombre del paquete de código).
 2. **Reutilización:** Los componentes transversales (botones, modales, barras de herramientas, inputs) se ubican bajo `src/componentes/`.
 3. **Consistencia Visual:** Todos los estilos deben basarse en los tokens definidos en `src/tema/` y alinearse con las especificaciones del Design System.
+   La referencia visual vigente es [mockups/DESIGN.md](../DESIGN.md). El tema común debe representar sus valores y variantes, incluidos tamaños, contrastes, estados y capas; no crear un tema por funcionalidad ni adoptar automáticamente los defaults de Mantine.
 4. **Fidelidad al Alcance:** Implementar exclusivamente para Web Desktop (verificado en el viewport canónico de 1440 px). No incluir media queries o hacks para dispositivos móviles.
 
 ---

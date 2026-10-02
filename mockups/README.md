@@ -6,13 +6,14 @@ Esta carpeta contiene la documentación permanente y la arquitectura base de la 
 
 La experiencia de usuario (UX) se establece transversalmente a nivel del módulo y orienta de forma consistente la construcción de todas las funcionalidades:
 
-$$\text{3 propuestas UX del módulo} \longrightarrow \text{comparación y consolidación} \longrightarrow \text{Propuesta UX Integral Adoptada} \longrightarrow \text{UX Decisions} \longrightarrow \text{UX Guidelines} \longrightarrow \text{16 funcionalidades} \longrightarrow \text{N pantallas por funcionalidad}$$
+$$\text{3 propuestas UX del módulo} \longrightarrow \text{comparación y consolidación} \longrightarrow \text{Propuesta UX Integral Adoptada} \longrightarrow \text{UX Decisions} \longrightarrow \text{UX Guidelines} \longrightarrow \text{Design System de mockups} \longrightarrow \text{16 funcionalidades} \longrightarrow \text{N pantallas por funcionalidad}$$
 
 ## 2. Estructura del Directorio
 
 ```text
 mockups/
 ├── README.md                                  # Guía del pipeline académico, DoD, DoR y trazabilidad
+├── DESIGN.md                                  # Foundations, componentes y composición de mockups (#60)
 ├── ux/                                        # UX transversal a nivel de módulo
 │   ├── propuesta-ux.md                        # 3 propuestas finales, matriz de 16 funcionalidades y propuesta integral
 │   ├── ux-decisions.md                        # Decisiones UX justificadas (UXD-XXX)
@@ -44,8 +45,9 @@ Define lineamientos que aplican obligatoriamente a todas las funcionalidades:
 - **`propuesta-ux.md`**: Documenta las 3 propuestas finales de #59, su matriz de aplicabilidad, evidencia, trade-offs, revisión de los borradores y la **Propuesta UX Integral Adoptada**.
 - **`ux-decisions.md`**: Registro formal de decisiones justificadas (`UXD-XXX`) derivadas de la propuesta integral.
 - **`ux-guidelines.md`**: Reglas normativas operativas derivadas estrictamente de las decisiones en `ux-decisions.md`.
+- **[`DESIGN.md`](DESIGN.md)**: Design System vigente de mockups: tokens visuales, layout desktop, componentes, variantes y estados. Representa la UX 2.0 y sustituye la referencia visual de baja fidelidad para esta etapa.
 
-La versión UX 2.0 sustituye los borradores anteriores. El resultado documental, los hallazgos de fuentes y las condiciones de habilitación se registran en [propuesta-ux.md](ux/propuesta-ux.md#11-validación-y-habilitación). La consolidación del Design System corresponde a #60; la habilitación compartida de #66 requiere integrar ambas capas en `master`.
+La versión UX 2.0 sustituye los borradores anteriores. El resultado documental y los hallazgos de fuentes se registran en [propuesta-ux.md](ux/propuesta-ux.md#11-validación-y-habilitación). El #59 está cerrado; el resultado de #60 y las condiciones de consumo se registran en [DESIGN.md](DESIGN.md#18-validación-documental-y-habilitación). La habilitación compartida de #66 requiere integrar ambas capas en `master`, sin dar por resueltos hallazgos funcionales ajenos.
 
 ### Nivel Funcionalidad / Mockup (`MK-XXX`)
 Cada funcionalidad concreta (`MK-001` a `MK-016`) consume la UX del módulo y define:
@@ -67,12 +69,13 @@ Cada funcionalidad concreta (`MK-001` a `MK-016`) consume la UX del módulo y de
 
 ```mermaid
 flowchart TD
-    A["SPEC + HU + WF + Flow + API Contract + Design System"]
+    A["SPEC + HU + WF + Flow + API Contract + antecedentes visuales"]
     B["3 propuestas UX del módulo (Evidencia académica)"]
     C["Comparación y consolidación"]
     D["Propuesta UX integral del módulo"]
     E["UX Decisions (UXD-XXX)"]
     F["UX Guidelines"]
+    U["Design System de mockups — DESIGN.md"]
 
     A --> B
     B --> C
@@ -97,7 +100,8 @@ flowchart TD
         T["Validation Report APROBADO"]
     end
 
-    F --> G
+    F --> U
+    U --> G
     G --> H
     H --> I
     I --> J
