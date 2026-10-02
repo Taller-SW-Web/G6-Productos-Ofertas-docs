@@ -68,13 +68,13 @@ Estados: `TODO`, `DOING`, `BLOCKED`, `REVIEW`, `DONE`.
 - [ ] **MK-XXX-T70 — P0:** Confirmar en validation-report.md que la autovalidación local está completa.
 - [ ] **MK-XXX-T71 — P0:** Solicitar revisión transversal a Leonardo Vera Rodríguez.
 - [ ] **MK-XXX-T72 — P0:** Atender todos los hallazgos bloqueantes/importantes indicados en la revisión transversal.
-- [ ] **MK-XXX-T73 — P0:** Obtener visto bueno final de Leonardo Vera Rodríguez.
-- [ ] **MK-XXX-T74 — P0:** Registrar el visto bueno en `validation-report.md`.
+- [ ] **MK-XXX-T73 — P0:** Obtener de Leonardo Vera Rodríguez el visto bueno para pasar a Figma.
+- [ ] **MK-XXX-T74 — P0:** Registrar en `validation-report.md` el estado de revisión transversal APROBADO PARA FIGMA.
 
 ## 8. Figma y cierre
 
-- [ ] **MK-XXX-T75 — P0:** Generar evidencia final aprobada.
-- [ ] **MK-XXX-T76 — P0:** Preparar e importar a Figma el diseño aprobado.
-- [ ] **MK-XXX-T77 — P0:** Verificar fidelidad entre código aprobado y Figma.
-- [ ] **MK-XXX-T78 — P0:** Registrar enlace de Figma en la documentación.
-- [ ] **MK-XXX-T79 — P0:** Actualizar índice y confirmar que no existen hallazgos bloqueantes ni importantes requeridos abiertos para el cierre definitivo.
+- [ ] **MK-XXX-T75 — P0:** Preparar e importar a Figma la versión con visto bueno.
+- [ ] **MK-XXX-T76 — P0:** Verificar la fidelidad entre Figma y la versión aprobada para Figma.
+- [ ] **MK-XXX-T77 — P0:** Confirmar que todas las pantallas P0 requeridas estén presentes en Figma.
+- [ ] **MK-XXX-T78 — P0:** Registrar el enlace de Figma y completar la sección Figma de `validation-report.md`.
+- [ ] **MK-XXX-T79 — P0:** Confirmar que no existen hallazgos bloqueantes ni importantes requeridos abiertos, cerrar todos los Quality Gates y registrar el resultado general APROBADO.
