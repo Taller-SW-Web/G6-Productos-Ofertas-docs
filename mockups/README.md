@@ -83,13 +83,14 @@ flowchart TD
         H["Component Spec (Pantallas MK-XXX-S01..Sn + LUX-XX)"]
         I["Plan"]
         J["Tasks"]
-        K["Implementación incremental"]
+        K["Implementación y refinamiento"]
         L["Normalización mediante código"]
-        M["Validación funcional + UX/UI"]
-        N{"¿Cumple?"}
-        O["Correcciones"]
-        P["Mockup aprobado"]
-        Q["Figma"]
+        M["Autovalidación del responsable"]
+        N["Revisión UX transversal — Leonardo Vera"]
+        O{"¿Visto bueno?"}
+        P["Correcciones del responsable"]
+        Q["Validation Report APROBADO"]
+        R["Figma"]
     end
 
     F --> G
@@ -100,10 +101,11 @@ flowchart TD
     K --> L
     L --> M
     M --> N
-    N -- "No" --> O
-    O --> K
-    N -- "Sí" --> P
-    P --> Q
+    N --> O
+    O -- "No" --> P
+    P --> N
+    O -- "Sí" --> Q
+    Q --> R
 ```
 
 ## 6. Fuentes de Verdad
@@ -153,8 +155,12 @@ Una funcionalidad `MK-XXX` se considera terminada cuando:
 - [ ] La UX integral del módulo y las UX Guidelines han sido rigurosamente respetadas.
 - [ ] Las decisiones locales `LUX-XX` están debidamente justificadas.
 - [ ] El código normalizado reside en `prototipo/src/pantallas/MKXXX`.
-- [ ] El `validation-report.md` cuenta con dictamen **APROBADO**.
-- [ ] Las pantallas finales están reflejadas en Figma.
+- [ ] El responsable completó la autovalidación.
+- [ ] No existen hallazgos bloqueantes ni hallazgos importantes requeridos abiertos.
+- [ ] Leonardo Vera Rodríguez realizó la revisión transversal final.
+- [ ] Leonardo Vera Rodríguez otorgó visto bueno.
+- [ ] `validation-report.md` registra el resultado **APROBADO**.
+- [ ] El resultado aprobado está reflejado fielmente en Figma.
 
 ## 11. Matriz de Trazabilidad e Índice Canónico de Funcionalidades
 
