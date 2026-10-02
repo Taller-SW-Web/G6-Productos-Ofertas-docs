@@ -60,6 +60,8 @@ Relación directa entre las unidades de trabajo ejecutadas en `tasks.md`, las pa
 
 ## 7. UI y Design System
 
+- **Referencia visual consumida:** [mockups/DESIGN.md](../../DESIGN.md), versión [versión consumida].
+- [ ] Variantes, tamaños y estados de los componentes DS-CXX coinciden con el component-spec y el Design System.
 - [ ] Colores aplicados estrictamente mediante tokens oficiales del tema.
 - [ ] Escala tipográfica oficial respetada.
 - [ ] Spacing y border-radius conforme a la escala del módulo.

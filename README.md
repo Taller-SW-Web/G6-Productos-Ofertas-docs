@@ -47,7 +47,7 @@ El prototipo HTML valida el comportamiento y la representación estructural del 
 #### Alta fidelidad (Mockups definitivos):
 ```mermaid
 flowchart TD
-    A["SPEC + HU + WF + Flow + API Contract + Design System"]
+    A["SPEC + HU + WF + Flow + API Contract + antecedentes visuales"]
     B["3 propuestas UX del módulo (Evidencia académica)"]
     C["Comparación y consolidación"]
     D["Propuesta UX integral del módulo"]
@@ -71,7 +71,7 @@ flowchart TD
         Q --> R["Validación de fidelidad en Figma"]
         R --> S["Validation Report APROBADO"]
     end
-    F --> MK
+    F --> DS["Design System de mockups — DESIGN.md"] --> MK
 ```
 
 El inventario detallado de funcionalidades, responsables y artefactos canónicos se encuentra en [`wireframes/INDEX.md`](wireframes/INDEX.md) y en [`mockups/README.md`](mockups/README.md).
@@ -290,13 +290,14 @@ Este pipeline no mezcla las reglas visuales de los wireframes con las decisiones
 - [`mockups/ux/propuesta-ux.md`](mockups/ux/propuesta-ux.md): Las 3 propuestas UX finales de #59, matriz de las 16 funcionalidades, evaluación de los borradores y Propuesta UX Integral Adoptada para el Gestor Comercial.
 - [`mockups/ux/ux-decisions.md`](mockups/ux/ux-decisions.md): Decisiones transversales justificadas (`UXD-001` a `UXD-012`).
 - [`mockups/ux/ux-guidelines.md`](mockups/ux/ux-guidelines.md): Reglas normativas operativas y accesibilidad en PC Desktop (viewport canónico de 1440 px).
+- [`mockups/DESIGN.md`](mockups/DESIGN.md): Design System vigente de mockups, con foundations, layout desktop, componentes y estados visuales alineados con la UX transversal.
 - [`mockups/prototipo/`](mockups/prototipo/): Código interactivo normalizado de prototipado (bajo `src/pantallas/MKXXX`).
 
 La cadena completa de diseño de alta fidelidad es:
 
 ```mermaid
 flowchart TD
-    A["SPEC + HU + WF + Flow + API Contract + Design System"]
+    A["SPEC + HU + WF + Flow + API Contract + antecedentes visuales"]
     B["3 propuestas UX del módulo (Evidencia académica)"]
     C["Comparación y consolidación"]
     D["Propuesta UX integral del módulo"]
@@ -320,7 +321,7 @@ flowchart TD
         Q --> R["Validación de fidelidad en Figma"]
         R --> S["Validation Report APROBADO"]
     end
-    F --> MK
+    F --> DS["Design System de mockups — DESIGN.md"] --> MK
 ```
 
 ---
