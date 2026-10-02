@@ -101,6 +101,7 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 | Topología RabbitMQ | [`api/rabbitmq-topologia.md`](api/rabbitmq-topologia.md) | Definición física de exchanges, colas y retries |
 | Kit de integración | [`api/kit-integracion.md`](api/kit-integracion.md) | Guía práctica de integración para otros módulos |
 | Acuerdos de integración | [`integraciones/`](integraciones/) | Acuerdos homologados con Chatbot, Ventas y Despacho |
+| Equipo y responsabilidades | [`EQUIPO_Y_RESPONSABILIDADES.md`](EQUIPO_Y_RESPONSABILIDADES.md) | Roles transversales, ownership funcional y mecanismos de revisión del equipo |
 
 ---
 
@@ -323,7 +324,7 @@ flowchart TD
 
 ---
 
-## 10. Equipo y responsabilidades
+## 10. Ownership funcional
 
 | Rama | Responsable | Área principal |
 |---|---|---|
@@ -334,9 +335,9 @@ flowchart TD
 | `vera` | Leonardo Vera Rodríguez | Precios, auditoría de precios y Revisor UX transversal |
 | `taco` | Miguel Ángel Taco Zavala | Inventario, analítica y alertas |
 
-Adicionalmente, Leonardo Vera Rodríguez desempeña el rol transversal de **Revisor UX de mockups**, siendo responsable de auditar la coherencia global del módulo y otorgar el visto bueno obligatorio para autorizar el pase a Figma.
-
 La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`wireframes/INDEX.md`](wireframes/INDEX.md) y [`mockups/README.md`](mockups/README.md).
+
+Los roles transversales, los límites de responsabilidad y los mecanismos de revisión del equipo se documentan en [`EQUIPO_Y_RESPONSABILIDADES.md`](EQUIPO_Y_RESPONSABILIDADES.md).
 
 ---
 
