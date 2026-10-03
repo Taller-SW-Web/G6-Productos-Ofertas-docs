@@ -32,4 +32,4 @@ La suite inicial de 31 pruebas pasó completa después de corregir la eliminaci�
 
 ## Alcance pendiente
 
-La validación local acredita la lógica, el contrato del workflow y los pushes contra fixtures. No acredita todavía una ejecución alojada en GitHub, sus eventos, disponibilidad, permisos de `GITHUB_TOKEN` ni reglas de protección de `lab/cueva`. Tampoco activa los otros cinco pares. El [procedimiento de activación](sincronizacion.md) permite comprobar el piloto antes de encender los eventos automáticos. La entrega sigue siendo local, conforme a la instrucción del usuario.
+Esta validación local acreditó la lógica, el contrato del workflow y los pushes contra fixtures. En esa etapa no se había publicado ni activado la entrega, conforme a la instrucción del usuario. La verificación posterior de eventos y publicación con `GITHUB_TOKEN` se registra en la [validación remota](validacion-remota.md). Los otros cinco pares permanecen deshabilitados.
