@@ -174,3 +174,40 @@ Las referencias hacia otros bounded contexts **no transfieren ownership**.
 - La suma de `reserved` y `blocked` nunca supera a `on_hand`.
 
 ---
+
+## 8. Diagrama lógico
+
+```mermaid
+erDiagram
+    STOCK_BALANCE ||--o{ RESERVATION_LINE : "afecta"
+    RESERVATIONS ||--|{ RESERVATION_LINE : "contiene"
+
+    STOCK_BALANCE {
+        ReferenciaExterna sku_id
+        ReferenciaExterna location_id
+        NumeroEntero on_hand
+        NumeroEntero reserved
+        NumeroEntero blocked
+        NumeroEntero stock_version
+        FechaHora created_at
+        FechaHora updated_at
+    }
+
+    RESERVATIONS {
+        UUID reservation_id
+        FechaHora expires_at
+        Texto idempotency_key
+        Estado status
+        FechaHora created_at
+        FechaHora updated_at
+    }
+
+    RESERVATION_LINE {
+        Referencia reservation_id
+        ReferenciaExterna sku_id
+        ReferenciaExterna location_id
+        NumeroEntero cantidad
+    }
+```
+
+---
