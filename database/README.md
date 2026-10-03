@@ -17,7 +17,32 @@ Estado: procedimiento verificable localmente; no se ha ejecutado contra un proye
 
 `read_model` pertenece al gateway y queda fuera de estos ocho contextos. No crear tablas de otro servicio, FK entre schemas, joins operativos entre contextos ni grants cruzados. Los IDs externos son referencias; cada servicio mantiene sus proyecciones y outbox/inbox cuando corresponda.
 
-Mientras este repositorio contiene los entregables de BD, guardar SQL en `database/<schema>/migrations/0001_descripcion.sql`, `physical-model.md` y `validation.sql`. Al incorporar el backend, conservar los mismos archivos y versiones en `infrastructure/persistence/migrations/` del servicio (Arquitectura §4). No mantener dos historiales activos ni volver a ejecutar una versión trasladada.
+### Flujo de diseño y derivación
+
+```text
+fuentes funcionales y contractuales
+        ↓
+Modelo_Conceptual.md
+        ↓
+logical-model.md
+        ↓
+physical-model.md
+        ↓
+migrations/
+        ↓
+validation.sql
+```
+
+### Entregables por bounded context
+
+Cada bounded context debe contar con los siguientes cuatro entregables documentales y de persistencia:
+
+1. `logical-model.md`: modelo lógico puro (entidades, atributos, cardinalidades, reglas de negocio, sin tipos ni sintaxis PostgreSQL).
+2. `physical-model.md`: modelo físico detallado sobre PostgreSQL/Supabase (tablas, columnas, tipos, constraints, índices, triggers).
+3. `migrations/`: scripts DDL ordenados correlativamente (`0001_*.sql`, etc.) ejecutables desde cero.
+4. `validation.sql`: script de validación determinista que comprueba constraints, aislamiento y ausencia de violaciones.
+
+Mientras este repositorio contiene los entregables de BD, guardar en `database/<schema>/` (o la carpeta asignada al servicio en `bd/`): `logical-model.md`, `physical-model.md`, `migrations/0001_descripcion.sql` y `validation.sql`. Al incorporar el backend, conservar los mismos archivos y versiones en `infrastructure/persistence/` del servicio (Arquitectura §4). No mantener dos historiales activos ni volver a ejecutar una versión trasladada.
 
 Versiones de cuatro dígitos consecutivas desde 0001, un cambio por archivo, SQL PostgreSQL UTF-8, nombres snake_case y objetos calificados con schema. El checksum usa texto UTF-8 sin BOM y saltos LF, para que Windows/Linux produzcan el mismo resultado. No editar ni borrar migraciones aplicadas. Cambios destructivos requieren estrategia expand/contract, respaldo y coordinación de versión. Cada archivo es transaccional: no BEGIN/COMMIT, VACUUM ni CREATE INDEX CONCURRENTLY. Para cambios no transaccionales se necesita un procedimiento independiente revisado, no introducirlos en este ejecutor.
 
