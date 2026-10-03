@@ -48,7 +48,8 @@ def main():
     sql += [f'SELECT version, checksum FROM {ledger} ORDER BY version;',
             f"SELECT pg_advisory_unlock(hashtextextended('po:migrations:{s}', 0));"]
     command = (['docker', 'exec', '-i', args.container, 'psql', '-U', 'postgres'] if args.container else [args.psql])
-    result = subprocess.run(command + ['-X', '-v', 'ON_ERROR_STOP=1'], input='\n'.join(sql)+'\n', text=True)
+    result = subprocess.run(command + ['-X', '-v', 'ON_ERROR_STOP=1'],
+                            input='\n'.join(sql)+'\n', text=True, encoding='utf-8')
     return result.returncode
 
 if __name__ == '__main__':
