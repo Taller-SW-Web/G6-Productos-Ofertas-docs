@@ -1,5 +1,7 @@
 # Component Spec — MK-XXX
 
+> **Instanciación:** Copiar a `mockups/MK-XXX/component-spec.md`. Los enlaces relativos de esta plantilla se interpretan desde ese destino; el Design System está en `../DESIGN.md`.
+
 > **Propósito y rol documental:**
 > Este documento es la especificación principal del resultado esperado del mockup (qué debe existir).
 > Subordinado a las fuentes de verdad (SPEC, HU, WF, FLOW, API Contract y Design System), define formalmente: qué pantallas existen, el propósito de cada pantalla, estructura de cada pantalla, componentes (compartidos y específicos), acciones, estados, contenido, jerarquía de información, decisiones UX locales (`LUX-XX`), fixtures y criterios de aceptación.
@@ -32,7 +34,7 @@ Define las fuentes oficiales de verdad consumidas por esta funcionalidad. Cualqu
 | UX Decisions | [UXD-XXX] | [Decisión transversal] |
 | UX Guidelines | `mockups/ux/ux-guidelines.md` | [Sección normativa] |
 | API Contract | [Ruta a Contrato_Api.md / OpenAPI] | [Endpoints y esquemas] |
-| Design System | [mockups/DESIGN.md](../../DESIGN.md), versión [versión consumida] | [Apartados, tokens y componentes DS-CXX aplicables] |
+| Design System | [mockups/DESIGN.md](../DESIGN.md), versión [versión consumida] | [Apartados, tokens y componentes DS-CXX aplicables] |
 
 ## 3. Objetivo funcional
 

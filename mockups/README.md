@@ -47,7 +47,7 @@ Define lineamientos que aplican obligatoriamente a todas las funcionalidades:
 - **`ux-guidelines.md`**: Reglas normativas operativas derivadas estrictamente de las decisiones en `ux-decisions.md`.
 - **[`DESIGN.md`](DESIGN.md)**: Design System vigente de mockups: tokens visuales, layout desktop, componentes, variantes y estados. Representa la UX 2.0 y sustituye la referencia visual de baja fidelidad para esta etapa.
 
-La versión UX 2.0 sustituye los borradores anteriores. El resultado documental y los hallazgos de fuentes se registran en [propuesta-ux.md](ux/propuesta-ux.md#11-validación-y-habilitación). El #59 está cerrado; el resultado de #60 y las condiciones de consumo se registran en [DESIGN.md](DESIGN.md#18-validación-documental-y-habilitación). La habilitación compartida de #66 requiere integrar ambas capas en `master`, sin dar por resueltos hallazgos funcionales ajenos.
+La versión UX 2.0 sustituye los borradores anteriores. El resultado documental y los hallazgos de fuentes se registran en [propuesta-ux.md](ux/propuesta-ux.md#11-validación-y-habilitación). El #59 está cerrado; el resultado de #60 y las condiciones de consumo se registran en [DESIGN.md](DESIGN.md#18-validación-documental-y-habilitación). El gate transversal está formado por #59 y #60, con sus fuentes disponibles en la base compartida. El #61 organiza la ejecución general de los mockups; el #66 corresponde únicamente a la asignación individual de Leonardo Vera para MK-013 y MK-014. Integrar la documentación en `master` no da por resueltos hallazgos funcionales ajenos.
 
 ### Nivel Funcionalidad / Mockup (`MK-XXX`)
 Cada funcionalidad concreta (`MK-001` a `MK-016`) consume la UX del módulo y define:
@@ -55,6 +55,8 @@ Cada funcionalidad concreta (`MK-001` a `MK-016`) consume la UX del módulo y de
 - **`plan.md`**: Estrategia de ejecución técnica guiada por un Contrato de ejecución (entradas, salidas esperadas, restricciones y condiciones de parada/escalamiento).
 - **`tasks.md`**: Desglose de unidades de trabajo ejecutables estructuradas (*Entrada*, *Acción*, *Salida esperada* y *Verificación* comprobable).
 - **`validation-report.md`**: Reporte formal de evidencia y trazabilidad de ejecución (autovalidación del owner, revisión UX transversal posterior, Quality Gates y fidelidad en Figma).
+
+Al instanciar las plantillas de `_plantillas/mockup/`, copiar sus archivos a `mockups/MK-XXX/`. Los enlaces relativos están preparados para ese destino: el Design System se referencia mediante `../DESIGN.md`. No recalcularlos desde la ubicación de la plantilla ni sustituirlos por `../../DESIGN.md`.
 
 ## 4. Nomenclatura
 
@@ -163,7 +165,7 @@ Una funcionalidad `MK-XXX` está lista para implementación cuando:
 - [ ] SPEC, HU, WF y Flow correspondientes están identificados y aprobados.
 - [ ] La Propuesta UX Integral del módulo está aprobada y vigente.
 - [ ] Las UX Decisions y UX Guidelines aplicables están consolidadas.
-- [ ] El Design System de mockups de #60 está consolidado y las fuentes transversales están disponibles en la base compartida conforme a #66.
+- [ ] El Design System de mockups de #60 está consolidado y las fuentes del gate #59 + #60 están disponibles en la base compartida antes de la ejecución general de #61.
 - [ ] Los hallazgos funcionales/contractuales que afectan las pantallas a implementar están resueltos; no se sustituyen capacidades ausentes por fixtures inventados.
 - [ ] El `component-spec.md` está redactado e inventaría todas las pantallas P0.
 - [ ] El `plan.md` e hitos están definidos.
