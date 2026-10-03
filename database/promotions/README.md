@@ -34,6 +34,16 @@ La aplicación debe tratar la excepción `COUPON_IDENTITY_MISMATCH` como conflic
 
 No exponer este schema en Data API ni conceder acceso a `anon`/`authenticated`. No almacenar claves ni conexiones en estos archivos.
 
+## Límites del modelo para Hito 2
+
+El modelo deriva de SPEC-005/006/007, OpenAPI, AsyncAPI, Arquitectura y Modelo Conceptual. Un escenario de presentación no añade restricciones permanentes: referencias externas escalares, sin FK ni acceso SQL a otro servicio; valores numéricos exactos sin imponer dos decimales ni una moneda única.
+
+Si un snapshot de Pricing contiene moneda, se conserva explícitamente en ese snapshot conforme al contrato del owner; no se sustituye por PEN implícito. PEN y dos decimales pueden usarse en una demostración, pero no son límites del schema. Promociones no calcula IGV/base imponible ni persiste costo de envío, Pickup, ubicaciones de fulfillment, pagos o reservas.
+
+La restitución implementada corresponde a **cancelación de pedido** en SPEC-005 y AsyncAPI. No se extiende a devoluciones parciales, reembolsos ni distribución fiscal de descuentos sin un acuerdo contractual oficial. D-REC-01/02 y los payloads GenericData de proyecciones siguen pendientes: conservar snapshot/procedencia permite avanzar sin fijar interpretaciones comerciales nuevas.
+
+La revisión de estos límites se comprueba en `validation.sql`; no cambió el contenido ni el checksum de las migraciones ya validadas. Los documentos temporales de coordinación no forman parte de las fuentes de datos ni se publican con esta entrega.
+
 ## Entrega compartida
 
 El despliegue en Supabase está pendiente por decisión de Axel: reunir antes el SQL de **todo el sistema**. El #53 requiere además revisión de BD/QA, despliegue real y evidencia del proyecto objetivo. La prueba local no permite cerrar ese criterio.

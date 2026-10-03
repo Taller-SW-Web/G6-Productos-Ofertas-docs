@@ -24,6 +24,13 @@ END $$;
 
 SELECT pg_temp.assert_true('12 tablas de arquitectura',
  (SELECT count(*)=12 FROM pg_tables WHERE schemaname='promotions' AND tablename<>'schema_migrations'));
+SELECT pg_temp.assert_true('solo entidades del contexto y ledger',
+ (SELECT array_agg(tablename::text ORDER BY tablename)=ARRAY['catalog_projection','combination_policy','coupon_uses','coupons','inbox','outbox','price_projection','promotion_scopes','promotions','recommendation_items','recommendation_rules','schema_migrations','stock_projection']
+  FROM pg_tables WHERE schemaname='promotions'));
+SELECT pg_temp.assert_true('montos sin escala rígida de demostración',
+ (SELECT count(*)=2 AND bool_and(numeric_scale IS NULL)
+  FROM information_schema.columns WHERE table_schema='promotions'
+  AND (table_name,column_name) IN (('promotions','discount_value'),('coupons','minimum_amount'))));
 SELECT pg_temp.assert_true('owner aislado',
  (SELECT pg_get_userbyid(nspowner)='po_promotions_owner' FROM pg_namespace WHERE nspname='promotions'));
 SELECT pg_temp.assert_true('ninguna FK entre schemas',NOT EXISTS(
@@ -155,6 +162,13 @@ INSERT INTO promotions.price_projection(sku,channel_id,snapshot,source_occurred_
 SELECT pg_temp.assert_true('global y override coexisten',(SELECT count(*)=2 FROM promotions.price_projection WHERE sku='fixture-price'));
 SELECT pg_temp.expect_error('un único precio global por SKU',$q$INSERT INTO promotions.price_projection(sku,channel_id,snapshot,source_occurred_at,source_message_id) VALUES('fixture-price',NULL,'{}','2026-10-03','price-global-other')$q$,'23505');
 SELECT pg_temp.expect_error('un único override SKU canal',$q$INSERT INTO promotions.price_projection(sku,channel_id,snapshot,source_occurred_at,source_message_id) VALUES('fixture-price','RETAIL','{}','2026-10-03','price-retail-other')$q$,'23505');
+INSERT INTO promotions.price_projection(sku,channel_id,snapshot,source_occurred_at,source_message_id) VALUES
+ ('fixture-price-pen',NULL,'{"currency":"PEN","amount":12.34}','2026-10-03','price-pen'),
+ ('fixture-price-usd',NULL,'{"currency":"USD","amount":12.3456}','2026-10-03','price-usd');
+SELECT pg_temp.assert_true('snapshot conserva moneda explícita y precisión',
+ (SELECT snapshot->>'currency'='PEN' FROM promotions.price_projection WHERE sku='fixture-price-pen')
+ AND (SELECT snapshot->>'currency'='USD' AND (snapshot->>'amount')::numeric=12.3456
+      FROM promotions.price_projection WHERE sku='fixture-price-usd'));
 SELECT pg_temp.expect_error('timestamp ambiguo sin versión',$q$UPDATE promotions.price_projection SET source_message_id='price-2' WHERE sku='fixture-price'$q$,'P0001','PROJECTION_ORDER_AMBIGUOUS');
 
 INSERT INTO promotions.inbox(message_id,handler,envelope) VALUES('fixture-msg','consume',

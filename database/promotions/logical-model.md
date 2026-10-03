@@ -153,6 +153,8 @@ Estado administrativo se expresa como `ACTIVO/INACTIVO`, conforme a OpenAPI; se 
 
 `D-REC-01`: disponibilidad por producto con varios SKU. `D-REC-02`: precio por producto con variantes/overrides. No se resuelven creando reglas comerciales nuevas en SQL. AsyncAPI usa GenericData para los cuatro eventos de proyección: acordar campos y versión/orden con cada owner antes de conectar consumidores. Se puede almacenar el snapshot de lectura actual, pero no declarar implementado un adaptador a eventos sin payload acordado.
 
+La semántica tributaria, promociones sobre envío y restitución después de devoluciones no están resueltas por las fuentes de este contexto. El uso/restitución de §3.5 corresponde al contrato actual de cancelación; no define devoluciones parciales. No incorporar tablas fiscales, de despacho, ubicaciones/fulfillment, pagos o reservas. Los ejemplos de moneda/formato de presentación no son catálogos cerrados ni reglas de precisión del dominio.
+
 ## 14. Derivación esperada hacia el modelo físico
 
 Una tabla por entidad, relaciones exclusivamente internas, unicidad de código y pedido/cupón, integridad diferida de agregados completos, historia protegida, control transaccional de cupos, almacenamiento explícito de envelopes y procedencia. Cada decisión física se detalla en `physical-model.md` y se verifica con fixtures reversibles.

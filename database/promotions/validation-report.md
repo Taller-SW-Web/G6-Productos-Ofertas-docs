@@ -22,7 +22,7 @@ La prueba exige que `promotions` aún no exista; no borra ni reinicia un schema 
 
 ## Resultados reales
 
-**PASS: 77 assertions SQL y 29 comprobaciones de integración.**
+**PASS: 80 assertions SQL y 29 comprobaciones de integración.**
 
 | Grupo | Evidencia / resultado |
 |---|---|
@@ -44,6 +44,7 @@ La prueba exige que `promotions` aún no exista; no borra ni reinicia un schema 
 | Reentrega concurrente | Ambas solicitudes idénticas responden con el mismo ID; un solo uso persistido. |
 | Permisos runtime reales | Puede guardar agregado/consumir/restituir/deduplicar; no puede DDL, otro schema, ledger, borrar historia ni editar identidad/envelope. |
 | Regresiones de precisión | 100.001 no se redondea a 100; mínimo 0.001 conservado; Infinity/NaN rechazados. |
+| Límites de Hito 2 | Solo las doce tablas del contexto y ledger; montos propios sin escala rígida; snapshots conservan PEN/USD y precisión sin imponer moneda única ni conversión. |
 | Regresiones de trim | Mayúsculas ASCII, espacios Unicode extremos y letra v conservada correctamente. |
 | Windows UTF-8 | SQL con comentarios y literales Unicode enviado con encoding explícito; runner probado con PYTHONUTF8=0. |
 
@@ -54,6 +55,8 @@ Las excepciones COUPON_* citadas son diagnósticos internos de persistencia; el 
 No se ejecutó SQL ni deploy en Supabase. La prueba PostgreSQL no acredita configuración de Data API, RLS/advisors del proyecto, conectividad del backend, consumidor RabbitMQ ni publicación real de eventos. El schema está diseñado como privado con privilegios explícitos, sin acceso PUBLIC/anon/authenticated.
 
 El comando de consumo no incluye subtotal/líneas: el backend sigue siendo responsable de autorizar y comprobar el snapshot comercial de Ventas antes de la transacción. AsyncAPI mantiene GenericData para eventos de las proyecciones; acordar payload/versiones con los owners. D-REC-01 y D-REC-02 permanecen abiertas y no se resolvieron artificialmente.
+
+La revisión del 2026-10-03 confirmó que no era necesario cambiar ninguna migración. Se precisaron los límites del modelo y se amplió validation.sql; ambos checksums siguen siendo los originales. No hay tablas/campos fiscales, de costo de envío, Pickup, fulfillment, pedidos/pagos o reservas. La función de restitución corresponde a cancelación del pedido; no declara resueltas las reglas de devoluciones/reembolsos ni su reparto de descuentos. Los snapshots monetarios de prueba son fixtures de persistencia, no un nuevo contrato de evento de Pricing.
 
 ## Pendientes para cerrar #53
 
