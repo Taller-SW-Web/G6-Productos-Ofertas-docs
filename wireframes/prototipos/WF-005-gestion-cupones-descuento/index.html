@@ -124,29 +124,9 @@ input[type="checkbox"],input[type="radio"]{width:18px;height:18px;margin-top:3px
     <div class="user">Gestor comercial</div>
   </div>
 </header>
-<main class="shell">
-  <div class="breadcrumb">Productos / Cupones</div>
-  
-<div class="page-head"><div><h1>Gestión de cupones de descuento</h1><p>Crea cupones, configura límites y define qué ocurre con su uso cuando un pedido se cancela.</p></div><div class="actions"><button class="btn primary" onclick="openForm()">Crear cupón</button></div></div>
-<div class="notice soft" style="margin-bottom:16px">La validación de un cupón durante una compra no consume su uso. El consumo y la restitución se realizan automáticamente desde el pedido.</div>
-<div class="table-wrap"><table><thead><tr><th>Código</th><th>Promoción</th><th>Estado</th><th>Uso global</th><th>Límite por cliente</th><th>Restitución</th><th>Acciones</th></tr></thead><tbody>
-<tr><td><strong>BIENVENIDA20</strong></td><td>20% primera compra</td><td><span class="badge dark">Activo</span></td><td>83 / 500</td><td>1</td><td>Restaurar al cancelar</td><td><button class="btn ghost" onclick="detail()">Ver</button></td></tr>
-<tr><td><strong>SETIEMBRE10</strong></td><td>10% temporada</td><td><span class="badge">Inactivo</span></td><td>Sin límite</td><td>2</td><td>No restaurar</td><td><button class="btn ghost" onclick="detail()">Ver</button></td></tr>
-</tbody></table></div>
-<div id="couponModal" class="overlay"><div class="modal"><div class="modal-head"><div><h2 id="modalTitle">Crear cupón</h2><p class="muted" id="modalDesc">Configura reglas de uso del cupón.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Cerrar">×</button></div>
-<form id="couponForm" class="stack" onsubmit="saveCoupon(event)">
-<div class="grid two"><div class="field"><label>Código</label><input class="input" value="NUEVO15"></div><div class="field"><label>Promoción</label><select class="select"><option>15% accesorios</option><option>20% primera compra</option></select></div><div class="field"><label>Monto mínimo</label><input class="input" type="number" value="80"></div><div class="field"><label>Límite global</label><input class="input" type="number" placeholder="Sin límite"></div><div class="field"><label>Límite por cliente</label><input class="input" type="number" value="1"></div><div class="field"><label>Restitución</label><select class="select"><option>Restaurar uso al cancelar</option><option>No restaurar</option></select></div></div>
-<div class="actions"><button type="button" class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary">Guardar</button></div></form>
-<div id="couponDetail" class="hidden stack"><ul class="summary-list"><li><span>Código</span><strong>BIENVENIDA20</strong></li><li><span>Límite global</span><strong>500 usos</strong></li><li><span>Límite por cliente</span><strong>1 uso</strong></li><li><span>Al cancelar</span><strong>Restaurar uso</strong></li></ul><div class="notice soft">No hay acciones manuales para consumir o devolver usos. Esas operaciones se ejecutan automáticamente cuando el pedido cambia de estado.</div><button class="btn" onclick="closeModal()">Volver</button></div>
-</div></div>
-<div id="toast5" class="notice hidden" style="position:fixed;right:20px;bottom:20px">Cupón guardado para la demostración.</div>
-
-</main>
-<script>
-function openForm(){document.getElementById('modalTitle').textContent='Crear cupón';document.getElementById('couponForm').classList.remove('hidden');document.getElementById('couponDetail').classList.add('hidden');document.getElementById('couponModal').classList.add('open')}
-function detail(){document.getElementById('modalTitle').textContent='Detalle del cupón';document.getElementById('couponForm').classList.add('hidden');document.getElementById('couponDetail').classList.remove('hidden');document.getElementById('couponModal').classList.add('open')}
-function closeModal(){document.getElementById('couponModal').classList.remove('open')}
-function saveCoupon(e){e.preventDefault();closeModal();const t=document.getElementById('toast5');t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),1500)}
-</script>
+<main class="shell" id="couponApp"></main>
+<div id="couponModal" class="overlay"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><h2 id="modalTitle"></h2><button class="icon-btn" data-modal="close" aria-label="Cerrar">×</button></div><div id="modalBody" class="stack"></div></section></div>
+<div id="toast5" class="notice hidden" role="status" aria-live="polite" style="position:fixed;right:20px;bottom:20px"></div>
+<script src="app.js"></script>
 </body>
 </html>
