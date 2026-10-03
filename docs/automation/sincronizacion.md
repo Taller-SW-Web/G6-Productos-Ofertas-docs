@@ -1,6 +1,6 @@
 # Sincronización de ramas con GitHub Actions
 
-Implementación local de la automatización analizada en el [issue #47](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/47). La decisión posterior del equipo es usar **GitHub Actions**, sustituyendo la recomendación inicial de un supervisor externo. El cierre anterior acreditaba el análisis aprobado; no acreditaba una automatización activa. Esta entrega prepara el ejecutor y sus pruebas. La publicación y la ejecución en GitHub siguen pendientes.
+Implementación de la automatización analizada en el [issue #47](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/47). La decisión posterior del equipo es usar **GitHub Actions**, sustituyendo la recomendación inicial de un supervisor externo. El cierre anterior acreditaba el análisis aprobado; no acreditaba una automatización activa. Esta entrega incluye el ejecutor y sus pruebas. El procedimiento siguiente permite validar la ejecución alojada en GitHub antes de activar los eventos automáticos.
 
 ## Alcance
 
@@ -41,9 +41,9 @@ La fuente puede avanzar después de la última comprobación; la siguiente ejecu
 
 Ante conflicto, el responsable resuelve los archivos funcionales en el laboratorio incorporando el origen y conservando sus archivos operativos. Después puede repetir una ejecución manual en simulación. No se abre un PR desde el laboratorio hacia una rama oficial. Ante un cambio concurrente, repetir la simulación con las referencias actuales. Ante error de permisos, revisar Actions y las reglas de la rama; el ejecutor no las evade.
 
-## Activación posterior
+## Procedimiento de activación
 
-Esta etapa no publica nada. Para activarlo posteriormente:
+Para instalar y activar el piloto:
 
 1. Revisar y publicar los archivos de esta entrega en la rama predeterminada (`master`). Los eventos manuales, periódicos y `workflow_run` requieren que el workflow exista allí. Publicarlo solo en una rama de trabajo no completa la activación.
 2. Confirmar que Actions permite el permiso `contents: write` y que las reglas de `lab/cueva` admiten el push del token del repositorio. No hace falta registrar un PAT ni un secreto nuevo para el diseño actual.
