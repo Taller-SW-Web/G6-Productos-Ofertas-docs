@@ -41,7 +41,7 @@ Origen y recomendados existen y están activos. No se recomienda el propio orige
 Enteros positivos.
 
 ### Requisito 5: Vigencia/estado
-Inicio < fin; `ACTIVA | INACTIVA`; solo activas/vigentes participan.
+Inicio < fin; `ACTIVO | INACTIVO` según `EstadoEntidad` de OpenAPI 0.5.0; solo reglas activas/vigentes participan.
 
 ### Requisito 6: Coincidencia
 Origen por producto específico o categoría.
@@ -66,3 +66,36 @@ IA/ML, lenguaje natural, personalización histórica, verificación automática 
 
 ## Criterio de completitud
 Se cumplen origen, criterio, prioridad, orden, vigencia, filtrado y deduplicación sin añadir simulación administrativa.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Extensión 0.5.0 — recomendaciones multicanal
+
+Marketplace, Chatbot y Retail son consumidores de la consulta contractual.
+
+Origen y recomendados deben existir, estar activos y ser comercialmente elegibles para el canal consultado. La capacidad usa disponibilidad **comercial**, nunca la composición del saldo.
+
+La recomendación sigue a nivel:
+
+```text
+product_id
+```
+
+y no selecciona automáticamente SKU/variante.
+
+`availability`, si se expone, reutiliza:
+
+```text
+DISPONIBLE
+STOCK_BAJO
+AGOTADO
+```
+
+Quedan abiertas:
+
+- `D-REC-01`: cómo obtener un status product-level a partir de múltiples SKU;
+- `D-REC-02`: qué representa `current_price` cuando existen variantes/overrides.
+
+Por ello esos enriquecimientos permanecen provisionales.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->

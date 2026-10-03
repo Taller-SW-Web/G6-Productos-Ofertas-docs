@@ -19,7 +19,7 @@ GET /api/v1/productos/{productoId}
 GET /api/v1/categorias
 GET /api/v1/marcas
 GET /api/v1/precios
-GET /api/v1/inventario/disponibilidad
+GET /api/v1/inventario/disponibilidad/comercial
 GET /api/v1/promociones
 POST /api/v1/promociones/evaluar
 POST /api/v1/cupones/validar
@@ -80,3 +80,20 @@ customer_ref = null
 ```
 
 si el cupón exige límite por cliente, la validación debe informar `CUSTOMER_REF_REQUERIDO`.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Actualización HTTP 0.5.0
+
+La disponibilidad consumida por Chatbot es la proyección comercial:
+
+```text
+sku + status
+status ∈ {DISPONIBLE, STOCK_BAJO, AGOTADO}
+```
+
+Chatbot no recibe `location_id`, `on_hand`, `reserved`, `blocked`, `available`, `threshold` ni `stock_version`.
+
+La proyección permanece provisional por `D-INV-01`. Recomendaciones continúan disponibles mediante `GET /api/v1/recomendaciones?productoId=...&canal=CHATBOT`.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->

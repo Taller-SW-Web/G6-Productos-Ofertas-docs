@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: API — Productos y Ofertas
-  version: 0.4.0
+  version: 0.5.0
   summary: Contrato HTTP de integración y administración del módulo Productos y Ofertas
   description: Contrato HTTP consolidado P0/P1/P2 del módulo Productos y Ofertas. P2 cierra la recepción de traslados internos de Inventario
     y la autorización local del operador de inventario. La topología RabbitMQ física se documenta en AsyncAPI 0.4.0 y api/rabbitmq-topologia.md.
@@ -74,6 +74,7 @@ paths:
         in: query
         schema:
           $ref: '#/components/schemas/Canal'
+        description: Contexto comercial. Obligatorio semánticamente para consumidores módulo-a-módulo de canal.
       - name: pagina
         in: query
         schema:
@@ -91,6 +92,7 @@ paths:
         in: query
         schema:
           $ref: '#/components/schemas/EstadoProducto'
+        description: Filtro de backoffice/usuario autorizado. Las identidades de canal no pueden usarlo para ampliar visibilidad.
       - name: precioMin
         in: query
         schema:
@@ -101,6 +103,11 @@ paths:
         schema:
           type: number
           minimum: 0
+      - name: orden
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/OrdenCatalogo'
       - $ref: '#/components/parameters/CorrelationId'
       responses:
         '200':
@@ -108,7 +115,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginaProductos'
+                $ref: '#/components/schemas/PaginaProductosComercial'
         '400':
           description: Solicitud inválida
           content:
@@ -286,6 +293,8 @@ paths:
                     status: 422
                     code: MARCA_INVALIDA
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
       x-error-codes:
         '400': *id001
         '401': *id002
@@ -293,11 +302,16 @@ paths:
         '422': *id004
         '500': *id005
         '503': *id006
+        '429':
+        - RATE_LIMIT_EXCEDIDO
       x-route-basis: existing-contract
       x-allowed-client-ids: &id020
       - modulo-marketplace
       - modulo-chatbot
       - modulo-retail
+      description: Lectura comercial. Los consumidores de servicio deben informar canal y solo reciben productos ACTIVO y comercialmente elegibles
+        para ese canal. El parámetro estado no habilita a un canal a consultar BORRADOR/INACTIVO. La respuesta usa una proyección comercial sin
+        flags administrativos.
     post:
       tags:
       - Productos
@@ -497,6 +511,12 @@ paths:
         required: true
         schema:
           type: string
+      - name: canal
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/Canal'
+        description: Obligatorio semánticamente para consumidores servicio-a-servicio de canal.
       - $ref: '#/components/parameters/CorrelationId'
       responses:
         '200':
@@ -504,7 +524,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductoDetalle'
+                $ref: '#/components/schemas/ProductoDetalleComercial'
         '404':
           description: Producto no encontrado
           content:
@@ -673,6 +693,8 @@ paths:
                     status: 503
                     code: SERVICIO_NO_DISPONIBLE
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
       x-error-codes:
         '400': *id014
         '401': *id015
@@ -680,8 +702,11 @@ paths:
         '404': *id017
         '500': *id018
         '503': *id019
+        '429':
+        - RATE_LIMIT_EXCEDIDO
       x-route-basis: existing-contract
       x-allowed-client-ids: *id020
+      description: Detalle comercial seguro. Para consumidores de canal solo expone producto ACTIVO y elegible en el canal informado.
     patch:
       tags:
       - Productos
@@ -1043,12 +1068,16 @@ paths:
                     status: 503
                     code: SERVICIO_NO_DISPONIBLE
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
       x-error-codes:
         '400': *id030
         '401': *id031
         '403': *id032
         '500': *id033
         '503': *id034
+        '429':
+        - RATE_LIMIT_EXCEDIDO
       x-route-basis: existing-contract
       description: Consulta consumible por Catálogo Core/canales. Expone únicamente categorías activas. El backoffice usa /categorias/administracion
         o /categorias/arbol.
@@ -1399,12 +1428,16 @@ paths:
                     status: 503
                     code: SERVICIO_NO_DISPONIBLE
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
       x-error-codes:
         '400': *id042
         '401': *id043
         '403': *id044
         '500': *id045
         '503': *id046
+        '429':
+        - RATE_LIMIT_EXCEDIDO
       x-route-basis: existing-contract
       description: Consulta consumible por Catálogo Core/canales. Expone únicamente marcas activas. El backoffice usa /marcas/administracion.
       x-allowed-client-ids: *id020
@@ -2009,6 +2042,8 @@ paths:
                     status: 503
                     code: SERVICIO_NO_DISPONIBLE
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
       x-error-codes:
         '400': *id060
         '401': *id061
@@ -2016,6 +2051,8 @@ paths:
         '404': *id063
         '500': *id064
         '503': *id065
+        '429':
+        - RATE_LIMIT_EXCEDIDO
       x-route-basis: existing-contract
       x-allowed-client-ids: *id066
     patch:
@@ -2399,12 +2436,16 @@ paths:
                     status: 503
                     code: SERVICIO_NO_DISPONIBLE
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
       x-error-codes:
         '400': *id075
         '401': *id076
         '403': *id077
         '500': *id078
         '503': *id079
+        '429':
+        - RATE_LIMIT_EXCEDIDO
       x-route-basis: existing-contract
       x-allowed-client-ids: &id715
       - modulo-marketplace
@@ -2764,6 +2805,8 @@ paths:
                     status: 503
                     code: SERVICIO_NO_DISPONIBLE
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
       x-error-codes:
         '400': *id086
         '401': *id087
@@ -2771,6 +2814,8 @@ paths:
         '422': *id089
         '500': *id090
         '503': *id091
+        '429':
+        - RATE_LIMIT_EXCEDIDO
       x-route-basis: existing-contract
       x-allowed-client-ids: &id716
       - modulo-marketplace
@@ -2945,12 +2990,16 @@ paths:
                     status: 503
                     code: SERVICIO_NO_DISPONIBLE
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
       x-error-codes:
         '400': *id092
         '401': *id093
         '403': *id094
         '500': *id095
         '503': *id096
+        '429':
+        - RATE_LIMIT_EXCEDIDO
       x-business-result-codes: &id714
       - CUPON_NO_ENCONTRADO
       - CUPON_INACTIVO
@@ -2973,7 +3022,7 @@ paths:
       - Recomendaciones
       operationId: obtenerRecomendaciones
       summary: Obtener candidatos de cross-sell/upsell
-      x-status: stable
+      x-status: provisional
       x-source-spec:
       - SPEC-007
       x-service-audience: api-productos
@@ -3140,15 +3189,27 @@ paths:
                     status: 503
                     code: SERVICIO_NO_DISPONIBLE
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
       x-error-codes:
         '400': *id097
         '401': *id098
         '403': *id099
         '500': *id100
         '503': *id101
+        '429':
+        - RATE_LIMIT_EXCEDIDO
       x-route-basis: existing-contract
-      x-allowed-client-ids: &id718
+      x-allowed-client-ids:
+      - modulo-marketplace
       - modulo-chatbot
+      - modulo-retail
+      x-consumers:
+      - Marketplace
+      - Chatbot
+      - Retail
+      description: Candidatos a nivel product_id para Marketplace, Chatbot y Retail. El enriquecimiento current_price/availability permanece provisional
+        mientras D-REC-01/D-REC-02 sigan abiertas.
   /combos/{comboId}:
     get:
       tags:
@@ -3557,9 +3618,6 @@ paths:
       x-source-spec:
       - SPEC-015
       x-consumers:
-      - Marketplace
-      - Chatbot
-      - Retail
       - Ventas/Postventa
       x-service-audience: api-productos
       x-required-scope: inventario:disponibilidad:leer
@@ -3567,7 +3625,7 @@ paths:
       security:
       - userBearer: []
       - serviceBearer: []
-      description: La consulta no reserva ni garantiza stock. El saldo autoritativo se mantiene por (sku, location_id).
+      description: Saldo detallado/autoritativo por SKU/ubicación. No es la representación consumida por canales.
       parameters:
       - name: skus
         in: query
@@ -3742,10 +3800,7 @@ paths:
         '500': *id119
         '503': *id120
       x-route-basis: existing-contract
-      x-allowed-client-ids: &id719
-      - modulo-marketplace
-      - modulo-chatbot
-      - modulo-retail
+      x-allowed-client-ids:
       - modulo-ventas
   /inventario/reservas:
     post:
@@ -5593,11 +5648,12 @@ paths:
       - Productos
       operationId: obtenerProductoPorSlug
       summary: Consultar producto por slug
-      x-status: provisional-internal
+      x-status: stable
       x-source-spec:
       - SPEC-003
       x-route-basis: derived-from-capability
       security:
+      - serviceBearer: []
       - userBearer: []
       parameters:
       - name: slug
@@ -5605,6 +5661,11 @@ paths:
         required: true
         schema:
           type: string
+      - name: canal
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Canal'
       - *id021
       responses:
         '200':
@@ -5612,7 +5673,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductoDetalle'
+                $ref: '#/components/schemas/ProductoDetalleComercial'
         '401':
           description: Error
           content:
@@ -5708,13 +5769,28 @@ paths:
                   required:
                   - status
                   - code
-      description: La SPEC exige consulta por slug pero no prescribe el path.
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+      description: Lectura comercial por slug. Requiere producto ACTIVO y elegible para el canal; no expone datos administrativos.
       x-error-codes:
         '401': *id175
         '403': *id176
         '500': *id177
         '503': *id178
         '404': *id179
+        '429':
+        - RATE_LIMIT_EXCEDIDO
+      x-consumers:
+      - Marketplace
+      - Chatbot
+      - Retail
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
   /productos/{productoId}/variantes:
     get:
       tags:
@@ -19388,6 +19464,334 @@ paths:
         - ERROR_INTERNO
         '503':
         - SERVICIO_NO_DISPONIBLE
+  /productos/codigos-barras/resolver:
+    post:
+      tags:
+      - Productos
+      operationId: resolverCodigoBarras
+      summary: Resolver código de barras a SKU vendible
+      description: Retail envía el valor capturado sin interpretarlo. Cada código resoluble identifica exactamente un SKU vendible.
+      x-status: stable
+      x-source-spec:
+      - SPEC-003
+      - SPEC-004
+      x-route-basis: derived-from-capability
+      x-consumers:
+      - Retail
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids:
+      - modulo-retail
+      security:
+      - serviceBearer: []
+      parameters:
+      - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolverCodigoBarrasRequest'
+      responses:
+        '200':
+          description: SKU vendible resuelto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolverCodigoBarrasResponse'
+        '400':
+          description: Solicitud inválida
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      enum:
+                      - VALIDACION
+                  required:
+                  - status
+                  - code
+        '401':
+          description: No autenticado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 401
+                    code:
+                      type: string
+                      enum:
+                      - TOKEN_INVALIDO
+                  required:
+                  - status
+                  - code
+        '403':
+          description: No autorizado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 403
+                    code:
+                      type: string
+                      enum:
+                      - SCOPE_INSUFICIENTE
+                  required:
+                  - status
+                  - code
+        '404':
+          description: Código de barras no resoluble a SKU vendible
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 404
+                    code:
+                      type: string
+                      enum:
+                      - CODIGO_BARRAS_NO_ENCONTRADO
+                  required:
+                  - status
+                  - code
+        '500':
+          description: Error interno
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 500
+                    code:
+                      type: string
+                      enum:
+                      - ERROR_INTERNO
+                  required:
+                  - status
+                  - code
+        '503':
+          description: Servicio no disponible
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 503
+                    code:
+                      type: string
+                      enum:
+                      - SERVICIO_NO_DISPONIBLE
+                  required:
+                  - status
+                  - code
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+      x-error-codes:
+        '400':
+        - VALIDACION
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
+        '404':
+        - CODIGO_BARRAS_NO_ENCONTRADO
+        '500':
+        - ERROR_INTERNO
+        '503':
+        - SERVICIO_NO_DISPONIBLE
+        '429':
+        - RATE_LIMIT_EXCEDIDO
+  /inventario/disponibilidad/comercial:
+    get:
+      tags:
+      - Inventario
+      operationId: consultarDisponibilidadComercial
+      summary: Consultar disponibilidad comercial de uno o varios SKU
+      description: Proyección informativa sin cantidades internas. No reserva ni garantiza stock. Permanece provisional mientras D-INV-01 defina
+        la reducción multiubicación.
+      x-status: provisional
+      x-source-spec:
+      - SPEC-015
+      x-route-basis: derived-from-capability
+      x-consumers:
+      - Marketplace
+      - Chatbot
+      - Retail
+      x-service-audience: api-productos
+      x-required-scope: inventario:disponibilidad:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
+      security:
+      - serviceBearer: []
+      parameters:
+      - name: skus
+        in: query
+        required: true
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 100
+        description: Lista separada por comas.
+      - name: canal
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Canal'
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Disponibilidad comercial
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsultaDisponibilidadComercialResponse'
+        '400':
+          description: Solicitud inválida
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      enum:
+                      - VALIDACION
+                  required:
+                  - status
+                  - code
+        '401':
+          description: No autenticado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 401
+                    code:
+                      type: string
+                      enum:
+                      - TOKEN_INVALIDO
+                  required:
+                  - status
+                  - code
+        '403':
+          description: No autorizado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 403
+                    code:
+                      type: string
+                      enum:
+                      - SCOPE_INSUFICIENTE
+                  required:
+                  - status
+                  - code
+        '500':
+          description: Error interno
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 500
+                    code:
+                      type: string
+                      enum:
+                      - ERROR_INTERNO
+                  required:
+                  - status
+                  - code
+        '503':
+          description: Servicio no disponible
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 503
+                    code:
+                      type: string
+                      enum:
+                      - SERVICIO_NO_DISPONIBLE
+                  required:
+                  - status
+                  - code
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+      x-error-codes:
+        '400':
+        - VALIDACION
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
+        '500':
+        - ERROR_INTERNO
+        '503':
+        - SERVICIO_NO_DISPONIBLE
+        '429':
+        - RATE_LIMIT_EXCEDIDO
 components:
   securitySchemes:
     serviceBearer:
@@ -20055,11 +20459,7 @@ components:
           - 'null'
           minimum: 0
         availability:
-          type: string
-          enum:
-          - AVAILABLE
-          - LOW_STOCK
-          - UNAVAILABLE
+          $ref: '#/components/schemas/EstadoStock'
       required:
       - product_id
       - type
@@ -20466,6 +20866,8 @@ components:
       - TRASLADO_NO_RECIBIBLE
       - CANTIDAD_RECIBIDA_EXCEDE_TRASLADO
       - DISPOSICION_RECEPCION_INVALIDA
+      - CODIGO_BARRAS_NO_ENCONTRADO
+      - RATE_LIMIT_EXCEDIDO
     CodigoRechazoCupon:
       type: string
       description: Motivo estable de no aplicabilidad del cupón. No implica por sí mismo error HTTP.
@@ -20833,6 +21235,7 @@ components:
           type: string
         codigo:
           type: string
+          description: Código normalizado por trim y mayúsculas ASCII; la unicidad se comprueba sobre ese valor.
         promocionId:
           type: string
         estado:
@@ -20883,6 +21286,7 @@ components:
       properties:
         codigo:
           type: string
+          description: Código normalizado por trim y mayúsculas ASCII; la unicidad se comprueba sobre ese valor.
           pattern: ^[A-Za-z0-9_-]+$
         promocionId:
           type: string
@@ -20916,6 +21320,7 @@ components:
       properties:
         codigo:
           type: string
+          description: Código normalizado por trim y mayúsculas ASCII; la unicidad se comprueba sobre ese valor.
           pattern: ^[A-Za-z0-9_-]+$
         promocionId:
           type: string
@@ -21017,8 +21422,15 @@ components:
           minimum: 1
         canalesHabilitados:
           type: array
+          minItems: 1
+          uniqueItems: true
+          description: Selección explícita de canales. No se admite vacío ni se interpreta omisión como todos los canales.
           items:
             $ref: '#/components/schemas/Canal'
+        puedeCambiarModalidad:
+          type: boolean
+          readOnly: true
+          description: Calculado por promotions-svc. Es true únicamente si está INACTIVO, nunca fue activada, no tiene cupones asociados ni usos históricos. No es una autorización enviada por el cliente; el servicio revalida al modificar.
         politicaCombinacion:
           $ref: '#/components/schemas/PoliticaCombinacion'
       additionalProperties: true
@@ -21035,6 +21447,7 @@ components:
       - prioridad
       - canalesHabilitados
       - politicaCombinacion
+      - puedeCambiarModalidad
     PromocionWriteRequest:
       type: object
       properties:
@@ -21063,6 +21476,9 @@ components:
           minimum: 1
         canalesHabilitados:
           type: array
+          minItems: 1
+          uniqueItems: true
+          description: Selección explícita de canales. No se admite vacío ni se interpreta omisión como todos los canales.
           items:
             $ref: '#/components/schemas/Canal'
         politicaCombinacion:
@@ -21078,6 +21494,7 @@ components:
       - validUntil
       - alcance
       - prioridad
+      - canalesHabilitados
       - politicaCombinacion
     PaginaPromociones:
       type: object
@@ -22455,6 +22872,9 @@ components:
           minimum: 1
         canalesHabilitados:
           type: array
+          minItems: 1
+          uniqueItems: true
+          description: Selección explícita de canales. No se admite vacío ni se interpreta omisión como todos los canales.
           items:
             $ref: '#/components/schemas/Canal'
         politicaCombinacion:
@@ -23165,6 +23585,201 @@ components:
       - pagina
       - tamanio
       - total
+    MarcaComercial:
+      type: object
+      properties:
+        marca_id:
+          type: string
+        name:
+          type: string
+        description:
+          type:
+          - string
+          - 'null'
+        logo_url:
+          type:
+          - string
+          - 'null'
+          format: uri
+        country_code:
+          type:
+          - string
+          - 'null'
+      required:
+      - marca_id
+      - name
+    VarianteComercial:
+      type: object
+      properties:
+        variant_id:
+          type: string
+        sku:
+          type: string
+        identifying_attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Atributo'
+        non_identifying_attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Atributo'
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+      required:
+      - variant_id
+      - sku
+    ProductoResumenComercial:
+      type: object
+      properties:
+        product_id:
+          type: string
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type:
+          - string
+          - 'null'
+        categoria_id:
+          type: string
+        tipo_producto_id:
+          type: string
+        marca_id:
+          type: string
+        tiene_variantes:
+          type: boolean
+        sku_base:
+          type:
+          - string
+          - 'null'
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Atributo'
+      required:
+      - product_id
+      - slug
+      - name
+      - categoria_id
+      - tipo_producto_id
+      - marca_id
+      - tiene_variantes
+    ProductoDetalleComercial:
+      allOf:
+      - $ref: '#/components/schemas/ProductoResumenComercial'
+      - type: object
+        properties:
+          marca:
+            $ref: '#/components/schemas/MarcaComercial'
+          variants:
+            type: array
+            items:
+              $ref: '#/components/schemas/VarianteComercial'
+        required:
+        - marca
+        - variants
+    PaginaProductosComercial:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductoResumenComercial'
+        pagina:
+          type: integer
+          minimum: 1
+        tamanio:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+      required:
+      - items
+      - pagina
+      - tamanio
+      - total
+    OrdenCatalogo:
+      type: string
+      enum:
+      - NOMBRE_ASC
+      - NOMBRE_DESC
+      description: Ordenamiento contractual seguro a nivel de producto. El orden por precio permanece fuera mientras no exista una regla product-level.
+    ResolverCodigoBarrasRequest:
+      type: object
+      properties:
+        codigo_barras:
+          type: string
+          minLength: 1
+          description: Valor opaco capturado por Retail. Se preserva como string y no se interpreta ni transforma.
+      required:
+      - codigo_barras
+      additionalProperties: false
+    ResolverCodigoBarrasResponse:
+      type: object
+      properties:
+        sku:
+          type: string
+      required:
+      - sku
+      additionalProperties: false
+    DisponibilidadComercial:
+      type: object
+      properties:
+        sku:
+          type: string
+        status:
+          $ref: '#/components/schemas/EstadoStock'
+      required:
+      - sku
+      - status
+      additionalProperties: false
+    ConsultaDisponibilidadComercialResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DisponibilidadComercial'
+      required:
+      - items
+  headers:
+    RetryAfter:
+      description: Tiempo sugerido antes de reintentar. Puede expresarse según la semántica HTTP de Retry-After.
+      schema:
+        type: string
+  responses:
+    RateLimitExceeded:
+      description: Límite temporal de solicitudes excedido
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/Problem'
+            - type: object
+              properties:
+                status:
+                  type: integer
+                  const: 429
+                code:
+                  type: string
+                  enum:
+                  - RATE_LIMIT_EXCEDIDO
+              required:
+              - status
+              - code
 x-security-contract:
   identity_provider: Taller-SW-Web/Modulo-de-Seguridad
   identity_openapi: specs/openapi.yaml
@@ -23194,11 +23809,16 @@ x-security-contract:
     cupones:validar:
       clients: *id717
     recomendaciones:leer:
-      clients: *id718
+      clients:
+      - modulo-chatbot
     combos:leer:
       clients: *id250
     inventario:disponibilidad:leer:
-      clients: *id719
+      clients:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
+      - modulo-ventas
     inventario:reservar:
       clients: *id720
     inventario:consumir:

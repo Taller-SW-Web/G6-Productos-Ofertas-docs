@@ -163,3 +163,21 @@ available = max(on_hand - reserved - blocked, 0)
 # Criterio de completitud
 
 La HU se considera cubierta cuando existen pruebas unitarias/contrato para las invariantes y, cuando exista backend real, pruebas de integración de concurrencia, idempotencia, reintegro, incidencias y conciliación offline.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Criterios complementarios 0.5.0
+
+Para evitar ambigüedad, los criterios de consulta se interpretan así:
+
+- la consulta detallada devuelve la composición del saldo únicamente a consumidores autorizados;
+- Marketplace, Chatbot y Retail consumen la proyección comercial;
+- la proyección comercial devuelve `sku + status`;
+- no expone ubicación, cantidades internas, umbral ni `stock_version`;
+- es informativa y no constituye reserva/garantía futura;
+- `AGOTADO` representa un SKU existente sin disponibilidad, no un SKU inexistente;
+- el mismo scope `inventario:disponibilidad:leer` no elimina las allowlists por operación.
+
+Los casos multiubicación permanecen bloqueados por `D-INV-01`.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->

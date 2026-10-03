@@ -9,7 +9,7 @@
 **Catálogo canónico de errores:** `api/catalogo-errores.md` (`0.4.0`)  
 **Contrato humano de integración:** `Contrato_Api.md`  
 **Modelo conceptual:** `Modelo_Conceptual.md`  
-**Estado contractual consolidado:** OpenAPI `0.4.0` + AsyncAPI `0.4.0` + topología RabbitMQ consolidada.
+**Estado contractual consolidado:** OpenAPI `0.5.0` + AsyncAPI `0.4.0` + topología RabbitMQ consolidada.
 
 > Esta arquitectura es la guía de implementación del backend y de sus integraciones.  
 > Las SPEC son la fuente de verdad para reglas funcionales; `api/openapi.yaml` gobierna HTTP; `asyncapi/asyncapi.yaml` gobierna mensajería; `api/catalogo-errores.md` gobierna la semántica estable de `code`.
@@ -3136,7 +3136,7 @@ Los principios arquitectónicos principales son:
 7. Marketplace/Chatbot solo consultan; Retail además reporta/resuelve incidencias físicas sin orquestar ventas.
 8. Catálogo mantiene perfil físico por SKU.
 9. Despacho mantiene ownership del empaque.
-10. OpenAPI `0.4.0` gobierna la interfaz HTTP de integración y administración.
+10. OpenAPI `0.5.0` gobierna la interfaz HTTP de integración y administración.
 11. AsyncAPI `0.4.0` gobierna la mensajería lógica consolidada y sus 39 mensajes.
 12. `api/catalogo-errores.md` gobierna los códigos estables y `api/catalogo-eventos.md` la lectura humana de mensajería.
 13. cada servicio aplica arquitectura por capas/puertos.
@@ -3147,3 +3147,65 @@ Los principios arquitectónicos principales son:
 18. los cambios de precio usan introspección; el resto del tráfico de usuario usa validación local con JWKS salvo ampliación contractual futura.
 
 Esta estructura permite implementar cada bounded context de forma independiente, probarlo en aislamiento, desplegarlo por separado y evolucionar contratos sin convertir el monorepo en una aplicación monolítica fuertemente acoplada.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Alineación arquitectónica HTTP 0.5.0
+
+### Fronteras
+
+```text
+Frontend Marketplace
+→ backend/BFF Marketplace (externo al módulo)
+→ Ingress/API Gateway de Productos y Ofertas
+→ servicio owner
+```
+
+El BFF Marketplace no es el `api-gateway` interno.
+
+### catalog-svc
+
+Responsabilidades nuevas/explicitadas:
+
+```text
+CommercialProductQuery
+CommercialEligibilityPolicy
+BarcodeResolver
+```
+
+La persistencia de barcode/elegibilidad sigue detrás de ports mientras `D-CAT-*` permanezcan abiertas.
+
+### inventory-svc
+
+Distinguir:
+
+```text
+DetailedAvailabilityQuery
+CommercialAvailabilityQuery
+CommercialAvailabilityPolicy
+```
+
+La policy multiubicación no está cerrada (`D-INV-01`), por lo que la proyección comercial sigue provisional.
+
+### promotions-svc
+
+`RecommendationPolicy` puede enriquecerse mediante proyecciones mínimas de Catálogo, Pricing e Inventario, sin joins cross-schema ni ownership ajeno. `D-REC-01/02` siguen abiertas.
+
+### Gateway
+
+El rate limiting pertenece a Ingress/API Gateway:
+
+```text
+429 RATE_LIMIT_EXCEDIDO
+Retry-After
+```
+
+La correlación se genera/preserva antes del rechazo.
+
+### Scopes
+
+Se mantienen 16 scopes. `catalogo:leer` no habilita el resolver a clientes distintos de Retail; `inventario:disponibilidad:leer` no habilita automáticamente la lectura detallada a canales.
+
+Los conteos históricos de paths/operaciones/schemas/ErrorCode deben recalcularse mecánicamente o eliminarse; no reutilizar cifras de 0.4.0.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->

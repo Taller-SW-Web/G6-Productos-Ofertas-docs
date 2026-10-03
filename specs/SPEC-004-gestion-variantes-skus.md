@@ -65,9 +65,23 @@ altoCm > 0
 
 Despacho consulta todas las unidades vendibles mediante el mismo endpoint físico.
 
-## 6. Desactivación
+Una variante en `BORRADOR` puede tener perfil físico incompleto; los valores informados deben ser positivos. Activar o reactivar exige los cuatro valores completos. El padre no tiene peso ni dimensiones propios; el volumen de la variante se deriva de sus dimensiones y no se ingresa por separado.
 
-Desactivar una variante publica `catalog.sku.deactivated`. Si era la última variante activa, el producto padre se inactiva conforme a SPEC-003.
+## 6. Edición, activación, desactivación y reactivación
+
+La edición ordinaria permite actualizar atributos no identificadores, imagen y perfil físico válido. Conserva `variant_id`, el SKU comercial publicado y los atributos identificadores, conforme a `VarianteUpdateRequest` en OpenAPI vigente.
+
+La edición actualiza la misma variante, sin crear otra ni cambiar su identidad comercial. Antes de guardar cambios de una variante `ACTIVA`, se comprueba que el resultado completo conserve las condiciones de activación de la variante. Si no las conserva, se rechaza la edición y se mantienen los datos y el estado anteriores, sin desactivación automática.
+
+Activar requiere un padre con `tiene_variantes=true`, SKU globalmente único, combinación identificadora única dentro del producto, atributos e imagen válidos, perfil físico completo en kg/cm con valores mayores que cero e Inventario confirmado mediante `inventory.sku.initialization.completed`. Las comprobaciones de unicidad excluyen la propia variante.
+
+Desactivar una variante publica `catalog.sku.deactivated`. Si era la última variante activa y el padre estaba `ACTIVO`, se inactiva el padre conforme a SPEC-003. Si el padre estaba en `BORRADOR` o `INACTIVO`, conserva ese estado. Desactivar al padre conserva los estados individuales de sus variantes, pero bloquea su exposición comercial.
+
+Reactivar una variante `INACTIVA` conserva `variant_id` y SKU, revalida las mismas condiciones de activación y solo entonces la devuelve a `ACTIVA`. Si no cumple, permanece `INACTIVA`. La preparación de Inventario rechazada o pendiente puede reintentarse idempotentemente conservando la identidad de operación; una inicialización completada no se repite. Reactivar no crea precio base ni activa automáticamente al padre: este se revalida conforme a SPEC-003.
+
+El padre no necesita estar `ACTIVO` para preparar, activar o reactivar una variante. Para activar o reactivar al padre se requiere al menos una variante activa y preparada; los hijos en `BORRADOR` o `INACTIVA` no bloquean al padre ni se ofrecen comercialmente. Reactivar al padre no reactiva variantes inactivas.
+
+La ruta `POST /productos/{productoId}/variantes/{variantId}/reactivar` está declarada en [OpenAPI vigente](../api/openapi.yaml), con estado `provisional-internal`. Los eventos de desactivación se publican mediante RabbitMQ y su fan-out corresponde a AsyncAPI 0.4.0.
 
 ## 7. No pertenece a esta capacidad
 
@@ -76,3 +90,25 @@ Desactivar una variante publica `catalog.sku.deactivated`. Si era la última var
 - precio master;
 - empaque;
 - pedido.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Extensión 0.5.0 — resolución de variante
+
+Se mantiene:
+
+```text
+variant_id != sku
+```
+
+Cuando un código de barras identifica una unidad vendible de un producto con variantes:
+
+```text
+codigo_barras → sku de la variante
+```
+
+No se devuelve `variant_id` como identidad comercial.
+
+Una variante inactiva o con producto padre no comercialmente vendible no produce una resolución válida. La ausencia temporal de stock **no** cambia la identidad SKU; disponibilidad se consulta separadamente.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->

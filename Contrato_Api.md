@@ -234,9 +234,9 @@ La definición exacta de parámetros y schemas está en `api/openapi.yaml`.
 | `GET` | `/api/v1/promociones` | stable | Marketplace / Chatbot / Retail |
 | `POST` | `/api/v1/promociones/evaluar` | stable | Marketplace / Chatbot / Retail |
 | `POST` | `/api/v1/cupones/validar` | stable | Marketplace / Chatbot / Retail |
-| `GET` | `/api/v1/recomendaciones` | stable | Chatbot |
+| `GET` | `/api/v1/recomendaciones` | provisional | Marketplace / Chatbot / Retail |
 | `GET` | `/api/v1/combos/{comboId}` | stable | Sin concesión externa inicial |
-| `GET` | `/api/v1/inventario/disponibilidad` | stable | Canales / Ventas |
+| `GET` | `/api/v1/inventario/disponibilidad` | stable | Ventas/Postventa / consumo interno autorizado |
 | `POST` | `/api/v1/inventario/reservas` | provisional | Solo Ventas/Postventa |
 | `POST` | `/api/v1/inventario/reservas/{reservaId}/confirmar` | provisional | Solo Ventas/Postventa |
 | `POST` | `/api/v1/inventario/reservas/{reservaId}/liberar` | provisional | Solo Ventas/Postventa |
@@ -410,7 +410,7 @@ Estas rutas usan el contrato técnico `precios:leer` cuando son invocadas módul
 
 ## 7.2. Administración de precio base y override
 
-OpenAPI `0.4.0` publica además:
+OpenAPI `0.5.0` publica además:
 
 | Método | Ruta | Estado |
 |---|---|---|
@@ -2166,7 +2166,7 @@ Principios:
 - reconciliación ante aplicación parcial;
 - no rollback distribuido ficticio.
 
-La cobertura HTTP administrativa de Bulk ya forma parte del OpenAPI `0.4.0`. La forma exacta de rutas, requests, estados y errores se toma del contrato ejecutable; este documento conserva únicamente las reglas de ownership y coordinación.
+La cobertura HTTP administrativa de Bulk ya forma parte del OpenAPI `0.5.0`. La forma exacta de rutas, requests, estados y errores se toma del contrato ejecutable; este documento conserva únicamente las reglas de ownership y coordinación.
 
 ---
 
@@ -2176,7 +2176,7 @@ Price Audit conserva el historial inmutable de cambios de precio.
 
 No se expone como parte de los contratos de canales; su superficie es administrativa.
 
-OpenAPI `0.4.0` publica:
+OpenAPI `0.5.0` publica:
 
 ```text
 GET  /api/v1/auditoria-precios
@@ -2225,7 +2225,7 @@ Línea base del artefacto HTTP:
 
 ```text
 OpenAPI 3.1.0
-info.version = 0.4.0
+info.version = 0.5.0
 ```
 
 Un cambio incompatible requiere nueva versión.
@@ -2482,6 +2482,77 @@ Seguridad:
 - emite tokens de servicio con `aud` y `scope` para APIs propietarias;
 - permite introspección para cambios de precio según el contrato vigente.
 
-La línea base documental consolidada es OpenAPI `0.4.0`, AsyncAPI `0.4.0`, catálogo de errores `0.4.0` y catálogo de eventos `0.4.0`.
+La línea base documental consolidada es OpenAPI `0.5.0`, AsyncAPI `0.4.0`, catálogo de errores `0.4.0` y catálogo de eventos `0.4.0`.
 
 A partir de esta versión, cualquier cambio de rutas HTTP debe realizarse primero en `api/openapi.yaml`; los cambios de mensajería deben realizarse primero en `asyncapi/asyncapi.yaml`; después se actualizan los documentos humanos derivados.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Homologación contractual HTTP 0.5.0
+
+**Fuente HTTP autoritativa:** `api/openapi.yaml` 0.5.0. AsyncAPI mantiene su versión propia vigente.
+
+### Catálogo comercial
+
+```text
+GET /api/v1/productos
+GET /api/v1/productos/{productoId}
+GET /api/v1/productos/por-slug/{slug}
+```
+
+Los consumidores de canal reciben una proyección comercial segura: no se exponen `catalog_version`, `pricing_preparado`, `inventario_inicializado`, `perfil_fisico` ni `physical_profile`.
+
+La elegibilidad comercial requiere:
+
+```text
+ACTIVO + elegible_para_canal(producto, canal)
+```
+
+El orden publicado se limita a `NOMBRE_ASC` / `NOMBRE_DESC`.
+
+### Retail — código de barras
+
+```text
+POST /api/v1/productos/codigos-barras/resolver
+codigo_barras (string opaco) → sku
+404 CODIGO_BARRAS_NO_ENCONTRADO
+```
+
+La cardinalidad inversa SKU→código(s) y la administración de la asociación continúan pendientes.
+
+### Inventario
+
+```text
+GET /api/v1/inventario/disponibilidad
+→ saldo detallado/autoritativo para Ventas/Postventa y usuarios autorizados
+
+GET /api/v1/inventario/disponibilidad/comercial
+→ Marketplace / Chatbot / Retail
+→ sku + status
+```
+
+La proyección comercial no expone cantidades/ubicaciones/versiones y permanece **provisional** mientras `D-INV-01` siga abierta.
+
+### Recomendaciones
+
+Marketplace, Chatbot y Retail pueden consumir `/recomendaciones` con `recomendaciones:leer`. La recomendación sigue a nivel `product_id`; `availability` reutiliza `EstadoStock`. El enriquecimiento `availability/current_price` permanece provisional mientras `D-REC-01/D-REC-02` sigan abiertas.
+
+### Correlación y rate limiting
+
+`X-Correlation-Id` continúa siendo canónico. El Gateway puede responder `429 RATE_LIMIT_EXCEDIDO` con `Retry-After`.
+
+### Scopes
+
+El conjunto continúa en 16 scopes. El resolver de código de barras reutiliza `catalogo:leer`; no se crea `codigos-barras:resolver`.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->
+
+## Alineación administrativa de Promociones y Cupones
+
+Los contratos administrativos internos de OpenAPI mantienen las rutas existentes. Al crear una promoción, `canalesHabilitados` es obligatorio, sin duplicados y con al menos un canal; omisión/vacío no significa «todos». En PATCH, omitir el campo conserva la selección y un array vacío es inválido.
+
+`PromocionAdmin.puedeCambiarModalidad` es de solo lectura y lo calcula `promotions-svc` aplicando HU-006 CA-13. El servicio debe volver a validar inactividad, ausencia de activaciones previas, de cupones asociados y de usos históricos al aceptar el cambio. La interfaz no puede conceder ese permiso. Un consumidor anterior que no reciba el campo no presupone elegibilidad.
+
+Los códigos de cupón se comparan después de eliminar espacios extremos y convertir letras ASCII a mayúsculas; la unicidad no depende de cómo el gestor haya escrito las mayúsculas. Los límites vacíos son `null` y los valores informados respetan las restricciones de los schemas.
+
+Estos ajustes documentan reglas administrativas y no acreditan implementación o integración del servicio. Los enriquecimientos de recomendaciones por producto siguen sujetos a D-REC-01/02.

@@ -1560,3 +1560,33 @@ SPEC-015 se considera implementada cuando:
 - los contratos asíncronos coinciden con `asyncapi/asyncapi.yaml`;
 - Ventas/Postventa tiene pruebas de contrato sobre reserva/consumo/liberación;
 - Marketplace y Chatbot no poseen permisos de mutación; Retail solo posee capacidades de incidencias físicas; Ventas/Postventa concentra las mutaciones comerciales.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Extensión 0.5.0 — saldo detallado vs disponibilidad comercial
+
+Esta sección sustituye cualquier referencia anterior que presente el saldo detallado como respuesta normal de Marketplace/Chatbot/Retail.
+
+```text
+GET /api/v1/inventario/disponibilidad
+→ saldo detallado/autoritativo
+→ Ventas/Postventa + usuarios humanos autorizados
+
+GET /api/v1/inventario/disponibilidad/comercial
+→ proyección para Marketplace / Chatbot / Retail
+→ sku + status
+```
+
+La proyección comercial no expone `location_id`, `on_hand`, `reserved`, `blocked`, `available`, `threshold` ni `stock_version`; no reserva ni garantiza stock.
+
+Estados:
+
+```text
+DISPONIBLE
+STOCK_BAJO
+AGOTADO
+```
+
+`D-INV-01` permanece abierta: todavía no existe una política respaldada para reducir múltiples saldos `(sku, location_id)` a un único status por SKU. Por ello la ruta comercial se mantiene `provisional`.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->

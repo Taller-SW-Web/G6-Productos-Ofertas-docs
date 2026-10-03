@@ -40,3 +40,21 @@
 
 ## Frontera Chatbot
 Productos y Ofertas entrega candidatos; Chatbot interpreta lenguaje natural y necesidades.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Criterios complementarios 0.5.0
+
+La consulta de candidatos:
+
+- puede ser consumida por Marketplace, Chatbot y Retail;
+- filtra recomendados no elegibles para el canal;
+- devuelve candidatos a nivel `product_id`;
+- no selecciona SKU/variante;
+- no expone saldos internos;
+- una lista sin candidatos válidos responde `[]`;
+- el precio y disponibilidad mostrados son informativos y no sustituyen la resolución definitiva del SKU elegido.
+
+`D-REC-01` y `D-REC-02` permanecen abiertas; los enriquecimientos afectados se consideran provisionales.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->
