@@ -55,21 +55,21 @@
 ### MK-016-S01 — Dashboard analítico y alertas de stock
 
 - [ ] **MK-016-T10 — P0 — Implementar estructura de MK-016-S01** `[TODO]`
-  - **Entrada:** `component-spec.md`, sección 10 (S01).
-  - **Acción:** Implementar cabecera, grilla de KPIs superiores (4+3), barra de filtros, panel de alertas, tabla de distribución y tabla de inventario por SKU.
+  - **Entrada:** `component-spec.md`, sección 10 (S01) y `DESIGN.md` §9.
+  - **Acción:** Implementar cabecera, grilla de KPIs (12 indicadores organizados en 4 filas de 3 tarjetas por fila, gap 24 px según DESIGN.md §9), barra de filtros multidimensional (productoId, categoriaId, marcaId, sku, locationId, estado), panel de alertas críticas, tabla de distribución por ubicación y tabla principal de inventario por SKU (9 columnas).
   - **Salida esperada:** Ruta `/MK016/S01` renderizable y navegable directamente en 1440 px.
   - **Verificación:** Todas las zonas obligatorias presentes y sin elementos inventados.
 
 - [ ] **MK-016-T11 — P0 — Implementar componentes específicos y compartidos de S01** `[TODO]`
   - **Entrada:** `component-spec.md` (secciones 8 y 9) y Design System.
-  - **Acción:** Integrar `DS-C19` (KPIs), `DS-C17` (Table), `DS-C14` (Badge), `DS-C13` (FilterBar) y `DS-C15` (Notice/Alert).
+  - **Acción:** Integrar `DS-C19` (KPIs en grid 3x), `DS-C17` (Table), `DS-C14` (Badge con LUX-01), `DS-C13` (FilterBar con 4 selectores y buscador) y `DS-C15` (Notice/Alert con LUX-04).
   - **Salida esperada:** Componentes integrados en `/MK016/S01` según la jerarquía establecida.
   - **Verificación:** Coincidencia con la especificación conceptual sin componentes inventados.
 
 - [ ] **MK-016-T12 — P0 — Implementar interacción principal y navegación de S01** `[TODO]`
-  - **Entrada:** `component-spec.md` (secciones 6 y 10) y `FLOW-016`.
-  - **Acción:** Conectar filtrado por texto, selectores de ubicación y estado, y enlaces contextuales hacia MK-015.
-  - **Salida esperada:** Filtrado reactivo en tiempo real sin recargar página y navegación hacia MK-015 para gestión de incidencias.
+  - **Entrada:** `component-spec.md` (secciones 6 y 10), `FLOW-016` y OpenAPI `GET /api/v1/inventario/dashboard`.
+  - **Acción:** Conectar filtrado por texto libre (`productoId`, `sku`), selectores de categoría (`categoriaId`), marca (`marcaId`), ubicación (`locationId`) y estado comercial (`estado`), y enlaces contextuales hacia MK-015 (`MK-015-S01` y `MK-015-S05`).
+  - **Salida esperada:** Filtrado reactivo en tiempo real sin recargar página y navegación hacia MK-015 para atención de incidencias.
   - **Verificación:** Filtrado determinista en tabla principal y enlaces operativos activos.
 
 - [ ] **MK-016-T13 — P0 — Implementar estado default con fixtures en S01** `[TODO]`

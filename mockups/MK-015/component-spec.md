@@ -32,7 +32,7 @@ Define las fuentes oficiales de verdad consumidas por esta funcionalidad. Cualqu
 | UX Decisions | `mockups/ux/ux-decisions.md` | UXD‑001, UXD‑011 decisiones de interacción |
 | UX Guidelines | `mockups/ux/ux-guidelines.md` | UXG‑001…UXG‑022 reglas operativas |
 | API Contract | [OpenAPI](../../api/openapi.yaml) / [Contrato_Api.md](../../Contrato_Api.md) | Endpoints `/inventario/disponibilidad`, `/inventario/umbrales`, `/inventario/traslados`, `/inventario/traslados/{id}/recepciones`; HTTP 0.5.0 |
-| Design System | [mockups/DESIGN.md](../../DESIGN.md), versión 1.0.0 | Tokens, componentes DS‑C01‑DS‑C29, layout 1440 px, estados de interacción |
+| Design System | [mockups/DESIGN.md](../DESIGN.md), versión 1.0.0 | Tokens, componentes DS‑C01‑DS‑C29, layout 1440 px, estados de interacción |
 
 ## 3. Objetivo funcional
 
@@ -45,13 +45,16 @@ Define las fuentes oficiales de verdad consumidas por esta funcionalidad. Cualqu
 
 ### Incluido
 
-- Consultar disponibilidad por SKU y ubicación (`GET /inventario/disponibilidad`).
+- Consultar disponibilidad por SKU y ubicación (`GET /api/v1/inventario/disponibilidad?skus=…&location_id=…`).
 - Mostrar `on_hand`, `reserved`, `blocked`, `available`, `estado`, `umbral_stock_bajo_resuelto`, `stock_version`.
-- Cálculo `available = max(on_hand - reserved - blocked, 0)`.
-- Determinar estado comercial: `AGOTADO` (available = 0), `STOCK_BAJO` (0 < available ≤ umbral), `DISPONIBLE` (available > umbral).
-- Configurar umbrales por SKU mediante los endpoints correctos: `GET /inventario/umbrales` para obtener la configuración actual, `PUT /inventario/umbrales/global` para aplicar un umbral global, y `PUT /inventario/umbrales/skus/{sku}` para aplicar umbral a un SKU específico.
-- Listar traslados pendientes (`GET /inventario/traslados`).
-- Registrar recepción de traslado (`POST …/traslados/{id}/recepciones`).
+- Cálculo autoritativo `available = max(on_hand - reserved - blocked, 0)`.
+- Determinar estado comercial: `AGOTADO` (available = 0), `STOCK_BAJO` (0 < available ≤ umbral), `DISPONIBLE` (available > umbral).
+- Configurar umbrales mediante los endpoints correctos:
+  - `GET /api/v1/inventario/umbrales` para obtener la configuración actual global y por SKU.
+  - `PUT /api/v1/inventario/umbrales/global` para definir el umbral global por defecto.
+  - `PUT /api/v1/inventario/umbrales/skus/{sku}` para definir el umbral específico por SKU.
+- Listar traslados pendientes (`GET /api/v1/inventario/traslados`).
+- Registrar recepción de traslado con cantidad recibida, disposición (`REINGRESAR_DISPONIBLE`, `MANTENER_BLOQUEADO`, `CONFIRMAR_MERMA`), marca de recepción final y nota opcional (`POST /api/v1/inventario/traslados/{id}/recepciones`).
 - Mostrar badges de estado (DISPONIBLE / STOCK_BAJO / AGOTADO) con ícono según DS‑C14.
 
 ### Fuera de alcance
@@ -67,15 +70,15 @@ Define las fuentes oficiales de verdad consumidas por esta funcionalidad. Cualqu
 
 ## 5. Inventario de pantallas
 
-Define qué pantallas existen y su propósito dentro de la funcionalidad.
+Define qué pantallas existen y su propósito dentro de la funcionalidad (ordenadas estrictamente según WF-015).
 
 | ID | Pantalla | Propósito | Entrada | Acción principal | Salida | Prioridad | Ruta del prototipo |
 |---|---|---|---|---|---|---|---|
-| MK‑015‑S01 | Control de stock | Consultar disponibilidad por SKU/ubicación | `GET /inventario/disponibilidad?skus=…&location_id=…` | Filtrar, agrupar | Tabla con Físico/Reservado/Bloqueado/Disponible/Estado/Umbral | P0 | `/MK015/S01` |
-| MK‑015‑S02 | Detalle del saldo | Ver detalle de un SKU/ubicación | misma llamada, drawer 640 px | — | Ficha con Físico/Reservado/Bloqueado/Disponible/Umbral/Estado | P0 | `/MK015/S02` |
-| MK‑015‑S03 | Configuración de umbrales | Definir umbral_stock_bajo por SKU | `GET /inventario/umbrales`, `PUT /inventario/umbrales/global`, `PUT /inventario/umbrales/skus/{sku}` | Aplicar umbral | Confirmación de actualización | P1 | `/MK015/S03` |
-| MK‑015‑S04 | Traslados pendientes | Listar traslados sin recibir | `GET /inventario/traslados?estado&target_location_id&pagina&tamanio` | — | Lista con SKU/origen/destino/cantidad pendiente/estado | P0 | `/MK015/S04` |
-| MK‑015‑S05 | Registrar recepción | Confirmar/rechazar traslado recibido | `POST …/traslados/{id}/recepciones` Cantidad Disposición Nota | Registrar recepción final | Estado COMPLETADO / COMPLETADO_CON_DISCREPANCIA | P0 | `/MK015/S05` |
+| MK‑015‑S01 | Control de stock | Consultar disponibilidad por SKU/ubicación | `GET /api/v1/inventario/disponibilidad?skus=…&location_id=…` | Filtrar, agrupar | Tabla con Físico/Reservado/Bloqueado/Disponible/Estado/Umbral | P0 | `/MK015/S01` |
+| MK‑015‑S02 | Configuración de umbrales | Definir umbral_stock_bajo a nivel global o por SKU | `GET /api/v1/inventario/umbrales`, `PUT /api/v1/inventario/umbrales/global`, `PUT /api/v1/inventario/umbrales/skus/{sku}` | Aplicar umbral | Confirmación de actualización | P1 | `/MK015/S02` |
+| MK‑015‑S03 | Detalle del saldo | Ver desglose auditado de un SKU/ubicación | misma llamada, drawer lateral 640 px | — | Ficha con Físico/Reservado/Bloqueado/Disponible/Umbral/Estado | P0 | `/MK015/S03` |
+| MK‑015‑S04 | Traslados pendientes | Listar traslados sin recibir | `GET /api/v1/inventario/traslados?estado&target_location_id&pagina&tamanio` | — | Lista con SKU/origen/destino/cantidad pendiente/estado | P0 | `/MK015/S04` |
+| MK‑015‑S05 | Registrar recepción | Confirmar recepción física y registrar faltantes/discrepancias | `POST /api/v1/inventario/traslados/{id}/recepciones` | Registrar recepción final | Estado COMPLETADO / COMPLETADO_CON_DISCREPANCIA | P0 | `/MK015/S05` |
 
 **Reglas de acceso y enrutamiento:**
 
@@ -89,13 +92,12 @@ Define qué pantallas existen y su propósito dentro de la funcionalidad.
 
 ```mermaid
 flowchart LR
-    S01["MK‑015‑S01 — Control de stock"] -->|"Ver detalle"| S02["MK‑015‑S02 — Detalle del saldo"]
+    S01["MK‑015‑S01 — Control de stock"] -->|"Configurar umbrales"| S02["MK‑015‑S02 — Configuración de umbrales"]
+    S01 -->|"Ver detalle"| S03["MK‑015‑S03 — Detalle del saldo"]
     S01 -->|"Ver traslados"| S04["MK‑015‑S04 — Traslados pendientes"]
     S01 -->|"Registrar recepción"| S05["MK‑015‑S05 — Registrar recepción"]
-    S02 -->|"Enlace a dashboard"| MK016_S01["MK‑016‑S01 — Dashboard"]
+    S03 -->|"Enlace a dashboard"| MK016_S01["MK‑016‑S01 — Dashboard"]
 ```
-
-Ajustar al Flow real de navegación.
 
 ## 7. Jerarquía de información
 
@@ -103,23 +105,21 @@ Ajustar al Flow real de navegación.
 2. **Secundaria:** Información de soporte o acciones secundarias (Reservado, Bloqueado, Umbral).
 3. **Complementaria:** Detalles periféricos, metadatos o ayuda contextual (SKU, Producto, Ubicación).
 
-Debe mantenerse alineada con la Propuesta UX y las UX Guidelines del módulo.
-
 ## 8. Componentes compartidos
 
-Componentes transversales del Design System o reutilizados entre pantallas. No redefinir componentes existentes del Design System.
+Componentes transversales del Design System reutilizados entre pantallas.
 
 | Componente | Pantallas | Uso | Variante | Estados |
 |---|---|---|---|---|
-| DS‑C17 PO/Table | S01, S02 | Tabla de stock | md por defecto; selección/orden si procede | default/hover/focus/pressed/disabled/loading/error |
-| DS‑C14 PO/Badge | S01, S02 | Badge de estado | sm mín 24 px alto / md 28 | Neutral/info/success/warning/error/promotion; palabra+eicono |
-| DS‑C13 PO/FilterBar | S01 | Filtros por producto/categoría/marca/SKU/ubicación/estado | «Aplicar filtros» / «Limpiar filtros» | — |
-| DS‑C03 PO/TextInput | S02, S03 | SKU/umbral | sm 32 px / md 40; padding 12 px; label arriba | default/hover/focus/filled/disabled/read‑only/error |
-| DS‑C04 PO/NumberInput | S03 | Umbral | unidad visible junto label o sufijo | precisión/min/max de SPEC |
-| DS‑C02 PO/ActionIcon | S05 | Botón “Registrar recepción” | área 32×32 o 40×40; icono 16/20 | nombre accesible, tooltip opcional |
-| DS‑C08 PO/Checkbox | S05 | Disposición | caja 18 px sm / 20 md; label clicable, área conjunta mín 32 px | unchecked/checked/indeterminate |
-| DS‑C19 PO/Card/KPI | S01 | KPIs de stock | padding 24 , radio 12 , sin sombra; etiqueta 14/20, cifra 28/36 | — |
-| DS‑C21 PO/Modal | S05 | Confirmación final de recepción | ancho 480 px / 640 formulario breve; título/impacto/cancelar/acción | overlay/foco contenido; Escape/no descarta trabajo |
+| DS‑C17 PO/Table | S01, S04 | Tabla de stock y tabla de traslados | md por defecto; cabecera cloud-subtle | default/hover/focus/loading/empty/error |
+| DS‑C14 PO/Badge | S01, S03, S04 | Badges de estado de inventario y traslados | sm mín 24 px / md 28 px | success (Disponible), warning (Stock bajo), error (Agotado) |
+| DS‑C13 PO/FilterBar | S01, S04 | Filtros por producto/categoría/marca/SKU/ubicación/estado | Integrada con buscador y selects | default, active, disabled |
+| DS‑C03 PO/TextInput | S02, S03, S05 | Inputs de SKU, nota y datos en solo lectura | md 40 px, padding 12 px, label superior | default/focus/read-only/disabled/error |
+| DS‑C04 PO/NumberInput | S02, S05 | Input numérico para umbral y cantidad recibida | precisión entera, min 0, label superior | default/focus/error |
+| DS‑C02 PO/ActionIcon | S01, S03, S04, S05 | Botones de acción, cierre de drawer y navegación | área 32×32 o 40×40 px con tooltip | default/hover/active |
+| DS‑C08 PO/Checkbox | S05 | Casilla “Esta es la recepción final” | caja 20 px con label clicable | unchecked/checked |
+| DS‑C15 PO/Alert/Notice | S02, S05 | Alerta inline de discrepancia (LUX-03) y feedback | contenedor con borde reforzado e ícono Tabler | default, warning, error, success |
+| DS‑C20 PO/Drawer | S03 | Contenedor lateral de 640 px para detalle de saldo | ancho 640 px, overlay accesible (LUX-02) | default, loading, error |
 
 ## 9. Componentes específicos
 
@@ -127,11 +127,10 @@ Componentes transversales del Design System o reutilizados entre pantallas. No r
 
 **Propósito:** Mostrar una fila de la tabla de stock con SKU, Producto, Ubicación y los valores Físico/Reservado/Bloqueado/Disponible/Umbral/Estado.
 
-**Pantallas en las que participa:** MK‑015‑S01, MK‑015‑S02.
+**Pantallas en las que participa:** MK‑015‑S01, MK‑015‑S03.
 
 **Contenido estructurado:**
-
-- **Fila:** `{[DS‑C03 TextInput SKU], [Producto], [Ubicación], [DS‑C03 TextInput Físico], [DS‑C03 TextInput Reservado], [DS‑C03 TextInput Bloqueado], [DS‑C03 TextInput Disponible], [DS‑C14 Badge Estado], [acción Ver detalle]}`.
+- **Fila:** `{[DS‑C03 TextInput SKU], [Producto], [Ubicación], [Físico], [Reservado], [Bloqueado], [Disponible], [Umbral], [DS‑C14 Badge Estado], [acción Ver detalle]}`.
 
 **Propiedades conceptuales:**
 
@@ -151,154 +150,277 @@ Componentes transversales del Design System o reutilizados entre pantallas. No r
 
 | Estado | Disparador | Representación visual | Acción permitida |
 |---|---|---|---|
-| Default | Datos cargados | Fila con todos los valores y badges | Ver detalles (S02), abrir S04/S05 |
+| Default | Datos cargados | Fila con todos los valores y badges | Ver detalle (S03), configurar umbral (S02), traslados (S04) |
 | Loading | Carga asíncrona | Skeleton DS‑C24 + texto “Cargando…” | Bloquear interacción |
-| Error | Fallo controlado | Mensaje error junto al campo | Reintentar, ver detalle |
+| Error | Fallo controlado | Mensaje error junto al campo | Reintentar consulta |
 
-### MK‑015‑C02 — Componente umbral
+### MK‑015‑C02 — Componente configuración de umbral
 
-**Propósito:** Input numérico para configurar el umbral de stock bajo por SKU.
+**Propósito:** Input numérico con selector de alcance para configurar el umbral de stock bajo a nivel global o por SKU específico.
 
-**Pantallas en las que participa:** MK‑015‑S03.
+**Pantallas en las que participa:** MK‑015‑S02.
 
 **Contenido estructurado:**
-
-- **Input:** `DS‑C04 NumberInput` con campo “Umbral”.
-- **Botón:** “Aplicar” — guarda el umbral y actualiza la clasificación de estados.
+- **Selector de alcance:** Alternar entre umbral global y override por SKU.
+- **Input:** `DS‑C04 NumberInput` con campo “Umbral de stock bajo”.
+- **Botón:** “Aplicar umbral” — ejecuta `PUT /api/v1/inventario/umbrales/global` o `PUT /api/v1/inventario/umbrales/skus/{sku}`.
 
 **Propiedades conceptuales:**
 
 | Propiedad | Tipo | Obligatoria | Regla / Restricción |
 |---|---|---|---|
-| sku | Texto | Sí | Debe coincidir con un SKU vendible activo |
-| umbral | Número | Sí | Debe ser ≥ 0; valida `umbral_stock_bajo_resuelto = override SKU ?? umbral global` |
+| sku | Texto | Condicional | Obligatorio solo si el alcance es override por SKU |
+| umbral | Número | Sí | Debe ser entero ≥ 0; valida `umbral_stock_bajo_resuelto = override SKU ?? umbral global` |
 
 **Estados:**
 
 | Estado | Disparador | Representación visual | Acción permitida |
 |---|---|---|---|
-| Default | Valor cargado | Input con valor y botón Aplicar | Aplicar umbral |
-| Error | Valor inválido | Input con borde error + mensaje | Corregir valor |
+| Default | Valor cargado | Input con valor actual y botón Aplicar | Aplicar umbral |
+| Loading | Guardado en curso | Botón con spinner y campos deshabilitados | Esperar confirmación |
+| Error | Valor inválido (< 0) | Input con borde error + mensaje explicativo | Corregir valor |
 
 ## 10. Especificación por pantalla
 
-Define la estructura, componentes, acciones, estados y contenido clave de cada pantalla.
+Define la estructura, componentes, acciones, estados y contenido clave de cada pantalla (S01 a S05 alineadas con WF-015).
 
 ### MK‑015‑S01 — Control de stock
 
-**Propósito y objetivo:** Consultar disponibilidad autoritativa de un SKU por ubicación y mostrar tabla con saldos y estado.
+**Propósito y objetivo:** Consultar disponibilidad autoritativa de un SKU por ubicación y mostrar tabla con saldos y estado sin botones de débito manual.
 
 **Estructura y layout:**
-
 1. **Zona 1 — Cabecera:** Título “Control de stock”, subtítulo “SKU y ubicación”, barra de filtros (`DS‑C13 FilterBar`).
 2. **Zona 2 — Área principal:** Tabla `DS‑C17 PO/Table` con columnas SKU, Producto, Ubicación, **Físico**, **Reservado**, **Bloqueado**, **Disponible**, **Umbral**, **Estado**. Filas crecen al envolver texto; no cortan controles.
-3. **Zona 3 — Barra de acciones:** Filtros aplicados, contador de filas, botón “Registrar recepción” ( conduce a S05).
+3. **Zona 3 — Barra de acciones:** Filtros aplicados, contador de filas, botón "Configurar umbrales" (conduce a S02) y botón “Ver traslados pendientes” (conduce a S04).
 
 **Componentes presentes:**
-
-- `DS‑C17 PO/Table` — tabla principal.
+- `DS‑C17 PO/Table` — tabla principal de inventario.
 - `DS‑C13 PO/FilterBar` — filtros por SKU, producto, categoría, marca, ubicación, estado.
-- `DS‑C14 PO/Badge` — badges de estado por fila.
+- `DS‑C14 PO/Badge` — badges de estado por fila (Disponible, Stock bajo, Agotado).
 - `DS‑C03 PO/TextInput` — campo de filtro SKU.
-- `DS‑C02 PO/ActionIcon` — botón “Registrar recepción” (S05).
+- `DS‑C02 PO/ActionIcon` — botón de acciones rápidas por fila.
 
-**Acción primaria:** Aplicar filtros y visualizar la tabla de stock.
+**Acción primaria:** Aplicar filtros y visualizar la tabla de stock disponible.
 
 **Acciones secundarias:**
-
 - Filtrar por SKU/producto/categoría/marca/ubicación/estado.
-- Abrir S02 (detalle del saldo) haciendo clic en una fila.
-- Abrir S04 (traslados pendientes).
-- Registrar recepción (S05).
+- Abrir S02 (Configuración de umbrales) desde el botón de cabecera o acción contextual.
+- Abrir S03 (Detalle del saldo) en drawer lateral de 640 px haciendo clic en una fila o en su botón de detalle.
+- Abrir S04 (Traslados pendientes) para gestionar recepciones físicas.
 
 **Estados requeridos:**
-
-- **Default:** Tabla con valores completos, badges de estado visibles.
-- **Loading:** Skeleton DS‑C24 + texto “Cargando…” en tabla.
+- **Default:** Tabla con valores completos, badges de estado visibles y cálculos exactos.
+- **Loading:** Skeleton `DS‑C24` + texto accesible “Cargando…”.
 - **Empty:** `DS‑C25 EmptyState` “Sin coincidencias con estos filtros” + acción “Limpiar filtros”.
-- **Error:** Mensaje error junto al campo/serie, explicación accionable.
+- **Error:** Alerta de error con mensaje accionable y opción "Reintentar".
 
 **Contenido clave y microtexto:**
 
 | Elemento | Texto / Patrón | Fuente de procedencia |
 |---|---|---|
-| H1 / Título | “Control de stock” | WF‑015 |
-| CTA Primario | “Registrar recepción” | WF‑015 S‑05 |
-| Mensaje de ayuda | “Unidades reservadas están comprometidas en pedidos. Las bloqueadas permanecen físicamente pero temporariamente no se ofrecen para venta.” | WF‑015 |
-
-### MK‑015‑S02 — Detalle del saldo
-
-**Propósito y objetivo:** Permite al usuario inspeccionar el detalle de saldos para un SKU y ubicación seleccionados, mostrando los valores de físico, reservado, bloqueado, disponible, umbral y estado.
-
-**Estructura y layout:**
-1. **Cabecera:** Título “Detalle del saldo”, botón de cierre del drawer. (Acción primaria: visualizar detalle del saldo en drawer)
-2. **Cuerpo:** Lista de campos clave con componentes `DS‑C03 PO/TextInput` (solo lectura) para cada valor y badge de estado `DS‑C14 PO/Badge`. (Estados requeridos: default, loading, error; microtexto explicativo sobre cálculo de disponible)
-3. **Acciones:** Botón “Cerrar” que retorna a la tabla S01.
-
-**Componentes presentes:**
-- `DS‑C03 PO/TextInput` (solo lectura) para cada atributo (Físico, Reservado, Bloqueado, Disponible, Umbral).
-- `DS‑C14 PO/Badge` para visualización del estado.
-- `DS‑C02 PO/ActionIcon` para cerrar el drawer.
-
-**Acciones secundarias:** Ninguna; el drawer es informativo.
+| H1 / Título | “Control de stock” | WF‑015 S‑01 |
+| CTA Primario | “Configurar umbrales” | WF‑015 S‑02 |
+| CTA Secundario | “Ver traslados pendientes” | WF‑015 S‑04 |
+| Mensaje de ayuda | “Las unidades reservadas están comprometidas en pedidos. Las bloqueadas permanecen físicamente en la ubicación, pero temporalmente no se ofrecen para venta.” | WF‑015 literal |
 
 ---
 
-### MK‑015‑S03 — Configuración de umbrales
+### MK‑015‑S02 — Configuración de umbrales
 
-**Propósito y objetivo:** Permite al usuario definir o actualizar el umbral de stock bajo para un SKU específico.
+**Propósito y objetivo:** Definir o actualizar el umbral de stock bajo a nivel global o por SKU específico, permitiendo reclasificar la disponibilidad comercial en Disponible, Stock bajo o Agotado.
 
 **Estructura y layout:**
-1. **Cabecera:** Título “Configuración de umbral”.
-2. **Campo umbral:** `DS‑C04 PO/NumberInput` pre‑poblado con valor actual.
-3. **Botón Aplicar:** Acción que envía `PUT /inventario/umbrales`. (Estados de respuesta: success → confirmación, error → mensaje de validación, loading → spinner)
-4. **Feedback:** Mensaje de éxito o error tras la actualización.
+1. **Zona 1 — Cabecera:** Título “Configuración de umbrales”, bajada descriptiva: “Configura el umbral global por defecto o define un umbral específico para un SKU.” Botón de retorno a S01.
+2. **Zona 2 — Formulario de umbrales:**
+   - Selector de modo: Radio buttons para elegir “Umbral global por defecto” o “Override por SKU”.
+   - Campo SKU: `DS‑C03 PO/TextInput` habilitado únicamente si se selecciona el modo override por SKU.
+   - Campo Umbral: `DS‑C04 PO/NumberInput` precargado con el valor vigente consultado mediante `GET /api/v1/inventario/umbrales`.
+3. **Zona 3 — Barra de acciones y feedback:**
+   - Botón primario: “Aplicar umbral” (ejecuta `PUT /api/v1/inventario/umbrales/global` si es global o `PUT /api/v1/inventario/umbrales/skus/{sku}` si es por SKU).
+   - Botón secundario: “Cancelar” (retorna a S01 sin mutar datos).
+   - Feedback inline: `DS‑C15 Alert` con mensaje de éxito tras confirmación o mensaje de error de validación.
 
 **Componentes presentes:**
-- `DS‑C04 PO/NumberInput` para entrada numérica.
-- `DS‑C02 PO/ActionIcon` como botón “Aplicar”.
-- `DS‑C08 PO/Checkbox` opcional para aplicar a nivel global.
+- `DS‑C04 PO/NumberInput` — entrada numérica del umbral con validación de enteros ≥ 0.
+- `DS‑C03 PO/TextInput` — campo de texto para identificar el SKU en modo override.
+- `DS‑C15 PO/Alert/Notice` — mensajes de alerta y confirmación inline.
+- `DS‑C02 PO/ActionIcon` / Botones Mantine — botones de aplicar y cancelar.
 
-**Acciones secundarias:** Validación de valor ≥ 0 antes de enviar.
+**Acción primaria:** Guardar el umbral presionando “Aplicar umbral” enviando `PUT /api/v1/inventario/umbrales/global` (global) o `PUT /api/v1/inventario/umbrales/skus/{sku}` (por SKU).
+
+**Acciones secundarias:**
+- Consultar la configuración vigente mediante `GET /api/v1/inventario/umbrales`.
+- Conmutar entre configuración global y por SKU individual.
+- Cancelar y retornar a la tabla de control de stock S01.
+
+**Estados requeridos:**
+- **Default:** Formulario con los valores actuales precargados y botón habilitado.
+- **Loading:** Indicador de carga / spinner mientras se consulta `GET` o se procesa la mutación `PUT`.
+- **Empty:** No aplica (siempre existe un valor numérico asignado, mínimo 0).
+- **Error:** Alerta inline si el valor es negativo (< 0), si el SKU no existe, o si falla la red.
+
+**Contenido clave y microtexto:**
+
+| Elemento | Texto / Patrón | Fuente de procedencia |
+|---|---|---|
+| H1 / Título | “Configuración de umbrales” | WF‑015 S‑02 |
+| Subtítulo | “Define el umbral global por defecto o un override individual por SKU.” | SPEC‑015 §12 |
+| Label Umbral | “Umbral de stock bajo” | WF‑015 S‑02 |
+| CTA Primario | “Aplicar umbral” | WF‑015 S‑02 |
+| CTA Secundario | “Cancelar” | UX Guidelines |
+| Feedback éxito | “Umbral actualizado exitosamente. Los estados de stock se han recalculado.” | UX Guidelines |
+| Error validación | “El valor del umbral debe ser un número entero mayor o igual a 0.” | SPEC‑015 §12 |
+
+---
+
+### MK‑015‑S03 — Detalle del saldo
+
+**Propósito y objetivo:** Inspeccionar el desglose completo del saldo de un SKU y ubicación seleccionados dentro de un Drawer lateral de 640 px (`DS‑C20`), verificando Físico, Reservado, Bloqueado, Disponible, Umbral resuelto y Estado sin mutar saldos.
+
+**Estructura y layout:**
+1. **Zona 1 — Cabecera del Drawer:** Título “Detalle del saldo”, identificador de SKU y botón de cierre (`DS‑C02 PO/ActionIcon`).
+2. **Zona 2 — Ficha de desglose auditado:** Panel vertical en drawer de 640 px con campos de solo lectura (`DS‑C03 PO/TextInput`):
+   - SKU y Producto.
+   - Ubicación (tienda o almacén).
+   - Físico (unidades totales contabilizadas).
+   - Reservado (unidades comprometidas en pedidos activos).
+   - Bloqueado (unidades temporalmente no vendibles por cuarentena/incidencia).
+   - Disponible (unidades calculadas: `max(Físico - Reservado - Bloqueado, 0)`).
+   - Umbral de alerta efectivo (`umbral_stock_bajo_resuelto`).
+   - Estado comercial con badge semántico (`DS‑C14 PO/Badge`).
+3. **Zona 3 — Microtexto explicativo y cierre:**
+   - Texto auxiliar literal de WF‑015 explicando la naturaleza de reservadas y bloqueadas.
+   - Botón “Cerrar” para replegar el drawer y volver a la tabla S01 conservando los filtros activos.
+
+**Componentes presentes:**
+- `DS‑C20 PO/Drawer` — contenedor lateral superpuesto de 640 px (LUX‑02).
+- `DS‑C03 PO/TextInput` — campos de solo lectura para cada atributo de inventario.
+- `DS‑C14 PO/Badge` — etiqueta visual de estado (Disponible / Stock bajo / Agotado).
+- `DS‑C02 PO/ActionIcon` — botón de cierre superior y botón “Cerrar”.
+
+**Acción primaria:** Visualizar la composición exacta del disponible y verificar que `disponible = max(físico - reservado - bloqueado, 0)`.
+
+**Acciones secundarias:**
+- Cerrar el drawer mediante el botón de cierre, clic fuera del contenedor o tecla `Escape`.
+- Enlazar al Dashboard analítico `MK‑016‑S01` para métricas globales agregadas.
+
+**Estados requeridos:**
+- **Default:** Drawer desplegado con todos los valores poblados fielmente según el fixture del SKU.
+- **Loading:** Skeleton en el cuerpo del drawer mientras se resuelven los datos del saldo.
+- **Empty:** No aplica (se invoca desde una fila existente en la tabla S01).
+- **Error:** Alerta localizada en el cuerpo del drawer si falla la obtención del detalle puntual.
+
+**Contenido clave y microtexto:**
+
+| Elemento | Texto / Patrón | Fuente de procedencia |
+|---|---|---|
+| H2 / Título | “Detalle del saldo” | WF‑015 S‑03 |
+| Microtexto explicativo | “Las unidades reservadas están comprometidas en pedidos. Las bloqueadas permanecen físicamente en la ubicación, pero temporalmente no se ofrecen para venta.” | WF‑015 S‑03 literal |
+| Badge Estado | “Disponible” / “Stock bajo” / “Agotado” | WF‑015 / DESIGN.md §4.1 |
+| CTA Cierre | “Cerrar” | UX Guidelines |
 
 ---
 
 ### MK‑015‑S04 — Traslados pendientes
 
-**Propósito y objetivo:** Muestra la lista de traslados que aún no han sido recibidos, permitiendo al usuario revisar y seleccionar uno para registrar su recepción.
+**Propósito y objetivo:** Listar las transferencias de inventario entre almacenes y tiendas que se encuentran pendientes de recepción, permitiendo revisar cantidades enviadas/recibidas y acceder al registro de recepción física.
 
 **Estructura y layout:**
-1. **Tabla:** `DS‑C17 PO/Table` con columnas SKU, Origen, Destino, Cantidad, Estado.
-2. **Acciones fila:** Botón “Registrar recepción” (`DS‑C02 PO/ActionIcon`) en cada fila. (Acción primaria: abrir pantalla S05 para registrar recepción)
-3. **Filtrado:** `DS‑C13 PO/FilterBar` para refinar por SKU o estado.
+1. **Zona 1 — Cabecera y filtros:** Título “Traslados pendientes”, subtítulo informativo y barra de filtros (`DS‑C13 FilterBar`) por SKU, ubicación destino y estado del traslado (`EN_TRANSITO`, `RECIBIDO_PARCIAL`).
+2. **Zona 2 — Tabla de traslados (`DS‑C17 PO/Table`):** Columnas normativas de WF‑015:
+   - SKU del producto.
+   - Ubicación de origen.
+   - Ubicación de destino.
+   - Cantidad enviada.
+   - Cantidad recibida.
+   - Cantidad pendiente (enviada - recibida).
+   - Estado del traslado (Badge `DS‑C14`: En tránsito, Recibido parcial, Con discrepancia).
+   - Acción por fila: Botón “Registrar recepción” que navega a S05.
+3. **Zona 3 — Barra inferior:** Resumen de traslados en tránsito y controles de paginación.
 
 **Componentes presentes:**
-- `DS‑C17 PO/Table` para listado.
-- `DS‑C13 PO/FilterBar` para filtros.
-- `DS‑C02 PO/ActionIcon` para iniciar registro de recepción.
+- `DS‑C17 PO/Table` — tabla de traslados.
+- `DS‑C13 PO/FilterBar` — filtros de búsqueda y refinamiento.
+- `DS‑C14 PO/Badge` — badges de estado de traslado.
+- `DS‑C02 PO/ActionIcon` / Botón — acción “Registrar recepción” por fila.
 
-**Acciones secundarias:** Navegar a pantalla S05 al seleccionar una fila.
+**Acción primaria:** Seleccionar un traslado pendiente y pulsar “Registrar recepción” para navegar a la pantalla S05.
+
+**Acciones secundarias:**
+- Filtrar traslados por SKU, ubicación de destino o estado.
+- Retornar al control de stock S01 mediante breadcrumb o enlace de navegación.
+
+**Estados requeridos:**
+- **Default:** Tabla con transferencias en tránsito y cantidades pendientes legibles.
+- **Loading:** Skeleton en la tabla durante la consulta a `GET /api/v1/inventario/traslados`.
+- **Empty:** `DS‑C25 EmptyState` con mensaje “No se encontraron traslados pendientes para los criterios seleccionados.”
+- **Error:** Alerta de fallo de comunicación con el servicio con botón “Reintentar”.
+
+**Contenido clave y microtexto:**
+
+| Elemento | Texto / Patrón | Fuente de procedencia |
+|---|---|---|
+| H1 / Título | “Traslados pendientes” | WF‑015 S‑04 |
+| Columna Acción | “Registrar recepción” | WF‑015 S‑04 |
+| Estado En tránsito | “En tránsito” | SPEC‑015 §15 / WF‑015 |
+| Estado Recibido parcial | “Recibido parcialmente” | SPEC‑015 §15 / WF‑015 |
+| Estado Con discrepancia | “Con discrepancia” | SPEC‑015 §15 / WF‑015 |
+| Empty state | “No se encontraron traslados pendientes para esta ubicación.” | UX Guidelines |
 
 ---
 
 ### MK‑015‑S05 — Registrar recepción
 
-**Propósito y objetivo:** Permite al usuario registrar la recepción de un traslado, confirmando cantidades y anotando discrepancias.
+**Propósito y objetivo:** Registrar la recepción física de un traslado en destino capturando cantidad recibida real, disposición de las unidades, casilla de recepción final y notas, alertando discrepancias sin inventar unidades disponibles.
 
 **Estructura y layout:**
-1. **Formulario:** Campos `DS‑C03 PO/TextInput` (solo lectura) para SKU, origen, destino, cantidad esperada.
-2. **Entrada recepción:** `DS‑C03 PO/TextInput` para cantidad recibida y `DS‑C08 PO/Checkbox` para marcar discrepancia.
-3. **Botón Confirmar:** `DS‑C02 PO/ActionIcon` que envía `POST /inventario/traslados/{id}/recepciones`. (Estados de respuesta: success → mensaje de éxito, error → descripción del problema, loading → indicador)
-4. **Feedback inline:** Mensaje de éxito o error mostrado bajo el formulario.
+1. **Zona 1 — Cabecera de contexto:** Título “Registrar recepción”, código de traslado, SKU, almacén de origen, almacén de destino y cantidad esperada en solo lectura (`DS‑C03 TextInput`).
+2. **Zona 2 — Formulario de recepción física:**
+   - Cantidad recibida: `DS‑C04 PO/NumberInput` (entero mayor a 0).
+   - Disposición de unidades: Selector (`DS‑C06 Select` o RadioGroup) con las 3 opciones de negocio de WF‑015:
+     - *Reingresar como disponible* (`REINGRESAR_DISPONIBLE`)
+     - *Mantener bloqueado* (`MANTENER_BLOQUEADO`)
+     - *Confirmar merma* (`CONFIRMAR_MERMA`)
+   - Casilla de verificación: `DS‑C08 PO/Checkbox` con etiqueta literal: “Esta es la recepción final”.
+   - Nota operativa: `DS‑C03 PO/TextInput` multilínea para observaciones del operador (opcional).
+3. **Zona 3 — Confirmación inline de discrepancia (LUX‑03) y botones:**
+   - Alerta inline condicional (`DS‑C15 Alert` warning) mostrada cuando se marca “Esta es la recepción final” y la cantidad recibida acumulada es menor a la cantidad enviada:
+     > “El traslado se cerrará con una discrepancia. Las unidades faltantes no se agregarán al inventario.”
+   - Botón primario: “Confirmar recepción” (ejecuta `POST /api/v1/inventario/traslados/{id}/recepciones`).
+   - Botón secundario: “Cancelar” (retorna a S04 sin mutar datos).
 
 **Componentes presentes:**
-- `DS‑C03 PO/TextInput` para datos de traslado.
-- `DS‑C08 PO/Checkbox` para indicar discrepancia.
-- `DS‑C02 PO/ActionIcon` como botón “Confirmar”.
-- `DS‑C21 PO/Modal` no usado; confirmación se muestra inline según LUX‑03.
+- `DS‑C04 PO/NumberInput` — campo numérico para cantidad recibida.
+- `DS‑C03 PO/TextInput` — campos de contexto en solo lectura y campo de nota opcional.
+- `DS‑C08 PO/Checkbox` — casilla “Esta es la recepción final”.
+- `DS‑C15 PO/Alert/Notice` — alerta inline con texto oficial de discrepancia (LUX‑03, sin modales anidados según DESIGN.md §4.5).
+- Botones Mantine — botones “Confirmar recepción” y “Cancelar”.
 
-**Acciones secundarias:** Ninguna; al confirmar, vuelve a la tabla S04.
+**Acción primaria:** Enviar el formulario presionando “Confirmar recepción” para invocar `POST /api/v1/inventario/traslados/{id}/recepciones`.
 
+**Acciones secundarias:**
+- Cancelar el registro y retornar al listado de traslados pendientes S04.
+- Cambiar la disposición asignada a las unidades (disponible, bloqueado o merma).
+
+**Estados requeridos:**
+- **Default:** Formulario precargado con el detalle del traslado y cantidad recibida lista para captura.
+- **Loading:** Botón "Confirmar recepción" con spinner mientras viaja la solicitud HTTP `POST`.
+- **Empty:** No aplica (pantalla contextual invocada para un traslado existente).
+- **Error:** Alerta inline si la cantidad recibida es inválida (≤ 0), excede el pendiente no admitido o si el servidor retorna error.
+
+**Contenido clave y microtexto:**
+
+| Elemento | Texto / Patrón | Fuente de procedencia |
+|---|---|---|
+| H1 / Título | “Registrar recepción” | WF‑015 S‑05 |
+| Label Cantidad | “Cantidad recibida” | WF‑015 S‑05 |
+| Disposición 1 | “Reingresar como disponible” | WF‑015 S‑05 literal |
+| Disposición 2 | “Mantener bloqueado” | WF‑015 S‑05 literal |
+| Disposición 3 | “Confirmar merma” | WF‑015 S‑05 literal |
+| Checkbox Cierre | “Esta es la recepción final” | WF‑015 S‑05 literal |
+| Alerta Discrepancia | “El traslado se cerrará con una discrepancia. Las unidades faltantes no se agregarán al inventario.” | WF‑015 S‑05 literal |
+| CTA Primario | “Confirmar recepción” | WF‑015 S‑05 |
+| CTA Secundario | “Cancelar” | UX Guidelines |
 
 ## 11. Decisiones UX locales
 
@@ -306,54 +428,51 @@ Solo registrar decisiones específicas de diseño exclusivas de esta funcionalid
 
 ### LUX‑01 — Mapeo de badge de estado
 
-**Problema:** determinar visualBadge `DISPONIBLE`/`STOCK_BAJO`/`AGOTADO` sin usar `volt`/`signal` como stock confirmado.
+**Problema:** Determinar visualBadge `DISPONIBLE`/`STOCK_BAJO`/`AGOTADO` sin usar `volt`/`signal` como stock confirmado.
 
 **Alternativas consideradas:**
-
 - Alternativa A: Usar `color/success/default` (`#2F9E44`) como indicador principal de stock confirmado.
 - Alternativa B: Usar `color/accent/signal` (`#4361EE`) para “stock en proceso”.
 
 **Decisión adoptada:** Mapear `DISPONIBLE` → `DS‑C14 PO/Badge` con variante `success`; `STOCK_BAJO` → variante `warning`; `AGOTADO` → variante `error`. La paleta y contraste están verificados en DESIGN.md §4.1 (ratios 6.12:1, 6.42:1). No usar `volt`/`signal` como stock confirmado (DESIGN.md prohíbe).
 
-**Justificación:** El Design System v1.0.0 (DATE 2026‑10‑02) define roles semánticos; las decisiones visuales deben basarse en tokens, no en inferencias.
+**Justificación:** El Design System v1.0.0 (DATE 2026‑10‑02) define roles semánticos; las decisiones visuales deben basarse en tokens, no en inferencias.
 
 **Trade‑off:** Richer visual feedback requiere consistencia con el Design System global; fuera del alcance actual no se añaden nuevas variantes de color.
 
-**Criterio de validación:** Los badges de estado en S01 y S02 renderizan con los tokens `color/success/default`, `color/warning/default`, `color/error/default` y cumplen los ratios de contraste verificados.
+**Criterio de validación:** Los badges de estado en S01 y S03 renderizan con los tokens `color/success/default`, `color/warning/default`, `color/error/default` y cumplen los ratios de contraste verificados.
 
 ### LUX‑02 — Detalle de saldo en drawer vs vista completa
 
-**Problema:** S02 “Detalle del saldo” debe mostrarse en un espacio contenido, no en una página completa.
+**Problema:** S03 “Detalle del saldo” debe mostrarse en un espacio contenido para consultar atributos sin perder de vista la tabla principal ni sus filtros.
 
 **Alternativas consideradas:**
+- Alternativa A: Vista completa en página separada (navegación independiente con retorno costoso).
+- Alternativa B: Drawer lateral de 640 px (`DS‑C20 PO/Drawer` según DESIGN.md §5.2).
 
-- Alternativa A: Vista completa de pantalla nueva (navegación independiente).
-- Alternativa B: Drawer lateral 640 px (según DESIGN.md §5.2, DS‑C20).
+**Decisión adoptada:** Usar `DS‑C20 PO/Drawer` de ancho 640 px con detalle del saldo, manteniendo los filtros y contexto en la pantalla padre S01. Al cerrarse el drawer, los filtros aplicados y la paginación de S01 se preservan intactos.
 
-**Decisión adoptada:** Usar `DS‑C20 PO/Drawer` ancho 640 px con detalle de saldo, manteniendo filtros y contexto en la pantalla padre. El drawer se abre sobre la tabla S01; al cerrarse, se conservan los filtros aplicados.
+**Justificación:** WF‑015 define “detalle breve” y UXD‑001/UXG‑001 recomiendan drawer para inspección contextual sin desorientar al usuario.
 
-**Justificación:** WF‑015 define “detalle breve” y UXD‑001/UXG‑001 aconsejan drawer para detalle contextual; la vista completa está reservada para configuraciones extensas (S03).
+**Trade‑off:** El drawer de 640 px limita el espacio horizontal a una sola columna de desglose; si se necesita comparar múltiples SKUs simultáneamente, el gestor debe apoyarse en la tabla principal S01.
 
-**Trade‑off:** El drawer limita la cantidad de información visible simultáneamente; si se necesita comparar múltiples SKUs, el usuario debe filtrar o navegar entre filas.
-
-**Criterio de validación:** S02 se abre como `DS‑C20 PO/Drawer` 640 px, conserva filtros padre y muestra Físico/Reservado/Bloqueado/Disponible/Umbral/Estado.
+**Criterio de validación:** S03 se abre como `DS‑C20 PO/Drawer` de 640 px sobre S01, preserva filtros y muestra Físico, Reservado, Bloqueado, Disponible, Umbral y Estado.
 
 ### LUX‑03 — Confirmación de recepción final inline (sin modal anidado)
 
-**Problema:** S05 “Registrar recepción” debe confirmar sin encadenar modales (DESIGN.md §4.5: “No encadenar modales”).
+**Problema:** S05 “Registrar recepción” debe advertir al usuario del cierre con faltantes sin encadenar ventanas modales (DESIGN.md §4.5: “No encadenar modales”).
 
 **Alternativas consideradas:**
+- Alternativa A: Modal emergente dentro de otro modal o diálogo superpuesto.
+- Alternativa B: Confirmación inline persistente en el cuerpo del formulario antes de presionar el botón primario.
 
-- Alternativa A: Modal dentro de otro modal (anidado).
-- Alternativa B: Confirmación inline dentro del mismo flujo.
+**Decisión adoptada:** La confirmación de discrepancia ante la casilla “Esta es la recepción final” se presenta **inline** mediante `DS‑C15 PO/Alert/Notice` con el texto literal de WF‑015: “El traslado se cerrará con una discrepancia. Las unidades faltantes no se agregarán al inventario.” No se utiliza modal anidado.
 
-**Decisión adoptada:** La confirmación de “Esta es la recepción final” se presenta **inline** dentro del paso de registro, con el texto literal de WF‑015: “El traslado se cerrará con una discrepancia. Las unidades faltantes no se agregarán al inventario.” No se utiliza modal anidado.
+**Justificación:** Cumple estrictamente DESIGN.md §4.5; la recepción final es una acción de cierre de flujo dentro del formulario, no una nueva operación asíncrona no solicitada.
 
-**Justificación:** DESIGN.md §4.5 prohíbe encadenar modales; la recepción final es una acción de cierre de flujo, no una nueva operación asíncrona.
+**Trade‑off:** Requiere que el usuario lea la advertencia inline antes de pulsar confirmar; se refuerza con borde visible de advertencia y contraste semántico oficial.
 
-**Trade‑off:** La información de faltantes es más limitada que en un modal secundario, pero la regla de negocio (no inventar unidades) se respeta de forma explícita.
-
-**Criterio de validación:** S05 presenta la confirmación inline con el texto de WF‑015; no hay modal anidado; el usuario puede confirmar o cancelar.
+**Criterio de validación:** S05 presenta la advertencia inline con el texto literal de WF‑015 cuando la recepción final deja unidades pendientes; no se genera ningún modal emergente adicional.
 
 ## 12. Reglas de layout PC
 
@@ -369,7 +488,7 @@ Conjunto de datos deterministas requeridos para reproducir de forma predecible c
 
 | Fixture | Caso de negocio | Pantalla / Estado asociado | Datos representativos |
 |---|---|---|---|
-| default | Caso éxito con datos estándar válidos | S01 / Default | on_hand = 10, reserved = 2, blocked = 1, disponible = 7 |
+| default | Caso éxito con datos estándar válidos | S01 / Default | on_hand = 10, reserved = 2, blocked = 1, disponible = 7 |
 | loading | Simulación de estado asíncrono en curso | S01 / Loading | skeleton + texto “Cargando…” |
 | empty | Sin registros o catálogo vacío | S01 / Empty | `[]` / lista vacía + “Sin coincidencias con estos filtros” |
 | error | Fallo controlado de validación o red | S01 / Error | código y mensaje de error |
@@ -380,7 +499,7 @@ Conjunto de datos deterministas requeridos para reproducir de forma predecible c
 
 | ID | Pregunta | Bloquea ejecución | Responsable | Estado |
 |---|---|---|---|---|
-| Q‑01 | ¿Sobre regla de negocio o interfaz que afecta la clasificación de umbrales? | Sí / No | Miguel Taco | Resuelta / Cerrada |
+| Q‑01 | ¿El umbral de stock bajo se configura por SKU individual, a nivel global, o ambos? | No | Miguel Taco | Resuelta — Respuesta concreta: Se configura a nivel global por defecto y admite override individual por SKU. Endpoints: `GET /api/v1/inventario/umbrales` (lectura), `PUT /api/v1/inventario/umbrales/global` (global) y `PUT /api/v1/inventario/umbrales/skus/{sku}` (por SKU). El valor resuelto es `umbral_stock_bajo_resuelto = override SKU ?? umbral global`. Fuente: SPEC‑015 §12, WF‑015 y Contrato_Api.md. |
 
 ### Supuestos adoptados
 

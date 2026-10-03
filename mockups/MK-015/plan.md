@@ -72,9 +72,9 @@ Detener inmediatamente la ejecución, marcar la tarea como `BLOCKED` y escalar a
 | UX Decisions | `mockups/ux/ux-decisions.md` | Vigente |
 | UX Guidelines | `mockups/ux/ux-guidelines.md` | Vigente |
 | Component Spec | `component-spec.md` | Aprobado |
-| SPEC/HU | Información pendiente de definir | Vigentes |
-| WF | Información pendiente de definir | Vigente |
-| Flow | Información pendiente de definir | Vigente |
+| SPEC/HU | [SPEC-015](../../specs/SPEC-015-control-stock-disponibilidad.md) / [HU-015](../../hu/HU-015-control-stock-disponibilidad.md) | Vigentes |
+| WF | [WF-015](../../wireframes/flows/WF-015-control-stock-disponibilidad.md) | Vigente |
+| Flow | [FLOW-015](../../flujos/FLOW-015-control-stock-disponibilidad.md) | Vigente |
 | Design System | [mockups/DESIGN.md](../DESIGN.md), versión 1.0.0 | Vigente y coherente con el component-spec |
 
 ## 4. Objetivo
@@ -88,8 +88,8 @@ Inventario de pantallas a construir con su orden de ejecución. El contenido det
 | ID | Nombre | Prioridad | Orden |
 |---|---|---|---|
 | MK‑015‑S01 | Control de stock | P0 | 1 |
-| MK‑015‑S02 | Detalle del saldo | P0 | 2 |
-| MK‑015‑S03 | Configuración de umbrales | P1 | 3 |
+| MK‑015‑S02 | Configuración de umbrales | P1 | 2 |
+| MK‑015‑S03 | Detalle del saldo | P0 | 3 |
 | MK‑015‑S04 | Traslados pendientes | P0 | 4 |
 | MK‑015‑S05 | Registrar recepción | P0 | 5 |
 
@@ -121,15 +121,15 @@ La pantalla ancla no crea una UX independiente; aplica la UX global del módulo 
 
 | Componente | Origen | Pantallas | Acción |
 |---|---|---|---|
-| DS‑C17 PO/Table | Design System / shared | S01, S02 | Reutilizar |
-| DS‑C14 PO/Badge | Design System / shared | S01, S02 | Reutilizar |
-| DS‑C13 PO/FilterBar | Design System / shared | S01 | Reutilizar |
-| DS‑C03 PO/TextInput | Design System / shared | S02, S03 | Reutilizar |
-| DS‑C04 PO/NumberInput | Design System / shared | S03 | Reutilizar |
-| DS‑C02 PO/ActionIcon | Design System / shared | S05 | Reutilizar |
+| DS‑C17 PO/Table | Design System / shared | S01, S04 | Reutilizar |
+| DS‑C14 PO/Badge | Design System / shared | S01, S03, S04 | Reutilizar |
+| DS‑C13 PO/FilterBar | Design System / shared | S01, S04 | Reutilizar |
+| DS‑C03 PO/TextInput | Design System / shared | S02, S03, S05 | Reutilizar |
+| DS‑C04 PO/NumberInput | Design System / shared | S02, S05 | Reutilizar |
+| DS‑C02 PO/ActionIcon | Design System / shared | S01, S03, S04, S05 | Reutilizar |
 | DS‑C08 PO/Checkbox | Design System / shared | S05 | Reutilizar |
-| DS‑C19 PO/Card/KPI | Design System / shared | S01 | Reutilizar |
-| DS‑C21 PO/Modal | Design System / shared | S05 | Reutilizar |
+| DS‑C15 PO/Alert/Notice | Design System / shared | S02, S05 | Reutilizar |
+| DS‑C20 PO/Drawer | Design System / shared | S03 | Reutilizar |
 
 ## 9. Normalización
 
@@ -176,7 +176,10 @@ La implementación final debe alinearse a:
 
 | ID | Riesgo | Probabilidad | Impacto | Mitigación |
 |---|---|---|---|---|
-| R‑01 | [Riesgo de ejecución] | Baja / Media / Alta | Baja / Media / Alta | [Acción preventiva / reactiva] |
+| R‑01 | Cierre erróneo de traslados con faltantes mutando saldos de forma prematura | Media | Alto | Aplicar regla de SPEC-015 §15 y mostrar advertencia literal WF-015 inline (LUX-03) garantizando que las unidades faltantes no se agreguen al inventario |
+| R‑02 | Inconsistencia entre umbral global y overrides individuales por SKU | Media | Medio | Consumir endpoints dedicados `GET /api/v1/inventario/umbrales`, `PUT .../global` y `PUT .../skus/{sku}` resolviendo autoritativamente `umbral = override ?? global` |
+| R‑03 | Intento de realizar mutaciones de inventario desde vistas de consulta | Baja | Alto | Mantener estrictamente el diseño de solo lectura en S01 y S03 sin controles de débito o reserva manual |
+| R‑04 | Retraso en la disponibilidad del prototipo raw para la funcionalidad | Media | Medio | Mantener tareas y quality gates de construcción en TODO/PENDIENTE hasta validar implementación real en `prototipo/src/pantallas/MK015` |
 
 ## 13. Quality Gates
 

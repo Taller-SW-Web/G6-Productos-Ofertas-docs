@@ -89,41 +89,50 @@
 - [ ] **MK-015-T15 — P1:** Ajustar copy y microtexto conforme a UX Guidelines. `[TODO]`
 - [ ] **MK-015-T16 — P0:** Verificar Flow y coherencia de navegación integral. `[TODO]`
 
-### MK-015-S02 — Detalle del saldo
+### MK-015-S02 — Configuración de umbrales
 
-- [ ] **MK-015-T20 — P0 — Implementar estructura de MK-015-S02** `[TODO]`
+- [ ] **MK-015-T20 — P1 — Implementar estructura de MK-015-S02** `[TODO]`
   - **Entrada:** `component-spec.md`, sección 10 (S02).
-  - **Acción:** Implementar las zonas y jerarquía definidas.
+  - **Acción:** Implementar zonas de formulario, selector de alcance y ruta `/MK015/S02`.
   - **Salida esperada:** Ruta `/MK015/S02` renderizable directamente.
   - **Verificación:** Estructura completa y ruta operativa independiente.
 
-- [ ] **MK-015-T21 — P0 — Implementar componentes y estados de S02** `[TODO]`
-  - **Entrada:** `component-spec.md` (secciones 9, 10 y 13).
-  - **Acción:** Construir componentes y enlazar fixtures de estados P0 para S02.
-  - **Salida esperada:** Pantalla interactiva en ruta `/MK015/S02`.
-  - **Verificación:** Datos visibles y estados requeridos comprobables.
+- [ ] **MK-015-T21 — P1 — Implementar componente umbral DS-C04 NumberInput** `[TODO]`
+  - **Entrada:** `component-spec.md` (secciones 9 y 10).
+  - **Acción:** Construir input numérico `DS-C04 NumberInput` con distinción de endpoints global (`PUT /api/v1/inventario/umbrales/global`) y por SKU (`PUT /api/v1/inventario/umbrales/skus/{sku}`).
+  - **Salida esperada:** Campo numérico funcional con validación de enteros ≥ 0.
+  - **Verificación:** Input no permite negativos y muestra valor vigente.
 
-- [ ] **MK-015-T22 — P0:** Implementar drawer `DS‑C20` 640 px para detalle de saldo. `[TODO]`
-- [ ] **MK-015-T23 — P0:** Implementar LUX‑02 (drawer vs vista completa). `[TODO]`
+- [ ] **MK-015-T22 — P1:** Implementar botón “Aplicar umbral”, consulta `GET /api/v1/inventario/umbrales` y feedback inline. `[TODO]`
 
-### MK-015-S03 — Configuración de umbrales
+### MK-015-S03 — Detalle del saldo
 
-- [ ] **MK-015-T30 — P1:** Implementar estructura de MK-015-S03. `[TODO]`
-- [ ] **MK-015-T31 — P1:** Implementar componente umbral `DS‑C04 NumberInput`. `[TODO]`
-- [ ] **MK-015-T32 — P1:** Implementar botón “Aplicar” y validación. `[TODO]`
+- [ ] **MK-015-T30 — P0 — Implementar estructura de MK-015-S03** `[TODO]`
+  - **Entrada:** `component-spec.md`, sección 10 (S03).
+  - **Acción:** Implementar drawer lateral de 640 px (`DS-C20`) superpuesto a la tabla S01.
+  - **Salida esperada:** Ruta `/MK015/S03` y apertura contextual desde filas de S01.
+  - **Verificación:** Apertura directa y preservación de filtros en la pantalla padre.
+
+- [ ] **MK-015-T31 — P0 — Implementar desglose de unidades de inventario** `[TODO]`
+  - **Entrada:** `component-spec.md` (secciones 9 y 10) y `WF-015`.
+  - **Acción:** Mostrar desglose de Físico, Reservado, Bloqueado, Disponible, Umbral y Estado con microtexto auxiliar oficial.
+  - **Salida esperada:** Ficha de saldo auditada completa sin campos técnicos crudos.
+  - **Verificación:** Disponible calculado `max(físico - reservado - bloqueado, 0)` exacto.
+
+- [ ] **MK-015-T32 — P0:** Implementar LUX-02 (drawer lateral 640 px vs vista completa). `[TODO]`
 
 ### MK-015-S04 — Traslados pendientes
 
 - [ ] **MK-015-T40 — P0:** Implementar estructura de MK-015-S04. `[TODO]`
 - [ ] **MK-015-T41 — P0:** Implementar lista de traslados con estados EN_TRANSITO/RECIBIDO_PARCIAL/COMPLETADO_CON_DISCREPANCIA. `[TODO]`
-- [ ] **MK-015-T42 — P0:** Enlazar a recepción `POST …/traslados/{id}/recepciones`. `[TODO]`
+- [ ] **MK-015-T42 — P0:** Enlazar a recepción `POST /api/v1/inventario/traslados/{id}/recepciones`. `[TODO]`
 
 ### MK-015-S05 — Registrar recepción
 
-- [x] **MK-015-T50 — P0:** Implementar estructura de MK-015-S05. `[DONE]`
-- [x] **MK-015-T51 — P0:** Implementar confirmación inline (LUX‑03) sin modal anidado. `[DONE]`
-- [x] **MK-015-T52 — P0:** Implementar campos: Cantidad recibida, Disposición (Reingresar/Mantener bloqueado/Confirmar merma), Nota opcional, “Esta es la recepción final”. `[DONE]`
-- [x] **MK-015-T53 — P0:** Mostrar texto literal WF‑015: “El traslado se cerrará con una discrepancia. Las unidades faltantes no se agregarán al inventario.” `[DONE]`
+- [ ] **MK-015-T50 — P0:** Implementar estructura de MK-015-S05. `[TODO]`
+- [ ] **MK-015-T51 — P0:** Implementar confirmación inline (LUX‑03) sin modal anidado. `[TODO]`
+- [ ] **MK-015-T52 — P0:** Implementar campos: Cantidad recibida (`DS-C04 NumberInput`), Disposición (Reingresar/Mantener bloqueado/Confirmar merma), Nota opcional, “Esta es la recepción final”. `[TODO]`
+- [ ] **MK-015-T53 — P0:** Mostrar texto literal WF‑015: “El traslado se cerrará con una discrepancia. Las unidades faltantes no se agregarán al inventario.” `[TODO]`
 - [ ] **MK-015-T54 — P0:** Verificar que no se inventen cifras de faltantes. `[TODO]`
 
 ### 5. Normalización
@@ -159,11 +168,11 @@
 
 ## 7. Revisión transversal y visto bueno
 
-- [ ] **MK-015-T70‑A — P0:** Confirmar en `validation-report.md` que la autovalidación local está completa y cerrada. `[TODO]`
-- [ ] **MK-015-T71 — P0:** Solicitar formalmente revisión transversal a Leonardo Vera Rodríguez. `[TODO]`
-- [ ] **MK-015-T72 — P0:** Atender y corregir todos los hallazgos bloqueantes e importantes formulados en la revisión transversal. `[TODO]`
-- [ ] **MK-015-T73 — P0:** Obtener visto bueno formal de Leonardo Vera Rodríguez. `[TODO]`
-- [ ] **MK-015-T74 — P0 — Registrar estado `APROBADO PARA FIGMA`** `[TODO]`
+- [ ] **MK-015-T72 — P0:** Confirmar en `validation-report.md` que la autovalidación local está completa y cerrada. `[TODO]`
+- [ ] **MK-015-T73 — P0:** Solicitar formalmente revisión transversal a Leonardo Vera Rodríguez. `[TODO]`
+- [ ] **MK-015-T74 — P0:** Atender y corregir todos los hallazgos bloqueantes e importantes formulados en la revisión transversal. `[TODO]`
+- [ ] **MK-015-T75 — P0:** Obtener visto bueno formal de Leonardo Vera Rodríguez. `[TODO]`
+- [ ] **MK-015-T76 — P0 — Registrar estado `APROBADO PARA FIGMA`** `[TODO]`
   - **Entrada:** Visto bueno otorgado por Leonardo Vera Rodríguez.
   - **Acción:** Registrar estado en la sección de revisión transversal de `validation-report.md`.
   - **Salida esperada:** Sección de revisión transversal en estado `APROBADO PARA FIGMA`.
@@ -171,12 +180,12 @@
 
 ## 8. Figma y cierre
 
-- [ ] **MK-015-T75 — P0:** Trasladar fielmente a Figma la versión del prototipo aprobada para Figma. `[TODO]`
-- [ ] **MK-015-T76 — P0:** Verificar fidelidad punto a punto entre Figma y el prototipo aprobado. `[TODO]`
-- [ ] **MK-015-T77 — P0:** Confirmar que todas las pantallas P0 requeridas están completas en Figma. `[TODO]`
-- [ ] **MK-015-T78 — P0:** Registrar enlace canónico de Figma en `validation-report.md`. `[TODO]`
-- [ ] **MK-015-T79 — P0 — Cierre de Quality Gates y resultado APROBADO** `[TODO]`
-  - **Entrada:** Gates A‑F cumplidos satisfactoriamente.
+- [ ] **MK-015-T77 — P0:** Trasladar fielmente a Figma la versión del prototipo aprobada para Figma. `[TODO]`
+- [ ] **MK-015-T78 — P0:** Verificar fidelidad punto a punto entre Figma y el prototipo aprobado. `[TODO]`
+- [ ] **MK-015-T79 — P0:** Confirmar que todas las pantallas P0 requeridas están completas en Figma. `[TODO]`
+- [ ] **MK-015-T80 — P0:** Registrar enlace canónico de Figma en `validation-report.md`. `[TODO]`
+- [ ] **MK-015-T81 — P0 — Cierre de Quality Gates y resultado APROBADO** `[TODO]`
+  - **Entrada:** Gates A‑F cumplidos satisfactoriamente.
   - **Acción:** Completar sección cierre en `validation-report.md` y declarar resultado general.
   - **Salida esperada:** `validation-report.md` con **Resultado general = APROBADO**.
   - **Verificación:** Todos los gates cerrados, enlace Figma verificado y cero bloqueos abiertos.

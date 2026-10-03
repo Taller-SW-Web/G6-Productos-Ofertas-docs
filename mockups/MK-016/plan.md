@@ -27,9 +27,10 @@ Referencias documentales oficiales que deben consultarse obligatoriamente antes 
 - UX Guidelines (`mockups/ux/ux-guidelines.md`).
 - UX Decisions (`mockups/ux/ux-decisions.md`).
 - Propuesta UX Integral del módulo (`mockups/ux/propuesta-ux.md`).
-- Wireframe oficial (`WF-016`).
-- Flujo de navegación oficial (`FLOW-016`).
-- Design System de mockups ([mockups/DESIGN.md](../DESIGN.md), versión 1.0.0, tokens y componentes DS-C01–DS-C29).
+- Wireframe oficial ([WF-016](../../wireframes/flows/WF-016-dashboard-alertas-stock.md)).
+- Flujo de navegación oficial ([FLOW-016](../../flujos/FLOW-016-dashboard-alertas-stock.md)).
+- Contrato API ([Contrato_Api.md](../../Contrato_Api.md), [OpenAPI](../../api/openapi.yaml) endpoint `GET /api/v1/inventario/dashboard`, [AsyncAPI](../../asyncapi/asyncapi.yaml) evento `inventory.stock.changed`).
+- Design System de mockups ([mockups/DESIGN.md](../DESIGN.md), versión 1.0.0, §9 Grid 3 cards por fila, gap 24 px, tokens y componentes DS-C01–DS-C29).
 
 *(Ver detalle de estados requeridos en la sección 3. Entradas obligatorias).*
 
@@ -71,9 +72,10 @@ Detener inmediatamente la ejecución, marcar la tarea como `BLOCKED` y escalar a
 | UX Decisions | `mockups/ux/ux-decisions.md` | Vigente |
 | UX Guidelines | `mockups/ux/ux-guidelines.md` | Vigente |
 | Component Spec | `component-spec.md` | Aprobado |
-| SPEC/HU | [SPEC-016](../specs/SPEC-016-dashboard-alertas-stock.md) / [HU-016](../hu/HU-016-dashboard-alertas-stock.md) | Vigentes |
-| WF | [WF-016](../wireframes/flows/WF-016-dashboard-alertas-stock.md) | Vigente |
-| Flow | [FLOW-016](../flujos/FLOW-016-dashboard-alertas-stock.md) | Vigente |
+| SPEC/HU | [SPEC-016](../../specs/SPEC-016-dashboard-alertas-stock.md) / [HU-016](../../hu/HU-016-dashboard-alertas-stock.md) | Vigentes |
+| WF | [WF-016](../../wireframes/flows/WF-016-dashboard-alertas-stock.md) | Vigente |
+| Flow | [FLOW-016](../../flujos/FLOW-016-dashboard-alertas-stock.md) | Vigente |
+| Contrato API | [OpenAPI](../../api/openapi.yaml) (`GET /api/v1/inventario/dashboard`) / [Contrato_Api.md](../../Contrato_Api.md) | Vigente |
 | Design System | [mockups/DESIGN.md](../DESIGN.md), versión 1.0.0 | Vigente y coherente con el component-spec |
 
 ## 4. Objetivo
@@ -93,10 +95,10 @@ Inventario de pantallas a construir con su orden de ejecución. El contenido det
 - **Pantalla:** MK-016-S01
 - **Motivo:** Es la pantalla única integral que consolida las métricas globales, el panel de alertas de discrepancias, la distribución por almacén/tienda y la tabla detallada de inventario por SKU.
 - **Qué debe establecer:**
-  - Disposición armónica de tarjetas KPI superiores (`DS-C19`).
-  - Barra de filtrado reactivo (`DS-C13`).
-  - Cuadrícula analítica de dos columnas (Alertas críticas vs Distribución geográfica).
-  - Tabla de inventario con cálculo autoritativo de disponible y badges semánticos (`DS-C14`).
+  - Disposición de tarjetas KPI superiores (`DS-C19`): 12 indicadores oficiales de SPEC-016 §2 y WF-016 estructurados en un grid estricto de 3 tarjetas por fila a 1440 px con gap 24 px según DESIGN.md §9.
+  - Barra de filtrado reactivo multidimensional (`DS-C13`): Búsqueda por texto (SKU/Producto) y selectores de Categoría (`categoriaId`), Marca (`marcaId`), Ubicación (`locationId`) y Estado comercial (`estado`).
+  - Cuadrícula analítica de dos columnas (Alertas críticas de stock bajo y discrepancias vs Distribución por ubicación geográfica).
+  - Tabla principal de inventario de 9 columnas con cálculo autoritativo de disponible (`available = max(on_hand - reserved - blocked, 0)`) y badges semánticos (`DS-C14`).
 
 La pantalla ancla no crea una UX independiente; aplica la UX global del módulo a esta funcionalidad.
 
@@ -104,7 +106,7 @@ La pantalla ancla no crea una UX independiente; aplica la UX global del módulo 
 
 1. Preparar contexto y fixtures deterministas para estados default, loading, empty y error.
 2. Implementar la pantalla ancla `MK-016-S01` conforme al `component-spec.md`.
-3. Validarla contra fuentes oficiales (`SPEC-016`, `HU-016`, `WF-016`) y la UX transversal del módulo.
+3. Validarla contra fuentes oficiales (`SPEC-016`, `HU-016`, `WF-016`, `openapi.yaml`) y la UX transversal del módulo.
 4. Normalizar el código con React, TypeScript, Mantine, Tabler Icons y el tema central.
 5. Ejecutar la autovalidación local de Miguel Ángel Taco Zavala en `validation-report.md`.
 6. Solicitar y atender la revisión transversal UX de Leonardo Vera Rodríguez.
@@ -113,11 +115,13 @@ La pantalla ancla no crea una UX independiente; aplica la UX global del módulo 
 ## 8. Componentes compartidos
 
 Componentes del Design System que deben ser consumidos sin duplicación:
-- `DS-C19 PO/Card/KPI`: Métricas numéricas de disponibilidad y traslados.
-- `DS-C17 PO/Table`: Tabla principal de inventario y tabla de distribución por ubicación.
-- `DS-C14 PO/Badge`: Badges de estado `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`.
-- `DS-C13 PO/FilterBar`: Búsqueda y filtros combinados.
-- `DS-C15 PO/Alert/Notice`: Avisos de alertas críticas de stock y traslados.
+- `DS-C19 PO/Card/KPI`: Métricas numéricas de disponibilidad, salud de catálogo y traslados (Grid de 3 cards por fila, gap 24 px).
+- `DS-C17 PO/Table`: Tabla principal de inventario (9 columnas) y tabla de distribución por ubicación (6 columnas).
+- `DS-C14 PO/Badge`: Badges de estado `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO` según LUX-01.
+- `DS-C13 PO/FilterBar`: Búsqueda y filtros combinados multidimensionales.
+- `DS-C15 PO/Alert/Notice`: Avisos de alertas críticas de riesgo de stock y traslados con discrepancia.
+- `DS-C03 PO/TextInput`: Campo de búsqueda de SKU y producto.
+- `DS-C06 PO/Select`: Selectores de Categoría, Marca, Ubicación y Estado.
 
 ## 9. Calidad y normalización
 
@@ -141,12 +145,21 @@ Garantizar la inspección directa y determinista de los 4 estados principales:
 - Revisión transversal por Leonardo Vera Rodríguez para obtener `APROBADO PARA FIGMA`.
 - Verificación de fidelidad entre la pantalla aprobada y el archivo en Figma.
 
-## 12. Quality Gates
+## 12. Riesgos
+
+| ID | Riesgo | Probabilidad | Impacto | Mitigación |
+|---|---|---|---|---|
+| R-01 | Intentar mutar saldos o resolver traslados directamente desde el dashboard violando SPEC-016 §1 | Baja | Alto | Mantener la pantalla estrictamente como solo lectura, delegando la atención operativa mediante enlaces contextuales a MK-015 |
+| R-02 | Inconsistencia en la cuadrícula de KPIs en resoluciones estándar desktop | Media | Medio | Seguir rigurosamente la regla de DESIGN.md §9 de componer un grid de 3 cards por fila a 1440 px con gap 24 px |
+| R-03 | Desincronización de filtros tras eventos reactivos `inventory.stock.changed` | Media | Medio | Preservar el estado local de filtros de FilterBar durante el recálculo reactivo de indicadores conforme a FLOW-016 |
+| R-04 | Declarar cumplidos gates de construcción sin prototipo raw implementado en `prototipo/src/pantallas/MK016` | Alta | Alto | Mantener tareas y quality gates de construcción en TODO/PENDIENTE hasta disponer de evidencia verificable |
+
+## 13. Quality Gates
 
 | Gate | Condición de aprobación | Verificación |
 |---|---|---|
-| Gate A — Requisitos | SPEC-016, HU-016, WF-016 y FLOW-016 alineados sin contradicciones | Inspección cruzada |
-| Gate B — Especificación | `component-spec.md` aprobado con todas las pantallas P0 e inventario de rutas | Revisión formal |
+| Gate A — Requisitos | SPEC-016, HU-016, WF-016, FLOW-016 y Contrato OpenAPI alineados sin contradicciones | Inspección cruzada |
+| Gate B — Especificación | `component-spec.md` aprobado con pantalla P0, 12 KPIs en grid 3x, filtros completos y LUX-01/04 | Revisión formal |
 | Gate C — Construcción | Pantalla operativa en `/MK016/S01` normalizada con Design System a 1440 px | Inspección visual y código |
 | Gate D — Autovalidación | Cero hallazgos bloqueantes en autovalidación de primera línea | `validation-report.md` |
 | Gate E — Revisión UX | Visto bueno formal de Leonardo Vera Rodríguez | `APROBADO PARA FIGMA` |

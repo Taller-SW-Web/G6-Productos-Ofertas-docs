@@ -26,15 +26,15 @@ Define las fuentes oficiales de verdad consumidas por esta funcionalidad. Cualqu
 
 | Fuente | Referencia | Alcance |
 |---|---|---|
-| SPEC | [SPEC-016](../specs/SPEC-016-dashboard-alertas-stock.md) | §1–8 Indicadores, estados de disponibilidad, actualización reactiva, distribución por ubicación, traslados y filtros |
-| HU | [HU-016](../hu/HU-016-dashboard-alertas-stock.md) | CA-01…CA-11 Criterios de aceptación, visualización de indicadores y alertas de inventario |
-| WF | [WF-016](../wireframes/flows/WF-016-dashboard-alertas-stock.md) | Distribución de KPIs, tabla principal, paneles de alertas y distribución por ubicación |
-| Flow | [FLOW-016](../flujos/FLOW-016-dashboard-alertas-stock.md) | Navegación analítica, filtros y actualización reactiva por evento de inventario |
+| SPEC | [SPEC-016](../../specs/SPEC-016-dashboard-alertas-stock.md) | §1–8 Indicadores, estados de disponibilidad, actualización reactiva, distribución por ubicación, traslados y filtros |
+| HU | [HU-016](../../hu/HU-016-dashboard-alertas-stock.md) | CA-01…CA-11 Criterios de aceptación, visualización de indicadores y alertas de inventario |
+| WF | [WF-016](../../wireframes/flows/WF-016-dashboard-alertas-stock.md) | Distribución de KPIs, tabla principal, paneles de alertas y distribución por ubicación |
+| Flow | [FLOW-016](../../flujos/FLOW-016-dashboard-alertas-stock.md) | Navegación analítica, filtros y actualización reactiva por evento de inventario |
 | Propuesta UX módulo | `mockups/ux/propuesta-ux.md` | §3–5 Matriz de aplicabilidad 016, UX-P01, UX-P02, UX-P03 |
 | UX Decisions | `mockups/ux/ux-decisions.md` | UXD-001 (estructura y densidad desktop), UXD-011 (feedback operacional) |
 | UX Guidelines | `mockups/ux/ux-guidelines.md` | UXG-001…UXG-022 Reglas normativas operativas y de layout |
-| API Contract | [Contrato_Api.md](../Contrato_Api.md) / [AsyncAPI](../asyncapi/asyncapi.yaml) | Consulta de disponibilidad agregada y evento `inventory.stock.changed` |
-| Design System | [mockups/DESIGN.md](../DESIGN.md), versión 1.0.0 | Tokens, componentes DS-C19 (KPIs), DS-C17 (Table), DS-C13 (FilterBar), DS-C14 (Badge), DS-C15 (Alert) |
+| API Contract | [Contrato_Api.md](../../Contrato_Api.md) / [OpenAPI](../../api/openapi.yaml) / [AsyncAPI](../../asyncapi/asyncapi.yaml) | Endpoint `GET /api/v1/inventario/dashboard` (consulta de KPIs y distribución) y evento reactivo `inventory.stock.changed` |
+| Design System | [mockups/DESIGN.md](../DESIGN.md), versión 1.0.0 | §9 (Grid de 3 cards por fila, gap 24 px), tokens y componentes DS-C19 (KPIs), DS-C17 (Table), DS-C13 (FilterBar), DS-C14 (Badge), DS-C15 (Alert) |
 
 ## 3. Objetivo funcional
 
@@ -47,22 +47,39 @@ Define las fuentes oficiales de verdad consumidas por esta funcionalidad. Cualqu
 
 ### Incluido
 
-- Panel de KPIs principales: Unidades disponibles, unidades bloqueadas, SKUs con stock bajo, SKUs agotados, traslados en tránsito, traslados recibidos parcialmente y traslados con discrepancia.
-- Cálculo de disponibilidad conforme a la regla autoritativa: `available = max(on_hand - reserved - blocked, 0)`.
-- Clasificación de estados comerciales: `DISPONIBLE` (available > umbral), `STOCK_BAJO` (0 < available ≤ umbral) y `AGOTADO` (available = 0).
-- Panel de distribución de saldos y disponibilidad por ubicación (tienda/almacén) con detalle de unidades físicas, reservadas, bloqueadas y disponibles.
-- Panel de alertas críticas de stock bajo y traslados con discrepancia.
+- Panel de KPIs principales (12 indicadores organizados en un grid de 3 cards por fila con gap 24 px según DESIGN.md §9):
+  1. Total de SKUs vendibles
+  2. Unidades físicas totales
+  3. Unidades reservadas
+  4. Unidades bloqueadas
+  5. Unidades disponibles
+  6. SKUs Disponibles
+  7. SKUs con Stock bajo
+  8. SKUs Agotados
+  9. Traslados en tránsito
+  10. Traslados recibidos parcialmente
+  11. Traslados pendientes totales
+  12. Traslados con discrepancia
+- Cálculo de disponibilidad conforme a la regla autoritativa de negocio: `available = max(on_hand - reserved - blocked, 0)`.
+- Clasificación de estados comerciales por SKU: `DISPONIBLE` (available > umbral), `STOCK_BAJO` (0 < available ≤ umbral) y `AGOTADO` (available = 0).
+- Panel de distribución de saldos y disponibilidad por ubicación (tienda/almacén) con desglose de Físico, Reservado, Bloqueado, Disponible y conteo de SKUs por estado.
+- Panel de alertas críticas de riesgo: SKUs con stock bajo y traslados completados con discrepancia.
 - Tabla detallada de inventario por SKU con columnas: SKU, Producto, Ubicación, Físico, Reservado, Bloqueado, Disponible, Umbral y Estado (Badge DS-C14).
-- Barra de filtros reactiva: Búsqueda por texto (SKU o nombre de producto), filtro por ubicación y filtro por estado de disponibilidad.
-- Enlaces contextuales hacia `MK-015` (Control de stock y Registrar recepción) para la atención operativa de las alertas.
-- Actualización reactiva ante eventos de cambio de stock (`inventory.stock.changed`) preservando los filtros aplicados.
+- Barra de filtros reactiva (`DS-C13 FilterBar`):
+  - Búsqueda por texto libre (SKU o nombre de producto / `productoId`, `sku`).
+  - Filtro por categoría (`categoriaId`).
+  - Filtro por marca (`marcaId`).
+  - Filtro por ubicación (`locationId`).
+  - Filtro por estado comercial (`estado`: `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`).
+- Enlaces contextuales hacia `MK-015` (Control de stock y Registrar recepción) para la atención operativa de las alertas sin incrustar formularios de mutación en el dashboard.
+- Actualización reactiva ante eventos de cambio de stock (`inventory.stock.changed`) preservando los filtros aplicados por el usuario.
 
 ### Fuera de alcance
 
-- Modificación o edición directa de saldos desde el dashboard (operación de solo lectura).
+- Modificación o edición directa de saldos desde el dashboard (operación estrictamente de solo lectura según SPEC-016 §1).
 - Creación, cancelación o liberación de reservas de inventario.
 - Registro o mutación directa de recepciones de traslado desde el dashboard (se delega a `MK-015-S05`).
-- Métrica o reportes de ventas, facturación o ranking financiero de productos.
+- Métricas o reportes de ventas, facturación o ranking financiero de productos.
 - Decisiones de picking, packing, logística o despacho.
 - Exposición de identificadores y nombres técnicos internos (`on_hand`, `reserved`, `blocked`, `available`, `routing_key`, `message_id`, etc.).
 
@@ -72,7 +89,7 @@ Define qué pantallas existen y su propósito dentro de la funcionalidad.
 
 | ID | Pantalla | Propósito | Entrada | Acción principal | Salida | Prioridad | Ruta del prototipo |
 |---|---|---|---|---|---|---|---|
-| MK-016-S01 | Dashboard analítico y alertas de stock | Monitoreo integral de saldos, alertas y traslados por SKU y ubicación | `GET /inventario/disponibilidad` (agregado) + KPIs | Filtrar por ubicación/estado, buscar por SKU/producto, inspeccionar alertas | Vista consolidada con KPIs, alertas, distribución geográfica y tabla de inventario | P0 | `/MK016/S01` |
+| MK-016-S01 | Dashboard analítico y alertas de stock | Monitoreo integral de saldos, alertas y traslados por SKU y ubicación | `GET /api/v1/inventario/dashboard?productoId=&categoriaId=&marcaId=&sku=&locationId=&estado=` + evento `inventory.stock.changed` | Filtrar por categoría/marca/ubicación/estado, buscar por SKU/producto, inspeccionar alertas | Vista consolidada de solo lectura con 12 KPIs (grid 3x), alertas, distribución geográfica y tabla de inventario | P0 | `/MK016/S01` |
 
 **Reglas de acceso y enrutamiento:**
 
@@ -102,88 +119,188 @@ flowchart TD
 
 ## 8. Componentes compartidos
 
-Componentes transversales del Design System reutilizados en el dashboard.
+Componentes transversales del Design System reutilizados en el dashboard conforme a DESIGN.md §9.
 
 | Componente | Pantallas | Uso | Variante | Estados |
 |---|---|---|---|---|
-| DS-C19 PO/Card/KPI | S01 | Tarjetas de métricas de stock y traslados | Padding 20 px, radio 8 px, cifra destacada 28 px | default, loading (skeleton) |
-| DS-C17 PO/Table | S01 | Tabla principal de inventario y tabla de distribución | Variante con bordes neutros y cabecera en neutral-10 | default, hover, empty, loading |
+| DS-C19 PO/Card/KPI | S01 | Tarjetas de métricas de disponibilidad, salud de catálogo y traslados (Grid 3 cards por fila, gap 24 px) | Padding 20 px, radio 8 px, cifra destacada 28 px | default, loading (skeleton) |
+| DS-C17 PO/Table | S01 | Tabla principal de inventario (9 columnas) y tabla de distribución por ubicación (6 columnas) | Variante con bordes neutros y cabecera en neutral-10 | default, hover, empty, loading |
 | DS-C14 PO/Badge | S01 | Etiquetas visuales de estado (Disponible, Stock bajo, Agotado) | Altura mínima 28 px, texto explícito e ícono | success (Disponible), warning (Stock bajo), error (Agotado) |
-| DS-C13 PO/FilterBar | S01 | Barra de herramientas y filtros integrados | Buscador + selectores de Ubicación y Estado | default, active, disabled |
-| DS-C15 PO/Alert/Notice | S01 | Tarjetas de alertas críticas de stock y traslados | Contenedor con borde reforzado, ícono de advertencia | default, warning, error |
+| DS-C13 PO/FilterBar | S01 | Barra de herramientas y filtros integrados multidimensionales | Buscador por texto + 4 selectores + botón Limpiar | default, active, disabled |
+| DS-C15 PO/Alert/Notice | S01 | Tarjetas de alertas críticas de stock y traslados con discrepancia | Contenedor con borde reforzado, ícono de advertencia | default, warning, error |
 | DS-C03 PO/TextInput | S01 | Campo de búsqueda de SKU y nombre de producto | Altura 44 px, padding 12 px, etiqueta superior | default, focus, filled |
-| DS-C06 PO/Select | S01 | Selectores de Ubicación y Estado | Altura 44 px con opciones predefinidas | default, focus, active |
+| DS-C06 PO/Select | S01 | Selectores de Categoría, Marca, Ubicación y Estado | Altura 44 px con opciones predefinidas | default, focus, active |
 
 ## 9. Componentes específicos
 
-### MK-016-C01 — Resumen de KPIs de disponibilidad
+### MK-016-C01 — Resumen de KPIs de disponibilidad (Grid 3 cards por fila)
 
-**Propósito:** Agrupar en una cuadrícula destacada los 4 indicadores críticos de saldos (Disponibles, Bloqueadas, Stock bajo, Agotados) y los 3 indicadores de flujo logístico (En tránsito, Recibidos parcialmente, Con discrepancia).
+**Propósito:** Agrupar en una cuadrícula destacada los 12 indicadores oficiales de SPEC-016 §2 y WF-016, organizados estrictamente en un grid de 3 tarjetas por fila a 1440 px con gap 24 px según DESIGN.md §9 ("Grid de 3 cards por fila a 1440 px como composición base, gap 24").
 
 **Pantallas en las que participa:** MK-016-S01.
 
 **Contenido estructurado:**
-- Fila 1 (Stock): 4 tarjetas `DS-C19` (Unidades disponibles, Unidades bloqueadas, SKUs con stock bajo, SKUs agotados).
-- Fila 2 (Traslados): 3 tarjetas `DS-C19` (Traslados en tránsito, Recibidos parcialmente, Traslados con discrepancia).
+- **Fila 1 — Disponibilidad y saldos físicos:**
+  1. `DS-C19` Unidades disponibles (128) — Cifra destacada, badge verde informativo.
+  2. `DS-C19` Unidades bloqueadas (9) — Cifra destacada, advertencia operativa.
+  3. `DS-C19` Unidades físicas totales (145) — Cifra destacada, total inventariado.
+- **Fila 2 — Salud del catálogo por SKU:**
+  4. `DS-C19` Total SKUs vendibles (24) — Cifra destacada del universo activo.
+  5. `DS-C19` SKUs Disponibles (15) — Cifra destacada con stock suficiente.
+  6. `DS-C19` SKUs con Stock bajo (6) — Cifra destacada, estado de atención preventiva.
+- **Fila 3 — Riesgos de quiebre y reservas:**
+  7. `DS-C19` SKUs Agotados (3) — Cifra destacada, alerta crítica de quiebre.
+  8. `DS-C19` Unidades reservadas (8) — Cifra destacada comprometida en órdenes.
+  9. `DS-C19` Traslados pendientes totales (6) — Suma de en tránsito y parciales.
+- **Fila 4 — Flujo logístico de traslados:**
+  10. `DS-C19` Traslados en tránsito (4) — Envíos confirmados en ruta.
+  11. `DS-C19` Traslados recibidos parcialmente (2) — Recepciones incompletas en curso.
+  12. `DS-C19` Traslados con discrepancia (1) — Alerta crítica de merma o faltante.
 
 ### MK-016-C02 — Panel de alertas críticas
 
-**Propósito:** Listar los eventos de riesgo de disponibilidad que requieren atención prioritaria por parte del gestor comercial.
+**Propósito:** Listar los eventos de riesgo de disponibilidad y logística que requieren atención prioritaria por parte del gestor comercial, enlazando hacia MK-015 sin mutar datos.
 
 **Pantallas en las que participa:** MK-016-S01.
 
 **Contenido estructurado:**
-- Alerta de Stock Bajo: SKU, producto, unidades disponibles actuales y ubicación afectada.
-- Alerta de Discrepancia: Identificador de traslado, unidades faltantes no ingresadas a inventario y estado de cierre.
-- Enlace contextual a `MK-015`.
+- Alertas de Stock Bajo: SKU, producto, unidades disponibles actuales y ubicación afectada, con enlace contextual “Revisar saldo” hacia `MK-015-S01`.
+- Alertas de Discrepancia: Identificador de traslado, unidades faltantes no ingresadas a inventario y estado de cierre, con enlace contextual “Ver traslado” hacia `MK-015-S04` / `MK-015-S05`.
 
 ## 10. Especificación de la pantalla MK-016-S01
 
 ### MK-016-S01 — Dashboard analítico y alertas de stock
 
-**Propósito y objetivo:** Monitorear el inventario físico, reservado, bloqueado y disponible por SKU y ubicación, visualizando alertas y traslados sin mutar saldos.
+**Propósito y objetivo:** Monitorear en tiempo real el inventario físico, reservado, bloqueado y disponible por SKU y ubicación, supervisando alertas de quiebre y traslados sin mutar saldos ni ejecutar recepciones desde esta pantalla (operación estricta de solo lectura según SPEC-016 §1).
 
-**Estructura y layout:**
+**Estructura y layout por zonas:**
 
-1. **Zona 1 — Cabecera de página:** Breadcrumb (`Inventario / Dashboard`), H1 “Dashboard analítico y alertas de stock”, bajada explicativa: “Monitorea disponibilidad, bloqueos y traslados por ubicación sin modificar los saldos desde el dashboard.”
-2. **Zona 2 — Grilla de KPIs principales:**
-   - 4 tarjetas superiores: Unidades disponibles (128), Unidades bloqueadas (9), Stock bajo (6), Agotados (3).
-   - 3 tarjetas inferiores: Traslados en tránsito (4), Recibidos parcialmente (2), Con discrepancia (1).
-3. **Zona 3 — Barra de filtros (`DS-C13`):**
-   - Campo de búsqueda por texto: “Buscar SKU o producto”.
-   - Selector de ubicación: “Todas”, “Tienda Miraflores”, “Almacén central”.
-   - Selector de estado: “Todos”, “Disponible”, “Stock bajo”, “Agotado”.
-4. **Zona 4 — Grilla analítica de dos columnas (50% / 50%):**
-   - Columna izquierda: Card “Alertas” con avisos de stock bajo y traslados con discrepancia (`DS-C15`).
-   - Columna derecha: Card “Distribución por ubicación” con tabla de totales (Ubicación, Físico, Reservado, Bloqueado, Disponible).
+1. **Zona 1 — Cabecera de página:**
+   - Breadcrumb (`Inventario / Dashboard`).
+   - H1: “Dashboard analítico y alertas de stock”.
+   - Bajada explicativa: “Monitorea disponibilidad, bloqueos y traslados por ubicación sin modificar los saldos desde el dashboard.”
+   - Metadato de sincronización reactiva: “Última actualización: Hace un momento (Reactivo ante eventos de stock)”.
+2. **Zona 2 — Grilla de KPIs principales (Grid 3 cards por fila, gap 24 px según DESIGN.md §9):**
+   - Fila 1: Unidades disponibles (128) | Unidades bloqueadas (9) | Total unidades físicas (145)
+   - Fila 2: Total SKUs vendibles (24) | SKUs disponibles (15) | SKUs con stock bajo (6)
+   - Fila 3: SKUs agotados (3) | Unidades reservadas (8) | Traslados pendientes totales (6)
+   - Fila 4: Traslados en tránsito (4) | Recibidos parcialmente (2) | Con discrepancia (1)
+3. **Zona 3 — Barra de filtros multidimensional (`DS-C13 FilterBar`):**
+   - Campo de búsqueda por texto (`DS-C03`): “Buscar SKU o producto” (`productoId`, `sku`).
+   - Selector de categoría (`DS-C06`): “Todas las categorías”, “Calzado”, “Vestimenta”, “Accesorios” (`categoriaId`).
+   - Selector de marca (`DS-C06`): “Todas las marcas”, “UrbanStep”, “EcoWear”, “TechSport” (`marcaId`).
+   - Selector de ubicación (`DS-C06`): “Todas las ubicaciones”, “Tienda Miraflores”, “Almacén Central” (`locationId`).
+   - Selector de estado comercial (`DS-C06`): “Todos los estados”, “Disponible”, “Stock bajo”, “Agotado” (`estado`).
+   - Botón secundario: “Limpiar filtros”.
+4. **Zona 4 — Grilla analítica de dos columnas (50% / 50%, gap 24 px):**
+   - **Columna izquierda — Card “Alertas críticas” (`DS-C15`):**
+     - Aviso de stock bajo (ZAP-URB-42: 1 disponible vs umbral 2 en Tienda Miraflores). Enlace: “Revisar saldo”.
+     - Aviso de traslado con discrepancia (TR-2026-088: 2 unidades faltantes no agregadas a inventario). Enlace: “Ver traslado”.
+   - **Columna derecha — Card “Distribución por ubicación” (`DS-C17`):**
+     - Tabla con totales por ubicación: Ubicación, Físico, Reservado, Bloqueado, Disponible, SKUs por estado (Disponibles / Stock bajo / Agotados).
 5. **Zona 5 — Tabla principal de inventario por SKU (`DS-C17`):**
-   - Título de sección: “Inventario por SKU”.
-   - Columnas obligatorias: SKU, Producto, Ubicación, **Físico**, **Reservado**, **Bloqueado**, **Disponible**, **Umbral**, **Estado**.
-   - Badges de estado con ícono y texto: `Disponible` (verde), `Stock bajo` (ámbar), `Agotado` (gris/rojo neutro).
+   - Cabecera de sección: H2 “Inventario por SKU” con contador de registros coincidentes.
+   - 9 columnas normativas: **SKU**, **Producto**, **Ubicación**, **Físico**, **Reservado**, **Bloqueado**, **Disponible**, **Umbral**, **Estado**.
+   - Columna Estado con badges semánticos (`DS-C14 PO/Badge`): `Disponible` (verde), `Stock bajo` (ámbar), `Agotado` (gris/rojo neutro) según LUX-01.
+   - Acción contextual en cada fila: Enlace “Ver detalle” que abre `MK-015-S03` en drawer.
+
+**Componentes presentes:**
+- `DS-C19 PO/Card/KPI` (12 tarjetas distribuidas en 4 filas de 3 columnas).
+- `DS-C17 PO/Table` (tabla de distribución por ubicación y tabla de inventario por SKU).
+- `DS-C13 PO/FilterBar` (contenedor integrado de filtrado reactivo).
+- `DS-C03 PO/TextInput` (input de búsqueda).
+- `DS-C06 PO/Select` (selectores de categoría, marca, ubicación y estado).
+- `DS-C14 PO/Badge` (etiquetas de estado DISPONIBLE, STOCK_BAJO, AGOTADO).
+- `DS-C15 PO/Alert/Notice` (avisos de alertas críticas).
+- `DS-C25 PO/EmptyState` (estado sin resultados).
+- `DS-C24 PO/Skeleton` (marcadores de posición durante la carga).
+
+**Acción primaria:** Monitorear en tiempo real los saldos, alertas y traslados aplicando filtros multidimensionales para detectar riesgos operativos sin alterar inventario.
+
+**Acciones secundarias:**
+- Filtrar la tabla y KPIs por categoría (`categoriaId`), marca (`marcaId`), ubicación (`locationId`) o estado comercial (`estado`).
+- Buscar un SKU o producto específico mediante texto libre.
+- Limpiar todos los filtros activos para regresar a la vista global predeterminada.
+- Navegar mediante enlace contextual “Revisar saldo” hacia el detalle de saldo (`MK-015-S03`) o control de stock (`MK-015-S01`).
+- Navegar mediante enlace contextual “Ver traslado” hacia la bandeja de traslados (`MK-015-S04`) o recepción (`MK-015-S05`).
 
 **Estados requeridos:**
+- **Default:** Dashboard poblado con datos representativos y consistentes (128 disponibles, 9 bloqueadas, 6 bajo stock, 3 agotados).
+- **Loading:** Tarjetas KPI, tabla de distribución y tabla de inventario con estados skeleton (`DS-C24`).
+- **Empty:** Estado sin coincidencias para los filtros aplicados (`DS-C25` EmptyState con ilustración, microtexto informativo y botón “Limpiar filtros”).
+- **Error:** Alerta de fallo en servicio de inventario (`DS-C15` error) con opción interactiva “Reintentar consulta”.
 
-- **Default:** Dashboard poblado con datos representativos y consistentes.
-- **Loading:** Tarjetas y tablas con estados skeleton (`DS-C24`).
-- **Empty:** Estado vacío cuando los filtros aplicados no arrojan registros (`DS-C25` EmptyState con botón “Limpiar filtros”).
-- **Error:** Panel de aviso ante interrupción de conexión o indisponibilidad del servicio de consulta.
+**Contenido clave y microtexto:**
 
-**Reglas de copy y etiquetas:**
-- Prohibido el uso de términos técnicos como cabeceras visibles (`on_hand`, `reserved`, `blocked`, `available`).
-- Uso exclusivo de terminología funcional clara: "Físico", "Reservado", "Bloqueado", "Disponible".
+| Elemento | Texto / Patrón | Fuente de procedencia |
+|---|---|---|
+| H1 / Título | “Dashboard analítico y alertas de stock” | WF-016 |
+| Bajada explicativa | “Monitorea disponibilidad, bloqueos y traslados por ubicación sin modificar los saldos desde el dashboard.” | WF-016 / SPEC-016 §1 |
+| KPI 1 | “Unidades disponibles” | SPEC-016 §2 / WF-016 |
+| KPI 2 | “Unidades bloqueadas” | SPEC-016 §2 / WF-016 |
+| KPI 3 | “Unidades físicas totales” | SPEC-016 §2 / WF-016 |
+| KPI 4 | “Total SKUs vendibles” | SPEC-016 §2 / WF-016 |
+| KPI 5 | “SKUs Disponibles” | SPEC-016 §2 / WF-016 |
+| KPI 6 | “SKUs con Stock bajo” | SPEC-016 §2 / WF-016 |
+| KPI 7 | “SKUs Agotados” | SPEC-016 §2 / WF-016 |
+| KPI 8 | “Unidades reservadas” | SPEC-016 §2 / WF-016 |
+| KPI 9 | “Traslados pendientes totales” | SPEC-016 §2 / WF-016 |
+| KPI 10 | “Traslados en tránsito” | SPEC-016 §6 / WF-016 |
+| KPI 11 | “Traslados recibidos parcialmente” | SPEC-016 §6 / WF-016 |
+| KPI 12 | “Traslados con discrepancia” | SPEC-016 §2, §6 / WF-016 |
+| Filtro Búsqueda | “Buscar SKU o producto” | SPEC-016 §7 |
+| Filtro Categoría | “Todas las categorías” | SPEC-016 §7 / OpenAPI |
+| Filtro Marca | “Todas las marcas” | SPEC-016 §7 / OpenAPI |
+| Filtro Ubicación | “Todas las ubicaciones” | SPEC-016 §7 / OpenAPI |
+| Filtro Estado | “Todos los estados” | SPEC-016 §7 / OpenAPI |
+| CTA Limpiar | “Limpiar filtros” | UX Guidelines |
+| Columna 1 | “SKU” | WF-016 |
+| Columna 2 | “Producto” | WF-016 |
+| Columna 3 | “Ubicación” | WF-016 |
+| Columna 4 | “Físico” | WF-016 |
+| Columna 5 | “Reservado” | WF-016 |
+| Columna 6 | “Bloqueado” | WF-016 |
+| Columna 7 | “Disponible” | WF-016 |
+| Columna 8 | “Umbral” | WF-016 |
+| Columna 9 | “Estado” | WF-016 |
+| EmptyState | “No se encontraron SKUs para los criterios seleccionados.” | UX Guidelines / DS-C25 |
+| Alerta Discrepancia | “Traslado TR-2026-088 cerrado con discrepancia (2 unidades faltantes no ingresadas a inventario).” | HU-016 CA-11 / SPEC-016 §6 |
 
 ## 11. Decisiones UX locales
 
-### LUX-01 — Mapeo semántico de Badges de Estado (Heredada de MK-015)
+Solo registrar decisiones específicas de diseño exclusivas de esta funcionalidad.
 
-- **Decisión:** Mapear `DISPONIBLE` a `success`, `STOCK_BAJO` a `warning` y `AGOTADO` a `error`/neutral según DESIGN.md §4.1. No emplear `volt` ni `signal` para saldos confirmados.
-- **Justificación:** Garantiza coherencia visual total entre la vista de control de stock (MK-015) y el dashboard analítico (MK-016).
+### LUX-01 — Mapeo semántico de Badges de Estado
+
+**Problema:** Determinar el mapeo de variantes para los estados comerciales `DISPONIBLE`, `STOCK_BAJO` y `AGOTADO` en la tabla y paneles analíticos sin recurrir a variantes de acento `volt` o `signal` para saldos confirmados, asegurando ratios de contraste accesibles y coherencia visual total con MK-015 y DESIGN.md §4.1.
+
+**Alternativas consideradas:**
+- **Alternativa A:** Utilizar los roles semánticos normativos del Design System: `color/success/default` (`#2F9E44`) para disponible, `color/warning/default` (`#F08C00`) para stock bajo y `color/error/default` (`#E03131`) para agotado, acompañados siempre de texto explícito e íconos SVG de soporte.
+- **Alternativa B:** Utilizar tonos de acento dinámicos `accent/signal` (`#4361EE`) para unidades disponibles y `accent/volt` para stock en alerta, diferenciando visualmente el dashboard de las tablas transaccionales.
+
+**Decisión adoptada:** Adoptar la **Alternativa A**. Mapear `DISPONIBLE` → `DS-C14 PO/Badge` con variante `success`; `STOCK_BAJO` → variante `warning`; `AGOTADO` → variante `error`. La paleta y contraste están formalmente verificados en DESIGN.md §4.1 (ratios de 6.12:1 y 6.42:1 frente a fondos neutros). Se prohíbe terminantemente usar `volt` o `signal` para saldos de inventario confirmados.
+
+**Justificación:** El Design System v1.0.0 establece roles semánticos estrictos. Introducir una paleta paralela en el dashboard desorientaría al gestor comercial al navegar entre el control de stock (MK-015) y el dashboard analítico (MK-016). La certeza semántica y la accesibilidad priman sobre ornamentaciones ad hoc.
+
+**Trade-off:** Limita la diferenciación cromática del dashboard a la escala semántica canónica del sistema de diseño, impidiendo esquemas de color exóticos, pero asegurando uniformidad operativa y cumplimiento normativo WCAG AA.
+
+**Criterio de validación:** Los badges en la tabla principal y en el panel de distribución renderizan exclusivamente con tokens canónicos `color/success/default`, `color/warning/default` y `color/error/default`, con texto legible e ícono accesible.
 
 ### LUX-04 — Alertas operativas con enlace contextual de navegación
 
-- **Decisión:** Las alertas de stock bajo y discrepancias en traslados incluyen enlaces de salto directo hacia `MK-015-S01` (para revisar el saldo específico) o `MK-015-S04` (para consultar el traslado), sin embeber modales de mutación dentro del dashboard.
-- **Justificación:** El dashboard es estrictamente de solo lectura y monitoreo (SPEC-016 §1 y §8). Proporcionar navegación fluida hacia el flujo de gestión en MK-015 resuelve la necesidad operativa del usuario sin violar la separación de responsabilidades.
-- **Trade-off:** Requiere que el usuario cambie de vista para actuar sobre una incidencia, pero evita saturar el dashboard con formularios transaccionales complejos.
+**Problema:** Resolver la atención oportuna de traslados con discrepancia y quiebres de stock detectados en el dashboard sin convertir la vista analítica en un formulario transaccional recargado.
+
+**Alternativas consideradas:**
+- **Alternativa A:** Embeber modales o drawers de edición directa de traslados y ajustes de umbrales dentro de MK-016.
+- **Alternativa B:** Ofrecer enlaces de salto contextual hacia los flujos especializados de gestión en `MK-015` (`MK-015-S01` para detalle de saldos y `MK-015-S05` para registro de recepciones con discrepancia).
+
+**Decisión adoptada:** Adoptar la **Alternativa B**. Las alertas de stock bajo y discrepancias en traslados incluyen enlaces de salto directo hacia `MK-015-S01` o `MK-015-S05`, manteniendo el dashboard estrictamente como una herramienta analítica de solo lectura.
+
+**Justificación:** El dashboard es de monitoreo y consulta conforme a SPEC-016 §1 y §8. Incorporar lógica de mutación en esta pantalla violaría el principio de responsabilidad única y duplicaría indebidamente el flujo de resolución de recepciones formalizado en MK-015.
+
+**Trade-off:** Requiere que el usuario navegue a otra vista para actuar sobre una incidencia, pero preserva la ligereza, claridad conceptual y aislamiento de estados del dashboard.
+
+**Criterio de validación:** Los botones/enlaces “Revisar saldo” y “Ver traslado” ejecutan navegación hacia las rutas `/MK015/S01` y `/MK015/S05` respectivamente, sin alterar datos dentro de `/MK016/S01`.
 
 ## 12. Reglas de layout PC
 
@@ -212,11 +329,11 @@ Componentes transversales del Design System reutilizados en el dashboard.
 
 ## 15. Criterios de aceptación
 
-- [x] La pantalla P0 `MK-016-S01` está identificada con su ruta `/MK016/S01`.
-- [x] El propósito, layout y jerarquía de información reflejan fielmente SPEC-016 y WF-016.
-- [x] No existen acciones de mutación ni botones para editar saldos directamente.
-- [x] Se respetan rigurosamente las UX Guidelines y el Design System (`DESIGN.md`).
-- [x] Las decisiones locales `LUX-01` y `LUX-04` están documentadas y justificadas.
-- [x] Se prohíben términos técnicos crudos en las etiquetas de interfaz.
-- [x] Los fixtures deterministas cubren los estados default, loading, empty y error.
-- [x] Accesibilidad básica garantizada (foco visible, nombres accesibles, no dependencia exclusiva del color).
+- [ ] La pantalla P0 `MK-016-S01` está identificada con su ruta `/MK016/S01`.
+- [ ] El propósito, layout y jerarquía de información reflejan fielmente SPEC-016, WF-016 y DESIGN.md §9 (grid de 3 cards por fila, gap 24 px).
+- [ ] No existen acciones de mutación ni botones para editar saldos directamente (solo lectura estricta).
+- [ ] Se respetan rigurosamente las UX Guidelines y el Design System (`DESIGN.md`).
+- [ ] Las decisiones locales `LUX-01` y `LUX-04` están completamente documentadas y justificadas con estructura formal.
+- [ ] Se prohíben términos técnicos crudos en las etiquetas de interfaz (`on_hand`, `reserved`, `blocked`, `available`).
+- [ ] Los fixtures deterministas cubren los estados default, loading, empty y error.
+- [ ] Accesibilidad básica garantizada (foco visible, nombres accesibles, no dependencia exclusiva del color).
