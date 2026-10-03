@@ -117,6 +117,8 @@ flowchart LR
     subgraph S["Sistema · Catálogo"]
         direction TB
         EDICION{"¿Cambios válidos sin alterar variant_id, SKU<br/>publicado ni atributos identificadores?"}
+        EDIT_ACTIVA{"¿Variante ACTIVA?"}
+        EDIT_CONDICIONES{"¿Resultado conserva las condiciones<br/>de activación de la variante?"}
         GUARDAR["Guardar cambios y conservar identidad e<br/>inicialización existente"]
         ESTADO{"¿Estado de origen compatible con la acción?"}
         MODELO{"¿Padre con tiene_variantes=true?"}
@@ -133,7 +135,11 @@ flowchart LR
     end
     INICIO --> ACCION
     ACCION -->|"Editar"| EDITAR --> EDICION
-    EDICION -->|"Sí"| GUARDAR --> FIN_EDICION
+    EDICION -->|"Sí"| EDIT_ACTIVA
+    EDIT_ACTIVA -->|"No"| GUARDAR
+    EDIT_ACTIVA -->|"Sí"| EDIT_CONDICIONES
+    EDIT_CONDICIONES -->|"Sí"| GUARDAR --> FIN_EDICION
+    EDIT_CONDICIONES -->|"No"| RECHAZAR
     EDICION -->|"No"| RECHAZAR --> FIN_ERROR
     ACCION -->|"Activar"| ACTIVAR --> ESTADO
     ACCION -->|"Reactivar"| REACTIVAR --> ESTADO
@@ -152,6 +158,8 @@ flowchart LR
 
 La edición valida el perfil proporcionado con `pesoKg`, `largoCm`, `anchoCm` y `altoCm` mayores que cero. Reactivar aplica las mismas condiciones de activación, conserva el SKU y no repite una inicialización completada. Si la preparación no concluyó, se utiliza el reintento idempotente de 4.2 sobre la operación existente.
 
+La edición actualiza la misma variante, sin crear otra; si está activa y el resultado completo incumple sus requisitos de activación, se rechaza toda la edición conservando datos y estado anteriores. El perfil puede estar incompleto en borrador, con valores informados positivos; activar/reactivar exige los cuatro valores completos. El padre no registra peso ni dimensiones y el volumen de la variante es derivado. El padre no necesita estar activo para activar/reactivar una variante; los hijos en borrador o inactivos no bloquean por sí solos al padre ni se ofrecen comercialmente. Reactivar al padre no reactiva hijos inactivos.
+
 OpenAPI denomina el estado de variante `ACTIVA` (producto: `ACTIVO`) y expone `POST /productos/{productoId}/variantes/{variantId}/reactivar`, con estado de ruta `provisional-internal`. Reactivar una variante no reactiva automáticamente al padre: el producto se revalida desde FLOW-003. Una variante activa con padre no comercialmente vendible no habilita resolución comercial; la disponibilidad de stock se consulta separadamente.
 
 ### 4.4. Desactivación y efecto sobre el padre
@@ -169,7 +177,7 @@ flowchart LR
         VALIDAR{"¿Variante admite desactivación?"}
         BAJA["Persistir variante INACTIVA conservando<br/>identidad SKU"]
         EVENTO["Publicar catalog.sku.deactivated mediante<br/>RabbitMQ"]
-        ULTIMA{"¿Se desactivó la última variante activa?"}
+        ULTIMA{"¿Se desactivó la última variante activa<br/>y el padre estaba ACTIVO?"}
         PADRE["Inactivar lógicamente el padre conforme a<br/>SPEC-003"]
         EVENTO_PADRE["Publicar catalog.product.deactivated mediante<br/>RabbitMQ al confirmar la baja del padre"]
         ERROR["Informar estado incompatible sin aplicar baja"]
@@ -186,6 +194,8 @@ flowchart LR
 ```
 
 RabbitMQ distribuye `catalog.sku.deactivated` a los consumidores declarados en AsyncAPI 0.4.0 (`inventory-svc`, `pricing-svc`, `promotions-svc`, `combos-svc`). La baja del padre publica `catalog.product.deactivated` conforme a FLOW-003. Catálogo no realiza llamadas directas a esos consumidores ni inventa un evento de reactivación.
+
+Si el padre estaba en `BORRADOR` o `INACTIVO`, conserva su estado al desactivar la última variante activa. Desactivar al padre conserva los estados individuales de los hijos y bloquea su exposición comercial; reactivar uno no reactiva automáticamente a los demás.
 
 ## 5. Reglas de preparación y trazabilidad
 

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "repository": "Taller-SW-Web/Productos-y-Ofertas-docs",
+  "enabled_sources": ["cueva"],
+  "pairs": [
+    {"source": "castilla", "destination": "lab/castilla"},
+    {"source": "poma", "destination": "lab/poma"},
+    {"source": "cueva", "destination": "lab/cueva"},
+    {"source": "lopez", "destination": "lab/lopez"},
+    {"source": "taco", "destination": "lab/taco"},
+    {"source": "vera", "destination": "lab/vera"}
+  ],
+  "operational_readme": "README.md",
+  "local_ignore_line": ".stitch/"
+}
