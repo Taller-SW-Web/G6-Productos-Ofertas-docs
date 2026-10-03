@@ -8,7 +8,7 @@
 - **Funcionalidad:** Control de stock y disponibilidad
 - **Relacionado con:** HU-015 / SPEC-015 / WF-015
 - **Responsable:** Miguel Ángel Taco Zavala
-- **Última actualización:** 2026-10-01
+- **Última actualización:** 2026-10-02
 
 ---
 
@@ -275,7 +275,7 @@ flowchart LR
         A2["Rechazar con VERSION_CONFLICT y no reaplicar conteo obsoleto"]
         A3["Aplicar saldo absoluto por (sku, location_id)"]
         A4["Persistir Kardex y Outbox en la misma transacción"]
-        A5["Incrementar stock_version y publicar inventory.stock.adjusted o stock.changed"]
+        A5["Incrementar stock_version y publicar inventory.stock.adjusted o inventory.stock.changed"]
     end
 
     subgraph RES["Resultado"]
@@ -322,7 +322,7 @@ flowchart LR
         A6["MERMA o FALTANTE_CONFIRMADO: blocked y on_hand disminuyen una sola vez"]
         A7["TRASLADO_ALMACEN_CENTRAL: continuar en el subflujo 4.9"]
         A8["Persistir Kardex, act_ref y Outbox en la misma transacción"]
-        A9["Publicar inventory.stock.adjusted o stock.changed tras el commit"]
+        A9["Publicar inventory.stock.adjusted o inventory.stock.changed tras el commit"]
     end
 
     subgraph RES["Resultado"]
@@ -378,7 +378,7 @@ flowchart LR
         A4["Responder resultado previo sin duplicar"]
         A5["Incrementar on_hand y recalcular available"]
         A6["Incrementar stock_version"]
-        A7["Registrar Kardex exactamente una vez"]
+        A7["Persistir Kardex y Outbox en la misma transacción"]
         A8["Publicar inventory.stock.changed tras el commit"]
     end
 
@@ -428,7 +428,7 @@ flowchart LR
         D2{"¿Puede aplicarse todo lo solicitado?"}
         A4["Calcular unresolved_quantity conservando saldos no negativos"]
         A5["Persistir Kardex y Outbox en la misma transacción"]
-        A6["Publicar inventory.stock.adjusted o stock.changed tras el commit"]
+        A6["Publicar inventory.stock.adjusted o inventory.stock.changed tras el commit"]
     end
 
     subgraph RES["Resultado"]
@@ -484,7 +484,7 @@ flowchart LR
         A7["REINGRESAR_BLOQUEADO: conservar cuarentena"]
         A8["CONFIRMAR_MERMA: no acreditar stock"]
         A9["Persistir Kardex y Outbox en la misma transacción"]
-        A10["Publicar inventory.stock.changed o stock.adjusted tras el commit"]
+        A10["Publicar inventory.stock.changed o inventory.stock.adjusted tras el commit"]
     end
 
     subgraph RES["Resultado"]
@@ -531,8 +531,9 @@ flowchart LR
         E1(("Solicitud de inicialización recibida"))
         D1{"¿El SKU ya fue inicializado?"}
         A2["Responder resultado previo sin duplicar saldos"]
-        A3["Crear saldo on_hand = 0, reserved = 0, blocked = 0 y available = 0"]
-        A4["Establecer stock_version = 0 en la ubicación predeterminada"]
+        D2{"¿Existe default_location_id?"}
+        A3["Crear saldo on_hand = 0, reserved = 0, blocked = 0 y available = 0 con stock_version = 0"]
+        A4["Registrar la identidad del SKU sin saldo (no inventar ubicación)"]
         A5["Responder inventory.sku.initialization.completed"]
     end
 
@@ -546,9 +547,11 @@ flowchart LR
     A1 --> E1
     E1 --> D1
     D1 -->|"Sí"| A2
-    D1 -->|"No"| A3
+    D1 -->|"No"| D2
     A2 --> A5
-    A3 --> A4
+    D2 -->|"Sí"| A3
+    D2 -->|"No"| A4
+    A3 --> A5
     A4 --> A5
     A5 --> B1
     B1 --> FIN
@@ -562,7 +565,7 @@ flowchart LR
 - **Idempotencia:** repetir un comando con la misma identidad y la misma intención responde el resultado previo sin efectos secundarios; reutilizar la identidad con otra intención produce `409 IDEMPOTENCY_CONFLICT` (HU-015 CA-14, SPEC-015 §30).
 - **202 Accepted:** es la admisión del comando, no el resultado final. Los resultados asíncronos se correlacionan mediante `order_id`, `operation_id`, `correlation_id` y `reservation_id` (SPEC-015 §30).
 - **Kardex y Outbox:** toda mutación autoritativa registra Kardex con saldos anterior/posterior, operación, SKU y ubicación, y persiste el Outbox en la misma transacción local; la publicación de eventos ocurre después del commit (HU-015 CA-16/CA-19, SPEC-015 §27).
-- **Invariantes:** en toda operación se cumple `on_hand >= 0`, `reserved >= 0`, `blocked >= 0`, `reserved + blocked <= on_hand` y `available >= 0` (HU-015 CA-04).
+- **Invariantes:** en toda operación se cumple `on_hand >= 0`, `reserved >= 0`, `blocked >= 0`, `reserved + blocked <= on_hand` y `available = max(on_hand - reserved - blocked, 0)` con `available >= 0` (HU-015 CA-04, SPEC-015 §13).
 - **Concurrencia:** confirmar, liberar y expirar la misma reserva produce una única transición terminal; dos operaciones concurrentes nunca comprometen las mismas unidades disponibles (HU-015 CA-13/CA-15).
 - **Consulta:** el subflujo 4.1 es de solo lectura y nunca modifica saldos ni registra eventos (HU-015 CA-06).
 

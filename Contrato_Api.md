@@ -2546,3 +2546,13 @@ Marketplace, Chatbot y Retail pueden consumir `/recomendaciones` con `recomendac
 
 El conjunto continúa en 16 scopes. El resolver de código de barras reutiliza `catalogo:leer`; no se crea `codigos-barras:resolver`.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
+
+## Alineación administrativa de Promociones y Cupones
+
+Los contratos administrativos internos de OpenAPI mantienen las rutas existentes. Al crear una promoción, `canalesHabilitados` es obligatorio, sin duplicados y con al menos un canal; omisión/vacío no significa «todos». En PATCH, omitir el campo conserva la selección y un array vacío es inválido.
+
+`PromocionAdmin.puedeCambiarModalidad` es de solo lectura y lo calcula `promotions-svc` aplicando HU-006 CA-13. El servicio debe volver a validar inactividad, ausencia de activaciones previas, de cupones asociados y de usos históricos al aceptar el cambio. La interfaz no puede conceder ese permiso. Un consumidor anterior que no reciba el campo no presupone elegibilidad.
+
+Los códigos de cupón se comparan después de eliminar espacios extremos y convertir letras ASCII a mayúsculas; la unicidad no depende de cómo el gestor haya escrito las mayúsculas. Los límites vacíos son `null` y los valores informados respetan las restricciones de los schemas.
+
+Estos ajustes documentan reglas administrativas y no acreditan implementación o integración del servicio. Los enriquecimientos de recomendaciones por producto siguen sujetos a D-REC-01/02.

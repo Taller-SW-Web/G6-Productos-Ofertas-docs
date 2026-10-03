@@ -26,11 +26,15 @@ S-01 Listado; S-02 Crear/Editar; S-02-U Upsell; S-03 Seleccionar recomendado; S-
 ## 3. Formulario
 Nombre, tipo, origen, prioridad, estado, inicio/fin, recomendados, orden; en Upsell criterio obligatorio y justificación opcional.
 
+Origen identifica exclusivamente Producto o Categoría mediante tipo e ID. Prioridad y orden son enteros positivos; inicio y fin son obligatorios y cumplen inicio < fin. La justificación tiene hasta 500 caracteres. Los errores conservan las entradas; el guardado válido actualiza la regla seleccionada o incorpora una nueva en la demostración.
+
 ## 4. Selector
 Solo productos activos; excluir origen específico y ya añadidos.
 
 ## 5. Detalle
 Mostrar orden, criterio/justificación y precio/disponibilidad informativos.
+
+Mientras D-REC-01/02 sigan abiertas, el prototipo muestra «Precio: No disponible» y «Disponibilidad: No disponible». No asigna precios ni cantidades ficticias al añadir un producto, no agrega saldo entre SKU y no selecciona variantes. La ausencia de estos enriquecimientos no bloquea la configuración administrativa.
 
 Los criterios deben mostrarse siempre con etiquetas humanas:
 - Mayor rendimiento
@@ -51,3 +55,5 @@ v0.7 completa S-05 con activación/desactivación navegable y confirmación en e
 v0.6 humaniza los criterios de Upsell en formulario y detalle; se eliminan constantes internas de la interfaz visible y del prototipo estático.
 
 v0.5 elimina el simulador administrativo y los criterios inventados fuera del catálogo controlado.
+
+Corrección 2026-10-02: incorpora origen tipado, vigencia, estado inicial, validación de prioridad/orden y justificación, exclusión de productos inactivos/origen/duplicados y datos comerciales ausentes. `app.js` usa fixtures en memoria; no representa una consulta API ni persistencia reales.

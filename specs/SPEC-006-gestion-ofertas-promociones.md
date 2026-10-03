@@ -49,3 +49,10 @@ Pricing aporta precio regular/oferta propia. Promociones aplica sus reglas sin s
 - Una promoción `CUPON` exige código válido.
 - `customer_ref` se usa para límites por cliente.
 - La evaluación no crea pedido ni reserva stock.
+## 6. Administración y persistencia de la configuración
+
+- El alcance conserva por separado `productIds` y `skus`. Seleccionar un producto completo no se convierte en una foto de sus SKU actuales; incluye sus SKU vendibles elegibles, deduplicando coincidencias con alcances específicos.
+- `canalesHabilitados` es una selección explícita, única y no vacía al crear. Un PATCH puede omitirla para conservarla, pero no enviarla vacía. No existe un default implícito «todos».
+- `PromocionAdmin.puedeCambiarModalidad` es una capacidad calculada por el servicio según HU-006 CA-13: inactiva, nunca activada, sin cupones asociados ni usos históricos. El cliente no decide esa capacidad ni puede autorizarla mediante el request. El servicio revalida la condición en la operación de actualización.
+- Activar una promoción deja un antecedente persistente de activación, incluso si luego se desactiva mediante edición o la acción de estado. No se elimina al desactivar.
+- Si un consumidor todavía no recibe `puedeCambiarModalidad`, considera desconocida la elegibilidad y no infiere permiso desde el estado inactivo. Los fixtures de demostración sí deben representar tanto el caso permitido como los bloqueados.

@@ -41,7 +41,7 @@ Origen y recomendados existen y están activos. No se recomienda el propio orige
 Enteros positivos.
 
 ### Requisito 5: Vigencia/estado
-Inicio < fin; `ACTIVA | INACTIVA`; solo activas/vigentes participan.
+Inicio < fin; `ACTIVO | INACTIVO` según `EstadoEntidad` de OpenAPI 0.5.0; solo reglas activas/vigentes participan.
 
 ### Requisito 6: Coincidencia
 Origen por producto específico o categoría.
