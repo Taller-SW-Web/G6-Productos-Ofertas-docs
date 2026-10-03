@@ -7,11 +7,10 @@
 --   §8 (Migraciones: reproducible desde cero, no editar aplicadas, expand/contract),
 --   §13 (Inventario: modelo autoritativo e invariantes),
 --   §15 (Concurrencia de inventario y ajustes absolutos);
---   Modelo_Conceptual.md §14-15 (matriz de ownership y relaciones).
+--   Modelo_Conceptual.md §14-15;
+--   Contrato_Api.md §2.1;
+--   CONVENCIONES_BD.md §3 y §18 (Ownership de Ubicación y definición de locations).
 -- Compatible con PostgreSQL 14+ (probado en PostgreSQL 18; Supabase = Postgres 15).
---
--- Regla §8: adicionalmente se cumple: no depende de la creación automática del
--- ORM; la migración puede ejecutarse desde cero en una BD vacía.
 -- ============================================================================
 
 BEGIN;
@@ -56,54 +55,22 @@ CREATE TYPE inventory.disposicion_recepcion_traslado AS ENUM
     ('REINGRESAR_DISPONIBLE', 'REINGRESAR_BLOQUEADO', 'CONFIRMAR_MERMA');
 
 -- --------------------------------------------------------------------------
--- Tabla: stock_balance (saldo autoritativo por (sku_id, location_id))
+-- Funciones compartidas de triggers
 -- --------------------------------------------------------------------------
 
-CREATE TABLE inventory.stock_balance (
-    sku_id          text        NOT NULL,
-    location_id     text        NOT NULL,
-    on_hand         integer     NOT NULL DEFAULT 0,
-    reserved        integer     NOT NULL DEFAULT 0,
-    blocked         integer     NOT NULL DEFAULT 0,
-    stock_version   bigint      NOT NULL DEFAULT 0,
-    available       integer     GENERATED ALWAYS AS (GREATEST(0, on_hand - reserved - blocked)) STORED,
-    created_at      timestamptz NOT NULL DEFAULT now(),
-    updated_at      timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT pk_stock_balance PRIMARY KEY (sku_id, location_id),
-    CONSTRAINT ck_sb_no_negativo CHECK (on_hand >= 0 AND reserved >= 0 AND blocked >= 0),
-    CONSTRAINT ck_sb_reserved_plus_blocked CHECK (reserved + blocked <= on_hand)
-);
--- Duplicate stock_balance definition removed
-
--- --------------------------------------------------------------------------
--- Tabla: reservations (agregado order-level; la ubicación vive en las líneas
---   reservation_lines, alineado al contrato lines[] de reserva)
--- --------------------------------------------------------------------------
-
-CREATE TABLE inventory.reservations (
-    id                uuid        NOT NULL DEFAULT gen_random_uuid(),
-    reservation_id    uuid        NOT NULL,
-    status            inventory.reservation_status NOT NULL DEFAULT 'ACTIVA',
-    expires_at        timestamptz NOT NULL,
-    idempotency_key   text        NOT NULL,
-    intention         text        NOT NULL DEFAULT 'reservar',
-    correlation_id    uuid,
-    order_id          uuid,
-    operation_id      uuid,
-    consumed_at       timestamptz,
-    released_at       timestamptz,
-    expired_at        timestamptz,
-    created_at        timestamptz NOT NULL DEFAULT now(),
-    updated_at        timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT pk_reservations PRIMARY KEY (id),
-    CONSTRAINT uq_reservations_identity UNIQUE (reservation_id),
-    CONSTRAINT uq_reservations_idempotency UNIQUE (idempotency_key)
-);
--- Duplicate reservations definition removed
+CREATE OR REPLACE FUNCTION inventory.fn_touch_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.updated_at := now();
+    RETURN NEW;
+END;
+$$;
 
 -- La carrera confirmar/liberar/expirar admite una sola transición terminal:
 -- las reservas no pueden salir de un estado terminal.
-CREATE FUNCTION inventory.fn_no_double_terminal()
+CREATE OR REPLACE FUNCTION inventory.fn_no_double_terminal()
 RETURNS trigger
 LANGUAGE plpgsql
 AS $$
@@ -117,13 +84,9 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER trg_no_double_terminal
-    BEFORE UPDATE OF status ON inventory.reservations
-    FOR EACH ROW EXECUTE FUNCTION inventory.fn_no_double_terminal();
-
 -- Los estados terminales de traslado (COMPLETADO, COMPLETADO_CON_DISCREPANCIA)
 -- son irreversibles: una recepción final no se revierte ni se sobrescribe.
-CREATE FUNCTION inventory.fn_traslado_terminal()
+CREATE OR REPLACE FUNCTION inventory.fn_traslado_terminal()
 RETURNS trigger
 LANGUAGE plpgsql
 AS $$
@@ -139,20 +102,98 @@ END;
 $$;
 
 -- --------------------------------------------------------------------------
--- Tabla: reservation_lines (líneas de reserva; FK interna al contexto)
+-- Tabla: locations (catálogo autoritativo de ubicaciones de inventario)
+-- CONVENCIONES_BD.md §18
+-- --------------------------------------------------------------------------
+
+CREATE TABLE inventory.locations (
+    id           uuid        NOT NULL DEFAULT gen_random_uuid(),
+    code         text        NOT NULL,
+    name         text        NOT NULL,
+    type         text        NOT NULL,
+    external_ref text,               -- extensión escalar opcional hacia Retail (sin FK)
+    active       boolean     NOT NULL DEFAULT true,
+    created_at   timestamptz NOT NULL DEFAULT now(),
+    updated_at   timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT pk_locations PRIMARY KEY (id),
+    CONSTRAINT uq_locations_code UNIQUE (code)
+);
+
+CREATE TRIGGER trg_locations_updated_at
+    BEFORE UPDATE ON inventory.locations
+    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
+
+-- --------------------------------------------------------------------------
+-- Tabla: stock_balance (saldo autoritativo por (sku_id, location_id))
+-- --------------------------------------------------------------------------
+
+CREATE TABLE inventory.stock_balance (
+    sku_id        text        NOT NULL,
+    location_id   uuid        NOT NULL,
+    on_hand       integer     NOT NULL DEFAULT 0,
+    reserved      integer     NOT NULL DEFAULT 0,
+    blocked       integer     NOT NULL DEFAULT 0,
+    stock_version bigint      NOT NULL DEFAULT 0,
+    available     integer     GENERATED ALWAYS AS (GREATEST(0, on_hand - reserved - blocked)) STORED,
+    created_at    timestamptz NOT NULL DEFAULT now(),
+    updated_at    timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT pk_stock_balance PRIMARY KEY (sku_id, location_id),
+    CONSTRAINT fk_stock_balance_location FOREIGN KEY (location_id) REFERENCES inventory.locations (id) ON DELETE RESTRICT,
+    CONSTRAINT ck_sb_no_negativo CHECK (on_hand >= 0 AND reserved >= 0 AND blocked >= 0),
+    CONSTRAINT ck_sb_reserved_plus_blocked CHECK (reserved + blocked <= on_hand)
+);
+
+CREATE TRIGGER trg_stock_balance_updated_at
+    BEFORE UPDATE ON inventory.stock_balance
+    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
+
+-- --------------------------------------------------------------------------
+-- Tabla: reservations (agregado order-level)
+-- --------------------------------------------------------------------------
+
+CREATE TABLE inventory.reservations (
+    id              uuid        NOT NULL DEFAULT gen_random_uuid(),
+    reservation_id  uuid        NOT NULL,
+    status          inventory.reservation_status NOT NULL DEFAULT 'ACTIVA',
+    expires_at      timestamptz NOT NULL,
+    idempotency_key text        NOT NULL,
+    intention       text        NOT NULL DEFAULT 'reservar',
+    correlation_id  uuid,
+    order_id        uuid,
+    operation_id    uuid,
+    consumed_at     timestamptz,
+    released_at     timestamptz,
+    expired_at      timestamptz,
+    created_at      timestamptz NOT NULL DEFAULT now(),
+    updated_at      timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT pk_reservations PRIMARY KEY (id),
+    CONSTRAINT uq_reservations_identity UNIQUE (reservation_id),
+    CONSTRAINT uq_reservations_idempotency UNIQUE (idempotency_key)
+);
+
+CREATE TRIGGER trg_reservations_updated_at
+    BEFORE UPDATE ON inventory.reservations
+    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
+
+CREATE TRIGGER trg_no_double_terminal
+    BEFORE UPDATE OF status ON inventory.reservations
+    FOR EACH ROW EXECUTE FUNCTION inventory.fn_no_double_terminal();
+
+-- --------------------------------------------------------------------------
+-- Tabla: reservation_lines (líneas de reserva; FK a reservations y locations)
 -- --------------------------------------------------------------------------
 
 CREATE TABLE inventory.reservation_lines (
     id             uuid        NOT NULL DEFAULT gen_random_uuid(),
     reservation_id uuid        NOT NULL,
     sku_id         text        NOT NULL,
-    location_id    text        NOT NULL,
+    location_id    uuid        NOT NULL,
     quantity       integer     NOT NULL CHECK (quantity > 0),
     CONSTRAINT pk_reservation_lines PRIMARY KEY (id),
     CONSTRAINT fk_reservation_lines_reservation FOREIGN KEY (reservation_id) REFERENCES inventory.reservations (id) ON DELETE CASCADE,
+    CONSTRAINT fk_reservation_lines_location FOREIGN KEY (location_id) REFERENCES inventory.locations (id) ON DELETE RESTRICT,
     CONSTRAINT uq_reservation_lines UNIQUE (reservation_id, sku_id, location_id)
 );
--- Duplicate reservation_lines definition removed
 
 -- --------------------------------------------------------------------------
 -- Tabla: inventory_operations (operaciones mutadoras, admisión e idempotencia)
@@ -165,12 +206,10 @@ CREATE TABLE inventory.inventory_operations (
     intention          text        NOT NULL,
     status             inventory.operation_status NOT NULL DEFAULT 'RECIBIDO',
     sku_id             text,
-    location_id        text,
+    location_id        uuid,
     quantity_requested integer,
     quantity_applied   integer,
-    result_code        text,       -- STOCK_INSUFICIENTE, VERSION_CONFLICT,
-                                   -- IDEMPOTENCY_CONFLICT, RESERVA_NO_ACTIVA,
-                                   -- RESERVA_EXPIRADA, REINTEGRO_NO_APLICABLE, ...
+    result_code        text,       -- STOCK_INSUFICIENTE, VERSION_CONFLICT, etc.
     correlation_id     uuid,
     order_id           uuid,
     reservation_id     uuid,
@@ -180,6 +219,7 @@ CREATE TABLE inventory.inventory_operations (
     created_at         timestamptz NOT NULL DEFAULT now(),
     updated_at         timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT pk_inventory_operations PRIMARY KEY (id),
+    CONSTRAINT fk_inventory_operations_location FOREIGN KEY (location_id) REFERENCES inventory.locations (id) ON DELETE RESTRICT,
     CONSTRAINT uk_operations_idempotency UNIQUE (idempotency_key),
     CONSTRAINT chk_op_qty CHECK (
         (quantity_requested IS NULL OR quantity_requested >= 0)
@@ -187,14 +227,18 @@ CREATE TABLE inventory.inventory_operations (
     )
 );
 
+CREATE TRIGGER trg_inventory_operations_updated_at
+    BEFORE UPDATE ON inventory.inventory_operations
+    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
+
 -- --------------------------------------------------------------------------
--- Tabla: kardex (mutaciones autoritativas de saldo con saldos anterior/posterior)
+-- Tabla: kardex (mutaciones autoritativas de saldo; append-only)
 -- --------------------------------------------------------------------------
 
 CREATE TABLE inventory.kardex (
     id              uuid        NOT NULL DEFAULT gen_random_uuid(),
     sku_id          text        NOT NULL,
-    location_id     text        NOT NULL,
+    location_id     uuid        NOT NULL,
     operation_type  inventory.operation_type NOT NULL,
     operation_id    uuid,
     reservation_id  uuid,
@@ -208,19 +252,19 @@ CREATE TABLE inventory.kardex (
     stock_version   bigint      NOT NULL,
     correlation_id  uuid,
     created_at      timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT pk_kardex PRIMARY KEY (id)
+    CONSTRAINT pk_kardex PRIMARY KEY (id),
+    CONSTRAINT fk_kardex_location FOREIGN KEY (location_id) REFERENCES inventory.locations (id) ON DELETE RESTRICT
 );
--- Duplicate kardex definition removed
 
 -- --------------------------------------------------------------------------
--- Tabla: incidencias (cuarentenas físicas reportadas por Retail)
+-- Tabla: incidencias (cuarentenas físicas reportadas)
 -- --------------------------------------------------------------------------
 
 CREATE TABLE inventory.incidencias (
     id                   uuid        NOT NULL DEFAULT gen_random_uuid(),
     incidencia_id        uuid        NOT NULL,
     sku_id               text        NOT NULL,
-    location_id          text        NOT NULL,
+    location_id          uuid        NOT NULL,
     external_incident_id text,               -- referencia operativa externa de Retail
     act_ref              text,               -- acta de resolución
     estado               inventory.incidencia_estado NOT NULL DEFAULT 'ABIERTA',
@@ -232,37 +276,26 @@ CREATE TABLE inventory.incidencias (
     updated_at           timestamptz NOT NULL DEFAULT now(),
     resolved_at          timestamptz,
     CONSTRAINT pk_incidencias PRIMARY KEY (id),
+    CONSTRAINT fk_incidencias_location FOREIGN KEY (location_id) REFERENCES inventory.locations (id) ON DELETE RESTRICT,
     CONSTRAINT uk_incidencias_identity UNIQUE (incidencia_id),
     CONSTRAINT uk_incidencias_idempotency UNIQUE (idempotency_key)
 );
 
+CREATE TRIGGER trg_incidencias_updated_at
+    BEFORE UPDATE ON inventory.incidencias
+    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
+
 -- --------------------------------------------------------------------------
--- Tabla: traslados (origen -> destino sin acreditar, con estados de recepción)
+-- Tabla: traslados (origen -> destino entre ubicaciones)
 -- --------------------------------------------------------------------------
 
 CREATE TABLE inventory.traslados (
     id                 uuid        NOT NULL DEFAULT gen_random_uuid(),
     traslado_id        uuid        NOT NULL,
-    source_incident_id uuid,
-    sku_id             text        NOT NULL,
-    source_location_id text        NOT NULL,
-    target_location_id text        NOT NULL,
-    quantity_shipped   integer     NOT NULL CHECK (quantity_shipped > 0),
-    quantity_received  integer     NOT NULL DEFAULT 0 CHECK (quantity_received >= 0),
-    missing_quantity   integer,
-    estado             inventory.traslado_estado NOT NULL DEFAULT 'EN_TRANSITO',
-    created_at         timestamptz NOT NULL DEFAULT now(),
-    updated_at         timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT pk_traslados PRIMARY KEY (id),
-    CONSTRAINT uk_traslados_identity UNIQUE (traslado_id),
-    CONSTRAINT chk_traslado_missing CHECK (missing_quantity IS NULL OR missing_quantity >= 0)
-);
-    id                 uuid        NOT NULL DEFAULT gen_random_uuid(),
-    traslado_id        uuid        NOT NULL,
     source_incident_id uuid,               -- incidencia resuelta como TRASLADO_ALMACEN_CENTRAL
     sku_id             text        NOT NULL,
-    source_location_id text        NOT NULL,
-    target_location_id text        NOT NULL,
+    source_location_id uuid        NOT NULL,
+    target_location_id uuid        NOT NULL,
     quantity_shipped   integer     NOT NULL CHECK (quantity_shipped > 0),
     quantity_received  integer     NOT NULL DEFAULT 0 CHECK (quantity_received >= 0),
     missing_quantity   integer,
@@ -270,6 +303,8 @@ CREATE TABLE inventory.traslados (
     created_at         timestamptz NOT NULL DEFAULT now(),
     updated_at         timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT pk_traslados PRIMARY KEY (id),
+    CONSTRAINT fk_traslados_source_location FOREIGN KEY (source_location_id) REFERENCES inventory.locations (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_traslados_target_location FOREIGN KEY (target_location_id) REFERENCES inventory.locations (id) ON DELETE RESTRICT,
     CONSTRAINT uk_traslados_identity UNIQUE (traslado_id),
     CONSTRAINT chk_traslado_missing CHECK (
         missing_quantity IS NULL OR missing_quantity >= 0
@@ -281,8 +316,10 @@ CREATE UNIQUE INDEX ix_traslado_por_incidencia
     ON inventory.traslados (source_incident_id)
     WHERE source_incident_id IS NOT NULL;
 
--- Estados terminales de traslado irreversibles (una recepción final no se
--- revierte ni sobrescribe). Función definida al inicio del script.
+CREATE TRIGGER trg_traslados_updated_at
+    BEFORE UPDATE ON inventory.traslados
+    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
+
 CREATE TRIGGER trg_traslado_terminal
     BEFORE UPDATE OF estado ON inventory.traslados
     FOR EACH ROW EXECUTE FUNCTION inventory.fn_traslado_terminal();
@@ -298,27 +335,11 @@ CREATE TABLE inventory.traslado_recepciones (
     cantidad_recibida integer     NOT NULL CHECK (cantidad_recibida > 0),
     disposicion       inventory.disposicion_recepcion_traslado NOT NULL,
     es_recepcion_final boolean     NOT NULL DEFAULT false,
-    sub_gestor        text        NOT NULL,
-    idempotency_key   text        NOT NULL,
-    received_at       timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT pk_traslado_recepciones PRIMARY KEY (id),
-    CONSTRAINT fk_recepciones_traslado FOREIGN KEY (traslado_id) REFERENCES inventory.traslados (id) ON DELETE CASCADE,
-    CONSTRAINT uk_recepciones_identity UNIQUE (recepcion_id),
-    CONSTRAINT uk_recepciones_idempotency UNIQUE (idempotency_key)
-);
-    id                uuid        NOT NULL DEFAULT gen_random_uuid(),
-    recepcion_id      uuid        NOT NULL,
-    traslado_id       uuid        NOT NULL,
-    cantidad_recibida integer     NOT NULL CHECK (cantidad_recibida > 0),
-    disposicion       inventory.disposicion_recepcion_traslado NOT NULL,
-    es_recepcion_final boolean     NOT NULL DEFAULT false,
     sub_gestor        text        NOT NULL, -- sub del gestor autorizado (INVENTARIO_TRASLADOS_RECIBIR)
     idempotency_key   text        NOT NULL, -- identidad de la recepción (Idempotency-Key)
     received_at       timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT pk_traslado_recepciones PRIMARY KEY (id),
-    CONSTRAINT fk_recepciones_traslado
-        FOREIGN KEY (traslado_id)
-        REFERENCES inventory.traslados (id) ON DELETE CASCADE,
+    CONSTRAINT fk_recepciones_traslado FOREIGN KEY (traslado_id) REFERENCES inventory.traslados (id) ON DELETE CASCADE,
     CONSTRAINT uk_recepciones_identity UNIQUE (recepcion_id),
     CONSTRAINT uk_recepciones_idempotency UNIQUE (idempotency_key)
 );
@@ -331,27 +352,12 @@ CREATE TABLE inventory.traslado_recepciones (
 CREATE TABLE inventory.stock_threshold_override (
     id              uuid        NOT NULL DEFAULT gen_random_uuid(),
     sku_id          text,
-    location_id     text,
+    location_id     uuid,
     umbral_efectivo integer     NOT NULL CHECK (umbral_efectivo >= 0),
     created_at      timestamptz NOT NULL DEFAULT now(),
     updated_at      timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT pk_stock_threshold_override PRIMARY KEY (id),
-    CONSTRAINT uq_threshold_override UNIQUE (sku_id, location_id),
-    CONSTRAINT chk_threshold_scope CHECK (
-        location_id IS NULL
-        AND (
-            (sku_id IS NULL)
-            OR (sku_id IS NOT NULL)
-        )
-    )
-);
-    id              uuid        NOT NULL DEFAULT gen_random_uuid(),
-    sku_id          text,
-    location_id     text,
-    umbral_efectivo integer     NOT NULL CHECK (umbral_efectivo >= 0),
-    created_at      timestamptz NOT NULL DEFAULT now(),
-    updated_at      timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT pk_stock_threshold_override PRIMARY KEY (id),
+    CONSTRAINT fk_threshold_override_location FOREIGN KEY (location_id) REFERENCES inventory.locations (id) ON DELETE RESTRICT,
     CONSTRAINT uq_threshold_override UNIQUE (sku_id, location_id),
     CONSTRAINT chk_threshold_scope CHECK (
         location_id IS NULL
@@ -367,6 +373,10 @@ CREATE UNIQUE INDEX ix_threshold_global
     ON inventory.stock_threshold_override ((1))
     WHERE sku_id IS NULL AND location_id IS NULL;
 
+CREATE TRIGGER trg_threshold_override_updated_at
+    BEFORE UPDATE ON inventory.stock_threshold_override
+    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
+
 -- --------------------------------------------------------------------------
 -- Tabla: inventory_config (configuración del contexto: TTL, política D-INV-01 ...)
 -- --------------------------------------------------------------------------
@@ -377,7 +387,10 @@ CREATE TABLE inventory.inventory_config (
     description text,
     updated_at  timestamptz NOT NULL DEFAULT now()
 );
--- Duplicate inventory_config definition removed
+
+CREATE TRIGGER trg_inventory_config_updated_at
+    BEFORE UPDATE ON inventory.inventory_config
+    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
 
 -- --------------------------------------------------------------------------
 -- Tabla: dashboard_projection (read model de solo lectura del dashboard)
@@ -385,7 +398,7 @@ CREATE TABLE inventory.inventory_config (
 
 CREATE TABLE inventory.dashboard_projection (
     sku_id          text        NOT NULL,
-    location_id     text        NOT NULL,
+    location_id     uuid        NOT NULL,
     on_hand         integer     NOT NULL,
     reserved        integer     NOT NULL,
     blocked         integer     NOT NULL,
@@ -395,9 +408,14 @@ CREATE TABLE inventory.dashboard_projection (
     umbral_efectivo integer     NOT NULL,
     updated_at      timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT pk_dashboard_projection PRIMARY KEY (sku_id, location_id),
+    CONSTRAINT fk_dashboard_projection_location FOREIGN KEY (location_id) REFERENCES inventory.locations (id) ON DELETE RESTRICT,
     CONSTRAINT chk_dp_no_negativo CHECK (on_hand >= 0 AND reserved >= 0 AND blocked >= 0),
     CONSTRAINT chk_dp_reserved_plus_blocked CHECK (reserved + blocked <= on_hand)
 );
+
+CREATE TRIGGER trg_dashboard_projection_updated_at
+    BEFORE UPDATE ON inventory.dashboard_projection
+    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
 
 -- --------------------------------------------------------------------------
 -- Tabla: outbox (publicación de eventos posterior al commit)
@@ -435,15 +453,27 @@ CREATE TABLE inventory.inbox (
 );
 
 -- --------------------------------------------------------------------------
--- Índices operativos
+-- Índices operativos y de claves foráneas
 -- --------------------------------------------------------------------------
+
+CREATE INDEX ix_stock_balance_location_id
+    ON inventory.stock_balance (location_id);
 
 CREATE INDEX ix_reservations_ttl
     ON inventory.reservations (status, expires_at)
     WHERE status = 'ACTIVA';              -- barrido del worker de expiración TTL
 
+CREATE INDEX ix_reservation_lines_reservation_id
+    ON inventory.reservation_lines (reservation_id);
+
+CREATE INDEX ix_reservation_lines_location_id
+    ON inventory.reservation_lines (location_id);
+
 CREATE INDEX ix_reservation_lines_sku
     ON inventory.reservation_lines (sku_id, location_id);
+
+CREATE INDEX ix_inventory_operations_location_id
+    ON inventory.inventory_operations (location_id);
 
 CREATE INDEX ix_operations_sku
     ON inventory.inventory_operations (sku_id, location_id);
@@ -451,11 +481,17 @@ CREATE INDEX ix_operations_sku
 CREATE INDEX ix_operations_type_status
     ON inventory.inventory_operations (operation_type, status);
 
+CREATE INDEX ix_kardex_location_id
+    ON inventory.kardex (location_id);
+
 CREATE INDEX ix_kardex_saldo
     ON inventory.kardex (sku_id, location_id, created_at DESC);
 
 CREATE INDEX ix_kardex_operation
     ON inventory.kardex (operation_id);
+
+CREATE INDEX ix_dashboard_projection_location_id
+    ON inventory.dashboard_projection (location_id);
 
 CREATE INDEX ix_dashboard_ubicacion_estado
     ON inventory.dashboard_projection (location_id, status);
@@ -469,11 +505,20 @@ CREATE INDEX ix_outbox_dispatcher
 CREATE INDEX ix_inbox_processing
     ON inventory.inbox (status, created_at);
 
+CREATE INDEX ix_incidencias_location_id
+    ON inventory.incidencias (location_id);
+
 CREATE INDEX ix_incidencias_estado
     ON inventory.incidencias (estado);
 
 CREATE INDEX ix_incidencias_sku
     ON inventory.incidencias (sku_id, location_id);
+
+CREATE INDEX ix_traslados_source_location_id
+    ON inventory.traslados (source_location_id);
+
+CREATE INDEX ix_traslados_target_location_id
+    ON inventory.traslados (target_location_id);
 
 CREATE INDEX ix_traslados_estado
     ON inventory.traslados (estado);
@@ -483,54 +528,5 @@ CREATE INDEX ix_traslados_source
 
 CREATE INDEX ix_recepciones_traslado
     ON inventory.traslado_recepciones (traslado_id);
-
--- --------------------------------------------------------------------------
--- Triggers de mantenimiento updated_at
--- --------------------------------------------------------------------------
-
-CREATE FUNCTION inventory.fn_touch_updated_at()
-RETURNS trigger
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    NEW.updated_at := now();
-    RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER trg_touch_updated_at
-    BEFORE UPDATE ON inventory.stock_balance
-    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
-
-CREATE TRIGGER trg_touch_updated_at
-    BEFORE UPDATE ON inventory.reservations
-    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
-
-CREATE TRIGGER trg_touch_updated_at
-    BEFORE UPDATE ON inventory.inventory_operations
-    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
-
-CREATE TRIGGER trg_touch_updated_at
-    BEFORE UPDATE ON inventory.incidencias
-    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
-
-CREATE TRIGGER trg_touch_updated_at
-    BEFORE UPDATE ON inventory.traslados
-    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
-
-CREATE TRIGGER trg_touch_updated_at_kardex
-    BEFORE UPDATE ON inventory.kardex
-    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
-
--- --------------------------------------------------------------------------
--- Permisos (Supabase): aislamiento de schema por ownership y permisos.
--- Las integraciones externas usan contratos/identificadores, nunca acceso SQL
--- directo (criterio de aceptación del issue #54). Habilitar en despliegue
--- según el rol con el que se conecte inventory-svc (p. ej. service_role).
--- --------------------------------------------------------------------------
-
--- GRANT USAGE ON SCHEMA inventory TO service_role;
--- GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA inventory TO service_role;
--- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA inventory TO service_role;
 
 COMMIT;
