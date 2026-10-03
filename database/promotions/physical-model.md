@@ -1,6 +1,6 @@
 # Modelo físico — `promotions` (`promotions-svc`)
 
-Issue [#53](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/53). Responsable: Axel Cueva. Owner exclusivo: Promociones. Actualizado: 2026-10-03. Estado: **EN REVISIÓN**. Origen: [modelo lógico](logical-model.md). Implementación: [0001_promotions_persistence.sql](migrations/0001_promotions_persistence.sql). Validación: [validation.sql](validation.sql). Motor: PostgreSQL/Supabase; evidencia local PostgreSQL 17.11.
+Issue [#53](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/53). Responsable: Axel Cueva. Owner exclusivo: Promociones. Actualizado: 2026-10-03. Estado: **EN REVISIÓN**. Origen: [modelo lógico](logical-model.md). Implementación: [0001](migrations/0001_promotions_persistence.sql) y [0002](migrations/0002_promotions_global_price_projection.sql). Validación: [validation.sql](validation.sql). Motor: PostgreSQL/Supabase; evidencia local PostgreSQL 17.11.
 
 ## 1. Propósito
 
@@ -26,6 +26,9 @@ Schema privado, fuera de Exposed schemas/Data API. PUBLIC sin USAGE ni EXECUTE; 
 | Cantidades comerciales | numeric exacto, sin typmod que redondee. OpenAPI no fija escala: 100.001 debe rechazarse como porcentaje, no convertirse silenciosamente en 100; mínimo 0.001 es positivo. NaN/Infinity rechazados. Se desvía de numeric(12,2) genérico por precisión contractual. No se inventa currency para estos campos. |
 | Fechas | timestamptz finito; vigencia [inicio, fin); reloj técnico del servidor para creación/modificación/primera activación. |
 | Migraciones | Numeración 0001 y transacción del ejecutor database/migrate.py; no copiar BEGIN/COMMIT ni numeración 001 de la plantilla transversal. CLI Supabase 2.119.0 generó el archivo original; se adoptó la historia común y no se guarda una historia paralela. |
+| Canal global de precio | channel_id nullable; UNIQUE NULLS NOT DISTINCT(SKU, canal) representa un global por SKU y un override por canal, conforme al contrato de Pricing. |
+| Catálogos propios | CHECK en lugar de enums nativos sugeridos por convenciones: mismos valores publicados, migración autocontenida y sin tipos extra; excepción a revisar con el owner de BD. |
+| Data API | Se aplica el procedimiento database/README.md de schemas privados; la sugerencia general de exponer nueve schemas en convenciones contradice ese procedimiento. Resolver en revisión transversal antes de cualquier exposición; esta entrega conserva el acceso por backend y no concede acceso anónimo. |
 | Roles | Bootstrap existente po_<schema>_owner y runtime con permisos concretos; no GRANT ALL a un rol compartido. |
 | Estado de recomendación | ACTIVO/INACTIVO del contrato HTTP; SPEC-007 actualizado para quitar la discrepancia ACTIVA/INACTIVA. |
 
@@ -251,19 +254,20 @@ Restricciones (incluye PK/UNIQUE/FK/CHECK):
 
 ### 4.9. `price_projection`
 
-Proyección de Pricing, §3.9. Snapshot por SKU/canal. No materializa ni decide un precio product-level provisional.
+Proyección de Pricing, lógico §3.9. Clave natural SKU/canal: NULL representa precio global, canales concretos representan overrides. ID técnico añadido en 0002 permite canal nullable sin perder unicidad global. Snapshot y procedencia preservados al actualizar la versión.
 
 | Columna | Tipo | Nulo | Default |
 |---|---|---|---|
 | `sku` | `text` | No | — |
-| `channel_id` | `text` | No | — |
+| `channel_id` | `text` | Sí | — |
 | `snapshot` | `jsonb` | No | — |
 | `source_version` | `bigint` | Sí | — |
 | `source_occurred_at` | `timestamp with time zone` | No | — |
 | `source_message_id` | `text` | No | — |
 | `updated_at` | `timestamp with time zone` | No | `now()` |
+| `id` | `uuid` | No | `gen_random_uuid()` |
 
-Restricciones (incluye PK/UNIQUE/FK/CHECK):
+Restricciones (incluye PK/UNIQUE/CHECK):
 
 - `ck_price_projection_channel`: `CHECK ((channel_id = ANY (ARRAY['MARKETPLACE'::text, 'CHATBOT'::text, 'RETAIL'::text, 'VENTAS'::text])))`.
 - `ck_price_projection_message`: `CHECK ((length(btrim(source_message_id)) > 0))`.
@@ -271,7 +275,7 @@ Restricciones (incluye PK/UNIQUE/FK/CHECK):
 - `ck_price_projection_snapshot`: `CHECK ((jsonb_typeof(snapshot) = 'object'::text))`.
 - `ck_price_projection_time`: `CHECK (isfinite(source_occurred_at))`.
 - `ck_price_projection_version`: `CHECK ((source_version > 0))`.
-- `pk_price_projection`: `PRIMARY KEY (sku, channel_id)`.
+- `uq_price_projection_sku_channel`: `UNIQUE NULLS NOT DISTINCT (sku, channel_id)`.
 
 ### 4.10. `stock_projection`
 
@@ -403,7 +407,6 @@ Catálogo completo de índices después de migrar:
 - `pk_inbox`: `CREATE UNIQUE INDEX pk_inbox ON promotions.inbox USING btree (message_id, handler)`.
 - `ix_outbox_pending`: `CREATE INDEX ix_outbox_pending ON promotions.outbox USING btree (created_at, message_id) WHERE (published_at IS NULL)`.
 - `pk_outbox`: `CREATE UNIQUE INDEX pk_outbox ON promotions.outbox USING btree (message_id)`.
-- `pk_price_projection`: `CREATE UNIQUE INDEX pk_price_projection ON promotions.price_projection USING btree (sku, channel_id)`.
 - `ix_promotion_scopes_product`: `CREATE INDEX ix_promotion_scopes_product ON promotions.promotion_scopes USING btree (product_id, promotion_id) WHERE (product_id IS NOT NULL)`.
 - `ix_promotion_scopes_promotion`: `CREATE INDEX ix_promotion_scopes_promotion ON promotions.promotion_scopes USING btree (promotion_id)`.
 - `ix_promotion_scopes_sku`: `CREATE INDEX ix_promotion_scopes_sku ON promotions.promotion_scopes USING btree (sku, promotion_id) WHERE (sku IS NOT NULL)`.
@@ -419,6 +422,9 @@ Catálogo completo de índices después de migrar:
 - `pk_recommendation_rules`: `CREATE UNIQUE INDEX pk_recommendation_rules ON promotions.recommendation_rules USING btree (id)`.
 - `schema_migrations_pkey`: `CREATE UNIQUE INDEX schema_migrations_pkey ON promotions.schema_migrations USING btree (version)`.
 - `pk_stock_projection`: `CREATE UNIQUE INDEX pk_stock_projection ON promotions.stock_projection USING btree (sku)`.
+
+- `pk_price_projection`: `CREATE UNIQUE INDEX pk_price_projection ON promotions.price_projection USING btree (id)`.
+- `uq_price_projection_sku_channel`: `CREATE UNIQUE INDEX uq_price_projection_sku_channel ON promotions.price_projection USING btree (sku, channel_id) NULLS NOT DISTINCT`.
 
 ## 9. Funciones y triggers
 
@@ -491,7 +497,7 @@ UUID propios con función nativa, numeric exacto y CHECK de finitud, valores con
 
 ## 15. Migración
 
-Administrador: bootstrap.sql + provision-runtime.sql. Deployer: python database/migrate.py promotions. Archivo único 0001_promotions_persistence.sql; SHA-256 y evidencia en validation-report.md. Runner envuelve DDL y ledger en la misma transacción, toma advisory lock por schema y detiene checksum alterado/huecos/error SQL. Reaplicar el mismo archivo conserva ledger/fecha/objetos. Se corrigió encoding UTF-8 explícito en el runner para PostgreSQL en Windows. Una vez aplicado en un entorno compartido, corregir mediante una versión nueva; no modificar 0001.
+Administrador: bootstrap.sql + provision-runtime.sql. Deployer: python database/migrate.py promotions. Versiones 0001_promotions_persistence.sql y 0002_promotions_global_price_projection.sql; SHA-256 de ambas y evidencia en validation-report.md. La segunda cambia la clave física de price_projection, habilita canal global NULL y conserva datos existentes. Runner envuelve DDL y ledger en la misma transacción, toma advisory lock por schema y detiene checksum alterado/huecos/error SQL. Reaplicar el mismo archivo conserva ledger/fecha/objetos. Se corrigió encoding UTF-8 explícito en el runner para PostgreSQL en Windows. Una vez aplicado en un entorno compartido, corregir mediante una versión nueva; no modificar 0001.
 
 ## 16. Validación
 

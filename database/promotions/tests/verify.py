@@ -52,16 +52,19 @@ def main():
     check('base objetivo vacía', text(sql("SELECT NOT EXISTS(SELECT 1 FROM pg_namespace WHERE nspname='promotions');")) == 't')
     bootstrap = (ROOT / 'database' / 'bootstrap.sql').read_text(encoding='utf-8')
     provision = (FOLDER / 'provision-runtime.sql').read_text(encoding='utf-8')
-    migration = (FOLDER / 'migrations' / '0001_promotions_persistence.sql').read_text(encoding='utf-8-sig').replace('\r\n', '\n')
+    migrations = {file.name: file.read_text(encoding='utf-8-sig').replace('\r\n', '\n')
+                  for file in sorted((FOLDER / 'migrations').glob('*.sql'))}
+    migration = '\n'.join(migrations.values())
     sql(bootstrap + '\n' + provision)
     first = migrate()
     if first.returncode:
         raise RuntimeError(first.stderr)
     check('migración inicial runner', first.returncode == 0)
-    digest = hashlib.sha256(migration.encode()).hexdigest()
+    digests = {name: hashlib.sha256(source.encode()).hexdigest() for name, source in migrations.items()}
     ledger_sql = "SELECT version||':'||checksum||':'||applied_at::text FROM promotions.schema_migrations ORDER BY version;"
     ledger = text(sql(ledger_sql))
-    check('checksum registrado', '0001_promotions_persistence.sql:' + digest + ':' in ledger)
+    check('checksums registrados', all(name + ':' + digest + ':' in ledger for name, digest in digests.items()))
+    check('historial completo', len(ledger.splitlines()) == len(migrations))
     repeated = migrate()
     check('repetición sin aplicar de nuevo', repeated.returncode == 0 and text(sql(ledger_sql)) == ledger)
     validation = text(sql((FOLDER / 'validation.sql').read_text(encoding='utf-8')))
@@ -73,16 +76,18 @@ def main():
         fixtures = pathlib.Path(tmp) / 'promotions' / 'migrations'
         fixtures.mkdir(parents=True)
         initial = fixtures / '0001_promotions_persistence.sql'
-        initial.write_text(migration + '\n-- altered checksum fixture\n', encoding='utf-8')
+        for name, source in migrations.items():
+            (fixtures / name).write_text(source, encoding='utf-8', newline='\n')
+        initial.write_text(migrations[initial.name] + '\n-- altered checksum fixture\n', encoding='utf-8')
         altered = migrate(pathlib.Path(tmp))
         check('checksum alterado rechazado', altered.returncode != 0 and 'Checksum alterado' in altered.stderr)
-        initial.write_text(migration, encoding='utf-8', newline='\n')
+        initial.write_text(migrations[initial.name], encoding='utf-8', newline='\n')
         # Archivo deliberadamente inválido, solo fixture temporal del ejecutor.
-        (fixtures / '0002_invalid_fixture.sql').write_text(
+        (fixtures / f'{len(migrations)+1:04d}_invalid_fixture.sql').write_text(
             'CREATE TABLE promotions.invalid_fixture(id integer);\nSELECT no_such_function_for_test();\n', encoding='utf-8')
         invalid = migrate(pathlib.Path(tmp))
         check('migración fallida se detiene', invalid.returncode != 0 and 'no_such_function_for_test' in invalid.stderr)
-        check('rollback DDL y ledger', text(sql("SELECT to_regclass('promotions.invalid_fixture') IS NULL AND (SELECT count(*) FROM promotions.schema_migrations)=1;")) == 't')
+        check('rollback DDL y ledger', text(sql(f"SELECT to_regclass('promotions.invalid_fixture') IS NULL AND (SELECT count(*) FROM promotions.schema_migrations)={len(migrations)};")) == 't')
 
     for label, statement in [
         ('runtime sin DDL', 'CREATE TABLE promotions.forbidden(id integer);'),
@@ -101,7 +106,13 @@ def main():
     try:
         sql('CREATE DATABASE ' + race_db + ';')
         created = True
-        sql(bootstrap + '\nSET ROLE po_promotions_owner; BEGIN;\n' + migration + '\nCOMMIT;', race_db)
+        first_name = next(iter(migrations))
+        sql(bootstrap + '\nSET ROLE po_promotions_owner; BEGIN;\n' + migrations[first_name] + '\nCOMMIT;', race_db)
+        sql("SET ROLE po_promotions_runtime; INSERT INTO promotions.price_projection(sku,channel_id,snapshot,source_occurred_at,source_message_id) VALUES('upgrade-fixture','RETAIL','{\"preserved\":true}','2026-10-03','upgrade-price');", race_db)
+        for name, source in migrations.items():
+            if name != first_name:
+                sql('SET ROLE po_promotions_owner; BEGIN;\n' + source + '\nCOMMIT;', race_db)
+        check('upgrade conserva snapshot y asigna id', text(sql("SELECT id IS NOT NULL AND snapshot='{\"preserved\":true}'::jsonb FROM promotions.price_projection WHERE sku='upgrade-fixture' AND channel_id='RETAIL';", race_db)) == 't')
         sql("""
 SET ROLE po_promotions_runtime;
 BEGIN;
@@ -156,7 +167,7 @@ COMMIT;
     check('base original sin fixtures de concurrencia', text(sql('SELECT count(*) FROM promotions.coupon_uses;')) == '0')
     report = json.dumps({'result': 'PASS', 'sql_assertions': assertions,
                       'integration_checks': len(checks), 'checks': checks,
-                      'migration_sha256': digest,
+                      'migrations_sha256': digests,
                       'postgres_version': text(sql('SHOW server_version;'))}, ensure_ascii=False, indent=2)
     if args.report:
         args.report.write_text(report + '\n', encoding='utf-8', newline='\n')

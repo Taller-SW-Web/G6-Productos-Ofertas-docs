@@ -1,11 +1,12 @@
 {
   "result": "PASS",
-  "sql_assertions": 74,
-  "integration_checks": 27,
+  "sql_assertions": 77,
+  "integration_checks": 29,
   "checks": [
     "base objetivo vacía",
     "migración inicial runner",
-    "checksum registrado",
+    "checksums registrados",
+    "historial completo",
     "repetición sin aplicar de nuevo",
     "assertions SQL",
     "fixtures SQL con rollback",
@@ -18,6 +19,7 @@
     "runtime sin editar pedido",
     "runtime sin editar outbox",
     "runtime sin editar ledger",
+    "upgrade conserva snapshot y asigna id",
     "runtime administra agregado completo",
     "race COUPON_GLOBAL_LIMIT",
     "race único consumo 53000000-0000-0000-0000-000000000011",
@@ -31,6 +33,9 @@
     "runtime inbox deduplica",
     "base original sin fixtures de concurrencia"
   ],
-  "migration_sha256": "ccb75886b2ff993717b46cb923e7983ab4af9038cb1db0af394f997962dac796",
+  "migrations_sha256": {
+    "0001_promotions_persistence.sql": "ccb75886b2ff993717b46cb923e7983ab4af9038cb1db0af394f997962dac796",
+    "0002_promotions_global_price_projection.sql": "ee6c36562c81b6a65682845b01d71c2e10763374c904ea5cb88c9b069f2a5f42"
+  },
   "postgres_version": "17.11 (Debian 17.11-1.pgdg13+2)"
 }

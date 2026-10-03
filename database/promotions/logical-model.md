@@ -56,7 +56,7 @@ Identificada por clase de referencia PRODUCTO/SKU y referencia externa. Conserva
 
 ### 3.9. Proyección de precio
 
-Identificada por SKU/canal. Snapshot local del dato de Pricing y procedencia del origen. No inventa un precio por producto ni selecciona variante. La semántica del snapshot corresponde al contrato/adaptador de Pricing.
+Identificada por SKU/canal, con canal ausente para precio global y canal concreto para override de Pricing. Cada ámbito mantiene un único snapshot local y procedencia del origen. No inventa un precio por producto ni selecciona variante. La semántica del snapshot corresponde al contrato/adaptador de Pricing.
 
 ### 3.10. Proyección de disponibilidad
 

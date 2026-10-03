@@ -7,7 +7,7 @@ Schema interno `promotions`, propiedad de Axel Cueva. Implementa la persistencia
 - `logical-model.md`: entidades, relaciones e invariantes.
 - `physical-model.md`: diccionario, índices, transacciones y decisiones de contrato.
 - `provision-runtime.sql`: preparación administrativa del rol de aplicación sin login ni membresía del owner.
-- `migrations/0001_promotions_persistence.sql`: única historia activa, compatible con `database/migrate.py`.
+- `migrations/0001_promotions_persistence.sql` y `0002_promotions_global_price_projection.sql`: una única historia activa, compatible con `database/migrate.py`; la segunda añade precio global/override sin editar la primera.
 - `validation.sql`: assertions y fixtures con rollback.
 - `tests/verify.py`: reproducción local, concurrencia y permisos; requiere un contenedor PostgreSQL desechable indicado explícitamente.
 - `validation-report.md`: evidencia real de ejecución y pendientes.

@@ -150,6 +150,11 @@ SELECT pg_temp.expect_error('proyección misma versión conflictiva',$q$UPDATE p
 SELECT pg_temp.expect_error('message id reutilizado conflictivo',$q$UPDATE promotions.stock_projection SET availability='DISPONIBLE' WHERE sku='fixture-stock'$q$,'P0001','PROJECTION_MESSAGE_CONFLICT');
 INSERT INTO promotions.price_projection(sku,channel_id,snapshot,source_occurred_at,source_message_id)
  VALUES('fixture-price','RETAIL','{}','2026-10-03','price-1');
+INSERT INTO promotions.price_projection(sku,channel_id,snapshot,source_occurred_at,source_message_id)
+ VALUES('fixture-price',NULL,'{"scope":"global"}','2026-10-03','price-global');
+SELECT pg_temp.assert_true('global y override coexisten',(SELECT count(*)=2 FROM promotions.price_projection WHERE sku='fixture-price'));
+SELECT pg_temp.expect_error('un único precio global por SKU',$q$INSERT INTO promotions.price_projection(sku,channel_id,snapshot,source_occurred_at,source_message_id) VALUES('fixture-price',NULL,'{}','2026-10-03','price-global-other')$q$,'23505');
+SELECT pg_temp.expect_error('un único override SKU canal',$q$INSERT INTO promotions.price_projection(sku,channel_id,snapshot,source_occurred_at,source_message_id) VALUES('fixture-price','RETAIL','{}','2026-10-03','price-retail-other')$q$,'23505');
 SELECT pg_temp.expect_error('timestamp ambiguo sin versión',$q$UPDATE promotions.price_projection SET source_message_id='price-2' WHERE sku='fixture-price'$q$,'P0001','PROJECTION_ORDER_AMBIGUOUS');
 
 INSERT INTO promotions.inbox(message_id,handler,envelope) VALUES('fixture-msg','consume',

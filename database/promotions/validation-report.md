@@ -6,9 +6,10 @@ Fecha: **2026-10-03**, America/Lima. Responsable: Axel Cueva. Estado: **VALIDADO
 
 - PostgreSQL **17.11 (Debian 17.11-1.pgdg13+2)**, imagen `postgres:17`, contenedor desechable local sin puerto publicado.
 - Schema nuevo, bootstrap común, owner `po_promotions_owner` y runtime `po_promotions_runtime` separados.
-- Migración `0001_promotions_persistence.sql`, generada inicialmente con **Supabase CLI 2.119.0**, adaptada al historial único del runner común.
-- SHA-256 canónico UTF-8/LF: `ccb75886b2ff993717b46cb923e7983ab4af9038cb1db0af394f997962dac796`.
-- El catálogo posterior contiene **12 tablas del servicio + ledger**, **107 columnas**, **93 restricciones**, **30 índices** y **15 funciones**, todos bajo el schema propio. Seis FK exclusivamente internas e indexadas.
+- Migraciones `0001_promotions_persistence.sql` y `0002_promotions_global_price_projection.sql`, generadas con **Supabase CLI 2.119.0** y adaptadas al historial único del runner común. La primera permanece intacta; la segunda habilita precio global/override.
+- SHA-256 canónico UTF-8/LF de 0001: `ccb75886b2ff993717b46cb923e7983ab4af9038cb1db0af394f997962dac796`.
+- SHA-256 canónico UTF-8/LF de 0002: `ee6c36562c81b6a65682845b01d71c2e10763374c904ea5cb88c9b069f2a5f42`.
+- El catálogo posterior contiene **12 tablas del servicio + ledger**, **108 columnas**, **94 restricciones**, **31 índices** y **15 funciones**, todos bajo el schema propio. Seis FK exclusivamente internas e indexadas.
 - Resultado capturado sin secretos: [validation-result.json](validation-result.json). El código asociado es la revisión de esta rama que contiene ese checksum; no sustituirlo por un hash de un commit anterior al SQL.
 
 ## Ejecución reproducible
@@ -21,14 +22,15 @@ La prueba exige que `promotions` aún no exista; no borra ni reinicia un schema 
 
 ## Resultados reales
 
-**PASS: 74 assertions SQL y 27 comprobaciones de integración.**
+**PASS: 77 assertions SQL y 29 comprobaciones de integración.**
 
 | Grupo | Evidencia / resultado |
 |---|---|
 | Instalación limpia | DDL del servicio y ledger se aplican satisfactoriamente desde una base vacía. |
 | Repetición | Mismo checksum, versión y applied_at; no reaplicar ni duplicar objetos. |
 | Checksum adulterado | Ejecutor lo rechaza antes de aplicar el archivo alterado. |
-| Migración inválida | Error SQL detiene ejecución; tabla de fixture y registro 0002 no persisten. |
+| Migración inválida | Error SQL detiene ejecución; tabla de fixture y registro 0003 no persisten. |
+| Precio global / override | Coexisten global NULL y RETAIL para un SKU; se rechazan segundo global y segundo override del mismo canal. Upgrade conserva snapshot anterior y asigna ID técnico. |
 | Configuración comercial | Código normalizado/único, límites, monto mínimo, fechas, canales, XOR/duplicados, alcance/política obligatorios. |
 | Modalidad | Cambio inicial válido, primera activación persistente después de desactivar, transición histórica bloqueada. |
 | Recomendaciones | No autorrecomendación/duplicados, criterio UPSELL incluso al cambiar tipo, candidatos obligatorios, orden positivo. |
