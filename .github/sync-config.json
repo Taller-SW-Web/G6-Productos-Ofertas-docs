@@ -1,7 +1,14 @@
 {
   "schema_version": 1,
   "repository": "Taller-SW-Web/Productos-y-Ofertas-docs",
-  "enabled_sources": ["cueva"],
+  "enabled_sources": [
+  "castilla",
+  "poma",
+  "cueva",
+  "lopez",
+  "taco",
+  "vera"
+  ],
   "pairs": [
     {"source": "castilla", "destination": "lab/castilla"},
     {"source": "poma", "destination": "lab/poma"},
