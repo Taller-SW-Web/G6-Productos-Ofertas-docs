@@ -526,4 +526,3 @@ Resultados verificables en [validation-report.md](validation-report.md) y [valid
 - [x] Seguridad invoker, revocación PUBLIC, runtime limitado comprobados.
 - [ ] Revisión de Leonardo Lopez y Marco Castilla.
 - [ ] Despliegue compartido y evidencia real de Supabase.
-

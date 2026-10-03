@@ -35,4 +35,4 @@ El resultado acredita correcciones de wireframes, fixtures y documentación. No 
 
 D-REC-01/02 y los enriquecimientos comerciales siguen pendientes de coordinación con sus owners. El prototipo no resuelve esas decisiones ni realiza una agregación de inventario. La persistencia y la integración real de consumption/restoration, Pricing, Inventario, Catálogo y Ventas requieren sus pruebas correspondientes.
 
-Esta entrega se mantiene local hasta completar la revisión solicitada por el usuario.
+La publicación en la rama `cueva` conserva este alcance de validación; las revisiones e integraciones pendientes siguen abiertas.
