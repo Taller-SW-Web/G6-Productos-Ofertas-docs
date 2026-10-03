@@ -2,6 +2,8 @@
 
 > Documento transversal que define el modelo físico de los ocho bounded contexts del módulo sobre PostgreSQL/Supabase.
 > Su objetivo es que cada responsable de microservicio construya su persistencia de forma autónoma sin producir modelos incompatibles entre sí.
+>
+> `/bd` es la única raíz canónica para los artefactos de persistencia del módulo. Cada contexto mantiene en `/bd/<contexto>/` sus modelos, migraciones y validaciones, mientras que las herramientas compartidas de despliegue residen en `/bd/deploy/`. No debe existir un segundo historial activo fuera de `/bd`.
 
 ---
 

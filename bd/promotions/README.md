@@ -7,17 +7,17 @@ Schema interno `promotions`, propiedad de Axel Cueva. Implementa la persistencia
 - `logical-model.md`: entidades, relaciones e invariantes.
 - `physical-model.md`: diccionario, índices, transacciones y decisiones de contrato.
 - `provision-runtime.sql`: preparación administrativa del rol de aplicación sin login ni membresía del owner.
-- `migrations/0001_promotions_persistence.sql`, `0002_promotions_global_price_projection.sql` y `0003_promotions_timestamps_and_delete_rules.sql`: historia única compatible con `database/migrate.py`; 0002 añade precio global/override y 0003 completa timestamps/FK/triggers sin editar las versiones publicadas.
+- `migrations/0001_promotions_persistence.sql`, `0002_promotions_global_price_projection.sql` y `0003_promotions_timestamps_and_delete_rules.sql`: historia única compatible con `bd/deploy/migrate.py`; 0002 añade precio global/override y 0003 completa timestamps/FK/triggers sin editar las versiones publicadas.
 - `validation.sql`: assertions y fixtures con rollback.
 - `tests/verify.py`: reproducción local, concurrencia y permisos; requiere un contenedor PostgreSQL desechable indicado explícitamente.
 - `validation-report.md`: evidencia real de ejecución y pendientes.
 
-Orden: administrador ejecuta `database/bootstrap.sql` y `provision-runtime.sql`; deployer ejecuta `python database/migrate.py promotions`; después se ejecuta `validation.sql`. La generación inicial utilizó Supabase CLI y se trasladó a la numeración de cuatro dígitos del ejecutor común; las correcciones posteriores se incorporan mediante nuevas migraciones versionadas. No hay un segundo historial de Supabase en este repositorio.
+Orden: administrador ejecuta `bd/deploy/bootstrap.sql` y `provision-runtime.sql`; deployer ejecuta `python bd/deploy/migrate.py promotions`; después se ejecuta `validation.sql`. La generación inicial utilizó Supabase CLI y se trasladó a la numeración de cuatro dígitos del ejecutor común; las correcciones posteriores se incorporan mediante nuevas migraciones versionadas. No hay un segundo historial de Supabase en este repositorio.
 
 Para verificar en una base local vacía:
 
 ```text
-python database/promotions/tests/verify.py --container CONTENEDOR_LOCAL
+python bd/promotions/tests/verify.py --container CONTENEDOR_LOCAL
 ```
 
 La prueba usa el usuario administrador **solo del contenedor local**, verifica el owner/runtime y conserva los objetos del schema, sin fixtures comerciales. No pasar un proyecto compartido a esta prueba.

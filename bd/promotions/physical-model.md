@@ -20,8 +20,8 @@
 | [Contrato API](../../Contrato_Api.md), [OpenAPI](../../api/openapi.yaml), [AsyncAPI](../../asyncapi/asyncapi.yaml) | Identidades, tipos, campos, eventos y límites de integración. |
 | SPEC/HU/WF/FLOW-005, 006 y 007 | Fuentes específicas enlazadas en logical-model §11 y trazabilidad §21 de este documento. |
 | [Modelo lógico](logical-model.md) | Entidades, cardinalidades, historia e invariantes. |
-| [Convenciones](../../bd/CONVENCIONES_BD.md), [plantilla](../../bd/plantillas/physical-model.md) | Nomenclatura, timestamps, FK explícitas y estructura de esta entrega. |
-| [Procedimiento de despliegue](../README.md), [runner](../migrate.py) | Roles, schema privado e historial único de migraciones. |
+| [Convenciones](../CONVENCIONES_BD.md), [plantilla](../plantillas/physical-model.md) | Nomenclatura, timestamps, FK explícitas y estructura de esta entrega. |
+| [Procedimiento de despliegue](../deploy/README.md), [runner](../deploy/migrate.py) | Roles, schema privado e historial único de migraciones. |
 
 Precedencia: fuentes funcionales/contractuales → conceptual → lógico → físico → migraciones → validación. Las convenciones físicas no sustituyen un contrato. Contradicciones y apartamientos se registran en §5.2/§23; no se resuelven con restricciones funcionales nuevas.
 
@@ -58,10 +58,10 @@ Schema privado, fuera de Exposed schemas/Data API. PUBLIC sin USAGE ni EXECUTE; 
 | Pedido/mensaje/correlación | text no vacío: AsyncAPI dice string sin formato UUID; no imponer uno. operation_id sí es UUID según MessageEnvelope. |
 | Cantidades comerciales | numeric exacto, sin typmod que redondee. OpenAPI no fija escala: 100.001 debe rechazarse como porcentaje, no convertirse silenciosamente en 100; mínimo 0.001 es positivo. NaN/Infinity rechazados. Se desvía de numeric(12,2) genérico por precisión contractual. No se inventa currency para estos campos. |
 | Fechas | timestamptz finito; vigencia [inicio, fin); reloj técnico del servidor para creación/modificación/primera activación. |
-| Migraciones | Numeración continua de cuatro dígitos y transacción del ejecutor database/migrate.py; no añadir BEGIN/COMMIT a los archivos. CLI Supabase 2.119.0 generó el archivo original; 0001/0002 conservan sus checksums y 0003 incorpora las correcciones. Se mantiene una única historia común. |
+| Migraciones | Numeración continua de cuatro dígitos y transacción del ejecutor bd/deploy/migrate.py; no añadir BEGIN/COMMIT a los archivos. CLI Supabase 2.119.0 generó el archivo original; 0001/0002 conservan sus checksums y 0003 incorpora las correcciones. Se mantiene una única historia común. |
 | Canal global de precio | channel_id nullable; UNIQUE NULLS NOT DISTINCT(SKU, canal) representa un global por SKU y un override por canal, conforme al contrato de Pricing. |
 | Catálogos propios | CHECK en lugar de enums nativos sugeridos por convenciones: mismos valores publicados, migración autocontenida y sin tipos extra; excepción a revisar con el owner de BD. |
-| Data API | Se aplica el procedimiento database/README.md de schemas privados; la sugerencia general de exponer nueve schemas en convenciones contradice ese procedimiento. Resolver en revisión transversal antes de cualquier exposición; esta entrega conserva el acceso por backend y no concede acceso anónimo. |
+| Data API | Se aplica el procedimiento bd/deploy/README.md de schemas privados; la sugerencia general de exponer nueve schemas en convenciones contradice ese procedimiento. Resolver en revisión transversal antes de cualquier exposición; esta entrega conserva el acceso por backend y no concede acceso anónimo. |
 | Roles | Bootstrap existente po_<schema>_owner y runtime con permisos concretos; no GRANT ALL a un rol compartido. |
 | Estado de recomendación | ACTIVO/INACTIVO del contrato HTTP; SPEC-007 actualizado para quitar la discrepancia ACTIVA/INACTIVA. |
 
@@ -85,7 +85,7 @@ El ledger usa applied_at y PK natural del runner; las proyecciones catalog/stock
 | `stock_projection` | Snapshot reconstruible de disponibilidad por SKU, sin stock autoritativo. | logical-model.md §3.10 — Proyección de disponibilidad | `PRIMARY KEY (sku)` | Mutable y reconstruible desde el owner original. |
 | `outbox` | Envelope transaccional inmutable y seguimiento de publicación. | logical-model.md §3.11 — Outbox | `PRIMARY KEY (message_id)` | Envelope inmutable; seguimiento operativo mutable. |
 | `inbox` | Deduplicación por mensaje/handler, envelope inmutable y resultado del procesamiento. | logical-model.md §3.12 — Inbox | `PRIMARY KEY (message_id, handler)` | Envelope inmutable; seguimiento operativo mutable. |
-| `schema_migrations` | Ledger técnico del mecanismo común; versiones/checksums/applied_at. | Necesidad técnica: logical-model.md §9; database/migrate.py | `PRIMARY KEY (version)` | Append-only, exclusivo del runner. |
+| `schema_migrations` | Ledger técnico del mecanismo común; versiones/checksums/applied_at. | Necesidad técnica: logical-model.md §9; bd/deploy/migrate.py | `PRIMARY KEY (version)` | Append-only, exclusivo del runner. |
 
 ## 7. Enumeraciones y tipos propios
 
@@ -867,14 +867,14 @@ No existen FK para esta tabla; referencias externas sin integridad cruzada.
 
 ### 8.13. `schema_migrations`
 
-**Origen lógico:** Necesidad técnica: logical-model.md §9; database/migrate.py. **Propósito:** Ledger técnico del mecanismo común; versiones/checksums/applied_at. **Estabilidad:** Append-only, exclusivo del runner.
+**Origen lógico:** Necesidad técnica: logical-model.md §9; bd/deploy/migrate.py. **Propósito:** Ledger técnico del mecanismo común; versiones/checksums/applied_at. **Estabilidad:** Append-only, exclusivo del runner.
 
 **Columnas**
 
 | Columna | Tipo PostgreSQL | Nulo | Default | Restricciones | Origen lógico |
 |---|---|---|---|---|---|
-| `version` | `text` | No | — | NOT NULL; schema_migrations_pkey | Necesidad técnica: logical-model.md §9; database/migrate.py |
-| `checksum` | `text` | No | — | NOT NULL | Necesidad técnica: logical-model.md §9; database/migrate.py |
+| `version` | `text` | No | — | NOT NULL; schema_migrations_pkey | Necesidad técnica: logical-model.md §9; bd/deploy/migrate.py |
+| `checksum` | `text` | No | — | NOT NULL | Necesidad técnica: logical-model.md §9; bd/deploy/migrate.py |
 | `applied_at` | `timestamp with time zone` | No | `now()` | NOT NULL | Técnico: convenciones §7 / runner |
 
 **Clave primaria:** `PRIMARY KEY (version)`.
@@ -1268,7 +1268,7 @@ erDiagram
 | logical-model.md §3.10 — Proyección de disponibilidad | `stock_projection` — detalle §8.10; migraciones 0001–0003 y validation.sql |
 | logical-model.md §3.11 — Outbox | `outbox` — detalle §8.11; migraciones 0001–0003 y validation.sql |
 | logical-model.md §3.12 — Inbox | `inbox` — detalle §8.12; migraciones 0001–0003 y validation.sql |
-| Necesidad técnica: logical-model.md §9; database/migrate.py | `schema_migrations` — detalle §8.13; migraciones 0001–0003 y validation.sql |
+| Necesidad técnica: logical-model.md §9; bd/deploy/migrate.py | `schema_migrations` — detalle §8.13; migraciones 0001–0003 y validation.sql |
 
 Campos derivados puedeCambiarModalidad/usosGlobalesConsumidos/usosDisponibles no se duplican; se obtienen de configuración e historia. Referencias externas permanecen escalares.
 
@@ -1294,7 +1294,7 @@ Fuentes funcionales: [SPEC-005](../../specs/SPEC-005-gestion-cupones-descuento.m
 | D-PHY-05 | Seis FK RESTRICT | NO ACTION implícito / cascadas | Cumplir cláusula explícita manteniendo retención de dependencias e historia | Borrado hijo deliberado, nunca cascada de consumos |
 | D-PHY-06 | 0003 con backfill de timestamps | Editar 0001/0002 publicados | Conservar ledger/checksums y upgrade de bases locales existentes | Fuentes técnicas aproximadas documentadas; defaults para nuevas filas |
 | D-PHY-07 | Timestamps actualizados por triggers | Aplicación escribe updated_at | Impedir omisión accidental; excluir updated_at de comparación de historia | Restitución sigue protegida y operativa |
-| D-PHY-08 | Schema privado y roles separados | Exponer en Data API/rol compartido | Procedimiento database/README y dominio backend; revisión transversal pendiente | Sin PUBLIC/anon/authenticated ni SECURITY DEFINER |
+| D-PHY-08 | Schema privado y roles separados | Exponer en Data API/rol compartido | Procedimiento bd/deploy/README y dominio backend; revisión transversal pendiente | Sin PUBLIC/anon/authenticated ni SECURITY DEFINER |
 
  PEN y visualización con dos decimales pueden representar ejemplos de Hito 2, pero no originan CHECK de moneda única ni redondeo de columnas. Las cantidades comerciales propias son numeric sin escala fija; la moneda explícita que provea Pricing se conserva en snapshot, no se reemplaza ni deduce. Los fixtures de validación comprueban snapshots en PEN y USD sin declarar conversión monetaria implementada.
 
@@ -1321,7 +1321,7 @@ No se cambia customer_ref a text ni se renombra un nombre heredado sin modificar
 | [0002](migrations/0002_promotions_global_price_projection.sql) | Canal global NULL, surrogate ID y UNIQUE NULLS NOT DISTINCT para precio. | Upgrade conserva snapshots. |
 | [0003](migrations/0003_promotions_timestamps_and_delete_rules.sql) | Seis created_at, dos updated_at, seis RESTRICT, triggers convencionales y guard histórico compatible. | Backfill atómico de registros existentes; no eliminar tablas/filas ni cambiar UUID. |
 
-Administrador ejecuta bootstrap/provisión; deployer usa database/migrate.py promotions. Runner por schema con advisory lock, transacción DDL+ledger, checksum canónico UTF-8/LF, numeración continua y rollback ante fallo. 0003 suspende temporalmente solo triggers de usuario afectados para backfill, dentro de la transacción del runner, y los habilita antes de confirmar; pruebas comprueban restauración y datos históricos. Nunca se editan 0001/0002. No hay cambios destructivos de modelo ni segundo historial Supabase.
+Administrador ejecuta bootstrap/provisión; deployer usa bd/deploy/migrate.py promotions. Runner por schema con advisory lock, transacción DDL+ledger, checksum canónico UTF-8/LF, numeración continua y rollback ante fallo. 0003 suspende temporalmente solo triggers de usuario afectados para backfill, dentro de la transacción del runner, y los habilita antes de confirmar; pruebas comprueban restauración y datos históricos. Nunca se editan 0001/0002. No hay cambios destructivos de modelo ni segundo historial Supabase.
 
 ## 25. Validación
 

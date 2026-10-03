@@ -1,8 +1,8 @@
 -- taxonomy-svc / Persistencia de Taxonomía y Atributos (FLOW-008 a FLOW-012). PostgreSQL >= 15.
 -- Fuentes y decisiones: ../physical-model.md y ../logical-model.md.
--- Ejecutar como po_taxonomy_owner, aprovisionado por database/bootstrap.sql.
--- taxonomy_app: login runtime aprovisionado por database/bootstrap.sql, SIN membresía owner.
--- Sin BEGIN/COMMIT: database/migrate.py administra la transacción y el cálculo de checksum.
+-- Ejecutar como po_taxonomy_owner, aprovisionado por bd/deploy/bootstrap.sql.
+-- taxonomy_app: login runtime aprovisionado por bd/deploy/bootstrap.sql, SIN membresía owner.
+-- Sin BEGIN/COMMIT: bd/deploy/migrate.py administra la transacción y el cálculo de checksum.
 
 DO $guard$
 BEGIN

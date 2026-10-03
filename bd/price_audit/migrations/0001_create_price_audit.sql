@@ -1,5 +1,5 @@
 -- #56 / price-audit-svc. PostgreSQL >= 15. Modelo: ../physical-model.md.
--- Transaccion/ledger administrados por database/migrate.py; sin BEGIN/COMMIT.
+-- Transaccion/ledger administrados por bd/deploy/migrate.py; sin BEGIN/COMMIT.
 -- Runtime price_audit_app; trabajador de retencion price_audit_archiver.
 -- Los roles/schemas los provisiona infraestructura, sin credenciales en Git.
 DO $guard$
