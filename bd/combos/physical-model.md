@@ -1,8 +1,8 @@
 # Modelo físico — `combos` (`combos-svc`)
 
-> Ubicación objetivo: `database/combos/physical-model.md`.
+> Ubicación objetivo: `bd/combos/physical-model.md`.
 >
-> Este documento materializa `logical-model.md` y aplica `bd/CONVENCIONES_BD.md` y el procedimiento vigente de `database/README.md`.
+> Este documento materializa `logical-model.md` y aplica `bd/CONVENCIONES_BD.md` y el procedimiento vigente de `bd/deploy/README.md`.
 
 ---
 
@@ -43,9 +43,9 @@ Fuentes revisadas:
 - `bd/plantillas/physical-model.md`
 - `bd/plantillas/migration.sql`
 - `bd/plantillas/validation.sql`
-- `database/README.md`
-- `database/bootstrap.sql`
-- `database/migrate.py`
+- `bd/deploy/README.md`
+- `bd/deploy/bootstrap.sql`
+- `bd/deploy/migrate.py`
 - issue #58
 
 Precedencia:
@@ -150,8 +150,8 @@ Prohibido:
 | `message_id` de Inbox/Outbox como `text` | **Sí** | AsyncAPI lo publica como `string` sin `format: uuid`; la propia convención manda priorizar contrato | `asyncapi/asyncapi.yaml` `MessageEnvelope` |
 | `correlation_id` de Inbox/Outbox como `text` | **Sí** | AsyncAPI lo publica como `string` sin `format: uuid` y lo exige | `MessageEnvelope` |
 | `operation_id` como `uuid NULL` | No | AsyncAPI sí declara `format: uuid` nullable | `MessageEnvelope` |
-| La migración no contiene `BEGIN/COMMIT` | No | `database/migrate.py` envuelve cada versión en una transacción | `database/README.md` |
-| `schema_migrations` queda fuera del inventario de dominio | No | La crea el ejecutor de migraciones, no el bounded context | `database/migrate.py` |
+| La migración no contiene `BEGIN/COMMIT` | No | `bd/deploy/migrate.py` envuelve cada versión en una transacción | `bd/deploy/README.md` |
+| `schema_migrations` queda fuera del inventario de dominio | No | La crea el ejecutor de migraciones, no el bounded context | `bd/deploy/migrate.py` |
 
 ---
 
@@ -165,7 +165,7 @@ Prohibido:
 | `outbox` | Publicación transaccional | necesidad técnica | `id` | mutable técnica |
 | `inbox` | Deduplicación de consumidores | necesidad técnica | `id` | append-only |
 
-`combos.schema_migrations` no forma parte de este inventario: es creado y administrado por `database/migrate.py`.
+`combos.schema_migrations` no forma parte de este inventario: es creado y administrado por `bd/deploy/migrate.py`.
 
 ---
 
@@ -593,7 +593,7 @@ erDiagram
 | Modelo Conceptual | ownership de Combo y proyección |
 | Arquitectura | tablas conceptuales, Outbox Relay, aislamiento |
 | CONVENCIONES_BD | PK UUID, timestamps, dinero, nomenclatura, Inbox/Outbox |
-| database/README | ubicación/versionado y ejecución transaccional |
+| bd/deploy/README | ubicación/versionado y ejecución transaccional |
 | logical-model.md | entidades e invariantes |
 
 ---
@@ -621,7 +621,7 @@ erDiagram
 | `P-PHY-02` | ¿Qué evento contractual publicará `combos-svc`? | AsyncAPI | uso efectivo de Outbox | No |
 | `P-PHY-03` | Payload final de `catalog.product.deactivated`. | AsyncAPI | adapter de proyección | No |
 | `P-PHY-04` | Granularidad final de `inventory.stock.changed`. | AsyncAPI | adapter de proyección | No |
-| `P-PHY-05` | Runtime role/grants concretos todavía no están definidos por nombre en el repositorio. | database/README | permisos de servicio runtime | No para DDL; sí antes de backend productivo |
+| `P-PHY-05` | Runtime role/grants concretos todavía no están definidos por nombre en el repositorio. | bd/deploy/README | permisos de servicio runtime | No para DDL; sí antes de backend productivo |
 
 ---
 
@@ -630,7 +630,7 @@ erDiagram
 Ubicación:
 
 ```text
-database/combos/migrations/
+bd/combos/migrations/
 ```
 
 Versión inicial:
@@ -642,10 +642,10 @@ Versión inicial:
 La migración:
 
 - no contiene `BEGIN/COMMIT`;
-- asume `database/bootstrap.sql` ya ejecutado;
+- asume `bd/deploy/bootstrap.sql` ya ejecutado;
 - modifica únicamente `combos`;
 - no crea roles;
-- es ejecutada por `database/migrate.py` con `SET ROLE po_combos_owner`;
+- es ejecutada por `bd/deploy/migrate.py` con `SET ROLE po_combos_owner`;
 - no depende de objetos de otros contexts.
 
 ---
@@ -655,7 +655,7 @@ La migración:
 Ubicación:
 
 ```text
-database/combos/validation.sql
+bd/combos/validation.sql
 ```
 
 La validación es **solo lectura** y verifica:
@@ -687,14 +687,14 @@ El script devuelve PASS/FAIL y termina con error en `psql` si existe algún fall
 Prerrequisito:
 
 ```text
-database/bootstrap.sql
+bd/deploy/bootstrap.sql
 ```
 
 Ejecución:
 
 ```text
-python database/migrate.py combos
-psql -X -v ON_ERROR_STOP=1 -f database/combos/validation.sql
+python bd/deploy/migrate.py combos
+psql -X -v ON_ERROR_STOP=1 -f bd/combos/validation.sql
 ```
 
 Registrar posteriormente:

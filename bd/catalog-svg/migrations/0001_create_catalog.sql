@@ -1,8 +1,8 @@
 -- catalog-svc / FLOW-003 y FLOW-004. PostgreSQL >= 15.
 -- Fuentes y decisiones: ../physical-model.md. No es un bootstrap global.
--- Ejecutar como po_catalog_owner, provisionado por database/bootstrap.sql.
+-- Ejecutar como po_catalog_owner, provisionado por bd/deploy/bootstrap.sql.
 -- catalog_app: login runtime provisionado por infraestructura, SIN membresia owner.
--- Sin BEGIN/COMMIT: database/migrate.py administra la transaccion y checksum.
+-- Sin BEGIN/COMMIT: bd/deploy/migrate.py administra la transaccion y checksum.
 
 DO $guard$
 BEGIN

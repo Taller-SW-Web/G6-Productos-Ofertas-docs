@@ -32,9 +32,9 @@ Este modelo físico deriva de:
 - `asyncapi/asyncapi.yaml` — AsyncAPI `0.4.0`
 - `logical-model.md`
 - `bd/CONVENCIONES_BD.md`
-- `database/README.md`
-- `database/bootstrap.sql`
-- `database/migrate.py`
+- `bd/deploy/README.md`
+- `bd/deploy/bootstrap.sql`
+- `bd/deploy/migrate.py`
 
 Precedencia aplicada:
 
@@ -121,7 +121,7 @@ Se prohíben:
 - FK hacia `auth.users`;
 - tablas maestras de dominios ajenos.
 
-El schema y su owner `po_bulk_owner` se crean mediante `database/bootstrap.sql`; las migraciones de Bulk se aplican después con `database/migrate.py bulk`.
+El schema y su owner `po_bulk_owner` se crean mediante `bd/deploy/bootstrap.sql`; las migraciones de Bulk se aplican después con `bd/deploy/migrate.py bulk`.
 
 ### 5.2. Convenciones aplicadas
 
@@ -131,8 +131,8 @@ El schema y su owner `po_bulk_owner` se crean mediante `database/bootstrap.sql`;
 | `message_id` y `correlation_id` de Outbox/Inbox son `text` | Sí | AsyncAPI `0.4.0` los define como `string` sin `format: uuid`; el contrato prevalece sobre la convención física | `asyncapi/asyncapi.yaml` `MessageEnvelope`; `CONVENCIONES_BD.md §2` |
 | `operation_id` es `uuid` | No | AsyncAPI lo define como `string format: uuid` | AsyncAPI `0.4.0` |
 | `batch_id`, `row_id` y `export_id` se materializan como `uuid` y se serializan como string en HTTP | No | Son identidades técnicas generadas por Bulk; UUID es compatible con los esquemas HTTP `type: string` | OpenAPI `0.5.0` + `CONVENCIONES_BD.md §6` |
-| `schema_migrations` no forma parte de este modelo | No | Es ledger de infraestructura creado por `database/migrate.py`, no una tabla del bounded context | `database/migrate.py` |
-| La migración no contiene `BEGIN/COMMIT` | No | `database/migrate.py` envuelve cada versión en una transacción | `database/README.md §1/§4` |
+| `schema_migrations` no forma parte de este modelo | No | Es ledger de infraestructura creado por `bd/deploy/migrate.py`, no una tabla del bounded context | `bd/deploy/migrate.py` |
+| La migración no contiene `BEGIN/COMMIT` | No | `bd/deploy/migrate.py` envuelve cada versión en una transacción | `bd/deploy/README.md §1/§4` |
 
 ---
 
@@ -148,7 +148,7 @@ El schema y su owner `po_bulk_owner` se crean mediante `database/bootstrap.sql`;
 | `outbox` | Publicación transaccional confiable | necesidad técnica | `id` | infraestructura; sin `updated_at` |
 | `inbox` | Deduplicación por mensaje/handler | necesidad técnica | `id` | registro de procesamiento; sin `updated_at` |
 
-`bulk.schema_migrations`, cuando existe, es administrada por `database/migrate.py` y queda fuera de este inventario.
+`bulk.schema_migrations`, cuando existe, es administrada por `bd/deploy/migrate.py` y queda fuera de este inventario.
 
 ---
 
@@ -730,7 +730,7 @@ erDiagram
 | `Arquitectura.md` | nombres de tablas, aislamiento y estado durable |
 | `logical-model.md` | invariantes y ownership |
 | `CONVENCIONES_BD.md` | PK, timestamps, nombres, Outbox/Inbox, índices |
-| `database/README.md` | estructura/versionado/despliegue de migraciones |
+| `bd/deploy/README.md` | estructura/versionado/despliegue de migraciones |
 
 ---
 
@@ -757,8 +757,8 @@ erDiagram
 |---|---|---|---|---:|
 | `P-PHY-001` | ¿Cómo se proyectan exactamente los resultados AsyncAPI hacia los pasos funcionales CATALOGO/PRICING/INVENTARIO? | `P-LOG-001` | implementación del consumer | No |
 | `P-PHY-002` | ¿Se requiere historial explícito de solicitudes `/reanudar`? | `P-LOG-002` | posible tabla futura | No |
-| `P-PHY-003` | ¿Cuál será el nombre/rol runtime al que se concederán permisos mínimos sobre `bulk`? | `database/README.md` | grants de runtime | No para DDL; sí antes de runtime productivo |
-| `P-PHY-004` | `CONVENCIONES_BD.md §15.3` muestra 3 dígitos, pero `database/migrate.py` exige 4 | fuentes de infraestructura | nomenclatura de archivo | No; se usa 4 dígitos porque el ejecutor lo exige |
+| `P-PHY-003` | ¿Cuál será el nombre/rol runtime al que se concederán permisos mínimos sobre `bulk`? | `bd/deploy/README.md` | grants de runtime | No para DDL; sí antes de runtime productivo |
+| `P-PHY-004` | `CONVENCIONES_BD.md §15.3` muestra 3 dígitos, pero `bd/deploy/migrate.py` exige 4 | fuentes de infraestructura | nomenclatura de archivo | No; se usa 4 dígitos porque el ejecutor lo exige |
 
 ---
 
@@ -767,7 +767,7 @@ erDiagram
 Ruta vigente:
 
 ```text
-database/bulk/migrations/
+bd/bulk/migrations/
 ```
 
 Migración inicial:
@@ -776,11 +776,11 @@ Migración inicial:
 0001_create_bulk_persistence.sql
 ```
 
-La versión utiliza cuatro dígitos porque `database/migrate.py` valida exactamente `0001_descripcion.sql`, aunque `CONVENCIONES_BD.md §15.3` aún muestre ejemplos de tres dígitos.
+La versión utiliza cuatro dígitos porque `bd/deploy/migrate.py` valida exactamente `0001_descripcion.sql`, aunque `CONVENCIONES_BD.md §15.3` aún muestre ejemplos de tres dígitos.
 
 El archivo no contiene `BEGIN/COMMIT`; el ejecutor aplica cada versión dentro de una transacción y registra checksum en `bulk.schema_migrations`.
 
-Prerrequisito: `database/bootstrap.sql` debe haber creado `po_bulk_owner` y el schema `bulk`.
+Prerrequisito: `bd/deploy/bootstrap.sql` debe haber creado `po_bulk_owner` y el schema `bulk`.
 
 ---
 
@@ -789,7 +789,7 @@ Prerrequisito: `database/bootstrap.sql` debe haber creado `po_bulk_owner` y el s
 Ruta:
 
 ```text
-database/bulk/validation.sql
+bd/bulk/validation.sql
 ```
 
 La versión corregida es **solo lectura** y aborta con `RAISE EXCEPTION` si detecta incumplimientos. Verifica:
@@ -808,15 +808,15 @@ La versión corregida es **solo lectura** y aborta con `RAISE EXCEPTION` si dete
 12. aislamiento y RLS deshabilitado;
 13. consistencia de datos terminales cuando existan registros.
 
-`bulk.schema_migrations` se excluye de los checks de modelo porque es infraestructura creada por `database/migrate.py` y utiliza deliberadamente `version text` como PK.
+`bulk.schema_migrations` se excluye de los checks de modelo porque es infraestructura creada por `bd/deploy/migrate.py` y utiliza deliberadamente `version text` como PK.
 
 ---
 
 ## 26. Despliegue en Supabase
 
-1. ejecutar una vez `database/bootstrap.sql` con administrador autorizado;
-2. ejecutar `python database/migrate.py bulk` con deployer miembro de `po_bulk_owner`;
-3. ejecutar `psql -X -v ON_ERROR_STOP=1 -f database/bulk/validation.sql`;
+1. ejecutar una vez `bd/deploy/bootstrap.sql` con administrador autorizado;
+2. ejecutar `python bd/deploy/migrate.py bulk` con deployer miembro de `po_bulk_owner`;
+3. ejecutar `psql -X -v ON_ERROR_STOP=1 -f bd/bulk/validation.sql`;
 4. registrar commit, schema, versión, checksum, PostgreSQL, fecha y resultado;
 5. no exponer `bulk` por Data API ni activar RLS en este schema de escritura;
 6. conceder al runtime únicamente permisos explícitos cuando Infra defina el rol/login correspondiente.
@@ -884,7 +884,7 @@ La versión corregida es **solo lectura** y aborta con `RAISE EXCEPTION` si dete
 **Observaciones:**
 
 - El modelo y el SQL quedan homologados con las convenciones cerradas del issue #48.
-- Persiste la discrepancia documental de 3 vs 4 dígitos; se adopta 4 porque es requisito ejecutable de `database/migrate.py`.
+- Persiste la discrepancia documental de 3 vs 4 dígitos; se adopta 4 porque es requisito ejecutable de `bd/deploy/migrate.py`.
 - `message_id/correlation_id` mantienen `text` por precedencia del AsyncAPI vigente.
 - Falta ejecución real de migración + `validation.sql` para marcar `APROBADO`.
 

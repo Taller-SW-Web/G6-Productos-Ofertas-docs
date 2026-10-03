@@ -40,16 +40,16 @@ Tablas: `bulk_price_jobs`, `bulk_price_rows`, `inbox`, `outbox`, `price_validiti
 
 ## Límites de esta evidencia
 
-No se ejecutó `database/migrate.py` con psql ni contra un servidor remoto; el check de ledger comprueba SQL/identidad de checksum, no certifica el cliente de despliegue. Tampoco conexiones concurrentes, API/broker o almacenamiento de archivos real. El despliegue Supabase **no se realizó**; el PR asociado es [#81](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/pull/81), con revisión BD/QA pendiente. Los issues #55 y #56 siguen pendientes de cierre hasta acreditar la ejecución real en el servidor objetivo.
+No se ejecutó `bd/deploy/migrate.py` con psql ni contra un servidor remoto; el check de ledger comprueba SQL/identidad de checksum, no certifica el cliente de despliegue. Tampoco conexiones concurrentes, API/broker o almacenamiento de archivos real. El despliegue Supabase **no se realizó**; el PR asociado es [#81](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/pull/81), con revisión BD/QA pendiente. Los issues #55 y #56 siguen pendientes de cierre hasta acreditar la ejecución real en el servidor objetivo.
 
 ## Reproducción en servidor objetivo
 
 Con roles/runtime/prerequisites provisionados y conexión configurada fuera de Git:
 
 ```powershell
-python database/migrate.py pricing --root bd
+python bd/deploy/migrate.py pricing
 psql -X -v ON_ERROR_STOP=1 -f bd/pricing/validation.sql
-python database/migrate.py pricing --root bd
+python bd/deploy/migrate.py pricing
 ```
 
 Registrar server_version, commit y manifiesto/checksum del ledger. Utilizar una base de pruebas aislada para fixtures/escenarios de retención; no limpiar schemas compartidos. Extensión/roles se provisionan por infraestructura; no usar un login administrador como runtime. Para el método embebido empleado aquí, [PGlite](https://pglite.dev/docs/about) ejecuta PostgreSQL/WASM y [su catálogo](https://pglite.dev/extensions/) publica btree_gist.
