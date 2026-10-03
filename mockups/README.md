@@ -206,7 +206,9 @@ Fuente de verdad canónica: [`wireframes/INDEX.md`](../wireframes/INDEX.md).
 | MK-010 | Asociación entre tipos de producto y características | `lopez` | Leonardo Lopez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
 | MK-011 | Gestión de marcas | `lopez` | Leonardo Lopez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
 | MK-012 | Gestión de SEO y metadatos | `lopez` | Leonardo Lopez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-013 | Gestión de precios individuales y masivos | `vera` | Leonardo Vera Rodríguez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
-| MK-014 | Historial de auditoría de precios | `vera` | Leonardo Vera Rodríguez | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+| MK-013 | Gestión de precios individuales y masivos | `vera` | Leonardo Vera Rodríguez | 6 P0 inventariadas | [Spec](MK-013/component-spec.md) | [Plan](MK-013/plan.md) | [Tasks](MK-013/tasks.md) | Pendiente | — | Documentación en revisión |
+| MK-014 | Historial de auditoría de precios | `vera` | Leonardo Vera Rodríguez | 5 P0 inventariadas | [Spec](MK-014/component-spec.md) | [Plan](MK-014/plan.md) | [Tasks](MK-014/tasks.md) | Pendiente | — | Documentación en revisión |
 | MK-015 | Control de stock y disponibilidad | `taco` | Miguel Ángel Taco Zavala | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
 | MK-016 | Dashboard analítico y alertas de stock | `taco` | Miguel Ángel Taco Zavala | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | — | Borrador |
+
+En MK-013 y MK-014 los conteos corresponden al inventario documental; todavía no acreditan pantallas implementadas. Sus component-spec registran los hallazgos contractuales pendientes y sus tasks mantienen separados construcción, autovalidación, revisión UX y Figma.
