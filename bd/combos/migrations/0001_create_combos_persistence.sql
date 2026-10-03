@@ -2,13 +2,13 @@
 -- 0001_create_combos_persistence.sql
 -- Issue #58 - combos-svc
 --
--- Ejecutada por database/migrate.py:
+-- Ejecutada por bd/deploy/migrate.py:
 --   - SET ROLE po_combos_owner
 --   - BEGIN/COMMIT por versión
 --   - ledger combos.schema_migrations
 --
 -- NO incluir BEGIN/COMMIT en este archivo.
--- Prerrequisito: database/bootstrap.sql.
+-- Prerrequisito: bd/deploy/bootstrap.sql.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -21,7 +21,7 @@ DECLARE
 BEGIN
     IF to_regnamespace('combos') IS NULL THEN
         RAISE EXCEPTION
-            'Schema combos inexistente. Ejecute database/bootstrap.sql antes de migrar.';
+            'Schema combos inexistente. Ejecute bd/deploy/bootstrap.sql antes de migrar.';
     END IF;
 
     SELECT pg_get_userbyid(nspowner)

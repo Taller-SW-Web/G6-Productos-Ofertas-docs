@@ -6,7 +6,17 @@ import re
 import subprocess
 import sys
 
-SCHEMAS = ('taxonomy', 'catalog', 'pricing', 'price_audit', 'promotions', 'combos', 'inventory', 'bulk')
+SCHEMA_DIRS = {
+    'taxonomy': 'taxonomy',
+    'catalog': 'catalog-svg',
+    'pricing': 'pricing',
+    'price_audit': 'price_audit',
+    'promotions': 'promotions',
+    'combos': 'combos',
+    'inventory': 'inventory-svc',
+    'bulk': 'bulk',
+}
+SCHEMAS = tuple(SCHEMA_DIRS.keys())
 
 def literal(value):
     return "'" + value.replace("'", "''") + "'"
@@ -14,11 +24,13 @@ def literal(value):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('schema', choices=SCHEMAS)
-    parser.add_argument('--root', type=pathlib.Path, default=pathlib.Path(__file__).parent)
+    parser.add_argument('--root', type=pathlib.Path, default=pathlib.Path(__file__).resolve().parent.parent)
     parser.add_argument('--psql', default='psql')
     parser.add_argument('--container', help='Contenedor PostgreSQL local de validación')
     args = parser.parse_args()
-    folder = args.root / args.schema / 'migrations'
+    folder = args.root / SCHEMA_DIRS[args.schema] / 'migrations'
+    if not folder.exists():
+        raise ValueError(f'No existen migraciones en {folder}')
     files = sorted(folder.glob('*.sql'))
     if not files:
         raise ValueError(f'No existen migraciones en {folder}')

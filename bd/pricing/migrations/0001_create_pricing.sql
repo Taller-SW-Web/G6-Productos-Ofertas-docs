@@ -1,5 +1,5 @@
 -- #55 / pricing-svc. PostgreSQL >= 15. Modelo: ../physical-model.md.
--- Sin BEGIN/COMMIT: database/migrate.py administra transaccion y checksum.
+-- Sin BEGIN/COMMIT: bd/deploy/migrate.py administra transaccion y checksum.
 -- Infraestructura: po_pricing_owner, schema pricing, pricing_app y btree_gist
 -- instalado en extensions. No crea roles ni modifica otros bounded contexts.
 DO $guard$

@@ -13,7 +13,7 @@ import threading
 import uuid
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
-FOLDER = ROOT / 'database' / 'promotions'
+FOLDER = ROOT / 'bd' / 'promotions'
 
 
 def main():
@@ -41,7 +41,7 @@ def main():
         return result.stdout.decode('utf-8').strip()
 
     def migrate(root=None):
-        command = [sys.executable, str(ROOT / 'database' / 'migrate.py'),
+        command = [sys.executable, str(ROOT / 'bd' / 'deploy' / 'migrate.py'),
                    'promotions', '--container', args.container]
         if root:
             command.extend(['--root', str(root)])
@@ -50,7 +50,7 @@ def main():
                               env={**os.environ, 'PYTHONUTF8': '0'})
 
     check('base objetivo vacía', text(sql("SELECT NOT EXISTS(SELECT 1 FROM pg_namespace WHERE nspname='promotions');")) == 't')
-    bootstrap = (ROOT / 'database' / 'bootstrap.sql').read_text(encoding='utf-8')
+    bootstrap = (ROOT / 'bd' / 'deploy' / 'bootstrap.sql').read_text(encoding='utf-8')
     provision = (FOLDER / 'provision-runtime.sql').read_text(encoding='utf-8')
     migrations = {file.name: file.read_text(encoding='utf-8-sig').replace('\r\n', '\n')
                   for file in sorted((FOLDER / 'migrations').glob('*.sql'))}

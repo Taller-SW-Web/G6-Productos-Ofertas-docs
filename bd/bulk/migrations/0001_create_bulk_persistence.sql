@@ -4,10 +4,10 @@
 -- PostgreSQL / Supabase
 --
 -- Prerrequisito:
---   database/bootstrap.sql ya creó schema bulk con owner po_bulk_owner.
+--   bd/deploy/bootstrap.sql ya creó schema bulk con owner po_bulk_owner.
 --
 -- IMPORTANTE:
---   NO incluir BEGIN/COMMIT. database/migrate.py envuelve esta versión en una
+--   NO incluir BEGIN/COMMIT. bd/deploy/migrate.py envuelve esta versión en una
 --   transacción y registra su checksum en bulk.schema_migrations.
 -- =============================================================================
 

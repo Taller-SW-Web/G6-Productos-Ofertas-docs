@@ -2,8 +2,8 @@
 -- bulk-svc — validation.sql
 -- Issue #57 — validación solo lectura
 --
--- Ejecutar después de: python database/migrate.py bulk
--- Uso: psql -X -v ON_ERROR_STOP=1 -f database/bulk/validation.sql
+-- Ejecutar después de: python bd/deploy/migrate.py bulk
+-- Uso: psql -X -v ON_ERROR_STOP=1 -f bd/bulk/validation.sql
 --
 -- Este script NO inserta, actualiza ni elimina datos. Si detecta un incumplimiento
 -- lanza RAISE EXCEPTION y finaliza con error.

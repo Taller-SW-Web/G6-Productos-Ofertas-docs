@@ -1,7 +1,7 @@
 # Modelo lógico — `<schema>` (`<microservicio>`)
 
 > **Ubicación oficial del documento:**
-> Guardar una copia completada en `database/<schema>/logical-model.md` (o en la ubicación temporal del bounded context dentro del repositorio mientras se normaliza la estructura del árbol de directorios).
+> Guardar una copia completada en `bd/<schema>/logical-model.md` (o en la carpeta asignada al servicio dentro de `bd/`).
 
 - **Issue:** #`<N>` — `<título del issue>`
 - **Responsable:** `<nombre del responsable>`

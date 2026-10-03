@@ -407,15 +407,15 @@ No hay decisiones pendientes que bloqueen la migracion inicial.
 
 ## 24. Migraciones
 
-La implementacion vive en `database/taxonomy/migrations/0001_create_taxonomy.sql`.
+La implementacion vive en `bd/taxonomy/migrations/0001_create_taxonomy.sql`.
 
-La migracion es reproducible desde una base limpia, modifica solo `taxonomy`, evita secretos y es compatible con `database/migrate.py taxonomy`.
+La migracion es reproducible desde una base limpia, modifica solo `taxonomy`, evita secretos y es compatible con `bd/deploy/migrate.py taxonomy`.
 
 ---
 
 ## 25. Validacion
 
-La validacion vive en `database/taxonomy/validation.sql` y cubre schema, tablas, tipos, PK, FK internas, ausencia de FK cross-context, UNIQUE, CHECK, indices, enums, idempotencia, reglas principales, Outbox/Inbox, aislamiento, limite 50, jerarquia/ciclos, marca normalizada y append-only.
+La validacion vive en `bd/taxonomy/validation.sql` y cubre schema, tablas, tipos, PK, FK internas, ausencia de FK cross-context, UNIQUE, CHECK, indices, enums, idempotencia, reglas principales, Outbox/Inbox, aislamiento, limite 50, jerarquia/ciclos, marca normalizada y append-only.
 
 ---
 
@@ -423,9 +423,9 @@ La validacion vive en `database/taxonomy/validation.sql` y cubre schema, tablas,
 
 Secuencia esperada:
 
-1. Ejecutar `database/bootstrap.sql` con administrador autorizado.
-2. Ejecutar `python database/migrate.py taxonomy`.
-3. Ejecutar `psql -X -v ON_ERROR_STOP=1 -f database/taxonomy/validation.sql`.
+1. Ejecutar `bd/deploy/bootstrap.sql` con administrador autorizado.
+2. Ejecutar `python bd/deploy/migrate.py taxonomy`.
+3. Ejecutar `psql -X -v ON_ERROR_STOP=1 -f bd/taxonomy/validation.sql`.
 4. Registrar evidencia sin secretos: commit, version de migracion, checksums, fecha, version PostgreSQL, resultado y PR asociado a #52.
 
 `bootstrap.sql` crea `taxonomy_app` sin password. La credencial real se inyecta por DevOps fuera del repositorio.
@@ -448,7 +448,7 @@ Secuencia esperada:
 - [x] Limite 50 de LISTA esta serializado.
 - [x] `schema_version` no aumenta con cualquier UPDATE.
 - [x] `slug_history` es append-only.
-- [x] Migracion y validacion estan bajo `database/taxonomy/`.
+- [x] Migracion y validacion estan bajo `bd/taxonomy/`.
 
 ---
 
