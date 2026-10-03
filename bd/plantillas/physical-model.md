@@ -35,7 +35,7 @@ Fuente: [`Modelo_Conceptual.md`](../../Modelo_Conceptual.md) y [`Contrato_Api.md
 
 ## 3. Convenciones aplicadas
 
-Declarar que este modelo sigue [`CONVENCIONES_BD.md`](../../CONVENCIONES_BD.md) y registrar las decisiones locales que se apartan, con su motivo.
+Declarar que este modelo sigue [`CONVENCIONES_BD.md`](../CONVENCIONES_BD.md) y registrar las decisiones locales que se apartan, con su motivo.
 
 | Decisión local | ¿Se aparta de la convención? | Motivo | Aprobado por |
 |---|---|---|---|

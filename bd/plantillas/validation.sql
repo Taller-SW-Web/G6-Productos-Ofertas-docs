@@ -1,5 +1,5 @@
--- =============================================================================
--- _TEMPLATE — validation.sql
+﻿-- =============================================================================
+-- _TEMPLATE 窶・validation.sql
 -- Checks verificables del modelo fisico de un bounded context
 -- =============================================================================
 -- Uso:
@@ -19,7 +19,7 @@
 
 
 -- =============================================================================
--- SECCION 0 — CONFIGURACION
+-- SECCION 0 窶・CONFIGURACION
 -- Editar estos dos bloques antes de ejecutar.
 -- =============================================================================
 
@@ -39,7 +39,7 @@
 
 
 -- =============================================================================
--- SECCION 1 — VERIFICACION GLOBAL
+-- SECCION 1 窶・VERIFICACION GLOBAL
 -- Devuelve una fila por check con PASS / FAIL.
 -- Copiar el bloque completo y ajustar los dos VALUES de arriba.
 -- =============================================================================
@@ -139,6 +139,21 @@ FROM pg_attribute a
 JOIN tablas_de_interes t ON t.relid = a.attrelid
 WHERE a.attnum > 0
   AND NOT a.attisdropped
+  AND (a.attidentity <> '' OR EXISTS (
+        SELECT 1 FROM pg_attrdef ad
+        WHERE ad.adrelid = a.attrelid AND ad.adnum = a.attnum
+          AND pg_get_expr(ad.adbin, ad.adrelid) LIKE 'nextval(%'
+      ))
+UNION ALL
+SELECT 5,
+       'sin_serial_ni_bigserial',
+       'Prohibido SERIAL, BIGSERIAL e IDENTITY autoincremental',
+       COUNT(*),
+       CASE WHEN COUNT(*) = 0 THEN 'PASS' ELSE 'FAIL' END
+FROM pg_attribute a
+JOIN tablas_de_interes t ON t.relid = a.attrelid
+WHERE a.attnum > 0
+  AND NOT a.attisdropped
   AND (a.attidentity <> '' OR a.attdefault IS NOT NULL)
   AND a.attdefault LIKE 'nextval(%'
 
@@ -201,7 +216,22 @@ WHERE t.qualified NOT IN (SELECT qualified FROM tablas_exentas)
       AND c.is_nullable = 'NO'
 )
 
--- 10. deleted_at presente salvo exentas
+-- 10. deleted_at presente solo cuando se use soft delete
+UNION ALL
+SELECT 10,
+       'deleted_at_present_si_usado',
+       'deleted_at es opcional; obligatorio solo si la tabla lo declara en su modelo fisico',
+       COUNT(*),
+       CASE WHEN COUNT(*) = 0 THEN 'PASS' ELSE 'FAIL' END
+FROM tablas_de_interes t
+WHERE t.qualified NOT IN (SELECT qualified FROM tablas_exentas)
+  AND t.relname NOT IN ('outbox','inbox')
+  AND EXISTS (
+    SELECT 1 FROM information_schema.columns c
+    WHERE c.table_schema = t.nspname AND c.table_name = t.relname
+      AND c.column_name = 'deleted_at'
+      AND c.is_nullable = 'NO'
+)
 UNION ALL
 SELECT 10,
        'deleted_at_presente',
@@ -374,7 +404,7 @@ ORDER BY orden;
 
 
 -- =============================================================================
--- SECCION 2 — CONSULTAS DE DETALLE
+-- SECCION 2 窶・CONSULTAS DE DETALLE
 -- Ejecutar solo cuando un check devuelve FAIL, para localizar las filas.
 -- =============================================================================
 
@@ -457,7 +487,7 @@ ORDER BY orden;
 
 
 -- =============================================================================
--- SECCION 3 — CHECKS DE DATOS (opcional)
+-- SECCION 3 窶・CHECKS DE DATOS (opcional)
 -- Ejecutar sobre datos de prueba, no sobre una base recien creada.
 -- =============================================================================
 

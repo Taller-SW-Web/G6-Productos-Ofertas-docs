@@ -269,7 +269,7 @@ Por acuerdo intermodular vigente:
 
 - **no** se crea `CHECK (moneda = 'PEN')`. `PEN` es el valor de los fixtures y demostraciones, no una restricción del modelo. El campo de moneda debe admitir la moneda del contrato vigente.
 - **no** se agregan columnas fiscales (`igv`, `base_imponible`, `tasa_igv`, `monto_descuento`) en `pricing`. La semántica tributaria pertenece al flujo comercial/fiscal y aún no está homologada con Ventas y Retail.
-- **no** se agrega `codigo_barras` a `catalog`. Retail lo requiere, pero Productos y Ofertas aún no lo formaliza como dato contractual; si aparece, entra como extensión nullable, nunca como campo obligatorio.
+- **no** se agrega `codigo_barras` a `catalog` como elemento obligatorio. El baseline 0.5.0 ya lo reconoce contractualmente, pero su representación física definitiva en `catalog` **aún queda abierta** y no se impone en este documento. En caso de modelarse, deberá ser una extensión nullable y alineada al modelo lógico/físico aprobado.
 
 ### 8.3 Moneda nula como precio global
 
@@ -638,7 +638,7 @@ Por acuerdo intermodular vigente, ningún schema debe crear:
 | FK o tabla de Retail | `external_ref` es extensión opcional, no contrato |
 | `CHECK (moneda = 'PEN')` | PEN es valor de fixture, no regla del modelo |
 | `igv`, `base_imponible`, `tasa_igv` en `pricing` | semántica tributaria aún no homologada |
-| `codigo_barras` en `catalog` | no formalizado como dato contractual de Productos y Ofertas |
+| `codigo_barras` en `catalog` | ya reconocido contractualmente, pero representación física aún no definida; en caso de incluirlo, debe ser nullable |
 | tablas Pickup (`pickup_order`, `pickup_handoff`, `pickup_store_receipt`) | sin contrato intermodular que las exija |
 | `pedido`, `pago`, `reserva_inventario` en `combos` | Combos no es owner de pedido ni de pago |
 | columnas fiscales o de despacho en cualquier schema | §4 y §8.2 |
