@@ -11,7 +11,7 @@
 - Modelo lógico de origen: incluido en §3 de este archivo para conservar tres entregables.
 - Migración: [migrations/0001_create_catalog.sql](migrations/0001_create_catalog.sql).
 - Validación: [validation.sql](validation.sql).
-- Ubicación solicitada: `db/catalog-savage`; no cambia el nombre del servicio/schema.
+- Ubicación actual: `bd/catalog-svg`; no cambia el nombre del servicio/schema.
 
 ## 2. Fuentes y precedencia
 
@@ -20,6 +20,7 @@ El diseño parte de [Modelo_Conceptual.md §4, §14–18 y alineación HTTP 0.5.
 | Fuente | Aplicación |
 |---|---|
 | [SPEC-003](../../specs/SPEC-003-gestion-productos-crud.md) / [SPEC-004](../../specs/SPEC-004-gestion-variantes-skus.md) | Borrador, perfil físico, preparación, identidad, edición y estados |
+| [SPEC-010 §4, Requisito 10](../../specs/SPEC-010-asociacion-tipo-producto-caracteristica.md) / [MK-003 Q-06](../../mockups/MK-003/component-spec.md) | Corrección condicionada del tipo y discrepancia contractual pendiente |
 | [WF-003 Markdown](../../wireframes/flows/WF-003-gestion-productos-crud.md) / [WF-004 Markdown](../../wireframes/flows/WF-004-gestion-variantes-skus.md) | Datos editables y preparación visible |
 | [HU-003](../../hu/HU-003-gestion-productos-crud.md) / [HU-004](../../hu/HU-004-gestion-variantes-skus.md) | Criterios de aceptación |
 | [FLOW-003](../../flujos/FLOW-003-gestion-productos-crud.md) / [FLOW-004](../../flujos/FLOW-004-gestion-variantes-skus.md) | Secuencias, retry y efectos sobre el padre |
@@ -74,7 +75,7 @@ Cada característica tiene una fila por entidad; valores múltiples permanecen d
 - Borrador admite perfil ausente/parcial; cualquier medida informada debe ser positiva y finita. Activar/reactivar una unidad vendible exige las cuatro medidas. Volumen = largo × ancho × alto, calculado en consulta/aplicación, sin columna ni entrada independiente.
 - Variante activa requiere imagen, identificadores válidos, perfil completo e INVENTORY COMPLETED. El padre puede estar borrador/inactivo.
 - Producto activo requiere imagen, PRICING COMPLETED, maestros/atributos válidos y perfil + INVENTORY COMPLETED si es simple. Con variantes requiere al menos una ACTIVA; todas las activas deben cumplir sus requisitos. Borradores/inactivas no bloquean al padre.
-- Editar actualiza el mismo registro. Identidad base, modelo y tipo no se migran por el UpdateRequest actual; variantes conservan padre, ID, SKU y combinación. El dominio valida la coherencia comercial del nombre/clasificación.
+- Editar actualiza el mismo registro. ID, SKU base y modelo se conservan; variantes conservan padre, ID, SKU y combinación. SPEC-010 permite corregir tipo_producto_id solo en BORRADOR, sin variantes y sin identidad comercial publicada. Q-06 mantiene bloqueada la implementación de esa corrección: ProductoUpdateRequest no expone tipoProductoId y falta la fuente oficial para comprobar las precondiciones. El dominio valida coherencia comercial; SQL no fija inmutabilidad absoluta del tipo ni decide qué acredita publicación.
 - Una edición activa inválida se rechaza entera con rollback, sin desactivación automática. Las comprobaciones locales se difieren hasta el estado final de la transacción.
 - Baja del padre: INACTIVO, hijos conservan estados. Baja de última variante activa: la aplicación inactiva también al padre si estaba ACTIVO, en la misma transacción; SQL rechaza un padre activo sin hijo activo. Un padre borrador/inactivo conserva estado.
 - Reactivar un hijo no reactiva al padre; reactivar al padre no reactiva hijos inactivos. ACTIVO/ACTIVA no sustituye elegibilidad por canal ni disponibilidad de Inventario.
@@ -92,7 +93,7 @@ Todo objeto de negocio vive en `catalog`. Solo FK internas; sin joins operativos
 | Decisión local | Apartamiento | Motivo |
 |---|---|---|
 | Un documento lógico + físico | Organizativo | Tres entregables: una plantilla Markdown y dos SQL |
-| Directorio db/catalog-savage | Ubicación solicitada | No modificar database ni mantener dos historiales activos |
+| Directorio bd/catalog-svg | Ubicación actual de entrega | No modificar database ni mantener dos historiales activos |
 | po_catalog_owner + catalog_app limitado | Ajusta ejemplo genérico de plantilla/convenciones | database vigente separa owner/runtime; no GRANT ALL de runtime |
 | Sin BEGIN/COMMIT; nombre 0001 | Ajusta ejemplo de plantilla | El ejecutor administra transacción y exige cuatro dígitos |
 | Medidas numeric sin escala fija | Se aparta de recomendación §8.4 | OpenAPI no fija escala/rango; evita redondear positivos pequeños a cero o imponer máximos no contractuales. Conserva decimal exacto, kg/cm |
@@ -156,7 +157,7 @@ Origen: PRODUCTO; datos, clasificación y ciclo de vida. Estabilidad: mutable.
 | `ck_products_minimos` | `CHECK (length(nombre) > 0 AND length(descripcion) > 0 AND length(categoria_id) > 0 AND length(tipo_producto_id) > 0 AND length(marca_id) > 0 AND length(sku_base) > 0 AND length(slug) > 0)` |
 | `ck_products_version` | `CHECK (catalog_version >= 0)` |
 
-ID/base/modelo/tipo inmutables en edición; versión incrementa al actualizar la raíz. No borrar físicamente.
+ID/base/modelo inmutables en edición; versión incrementa al actualizar la raíz. tipo_producto_id conserva la corrección condicionada de SPEC-010, con implementación bloqueada por Q-06 (§23), sin guard SQL de inmutabilidad absoluta. No borrar físicamente.
 
 ### 8.2. `catalog.variants`
 
@@ -482,6 +483,7 @@ No se persiste perfil de usuario ni se crea FK a Seguridad.
 | Perfil completo, imagen y confirmación al activar/editar activo | Constraint triggers diferidos, estado final |
 | Dependencia en unidad correcta, intención estable y no repetir COMPLETED | Guard activation_checks + FK/UNIQUE/CHECK |
 | No migrar identidad por edición | Guards products/variants/sku_identity |
+| Corrección del tipo solo en BORRADOR, sin variantes ni identidad publicada | Regla de SPEC-010; habilitación/verificación bloqueadas por Q-06. Sin comprobar publicación mediante una regla SQL inventada |
 | Maestros válidos, atributos obligatorios, coherencia comercial | Aplicación revalida contratos/proyecciones; no CHECK con datos externos |
 | Baja de última ACTIVA e inserción de eventos | Servicio en transacción local; SQL rechaza padre activo sin hijo |
 
@@ -558,7 +560,7 @@ Activar/reactivar: dominio valida maestros, obligatorios, barreras y coherencia;
 
 Baja variante: INACTIVA + catalog.sku.deactivated; si queda sin ACTIVA y el padre era ACTIVO, INACTIVO + catalog.product.deactivated en la misma transacción. Baja padre cambia solo su estado y agrega evento. Catálogo no modifica saldos, reservas ni pedidos.
 
-Edición: campos del UpdateRequest, no cambio automático de slug por renombrar. Comparar catalogVersion, validar estado final; fallo revierte edición/outbox. Otra identidad comercial requiere nueva alta. Motivo de baja, si existe, queda en el payload contractual/outbox, sin inventar tabla de auditoría de dominio.
+Edición: campos del UpdateRequest, no cambio automático de slug por renombrar. Comparar catalogVersion, validar estado final; fallo revierte edición/outbox. Otra identidad comercial requiere nueva alta. La corrección ordinaria del tipo se sujeta a las tres condiciones de SPEC-010 y a la resolución oficial de Q-06: no enviar tipoProductoId aprovechando additionalProperties ni habilitarla solo por BORRADOR o ausencia de variantes. La existencia de sku_identity o la preparación de Pricing/Inventario tampoco define identidad comercial publicada. Con variantes o identidad publicada, el cambio de tipo es migración de modelo fuera del CRUD ordinario. Motivo de baja, si existe, queda en el payload contractual/outbox, sin inventar tabla de auditoría de dominio.
 
 ## 18. Excepciones de timestamps y borrado
 
@@ -673,6 +675,7 @@ La matriz §6 contiene las trece tablas y §3.1 las relaciones. Entidades concep
 |---|---|
 | SPEC-003 §1–2, §5–7 / HU-003 CA-01..15 | products, colecciones, perfil simple, PRICING/INVENTORY, política activa |
 | SPEC-004 §2, §4–6 / HU-004 CA-01..15 | variants, unicidades, atributos, perfil SKU, inventario, estados padre/hijo |
+| SPEC-010 §4, Requisito 10 / MK-003 Q-06 | Tipo sin inmutabilidad absoluta en persistencia; corrección ordinaria condicionada y pendiente de alineación oficial |
 | WF Markdown / FLOW 003–004 | Borrador parcial, retry, edición rechazada, baja sin cambiar identidad |
 | OpenAPI Producto/Variante/PerfilFisicoInput | Identificadores, campos, nullability/enums; input camelCase → snake_case |
 | OpenAPI Atributo / ImagenRef | caracteristica_id, nombre_snapshot, valor_id/valor JSONB, url/principal |
@@ -705,12 +708,13 @@ La matriz §6 contiene las trece tablas y §3.1 las relaciones. Entidades concep
 | P-PHY-03 | Consumidores tras reactivación | No inventar eventos; conservar mecanismos del contrato vigente | No para DDL; coordinar integración |
 | P-PHY-04 | Versión Supabase, deployer/runtime y grants reales | Proyecto objetivo sin validar | Sí para desplegar allí |
 | P-PHY-05 | Múltiples conexiones y locks de maestros | UNIQUE/locks locales presentes; adaptador y servidor deben probar carreras reales | No para DDL; pendiente integración |
+| Q-06 | Alinear corrección del tipo entre SPEC-010 y ProductoUpdateRequest; fuente verificable de BORRADOR, ausencia de variantes y de identidad comercial publicada | SPEC-010 / OpenAPI 0.5.0 / MK-003. No imponer tipo read-only universal ni inventar publicación mediante estado, SKU o preparación | No para DDL; sí para implementar/aprobar la corrección del tipo por CRUD |
 
 El diseño resuelve persistencia de 003/004 sin cerrar decisiones comerciales abiertas. No acredita implementación completa de todos los endpoints de catalog-svc.
 
 ## 24. Migraciones
 
-Entrega única: db/catalog-savage/migrations/0001_create_catalog.sql. El ejecutor espera `<root>/catalog/migrations`: para usarlo preparar copia temporal con ese layout y ejecutar `python database/migrate.py catalog --root RUTA_TEMPORAL`. Copiar SQL byte a byte, conservar nombre; la copia temporal no es otro historial versionado. Al integrar al backend/database estándar, trasladar el historial conservando versiones/checksums, sin reaplicar versiones registradas.
+Entrega única: bd/catalog-svg/migrations/0001_create_catalog.sql. El ejecutor espera `<root>/catalog/migrations`: para usarlo preparar copia temporal con ese layout y ejecutar `python database/migrate.py catalog --root RUTA_TEMPORAL`. Copiar SQL byte a byte, conservar nombre; la copia temporal no es otro historial versionado. Al integrar al backend/database estándar, trasladar el historial conservando versiones/checksums, sin reaplicar versiones registradas.
 
 Infraestructura ejecuta bootstrap y provisiona catalog_app sin membresía owner. La migración no crea roles ni toca otros schemas; falla ante prerequisites ausentes. Sin BEGIN/COMMIT: el ejecutor aplica SQL + registro checksum en una transacción. Para ejecución aislada envolverla en una transacción explícita; no emitir éxito antes de COMMIT.
 
@@ -718,11 +722,13 @@ Reaplicación segura mediante ledger/checksum del ejecutor, no IF NOT EXISTS en 
 
 ## 25. Validación
 
-validation.sql contiene assertions: objetos faltantes o reglas inválidas lanzan excepción. Ejecutar `psql -X -v ON_ERROR_STOP=1 -f db/catalog-savage/validation.sql` con deployer/owner autorizado. Debe poder SET ROLE catalog_app para probar permisos; la membresía de prueba la gestiona infraestructura, no esta migración.
+validation.sql contiene assertions: objetos faltantes o reglas inválidas lanzan excepción. Ejecutar `psql -X -v ON_ERROR_STOP=1 -f bd/catalog-svg/validation.sql` con deployer/owner autorizado. Debe poder SET ROLE catalog_app para probar permisos; la membresía de prueba la gestiona infraestructura, no esta migración.
 
 Comprueba schema/owner; manifest de columnas/tipos/nullability/constraints; PK UUID; FK externas (destino en todo pg_catalog, no solo catalog); índices FK; enums; tipos; RLS/grants; SKU/combinación; borrador parcial; activación con completed; perfil padre prohibido; edición atómica; reemplazo válido; última variante; reactivación independiente; retry; inbox/outbox. Fixtures y mensajes se revierten con ROLLBACK. Nunca limpiar una base compartida para probar desde cero.
 
 La sección estructural comprueba diseño y la funcional ejecuta reglas. Exit code cero de consultas que solo muestran datos no es suficiente: revisar todos los PASS y ausencia de fixtures después.
+
+La regresión de tipo comprueba únicamente que la persistencia no imponga inmutabilidad absoluta y que cambiar esa columna no altere SKU/modelo. No valida los casos funcionalmente elegible/no elegible/no verificable de Q-06, ni acredita ausencia de identidad publicada; esos escenarios permanecen bloqueados hasta la resolución oficial.
 
 ## 26. Despliegue y evidencia
 
@@ -734,6 +740,7 @@ Evidencia local del 2026-10-03: **PostgreSQL 18.3, PGlite 0.5.8, WASM**; base en
 | Manifest de columnas/tipos/nullability y constraints | PASS; 115 columnas y 60 constraints explícitas |
 | Schema/ownership, enums, FK/índices, tipos y permisos | PASS |
 | Escenarios funcionales de validation.sql | PASS |
+| Regresión técnica de tipo_producto_id, sin decidir elegibilidad Q-06 | PASS; no bloqueo absoluto y SKU/modelo conservados |
 | Ejecutar validation.sql dos veces | PASS; tres grupos de assertions en ambas ejecuciones |
 | Consultar todas las tablas tras cada ROLLBACK de fixtures | PASS; cero filas persistidas |
 | Eliminar índice crítico en transacción de prueba | PASS; validación detecta el faltante |
@@ -741,7 +748,7 @@ Evidencia local del 2026-10-03: **PostgreSQL 18.3, PGlite 0.5.8, WASM**; base en
 | Error SQL tras CREATE TABLE en transacción de prueba | PASS; rollback elimina el objeto |
 | Enlaces Markdown y diagrama Mermaid ER | PASS; enlaces locales resueltos y diagrama parseado/renderizado |
 
-SHA-256 de 0001_create_catalog.sql, normalizado UTF-8 sin BOM y LF como migrate.py: `9e4ed4128dd5ef6c0004c4d492c6b5101108ea75c1fb79478bc04f369d78b96e`.
+SHA-256 de 0001_create_catalog.sql, normalizado UTF-8 sin BOM y LF como migrate.py: `d3d6937a1f7fdb41ce96d50bdaa71a14114126757c5a3e674632d85c50804770`.
 
 Esta evidencia prueba SQL y reglas locales en motor embebido. **No se ejecutó migrate.py/psql contra servidor**, no se probaron conexiones simultáneas y no se validó Supabase. El cliente PostgreSQL local disponible carece de archivos del servidor para iniciar una base desechable; se utilizó PGlite exclusivamente para la prueba aislada. La migración se adapta estáticamente al ejecutor vigente, cuya evidencia previa pertenece a database/validation-report.md.
 

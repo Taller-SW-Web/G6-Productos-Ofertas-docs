@@ -100,3 +100,8 @@ La restitución es idempotente.
 ## 6. Fuera de alcance
 
 Cupones no procesa pagos, reembolsos ni decide el estado del pedido.
+## Administración del código y límites
+
+El código se normaliza eliminando espacios en los extremos y convirtiendo letras ASCII a mayúsculas; solo admite letras ASCII, números, guion y guion bajo. La unicidad se compara después de normalizar y excluye el propio registro al editar. El cliente normaliza antes de enviar el request y el servicio mantiene la misma regla.
+
+Los límites opcionales vacíos se representan como `null` (Sin límite). Si se informan, son enteros positivos. El monto mínimo opcional vacío es `null`; si se informa, debe ser mayor que cero. Un guardado inválido conserva el formulario y no comunica éxito.

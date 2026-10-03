@@ -114,6 +114,15 @@ BEGIN
     INSERT INTO catalog.products(id,nombre,descripcion,categoria_id,tipo_producto_id,marca_id,sku_base,slug,tiene_variantes)
         VALUES(simple,'Simple','Descripcion','cat-external','type-external','brand-external',base,base,false),
         (parent,'Padre','Descripcion','cat-external','type-external','brand-external','parent-'||token,'parent-'||token,true);
+    -- Regresion de persistencia: el guard no fija tipo_producto_id como inmutable.
+    -- Este UPDATE SQL de fixture no acredita elegibilidad funcional ni habilita
+    -- PATCH tipoProductoId: Q-06 y la evidencia de identidad publicada siguen abiertas.
+    UPDATE catalog.products SET tipo_producto_id='type-correction-fixture' WHERE id=simple;
+    IF NOT EXISTS (SELECT 1 FROM catalog.products WHERE id=simple
+        AND tipo_producto_id='type-correction-fixture' AND sku_base=base AND NOT tiene_variantes) THEN
+        RAISE EXCEPTION 'FAIL persistencia del tipo conserva bloqueo absoluto o altera identidad';
+    END IF;
+    UPDATE catalog.products SET tipo_producto_id='type-external' WHERE id=simple;
     SELECT id INTO sid FROM catalog.sku_identity WHERE product_id = simple;
     INSERT INTO catalog.sku_physical_profiles(sku_identity_id,peso_kg) VALUES(sid,0.001);
     SET CONSTRAINTS ALL IMMEDIATE; -- borrador simple con perfil parcial permitido
