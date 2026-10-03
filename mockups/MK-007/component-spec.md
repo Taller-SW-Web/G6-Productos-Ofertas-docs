@@ -211,7 +211,7 @@ Datos exclusivamente ficticios: Completa tu carrera, venta cruzada de Running Es
 | validacion / guardar-error | Envío inválido o rechazo confirmado | Campo/alert, entradas preservadas |
 | rechazo | Cambio estado rechazado | Estado previo conservado |
 
-Casos específicos: upsell-incompleto: criterio vacío; origen-categoria; recomendados-vacios; guardar-error. Precio/disponibilidad product-level se muestran No disponible hasta alinear D-REC-01/02; no calcular desde SKUs.
+Casos específicos: upsell-incompleto: criterio vacío; origen-categoria con tipo/ID explícitos; fechas-ausentes/invertidas; estado-inicial; orden-cero/negativo/fraccionario; justificacion-501; origen-como-recomendado; duplicado; producto-inactivo; recomendados-vacios; guardar-error conserva los datos. Precio/disponibilidad product-level se muestran No disponible hasta alinear D-REC-01/02; no calcular desde SKUs.
 
 ## 14. Preguntas y supuestos
 

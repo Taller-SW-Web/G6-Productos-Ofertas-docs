@@ -26,7 +26,7 @@ Gestor comercial autorizado configura y consulta gestión de ofertas y promocion
 
 ## 4. Alcance
 
-Incluye pantallas P0, lectura/creación/edición/estado, fixtures deterministas y mensajes contractuales. No integra backend, pagos, pedidos ni pantallas de prueba comercial. HU CA-02–04 configuración completa, alcance no vacío y CRUD; CA-09 pedidos confirmados no cambian; CA-10 combinaciones solo autorizadas; CA-11 producto/SKU sin duplicados; CA-13 modalidad cambia únicamente si inactiva, nunca activada y sin cupones/usos. PromocionAdmin no publica todos esos antecedentes: edición bloquea modalidad conservadoramente y explica crear otra promoción; no deducir elegibilidad de INACTIVO. CA-14/16 no cambia precio maestro ni simula compra.
+Incluye pantallas P0, lectura/creación/edición/estado, fixtures deterministas y mensajes contractuales. No integra backend, pagos, pedidos ni pantallas de prueba comercial. HU CA-02–04 configuración completa, alcance no vacío y CRUD; CA-09 pedidos confirmados no cambian; CA-10 combinaciones solo autorizadas; CA-11 producto/SKU sin duplicados; CA-13 modalidad cambia únicamente si inactiva, nunca activada y sin cupones/usos. PromocionAdmin publica puedeCambiarModalidad de solo lectura, calculado según CA-13: permitir el caso elegible y bloquear los antecedentes impeditivos. Si el campo falta en un consumidor anterior, tratarlo como desconocido y explicar el bloqueo; no deducir elegibilidad de INACTIVO. CA-14/16 no cambia precio maestro ni simula compra.
 
 ## 5. Inventario de pantallas
 
@@ -78,7 +78,7 @@ Primaria: tarea, entidad y estado; secundaria: configuración/alcance/vigencia; 
 
 ### MK-006-C01 — Configuración comercial
 
-Propósito: representar campos de MK-006 sin reglas nuevas. Pantallas crear/editar/detalle. Propiedades y restricciones: Nombre; modalidad Automática/Cupón; tipo Porcentaje/Monto fijo; valor (0,100] o >0; vigencia inicio < fin; estado; prioridad entera >=1; alcance de productos completos o SKUs activos; canales Marketplace/Chatbot/Retail/Ventas; combinación con oferta de Pricing/promoción automática/cupón, deshabilitada por defecto.
+Propósito: representar campos de MK-006 sin reglas nuevas. Pantallas crear/editar/detalle. Propiedades y restricciones: Nombre; modalidad Automática/Cupón; tipo Porcentaje/Monto fijo; valor (0,100] o >0; vigencia inicio < fin; estado; prioridad entera >=1; alcance separado productIds/skus de productos completos o SKU activos, sin expandir el producto completo a sus SKU actuales; al menos un canal explícito Marketplace/Chatbot/Retail/Ventas, sin default implícito de todos; combinación con oferta de Pricing/promoción automática/cupón, deshabilitada por defecto.
 
 Default refleja fixture; loading anuncia espera; error inline conserva valores; permiso denegado bloquea mutación sin inventar scopes. Guardar valida y enfoca primer error. Cancelar con cambios abre aviso. Cada campo tiene label visible; criterio/error asociado y foco visible. Operaciones: GET /promociones/administracion; POST /promociones; GET/PATCH /promociones/{promocionId}; POST activar/desactivar. Filtros: estado, modalidad, pagina, tamanio. Selector consulta Catálogo; los fixtures no acreditan validación backend.
 
@@ -106,7 +106,7 @@ Tabla de entidades/selección con datos deterministas, estado y acciones explíc
 
 **Propósito:** crear promoción respetando las fuentes y manteniendo contexto.
 
-**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Nombre; modalidad Automática/Cupón; tipo Porcentaje/Monto fijo; valor (0,100] o >0; vigencia inicio < fin; estado; prioridad entera >=1; alcance de productos completos o SKUs activos; canales Marketplace/Chatbot/Retail/Ventas; combinación con oferta de Pricing/promoción automática/cupón, deshabilitada por defecto.
+**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Nombre; modalidad Automática/Cupón; tipo Porcentaje/Monto fijo; valor (0,100] o >0; vigencia inicio < fin; estado; prioridad entera >=1; alcance separado productIds/skus de productos completos o SKU activos, sin expandir el producto completo a sus SKU actuales; al menos un canal explícito Marketplace/Chatbot/Retail/Ventas, sin default implícito de todos; combinación con oferta de Pricing/promoción automática/cupón, deshabilitada por defecto.
 
 **Componentes:** shell común, DS-C28 breadcrumbs, DS-C01 botones, DS-C19 card; tabla DS-C17 y filtros DS-C13 en consulta; DS-C03–09/11 para campos; DS-C21 para confirmación; DS-C22/24/25 para feedback.
 
@@ -120,7 +120,7 @@ Tabla de entidades/selección con datos deterministas, estado y acciones explíc
 
 **Propósito:** editar promoción respetando las fuentes y manteniendo contexto.
 
-**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Nombre; modalidad Automática/Cupón; tipo Porcentaje/Monto fijo; valor (0,100] o >0; vigencia inicio < fin; estado; prioridad entera >=1; alcance de productos completos o SKUs activos; canales Marketplace/Chatbot/Retail/Ventas; combinación con oferta de Pricing/promoción automática/cupón, deshabilitada por defecto. Ante fallo se conservan valores; salir con cambios requiere confirmar descarte.
+**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Nombre; modalidad Automática/Cupón; tipo Porcentaje/Monto fijo; valor (0,100] o >0; vigencia inicio < fin; estado; prioridad entera >=1; alcance separado productIds/skus de productos completos o SKU activos, sin expandir el producto completo a sus SKU actuales; al menos un canal explícito Marketplace/Chatbot/Retail/Ventas, sin default implícito de todos; combinación con oferta de Pricing/promoción automática/cupón, deshabilitada por defecto. Ante fallo se conservan valores; salir con cambios requiere confirmar descarte.
 
 **Componentes:** shell común, DS-C28 breadcrumbs, DS-C01 botones, DS-C19 card; tabla DS-C17 y filtros DS-C13 en consulta; DS-C03–09/11 para campos; DS-C21 para confirmación; DS-C22/24/25 para feedback.
 
@@ -148,7 +148,7 @@ Tabla de entidades/selección con datos deterministas, estado y acciones explíc
 
 **Propósito:** detalle de promoción respetando las fuentes y manteniendo contexto.
 
-**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Nombre; modalidad Automática/Cupón; tipo Porcentaje/Monto fijo; valor (0,100] o >0; vigencia inicio < fin; estado; prioridad entera >=1; alcance de productos completos o SKUs activos; canales Marketplace/Chatbot/Retail/Ventas; combinación con oferta de Pricing/promoción automática/cupón, deshabilitada por defecto. Valores de configuración en lectura, estado en texto y acciones Editar / Cambiar estado / Volver.
+**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Nombre; modalidad Automática/Cupón; tipo Porcentaje/Monto fijo; valor (0,100] o >0; vigencia inicio < fin; estado; prioridad entera >=1; alcance separado productIds/skus de productos completos o SKU activos, sin expandir el producto completo a sus SKU actuales; al menos un canal explícito Marketplace/Chatbot/Retail/Ventas, sin default implícito de todos; combinación con oferta de Pricing/promoción automática/cupón, deshabilitada por defecto. Valores de configuración en lectura, estado en texto y acciones Editar / Cambiar estado / Volver.
 
 **Componentes:** shell común, DS-C28 breadcrumbs, DS-C01 botones, DS-C19 card; tabla DS-C17 y filtros DS-C13 en consulta; DS-C03–09/11 para campos; DS-C21 para confirmación; DS-C22/24/25 para feedback.
 
@@ -196,11 +196,11 @@ Datos exclusivamente ficticios: Carrera de octubre automática, porcentaje 15, R
 | validacion / guardar-error | Envío inválido o rechazo confirmado | Campo/alert, entradas preservadas |
 | rechazo | Cambio estado rechazado | Estado previo conservado |
 
-Casos específicos: modalidad-bloqueada: edición sin antecedentes suficientes; porcentaje-invalido: 101; alcance-vacio: []; guardar-error: entradas conservadas.
+Casos específicos: modalidad-permitida: inactiva nunca activada, sin cupones ni usos; modalidad-bloqueada: activa, activada alguna vez, con cupones/usos o capacidad desconocida; porcentaje-invalido: 101; canales-vacios: []; alcance-vacio: productIds=[] y skus=[]; producto-con-sku-nuevo: sigue incluido por productId; guardar-error: entradas conservadas. Cambiar campos y corregir errores conserva Guardar/Cancelar funcionales.
 
 ## 14. Preguntas y supuestos
 
-No hay pregunta funcional bloqueante para las pantallas administrativas descritas. Las rutas internas de administración son provisionales según OpenAPI, por lo que se construye mockup, no integración productiva.
+Las reglas administrativas se alinearon en la rama oficial local cueva (b05dd63), aún sin publicar: canales explícitos y capacidad calculada de modalidad. No hay pregunta funcional bloqueante para representarlas con fixtures; la integración real debe proporcionar y revalidar esa capacidad. Las rutas internas de administración son provisionales según OpenAPI, por lo que se construye mockup, no integración productiva.
 
 Supuestos: datos de fixtures no acreditan llamadas API; usuario autorizado salvo estado explícito 401/403; no se crean nuevos permisos. Supuestos se revisan al integrar backend. Visto bueno de Leonardo y fidelidad Figma permanecen pendientes.
 

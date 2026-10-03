@@ -78,7 +78,7 @@ Primaria: tarea, entidad y estado; secundaria: configuración/alcance/vigencia; 
 
 ### MK-005-C01 — Configuración comercial
 
-Propósito: representar campos de MK-005 sin reglas nuevas. Pantallas crear/editar/detalle. Propiedades y restricciones: Código normalizado único (letras, números, guion y guion bajo); promoción asociada; estado; monto mínimo >0 opcional; límite global y por cliente enteros >=1 opcionales; política de restitución. Vacío significa Sin límite / Sin monto mínimo, nunca cero. La vigencia se consulta en la promoción asociada, no se crea una vigencia propia del cupón.
+Propósito: representar campos de MK-005 sin reglas nuevas. Pantallas crear/editar/detalle. Propiedades y restricciones: Código normalizado único por trim y mayúsculas ASCII (letras ASCII, números, guion y guion bajo; al editar se excluye el propio registro); promoción asociada; estado; monto mínimo >0 opcional; límite global y por cliente enteros >=1 opcionales; política de restitución. Vacío significa Sin límite / Sin monto mínimo, nunca cero. La vigencia se consulta en la promoción asociada, no se crea una vigencia propia del cupón.
 
 Default refleja fixture; loading anuncia espera; error inline conserva valores; permiso denegado bloquea mutación sin inventar scopes. Guardar valida y enfoca primer error. Cancelar con cambios abre aviso. Cada campo tiene label visible; criterio/error asociado y foco visible. Operaciones: GET/POST /cupones; GET/PATCH /cupones/{cuponId}; POST /cupones/{cuponId}/activar y /desactivar. Filtro administrativo: estado, pagina, tamanio.
 
@@ -106,7 +106,7 @@ Tabla de entidades/selección con datos deterministas, estado y acciones explíc
 
 **Propósito:** crear cupón respetando las fuentes y manteniendo contexto.
 
-**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Código normalizado único (letras, números, guion y guion bajo); promoción asociada; estado; monto mínimo >0 opcional; límite global y por cliente enteros >=1 opcionales; política de restitución. Vacío significa Sin límite / Sin monto mínimo, nunca cero. La vigencia se consulta en la promoción asociada, no se crea una vigencia propia del cupón.
+**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Código normalizado único por trim y mayúsculas ASCII (letras ASCII, números, guion y guion bajo; al editar se excluye el propio registro); promoción asociada; estado; monto mínimo >0 opcional; límite global y por cliente enteros >=1 opcionales; política de restitución. Vacío significa Sin límite / Sin monto mínimo, nunca cero. La vigencia se consulta en la promoción asociada, no se crea una vigencia propia del cupón.
 
 **Componentes:** shell común, DS-C28 breadcrumbs, DS-C01 botones, DS-C19 card; tabla DS-C17 y filtros DS-C13 en consulta; DS-C03–09/11 para campos; DS-C21 para confirmación; DS-C22/24/25 para feedback.
 
@@ -120,7 +120,7 @@ Tabla de entidades/selección con datos deterministas, estado y acciones explíc
 
 **Propósito:** editar cupón respetando las fuentes y manteniendo contexto.
 
-**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Código normalizado único (letras, números, guion y guion bajo); promoción asociada; estado; monto mínimo >0 opcional; límite global y por cliente enteros >=1 opcionales; política de restitución. Vacío significa Sin límite / Sin monto mínimo, nunca cero. La vigencia se consulta en la promoción asociada, no se crea una vigencia propia del cupón. Ante fallo se conservan valores; salir con cambios requiere confirmar descarte.
+**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Código normalizado único por trim y mayúsculas ASCII (letras ASCII, números, guion y guion bajo; al editar se excluye el propio registro); promoción asociada; estado; monto mínimo >0 opcional; límite global y por cliente enteros >=1 opcionales; política de restitución. Vacío significa Sin límite / Sin monto mínimo, nunca cero. La vigencia se consulta en la promoción asociada, no se crea una vigencia propia del cupón. Ante fallo se conservan valores; salir con cambios requiere confirmar descarte.
 
 **Componentes:** shell común, DS-C28 breadcrumbs, DS-C01 botones, DS-C19 card; tabla DS-C17 y filtros DS-C13 en consulta; DS-C03–09/11 para campos; DS-C21 para confirmación; DS-C22/24/25 para feedback.
 
@@ -134,7 +134,7 @@ Tabla de entidades/selección con datos deterministas, estado y acciones explíc
 
 **Propósito:** detalle de cupón respetando las fuentes y manteniendo contexto.
 
-**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Código normalizado único (letras, números, guion y guion bajo); promoción asociada; estado; monto mínimo >0 opcional; límite global y por cliente enteros >=1 opcionales; política de restitución. Vacío significa Sin límite / Sin monto mínimo, nunca cero. La vigencia se consulta en la promoción asociada, no se crea una vigencia propia del cupón. Valores de configuración en lectura, estado en texto y acciones Editar / Cambiar estado / Volver.
+**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Código normalizado único por trim y mayúsculas ASCII (letras ASCII, números, guion y guion bajo; al editar se excluye el propio registro); promoción asociada; estado; monto mínimo >0 opcional; límite global y por cliente enteros >=1 opcionales; política de restitución. Vacío significa Sin límite / Sin monto mínimo, nunca cero. La vigencia se consulta en la promoción asociada, no se crea una vigencia propia del cupón. Valores de configuración en lectura, estado en texto y acciones Editar / Cambiar estado / Volver.
 
 **Componentes:** shell común, DS-C28 breadcrumbs, DS-C01 botones, DS-C19 card; tabla DS-C17 y filtros DS-C13 en consulta; DS-C03–09/11 para campos; DS-C21 para confirmación; DS-C22/24/25 para feedback.
 
@@ -196,7 +196,7 @@ Datos exclusivamente ficticios: BIENVENIDA15, promoción Bienvenida (modalidad C
 | validacion / guardar-error | Envío inválido o rechazo confirmado | Campo/alert, entradas preservadas |
 | rechazo | Cambio estado rechazado | Estado previo conservado |
 
-Casos específicos: duplicado: código BIENVENIDA15; agotado: límite 100/uso 100; sin-limite: null; guardar-error: fallo confirmado sin efecto, entradas conservadas.
+Casos específicos: detalle-registro-seleccionado: código/límites/política propios; duplicado: código bienvenida15 con espacios extremos equivale a BIENVENIDA15; edición-propia: conserva código sin falso duplicado; código-vacio; monto-negativo; limite-cero/fraccionario; agotado: límite 100/uso 100; sin-limite: null; guardar-error: fallo confirmado sin efecto, entradas conservadas.
 
 ## 14. Preguntas y supuestos
 

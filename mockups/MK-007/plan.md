@@ -52,3 +52,7 @@ Fuentes provisionales (API Admin): no integrar backend; D-REC abiertos: no infer
 - D PC: 1440, sin overflow, foco/teclado.
 - E Revisión: Leonardo, hallazgos cerrados, APROBADO PARA FIGMA formal.
 - F Figma/cierre: fidelidad, todas P0 y enlace; entonces reporte APROBADO.
+
+## Regresiones funcionales que deben conservarse
+
+Las correcciones locales de las fuentes oficiales (cueva b05dd63) y su [validación de wireframes](../../wireframes/prototipos/tests/VALIDACION-005-007.md) se usan como referencia funcional, no como aprobación del mockup. Llevar a la implementación los casos de component-spec §13 y repetirlos en sus rutas directas, con React/TypeScript/Mantine y el Design System vigente. El resultado del HTML previo no marca como completada la autovalidación del MK.

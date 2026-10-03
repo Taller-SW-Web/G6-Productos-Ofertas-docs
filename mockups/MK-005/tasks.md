@@ -7,6 +7,11 @@ Axel Cueva; [plan](plan.md); estado En progreso.
 P0 obligatorio; TODO/DOING/BLOCKED/REVIEW/DONE. DONE solo con evidencia; bloqueos en §9. Cada tarea relevante indica entrada, acción, salida y verificación. Contenido de pantalla vive en component-spec, no se duplica aquí.
 
 ## 3. Preparación, 4. Implementación, 5. Normalización y 6. Autovalidación
+- [x] **MK-005-T05 — P0 — Alinear documentación con correcciones funcionales locales** `[DONE]`
+  - **Entrada:** Fuentes corregidas en cueva b05dd63 e informe de validación de wireframes.
+  - **Acción:** Actualizar restricciones y casos específicos de component-spec y plan.
+  - **Salida:** Borradores alineados con las fuentes locales; no hay pantallas nuevas ni aprobación UX.
+  - **Verificación:** Casos de §13 y [evidencia funcional previa](../../wireframes/prototipos/tests/VALIDACION-005-007.md). La implementación/autovalidación del MK conserva sus tareas pendientes.
 - [ ] **MK-005-T01 — P0 — Verificar fuentes y DoR** `[REVIEW]`
   - **Entrada:** component-spec §2/14.
   - **Acción:** Contrastar gates y reglas sin contradicción funcional.
@@ -54,7 +59,7 @@ P0 obligatorio; TODO/DOING/BLOCKED/REVIEW/DONE. DONE solo con evidencia; bloqueo
   - **Verificación:** Build y medidas.
 - [ ] **MK-005-T60 — P0 — Autovalidar** `[TODO]`
   - **Entrada:** SPEC/HU/WF/Flow y UXG.
-  - **Acción:** Ejecutar recorridos, casos negativos y accesibilidad.
+  - **Acción:** Ejecutar recorridos, casos negativos y accesibilidad; repetir las regresiones de component-spec §13 en el propio MK, sin dar por suficiente la prueba del wireframe.
   - **Salida:** Evidencias/reportes.
   - **Verificación:** Checks PASS y hallazgos cerrados.
 
