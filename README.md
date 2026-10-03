@@ -103,6 +103,7 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 | Matriz de pruebas de contrato | [`api/pruebas-contrato.md`](api/pruebas-contrato.md) | Casos estáticos, provider, consumer/provider, seguridad e integración |
 | Acuerdos de integración | [`integraciones/`](integraciones/) | Acuerdos homologados con Marketplace, Retail, Chatbot y Ventas; las integraciones restantes se documentan en sus artefactos canónicos |
 | Equipo y responsabilidades | [`EQUIPO_Y_RESPONSABILIDADES.md`](EQUIPO_Y_RESPONSABILIDADES.md) | Roles transversales, ownership funcional y mecanismos de revisión del equipo |
+| Persistencia por bounded context | [`bd/`](bd/) | Modelo físico, migraciones y scripts de validación SQL por servicio |
 
 ---
 
@@ -360,8 +361,8 @@ Los roles transversales, los límites de responsabilidad y los mecanismos de rev
 | AsyncAPI | Disponible |
 | Catálogo de errores | Disponible |
 | Catálogo de eventos | Disponible |
-| Modelo lógico/físico de BD | En evolución para Hito 2 |
-| Implementación de BD / Supabase | En evolución para Hito 2 |
+| Modelo lógico/físico de BD | Implementado para `inventory-svc` (en evolución para el resto) |
+| Implementación de BD / Supabase | Validación local OK para `inventory-svc`; despliegue Supabase pendiente (Hito 2) |
 | Matriz de trazabilidad integral | Pendiente de consolidación |
 
 ---
@@ -410,10 +411,10 @@ Este repositorio busca mantener:
 Los siguientes artefactos ampliarán la trazabilidad hacia el Hito 2:
 
 - Implementación incremental y validación de los 16 mockups (`mockups/MK-001` a `MK-016`).
-- Modelo lógico de base de datos.
-- Modelo físico de base de datos.
-- Scripts SQL y migraciones.
-- Evidencia de implementación en Supabase.
+- Modelo lógico de base de datos (resto de bounded contexts; `inventory-svc` ya cuenta con [`bd/inventory-svc/physical-model.md`](bd/inventory-svc/physical-model.md)).
+- Modelo físico de base de datos (`inventory-svc` implementado en `migration.sql`).
+- Scripts SQL y migraciones (`inventory-svc` validado localmente con `validation.sql`).
+- Evidencia de implementación en Supabase (despliegue del schema `inventory`, coordinado con Axel Cueva).
 - Matriz integral de trazabilidad.
 - Evidencia de pruebas y validación funcional.
 
