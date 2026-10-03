@@ -21,9 +21,11 @@
 | CA-05 | Tras crear el borrador se solicita `pricing.product.initialization.requested`. |
 | CA-06 | Producto simple solicita `inventory.sku.initialization.requested`. |
 | CA-07 | Un retry no duplica precio ni identidad SKU. |
-| CA-08 | Activar exige confirmación de Pricing e Inventario. |
-| CA-09 | Rechazo de una dependencia mantiene `BORRADOR`. |
+| CA-08 | Activar/reactivar exige Pricing preparado e Inventario confirmado para el SKU simple o todas las variantes activas. El padre con variantes necesita al menos una variante activa y preparada; los hijos en borrador o inactivos no bloquean ni se ofrecen comercialmente. |
+| CA-09 | Durante el alta, el rechazo de una dependencia requerida mantiene `BORRADOR`; una variante no activa rechazada no bloquea por sí sola al padre ni lo inactiva. |
 | CA-10 | Variantes sin override heredan el precio del producto. |
-| CA-11 | El perfil físico usa kg/cm y valores >0. |
+| CA-11 | El perfil físico simple usa kg/cm y valores >0. Puede estar incompleto en borrador; activar/reactivar exige peso, largo, ancho y alto completos. El padre con variantes no tiene perfil propio; el volumen es derivado, no una entrada independiente. |
 | CA-12 | Despacho obtiene físico sin stock/precio/pedido. |
 | CA-13 | Desactivación es lógica y trazable. |
+| CA-14 | Editar conserva el producto, su naturaleza comercial y la coherencia con sus variantes, sin recodificar SKU base, cambiar el modelo de venta ni crear variantes. Cambiar la identidad comercial requiere otro producto. Si una edición de un producto activo incumple condiciones de activación, se rechaza conservando datos y estado anteriores. |
+| CA-15 | Desactivar al padre bloquea comercialmente a sus variantes conservando sus estados. Reactivar al padre revalida sus condiciones y no reactiva hijos inactivos; reactivar una variante no reactiva al padre. |
