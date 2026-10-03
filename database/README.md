@@ -27,7 +27,7 @@ El administrador obtiene la conexión desde **Connect** del proyecto Supabase. P
 
 Instalar Python 3 y cliente `psql` PostgreSQL 17; comprobar `python --version`, `psql --version`. Docker con `postgres:17` permite reproducir las verificaciones en un entorno limpio. Supabase puede tener otra versión: comprobar `SHOW server_version` y repetir validaciones con esa versión antes del despliegue.
 
-El administrador ejecuta `bootstrap.sql` una vez con un usuario autorizado para crear roles/schemas. Crea ocho roles `po_<schema>_owner` NOLOGIN y ocho schemas sin acceso PUBLIC. Asigna a cada deployer un login independiente, miembro únicamente de su owner; configura su contraseña fuera de Git. Para un login recién creado y sin membresías previas:
+El administrador ejecuta `bootstrap.sql` una vez con un usuario autorizado para crear roles/schemas. Crea ocho roles `po_<schema>_owner` NOLOGIN, ocho schemas sin acceso PUBLIC y el rol runtime `taxonomy_app` sin password versionado. Asigna a cada deployer un login independiente, miembro únicamente de su owner; configura su contraseña fuera de Git. Para un login recién creado y sin membresías previas:
 
 ```sql
 GRANT po_promotions_owner TO deploy_promotions;
@@ -56,10 +56,10 @@ Alternativa: `PGPASSFILE` apuntando a un archivo local protegido fuera del repos
 ## 4. Desplegar desde cero y actualizar
 
 1. Confirmar destino con `psql -X -c "SELECT current_database(), current_user, version();"`. Verificar permisos del deployer y schema propio. Leer el diff y `physical-model.md`, obtener revisión del SQL.
-2. Ejecutar desde la raíz `python database/migrate.py promotions`. Sustituir solo el schema propio. Si `psql` no está en PATH, agregar `--psql RUTA_AL_EJECUTABLE`.
+2. Ejecutar desde la raíz `python database/migrate.py <schema>`. Para taxonomy: `python database/migrate.py taxonomy`. Sustituir solo el schema propio. Si `psql` no está en PATH, agregar `--psql RUTA_AL_EJECUTABLE`.
 3. El ejecutor valida orden, toma un advisory lock por schema, hace SET ROLE del owner y registra versión, SHA-256 y fecha en `<schema>.schema_migrations`. Aplica cada archivo y su registro en la misma transacción. En reejecución comprueba checksum y omite versiones ya aplicadas; un historial alterado/faltante o un error SQL detiene el proceso. No se avanza a la siguiente versión ni se arranca el nuevo servicio si falla.
-4. Ejecutar `psql -X -v ON_ERROR_STOP=1 -f database/promotions/validation.sql`. Las comprobaciones deben usar ROLLBACK para fixtures; no introducir seeds comerciales permanentes. Revisar tanto constraints/índices como reglas y ausencia de FK/grants externos.
-5. Consultar `SELECT version, checksum, applied_at FROM promotions.schema_migrations ORDER BY version;`; comparar con el manifiesto del ejecutor y commit desplegado. Registrar versión del servidor, commit, schema, checksums, resultado y fecha en evidencia sin secretos. Un exit code 0 confirma la ejecución; un archivo SQL que solo muestra datos sin assertions no constituye validación.
+4. Ejecutar `psql -X -v ON_ERROR_STOP=1 -f database/<schema>/validation.sql`. Para taxonomy: `psql -X -v ON_ERROR_STOP=1 -f database/taxonomy/validation.sql`. Las comprobaciones deben usar ROLLBACK para fixtures; no introducir seeds comerciales permanentes. Revisar tanto constraints/índices como reglas y ausencia de FK/grants externos.
+5. Consultar `SELECT version, checksum, applied_at FROM <schema>.schema_migrations ORDER BY version;`; para taxonomy: `SELECT version, checksum, applied_at FROM taxonomy.schema_migrations ORDER BY version;`. Comparar con el manifiesto del ejecutor y commit desplegado. Registrar versión del servidor, commit, schema, checksums, resultado y fecha en evidencia sin secretos. Un exit code 0 confirma la ejecución; un archivo SQL que solo muestra datos sin assertions no constituye validación.
 6. Arrancar la versión compatible del servicio con su login runtime y hacer smoke test. El owner de cada servicio controla su despliegue.
 
 Los ocho contextos son independientes y pueden desplegarse en cualquier orden después del bootstrap. Una migración no espera tablas de otro schema. Integración de eventos/proyecciones se coordina por contrato y versión, no por FK. Dentro de cada schema el orden es estricto. Ante fallo de validación, detener el arranque; corregir con una migración nueva o restaurar el entorno según el respaldo acordado. No hacer rollback destructivo improvisado sobre datos compartidos.
@@ -68,7 +68,7 @@ Los ocho contextos son independientes y pueden desplegarse en cualquier orden de
 
 Crear una base local desechable sin datos comerciales. Ejecutar bootstrap, todas las migraciones propias, validation.sql, repetir el ejecutor (sin cambios) y comparar ledger/objetos con el primer despliegue. Probar también una migración inválida: sus tablas y ledger no deben persistir. No limpiar el Supabase compartido para reproducir desde cero; utilizar otro proyecto/base autorizado. [Evidencia local del mecanismo](validation-report.md).
 
-Para prueba local con un contenedor PostgreSQL ya inicializado se admite `python database/migrate.py promotions --container NOMBRE`; usa exclusivamente `docker exec -i NOMBRE psql` y el usuario administrador local del contenedor para SET ROLE. Este modo es de validación local, no una receta para credenciales de producción. Copiar fixtures de prueba a una carpeta aislada y pasar `--root RUTA`; el árbol versionado solo incluye migraciones reales de cada owner.
+Para prueba local con un contenedor PostgreSQL ya inicializado se admite `python database/migrate.py <schema> --container NOMBRE`; por ejemplo `python database/migrate.py taxonomy --container NOMBRE`. Usa exclusivamente `docker exec -i NOMBRE psql` y el usuario administrador local del contenedor para SET ROLE. Este modo es de validación local, no una receta para credenciales de producción. Copiar fixtures de prueba a una carpeta aislada y pasar `--root RUTA`; el árbol versionado solo incluye migraciones reales de cada owner.
 
 ## 6. Criterio de entrega de cada owner
 
