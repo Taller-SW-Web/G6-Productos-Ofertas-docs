@@ -6,14 +6,14 @@ Estado: procedimiento verificable localmente; no se ha ejecutado contra un proye
 
 | Schema | Servicio / responsable |
 |---|---|
-| taxonomy | taxonomy-svc / dueño de clasificación |
-| catalog | catalog-svc / dueño de catálogo |
-| pricing | pricing-svc / dueño de precios |
-| price_audit | price-audit-svc / dueño de auditoría |
+| taxonomy | taxonomy-svc / Leonardo Lopez |
+| catalog | catalog-svc / Gabriel Poma |
+| pricing | pricing-svc / Leonardo Vera |
+| price_audit | price-audit-svc / Leonardo Vera |
 | promotions | promotions-svc / Axel Cueva |
-| combos | combos-svc / dueño de combos |
-| inventory | inventory-svc / dueño de inventario |
-| bulk | bulk-svc / dueño de carga masiva |
+| combos | combos-svc / Marco Castilla |
+| inventory | inventory-svc / Miguel Taco |
+| bulk | bulk-svc / Marco Castilla |
 
 `read_model` pertenece al gateway y queda fuera de estos ocho contextos. No crear tablas de otro servicio, FK entre schemas, joins operativos entre contextos ni grants cruzados. Los IDs externos son referencias; cada servicio mantiene sus proyecciones y outbox/inbox cuando corresponda.
 

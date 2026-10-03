@@ -13,6 +13,7 @@ Fecha: 2026-10-02. Resultado local: PASS. Motor real: PostgreSQL 17.11 (Debian),
 | Dos ejecutores simultáneos sobre nueva versión | PASS; advisory lock serializa, un índice y una versión |
 | Eliminar archivo de una versión aplicada del checkout de prueba | PASS; historial ausente rechazado |
 | Eliminar versión inferior del ledger conservando otra superior | PASS; hueco rechazado |
+| Aplicar UTF-8/LF y repetir con BOM/CRLF | PASS; checksum idéntico y versión omitida sin reaplicar |
 
 Solo se usaron tablas `deployment_fixture` en una base local desechable; no constituyen modelo físico de ningún contexto. El modelo de promotions y su despliegue pertenecen al #53, aplazado por Axel.
 

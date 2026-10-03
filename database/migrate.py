@@ -42,7 +42,7 @@ def main():
     for name, checksum, source in migrations:
         n, h = literal(name), literal(checksum)
         sql += [f"DO $guard$ BEGIN IF EXISTS (SELECT 1 FROM {ledger} WHERE version={n} AND checksum<>{h}) THEN RAISE EXCEPTION 'Checksum alterado: {name}'; END IF; END $guard$;",
-                f'SELECT NOT EXISTS (SELECT 1 FROM {ledger} WHERE version={n}) AS apply_migration \gset',
+                f'SELECT NOT EXISTS (SELECT 1 FROM {ledger} WHERE version={n}) AS apply_migration \\gset',
                 r'\if :apply_migration', 'BEGIN;', source,
                 f'INSERT INTO {ledger}(version, checksum) VALUES ({n}, {h});', 'COMMIT;', r'\endif']
     sql += [f'SELECT version, checksum FROM {ledger} ORDER BY version;',
