@@ -95,7 +95,7 @@ Representa una unidad de clasificación taxonómica y navegación del catálogo.
 - `nivel`: Profundidad jerárquica (Entero: 1 para raíz, 2 para subcategoría; en MVP `MAX_CATEGORY_DEPTH=2`).
 - `orden`: Posición ordinal para ordenamiento visual en menús (Entero no negativo, por defecto 0).
 - `imagen_url`: Enlace al recurso gráfico representativo (Texto opcional formato URI).
-- `estado`: Estado de ciclo de vida (`ACTIVO`, `INACTIVO`, `DESACTIVACION_PENDIENTE`).
+- `estado`: Estado de ciclo de vida (`ACTIVO`, `INACTIVO`, `PENDING_DEACTIVATION`).
 - `version`: Contador de versión para concurrencia optimista (Entero >= 0).
 
 ### 5.2. `MARCA`
@@ -105,7 +105,7 @@ Representa un fabricante o marca comercial bajo la cual se comercializan product
 - `descripcion`: Reseña informativa de la marca (Texto opcional).
 - `logo_url`: Enlace a la imagen del logotipo (Texto opcional formato URI, máx. 5 MB en origen).
 - `pais_origen_iso`: Código de país según estándar ISO 3166-1 alpha-2 (Texto opcional de exactamente 2 letras mayúsculas, ej. `"PE"`, `"US"`).
-- `estado`: Estado de ciclo de vida (`ACTIVO`, `INACTIVO`, `DESACTIVACION_PENDIENTE`).
+- `estado`: Estado de ciclo de vida (`ACTIVO`, `INACTIVO`, `PENDING_DEACTIVATION`).
 - `version`: Contador de versión optimista (Entero >= 0).
 
 ### 5.3. `CARACTERISTICA`
@@ -122,7 +122,7 @@ Representa un elemento del catálogo predefinido de opciones para característic
 - `id`: Identificador único global (UUID lógico).
 - `caracteristica_id`: Referencia a la característica propietaria (Obligatorio, debe ser de tipo `LISTA`).
 - `nombre`: Etiqueta del valor (Texto obligatorio, único dentro de la misma característica, ej. `"Rojo"`, `"Azul"`, `"XL"`).
-- `estado`: Estado de ciclo de vida (`ACTIVO`, `INACTIVO`, `DESACTIVACION_PENDIENTE`).
+- `estado`: Estado de ciclo de vida (`ACTIVO`, `INACTIVO`, `PENDING_DEACTIVATION`).
 - `version`: Contador de versión optimista (Entero >= 0).
 
 ### 5.5. `TIPO_PRODUCTO`
@@ -196,7 +196,7 @@ erDiagram
 | `CATEGORIA` → `SEO_CATEGORIA` | `1 : 1` | Toda categoría tiene exactamente una configuración SEO. Al crear la categoría se crea su registro SEO inicial. |
 | `CATEGORIA` → `HISTORIAL_SLUG_CATEGORIA` | `1 : 0..N` | Append-only. Cada cambio en `SEO_CATEGORIA.slug` genera una fila en esta bitácora. |
 | `CARACTERISTICA` → `VALOR_CARACTERISTICA` | `1 : 0..N` | Solo permitido si `CARACTERISTICA.tipo = 'LISTA'`. Máximo 50 valores activos simultáneos por característica. |
-| `TIPO_PRODUCTO` → `ASOCIACION_TIPO_CARACTERISTICA` | `1 : 0..N` | Un tipo puede asociar de 0 a 15 características activas. |
+| `TIPO_PRODUCTO` → `ASOCIACION_TIPO_CARACTERISTICA` | `1 : 0..N` | Un tipo puede asociar hasta `MAX_PRODUCT_TYPE_ATTRIBUTES` características activas; valor inicial configurable del MVP: 20. |
 | `CARACTERISTICA` → `ASOCIACION_TIPO_CARACTERISTICA` | `1 : 0..N` | Una característica solo puede asociarse una vez por tipo de producto (`UNIQUE(tipo_producto_id, caracteristica_id)`). |
 
 ---
