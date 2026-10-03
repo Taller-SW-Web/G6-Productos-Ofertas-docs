@@ -6,15 +6,16 @@ Esta carpeta contiene la documentación permanente y la arquitectura base de la 
 
 La experiencia de usuario (UX) se establece transversalmente a nivel del módulo y orienta de forma consistente la construcción de todas las funcionalidades:
 
-$$\text{3 propuestas UX del módulo} \longrightarrow \text{comparación y consolidación} \longrightarrow \text{Propuesta UX Integral Adoptada} \longrightarrow \text{UX Decisions} \longrightarrow \text{UX Guidelines} \longrightarrow \text{16 funcionalidades} \longrightarrow \text{N pantallas por funcionalidad}$$
+$$\text{3 propuestas UX del módulo} \longrightarrow \text{comparación y consolidación} \longrightarrow \text{Propuesta UX Integral Adoptada} \longrightarrow \text{UX Decisions} \longrightarrow \text{UX Guidelines} \longrightarrow \text{Design System de mockups} \longrightarrow \text{16 funcionalidades} \longrightarrow \text{N pantallas por funcionalidad}$$
 
 ## 2. Estructura del Directorio
 
 ```text
 mockups/
 ├── README.md                                  # Guía del pipeline académico, DoD, DoR y trazabilidad
+├── DESIGN.md                                  # Foundations, componentes y composición de mockups (#60)
 ├── ux/                                        # UX transversal a nivel de módulo
-│   ├── propuesta-ux.md                        # 3 propuestas UX preservadas, comparativa y Propuesta UX Integral Adoptada
+│   ├── propuesta-ux.md                        # 3 propuestas finales, matriz de 16 funcionalidades y propuesta integral
 │   ├── ux-decisions.md                        # Decisiones UX justificadas (UXD-XXX)
 │   └── ux-guidelines.md                       # Reglas UX normativas obligatorias
 ├── _plantillas/                               # Plantillas estandarizadas del módulo y funcionalidades
@@ -41,16 +42,19 @@ mockups/
 
 ### Nivel Módulo (Transversal)
 Define lineamientos que aplican obligatoriamente a todas las funcionalidades:
-- **`propuesta-ux.md`**: Integra las 3 propuestas UX originales preservadas como evidencia académica, su comparación transversal con análisis de trade-offs y la **Propuesta UX Integral Adoptada**.
+- **`propuesta-ux.md`**: Documenta las 3 propuestas finales de #59, su matriz de aplicabilidad, evidencia, trade-offs, revisión de los borradores y la **Propuesta UX Integral Adoptada**.
 - **`ux-decisions.md`**: Registro formal de decisiones justificadas (`UXD-XXX`) derivadas de la propuesta integral.
 - **`ux-guidelines.md`**: Reglas normativas operativas derivadas estrictamente de las decisiones en `ux-decisions.md`.
+- **[`DESIGN.md`](DESIGN.md)**: Design System vigente de mockups: tokens visuales, layout desktop, componentes, variantes y estados. Representa la UX 2.0 y sustituye la referencia visual de baja fidelidad para esta etapa.
+
+La versión UX 2.0 sustituye los borradores anteriores. El resultado documental y los hallazgos de fuentes se registran en [propuesta-ux.md](ux/propuesta-ux.md#11-validación-y-habilitación). El #59 está cerrado; el resultado de #60 y las condiciones de consumo se registran en [DESIGN.md](DESIGN.md#18-validación-documental-y-habilitación). La habilitación compartida de #66 requiere integrar ambas capas en `master`, sin dar por resueltos hallazgos funcionales ajenos.
 
 ### Nivel Funcionalidad / Mockup (`MK-XXX`)
 Cada funcionalidad concreta (`MK-001` a `MK-016`) consume la UX del módulo y define:
-- **`component-spec.md`**: Especificación de componentes, inventario de pantallas (`MK-XXX-S01`, `S02`, etc.) y decisiones locales (`LUX-XX`).
-- **`plan.md`**: Estrategia de implementación incremental.
-- **`tasks.md`**: Desglose de tareas verificables.
-- **`validation-report.md`**: Reporte formal de validación funcional, UI y accesibilidad en PC.
+- **`component-spec.md`**: Especificación principal del resultado esperado del mockup (qué pantallas existen, propósito, estructura, componentes, estados, fixtures y decisiones locales `LUX-XX`), subordinada a las fuentes oficiales de verdad.
+- **`plan.md`**: Estrategia de ejecución técnica guiada por un Contrato de ejecución (entradas, salidas esperadas, restricciones y condiciones de parada/escalamiento).
+- **`tasks.md`**: Desglose de unidades de trabajo ejecutables estructuradas (*Entrada*, *Acción*, *Salida esperada* y *Verificación* comprobable).
+- **`validation-report.md`**: Reporte formal de evidencia y trazabilidad de ejecución (autovalidación del owner, revisión UX transversal posterior, Quality Gates y fidelidad en Figma).
 
 ## 4. Nomenclatura
 
@@ -65,12 +69,13 @@ Cada funcionalidad concreta (`MK-001` a `MK-016`) consume la UX del módulo y de
 
 ```mermaid
 flowchart TD
-    A["SPEC + HU + WF + Flow + API Contract + Design System"]
+    A["SPEC + HU + WF + Flow + API Contract + antecedentes visuales"]
     B["3 propuestas UX del módulo (Evidencia académica)"]
     C["Comparación y consolidación"]
     D["Propuesta UX integral del módulo"]
     E["UX Decisions (UXD-XXX)"]
     F["UX Guidelines"]
+    U["Design System de mockups — DESIGN.md"]
 
     A --> B
     B --> C
@@ -95,7 +100,8 @@ flowchart TD
         T["Validation Report APROBADO"]
     end
 
-    F --> G
+    F --> U
+    U --> G
     G --> H
     H --> I
     I --> J
@@ -112,22 +118,32 @@ flowchart TD
     S --> T
 ```
 
-## 6. Fuentes de Verdad
+### Operativa del Pipeline por Funcionalidad
 
-| Fuente | Define |
-|---|---|
-| SPEC | Reglas y validaciones del negocio |
-| HU | Necesidades del usuario e intenciones |
-| WF | Estructura base de distribución |
-| Flow | Navegación, transiciones y flujos alternativos |
-| API Contract | Esquema de datos y modelos de integración |
-| Design System | Foundations, tokens y componentes base |
-| Propuesta UX del módulo | Enfoque global de experiencia y consolidación |
-| UX Decisions | Justificación estructurada de patrones transversales |
-| UX Guidelines | Reglas normativas de interacción y consistencia |
-| Component Spec | Contenido técnico y pantallas por funcionalidad |
-| Plan | Fases e hitos de construcción |
-| Tasks | Unidades de trabajo atómicas |
+1. **Especificación (`component-spec.md`):** Especifica formalmente el resultado esperado (qué debe existir: pantallas, estructura, componentes, estados, fixtures y LUX-XX) sin incluir instrucciones procedimentales paso a paso, manteniéndose subordinado a SPEC, HU, WF y Flow.
+2. **Plan de ejecución (`plan.md`):** Define la estrategia constructiva mediante un Contrato de ejecución con entradas oficiales, salidas esperadas, restricciones estrictas (no inventar reglas ni campos) y condiciones de parada claras ante contradicciones o información faltante.
+3. **Desglose ejecutable (`tasks.md`):** Organiza el trabajo en unidades atómicas estructuradas (*Entrada / Acción / Salida esperada / Verificación*), cerrándose únicamente cuando la evidencia sea comprobable, y registrando formalmente cualquier bloqueo (`BLOCKED`).
+4. **Construcción y normalización:** El owner implementa la pantalla ancla y pantallas subsiguientes en `prototipo/src/pantallas/MKXXX`, normalizando el código con Mantine y Design System.
+5. **Autovalidación y revisión transversal:** El owner funcional realiza la autovalidación de primera línea con fixtures deterministas. A continuación, Leonardo Vera Rodríguez ejecuta la revisión UX transversal posterior a la autovalidación del owner para otorgar el visto bueno (`APROBADO PARA FIGMA`).
+6. **Figma y validación final (`validation-report.md`):** Se traslada fielmente a Figma la versión aprobada, se verifica su fidelidad punto a punto y se registra la trazabilidad de ejecución completa (`Task -> Pantalla -> Evidencia -> Resultado`) para emitir el resultado general `APROBADO`.
+
+## 6. Fuentes de Verdad y Artefactos de Mockup
+
+| Fuente / Artefacto | Define | Rol en el pipeline |
+|---|---|---|
+| SPEC | Reglas y validaciones del negocio | Fuente de verdad funcional primaria |
+| HU | Necesidades del usuario e intenciones | Criterios de aceptación del usuario |
+| WF | Estructura base de distribución | Disposición espacial y volumetría base |
+| Flow | Navegación, transiciones y flujos alternativos | Orquestación de pantallas y caminos |
+| API Contract | Esquema de datos y modelos de integración | Contratos de interfaces y esquemas |
+| Design System | Foundations, tokens y componentes base | Estándar visual y componentes compartidos |
+| Propuesta UX del módulo | Enfoque global de experiencia y consolidación | Experiencia unificada del módulo |
+| UX Decisions | Justificación estructurada de patrones transversales | Decisiones normativas (`UXD-XXX`) |
+| UX Guidelines | Reglas normativas de interacción y consistencia | Reglas obligatorias de interfaz |
+| `component-spec.md` | Especificación principal del resultado esperado del mockup | Qué debe existir (pantallas, estados, componentes, fixtures) |
+| `plan.md` | Estrategia de ejecución y Contrato de ejecución | Cómo construirlo (entradas, salidas, restricciones, paradas, Quality Gates) |
+| `tasks.md` | Unidades de trabajo ejecutables y trazables | Qué acciones completar (Entrada / Acción / Salida / Verificación) |
+| `validation-report.md` | Evidencia objetiva y trazabilidad de ejecución | Demostración de cumplimiento, autovalidación y revisión UX transversal |
 
 ## 7. Regla de Decisiones UX Locales
 
@@ -147,6 +163,8 @@ Una funcionalidad `MK-XXX` está lista para implementación cuando:
 - [ ] SPEC, HU, WF y Flow correspondientes están identificados y aprobados.
 - [ ] La Propuesta UX Integral del módulo está aprobada y vigente.
 - [ ] Las UX Decisions y UX Guidelines aplicables están consolidadas.
+- [ ] El Design System de mockups de #60 está consolidado y las fuentes transversales están disponibles en la base compartida conforme a #66.
+- [ ] Los hallazgos funcionales/contractuales que afectan las pantallas a implementar están resueltos; no se sustituyen capacidades ausentes por fixtures inventados.
 - [ ] El `component-spec.md` está redactado e inventaría todas las pantallas P0.
 - [ ] El `plan.md` e hitos están definidos.
 - [ ] Las tareas en `tasks.md` son atómicas y ejecutables.

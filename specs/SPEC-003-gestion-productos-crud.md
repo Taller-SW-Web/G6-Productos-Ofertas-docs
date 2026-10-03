@@ -133,3 +133,35 @@ con `sub=modulo-despacho`, `aud=api-productos`, `scope=productos:fisicos:leer`.
 ## 8. Criterio de completitud
 
 La capacidad queda completa cuando el CRUD, preparación de Pricing e inicialización de Inventario son idempotentes y la activación nunca presupone que un `requested` ya terminó correctamente.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Extensión 0.5.0 — identidad y exposición comercial
+
+Se formaliza:
+
+```text
+product_id != variant_id != sku != codigo_barras
+producto simple → sku_base = SKU vendible
+```
+
+Catálogo es owner de la capacidad de resolver un código de barras a un SKU vendible. Cada código resoluble identifica exactamente un SKU. La cardinalidad inversa SKU→código(s) y la administración de la asociación siguen abiertas (`D-CAT-01..04`).
+
+La lectura comercial por slug aplica:
+
+```text
+producto.status = ACTIVO
+AND elegible_para_canal(producto, canal)
+```
+
+`ACTIVO` no implica visibilidad automática en todos los canales. La persistencia y default de elegibilidad continúan abiertos (`D-CAT-05/06`).
+
+Para producto simple, cuando exista una asociación resoluble:
+
+```text
+codigo_barras → sku_base
+```
+
+Desactivar el producto impide la resolución comercial mientras permanezca inactivo. No se define todavía si la asociación histórica se elimina/reutiliza.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->

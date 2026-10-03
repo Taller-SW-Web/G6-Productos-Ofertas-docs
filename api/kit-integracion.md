@@ -360,7 +360,7 @@ origen
 ## 6.5. Consultar disponibilidad
 
 ```http
-GET /api/v1/inventario/disponibilidad?skus=SKU-001,SKU-002
+GET /api/v1/inventario/disponibilidad/comercial?skus=SKU-001,SKU-002&canal=MARKETPLACE
 Authorization: Bearer <token-servicio>
 ```
 
@@ -761,7 +761,7 @@ Si se conservan esos identificadores, son capacidades internas del módulo.
 
 # 11. Pricing: consultas, programaciones e importación
 
-`api/openapi.yaml` es la fuente de verdad HTTP. Esta sección resume la superficie de Pricing publicada en OpenAPI `0.4.0` y su política de autorización.
+`api/openapi.yaml` es la fuente de verdad HTTP. Esta sección resume la superficie de Pricing publicada en OpenAPI `0.5.0` y su política de autorización.
 
 ## 11.1. Consultas
 
@@ -1246,3 +1246,62 @@ audiencia = api-productos
 ```
 
 La ruta o scope solo se considera contractual después de incorporarse al artefacto canónico correspondiente.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Guía práctica — HTTP 0.5.0
+
+### Marketplace
+
+Su frontend llama a su backend/BFF; el BFF consume `api-productos`.
+
+```text
+GET /productos?canal=MARKETPLACE&orden=NOMBRE_ASC
+GET /productos/por-slug/{slug}?canal=MARKETPLACE
+```
+
+### Retail — resolver código
+
+```http
+POST /api/v1/productos/codigos-barras/resolver
+Content-Type: application/json
+X-Correlation-Id: <uuid>
+
+{"codigo_barras":"0001234567890"}
+```
+
+Respuesta:
+
+```json
+{"sku":"SKU-001"}
+```
+
+Retail no transforma el valor y, desde la respuesta, usa SKU para precio/disponibilidad/venta.
+
+### Disponibilidad de canales
+
+```text
+GET /api/v1/inventario/disponibilidad/comercial?skus=SKU-001,SKU-002&canal={CANAL}
+```
+
+Respuesta:
+
+```json
+{"items":[{"sku":"SKU-001","status":"DISPONIBLE"}]}
+```
+
+No expone `location_id`, `on_hand`, `reserved`, `blocked`, `available`, `threshold` ni `stock_version`. Sigue provisional por `D-INV-01`.
+
+### Recomendaciones
+
+```text
+GET /api/v1/recomendaciones?productoId={id}&canal={MARKETPLACE|CHATBOT|RETAIL}
+```
+
+`availability/current_price` product-level siguen provisionales por `D-REC-01/D-REC-02`.
+
+### Rate limiting
+
+`429 RATE_LIMIT_EXCEDIDO` puede incluir `Retry-After`. No se publica una cuota numérica universal.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->
