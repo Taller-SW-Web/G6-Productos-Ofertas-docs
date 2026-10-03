@@ -2,7 +2,7 @@
 
 ## 1. Identificación
 
-Funcionalidad: **Gestión de ofertas y promociones**. Owner: Axel Andree Cueva Alcalá. Issue: [#64](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/64). Versión **1.1**, fecha **2026-10-03**, estado **DOCUMENTACIÓN PREPARADA PARA BASE RAW; EN REVISIÓN**. Rama documental `cueva`; construcción/iteración futura en `lab/cueva`. Base visual de Leonardo Vera aún pendiente; no hay mockup implementado, autovalidación visual ni visto bueno.
+Funcionalidad: **Gestión de ofertas y promociones**. Owner: Axel Andree Cueva Alcalá. Issue: [#64](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/64). Versión **1.2**, fecha **2026-10-03**, estado **EN REVISIÓN — APROBACIÓN DOCUMENTAL PENDIENTE**. Rama documental `cueva`; construcción/iteración futura en `lab/cueva`. La implementación está bloqueada hasta aprobar este component-spec y confirmar las entradas oficiales. No hay mockup implementado, autovalidación visual ni visto bueno.
 
 ## 2. Trazabilidad
 
@@ -10,14 +10,14 @@ Funcionalidad: **Gestión de ofertas y promociones**. Owner: Axel Andree Cueva A
 |---|---|---|
 | SPEC | [SPEC-006](../../specs/SPEC-006-gestion-ofertas-promociones.md) | Reglas de negocio, campos y límites. |
 | HU | [HU-006](../../hu/HU-006-gestion-ofertas-promociones.md) | Criterios de aceptación y actor Gestor Comercial. |
-| Wireframe | [WF-006](../../wireframes/flows/WF-006-gestion-ofertas-promociones.md) | Inventario/estructura/copy; no es la base raw de alta fidelidad. |
+| Wireframe | [WF-006](../../wireframes/flows/WF-006-gestion-ofertas-promociones.md) | Inventario/estructura/copy; no constituye el mockup de alta fidelidad. |
 | Navegación | [FLOW-006](../../flujos/FLOW-006-gestion-ofertas-promociones.md) | Entradas, retornos, guardado y estados. |
 | Contratos | [OpenAPI 0.5.0](../../api/openapi.yaml), [AsyncAPI 0.4.0](../../asyncapi/asyncapi.yaml), [Contrato API](../../Contrato_Api.md) | Campos/operaciones vigentes; mensajería solo contexto, no botones técnicos. |
 | UX | [Propuesta 2.0](../ux/propuesta-ux.md), [UXD](../ux/ux-decisions.md), [UXG](../ux/ux-guidelines.md) | Patrones/normas transversales; aplicabilidad por pantalla y estado. |
 | Design System | [DESIGN 1.0.0](../DESIGN.md) | Tokens, tipografía, shell y DS-C aplicables. |
 | Pipeline | [Mockups](../README.md), [prototipo](../prototipo/README.md), [INDEX](../../wireframes/INDEX.md), [equipo](../../EQUIPO_Y_RESPONSABILIDADES.md) | Rutas, DoR/DoD, ownership y revisión. |
 
-SPEC/HU/contratos prevalecen sobre artefactos visuales. La base de Stitch es una propuesta exploratoria, no una fuente funcional. El wireframe previo guía estructura; los valores visuales de alta fidelidad proceden de DESIGN. Consumir versiones vigentes en la rama del equipo al iniciar laboratorio, sin congelar un hash antiguo de master como autoridad.
+SPEC/HU/contratos prevalecen sobre artefactos visuales. Una propuesta visual exploratoria no es una fuente funcional ni una aprobación documental. El wireframe previo guía estructura; los valores visuales de alta fidelidad proceden de DESIGN. Consumir versiones vigentes en la rama del equipo al iniciar laboratorio, sin congelar un hash antiguo de master como autoridad.
 
 ## 3. Objetivo funcional
 
@@ -25,7 +25,7 @@ El Gestor Comercial configura promociones automáticas o con cupón, beneficio, 
 
 ## 4. Alcance
 
-**Incluido:** 6 pantallas P0 de §5, estados/fixtures de §10/13, lectura/alta/edición/cambio de estado documentados, navegación y accesibilidad desktop. Documentación de entrada para que Vera prepare raw; posteriormente el owner refina, normaliza y autovalida.
+**Incluido:** 6 pantallas P0 de §5, estados/fixtures de §10/13, lectura/alta/edición/cambio de estado documentados, navegación y accesibilidad desktop. Documentación funcional pendiente de aprobación; después el owner implementa/refina, normaliza y autovalida conforme a #61/#64.
 
 **Fuera de alcance:** Sin sobrescribir precio maestro/oferta de Pricing, evaluar cesta desde Backoffice, simular checkout, crear cupón dentro de la promoción, pagar o reservar stock. La integración backend no se acredita mediante fixtures. No crear nuevos endpoints/permisos/maestros ni pantallas fuera del inventario.
 
@@ -186,7 +186,7 @@ Los filtros son parámetros publicados, no sugerencias visuales de búsqueda. Lo
 
 ### LUX-01 — Composición propia de gestión de ofertas y promociones
 
-Selector de alcance en vista completa S04 con retorno al formulario de hasta 880 px. Fuente WF-006 Alcance y HU-006. Alternativa: todas las referencias en un modal breve; descartada por comparación producto/SKU y contexto. Trade-off: navegación adicional; conservar borrador y etiqueta del tipo seleccionado. No transforma productos en variantes ni crea wizard. Se subordina a UXD-001/002 y UXG-001/002/003; no modifica tokens ni un patrón transversal. Validación de la elección visual pendiente de raw y revisión.
+Selector de alcance en vista completa S04 con retorno al formulario de hasta 880 px. Fuente WF-006 Alcance y HU-006. Alternativa: todas las referencias en un modal breve; descartada por comparación producto/SKU y contexto. Trade-off: navegación adicional; conservar borrador y etiqueta del tipo seleccionado. No transforma productos en variantes ni crea wizard. Se subordina a UXD-001/002 y UXG-001/002/003; no modifica tokens ni un patrón transversal. Validación de la elección visual pendiente de implementación, autovalidación y revisión UX.
 
 ## 12. Reglas de layout PC
 
@@ -230,7 +230,7 @@ Todos son escenarios por implementar y verificar; un dato fixture no certifica u
 
 Canales explícitos y puedeCambiarModalidad ya están definidos en las fuentes locales vigentes. Un consumidor con respuesta incompleta conserva el bloqueo de modalidad; no declarar que la API carece de esa capacidad. Los endpoints administrativos son provisionales de OpenAPI: el mockup usa fixtures, sin integrar producción.
 
-La base raw está **pendiente de Vera**, confirmada por Axel. No se solicita otra búsqueda ni se sustituye por el HTML de wireframes. La revisión UX transversal y la fidelidad Figma siguen pendientes. Supuesto de representación: gestor autorizado salvo fixture 401/403; fixtures no conceden permisos reales. Base futura debe venir identificada con MK/pantallas/ancla/supuestos/dudas.
+La propuesta exploratoria está **pendiente de Vera**, confirmada por Axel. No se solicita otra búsqueda ni se sustituye por el HTML de wireframes. La revisión UX transversal y la fidelidad Figma siguen pendientes. Supuesto de representación: gestor autorizado salvo fixture 401/403; fixtures no conceden permisos reales. Base futura debe venir identificada con MK/pantallas/ancla/supuestos/dudas.
 
 ## 15. Criterios de aceptación
 
@@ -239,4 +239,4 @@ La base raw está **pendiente de Vera**, confirmada por Axel. No se solicita otr
 - Formularios/selecciones/registros y retorno contextual preservados; guardado/estado solo confirmados con resultado.
 - Aplicación de DS/UX y accesibilidad desktop1440: tokens compartidos, labels, foco, error localizable y sin overflow.
 - Tareas ejecutables y evidencia propia del mockup antes de revisión de Vera; visto bueno verificable antes de Figma/promoción del código.
-- Cierre de #64 solo con revisión, Figma/fidelidad y reporte final; este paquete documental habilita raw, no cierra el issue.
+- Cierre de #64 solo con revisión, Figma/fidelidad y reporte final; la redacción de este paquete no acredita aprobación ni cierra el issue.

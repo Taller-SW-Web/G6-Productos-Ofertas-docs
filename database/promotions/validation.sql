@@ -27,6 +27,47 @@ SELECT pg_temp.assert_true('12 tablas de arquitectura',
 SELECT pg_temp.assert_true('solo entidades del contexto y ledger',
  (SELECT array_agg(tablename::text ORDER BY tablename)=ARRAY['catalog_projection','combination_policy','coupon_uses','coupons','inbox','outbox','price_projection','promotion_scopes','promotions','recommendation_items','recommendation_rules','schema_migrations','stock_projection']
   FROM pg_tables WHERE schemaname='promotions'));
+-- §7.2/§7.3: el ledger del runner usa applied_at; inbox/outbox solo
+-- están exentos de updated_at. Verificar cada tabla, no solo un total.
+DO $conventions$
+DECLARE item record; stamp text;
+BEGIN
+  FOR item IN SELECT tablename::text AS table_name FROM pg_tables
+    WHERE schemaname='promotions' AND tablename<>'schema_migrations' ORDER BY tablename
+  LOOP
+    FOREACH stamp IN ARRAY CASE WHEN item.table_name IN ('inbox','outbox')
+      THEN ARRAY['created_at'] ELSE ARRAY['created_at','updated_at'] END
+    LOOP
+      PERFORM pg_temp.assert_true(item.table_name||'.'||stamp||' obligatorio',
+        EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='promotions'
+          AND table_name=item.table_name AND column_name=stamp
+          AND data_type='timestamp with time zone' AND is_nullable='NO' AND column_default='now()'));
+    END LOOP;
+    IF item.table_name NOT IN ('inbox','outbox') THEN
+      PERFORM pg_temp.assert_true(item.table_name||'.updated_at trigger',EXISTS(
+        SELECT 1 FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid
+        JOIN pg_namespace n ON n.oid=c.relnamespace JOIN pg_proc p ON p.oid=t.tgfoid
+        WHERE n.nspname='promotions' AND c.relname=item.table_name AND NOT t.tgisinternal
+          AND t.tgname='trg_'||item.table_name||'_updated_at' AND t.tgenabled='O'
+          AND t.tgtype=19 AND p.proname='fn_touch_updated_at' AND p.pronamespace=n.oid));
+    END IF;
+  END LOOP;
+END $conventions$;
+SELECT pg_temp.assert_true('customer_ref permanece UUID',EXISTS(
+  SELECT 1 FROM information_schema.columns WHERE table_schema='promotions'
+    AND table_name='coupon_uses' AND column_name='customer_ref' AND data_type='uuid'));
+SELECT pg_temp.assert_true('seis FK con RESTRICT explícito',
+ (SELECT count(*)=6 AND bool_and(c.confdeltype='r' AND NOT c.condeferrable)
+  FROM pg_constraint c JOIN pg_class t ON t.oid=c.conrelid
+  JOIN pg_namespace n ON n.oid=t.relnamespace WHERE c.contype='f' AND n.nspname='promotions'));
+SELECT pg_temp.assert_true('triggers con nombres convencionales',NOT EXISTS(
+ SELECT 1 FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid
+ JOIN pg_namespace n ON n.oid=c.relnamespace
+ WHERE n.nspname='promotions' AND NOT t.tgisinternal AND t.tgname NOT LIKE 'trg\_%'));
+SELECT pg_temp.assert_true('todos los triggers habilitados',NOT EXISTS(
+ SELECT 1 FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid
+ JOIN pg_namespace n ON n.oid=c.relnamespace
+ WHERE n.nspname='promotions' AND NOT t.tgisinternal AND t.tgenabled<>'O'));
 SELECT pg_temp.assert_true('montos sin escala rígida de demostración',
  (SELECT count(*)=2 AND bool_and(numeric_scale IS NULL)
   FROM information_schema.columns WHERE table_schema='promotions'
@@ -66,7 +107,7 @@ INSERT INTO promotions.promotions(id,name,discount_type,discount_value,modality,
  ('53000000-0000-0000-0000-000000000001','Fixture cupón','PORCENTAJE',10,'CUPON','ACTIVO','2000-01-01','2100-01-01',1,ARRAY['MARKETPLACE','RETAIL']),
  ('53000000-0000-0000-0000-000000000002','Fixture automática','MONTO_FIJO',5,'AUTOMATICA','INACTIVO','2000-01-01','2100-01-01',2,ARRAY['CHATBOT']),
  ('53000000-0000-0000-0000-000000000003','Fixture modalidad','PORCENTAJE',5,'AUTOMATICA','INACTIVO','2000-01-01','2100-01-01',2,ARRAY['CHATBOT']);
-INSERT INTO promotions.combination_policy SELECT id,false,false,false FROM promotions.promotions WHERE id IN
+INSERT INTO promotions.combination_policy(promotion_id,pricing_offer,automatic_promotion,coupon) SELECT id,false,false,false FROM promotions.promotions WHERE id IN
  ('53000000-0000-0000-0000-000000000001','53000000-0000-0000-0000-000000000002','53000000-0000-0000-0000-000000000003');
 INSERT INTO promotions.promotion_scopes(promotion_id,product_id) VALUES
  ('53000000-0000-0000-0000-000000000001','product-fixture'),
@@ -84,6 +125,16 @@ INSERT INTO promotions.recommendation_items(rule_id,product_id,item_order,superi
  ('53000000-0000-0000-0000-000000000021','recommended-fixture',1,NULL),
  ('53000000-0000-0000-0000-000000000022','better-fixture',1,'MEJOR_MATERIAL');
 SET CONSTRAINTS ALL IMMEDIATE;
+
+CREATE TEMP TABLE timestamp_before AS SELECT id,created_at FROM promotions.promotion_scopes;
+UPDATE promotions.promotion_scopes SET product_id=product_id,updated_at='2000-01-01';
+SELECT pg_temp.assert_true('scope actualiza timestamp automáticamente y conserva creación',
+ (SELECT bool_and(s.updated_at>=now() AND s.updated_at<=clock_timestamp() AND s.created_at=b.created_at)
+  FROM promotions.promotion_scopes s JOIN timestamp_before b USING(id)));
+SELECT pg_temp.expect_error('no borrar promoción con dependencias',
+ $q$DELETE FROM promotions.promotions WHERE id='53000000-0000-0000-0000-000000000001'$q$,'23503');
+SELECT pg_temp.expect_error('no borrar regla con candidatos',
+ $q$DELETE FROM promotions.recommendation_rules WHERE id='53000000-0000-0000-0000-000000000021'$q$,'23503');
 
 SELECT pg_temp.assert_true('normalización ASCII',
  (SELECT code='TEST-53' FROM promotions.coupons WHERE id='53000000-0000-0000-0000-000000000011'));
@@ -127,6 +178,7 @@ SELECT pg_temp.expect_error('identidad obligatoria con límite',$q$SELECT promot
 SELECT pg_temp.expect_error('consumo fuera de canal',$q$SELECT promotions.fn_consume_coupon('order-fixture-0','53000000-0000-0000-0000-000000000011','53000000-0000-0000-0000-000000000099','CHATBOT','2026-10-03')$q$,'P0001','COUPON_NOT_ELIGIBLE');
 SELECT pg_temp.expect_error('consumo fuera de vigencia',$q$SELECT promotions.fn_consume_coupon('order-fixture-0','53000000-0000-0000-0000-000000000011','53000000-0000-0000-0000-000000000099','MARKETPLACE','2100-01-01')$q$,'P0001','COUPON_NOT_ELIGIBLE');
 SELECT promotions.fn_consume_coupon('order-fixture-1','53000000-0000-0000-0000-000000000011','53000000-0000-0000-0000-000000000099','MARKETPLACE','2026-10-03');
+INSERT INTO timestamp_before SELECT id,created_at FROM promotions.coupon_uses WHERE order_id='order-fixture-1';
 SELECT pg_temp.assert_true('consumo idempotente',
  promotions.fn_consume_coupon('order-fixture-1','53000000-0000-0000-0000-000000000011','53000000-0000-0000-0000-000000000099','MARKETPLACE','2026-10-03')=
  (SELECT id FROM promotions.coupon_uses WHERE order_id='order-fixture-1'));
@@ -139,6 +191,13 @@ SELECT pg_temp.assert_true('política del pedido es snapshot',(SELECT cancellati
 SELECT pg_temp.assert_true('restitución libera cupo',(SELECT outcome='RESTORED' FROM promotions.fn_restore_coupon('order-fixture-1','2026-10-04')));
 SELECT pg_temp.assert_true('restitución repetida',(SELECT outcome='RESTORED' FROM promotions.fn_restore_coupon('order-fixture-1','2026-10-05')));
 SELECT pg_temp.assert_true('fecha restituida no cambia',(SELECT restored_at='2026-10-04'::timestamptz FROM promotions.coupon_uses WHERE order_id='order-fixture-1'));
+SELECT pg_temp.assert_true('restitución mantiene creación y actualiza timestamp técnico',
+ (SELECT u.created_at=b.created_at AND u.updated_at>=now() AND u.updated_at<=clock_timestamp() FROM promotions.coupon_uses u
+  JOIN timestamp_before b USING(id) WHERE u.order_id='order-fixture-1'));
+SELECT pg_temp.expect_error('creación del consumo es inmutable',
+ $q$UPDATE promotions.coupon_uses SET created_at='2000-01-01' WHERE order_id='order-fixture-1'$q$,'P0001','COUPON_HISTORY_IMMUTABLE');
+SELECT pg_temp.expect_error('cupón con consumos no se elimina',
+ $q$DELETE FROM promotions.coupons WHERE id='53000000-0000-0000-0000-000000000011'$q$,'23503');
 SELECT promotions.fn_consume_coupon('order-fixture-3','53000000-0000-0000-0000-000000000011','53000000-0000-0000-0000-000000000097','MARKETPLACE','2026-10-03');
 SELECT promotions.fn_consume_coupon('order-fixture-1','53000000-0000-0000-0000-000000000011','53000000-0000-0000-0000-000000000099','MARKETPLACE','2026-10-03');
 SELECT pg_temp.assert_true('reentrega no vuelve a consumir',(SELECT count(*)=1 AND count(restored_at)=1 FROM promotions.coupon_uses WHERE order_id='order-fixture-1'));

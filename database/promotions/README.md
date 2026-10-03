@@ -7,12 +7,12 @@ Schema interno `promotions`, propiedad de Axel Cueva. Implementa la persistencia
 - `logical-model.md`: entidades, relaciones e invariantes.
 - `physical-model.md`: diccionario, índices, transacciones y decisiones de contrato.
 - `provision-runtime.sql`: preparación administrativa del rol de aplicación sin login ni membresía del owner.
-- `migrations/0001_promotions_persistence.sql` y `0002_promotions_global_price_projection.sql`: una única historia activa, compatible con `database/migrate.py`; la segunda añade precio global/override sin editar la primera.
+- `migrations/0001_promotions_persistence.sql`, `0002_promotions_global_price_projection.sql` y `0003_promotions_timestamps_and_delete_rules.sql`: historia única compatible con `database/migrate.py`; 0002 añade precio global/override y 0003 completa timestamps/FK/triggers sin editar las versiones publicadas.
 - `validation.sql`: assertions y fixtures con rollback.
 - `tests/verify.py`: reproducción local, concurrencia y permisos; requiere un contenedor PostgreSQL desechable indicado explícitamente.
 - `validation-report.md`: evidencia real de ejecución y pendientes.
 
-Orden: administrador ejecuta `database/bootstrap.sql` y `provision-runtime.sql`; deployer ejecuta `python database/migrate.py promotions`; después se ejecuta `validation.sql`. La migración fue creada con Supabase CLI y trasladada a la numeración de cuatro dígitos del ejecutor común. No hay un segundo historial de Supabase en este repositorio.
+Orden: administrador ejecuta `database/bootstrap.sql` y `provision-runtime.sql`; deployer ejecuta `python database/migrate.py promotions`; después se ejecuta `validation.sql`. La generación inicial utilizó Supabase CLI y se trasladó a la numeración de cuatro dígitos del ejecutor común; las correcciones posteriores se incorporan mediante nuevas migraciones versionadas. No hay un segundo historial de Supabase en este repositorio.
 
 Para verificar en una base local vacía:
 
@@ -42,7 +42,9 @@ Si un snapshot de Pricing contiene moneda, se conserva explícitamente en ese sn
 
 La restitución implementada corresponde a **cancelación de pedido** en SPEC-005 y AsyncAPI. No se extiende a devoluciones parciales, reembolsos ni distribución fiscal de descuentos sin un acuerdo contractual oficial. D-REC-01/02 y los payloads GenericData de proyecciones siguen pendientes: conservar snapshot/procedencia permite avanzar sin fijar interpretaciones comerciales nuevas.
 
-La revisión de estos límites se comprueba en `validation.sql`; no cambió el contenido ni el checksum de las migraciones ya validadas. Los documentos temporales de coordinación no forman parte de las fuentes de datos ni se publican con esta entrega.
+La revisión de estos límites se comprueba en `validation.sql`. 0001/0002 conservan sus checksums; las correcciones de timestamps, FK explícitas y triggers se aplican en 0003. El upgrade preserva registros previos y documenta la aproximación del backfill; no recupera una fecha de creación histórica desconocida. Los documentos temporales de coordinación no forman parte de las fuentes de datos ni se publican con esta entrega.
+
+Las tablas mantienen los nombres heredados de Arquitectura conforme a la excepción vigente de `bd/CONVENCIONES_BD.md` §5.2. `customer_ref` sigue siendo UUID por el contrato oficial, sin FK a Seguridad. La validación comprueba tanto estos puntos como las fechas obligatorias, los triggers y las seis FK RESTRICT; las pruebas negativas demuestran que esas comprobaciones detectan regresiones. Modelo físico en revisión BD/QA; decisiones transversales pendientes registradas en su §23.
 
 ## Entrega compartida
 

@@ -2,30 +2,31 @@
 
 ## 1. Identificación
 
-Reglas de venta cruzada y upselling · Axel Cueva · [plan](plan.md) / [component-spec](component-spec.md) · #64 · versión1.1 · 2026-10-03. Documentos preparados en `cueva`; raw pendiente; implementación futura en `lab/cueva`.
+Reglas de venta cruzada y upselling · Axel Cueva · [plan](plan.md) / [component-spec](component-spec.md) · #64 · versión1.2 · 2026-10-03. Documentación redactada en `cueva`, EN REVISIÓN; preparación e implementación bloqueadas hasta aprobar el component-spec. Refinamiento posterior en `lab/cueva`.
 
 ## 2. Convenciones y reglas de ejecución
 
-P0 obligatorio. Estados TODO/DOING/BLOCKED/REVIEW/DONE; checkbox marcado solo cuando la verificación es comprobable. Una tarea de documentos DONE no acredita una pantalla. Cada tarea tiene Entrada/Acción/Salida esperada/Verificación. Registrar causa y desbloqueo de BLOCKED en §9. IDs estables: T01–05 preparación, T11–17 pantallas según inventario, T50–52 normalización, T60–62 autovalidación, T70–74 revisión, T75–79 promoción/Figma/cierre. No crear un issue por cada tarea.
+P0 obligatorio. Estados TODO/DOING/BLOCKED/REVIEW/DONE; checkbox marcado solo cuando la verificación es comprobable. DONE en T01/T02/T05 acredita redacción comprobada, no aprobación. T03 permanece BLOCKED hasta dictamen; la preparación no está completa y el plan/tasks puede cambiar durante la revisión. Cada tarea tiene Entrada/Acción/Salida esperada/Verificación. Registrar causa y desbloqueo de BLOCKED en §9. IDs estables: T01–05 preparación, T11–17 pantallas según inventario, T50–52 normalización, T60–62 autovalidación, T70–74 revisión, T75–79 promoción/Figma/cierre. No crear un issue por cada tarea.
 
 ## 3. Preparación
+
 - [x] **MK-007-T01 — P0 — Preparar fuentes e inventario documental** `[DONE]`
   - **Entrada:** Fuentes enlazadas en component-spec §2 y reglas de SPEC/HU/WF/FLOW.
   - **Acción:** Cotejar campos/operaciones e inventariar pantallas, estados y límites sin inventar comportamiento.
-  - **Salida esperada:** Component-spec versión1.1 con fuentes, P0 y casos específicos.
+  - **Salida esperada:** Component-spec versión1.2 con fuentes, P0 y casos específicos.
   - **Verificación:** Enlaces locales existentes, secciones1–15, IDs/rutas únicas y campos contractualizados; no es aprobación UX.
 - [x] **MK-007-T02 — P0 — Documentar ejecución y escenarios** `[DONE]`
   - **Entrada:** Component-spec §5/9/13 y plantillas canónicas.
   - **Acción:** Definir plan/gates y unidades ejecutables; separar fases y resultados.
   - **Salida esperada:** Plan1–13 y tasks1–9; escenarios de datos/errores documentados, todavía no código de fixtures.
   - **Verificación:** Plan referencia las mismas pantallas/rutas; tareas con cuatro campos y bloqueos explícitos.
-- [ ] **MK-007-T03 — P0 — Recibir y registrar la base raw de Vera** `[BLOCKED]`
-  - **Entrada:** Component-spec/plan de cueva entregables para Vera.
-  - **Acción:** Recibir raw de Stitch, ubicación, ancla, pantallas creadas, supuestos y dudas.
-  - **Salida esperada:** Entrega identificable para comparación; ninguna aprobación deducida.
-  - **Verificación:** Registro del enlace/rama/archivos y origen Vera; contrastar con §5/9 antes de T11.
+- [ ] **MK-007-T03 — P0 — Obtener aprobación documental del component-spec** `[BLOCKED]`
+  - **Entrada:** Component-spec versión1.2 EN REVISIÓN y fuentes vigentes de §2.
+  - **Acción:** Atender observaciones funcionales/documentales y presentar la versión al revisor del equipo; alinear plan/tasks si cambia.
+  - **Salida esperada:** Dictamen explícito APROBADO sobre versión identificable y DoR comprobada.
+  - **Verificación:** Registrar revisor, fecha, versión, dictamen y cierre de observaciones; cambiar a DONE solo con esa evidencia, nunca por existir el archivo.
 - [ ] **MK-007-T04 — P0 — Alinear laboratorio y preparar fixtures de implementación** `[BLOCKED]`
-  - **Entrada:** Base identificada T03, documentación vigente de cueva.
+  - **Entrada:** Component-spec aprobado en T03 y documentación derivada alineada en cueva.
   - **Acción:** Alinear lab/cueva, resolver contradicciones contra fuentes y convertir §13 en datos/estados deterministas.
   - **Salida esperada:** Laboratorio coherente, fixtures de este MK listos para sus rutas.
   - **Verificación:** Diff limitado al MK/compartidos necesarios; valores/IDs estables, nada de otro owner ni contrato inventado.
@@ -40,58 +41,100 @@ P0 obligatorio. Estados TODO/DOING/BLOCKED/REVIEW/DONE; checkbox marcado solo cu
 ### MK-007-S01 — Listado de reglas
 
 - [ ] **MK-007-T11 — P0 — Implementar S01** `[BLOCKED]`
-  - **Entrada:** Raw T03/T04 y component-spec §10 MK-007-S01.
+  - **Entrada:** Entradas aprobadas T03/T04 y component-spec §10 MK-007-S01.
   - **Acción:** Refinar estructura, campos, acción «Crear venta cruzada», retorno y estados aplicables de esta pantalla.
   - **Salida esperada:** Vista normalizada en MK007, ruta `/MK007/S01` y fixtures de §13.
-  - **Verificación:** Entrada directa1440; Sidebar o ruta directa. S02; Crear upselling a S04; editar S03; detalle S06.; estados negativos y controles conservan entidad/contexto; captura y evidencia propia.
+  - **Verificación:**
+    - **Ruta/fixture:** Abrir `/MK007/S01`; reproducir default y sin-resultados según component-spec §13, con los registros ficticios allí definidos.
+    - **Recorrido:** Filtrar Completa tu carrera, abrir S06 y volver; probar Crear venta cruzada y Crear upselling.
+    - **Resultado:** Las acciones abren S02/S04 respectivamente; detalle y retorno mantienen registro y filtros.
+    - **Contexto:** Conservar filtros, página y regla seleccionada.
+    - **Viewport/acceso:** Verificar 1440×900, sin overflow horizontal; recorrer acciones con teclado y comprobar foco/labels.
+    - **Evidencia:** Al implementar, registrar fixture, pasos, resultado y capturas de MK-007-S01 en validation-report. Estado actual: sin ejecución visual ni evidencia de pantalla.
 
 ### MK-007-S02 — Crear venta cruzada
 
 - [ ] **MK-007-T12 — P0 — Implementar S02** `[BLOCKED]`
-  - **Entrada:** Raw T03/T04 y component-spec §10 MK-007-S02.
+  - **Entrada:** Entradas aprobadas T03/T04 y component-spec §10 MK-007-S02.
   - **Acción:** Refinar estructura, campos, acción «Crear regla», retorno y estados aplicables de esta pantalla.
   - **Salida esperada:** Vista normalizada en MK007, ruta `/MK007/S02` y fixtures de §13.
-  - **Verificación:** Entrada directa1440; S01 / Crear venta cruzada. S06 tras guardado; S05 para recomendados; cancelar a S01.; estados negativos y controles conservan entidad/contexto; captura y evidencia propia.
+  - **Verificación:**
+    - **Ruta/fixture:** Abrir `/MK007/S02`; reproducir regla-invalida y origen-categoria según component-spec §13, con los registros ficticios allí definidos.
+    - **Recorrido:** Crear venta cruzada sin fechas/recomendados y corregir; cambiar origen a categoría Running; seleccionar candidatos en S05.
+    - **Resultado:** Errores impiden guardar; el selector vuelve a S02 con borrador; guardado confirmado abre S06 y conserva tipo/ID de origen.
+    - **Contexto:** Conservar nombre, origen, fechas, prioridad y candidatos al corregir o volver del selector.
+    - **Viewport/acceso:** Verificar 1440×900, sin overflow horizontal; recorrer acciones con teclado y comprobar foco/labels.
+    - **Evidencia:** Al implementar, registrar fixture, pasos, resultado y capturas de MK-007-S02 en validation-report. Estado actual: sin ejecución visual ni evidencia de pantalla.
 
 ### MK-007-S03 — Editar regla
 
 - [ ] **MK-007-T13 — P0 — Implementar S03** `[BLOCKED]`
-  - **Entrada:** Raw T03/T04 y component-spec §10 MK-007-S03.
+  - **Entrada:** Entradas aprobadas T03/T04 y component-spec §10 MK-007-S03.
   - **Acción:** Refinar estructura, campos, acción «Guardar cambios», retorno y estados aplicables de esta pantalla.
   - **Salida esperada:** Vista normalizada en MK007, ruta `/MK007/S03` y fixtures de §13.
-  - **Verificación:** Entrada directa1440; S01/S06 con reglaId. S06 del mismo registro; S05 regresa al borrador de edición.; estados negativos y controles conservan entidad/contexto; captura y evidencia propia.
+  - **Verificación:**
+    - **Ruta/fixture:** Abrir `/MK007/S03`; reproducir cambio-tipo y guardar-error según component-spec §13, con los registros ficticios allí definidos.
+    - **Recorrido:** Editar Completa tu carrera y cambiar a UPSELL; dejar criterio vacío y luego corregir; simular rechazo de guardado.
+    - **Resultado:** Cada candidato exige criterio al cambiar tipo; el rechazo mantiene borrador. Guardado confirmado vuelve a S06 de la misma regla.
+    - **Contexto:** Conservar ID, candidatos, orden y justificación; advertir antes de descartar datos al cambiar origen/tipo.
+    - **Viewport/acceso:** Verificar 1440×900, sin overflow horizontal; recorrer acciones con teclado y comprobar foco/labels.
+    - **Evidencia:** Al implementar, registrar fixture, pasos, resultado y capturas de MK-007-S03 en validation-report. Estado actual: sin ejecución visual ni evidencia de pantalla.
 
 ### MK-007-S04 — Crear upselling
 
 - [ ] **MK-007-T14 — P0 — Implementar S04** `[BLOCKED]`
-  - **Entrada:** Raw T03/T04 y component-spec §10 MK-007-S04.
+  - **Entrada:** Entradas aprobadas T03/T04 y component-spec §10 MK-007-S04.
   - **Acción:** Refinar estructura, campos, acción «Crear regla de upselling», retorno y estados aplicables de esta pantalla.
   - **Salida esperada:** Vista normalizada en MK007, ruta `/MK007/S04` y fixtures de §13.
-  - **Verificación:** Entrada directa1440; S01 / Crear upselling. S06 tras guardado; S05 regresa a esta alta con borrador; cancelar a S01.; estados negativos y controles conservan entidad/contexto; captura y evidencia propia.
+  - **Verificación:**
+    - **Ruta/fixture:** Abrir `/MK007/S04`; reproducir upsell-incompleto y regla-invalida según component-spec §13, con los registros ficticios allí definidos.
+    - **Recorrido:** Crear upselling sin criterio por candidato, con orden cero o justificación de 501 caracteres; corregir y abrir S05.
+    - **Resultado:** Cada error se asocia a su fila/campo; no se asigna criterio automáticamente. S05 vuelve a S04 y guardado confirmado abre S06.
+    - **Contexto:** Conservar nombre, origen, fechas y filas al corregir; cancelar solo descarta tras confirmación de cambios.
+    - **Viewport/acceso:** Verificar 1440×900, sin overflow horizontal; recorrer acciones con teclado y comprobar foco/labels.
+    - **Evidencia:** Al implementar, registrar fixture, pasos, resultado y capturas de MK-007-S04 en validation-report. Estado actual: sin ejecución visual ni evidencia de pantalla.
 
 ### MK-007-S05 — Seleccionar recomendado
 
 - [ ] **MK-007-T15 — P0 — Implementar S05** `[BLOCKED]`
-  - **Entrada:** Raw T03/T04 y component-spec §10 MK-007-S05.
+  - **Entrada:** Entradas aprobadas T03/T04 y component-spec §10 MK-007-S05.
   - **Acción:** Refinar estructura, campos, acción «Confirmar selección», retorno y estados aplicables de esta pantalla.
   - **Salida esperada:** Vista normalizada en MK007, ruta `/MK007/S05` y fixtures de §13.
-  - **Verificación:** Entrada directa1440; S02/S03/S04 con borrador; ruta directa reproduce origen de retorno. Formulario de origen con candidatos preservados; cancelar solo descarta selección temporal.; estados negativos y controles conservan entidad/contexto; captura y evidencia propia.
+  - **Verificación:**
+    - **Ruta/fixture:** Abrir `/MK007/S05`; reproducir origen-como-recomendado y duplicado-inactivo según component-spec §13, con los registros ficticios allí definidos.
+    - **Recorrido:** Abrir desde S02/S03/S04, intentar elegir producto origen, ya añadido o inactivo; confirmar candidato elegible y repetir cancelando.
+    - **Resultado:** Los candidatos inválidos se excluyen; confirmar vuelve al formulario de origen sin duplicados; cancelar descarta solo selección temporal.
+    - **Contexto:** Conservar formulario de retorno, borrador, candidatos anteriores y sus criterios.
+    - **Viewport/acceso:** Verificar 1440×900, sin overflow horizontal; recorrer acciones con teclado y comprobar foco/labels.
+    - **Evidencia:** Al implementar, registrar fixture, pasos, resultado y capturas de MK-007-S05 en validation-report. Estado actual: sin ejecución visual ni evidencia de pantalla.
 
 ### MK-007-S06 — Detalle de regla
 
 - [ ] **MK-007-T16 — P0 — Implementar S06** `[BLOCKED]`
-  - **Entrada:** Raw T03/T04 y component-spec §10 MK-007-S06.
+  - **Entrada:** Entradas aprobadas T03/T04 y component-spec §10 MK-007-S06.
   - **Acción:** Refinar estructura, campos, acción «Editar regla», retorno y estados aplicables de esta pantalla.
   - **Salida esperada:** Vista normalizada en MK007, ruta `/MK007/S06` y fixtures de §13.
-  - **Verificación:** Entrada directa1440; S01 o guardado confirmado. S03; Cambiar estado a S07; volver a S01 con contexto.; estados negativos y controles conservan entidad/contexto; captura y evidencia propia.
+  - **Verificación:**
+    - **Ruta/fixture:** Abrir `/MK007/S06`; reproducir default y enriquecimiento-ausente según component-spec §13, con los registros ficticios allí definidos.
+    - **Recorrido:** Consultar Mejora tu rendimiento, verificar candidatos ordenados y criterio; abrir S03/S07 y volver.
+    - **Resultado:** Detalle pertenece a esa regla; precio y disponibilidad por producto muestran No disponible, sin cero ficticio ni SKU elegido para completar datos.
+    - **Contexto:** Conservar regla, filtros y selección; las consultas no agregan productos al pedido.
+    - **Viewport/acceso:** Verificar 1440×900, sin overflow horizontal; recorrer acciones con teclado y comprobar foco/labels.
+    - **Evidencia:** Al implementar, registrar fixture, pasos, resultado y capturas de MK-007-S06 en validation-report. Estado actual: sin ejecución visual ni evidencia de pantalla.
 
 ### MK-007-S07 — Cambiar estado
 
 - [ ] **MK-007-T17 — P0 — Implementar S07** `[BLOCKED]`
-  - **Entrada:** Raw T03/T04 y component-spec §10 MK-007-S07.
+  - **Entrada:** Entradas aprobadas T03/T04 y component-spec §10 MK-007-S07.
   - **Acción:** Refinar estructura, campos, acción «Activar regla / Desactivar regla», retorno y estados aplicables de esta pantalla.
   - **Salida esperada:** Vista normalizada en MK007, ruta `/MK007/S07` y fixtures de §13.
-  - **Verificación:** Entrada directa1440; S06 / Cambiar estado; entrada directa reproduce detalle + diálogo. S06 con estado confirmado; cancelación/rechazo no altera badge ni datos.; estados negativos y controles conservan entidad/contexto; captura y evidencia propia.
+  - **Verificación:**
+    - **Ruta/fixture:** Abrir `/MK007/S07`; reproducir default y rechazo según component-spec §13, con los registros ficticios allí definidos.
+    - **Recorrido:** Desde S06 abrir confirmación; cancelar con Escape, simular rechazo y luego confirmar respuesta satisfactoria.
+    - **Resultado:** Rechazo/cancelación conserva estado; solo respuesta confirmada actualiza badge y vuelve a S06.
+    - **Contexto:** Conservar regla y detalle de fondo; devolver foco a la acción de estado.
+    - **Viewport/acceso:** Verificar 1440×900, sin overflow horizontal; recorrer acciones con teclado y comprobar foco/labels.
+    - **Evidencia:** Al implementar, registrar fixture, pasos, resultado y capturas de MK-007-S07 en validation-report. Estado actual: sin ejecución visual ni evidencia de pantalla.
 
 ## 5. Normalización
 
@@ -151,14 +194,14 @@ P0 obligatorio. Estados TODO/DOING/BLOCKED/REVIEW/DONE; checkbox marcado solo cu
 
 - [ ] **MK-007-T75 — P0 — Promover artefactos consolidados a cueva** `[TODO]`
   - **Entrada:** Visto bueno T74, diff de lab/cueva.
-  - **Acción:** Trasladar únicamente documentos/código normalizado de este MK y compartidos necesarios; retirar raw/experimentos.
+  - **Acción:** Trasladar únicamente documentos/código normalizado de este MK y compartidos necesarios; excluir variantes y experimentos sin aprobación.
   - **Salida esperada:** Entrega consolidada en la rama oficial existente, sin merge indiscriminado de lab.
   - **Verificación:** Diff revisable sin archivos temporales/guías privadas/trabajo ajeno; no presentar promoción como Figma terminado.
 - [ ] **MK-007-T76 — P0 — Trasladar la versión aprobada a Figma** `[TODO]`
   - **Entrada:** Versión exacta aprobada por Vera y ya consolidada.
   - **Acción:** Reproducir pantallas/estados con tokens/componentes y rutas identificables.
   - **Salida esperada:** Archivo/enlaces de Figma y frames trazables.
-  - **Verificación:** No trasladar raw ni declarar aprobación antes de T74; enlaces/versiones verificables.
+  - **Verificación:** Trasladar solo la versión con visto bueno y no declarar aprobación antes de T74; enlaces/versiones verificables.
 - [ ] **MK-007-T78 — P0 — Verificar fidelidad en Figma** `[TODO]`
   - **Entrada:** Mockup aprobado y frames T76.
   - **Acción:** Comparar pantalla/estado, copy/datos, medidas/tokens/interacciones representables.
@@ -174,7 +217,7 @@ P0 obligatorio. Estados TODO/DOING/BLOCKED/REVIEW/DONE; checkbox marcado solo cu
 
 | ID / tareas | Causa / fuente | Responsable de resolución | Condición de desbloqueo | Estado |
 |---|---|---|---|---|
-| B-RAW — T03/T04/T11–T17 | Base raw aún no entregada; secuencia de plan §7 confirmada por Axel. | Leonardo Vera prepara base; Axel identifica recepción. | Base con ancla/inventario/enlace o archivos y supuestos; contraste funcional realizado. | BLOCKED |
+| B-DOC — T03/T04/T11–T17 | Component-spec versión1.2 EN REVISIÓN; plan.template §3 exige APROBADO. | Axel atiende observaciones; revisor documental del equipo emite dictamen. | Aprobación registrada con revisor/fecha/versión y plan/tasks alineados; confirmar DoR. | BLOCKED |
 | B-UX — T70/T71/T74 | Revisión transversal exige versión autovalidada; no existe todavía. | Vera / owner. | T62 completada y revisión/visto bueno real sobre versión concreta. | Pendiente de fase |
 | B-PROM — T75/T76/T78/T79 | Gate E sin aprobación; no promover código experimental ni Figma. | Owner / revisor. | APROBADO PARA FIGMA, luego promoción/fidelidad verificadas. | Pendiente de fase |
 | B-REC — enriquecimientos de S06 | D-REC-01/02 abiertas en SPEC-007/contrato. | Owners/integración según fuentes. | Decisiones oficiales sobre disponibilidad/precio por producto. Configuración sigue representable con No disponible. | Bloqueo parcial; no bloquea documentos ni configuración |

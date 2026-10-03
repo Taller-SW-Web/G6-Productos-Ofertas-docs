@@ -2,33 +2,38 @@
 
 ## 1. Identificación
 
-Reglas de venta cruzada y upselling · Axel Cueva · issue #64 · versión 1.1 · 2026-10-03. **Preparación documental completa; construcción pendiente de base raw**. Documentos en `cueva`; iteración posterior en `lab/cueva`; sin ramas nuevas.
+Reglas de venta cruzada y upselling · Axel Cueva · issue #64 · versión 1.2 · 2026-10-03. **Documentación redactada, en revisión; preparación pendiente de aprobación del component-spec**. Documentos en `cueva`; implementación/refinamiento en `lab/cueva`.
 
 ## 2. Contrato de ejecución
 
 ### Entradas
 
-[component-spec](component-spec.md) completo y sus fuentes §2; SPEC/HU/WF/FLOW-007, UX2.0 y DESIGN1.0.0. Posteriormente, base raw de Vera identificada por MK/pantallas/ancla/supuestos/dudas. El raw no reemplaza ninguna fuente.
+[Component-spec](component-spec.md) **APROBADO**, fuentes vigentes de su §2 y Design System coherente. Estado actual: component-spec EN REVISIÓN; la dependencia de aprobación permanece bloqueada en T03. Plan/tasks son documentos derivados sujetos a esa revisión.
 
 ### Salidas esperadas
 
-Ahora: component-spec, plan y tasks preparados para Vera. Después de recibir raw: 7 P0 con rutas §5, código modular en `mockups/prototipo/src/pantallas/MK007/`, fixtures/estados reproducibles y autovalidación objetiva. Finalmente revisión/visto bueno de Vera, versión consolidada promovida a `cueva`, Figma fiel y validation-report final según pipeline.
+Después de aprobar las entradas: 7 pantallas P0 del inventario, código normalizado en `mockups/prototipo/src/pantallas/MK007/`, fixtures reproducibles, autovalidación, revisión UX de Vera y visto bueno APROBADO PARA FIGMA; después Figma, fidelidad y validation-report APROBADO. Redactar documentos no acredita estas salidas.
 
 ### Restricciones de ejecución
 
-Usar ramas existentes; no iniciar implementación mientras no llegue base. Vera prepara las propuestas con MCP de Stitch; owner valida funcionalidad, refina y normaliza en lab. No integrar raw/código experimental directamente en la rama oficial. Documentación necesaria para raw sí se entrega en `cueva`. No inventar campos/operaciones/permisos, cambiar otras funcionalidades, simular servicios o declarar revisiones/Figma no realizados. Conservar el alcance y los límites de component-spec §4/9/14.
+Seguir #61/#64 y las fuentes oficiales. No iniciar implementación con component-spec sin aprobar. Usar ramas existentes, conservar ownership y trabajar en laboratorio. No inventar campos, operaciones, permisos o reglas; no declarar aprobaciones/revisiones realizadas sin evidencia. Vera realiza la revisión UX transversal; este MK no le atribuye una obligación oficial adicional de producir una base con una herramienta determinada.
 
 ### Condiciones de parada / escalamiento
 
-Ausencia de raw bloquea construcción, no documentación. Contradicción con fuente oficial detiene solo pantalla/estado afectado y se registra en tasks §9 con causa, owner y condición de desbloqueo. Respuesta/capacidad ausente se representa honestamente, no se infiere. Una decisión transversal nueva requiere evaluación de UXD/UXG por responsable; no imponerla desde un MK. Gate UX pendiente bloquea aprobación/promoción del código y Figma, no se suplanta con autovalidación.
+Una fuente contradictoria o aprobación documental pendiente bloquea la parte afectada. Registrar causa, responsable y condición verificable en tasks §9. Cualquier cambio del pipeline o reparto transversal de tareas necesita homologación del equipo; la coordinación de propuestas iniciales no agrega un gate oficial exclusivo a este MK.
 
 ## 3. Entradas obligatorias
 
-Versiones vigentes en rama `cueva`, enlaces de component-spec §2; [prototipo/README](../prototipo/README.md) para rutas/estructura; plantillas canónicas component-spec → plan → tasks. UX2.0/DS1.0.0 disponibles, pero no acreditan aprobación de este MK. Alinear `lab/cueva` desde `cueva` antes de iterar; resolver conflictos desde fuentes oficiales, nunca escoger raw arbitrariamente.
+| Entrada | Estado requerido | Estado actual / evidencia |
+|---|---|---|
+| Component Spec | APROBADO | EN REVISIÓN; T03 BLOCKED, falta dictamen sobre versión1.2. |
+| SPEC/HU/WF/FLOW y contratos | Vigentes y coherentes | Referencias en component-spec §2; resolver contradicciones antes de implementar. |
+| UX integral, UXD, UXG y DESIGN | Vigentes y coherentes | Fuentes disponibles; su existencia no aprueba este MK. |
+| Laboratorio y entorno | Alineados con documentación aprobada | T04 pendiente de T03; usar estructura de [prototipo](../prototipo/README.md). |
 
 ## 4. Objetivo
 
-El Gestor Comercial define Cross-sell/Upsell por producto o categoría, candidatos, orden, prioridad y vigencia; cada candidato Upsell conserva su criterio de superioridad explícito. Construir exclusivamente el inventario y sus estados, con evidencia trazable por pantalla. El paquete actual termina antes de construir raw; las tareas siguientes conservan estado pendiente.
+El Gestor Comercial define Cross-sell/Upsell por producto o categoría, candidatos, orden, prioridad y vigencia; cada candidato Upsell conserva su criterio de superioridad explícito. Construir exclusivamente el inventario y sus estados, con evidencia trazable por pantalla.
 
 ## 5. Pantallas
 
@@ -46,18 +51,18 @@ Contenido detallado en component-spec §10; no crear rutas/nuevas vistas por una
 
 ## 6. Pantalla ancla
 
-**MK-007-S01**: fija shell, jerarquía, filtros, tabla, estados y acciones. Vera la genera primero y conserva lenguaje visual en las restantes. Owner la contrasta con fuentes y normaliza antes de extender a formularios/selección/detalles. Una base atractiva no aprueba UX ni cambia negocio.
+**MK-007-S01** fija shell, jerarquía, filtros, tabla y estados. El owner la contrasta con component-spec aprobado y DESIGN antes de extender la composición a otras pantallas. Su implementación no sustituye la revisión UX final.
 
 ## 7. Estrategia
 
-1. Entregar documentación en `cueva`: inventario/campos/estados/LUX, contrato de ejecución y tareas verificables.
-2. Recibir raw de Vera: registrar entrega, ancla, pantallas, supuestos y dudas. Contrastar contra component-spec y fuentes; no dar raw por correcto.
-3. Alinear laboratorio y refinar S01; luego formulario, selectores si existen, detalle y confirmación según §11.
-4. Completar estados negativos/contexto, normalizar componentes/tokens/copy y accesibilidad.
-5. Autovalidar en desktop1440 con fixtures, rutas y recorridos, registrando evidencia/hallazgos en validation-report.
-6. Obtener revisión transversal de Vera, corregir hallazgos y registrar visto bueno real.
-7. Promover únicamente artefactos consolidados de estos MK desde laboratorio a `cueva` después del visto bueno; conservar cambios de fuentes permanentes, excluir raw/variantes/herramientas temporales. No merge indiscriminado de toda lab.
-8. Pasar versión aprobada a Figma, verificar fidelidad y cerrar reporte/índice. Si el equipo promueve el código antes de Figma, su estado sigue pendiente de fidelidad: no confundir promoción de rama con cierre del pipeline.
+1. Atender la revisión de component-spec y registrar aprobación documental en T03.
+2. Actualizar plan/tasks si cambia el inventario, confirmar DoR y alinear laboratorio en T04.
+3. Implementar/refinar S01 y las restantes pantallas según las tareas de §4.
+4. Completar fixtures y casos negativos, normalizar componentes/tokens y accesibilidad.
+5. Autovalidar rutas, navegación, datos y viewport; registrar evidencia real en validation-report.
+6. Someter la versión autovalidada a revisión UX transversal de Vera y corregir hallazgos.
+7. Con APROBADO PARA FIGMA, promover selectivamente artefactos consolidados a `cueva`; nunca fusionar toda lab hacia una rama oficial.
+8. Reflejar la versión con visto bueno en Figma, verificar fidelidad y cerrar reporte/índice. Promover código no equivale al cierre de Figma.
 
 ## 8. Reutilización
 
@@ -73,18 +78,18 @@ Component-spec §10/13 define qué estados corresponden a cada pantalla, cómo r
 
 ## 11. Orden de ejecución
 
-Documentos → base raw S01 y restantes por Vera → recepción/contraste → S01 normalizada → altas/edición y selección → detalle/estado → estados faltantes → normalización → autovalidación → revisión Vera → correcciones → visto bueno → promoción selectiva a `cueva` → Figma/fidelidad/reporte. Tasks §3–8 marca avance; validation-report registra pruebas reales, no sirve como lista de tareas.
+Component Spec y aprobación de entradas → Plan/Tasks alineados → implementación/refinamiento → normalización → autovalidación → revisión UX transversal → APROBADO PARA FIGMA → Figma → fidelidad → Validation Report APROBADO. La promoción selectiva requiere visto bueno y conserva los límites del laboratorio. Tasks registra avance; validation-report registra evidencia, no intenciones.
 
 ## 12. Riesgos
 
 | Riesgo | Respuesta verificable |
 |---|---|
-| Base todavía ausente | T03/T11 y demás construcción BLOCKED; avanzar solo documentos de entrada. |
-| Raw contradice negocio | Contrastar §9/13; detener decisión afectada y corregir fuente si corresponde antes de consolidar. |
-| Pérdida de entidad/contexto/draft | Probar edición del segundo registro, retorno de selector, fallo de guardar y cancelación/descarte. |
-| Visual desalineado | Medir shell/formulario/DS, tokens y contraste; no aceptar defaults arbitrarios. |
-| Integración/enriquecimiento ausente | Fixtures etiquetados, datos No disponible, no inventar backend/capacidad/agregación. |
-| Aprobación confundida con raw o commit | Registrar revisor/fecha/resultado; gate E independiente; Figma y fidelidad verificables. |
+| Component-spec todavía en revisión | T03 y construcción BLOCKED hasta dictamen identificable; no llamar completa a la preparación. |
+| Propuesta visual contradice negocio | Cotejar campos, acciones y estados contra fuentes oficiales; corregir antes de consolidar. |
+| Pérdida de contexto/borrador | Ejecutar los checks específicos de cada pantalla en tasks; comparar datos antes/después. |
+| Desalineación visual | Medir en 1440×900, comprobar tokens, foco y ausencia de overflow; registrar capturas. |
+| Integración/enriquecimiento ausente | Fixtures identificados y No disponible donde corresponde; no inventar capacidades de otros owners. |
+| Acuerdo operativo confundido con gobernanza | Homologar cambios transversales en fuentes oficiales; no imponer una herramienta o proveedor como gate local. |
 
 ## 13. Quality Gates
 
@@ -97,4 +102,4 @@ Documentos → base raw S01 y restantes por Vera → recepción/contraste → S0
 | E Revisión | Vera revisó, hallazgos bloqueantes/importantes cerrados y APROBADO PARA FIGMA verificable. | Revisor/fecha/versión; habilita promoción consolidada y Figma. |
 | F Figma/cierre | Enlace, fidelidad pantalla/estado, reporte final e índice actualizado. | Owner y evidencia; solo entonces APROBADO/#64 completo. |
 
-Los gates A–F aún no se acreditan con pantallas: el estado actual es documental y la base está pendiente. No registrar el trabajo de wireframes o BD como validación visual del MK.
+La preparación no está aprobada: falta T03. Los gates A–F todavía no se acreditan mediante pantallas; las tareas de redacción DONE únicamente acreditan documentos existentes, revisables y sujetos a cambios.

@@ -2,30 +2,31 @@
 
 ## 1. Identificación
 
-Gestión de ofertas y promociones · Axel Cueva · [plan](plan.md) / [component-spec](component-spec.md) · #64 · versión1.1 · 2026-10-03. Documentos preparados en `cueva`; raw pendiente; implementación futura en `lab/cueva`.
+Gestión de ofertas y promociones · Axel Cueva · [plan](plan.md) / [component-spec](component-spec.md) · #64 · versión1.2 · 2026-10-03. Documentación redactada en `cueva`, EN REVISIÓN; preparación e implementación bloqueadas hasta aprobar el component-spec. Refinamiento posterior en `lab/cueva`.
 
 ## 2. Convenciones y reglas de ejecución
 
-P0 obligatorio. Estados TODO/DOING/BLOCKED/REVIEW/DONE; checkbox marcado solo cuando la verificación es comprobable. Una tarea de documentos DONE no acredita una pantalla. Cada tarea tiene Entrada/Acción/Salida esperada/Verificación. Registrar causa y desbloqueo de BLOCKED en §9. IDs estables: T01–05 preparación, T11–17 pantallas según inventario, T50–52 normalización, T60–62 autovalidación, T70–74 revisión, T75–79 promoción/Figma/cierre. No crear un issue por cada tarea.
+P0 obligatorio. Estados TODO/DOING/BLOCKED/REVIEW/DONE; checkbox marcado solo cuando la verificación es comprobable. DONE en T01/T02/T05 acredita redacción comprobada, no aprobación. T03 permanece BLOCKED hasta dictamen; la preparación no está completa y el plan/tasks puede cambiar durante la revisión. Cada tarea tiene Entrada/Acción/Salida esperada/Verificación. Registrar causa y desbloqueo de BLOCKED en §9. IDs estables: T01–05 preparación, T11–17 pantallas según inventario, T50–52 normalización, T60–62 autovalidación, T70–74 revisión, T75–79 promoción/Figma/cierre. No crear un issue por cada tarea.
 
 ## 3. Preparación
+
 - [x] **MK-006-T01 — P0 — Preparar fuentes e inventario documental** `[DONE]`
   - **Entrada:** Fuentes enlazadas en component-spec §2 y reglas de SPEC/HU/WF/FLOW.
   - **Acción:** Cotejar campos/operaciones e inventariar pantallas, estados y límites sin inventar comportamiento.
-  - **Salida esperada:** Component-spec versión1.1 con fuentes, P0 y casos específicos.
+  - **Salida esperada:** Component-spec versión1.2 con fuentes, P0 y casos específicos.
   - **Verificación:** Enlaces locales existentes, secciones1–15, IDs/rutas únicas y campos contractualizados; no es aprobación UX.
 - [x] **MK-006-T02 — P0 — Documentar ejecución y escenarios** `[DONE]`
   - **Entrada:** Component-spec §5/9/13 y plantillas canónicas.
   - **Acción:** Definir plan/gates y unidades ejecutables; separar fases y resultados.
   - **Salida esperada:** Plan1–13 y tasks1–9; escenarios de datos/errores documentados, todavía no código de fixtures.
   - **Verificación:** Plan referencia las mismas pantallas/rutas; tareas con cuatro campos y bloqueos explícitos.
-- [ ] **MK-006-T03 — P0 — Recibir y registrar la base raw de Vera** `[BLOCKED]`
-  - **Entrada:** Component-spec/plan de cueva entregables para Vera.
-  - **Acción:** Recibir raw de Stitch, ubicación, ancla, pantallas creadas, supuestos y dudas.
-  - **Salida esperada:** Entrega identificable para comparación; ninguna aprobación deducida.
-  - **Verificación:** Registro del enlace/rama/archivos y origen Vera; contrastar con §5/9 antes de T11.
+- [ ] **MK-006-T03 — P0 — Obtener aprobación documental del component-spec** `[BLOCKED]`
+  - **Entrada:** Component-spec versión1.2 EN REVISIÓN y fuentes vigentes de §2.
+  - **Acción:** Atender observaciones funcionales/documentales y presentar la versión al revisor del equipo; alinear plan/tasks si cambia.
+  - **Salida esperada:** Dictamen explícito APROBADO sobre versión identificable y DoR comprobada.
+  - **Verificación:** Registrar revisor, fecha, versión, dictamen y cierre de observaciones; cambiar a DONE solo con esa evidencia, nunca por existir el archivo.
 - [ ] **MK-006-T04 — P0 — Alinear laboratorio y preparar fixtures de implementación** `[BLOCKED]`
-  - **Entrada:** Base identificada T03, documentación vigente de cueva.
+  - **Entrada:** Component-spec aprobado en T03 y documentación derivada alineada en cueva.
   - **Acción:** Alinear lab/cueva, resolver contradicciones contra fuentes y convertir §13 en datos/estados deterministas.
   - **Salida esperada:** Laboratorio coherente, fixtures de este MK listos para sus rutas.
   - **Verificación:** Diff limitado al MK/compartidos necesarios; valores/IDs estables, nada de otro owner ni contrato inventado.
@@ -40,50 +41,86 @@ P0 obligatorio. Estados TODO/DOING/BLOCKED/REVIEW/DONE; checkbox marcado solo cu
 ### MK-006-S01 — Listado de promociones
 
 - [ ] **MK-006-T11 — P0 — Implementar S01** `[BLOCKED]`
-  - **Entrada:** Raw T03/T04 y component-spec §10 MK-006-S01.
+  - **Entrada:** Entradas aprobadas T03/T04 y component-spec §10 MK-006-S01.
   - **Acción:** Refinar estructura, campos, acción «Crear promoción», retorno y estados aplicables de esta pantalla.
   - **Salida esperada:** Vista normalizada en MK006, ruta `/MK006/S01` y fixtures de §13.
-  - **Verificación:** Entrada directa1440; Sidebar o ruta directa. S02 o S03/S05 de la entidad elegida.; estados negativos y controles conservan entidad/contexto; captura y evidencia propia.
+  - **Verificación:**
+    - **Ruta/fixture:** Abrir `/MK006/S01`; reproducir default y sin-resultados según component-spec §13, con los registros ficticios allí definidos.
+    - **Recorrido:** Filtrar Carrera de octubre, abrir S05 y volver al listado; probar Crear promoción.
+    - **Resultado:** Detalle pertenece a Carrera de octubre; Crear abre S02 y el retorno mantiene filtros.
+    - **Contexto:** Conservar filtros, página y promoción seleccionada.
+    - **Viewport/acceso:** Verificar 1440×900, sin overflow horizontal; recorrer acciones con teclado y comprobar foco/labels.
+    - **Evidencia:** Al implementar, registrar fixture, pasos, resultado y capturas de MK-006-S01 en validation-report. Estado actual: sin ejecución visual ni evidencia de pantalla.
 
 ### MK-006-S02 — Crear promoción
 
 - [ ] **MK-006-T12 — P0 — Implementar S02** `[BLOCKED]`
-  - **Entrada:** Raw T03/T04 y component-spec §10 MK-006-S02.
+  - **Entrada:** Entradas aprobadas T03/T04 y component-spec §10 MK-006-S02.
   - **Acción:** Refinar estructura, campos, acción «Crear promoción», retorno y estados aplicables de esta pantalla.
   - **Salida esperada:** Vista normalizada en MK006, ruta `/MK006/S02` y fixtures de §13.
-  - **Verificación:** Entrada directa1440; S01 / Crear promoción. S05 tras resultado confirmado; S04 para elegir alcance; cancelar a S01.; estados negativos y controles conservan entidad/contexto; captura y evidencia propia.
+  - **Verificación:**
+    - **Ruta/fixture:** Abrir `/MK006/S02`; reproducir beneficio-invalido y canales-vacios según component-spec §13, con los registros ficticios allí definidos.
+    - **Recorrido:** Crear con porcentaje 101 y sin canales; corregir a 15 y Marketplace; abrir selector S04 y regresar.
+    - **Resultado:** Valor/canales inválidos impiden guardar; selección conserva borrador; guardado confirmado abre S05 y cancelación resuelta vuelve a S01.
+    - **Contexto:** Conservar nombre, fechas, beneficio, canales y política al corregir o volver del selector.
+    - **Viewport/acceso:** Verificar 1440×900, sin overflow horizontal; recorrer acciones con teclado y comprobar foco/labels.
+    - **Evidencia:** Al implementar, registrar fixture, pasos, resultado y capturas de MK-006-S02 en validation-report. Estado actual: sin ejecución visual ni evidencia de pantalla.
 
 ### MK-006-S03 — Editar promoción
 
 - [ ] **MK-006-T13 — P0 — Implementar S03** `[BLOCKED]`
-  - **Entrada:** Raw T03/T04 y component-spec §10 MK-006-S03.
+  - **Entrada:** Entradas aprobadas T03/T04 y component-spec §10 MK-006-S03.
   - **Acción:** Refinar estructura, campos, acción «Guardar cambios», retorno y estados aplicables de esta pantalla.
   - **Salida esperada:** Vista normalizada en MK006, ruta `/MK006/S03` y fixtures de §13.
-  - **Verificación:** Entrada directa1440; S01/S05 con promocionId. S05 del mismo registro; S04 conserva borrador de edición.; estados negativos y controles conservan entidad/contexto; captura y evidencia propia.
+  - **Verificación:**
+    - **Ruta/fixture:** Abrir `/MK006/S03`; reproducir modalidad-permitida, modalidad-bloqueada y modalidad-desconocida según component-spec §13, con los registros ficticios allí definidos.
+    - **Recorrido:** Editar Inactiva nueva e Inactiva histórica; repetir con capacidad administrativa desconocida.
+    - **Resultado:** Solo capacidad=true permite cambiar modalidad; false o ausente no habilita la acción. Guardado confirmado abre S05 del mismo registro.
+    - **Contexto:** Conservar promoción y datos del formulario ante bloqueo o rechazo; no deducir capacidad desde el estado visible.
+    - **Viewport/acceso:** Verificar 1440×900, sin overflow horizontal; recorrer acciones con teclado y comprobar foco/labels.
+    - **Evidencia:** Al implementar, registrar fixture, pasos, resultado y capturas de MK-006-S03 en validation-report. Estado actual: sin ejecución visual ni evidencia de pantalla.
 
 ### MK-006-S04 — Seleccionar alcance
 
 - [ ] **MK-006-T14 — P0 — Implementar S04** `[BLOCKED]`
-  - **Entrada:** Raw T03/T04 y component-spec §10 MK-006-S04.
+  - **Entrada:** Entradas aprobadas T03/T04 y component-spec §10 MK-006-S04.
   - **Acción:** Refinar estructura, campos, acción «Confirmar alcance», retorno y estados aplicables de esta pantalla.
   - **Salida esperada:** Vista normalizada en MK006, ruta `/MK006/S04` y fixtures de §13.
-  - **Verificación:** Entrada directa1440; S02/S03 con borrador y selección; ruta directa usa origen reproducible. Mismo S02/S03 con borrador y productIds/skus preservados; cancelar descarta solo cambios del selector.; estados negativos y controles conservan entidad/contexto; captura y evidencia propia.
+  - **Verificación:**
+    - **Ruta/fixture:** Abrir `/MK006/S04`; reproducir producto-con-sku-nuevo y coincidencias-alcance según component-spec §13, con los registros ficticios allí definidos.
+    - **Recorrido:** Abrir desde S02/S03, elegir producto completo y SKU específico; confirmar y luego repetir cancelando.
+    - **Resultado:** Producto completo conserva productId e incluye futuros SKU; coincidencias no duplican alcance; confirmar vuelve al formulario de origen y cancelar descarta solo selección temporal.
+    - **Contexto:** Conservar borrador, tipo de selección y alcance previo; el selector no cambia beneficio ni canales.
+    - **Viewport/acceso:** Verificar 1440×900, sin overflow horizontal; recorrer acciones con teclado y comprobar foco/labels.
+    - **Evidencia:** Al implementar, registrar fixture, pasos, resultado y capturas de MK-006-S04 en validation-report. Estado actual: sin ejecución visual ni evidencia de pantalla.
 
 ### MK-006-S05 — Detalle de promoción
 
 - [ ] **MK-006-T15 — P0 — Implementar S05** `[BLOCKED]`
-  - **Entrada:** Raw T03/T04 y component-spec §10 MK-006-S05.
+  - **Entrada:** Entradas aprobadas T03/T04 y component-spec §10 MK-006-S05.
   - **Acción:** Refinar estructura, campos, acción «Editar promoción», retorno y estados aplicables de esta pantalla.
   - **Salida esperada:** Vista normalizada en MK006, ruta `/MK006/S05` y fixtures de §13.
-  - **Verificación:** Entrada directa1440; S01 o guardado confirmado. S03; cambiar estado a S06; volver a S01 con filtros.; estados negativos y controles conservan entidad/contexto; captura y evidencia propia.
+  - **Verificación:**
+    - **Ruta/fixture:** Abrir `/MK006/S05`; reproducir default y error según component-spec §13, con los registros ficticios allí definidos.
+    - **Recorrido:** Consultar Carrera de octubre; abrir Editar S03 y Cambiar estado S06; repetir con lectura fallida.
+    - **Resultado:** Detalle muestra 15%, canales y alcance del registro correcto; error ofrece reintento sin mostrar datos de otra promoción.
+    - **Contexto:** Conservar promoción y filtros del listado en todos los retornos.
+    - **Viewport/acceso:** Verificar 1440×900, sin overflow horizontal; recorrer acciones con teclado y comprobar foco/labels.
+    - **Evidencia:** Al implementar, registrar fixture, pasos, resultado y capturas de MK-006-S05 en validation-report. Estado actual: sin ejecución visual ni evidencia de pantalla.
 
 ### MK-006-S06 — Cambiar estado
 
 - [ ] **MK-006-T16 — P0 — Implementar S06** `[BLOCKED]`
-  - **Entrada:** Raw T03/T04 y component-spec §10 MK-006-S06.
+  - **Entrada:** Entradas aprobadas T03/T04 y component-spec §10 MK-006-S06.
   - **Acción:** Refinar estructura, campos, acción «Activar promoción / Desactivar promoción», retorno y estados aplicables de esta pantalla.
   - **Salida esperada:** Vista normalizada en MK006, ruta `/MK006/S06` y fixtures de §13.
-  - **Verificación:** Entrada directa1440; S05 / Cambiar estado; entrada directa reproduce detalle + diálogo. S05 con estado confirmado; rechazo/cancelar conserva estado y foco.; estados negativos y controles conservan entidad/contexto; captura y evidencia propia.
+  - **Verificación:**
+    - **Ruta/fixture:** Abrir `/MK006/S06`; reproducir default y rechazo según component-spec §13, con los registros ficticios allí definidos.
+    - **Recorrido:** Abrir S06 desde S05; cancelar, provocar rechazo y luego confirmar cambio de estado.
+    - **Resultado:** Solo confirmación satisfactoria actualiza estado; rechazo/cancelación conserva estado y antecedente de activación.
+    - **Contexto:** Conservar promoción, detalle y capacidad de modalidad; Escape devuelve foco a la acción original.
+    - **Viewport/acceso:** Verificar 1440×900, sin overflow horizontal; recorrer acciones con teclado y comprobar foco/labels.
+    - **Evidencia:** Al implementar, registrar fixture, pasos, resultado y capturas de MK-006-S06 en validation-report. Estado actual: sin ejecución visual ni evidencia de pantalla.
 
 ## 5. Normalización
 
@@ -143,14 +180,14 @@ P0 obligatorio. Estados TODO/DOING/BLOCKED/REVIEW/DONE; checkbox marcado solo cu
 
 - [ ] **MK-006-T75 — P0 — Promover artefactos consolidados a cueva** `[TODO]`
   - **Entrada:** Visto bueno T74, diff de lab/cueva.
-  - **Acción:** Trasladar únicamente documentos/código normalizado de este MK y compartidos necesarios; retirar raw/experimentos.
+  - **Acción:** Trasladar únicamente documentos/código normalizado de este MK y compartidos necesarios; excluir variantes y experimentos sin aprobación.
   - **Salida esperada:** Entrega consolidada en la rama oficial existente, sin merge indiscriminado de lab.
   - **Verificación:** Diff revisable sin archivos temporales/guías privadas/trabajo ajeno; no presentar promoción como Figma terminado.
 - [ ] **MK-006-T76 — P0 — Trasladar la versión aprobada a Figma** `[TODO]`
   - **Entrada:** Versión exacta aprobada por Vera y ya consolidada.
   - **Acción:** Reproducir pantallas/estados con tokens/componentes y rutas identificables.
   - **Salida esperada:** Archivo/enlaces de Figma y frames trazables.
-  - **Verificación:** No trasladar raw ni declarar aprobación antes de T74; enlaces/versiones verificables.
+  - **Verificación:** Trasladar solo la versión con visto bueno y no declarar aprobación antes de T74; enlaces/versiones verificables.
 - [ ] **MK-006-T78 — P0 — Verificar fidelidad en Figma** `[TODO]`
   - **Entrada:** Mockup aprobado y frames T76.
   - **Acción:** Comparar pantalla/estado, copy/datos, medidas/tokens/interacciones representables.
@@ -166,6 +203,6 @@ P0 obligatorio. Estados TODO/DOING/BLOCKED/REVIEW/DONE; checkbox marcado solo cu
 
 | ID / tareas | Causa / fuente | Responsable de resolución | Condición de desbloqueo | Estado |
 |---|---|---|---|---|
-| B-RAW — T03/T04/T11–T16 | Base raw aún no entregada; secuencia de plan §7 confirmada por Axel. | Leonardo Vera prepara base; Axel identifica recepción. | Base con ancla/inventario/enlace o archivos y supuestos; contraste funcional realizado. | BLOCKED |
+| B-DOC — T03/T04/T11–T16 | Component-spec versión1.2 EN REVISIÓN; plan.template §3 exige APROBADO. | Axel atiende observaciones; revisor documental del equipo emite dictamen. | Aprobación registrada con revisor/fecha/versión y plan/tasks alineados; confirmar DoR. | BLOCKED |
 | B-UX — T70/T71/T74 | Revisión transversal exige versión autovalidada; no existe todavía. | Vera / owner. | T62 completada y revisión/visto bueno real sobre versión concreta. | Pendiente de fase |
 | B-PROM — T75/T76/T78/T79 | Gate E sin aprobación; no promover código experimental ni Figma. | Owner / revisor. | APROBADO PARA FIGMA, luego promoción/fidelidad verificadas. | Pendiente de fase |
