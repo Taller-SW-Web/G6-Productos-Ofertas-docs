@@ -707,6 +707,7 @@ Antes de aprobar un `physical-model.md` o un `migration.sql`:
 
 | Documento | Uso |
 |---|---|
+| [`plantillas/logical-model.md`](plantillas/logical-model.md) | Modelo lógico de un bounded context |
 | [`plantillas/physical-model.md`](plantillas/physical-model.md) | Modelo físico de un bounded context |
 | [`plantillas/migration.sql`](plantillas/migration.sql) | Estructura de migraciones de un bounded context |
 | [`plantillas/validation.sql`](plantillas/validation.sql) | Checks verificables de un bounded context |

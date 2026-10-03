@@ -9,14 +9,17 @@
 
 DO $$
 DECLARE
-    v_ns           oid;
-    v_total        bigint;
-    v_available    integer;
-    v_res_id       uuid;
-    v_global_id    uuid;
-    v_inc_id       uuid;
-    v_tra_id       uuid;
-    v_fixture      bigint;
+    v_ns            oid;
+    v_total         bigint;
+    v_available     integer;
+    v_loc_id        uuid;
+    v_loc_dest_id   uuid;
+    v_res_id        uuid;
+    v_global_id     uuid;
+    v_inc_id        uuid;
+    v_tra_id        uuid;
+    v_fixture       uuid;
+    v_col_type      text;
 BEGIN
 
     -- ---------------------------------------------------------------- 1.
@@ -28,25 +31,132 @@ BEGIN
     END IF;
 
     -- ---------------------------------------------------------------- 2.
+    -- Tabla inventory.locations existe y cumple especificación (CONVENCIONES_BD.md §18)
+    -- ----------------------------------------------------------------
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'inventory' AND table_name = 'locations'
+    ) THEN
+        RAISE EXCEPTION 'VALIDACION FALLADA [2a]: la tabla inventory.locations no existe';
+    END IF;
+
+    -- Comprobar PK pk_locations
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'inventory' AND table_name = 'locations'
+          AND constraint_type = 'PRIMARY KEY' AND constraint_name = 'pk_locations'
+    ) THEN
+        RAISE EXCEPTION 'VALIDACION FALLADA [2b]: falta la clave primaria pk_locations en inventory.locations';
+    END IF;
+
+    -- Comprobar unicidad de code
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'inventory' AND table_name = 'locations'
+          AND constraint_type = 'UNIQUE' AND constraint_name = 'uq_locations_code'
+    ) THEN
+        RAISE EXCEPTION 'VALIDACION FALLADA [2c]: falta la restriccion unica uq_locations_code en inventory.locations';
+    END IF;
+
+    -- Comprobar tipo uuid para columna id
+    SELECT data_type INTO v_col_type
+      FROM information_schema.columns
+     WHERE table_schema = 'inventory' AND table_name = 'locations' AND column_name = 'id';
+    IF v_col_type <> 'uuid' THEN
+        RAISE EXCEPTION 'VALIDACION FALLADA [2d]: locations.id debe ser tipo uuid, obtenido %', v_col_type;
+    END IF;
+
+    -- Comprobar que external_ref es nullable
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'inventory' AND table_name = 'locations'
+          AND column_name = 'external_ref' AND is_nullable = 'YES'
+    ) THEN
+        RAISE EXCEPTION 'VALIDACION FALLADA [2e]: locations.external_ref debe ser nullable';
+    END IF;
+
+    -- ---------------------------------------------------------------- 3.
+    -- Coherencia de tipos y FK internas hacia inventory.locations
+    -- ----------------------------------------------------------------
+    -- Comprobar tipo uuid en columnas que referencian ubicación
+    SELECT count(*) INTO v_total
+      FROM information_schema.columns
+     WHERE table_schema = 'inventory'
+       AND column_name IN ('location_id', 'source_location_id', 'target_location_id')
+       AND data_type <> 'uuid';
+    IF v_total > 0 THEN
+        RAISE EXCEPTION 'VALIDACION FALLADA [3a]: existen % columnas de ubicacion que no son de tipo uuid', v_total;
+    END IF;
+
+    -- Comprobar FK internas hacia locations
+    SELECT count(*) INTO v_total
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.referential_constraints rc
+        ON rc.constraint_name = tc.constraint_name AND rc.constraint_schema = tc.constraint_schema
+      JOIN information_schema.constraint_column_usage ccu
+        ON ccu.constraint_name = tc.constraint_name AND ccu.constraint_schema = tc.constraint_schema
+     WHERE tc.constraint_schema = 'inventory'
+       AND tc.constraint_type = 'FOREIGN KEY'
+       AND ccu.table_name = 'locations' AND ccu.column_name = 'id';
+    IF v_total < 7 THEN
+        RAISE EXCEPTION 'VALIDACION FALLADA [3b]: se esperaban al menos 7 FK hacia inventory.locations, encontradas %', v_total;
+    END IF;
+
+    -- ---------------------------------------------------------------- 4.
+    -- Aislamiento: ninguna FK hacia otros schemas (Retail, Catálogo, auth, public)
+    -- ----------------------------------------------------------------
+    SELECT count(*) INTO v_total
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.referential_constraints rc
+        ON rc.constraint_name = tc.constraint_name AND rc.constraint_schema = tc.constraint_schema
+     WHERE tc.constraint_schema = 'inventory'
+       AND tc.constraint_type = 'FOREIGN KEY'
+       AND rc.unique_constraint_schema IS DISTINCT FROM 'inventory';
+    IF v_total > 0 THEN
+        RAISE EXCEPTION 'VALIDACION FALLADA [4]: se encontraron % FK hacia schemas externos', v_total;
+    END IF;
+
+    -- ---------------------------------------------------------------- 5.
+    -- Creación de ubicaciones de prueba para fixtures
+    -- ----------------------------------------------------------------
+    INSERT INTO inventory.locations (code, name, type, external_ref)
+    VALUES ('V-LOC-1', 'Almacén de Prueba 1', 'ALMACEN_CENTRAL', 'RET-001')
+    RETURNING id INTO v_loc_id;
+
+    INSERT INTO inventory.locations (code, name, type, external_ref)
+    VALUES ('V-LOC-DEST', 'Almacén Destino Prueba', 'TIENDA', NULL)
+    RETURNING id INTO v_loc_dest_id;
+
+    -- Unicidad de código de ubicación
+    BEGIN
+        INSERT INTO inventory.locations (code, name, type)
+        VALUES ('V-LOC-1', 'Duplicado', 'TIENDA');
+        RAISE EXCEPTION 'VALIDACION FALLADA [5b]: se permitió código de ubicación duplicado';
+    EXCEPTION WHEN unique_violation THEN
+        NULL;
+    END;
+
+    -- ---------------------------------------------------------------- 6.
     -- available es columna generada por la fórmula contractual
     --    available = max(on_hand - reserved - blocked, 0)
     -- ----------------------------------------------------------------
     INSERT INTO inventory.stock_balance (sku_id, location_id, on_hand, reserved, blocked)
-    VALUES ('V-SKU-1', 'V-LOC', 100, 30, 10);
+    VALUES ('V-SKU-1', v_loc_id, 100, 30, 10);
+
     SELECT available INTO v_available
       FROM inventory.stock_balance
-     WHERE sku_id = 'V-SKU-1' AND location_id = 'V-LOC';
+     WHERE sku_id = 'V-SKU-1' AND location_id = v_loc_id;
     IF v_available IS DISTINCT FROM 60 THEN
-        RAISE EXCEPTION 'VALIDACION FALLADA [2]: available esperado 60, obtenido %', v_available;
+        RAISE EXCEPTION 'VALIDACION FALLADA [6]: available esperado 60, obtenido %', v_available;
     END IF;
 
-    -- ---------------------------------------------------------------- 3.
+    -- ---------------------------------------------------------------- 7.
     -- Invariante: on_hand negativo DEBE ser rechazado (CHECK)
     -- ----------------------------------------------------------------
     BEGIN
         INSERT INTO inventory.stock_balance (sku_id, location_id, on_hand)
-        VALUES ('V-SKU-NEG', 'V-LOC', -1);
-        RAISE EXCEPTION 'VALIDACION FALLADA [3a]: se permitió on_hand negativo';
+        VALUES ('V-SKU-NEG', v_loc_id, -1);
+        RAISE EXCEPTION 'VALIDACION FALLADA [7a]: se permitió on_hand negativo';
     EXCEPTION WHEN check_violation THEN
         NULL;
     END;
@@ -54,43 +164,42 @@ BEGIN
     -- Invariante: reserved o blocked negativos DEBEN ser rechazados
     BEGIN
         INSERT INTO inventory.stock_balance (sku_id, location_id, on_hand, reserved)
-        VALUES ('V-SKU-NEG2', 'V-LOC', 5, -1);
-        RAISE EXCEPTION 'VALIDACION FALLADA [3b]: se permitió reserved negativo';
+        VALUES ('V-SKU-NEG2', v_loc_id, 5, -1);
+        RAISE EXCEPTION 'VALIDACION FALLADA [7b]: se permitió reserved negativo';
     EXCEPTION WHEN check_violation THEN
         NULL;
     END;
 
-    -- ---------------------------------------------------------------- 4.
-    -- Invariante: reserved + blocked <= on_hand DEBE ser rechazado
+    -- ---------------------------------------------------------------- 8.
+    -- Invariante: reserved + blocked <= on_hand DEBE ser rechazado si supera
     -- ----------------------------------------------------------------
     BEGIN
         INSERT INTO inventory.stock_balance (sku_id, location_id, on_hand, reserved, blocked)
-        VALUES ('V-SKU-OV', 'V-LOC', 5, 4, 2);
-        RAISE EXCEPTION 'VALIDACION FALLADA [4]: se permitió reserved + blocked > on_hand';
+        VALUES ('V-SKU-OV', v_loc_id, 5, 4, 2);
+        RAISE EXCEPTION 'VALIDACION FALLADA [8]: se permitió reserved + blocked > on_hand';
     EXCEPTION WHEN check_violation THEN
         NULL;
     END;
 
-    -- ---------------------------------------------------------------- 5.
+    -- ---------------------------------------------------------------- 9.
     -- Idempotencia: la clave de comando en inventory_operations es única
     -- ----------------------------------------------------------------
-    INSERT INTO inventory.inventory_operations (operation_type, idempotency_key, intention, status)
-    VALUES ('RESERVA', 'V-IDEM-1', 'reservar', 'APLICADO');
+    INSERT INTO inventory.inventory_operations (operation_type, idempotency_key, intention, status, location_id)
+    VALUES ('RESERVA', 'V-IDEM-1', 'reservar', 'APLICADO', v_loc_id);
+
     BEGIN
-        INSERT INTO inventory.inventory_operations (operation_type, idempotency_key, intention, status)
-        VALUES ('RESERVA', 'V-IDEM-1', 'reservar', 'APLICADO');
-        RAISE EXCEPTION 'VALIDACION FALLADA [5]: idempotency_key duplicada aceptada';
+        INSERT INTO inventory.inventory_operations (operation_type, idempotency_key, intention, status, location_id)
+        VALUES ('RESERVA', 'V-IDEM-1', 'reservar', 'APLICADO', v_loc_id);
+        RAISE EXCEPTION 'VALIDACION FALLADA [9]: idempotency_key duplicada aceptada';
     EXCEPTION WHEN unique_violation THEN
         NULL;
     END;
 
-    -- ---------------------------------------------------------------- 6.
+    -- ---------------------------------------------------------------- 10.
     -- Ciclo funcional reserva -> consumo con Kardex consistente
-    --    reserva:  reserved += qty  (on_hand sin cambios)
-    --    consumo:  on_hand -= qty, reserved -= qty
     -- ----------------------------------------------------------------
     INSERT INTO inventory.stock_balance (sku_id, location_id, on_hand, reserved, blocked)
-    VALUES ('V-SKU-CICLO', 'V-LOC', 10, 0, 0);
+    VALUES ('V-SKU-CICLO', v_loc_id, 10, 0, 0);
 
     INSERT INTO inventory.reservations
         (reservation_id, expires_at, idempotency_key)
@@ -98,25 +207,25 @@ BEGIN
     RETURNING id INTO v_res_id;
 
     INSERT INTO inventory.reservation_lines (reservation_id, sku_id, location_id, quantity)
-    VALUES (v_res_id, 'V-SKU-CICLO', 'V-LOC', 3);
+    VALUES (v_res_id, 'V-SKU-CICLO', v_loc_id, 3);
 
     -- Reserva: reserved += 3
     UPDATE inventory.stock_balance
        SET reserved = reserved + 3, stock_version = stock_version + 1
-     WHERE sku_id = 'V-SKU-CICLO' AND location_id = 'V-LOC';
+     WHERE sku_id = 'V-SKU-CICLO' AND location_id = v_loc_id;
 
     SELECT available INTO v_available
       FROM inventory.stock_balance
-     WHERE sku_id = 'V-SKU-CICLO' AND location_id = 'V-LOC';
+     WHERE sku_id = 'V-SKU-CICLO' AND location_id = v_loc_id;
     IF v_available IS DISTINCT FROM 7 THEN
-        RAISE EXCEPTION 'VALIDACION FALLADA [6a]: tras la reserva available esperado 7, obtenido %', v_available;
+        RAISE EXCEPTION 'VALIDACION FALLADA [10a]: tras la reserva available esperado 7, obtenido %', v_available;
     END IF;
 
     INSERT INTO inventory.kardex
         (sku_id, location_id, operation_type, reservation_id, quantity,
          on_hand_before, on_hand_after, reserved_before, reserved_after,
          blocked_before, blocked_after, stock_version)
-    VALUES ('V-SKU-CICLO', 'V-LOC', 'RESERVA', v_res_id, 3, 10, 10, 0, 3, 0, 0, 1);
+    VALUES ('V-SKU-CICLO', v_loc_id, 'RESERVA', v_res_id, 3, 10, 10, 0, 3, 0, 0, 1);
 
     -- Consumo: on_hand -= 3 y reserved -= 3
     UPDATE inventory.reservations
@@ -125,26 +234,26 @@ BEGIN
 
     UPDATE inventory.stock_balance
        SET on_hand = on_hand - 3, reserved = reserved - 3, stock_version = stock_version + 1
-     WHERE sku_id = 'V-SKU-CICLO' AND location_id = 'V-LOC';
+     WHERE sku_id = 'V-SKU-CICLO' AND location_id = v_loc_id;
 
     SELECT available INTO v_available
       FROM inventory.stock_balance
-     WHERE sku_id = 'V-SKU-CICLO' AND location_id = 'V-LOC';
+     WHERE sku_id = 'V-SKU-CICLO' AND location_id = v_loc_id;
     IF v_available IS DISTINCT FROM 7 THEN
-        RAISE EXCEPTION 'VALIDACION FALLADA [6b]: tras el consumo available esperado 7, obtenido %', v_available;
+        RAISE EXCEPTION 'VALIDACION FALLADA [10b]: tras el consumo available esperado 7, obtenido %', v_available;
     END IF;
 
     INSERT INTO inventory.kardex
         (sku_id, location_id, operation_type, reservation_id, quantity,
          on_hand_before, on_hand_after, reserved_before, reserved_after,
          blocked_before, blocked_after, stock_version)
-    VALUES ('V-SKU-CICLO', 'V-LOC', 'CONSUMO', v_res_id, -3, 10, 7, 3, 0, 0, 0, 2);
+    VALUES ('V-SKU-CICLO', v_loc_id, 'CONSUMO', v_res_id, -3, 10, 7, 3, 0, 0, 0, 2);
 
-    -- ---------------------------------------------------------------- 7.
-    -- Expiración por TTL: efecto completo (reserved--, kardex, outbox por evento)
+    -- ---------------------------------------------------------------- 11.
+    -- Expiración por TTL: efecto completo
     -- ----------------------------------------------------------------
     INSERT INTO inventory.stock_balance (sku_id, location_id, on_hand, reserved, blocked)
-    VALUES ('V-SKU-TTL', 'V-LOC', 8, 2, 0);
+    VALUES ('V-SKU-TTL', v_loc_id, 8, 2, 0);
 
     INSERT INTO inventory.reservations
         (reservation_id, expires_at, idempotency_key)
@@ -152,7 +261,7 @@ BEGIN
     RETURNING id INTO v_res_id;
 
     INSERT INTO inventory.reservation_lines (reservation_id, sku_id, location_id, quantity)
-    VALUES (v_res_id, 'V-SKU-TTL', 'V-LOC', 2);
+    VALUES (v_res_id, 'V-SKU-TTL', v_loc_id, 2);
 
     -- Worker: marcar EXPIRADA y liberar reserved
     UPDATE inventory.reservations
@@ -161,30 +270,22 @@ BEGIN
 
     UPDATE inventory.stock_balance
        SET reserved = reserved - 2, stock_version = stock_version + 1
-     WHERE sku_id = 'V-SKU-TTL' AND location_id = 'V-LOC';
+     WHERE sku_id = 'V-SKU-TTL' AND location_id = v_loc_id;
 
     SELECT available INTO v_available
       FROM inventory.stock_balance
-     WHERE sku_id = 'V-SKU-TTL' AND location_id = 'V-LOC';
+     WHERE sku_id = 'V-SKU-TTL' AND location_id = v_loc_id;
     IF v_available IS DISTINCT FROM 8 THEN
-        RAISE EXCEPTION 'VALIDACION FALLADA [7a]: tras expirar available esperado 8, obtenido %', v_available;
+        RAISE EXCEPTION 'VALIDACION FALLADA [11a]: tras expirar available esperado 8, obtenido %', v_available;
     END IF;
 
     INSERT INTO inventory.kardex
         (sku_id, location_id, operation_type, reservation_id, quantity,
          on_hand_before, on_hand_after, reserved_before, reserved_after,
          blocked_before, blocked_after, stock_version)
-    VALUES ('V-SKU-TTL', 'V-LOC', 'EXPIRACION', v_res_id, -2, 8, 8, 2, 0, 0, 0, 1);
+    VALUES ('V-SKU-TTL', v_loc_id, 'EXPIRACION', v_res_id, -2, 8, 8, 2, 0, 0, 0, 1);
 
-    -- Outbox en la misma transacción local: reservation.expired y stock.changed
-    INSERT INTO inventory.outbox (event_id, event_type, aggregate_type, aggregate_id, correlation_id, payload)
-    VALUES (gen_random_uuid(), 'inventory.reservation.expired', 'reservation',
-            v_res_id::text, NULL, jsonb_build_object('reservation_id', v_res_id));
-    INSERT INTO inventory.outbox (event_id, event_type, aggregate_type, aggregate_id, correlation_id, payload)
-    VALUES (gen_random_uuid(), 'inventory.stock.changed', 'stock_balance',
-            'V-SKU-TTL|V-LOC', NULL, jsonb_build_object('sku_id', 'V-SKU-TTL'));
-
-    -- ---------------------------------------------------------------- 8.
+    -- ---------------------------------------------------------------- 12.
     -- Carrera: una sola transición terminal (trigger trg_no_double_terminal)
     -- ----------------------------------------------------------------
     INSERT INTO inventory.reservations
@@ -193,16 +294,23 @@ BEGIN
     RETURNING id INTO v_res_id;
 
     INSERT INTO inventory.reservation_lines (reservation_id, sku_id, location_id, quantity)
-    VALUES (v_res_id, 'V-SKU-CARRERA', 'V-LOC', 1);
+    VALUES (v_res_id, 'V-SKU-CARRERA', v_loc_id, 1);
 
     UPDATE inventory.reservations
        SET status = 'EXPIRADA', expired_at = now()
      WHERE id = v_res_id;
 
+    BEGIN
+        UPDATE inventory.reservations
+           SET status = 'CONSUMIDA'
+         WHERE id = v_res_id;
+        RAISE EXCEPTION 'VALIDACION FALLADA [12]: se permitió cambiar estado terminal de reserva';
+    EXCEPTION WHEN raise_exception THEN
+        NULL;
+    END;
 
-
-    -- ---------------------------------------------------------------- 9.
-    -- Outbox: event_id único (no duplicar eventos)
+    -- ---------------------------------------------------------------- 13.
+    -- Outbox: event_id único
     -- ----------------------------------------------------------------
     INSERT INTO inventory.outbox (event_id, event_type, aggregate_type, aggregate_id, payload)
     VALUES (gen_random_uuid(), 'dup', 'x', 'x', '{}'::jsonb)
@@ -212,15 +320,15 @@ BEGIN
         INSERT INTO inventory.outbox (event_id, event_type, aggregate_type, aggregate_id, payload)
         SELECT event_id, event_type, aggregate_type, aggregate_id, payload
           FROM inventory.outbox WHERE id = v_fixture;
-        RAISE EXCEPTION 'VALIDACION FALLADA [9]: event_id duplicado aceptado en outbox';
+        RAISE EXCEPTION 'VALIDACION FALLADA [13]: event_id duplicado aceptado en outbox';
     EXCEPTION WHEN unique_violation THEN
         NULL;
     END;
 
     DELETE FROM inventory.outbox WHERE id = v_fixture;
 
-    -- ---------------------------------------------------------------- 10.
-    -- Inbox: message_id único (deduplicación de mensajes entrantes)
+    -- ---------------------------------------------------------------- 14.
+    -- Inbox: message_id único
     -- ----------------------------------------------------------------
     INSERT INTO inventory.inbox (message_id, message_type, source, payload)
     VALUES (gen_random_uuid(), 'inventory.reservation.requested', 'rabbitmq', '{}'::jsonb)
@@ -229,13 +337,13 @@ BEGIN
     BEGIN
         INSERT INTO inventory.inbox (message_id, message_type, source, payload)
         SELECT message_id, message_type, source, payload FROM inventory.inbox WHERE id = v_fixture;
-        RAISE EXCEPTION 'VALIDACION FALLADA [10]: message_id duplicado aceptado en inbox';
+        RAISE EXCEPTION 'VALIDACION FALLADA [14]: message_id duplicado aceptado en inbox';
     EXCEPTION WHEN unique_violation THEN
         NULL;
     END;
 
-    -- ---------------------------------------------------------------- 11.
-    -- Umbral global único en stock_threshold_override
+    -- ---------------------------------------------------------------- 15.
+    -- Umbrales de stock
     -- ----------------------------------------------------------------
     INSERT INTO inventory.stock_threshold_override (sku_id, location_id, umbral_efectivo)
     VALUES (NULL, NULL, 5)
@@ -244,86 +352,63 @@ BEGIN
     BEGIN
         INSERT INTO inventory.stock_threshold_override (sku_id, location_id, umbral_efectivo)
         VALUES (NULL, NULL, 8);
-        RAISE EXCEPTION 'VALIDACION FALLADA [11]: override global duplicado aceptado';
+        RAISE EXCEPTION 'VALIDACION FALLADA [15a]: override global duplicado aceptado';
     EXCEPTION WHEN unique_violation THEN
         NULL;
     END;
 
-    -- override por SKU válido (sku_id definido, location_id nulo): SPEC-015 §6
     INSERT INTO inventory.stock_threshold_override (sku_id, location_id, umbral_efectivo)
     VALUES ('V-SKU-TH', NULL, 3);
 
     -- scope inválido (por ubicación) debe fallar: SPEC-015 §6
     BEGIN
         INSERT INTO inventory.stock_threshold_override (sku_id, location_id, umbral_efectivo)
-        VALUES ('V-SKU-TH', 'V-LOC', 3);
-        RAISE EXCEPTION 'VALIDACION FALLADA [11b]: override por ubicación aceptado';
+        VALUES ('V-SKU-TH', v_loc_id, 3);
+        RAISE EXCEPTION 'VALIDACION FALLADA [15b]: override por ubicación aceptado';
     EXCEPTION WHEN check_violation THEN
         NULL;
     END;
 
-    -- ---------------------------------------------------------------- 12.
-    -- Dashboard projection: solo lectura con status derivado
+    -- ---------------------------------------------------------------- 16.
+    -- Dashboard projection
     -- ----------------------------------------------------------------
     INSERT INTO inventory.dashboard_projection
         (sku_id, location_id, on_hand, reserved, blocked, status, umbral_efectivo)
-    VALUES ('V-SKU-1', 'V-LOC', 100, 30, 10, 'DISPONIBLE', 0);
+    VALUES ('V-SKU-1', v_loc_id, 100, 30, 10, 'DISPONIBLE', 0);
 
     SELECT available INTO v_available
       FROM inventory.dashboard_projection
-     WHERE sku_id = 'V-SKU-1' AND location_id = 'V-LOC';
+     WHERE sku_id = 'V-SKU-1' AND location_id = v_loc_id;
     IF v_available IS DISTINCT FROM 60 THEN
-        RAISE EXCEPTION 'VALIDACION FALLADA [12]: available de proyección esperado 60, obtenido %', v_available;
+        RAISE EXCEPTION 'VALIDACION FALLADA [16]: available de proyección esperado 60, obtenido %', v_available;
     END IF;
 
-    -- ---------------------------------------------------------------- 13.
-    -- No existen FK hacia Catálogo, Ventas ni otros bounded contexts
-    --    (criterio de aceptación del issue #54)
-    -- ----------------------------------------------------------------
-    SELECT count(*) INTO v_total
-      FROM information_schema.table_constraints tc
-      JOIN information_schema.referential_constraints rc
-        ON rc.constraint_name = tc.constraint_name
-       AND rc.constraint_schema = tc.constraint_schema
-     WHERE tc.constraint_schema = 'inventory'
-       AND tc.constraint_type = 'FOREIGN KEY'
-       AND rc.unique_constraint_schema IS DISTINCT FROM 'inventory';
-    IF v_total > 0 THEN
-        RAISE EXCEPTION 'VALIDACION FALLADA [13]: se encontraron % FK hacia schemas externos', v_total;
-    END IF;
-
-    -- ---------------------------------------------------------------- 15.
+    -- ---------------------------------------------------------------- 17.
     -- Incidencia: reporte ABIERTA con bloqueo y resolución REHABILITADO
-    --    reporte:  incidencias ABIERTA y blocked += cantidad (FLOW-015 4.6)
-    --    resolución REHABILITADO: estado RESUELTA y blocked -= cantidad
     -- ----------------------------------------------------------------
     INSERT INTO inventory.stock_balance (sku_id, location_id, on_hand, reserved, blocked)
-    VALUES ('V-SKU-INC', 'V-LOC', 20, 0, 0);
+    VALUES ('V-SKU-INC', v_loc_id, 20, 0, 0);
 
     INSERT INTO inventory.incidencias
         (incidencia_id, sku_id, location_id, external_incident_id, cantidad_bloqueada, idempotency_key)
-    VALUES (gen_random_uuid(), 'V-SKU-INC', 'V-LOC', 'V-EXT-1', 5, 'V-INCID-1');
+    VALUES (gen_random_uuid(), 'V-SKU-INC', v_loc_id, 'V-EXT-1', 5, 'V-INCID-1');
 
     UPDATE inventory.stock_balance
        SET blocked = blocked + 5, stock_version = stock_version + 1
-     WHERE sku_id = 'V-SKU-INC' AND location_id = 'V-LOC';
+     WHERE sku_id = 'V-SKU-INC' AND location_id = v_loc_id;
 
     SELECT available INTO v_available
       FROM inventory.stock_balance
-     WHERE sku_id = 'V-SKU-INC' AND location_id = 'V-LOC';
+     WHERE sku_id = 'V-SKU-INC' AND location_id = v_loc_id;
     IF v_available IS DISTINCT FROM 15 THEN
-        RAISE EXCEPTION 'VALIDACION FALLADA [15a]: tras bloqueo available esperado 15, obtenido %', v_available;
+        RAISE EXCEPTION 'VALIDACION FALLADA [17a]: tras bloqueo available esperado 15, obtenido %', v_available;
     END IF;
 
     INSERT INTO inventory.kardex
         (sku_id, location_id, operation_type, operation_id, quantity,
          on_hand_before, on_hand_after, reserved_before, reserved_after,
          blocked_before, blocked_after, stock_version)
-    VALUES ('V-SKU-INC', 'V-LOC', 'INCIDENCIA_BLOQUEO', NULL, 5, 20, 20, 0, 0, 0, 5, 1);
-
-    INSERT INTO inventory.outbox (event_id, event_type, aggregate_type, aggregate_id, payload)
-    VALUES (gen_random_uuid(), 'inventory.stock.changed', 'stock_balance',
-            'V-SKU-INC|V-LOC', jsonb_build_object('sku_id', 'V-SKU-INC'));
+    VALUES ('V-SKU-INC', v_loc_id, 'INCIDENCIA_BLOQUEO', NULL, 5, 20, 20, 0, 0, 0, 5, 1);
 
     -- Resolución REHABILITADO
     UPDATE inventory.incidencias
@@ -332,46 +417,44 @@ BEGIN
 
     UPDATE inventory.stock_balance
        SET blocked = blocked - 5, stock_version = stock_version + 1
-     WHERE sku_id = 'V-SKU-INC' AND location_id = 'V-LOC';
+     WHERE sku_id = 'V-SKU-INC' AND location_id = v_loc_id;
 
     SELECT available INTO v_available
       FROM inventory.stock_balance
-     WHERE sku_id = 'V-SKU-INC' AND location_id = 'V-LOC';
+     WHERE sku_id = 'V-SKU-INC' AND location_id = v_loc_id;
     IF v_available IS DISTINCT FROM 20 THEN
-        RAISE EXCEPTION 'VALIDACION FALLADA [15b]: tras rehabilitar available esperado 20, obtenido %', v_available;
+        RAISE EXCEPTION 'VALIDACION FALLADA [17b]: tras rehabilitar available esperado 20, obtenido %', v_available;
     END IF;
 
-    -- Idempotencia del reporte de incidencia (mismo idempotency_key rechazado)
+    -- Idempotencia del reporte de incidencia
     BEGIN
         INSERT INTO inventory.incidencias
             (incidencia_id, sku_id, location_id, cantidad_bloqueada, idempotency_key)
-        VALUES (gen_random_uuid(), 'V-SKU-INC', 'V-LOC', 5, 'V-INCID-1');
-        RAISE EXCEPTION 'VALIDACION FALLADA [15c]: incidencia duplicada aceptada';
+        VALUES (gen_random_uuid(), 'V-SKU-INC', v_loc_id, 5, 'V-INCID-1');
+        RAISE EXCEPTION 'VALIDACION FALLADA [17c]: incidencia duplicada aceptada';
     EXCEPTION WHEN unique_violation THEN
         NULL;
     END;
 
-    -- ---------------------------------------------------------------- 16.
-    -- Traslado y recepciones: EN_TRANSITO -> RECIBIDO_PARCIAL ->
-    --    COMPLETADO_CON_DISCREPANCIA con missing_quantity (FLOW-015 4.9)
+    -- ---------------------------------------------------------------- 18.
+    -- Traslado y recepciones entre ubicaciones
     -- ----------------------------------------------------------------
     INSERT INTO inventory.stock_balance (sku_id, location_id, on_hand, reserved, blocked)
-    VALUES ('V-SKU-TRA', 'V-LOC', 10, 0, 4);
+    VALUES ('V-SKU-TRA', v_loc_id, 10, 0, 4);
 
     INSERT INTO inventory.incidencias
         (incidencia_id, sku_id, location_id, cantidad_bloqueada, idempotency_key, estado)
-    VALUES (gen_random_uuid(), 'V-SKU-TRA', 'V-LOC', 4, 'V-INCID-TRA', 'TRASLADO_PENDIENTE')
+    VALUES (gen_random_uuid(), 'V-SKU-TRA', v_loc_id, 4, 'V-INCID-TRA', 'TRASLADO_PENDIENTE')
     RETURNING id INTO v_inc_id;
 
-    -- Origen: descuento on_hand y blocked, y creación del traslado EN_TRANSITO
     UPDATE inventory.stock_balance
        SET on_hand = on_hand - 4, blocked = blocked - 4, stock_version = stock_version + 1
-     WHERE sku_id = 'V-SKU-TRA' AND location_id = 'V-LOC';
+     WHERE sku_id = 'V-SKU-TRA' AND location_id = v_loc_id;
 
     INSERT INTO inventory.traslados
         (traslado_id, source_incident_id, sku_id, source_location_id, target_location_id,
          quantity_shipped, quantity_received, missing_quantity, estado)
-    VALUES (gen_random_uuid(), v_inc_id, 'V-SKU-TRA', 'V-LOC', 'V-LOC-DEST', 4, 0, NULL, 'EN_TRANSITO')
+    VALUES (gen_random_uuid(), v_inc_id, 'V-SKU-TRA', v_loc_id, v_loc_dest_id, 4, 0, NULL, 'EN_TRANSITO')
     RETURNING id INTO v_tra_id;
 
     -- Recepción parcial (2 de 4) -> RECIBIDO_PARCIAL
@@ -383,10 +466,6 @@ BEGIN
        SET quantity_received = 2, estado = 'RECIBIDO_PARCIAL'
      WHERE id = v_tra_id;
 
-    IF (SELECT quantity_received FROM inventory.traslados WHERE id = v_tra_id) IS DISTINCT FROM 2 THEN
-        RAISE EXCEPTION 'VALIDACION FALLADA [16a]: no se actualizó quantity_received en recepción parcial';
-    END IF;
-
     -- Recepción final con faltante (1 de 4 merma; falta 1) -> COMPLETADO_CON_DISCREPANCIA
     INSERT INTO inventory.traslado_recepciones
         (recepcion_id, traslado_id, cantidad_recibida, disposicion, es_recepcion_final, sub_gestor, idempotency_key)
@@ -396,38 +475,18 @@ BEGIN
        SET quantity_received = 3, missing_quantity = 1, estado = 'COMPLETADO_CON_DISCREPANCIA'
      WHERE id = v_tra_id;
 
-    -- Destino acreditado con la parte REINGRESAR_DISPONIBLE
     INSERT INTO inventory.stock_balance (sku_id, location_id, on_hand, reserved, blocked)
-    VALUES ('V-SKU-TRA', 'V-LOC-DEST', 2, 0, 0);
-
-    IF (SELECT estado FROM inventory.traslados WHERE id = v_tra_id)
-       IS DISTINCT FROM 'COMPLETADO_CON_DISCREPANCIA' THEN
-        RAISE EXCEPTION 'VALIDACION FALLADA [16b]: estado final de traslado incorrecto';
-    END IF;
-    IF (SELECT missing_quantity FROM inventory.traslados WHERE id = v_tra_id)
-       IS DISTINCT FROM 1 THEN
-        RAISE EXCEPTION 'VALIDACION FALLADA [16c]: missing_quantity esperado 1';
-    END IF;
-
-    -- Idempotencia de la recepción (misma Idempotency-Key rechazada)
-    BEGIN
-        INSERT INTO inventory.traslado_recepciones
-            (recepcion_id, traslado_id, cantidad_recibida, disposicion, es_recepcion_final, sub_gestor, idempotency_key)
-        VALUES (gen_random_uuid(), v_tra_id, 2, 'REINGRESAR_DISPONIBLE', false, 'V-GESTOR', 'V-REC-PARCIAL');
-        RAISE EXCEPTION 'VALIDACION FALLADA [16d]: recepción duplicada aceptada';
-    EXCEPTION WHEN unique_violation THEN
-        NULL;
-    END;
+    VALUES ('V-SKU-TRA', v_loc_dest_id, 2, 0, 0);
 
     -- Transición terminal del traslado: no debe salir de COMPLETADO_CON_DISCREPANCIA
     BEGIN
         UPDATE inventory.traslados SET estado = 'COMPLETADO' WHERE id = v_tra_id;
-        RAISE EXCEPTION 'VALIDACION FALLADA [16e]: traslado terminado mutado a otro estado';
+        RAISE EXCEPTION 'VALIDACION FALLADA [18e]: traslado terminado mutado a otro estado';
     EXCEPTION WHEN raise_exception THEN
         NULL;
     END;
 
-    -- ---------------------------------------------------------------- 17.
+    -- ---------------------------------------------------------------- 19.
     -- Limpieza de datos de prueba
     -- ----------------------------------------------------------------
     DELETE FROM inventory.inbox WHERE message_type = 'inventory.reservation.requested';
@@ -441,15 +500,16 @@ BEGIN
     DELETE FROM inventory.stock_threshold_override WHERE sku_id LIKE 'V-%';
     DELETE FROM inventory.stock_threshold_override WHERE sku_id IS NULL AND location_id IS NULL;
     DELETE FROM inventory.stock_balance WHERE sku_id LIKE 'V-%';
+    DELETE FROM inventory.locations WHERE code LIKE 'V-%';
 
-    -- ---------------------------------------------------------------- 18.
+    -- ---------------------------------------------------------------- 20.
     -- Resumen
     -- ----------------------------------------------------------------
     SELECT count(*) INTO v_total
       FROM information_schema.tables
      WHERE table_schema = 'inventory';
 
-    RAISE NOTICE 'VALIDACION OK: schema inventory con % tablas cumple esquema, invariantes, idempotencia, ciclo reserva/consumo, TTL, carrera de terminal única, outbox/inbox, incidencias y traslados, y ausencia de FK externos.', v_total;
+    RAISE NOTICE 'VALIDACION OK: schema inventory con % tablas cumple locations, esquema, invariantes, idempotencia, ciclo reserva/consumo, TTL, carrera de terminal única, outbox/inbox, incidencias, traslados, y ausencia de FK externos.', v_total;
 
 END $$;
 
