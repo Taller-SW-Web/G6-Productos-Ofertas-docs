@@ -27,8 +27,8 @@ El diseño parte de [Modelo_Conceptual.md §4, §14–18 y alineación HTTP 0.5.
 | [OpenAPI 0.5.0](../../api/openapi.yaml) | ProductoCreate/UpdateRequest, VarianteCreate/UpdateRequest, Atributo, ImagenRef, PerfilFisicoInput y estados |
 | [AsyncAPI 0.4.0](../../asyncapi/asyncapi.yaml) / [Contrato_Api.md](../../Contrato_Api.md) | Envelope, mensajes, idempotencia e integración |
 | [Arquitectura §7–8, §32 y §39](../../Arquitectura.md) | Schema, tablas de referencia, políticas de aplicación y transacciones locales |
-| [CONVENCIONES_BD.md](../../bd/CONVENCIONES_BD.md) | UUID, nombres, tipos, timestamps, enums, FK, mensajería y seguridad |
-| [database/README.md](../../database/README.md), [bootstrap.sql](../../database/bootstrap.sql), [migrate.py](../../database/migrate.py), [validation-report.md](../../database/validation-report.md) | Roles actuales, checksum/versionado, transacción del ejecutor y evidencia previa del procedimiento |
+| [CONVENCIONES_BD.md](../CONVENCIONES_BD.md) | UUID, nombres, tipos, timestamps, enums, FK, mensajería y seguridad |
+| [bd/deploy/README.md](../deploy/README.md), [bootstrap.sql](../deploy/bootstrap.sql), [migrate.py](../deploy/migrate.py), [validation-report.md](../deploy/validation-report.md) | Roles actuales, checksum/versionado, transacción del ejecutor y evidencia previa del procedimiento |
 
 Precedencia funcional solicitada: SPEC → documentación WF → HU, contrastada con FLOW. Los índices HTML son prototipos, no fuentes para inventar reglas de BD. Los contratos quedan fijos. Las fuentes oficiales prevalecen sobre recomendaciones físicas o supuestos; las discrepancias se registran en §5 y §23.
 
@@ -93,13 +93,13 @@ Todo objeto de negocio vive en `catalog`. Solo FK internas; sin joins operativos
 | Decisión local | Apartamiento | Motivo |
 |---|---|---|
 | Un documento lógico + físico | Organizativo | Tres entregables: una plantilla Markdown y dos SQL |
-| Directorio bd/catalog-svg | Ubicación actual de entrega | No modificar database ni mantener dos historiales activos |
-| po_catalog_owner + catalog_app limitado | Ajusta ejemplo genérico de plantilla/convenciones | database vigente separa owner/runtime; no GRANT ALL de runtime |
+| Directorio bd/catalog-svg | Ubicación actual de entrega | No mantener dos historiales activos fuera de bd |
+| po_catalog_owner + catalog_app limitado | Ajusta ejemplo genérico de plantilla/convenciones | procedimiento bd/deploy separa owner/runtime; no GRANT ALL de runtime |
 | Sin BEGIN/COMMIT; nombre 0001 | Ajusta ejemplo de plantilla | El ejecutor administra transacción y exige cuatro dígitos |
 | Medidas numeric sin escala fija | Se aparta de recomendación §8.4 | OpenAPI no fija escala/rango; evita redondear positivos pequeños a cero o imponer máximos no contractuales. Conserva decimal exacto, kg/cm |
-| Validación con fixtures y ROLLBACK | Amplía plantilla de solo lectura | database exige operaciones representativas sin datos permanentes |
+| Validación con fixtures y ROLLBACK | Amplía plantilla de solo lectura | procedimiento de validación exige operaciones representativas sin datos permanentes |
 
-No exponer `catalog` en Data API: se sigue la instrucción concreta de database/README.md para escritura interna. El ejemplo genérico de convenciones §16.3 sobre registrar schemas no autoriza esa exposición.
+No exponer `catalog` en Data API: se sigue la instrucción concreta de bd/deploy/README.md para escritura interna. El ejemplo genérico de convenciones §16.3 sobre registrar schemas no autoriza esa exposición.
 
 ## 6. Inventario de tablas
 
@@ -682,7 +682,7 @@ La matriz §6 contiene las trece tablas y §3.1 las relaciones. Entidades concep
 | AsyncAPI | outbox/inbox, operation/message/correlation y evidencia de readiness |
 | Modelo conceptual §4, §15–18 | SKU vendible, perfil, relaciones, referencias y ownership |
 | Arquitectura §7/32 | Preparación/barrera y políticas, schema aislado |
-| database | Roles, ledger, migración atómica y evidencia |
+| bd/deploy | Roles, ledger, migración atómica y evidencia |
 
 ## 22. Decisiones físicas
 
@@ -714,7 +714,7 @@ El diseño resuelve persistencia de 003/004 sin cerrar decisiones comerciales ab
 
 ## 24. Migraciones
 
-Entrega única: bd/catalog-svg/migrations/0001_create_catalog.sql. El ejecutor espera `<root>/catalog/migrations`: para usarlo preparar copia temporal con ese layout y ejecutar `python database/migrate.py catalog --root RUTA_TEMPORAL`. Copiar SQL byte a byte, conservar nombre; la copia temporal no es otro historial versionado. Al integrar al backend/database estándar, trasladar el historial conservando versiones/checksums, sin reaplicar versiones registradas.
+Entrega única: bd/catalog-svg/migrations/0001_create_catalog.sql. Ejecutar desde raíz con `python bd/deploy/migrate.py catalog`. Copiar SQL byte a byte, conservar nombre; no es otro historial versionado. Al integrar al backend/bd estándar, trasladar el historial conservando versiones/checksums, sin reaplicar versiones registradas.
 
 Infraestructura ejecuta bootstrap y provisiona catalog_app sin membresía owner. La migración no crea roles ni toca otros schemas; falla ante prerequisites ausentes. Sin BEGIN/COMMIT: el ejecutor aplica SQL + registro checksum en una transacción. Para ejecución aislada envolverla en una transacción explícita; no emitir éxito antes de COMMIT.
 
@@ -750,7 +750,7 @@ Evidencia local del 2026-10-03: **PostgreSQL 18.3, PGlite 0.5.8, WASM**; base en
 
 SHA-256 de 0001_create_catalog.sql, normalizado UTF-8 sin BOM y LF como migrate.py: `d3d6937a1f7fdb41ce96d50bdaa71a14114126757c5a3e674632d85c50804770`.
 
-Esta evidencia prueba SQL y reglas locales en motor embebido. **No se ejecutó migrate.py/psql contra servidor**, no se probaron conexiones simultáneas y no se validó Supabase. El cliente PostgreSQL local disponible carece de archivos del servidor para iniciar una base desechable; se utilizó PGlite exclusivamente para la prueba aislada. La migración se adapta estáticamente al ejecutor vigente, cuya evidencia previa pertenece a database/validation-report.md.
+Esta evidencia prueba SQL y reglas locales en motor embebido. **No se ejecutó migrate.py/psql contra servidor**, no se probaron conexiones simultáneas y no se validó Supabase. El cliente PostgreSQL local disponible carece de archivos del servidor para iniciar una base desechable; se utilizó PGlite exclusivamente para la prueba aislada. La migración se adapta estáticamente al ejecutor vigente, cuya evidencia previa pertenece a bd/deploy/validation-report.md.
 
 Para aprobar despliegue real registrar entorno, commit, schema, versión 0001, SHA-256 normalizado por migrate.py, fecha, server_version, validation.sql, repetición del ejecutor y PR/revisor. Repetir con motor/permisos del proyecto; evidencia embebida no acredita servidor multiusuario ni Supabase.
 

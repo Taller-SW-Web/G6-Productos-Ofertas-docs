@@ -1,6 +1,6 @@
 # Despliegue por schema en Supabase — issue #49
 
-Estado: procedimiento verificable localmente; no se ha ejecutado contra un proyecto Supabase compartido. Cada owner ejecuta sus migraciones; DevOps mantiene este procedimiento. [Arquitectura §7–8](../Arquitectura.md) y [modelo conceptual](../Modelo_Conceptual.md) gobiernan el aislamiento.
+Estado: procedimiento verificable localmente; no se ha ejecutado contra un proyecto Supabase compartido. Cada owner ejecuta sus migraciones; DevOps mantiene este procedimiento. [Arquitectura §7–8](../../Arquitectura.md) y [modelo conceptual](../../Modelo_Conceptual.md) gobiernan el aislamiento.
 
 ## 1. Convenciones y responsabilidades
 
@@ -42,7 +42,7 @@ Cada bounded context debe contar con los siguientes cuatro entregables documenta
 3. `migrations/`: scripts DDL ordenados correlativamente (`0001_*.sql`, etc.) ejecutables desde cero.
 4. `validation.sql`: script de validación determinista que comprueba constraints, aislamiento y ausencia de violaciones.
 
-Mientras este repositorio contiene los entregables de BD, guardar en `database/<schema>/` (o la carpeta asignada al servicio en `bd/`): `logical-model.md`, `physical-model.md`, `migrations/0001_descripcion.sql` y `validation.sql`. Al incorporar el backend, conservar los mismos archivos y versiones en `infrastructure/persistence/` del servicio (Arquitectura §4). No mantener dos historiales activos ni volver a ejecutar una versión trasladada.
+Mientras este repositorio contiene los entregables de BD, guardar en `bd/<schema>/` (o la carpeta asignada al servicio en `bd/`): `logical-model.md`, `physical-model.md`, `migrations/0001_descripcion.sql` y `validation.sql`. Al incorporar el backend, conservar los mismos archivos y versiones en `infrastructure/persistence/` del servicio (Arquitectura §4). No mantener dos historiales activos ni volver a ejecutar una versión trasladada.
 
 Versiones de cuatro dígitos consecutivas desde 0001, un cambio por archivo, SQL PostgreSQL UTF-8, nombres snake_case y objetos calificados con schema. El checksum usa texto UTF-8 sin BOM y saltos LF, para que Windows/Linux produzcan el mismo resultado. No editar ni borrar migraciones aplicadas. Cambios destructivos requieren estrategia expand/contract, respaldo y coordinación de versión. Cada archivo es transaccional: no BEGIN/COMMIT, VACUUM ni CREATE INDEX CONCURRENTLY. Para cambios no transaccionales se necesita un procedimiento independiente revisado, no introducirlos en este ejecutor.
 
@@ -81,9 +81,9 @@ Alternativa: `PGPASSFILE` apuntando a un archivo local protegido fuera del repos
 ## 4. Desplegar desde cero y actualizar
 
 1. Confirmar destino con `psql -X -c "SELECT current_database(), current_user, version();"`. Verificar permisos del deployer y schema propio. Leer el diff y `physical-model.md`, obtener revisión del SQL.
-2. Ejecutar desde la raíz `python database/migrate.py <schema>`. Para taxonomy: `python database/migrate.py taxonomy`. Sustituir solo el schema propio. Si `psql` no está en PATH, agregar `--psql RUTA_AL_EJECUTABLE`.
+2. Ejecutar desde la raíz `python bd/deploy/migrate.py <schema>`. Para taxonomy: `python bd/deploy/migrate.py taxonomy`. Sustituir solo el schema propio. Si `psql` no está en PATH, agregar `--psql RUTA_AL_EJECUTABLE`.
 3. El ejecutor valida orden, toma un advisory lock por schema, hace SET ROLE del owner y registra versión, SHA-256 y fecha en `<schema>.schema_migrations`. Aplica cada archivo y su registro en la misma transacción. En reejecución comprueba checksum y omite versiones ya aplicadas; un historial alterado/faltante o un error SQL detiene el proceso. No se avanza a la siguiente versión ni se arranca el nuevo servicio si falla.
-4. Ejecutar `psql -X -v ON_ERROR_STOP=1 -f database/<schema>/validation.sql`. Para taxonomy: `psql -X -v ON_ERROR_STOP=1 -f database/taxonomy/validation.sql`. Las comprobaciones deben usar ROLLBACK para fixtures; no introducir seeds comerciales permanentes. Revisar tanto constraints/índices como reglas y ausencia de FK/grants externos.
+4. Ejecutar `psql -X -v ON_ERROR_STOP=1 -f bd/<schema>/validation.sql`. Para taxonomy: `psql -X -v ON_ERROR_STOP=1 -f bd/taxonomy/validation.sql`. Las comprobaciones deben usar ROLLBACK para fixtures; no introducir seeds comerciales permanentes. Revisar tanto constraints/índices como reglas y ausencia de FK/grants externos.
 5. Consultar `SELECT version, checksum, applied_at FROM <schema>.schema_migrations ORDER BY version;`; para taxonomy: `SELECT version, checksum, applied_at FROM taxonomy.schema_migrations ORDER BY version;`. Comparar con el manifiesto del ejecutor y commit desplegado. Registrar versión del servidor, commit, schema, checksums, resultado y fecha en evidencia sin secretos. Un exit code 0 confirma la ejecución; un archivo SQL que solo muestra datos sin assertions no constituye validación.
 6. Arrancar la versión compatible del servicio con su login runtime y hacer smoke test. El owner de cada servicio controla su despliegue.
 
@@ -93,8 +93,8 @@ Los ocho contextos son independientes y pueden desplegarse en cualquier orden de
 
 Crear una base local desechable sin datos comerciales. Ejecutar bootstrap, todas las migraciones propias, validation.sql, repetir el ejecutor (sin cambios) y comparar ledger/objetos con el primer despliegue. Probar también una migración inválida: sus tablas y ledger no deben persistir. No limpiar el Supabase compartido para reproducir desde cero; utilizar otro proyecto/base autorizado. [Evidencia local del mecanismo](validation-report.md).
 
-Para prueba local con un contenedor PostgreSQL ya inicializado se admite `python database/migrate.py <schema> --container NOMBRE`; por ejemplo `python database/migrate.py taxonomy --container NOMBRE`. Usa exclusivamente `docker exec -i NOMBRE psql` y el usuario administrador local del contenedor para SET ROLE. Este modo es de validación local, no una receta para credenciales de producción. Copiar fixtures de prueba a una carpeta aislada y pasar `--root RUTA`; el árbol versionado solo incluye migraciones reales de cada owner.
+Para prueba local con un contenedor PostgreSQL ya inicializado se admite `python bd/deploy/migrate.py <schema> --container NOMBRE`; por ejemplo `python bd/deploy/migrate.py taxonomy --container NOMBRE`. Usa exclusivamente `docker exec -i NOMBRE psql` y el usuario administrador local del contenedor para SET ROLE. Este modo es de validación local, no una receta para credenciales de producción. Copiar fixtures de prueba a una carpeta aislada y pasar `--root RUTA`; el árbol versionado solo incluye migraciones reales de cada owner.
 
 ## 6. Criterio de entrega de cada owner
 
-PR con modelo físico, migraciones, constraints/índices, validation.sql, evidencia en limpio y repetición, aislamiento probado y evidencia del proyecto objetivo cuando tenga acceso. Un despliegue local no acredita un despliegue Supabase. La [entrega local de #53](promotions/README.md) se valida por separado; Axel ya dispone de acceso, pero indicó esperar a reunir el SQL de **todo el sistema** antes del despliegue compartido.
+PR con modelo físico, migraciones, constraints/índices, validation.sql, evidencia en limpio y repetición, aislamiento probado y evidencia del proyecto objetivo cuando tenga acceso. Un despliegue local no acredita un despliegue Supabase. La [entrega local de #53](../promotions/README.md) se valida por separado; Axel ya dispone de acceso, pero indicó esperar a reunir el SQL de **todo el sistema** antes del despliegue compartido.

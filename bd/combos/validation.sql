@@ -4,11 +4,11 @@
 --
 -- SOLO LECTURA: no INSERT/UPDATE/DELETE/DDL.
 -- Ejecutar con:
---   psql -X -v ON_ERROR_STOP=1 -f database/combos/validation.sql
+--   psql -X -v ON_ERROR_STOP=1 -f bd/combos/validation.sql
 --
 -- Nota:
 --   combos.schema_migrations se excluye de los checks de tablas de dominio
---   porque lo crea database/migrate.py y usa version text como PK.
+--   porque lo crea bd/deploy/migrate.py y usa version text como PK.
 -- =============================================================================
 
 \set ON_ERROR_STOP on

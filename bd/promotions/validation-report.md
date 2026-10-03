@@ -16,7 +16,7 @@ Fecha: **2026-10-03**, America/Lima. Responsable: Axel Cueva. Estado: **VALIDADO
 ## Ejecución reproducible
 
 ```text
-python database/promotions/tests/verify.py --container CONTENEDOR_LOCAL_VACIO --report database/promotions/validation-result.json
+python bd/promotions/tests/verify.py --container CONTENEDOR_LOCAL_VACIO --report bd/promotions/validation-result.json
 ```
 
 La prueba exige que `promotions` aún no exista; no borra ni reinicia un schema preexistente. Aplica bootstrap/provisión/migración con el runner real. Las carreras con commits usan otra base efímera recién creada dentro del contenedor y la eliminan al terminar; los fixtures de `validation.sql` usan ROLLBACK. El schema original termina sin datos de prueba.

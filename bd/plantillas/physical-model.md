@@ -2,7 +2,7 @@ _TEMPLATE — Modelo Físico de Base de Datos
 
 «Plantilla estándar para documentar el modelo físico de un bounded context.
 
-Completar una copia por microservicio/schema dentro de "database/<schema>/physical-model.md".
+Completar una copia por microservicio/schema dentro de "bd/<schema>/physical-model.md".
 
 Este documento materializa el "logical-model.md" correspondiente en un diseño implementable sobre PostgreSQL/Supabase.
 
@@ -634,7 +634,7 @@ Una contradicción funcional no debe resolverse mediante una decisión física l
 
 La implementación correspondiente vive en:
 
-database/<schema>/migrations/
+bd/<schema>/migrations/
 
 Nomenclatura:
 
@@ -663,7 +663,7 @@ Los cambios destructivos deben seguir estrategia "expand/contract".
 
 La validación correspondiente vive en:
 
-database/<schema>/validation.sql
+bd/<schema>/validation.sql
 
 Debe comprobar como mínimo:
 

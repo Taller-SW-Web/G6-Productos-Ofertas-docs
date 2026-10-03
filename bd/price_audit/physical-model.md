@@ -22,7 +22,7 @@
 | [Modelo conceptual](../../Modelo_Conceptual.md), [Arquitectura](../../Arquitectura.md) | Entidades, ownership, tablas base y aislamiento |
 | [Convenciones BD](../CONVENCIONES_BD.md) | Nombres, tipos, PK, timestamps, índices y mensajería |
 | [Plantilla física](../plantillas/physical-model.md), [migración](../plantillas/migration.sql), [validación](../plantillas/validation.sql) | Estructura adaptada por contexto; no copiar ejemplos/grants indiscriminadamente |
-| [Procedimiento #49](../../database/README.md), [ejecutor](../../database/migrate.py), [bootstrap](../../database/bootstrap.sql) | Owner/deployer/runtime, transacciones y ledger SHA-256 |
+| [Procedimiento #49](../deploy/README.md), [ejecutor](../deploy/migrate.py), [bootstrap](../deploy/bootstrap.sql) | Owner/deployer/runtime, transacciones y ledger SHA-256 |
 
 Precedencia: fuente funcional/contrato → conceptual → derivación lógica (§3) → físico → migración → validación. Estas plantillas son guías de entrega, no autorizaciones de despliegue. Las rutas provisionales no se convierten en estables por persistirlas.
 
@@ -342,7 +342,7 @@ Contradicción documental transversal: Convenciones §16.3 menciona exponer sche
 
 ## 24. Migraciones
 
-Único historial: `bd/price_audit/migrations/0001_create_price_audit.sql`. Ejecutar desde raíz con `python database/migrate.py price_audit --root bd`; no copia ni segundo historial en database/. El ejecutor administra transacción/ledger/checksum y SET ROLE po_price_audit_owner; por eso no se copia BEGIN/COMMIT de la plantilla dentro del archivo de versión.
+Único historial: `bd/price_audit/migrations/0001_create_price_audit.sql`. Ejecutar desde raíz con `python bd/deploy/migrate.py price_audit`; no copia ni segundo historial fuera de `bd/`. El ejecutor administra transacción/ledger/checksum y SET ROLE po_price_audit_owner; por eso no se copia BEGIN/COMMIT de la plantilla dentro del archivo de versión.
 
 Bootstrap/roles son preparación de infraestructura. Runtime debe existir sin membresía owner ni atributos administrativos; migración falla si prerequisites faltan. En ejecución aislada envolver SQL en BEGIN/COMMIT bajo owner. Reejecución segura por ledger/checksum, no por IF NOT EXISTS que oculte drift. Nunca repetir el DDL a mano sobre tablas existentes. Cambios siguientes: 0002...; no editar migración aplicada, usar expand/contract.
 
@@ -356,7 +356,7 @@ Manifest explícito de tablas/columnas/tipos/nullabilidad, PK/constraints, enums
 
 [validation-report.md](validation-report.md) y [local-validation.json](evidence/local-validation.json) registran ejecución **local embebida** del 2026-10-03. No equivalen a psql contra servidor, pruebas multiusuario, recuperación real de storage ni Supabase.
 
-Destino Supabase: Módulo de Productos y Ofertas, project ref `slzglmtiyrzygpkiuthf`, declarado Desarrollo / Staging. Proyecto identificado; pendientes clasificación exacta del entorno, acceso PostgreSQL autenticado y ejecución real. Ver detalles en [validation-report.md](validation-report.md). Registrar después proyecto/entorno, commit, schema, versión, SHA-256, fecha, server_version, resultados validation.sql/repetición del ejecutor. PR asociado: [#81](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/pull/81). Referencia de procedimiento: [database/README.md](../../database/README.md); no exponer schema de escritura por Data API.
+Destino Supabase: Módulo de Productos y Ofertas, project ref `slzglmtiyrzygpkiuthf`, declarado Desarrollo / Staging. Proyecto identificado; pendientes clasificación exacta del entorno, acceso PostgreSQL autenticado y ejecución real. Ver detalles en [validation-report.md](validation-report.md). Registrar después proyecto/entorno, commit, schema, versión, SHA-256, fecha, server_version, resultados validation.sql/repetición del ejecutor. PR asociado: [#81](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/pull/81). Referencia de procedimiento: [bd/deploy/README.md](../deploy/README.md); no exponer schema de escritura por Data API.
 
 ## 27. Checklist de revisión
 
