@@ -37,7 +37,7 @@ Gestión de ofertas y promociones — Obligatoria.
 | ID | Criterio |
 |---|---|
 | **CA-01** | Solo un usuario autorizado puede crear, modificar, activar o desactivar promociones. Los permisos granulares los define Seguridad. |
-| **CA-02** | Para registrar una promoción se indican nombre, alcance, tipo/valor, inicio, fin, modalidad, estado inicial, prioridad, canales y política de combinación. |
+| **CA-02** | Para registrar una promoción se indican nombre, alcance, tipo/valor, inicio, fin, modalidad, estado inicial, prioridad, al menos un canal explícito y política de combinación. Omitir canales o enviar una selección vacía es inválido. |
 | **CA-03** | El alcance contiene al menos un producto o SKU vendible activo. Inicio < fin; porcentaje `(0,100]`; monto fijo `>0`. |
 | **CA-04** | El gestor puede consultar listado/detalle, editar condiciones y activar/desactivar. |
 | **CA-05** | Solo se aplica si está activa, vigente, es elegible por alcance y está habilitada para el canal. |

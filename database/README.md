@@ -72,4 +72,4 @@ Para prueba local con un contenedor PostgreSQL ya inicializado se admite `python
 
 ## 6. Criterio de entrega de cada owner
 
-PR con modelo físico, migraciones, constraints/índices, validation.sql, evidencia en limpio y repetición, aislamiento probado y evidencia del proyecto objetivo cuando tenga acceso. Un despliegue local no acredita un despliegue Supabase. El #53 está aplazado por indicación de Axel hasta disponer de acceso.
+PR con modelo físico, migraciones, constraints/índices, validation.sql, evidencia en limpio y repetición, aislamiento probado y evidencia del proyecto objetivo cuando tenga acceso. Un despliegue local no acredita un despliegue Supabase. La [entrega local de #53](promotions/README.md) se valida por separado; Axel ya dispone de acceso, pero indicó esperar a reunir el SQL de **todo el sistema** antes del despliegue compartido.

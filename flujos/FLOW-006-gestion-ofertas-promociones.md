@@ -192,3 +192,7 @@ Un producto o SKU desactivado deja de ser candidato válido en nuevas evaluacion
 | Proyecciones y consumidores publicados | Arquitectura §35; AsyncAPI y catálogo 0.4.0 | §4.4 |
 
 La referencia HTTP de este FLOW es OpenAPI 0.5.0 vigente en `master`; la mensajería continúa en AsyncAPI 0.4.0. La actualización del FLOW no altera contratos ni crea eventos administrativos nuevos.
+
+### Precisiones administrativas de la corrección 2026-10-02
+
+El alcance administrativo distingue `productIds` y `skus`; la selección por producto completo conserva esa identidad. `canalesHabilitados` requiere al menos un canal explícito y no interpreta vacío/omisión al crear como todos. El servicio publica `puedeCambiarModalidad` de solo lectura y revalida HU-006 CA-13 al modificar; la UI no infiere esa elegibilidad del estado inactivo. La activación previa permanece aunque luego se desactive. Estas precisiones no introducen rutas ni eventos nuevos.
