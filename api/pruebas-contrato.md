@@ -1,6 +1,7 @@
 # Matriz de pruebas de contrato e integración — Productos y Ofertas
 
 **Contrato HTTP objetivo:** OpenAPI 0.5.0
+**Contrato asíncrono objetivo:** AsyncAPI 0.5.0
 **Estado inicial:** definición documental; ningún caso se marca `PASS` sin evidencia reproducible.
 
 ## Estados
@@ -37,6 +38,7 @@ ARCHITECTURE_INVARIANT
 | CT-STATIC-05 | STATIC_CONTRACT | Código de barras reutiliza `catalogo:leer`; sin scope nuevo | PENDIENTE_EJECUCION |
 | CT-STATIC-06 | STATIC_CONTRACT | `DisponibilidadComercial` no contiene saldos internos | PENDIENTE_EJECUCION |
 | CT-STATIC-07 | STATIC_CONTRACT | Schemas comerciales de Catálogo no contienen flags administrativos/perfiles físicos internos | PENDIENTE_EJECUCION |
+| CT-STATIC-08 | STATIC_CONTRACT | YAML válido, AsyncAPI 3.0.0, `info.version=0.5.0`, 39 canales, 39 mensajes, `$ref` resolubles, `operation_id` requerido en inicializaciones y `causation_id` requerido en resultados | PENDIENTE_EJECUCION |
 
 ## 2. Marketplace ↔ Productos y Ofertas
 
@@ -151,7 +153,42 @@ Las pruebas con grants reales permanecen `BLOQUEADA_DEPENDENCIA_EXTERNA` mientra
 | CT-DSP-03 | Solo consumidor autorizado | PENDIENTE_EJECUCION |
 | CT-DSP-04 | Sin stock/precio/pedido en respuesta física | PENDIENTE_EJECUCION |
 
-## 11. Evidencia futura
+## 11. Recuperación de preparación — Catálogo (FLOW-003 / FLOW-004 / Endurecimiento contractual)
+
+| ID | Tipo | Caso / Resultado esperado | Estado |
+|---|---|---|---|
+| CT-PREP-01 | PROVIDER_CONTRACT | `GET /productos/{productoId}/preparacion` devuelve detalle rico (`ProductoPreparacion`) con pricing, inventario de `sku_base` (o null si `tiene_variantes=true`) y variantes | PENDIENTE_EJECUCION |
+| CT-PREP-02 | PROVIDER_CONTRACT | Estados `PENDING`, `COMPLETED` y `REJECTED` modelados con código funcional opcional en `code` | PENDIENTE_EJECUCION |
+| CT-PREP-03 | PROVIDER_CONTRACT | `manual_retry_allowed=false` durante recuperación técnica automática ordinaria y PENDING en curso | PENDIENTE_EJECUCION |
+| CT-PREP-04 | PROVIDER_CONTRACT | Recuperación manual de Pricing (`POST /productos/{productoId}/preparacion/reintentar` con `dependencia=PRICING`) devuelve HTTP 202 `OperationAccepted` | PENDIENTE_EJECUCION |
+| CT-PREP-05 | PROVIDER_CONTRACT | Recuperación manual de Inventario de producto simple (`POST /productos/{productoId}/preparacion/reintentar` con `dependencia=INVENTARIO`) devuelve HTTP 202 `OperationAccepted` | PENDIENTE_EJECUCION |
+| CT-PREP-06 | PROVIDER_CONTRACT | Recuperación manual de Inventario de variante (`POST /productos/{productoId}/variantes/{variantId}/preparacion/reintentar`) devuelve HTTP 202 `OperationAccepted` | PENDIENTE_EJECUCION |
+| CT-PREP-07 | STATIC_CONTRACT | Variante no puede solicitar inicialización de Pricing; contrato de variante solo expone reintento de inventario | PENDIENTE_EJECUCION |
+| CT-PREP-08 | PROVIDER_CONTRACT | Producto con variantes (`tiene_variantes=true`) rechaza reintento de inventario a nivel padre | PENDIENTE_EJECUCION |
+| CT-PREP-09 | PROVIDER_CONTRACT | Respuesta HTTP 202 `OperationAccepted` formaliza admisión de recuperación, no terminación exitosa ni COMPLETED | PENDIENTE_EJECUCION |
+| CT-PREP-10 | INTEGRATION | Admisión de recuperación manual conserva `operation_id` original de la preparación para correlación e idempotencia | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-11 | INTEGRATION | Republicación de comando por recuperación manual genera nueva `message_id` para transporte RabbitMQ | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-12 | PROVIDER_CONTRACT | Dependencia con estado COMPLETED nunca vuelve a ejecutarse ni reintentarse | PENDIENTE_EJECUCION |
+| CT-PREP-13 | PROVIDER_CONTRACT | Solicitud de reintento sobre preparación no recuperable (en curso técnico, COMPLETED o sin precondiciones) devuelve HTTP 409 `PREPARACION_NO_REINTENTABLE` | PENDIENTE_EJECUCION |
+| CT-PREP-14 | INTEGRATION | Concurrencia atómica de reintento: exactamente 1 solicitud obtiene 202 Accepted, solicitudes concurrentes competidoras obtienen 409 PREPARACION_NO_REINTENTABLE, exactamente 1 sola publicación efectiva | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-15 | STATIC_CONTRACT | Schemas comerciales (`ProductoResumenComercial`, `ProductoDetalleComercial`, variantes comerciales) no exponen estado administrativo de preparación | PENDIENTE_EJECUCION |
+| CT-PREP-16 | ARCHITECTURE_INVARIANT | No se crean mensajes AsyncAPI nuevos; se reutilizan comandos y resultados existentes de Pricing e Inventario | PENDIENTE_EJECUCION |
+| CT-PREP-17 | PROVIDER_CONTRACT | REJECTED no habilita automáticamente un reintento (`manual_retry_allowed=false`) mientras las precondiciones funcionales sigan inválidas | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-18 | PROVIDER_CONTRACT | Edición válida del borrador provoca reevaluación autoritativa de elegibilidad en Catálogo; si las precondiciones de la preparación quedan satisfechas, `manual_retry_allowed=true`; de lo contrario permanece `false` | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-19 | ARCHITECTURE_INVARIANT | `manual_retry_allowed` es potestad exclusiva del backend; la UI no puede forzar la admisión sin precondiciones validadas | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-20 | PROVIDER_CONTRACT | Endpoint POST de reintento revalida las precondiciones antes de admitir para prevenir TOCTOU (devuelve 409 si ya no es reintentable) | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-21 | INTEGRATION | Nuevo comando `*.requested` publicado tras corrección se construye usando el estado actual validado del borrador (no el payload antiguo) | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-22 | INTEGRATION | Consumidor reconoce que misma `operation_id` con nueva `message_id` tras `REJECTED` autorizado representa un nuevo intento de la misma preparación y no una segunda entidad | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-23 | INTEGRATION | Misma `operation_id` recibida cuando la preparación ya está `COMPLETED` se descarta idempotentemente sin reejecución de efectos | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-24 | ARCHITECTURE_INVARIANT | Agotamiento del retry técnico del consumidor y su envío a DLQ no requiere que Catálogo lea la DLQ; Catálogo permanece en PENDING hasta el umbral operativo | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-25 | INTEGRATION | Correlación por intento mediante `causation_id`: resultado (`*.completed` / `*.rejected`) porta `causation_id = message_id` del `*.requested` activo y actualiza autoritativamente el estado en Catálogo | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-26 | INTEGRATION | Descarte de resultados stale: resultado tardío con `causation_id` de un intento previo se ignora/registra idempotentemente como stale sin alterar el estado del intento activo | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-27 | INTEGRATION | Coexistencia de identidades: dos intentos distintos de la misma preparación comparten `operation_id` pero generan `message_id` distintos en cada publicación | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-28 | PROVIDER_CONTRACT | Inadmisibilidad de reintento por mutación no publicada: rechazo de pricing que exija modificar precio base inicial mantiene `manual_retry_allowed=false` por carecer de endpoint de modificación de precio inicial en borrador | PENDIENTE_IMPLEMENTACION |
+| CT-PREP-29 | STATIC_CONTRACT | Validación de schema AsyncAPI: mensaje de inicialización sin `operation_id` o resultado de inicialización sin `causation_id` es rechazado | PENDIENTE_EJECUCION |
+| CT-PREP-30 | PROVIDER_CONTRACT | PENDING prolongado tras umbral operativo configurable habilita `manual_retry_allowed=true` manteniendo `PENDING` sin consultar DLQ del consumidor | PENDIENTE_IMPLEMENTACION |
+
+## 12. Evidencia futura
 
 Cada ejecución debe registrar:
 

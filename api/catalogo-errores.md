@@ -121,6 +121,7 @@ Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail
 | `CODIGO_BARRAS_NO_ENCONTRADO` | El código de barras recibido no puede resolverse a un SKU vendible para la integración autorizada. |
 
 | `RATE_LIMIT_EXCEDIDO` | La identidad o cliente excedió temporalmente la política de solicitudes permitida; la respuesta HTTP es 429 y puede incluir `Retry-After`. |
+| `PREPARACION_NO_REINTENTABLE` | La preparación existe pero el estado actual no admite recuperación manual. |
 
 ## Recepción de traslados
 
@@ -142,9 +143,11 @@ DISPOSICION_RECEPCION_INVALIDA
 <!-- HOMOLOGACION-HTTP-0.5.0:START -->
 ## Cambios HTTP 0.5.0
 
-Los códigos incorporados por HTTP 0.5.0 son `CODIGO_BARRAS_NO_ENCONTRADO` y `RATE_LIMIT_EXCEDIDO`.
+Los códigos incorporados por HTTP 0.5.0 son `CODIGO_BARRAS_NO_ENCONTRADO`, `RATE_LIMIT_EXCEDIDO` y `PREPARACION_NO_REINTENTABLE`.
 
 `CODIGO_BARRAS_NO_ENCONTRADO` no revela si existió una asociación histórica/inactiva; solo comunica que no hay una resolución comercial válida.
 
 `RATE_LIMIT_EXCEDIDO` se origina en Ingress/API Gateway, no en el dominio, y es distinto de `TOKEN_INVALIDO`, `SCOPE_INSUFICIENTE` e `IDEMPOTENCY_CONFLICT`.
+
+`PREPARACION_NO_REINTENTABLE` indica que la preparación técnica existe pero su estado actual no admite una recuperación manual (p. ej. continúa bajo recuperación técnica ordinaria, ya concluyó con éxito o ya fue admitido un reintento).
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->

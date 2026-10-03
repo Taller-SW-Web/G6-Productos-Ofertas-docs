@@ -2,8 +2,8 @@ asyncapi: 3.0.0
 id: urn:taller-sw-web:productos-y-ofertas:asyncapi
 info:
   title: Productos y Ofertas — Contrato asíncrono
-  version: 0.4.0
-  description: 'Contrato asíncrono consolidado P0/P1/P2. P2 fija la topología física RabbitMQ para los 39 mensajes lógicos existentes:
+  version: 0.5.0
+  description: 'Contrato asíncrono consolidado P0/P1/P2. Formaliza la obligatoriedad de operation_id y causation_id en los mensajes de inicialización y preparación para correlación estricta y descarte de resultados stale. Fija la topología física RabbitMQ para los 39 mensajes lógicos existentes:
     exchanges, queues, bindings, retry y DLQ. Los nombres lógicos y routing keys se conservan.'
 defaultContentType: application/json
 x-delivery-semantics: at-least-once
@@ -2271,6 +2271,9 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            operation_id:
+              type: string
+              format: uuid
             producer:
               type: string
               const: catalog-svc
@@ -2283,6 +2286,7 @@ components:
             data:
               $ref: '#/components/schemas/PricingProductInitializationRequestedData'
           required:
+          - operation_id
           - producer
           - kind
           - name
@@ -2304,6 +2308,12 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            operation_id:
+              type: string
+              format: uuid
+            causation_id:
+              type: string
+              minLength: 1
             producer:
               type: string
               const: pricing-svc
@@ -2316,6 +2326,8 @@ components:
             data:
               $ref: '#/components/schemas/PricingProductInitializationResultData'
           required:
+          - operation_id
+          - causation_id
           - producer
           - kind
           - name
@@ -2337,6 +2349,12 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            operation_id:
+              type: string
+              format: uuid
+            causation_id:
+              type: string
+              minLength: 1
             producer:
               type: string
               const: pricing-svc
@@ -2349,6 +2367,8 @@ components:
             data:
               $ref: '#/components/schemas/PricingProductInitializationResultData'
           required:
+          - operation_id
+          - causation_id
           - producer
           - kind
           - name
@@ -2370,6 +2390,9 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            operation_id:
+              type: string
+              format: uuid
             producer:
               type: string
               const: catalog-svc
@@ -2382,6 +2405,7 @@ components:
             data:
               $ref: '#/components/schemas/InventorySkuInitializationRequestedData'
           required:
+          - operation_id
           - producer
           - kind
           - name
@@ -2403,6 +2427,12 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            operation_id:
+              type: string
+              format: uuid
+            causation_id:
+              type: string
+              minLength: 1
             producer:
               type: string
               const: inventory-svc
@@ -2415,6 +2445,8 @@ components:
             data:
               $ref: '#/components/schemas/InventorySkuInitializationResultData'
           required:
+          - operation_id
+          - causation_id
           - producer
           - kind
           - name
@@ -2436,6 +2468,12 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            operation_id:
+              type: string
+              format: uuid
+            causation_id:
+              type: string
+              minLength: 1
             producer:
               type: string
               const: inventory-svc
@@ -2448,6 +2486,8 @@ components:
             data:
               $ref: '#/components/schemas/InventorySkuInitializationResultData'
           required:
+          - operation_id
+          - causation_id
           - producer
           - kind
           - name

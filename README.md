@@ -259,12 +259,12 @@ La explicación humana de responsabilidades e integración se mantiene en:
 
 | Artefacto | Versión |
 |---|---|
-| OpenAPI | `0.4.0` |
-| AsyncAPI | `0.4.0` |
-| Catálogo de errores | `0.4.0` |
-| Catálogo de eventos | `0.4.0` |
-| Topología RabbitMQ | `0.4.0` |
-| Kit de integración | `0.4.0` |
+| OpenAPI | `0.5.0` |
+| AsyncAPI | `0.5.0` |
+| Catálogo de errores | `0.5.0` |
+| Catálogo de eventos | `0.5.0` |
+| Topología RabbitMQ | `0.5.0` |
+| Kit de integración | `0.5.0` |
 
 ---
 

@@ -4,10 +4,10 @@
 **Repositorio:** `Taller-SW-Web/Productos-y-Ofertas-docs`  
 **Archivo:** `Modelo_Conceptual.md`  
 **Arquitectura de referencia:** `Arquitectura.md`  
-**Contrato HTTP de referencia:** `api/openapi.yaml` (`0.4.0`)  
-**Contrato asíncrono de referencia:** `asyncapi/asyncapi.yaml` (`0.4.0`)  
-**Catálogo de errores:** `api/catalogo-errores.md` (`0.4.0`)  
-**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.4.0`)  
+**Contrato HTTP de referencia:** `api/openapi.yaml` (`0.5.0`)
+**Contrato asíncrono de referencia:** `asyncapi/asyncapi.yaml` (`0.5.0`)
+**Catálogo de errores:** `api/catalogo-errores.md` (`0.5.0`)
+**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.5.0`)
 **Contrato humano de referencia:** `Contrato_Api.md`
 
 > **Alcance:** este documento define los modelos conceptuales de datos de los ocho bounded contexts del módulo Productos y Ofertas.  
@@ -62,7 +62,7 @@ Esta versión incorpora las decisiones de diseño del modelo de datos:
 9. `SPEC/HU/WF-003`, `004` y `015` ya incorporan estas decisiones; dejan de ser propagaciones futuras.
 10. La idempotencia de Inventario distingue retry legítimo de `IDEMPOTENCY_CONFLICT`.
 11. Los contratos HTTP/asíncronos y códigos estables ya están publicados en OpenAPI, AsyncAPI y `catalogo-errores.md`.
-12. OpenAPI y AsyncAPI `0.4.0` constituyen el baseline contractual vigente de este modelo.
+12. OpenAPI y AsyncAPI `0.5.0` constituyen el baseline contractual vigente de este modelo.
 13. Taxonomía expone operaciones observables de **baja maestra segura** para recursos con dependencias.
 14. Una operación de baja maestra puede permanecer pendiente después de un `202 Accepted`; su resultado definitivo se resuelve de forma asíncrona.
 15. La operación de baja pertenece a Taxonomía y no implica acceso directo a las tablas del bounded context consumidor.
@@ -1439,19 +1439,19 @@ Las decisiones conceptuales principales ya fueron propagadas.
 | Artefacto | Estado |
 |---|---|
 | `Arquitectura.md` | Actualizado con `GESTOR_COMERCIAL` como actor humano canónico, Ventas como orquestador, inventario extendido, datos físicos, AsyncAPI, errores e idempotencia |
-| `Contrato_Api.md` | Baseline `0.4.0`, ownership e integración consolidados |
+| `Contrato_Api.md` | Baseline `0.5.0`, ownership e integración consolidados |
 | `SPEC/HU/WF-003` | Actualizados: perfil físico de producto simple y Seguridad |
 | `SPEC/HU/WF-004` | Actualizados: perfil físico de variante/SKU y Seguridad |
 | `SPEC/HU/WF-014` | Auditoría alineada con `GESTOR_COMERCIAL` y capacidades internas, sin rol global de Auditor |
 | `SPEC/HU/WF-015` | Reserva/consumo/liberación, TTL, idempotencia, incidencias, reintegros, conciliación y traslados |
 | `HU/WF-016` | Dashboard y alertas alineados con Gestor Comercial autorizado y proyección de solo lectura |
-| `api/openapi.yaml` | `0.4.0`: contrato HTTP consolidado P0/P1/P2 |
-| `asyncapi/asyncapi.yaml` | `0.4.0`: mensajería consolidada y topología RabbitMQ consolidada |
-| `api/catalogo-eventos.md` | `0.4.0`: referencia humana alineada con 39 mensajes y consumidores |
-| `api/catalogo-errores.md` | `0.4.0`: catálogo consolidado, incluidos errores de traslados |
+| `api/openapi.yaml` | `0.5.0`: contrato HTTP consolidado P0/P1/P2 |
+| `asyncapi/asyncapi.yaml` | `0.5.0`: mensajería consolidada y topología RabbitMQ consolidada |
+| `api/catalogo-eventos.md` | `0.5.0`: referencia humana alineada con 39 mensajes y consumidores |
+| `api/catalogo-errores.md` | `0.5.0`: catálogo consolidado, incluidos errores de traslados |
 | Operación de baja maestra | Incorporada conceptualmente en Taxonomía y observable por `GET /api/v1/taxonomia/operaciones/{operationId}` |
 
-Los contratos Catálogo → Pricing, Catálogo → Inventario y el reintegro físico ya están formalizados en el baseline `0.4.0`; no se mantienen como pendientes del modelo conceptual.
+Los contratos Catálogo → Pricing, Catálogo → Inventario y el reintegro físico ya están formalizados en el baseline `0.5.0`; no se mantienen como pendientes del modelo conceptual.
 
 Pendientes que sí pueden afectar el modelo lógico o la implementación futura:
 

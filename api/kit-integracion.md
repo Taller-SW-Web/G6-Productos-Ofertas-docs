@@ -58,7 +58,7 @@ Ejemplo conceptual:
 La versión contractual de este kit es:
 
 ```text
-0.4.0
+0.5.0
 ```
 
 ---
@@ -1221,7 +1221,7 @@ No se deben crear rutas nuevas únicamente en documentación de un consumidor.
 Sincronización documental 2026-10-01:
 
 ```text
-kit-integracion.md se alinea con api/openapi.yaml 0.4.0 para Pricing.
+kit-integracion.md se alinea con api/openapi.yaml 0.5.0 para Pricing.
 No se agregan rutas HTTP nuevas.
 Se documentan explícitamente consultas administrativas, prevalidación,
 importación, seguimiento y reporte ya presentes en OpenAPI.
