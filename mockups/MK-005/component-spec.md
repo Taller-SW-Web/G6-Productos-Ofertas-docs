@@ -2,212 +2,235 @@
 
 ## 1. Identificación
 
-Funcionalidad: Gestión de cupones de descuento. Owner: Axel Andree Cueva Alcalá. Versión 1.0. Estado: En revisión documental; construcción y revisión UX transversal pendientes. Fuentes transversales #59/#60 cerradas y en master dc8fc6d. Rama oficial cueva. La construcción seguirá el pipeline y sus gates; estos documentos todavía no acreditan pantallas implementadas.
+Funcionalidad: **Gestión de cupones de descuento**. Owner: Axel Andree Cueva Alcalá. Issue: [#64](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/64). Versión **1.1**, fecha **2026-10-03**, estado **DOCUMENTACIÓN PREPARADA PARA BASE RAW; EN REVISIÓN**. Rama documental `cueva`; construcción/iteración futura en `lab/cueva`. Base visual de Leonardo Vera aún pendiente; no hay mockup implementado, autovalidación visual ni visto bueno.
 
 ## 2. Trazabilidad
 
-| Fuente | Referencia | Alcance |
+| Fuente | Referencia | Uso |
 |---|---|---|
-| SPEC | [SPEC-005](../../specs/SPEC-005-gestion-cupones-descuento.md) | Reglas completas |
-| HU | [HU-005](../../hu/HU-005-gestion-cupones-descuento.md) | Criterios administrativos; reglas de canal explicadas sin ejecutarlas |
-| WF | [WF-005](../../wireframes/flows/WF-005-gestion-cupones-descuento.md) | Pantallas/campos/microtexto |
-| Flow | [FLOW-005](../../flujos/FLOW-005-gestion-cupones-descuento.md) | Navegación/estado, entrega #38 en cueva |
-| Propuesta UX | [Versión 2.0](../ux/propuesta-ux.md) | §9–11, fuentes abiertas |
-| UX Decisions | [UXD](../ux/ux-decisions.md) | 001–006, 009–012 según condición |
-| UX Guidelines | [UXG](../ux/ux-guidelines.md) | 001–008, 011, 013, 017–018, 020–022 |
-| API | [OpenAPI 0.5.0](../../api/openapi.yaml), [Contrato](../../Contrato_Api.md) | Administración provisional interna; no conexión backend |
-| Índice/ownership | [INDEX](../../wireframes/INDEX.md), [Equipo](../../EQUIPO_Y_RESPONSABILIDADES.md) | Asignación canónica de Axel |
-| Wireframe DS | [Guía de baja fidelidad](../../wireframes/DESIGN.md) | Estructura previa; colores/tipografía de mockup regidos por DESIGN1.0 |
-| DS | [DESIGN 1.0.0](../DESIGN.md) | §4–13 y 15, componentes DS-C01–29 aplicables |
+| SPEC | [SPEC-005](../../specs/SPEC-005-gestion-cupones-descuento.md) | Reglas de negocio, campos y límites. |
+| HU | [HU-005](../../hu/HU-005-gestion-cupones-descuento.md) | Criterios de aceptación y actor Gestor Comercial. |
+| Wireframe | [WF-005](../../wireframes/flows/WF-005-gestion-cupones-descuento.md) | Inventario/estructura/copy; no es la base raw de alta fidelidad. |
+| Navegación | [FLOW-005](../../flujos/FLOW-005-gestion-cupones-descuento.md) | Entradas, retornos, guardado y estados. |
+| Contratos | [OpenAPI 0.5.0](../../api/openapi.yaml), [AsyncAPI 0.4.0](../../asyncapi/asyncapi.yaml), [Contrato API](../../Contrato_Api.md) | Campos/operaciones vigentes; mensajería solo contexto, no botones técnicos. |
+| UX | [Propuesta 2.0](../ux/propuesta-ux.md), [UXD](../ux/ux-decisions.md), [UXG](../ux/ux-guidelines.md) | Patrones/normas transversales; aplicabilidad por pantalla y estado. |
+| Design System | [DESIGN 1.0.0](../DESIGN.md) | Tokens, tipografía, shell y DS-C aplicables. |
+| Pipeline | [Mockups](../README.md), [prototipo](../prototipo/README.md), [INDEX](../../wireframes/INDEX.md), [equipo](../../EQUIPO_Y_RESPONSABILIDADES.md) | Rutas, DoR/DoD, ownership y revisión. |
+
+SPEC/HU/contratos prevalecen sobre artefactos visuales. La base de Stitch es una propuesta exploratoria, no una fuente funcional. El wireframe previo guía estructura; los valores visuales de alta fidelidad proceden de DESIGN. Consumir versiones vigentes en la rama del equipo al iniciar laboratorio, sin congelar un hash antiguo de master como autoridad.
 
 ## 3. Objetivo funcional
 
-Gestor comercial autorizado configura y consulta gestión de cupones de descuento para los canales. Resultado exitoso: configuración válida guardada y estado confirmado, sin ejecutar checkout desde administración.
+El Gestor Comercial consulta y configura cupones, límites y política de restitución; conoce el uso global confirmado y cambia el estado sin operar un pedido.
 
 ## 4. Alcance
 
-Incluye pantallas P0, lectura/creación/edición/estado, fixtures deterministas y mensajes contractuales. No integra backend, pagos, pedidos ni pantallas de prueba comercial. HU CA-01 código único; CA-02 validar no consume; CA-03/04 identidad y límite por cliente se explican sin pedir UUID al gestor; CA-05–11 consumo/restitución automáticos del pedido; CA-12 no pagos. Mostrar usos globales confirmados y usos disponibles solo con dato contractual; no inventar desglose por cliente.
+**Incluido:** 6 pantallas P0 de §5, estados/fixtures de §10/13, lectura/alta/edición/cambio de estado documentados, navegación y accesibilidad desktop. Documentación de entrada para que Vera prepare raw; posteriormente el owner refina, normaliza y autovalida.
+
+**Fuera de alcance:** Sin validar una cesta, consumir/restaurar manualmente, checkout, pagos, historial por cliente no publicado ni vigencia independiente del cupón. SPEC-005 CA/flujo comercial se explica como contexto; la administración no lo ejecuta. La integración backend no se acredita mediante fixtures. No crear nuevos endpoints/permisos/maestros ni pantallas fuera del inventario.
 
 ## 5. Inventario de pantallas
 
 | ID | Pantalla | Propósito | Entrada | Acción principal | Salida | Prioridad | Ruta |
-|---|---|---|---|---|---|---|---|
-| MK-005-S01 | Listado de cupones | list | Navegación/entrada directa | Consultar / elegir / confirmar | Retorno al contexto | P0 | `/MK005/S01` |
-| MK-005-S02 | Crear cupón | create | Navegación/entrada directa | Guardar | Retorno al contexto | P0 | `/MK005/S02` |
-| MK-005-S03 | Editar cupón | edit | Navegación/entrada directa | Guardar | Retorno al contexto | P0 | `/MK005/S03` |
-| MK-005-S04 | Detalle de cupón | detail | Navegación/entrada directa | Consultar / elegir / confirmar | Retorno al contexto | P0 | `/MK005/S04` |
-| MK-005-S05 | Límites y uso | usage | Navegación/entrada directa | Consultar / elegir / confirmar | Retorno al contexto | P0 | `/MK005/S05` |
-| MK-005-S06 | Cambiar estado | state | Navegación/entrada directa | Consultar / elegir / confirmar | Retorno al contexto | P0 | `/MK005/S06` |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| MK-005-S01 | Listado de cupones | Consultar estado/configuración y elegir un cupón. | Sidebar o ruta directa. | Crear cupón | S02 o S03/S04 del registro elegido. | P0 | `/MK005/S01` |
+| MK-005-S02 | Crear cupón | Registrar una configuración válida. | S01 / Crear cupón. | Crear cupón | S04 del cupón creado solo tras guardado confirmado; cancelar vuelve a S01. | P0 | `/MK005/S02` |
+| MK-005-S03 | Editar cupón | Modificar el cupón seleccionado sin perder identidad ni entradas. | S01 o S04 con cuponId. | Guardar cambios | S04 del mismo cupón; cancelar conserva registro anterior. | P0 | `/MK005/S03` |
+| MK-005-S04 | Detalle de cupón | Leer configuración, promoción y uso confirmado. | S01 o guardado confirmado. | Editar cupón | S03; Límites y uso a S05; Cambiar estado a S06; volver a S01. | P0 | `/MK005/S04` |
+| MK-005-S05 | Límites y uso | Consultar cupos derivados y política sin actuar sobre pedidos. | S04 / Límites y uso. | Volver al detalle | S04 del mismo cupón. | P0 | `/MK005/S05` |
+| MK-005-S06 | Cambiar estado | Confirmar Activar o Desactivar el cupón seleccionado. | S04 / Cambiar estado; entrada directa reproduce detalle + diálogo. | Activar cupón / Desactivar cupón | Confirmado: S04 con nuevo estado; cancelar/rechazo conserva el anterior. | P0 | `/MK005/S06` |
 
-Cada ruta permite inspección directa. Estado controlado por `?estado=...`, no visible en la interfaz. Datos de muestra identificados en el entorno; no se presentan como integración real.
+Cada pantalla mantiene una ruta individual; un diálogo S06 se reproduce con su detalle de fondo. Query `estado` controla fixtures reproducibles, sin aparecer como un selector técnico al usuario. Entrada directa inicializa registro/contexto estable; navegación real conserva el contexto elegido.
 
 ## 6. Relación entre pantallas
 
 ```mermaid
 flowchart LR
- S01[Listado] --> S02[Crear]
- S01 --> E[Editar]
- S01 --> D[Detalle]
- S02 --> D
- E --> D
- D --> E
- D --> C[Cambiar estado]
- C --> D
- D --> S01
+ S01 --> S02
+ S01 --> S03
+ S01 --> S04
+ S02 --> S04
+ S03 --> S04
+ S04 --> S03
+ S04 --> S05
+ S05 --> S04
+ S04 --> S06
+ S06 --> S04
+ S04 --> S01
 ```
 
-Selector vuelve al formulario con selección y borrador preservados. Uso vuelve al detalle. Upselling tiene entrada propia y criterio por item. Los alias del diagrama se resuelven a las rutas de §5; no representan pantallas adicionales.
+Todos los nodos son SXX del inventario, no pantallas adicionales. Guardado exitoso va al detalle del registro guardado; fallo corregible conserva formulario. Volver a listado conserva filtros/página. Selector (cuando exista) recuerda pantalla/borrador de origen, confirma selección explícita y vuelve a ese mismo formulario; cancelar no modifica el borrador original. Cerrar con cambios pide Seguir editando/Descartar. Confirmación de estado vuelve al detalle y restituye foco.
 
 ## 7. Jerarquía de información
 
-Primaria: tarea, entidad y estado; secundaria: configuración/alcance/vigencia; complementaria: explicación de impacto y auditoría solo cuando se dispone de ella. No usar un KPI sin fuente.
+Primaria: tarea, nombre/código de entidad y estado en palabras. Secundaria: configuración/alcance/vigencia/límites pertinentes. Complementaria: ayudas e impacto de acciones, timestamps solo con dato publicado. No inventar KPI/historial o rellenar ausencia con cero. Error de campo aparece junto a etiqueta y un resumen permite localizarlo; rechazo de operación es persistente.
 
 ## 8. Componentes compartidos
 
-| Componente | Uso / variante / tamaño | Estados |
+| ID | Variante / tamaño / uso | Estados y tokens |
 |---|---|---|
-| DS-C01 Button | primary filled y secondary outline, md 40 px | focus/disabled/loading, texto explícito |
-| DS-C03/04/06/07 | Texto, número, select/múltiple; md 40 px; label visible | error/read-only; criterios sin default |
-| DS-C08/09/11 | Combinación, elección excluyente, fecha-hora zona Lima | selected/focus/error |
-| DS-C13/17/18 | Filtros padding16, tabla filas48, pagination32 | carga/vacío/sin coincidencias |
-| DS-C14/19 | Estado textual semántico, cards padding24 radius12 sin sombra | informativo/read-only |
-| DS-C21 | Modal 480 confirmación, padding24 radius16 | foco contenido/Escape/retorno |
-| DS-C22/24/25/28 | Alert persistente, skeleton/loader, vacío y breadcrumbs | error/carga/info; retorno contextual |
+| DS-C01/02 | Button filled primary / outline secondary md 40 px; ActionIcon 32/40 px con nombre accesible | default/hover/focus/disabled/loading; color/action y color/focus de DESIGN. |
+| DS-C03/04/05 | Texto/número md 40 px; textarea solo justificación cuando aplique | label visible, helper/error/read-only; border/control y semánticos de error. |
+| DS-C06/07/08/09/11 | Select/MultiSelect/check/radio/fecha-hora según cardinalidad contractual | selección explícita, foco, error y carga localizada; ningún criterio/canal universal por defecto. |
+| DS-C13/17/18 | FilterBar padding16, Table filas48/header40, Pagination32 | loading/empty/sin-resultados/error por región; filtros/cuenta contractuales. |
+| DS-C14/15/19 | Badge estado textual, Pill seleccionada removible, Card padding24/radio12 sin sombra | estado no depende de color; lectura conocida/ausente diferenciadas. |
+| DS-C21 | Modal confirmación 480 px, padding24/radio16 | impacto/cancelar/acción específica; focus trap, Escape y retorno. |
+| DS-C22/24/25/28 | Alert persistente, Loader/Skeleton, EmptyState y Breadcrumbs | error/carga/ausencia/retorno real; sin progreso ni éxito ficticios. |
+
+Tema compartido en `prototipo/src/tema/`; composición reutilizable en `src/componentes/`. Tipos/estados no justifican estilos ad hoc; solo instanciar componentes que la pantalla requiera. Inputs y botones de escritura no aparecen en vistas exclusivamente de lectura.
 
 ## 9. Componentes específicos
 
-### MK-005-C01 — Configuración comercial
+C01 Formulario de cupón agrupa Identificación, Límites y Restitución (DS-C03/04/06/09); C02 Resumen de usos es lectura (DS-C19/22); C03 Confirmación de estado conserva contexto (DS-C21). Ninguno agrega controles de consumo o restitución.
 
-Propósito: representar campos de MK-005 sin reglas nuevas. Pantallas crear/editar/detalle. Propiedades y restricciones: Código normalizado único por trim y mayúsculas ASCII (letras ASCII, números, guion y guion bajo; al editar se excluye el propio registro); promoción asociada; estado; monto mínimo >0 opcional; límite global y por cliente enteros >=1 opcionales; política de restitución. Vacío significa Sin límite / Sin monto mínimo, nunca cero. La vigencia se consulta en la promoción asociada, no se crea una vigencia propia del cupón.
+### Campos, props y validaciones
 
-Default refleja fixture; loading anuncia espera; error inline conserva valores; permiso denegado bloquea mutación sin inventar scopes. Guardar valida y enfoca primer error. Cancelar con cambios abre aviso. Cada campo tiene label visible; criterio/error asociado y foco visible. Operaciones: GET/POST /cupones; GET/PATCH /cupones/{cuponId}; POST /cupones/{cuponId}/activar y /desactivar. Filtro administrativo: estado, pagina, tamanio.
+| Etiqueta visible | Campo contractual | Regla / representación |
+| --- | --- | --- |
+| Código | codigo | Texto obligatorio; trim y mayúsculas ASCII; solo A–Z, 0–9, guion y guion bajo; único, excluyendo el propio registro al editar. |
+| Promoción asociada | promocionId | Obligatoria; promoción de modalidad CUPON; obtener nombre/vigencia con la consulta de Promoción, no inventarlos en CuponAdmin. |
+| Estado | estado | ACTIVO/INACTIVO; etiqueta humana Activo/Inactivo. Elegir al crear; cambiar una entidad existente siguiendo confirmación de S06. |
+| Monto mínimo | montoMinimo | Opcional; null significa Sin monto mínimo; si existe, mayor que cero; no convertir vacío en cero ni añadir campo moneda ausente del request. |
+| Límite global | maxUsosGlobal | Opcional; null significa Sin límite; entero positivo si se informa. |
+| Límite por cliente | maxUsosPorCliente | Opcional; null significa Sin límite; entero positivo. Ayuda: requiere identificar al cliente en el canal; no pedir customer_ref al gestor. |
+| Política de restitución | politicaCancelacion | Obligatoria; Restaurar uso al cancelar / No restaurar. Solo cancelación contractual, sin extender a devoluciones. |
+| Uso global y disponibles | usosGlobalesConsumidos / usosDisponibles | Solo lectura, nunca request de escritura. Datos de CuponAdmin; disponible null con cupo ilimitado se representa Sin límite; si falta información no mostrar cero. |
 
-### MK-005-C02 — Colección/selección contextual
+El formulario conserva su draft, registro editado, errores y selección de referencias. Props de lectura y capacidades no se mandan como autorización. Guardar enfoca primer error y no comunica éxito hasta resultado; durante envío impide doble click. Labels son humanos; constantes contractuales viven en datos/adaptador, no en copy.
 
-Tabla de entidades/selección con datos deterministas, estado y acciones explícitas por fila; sin acciones masivas. Colección vacía permite crear o regresar, sin coincidencias permite limpiar filtros. Consulta fallida permite reintentar lectura; tabla no sustituye ausencia con cero. Selección por botón etiquetado, teclado y retorno al formulario.
+### Operaciones disponibles
+
+| Acción | Operación OpenAPI (relativa al servidor `/api/v1`) | Límite |
+|---|---|---|
+| Listar | GET `/cupones` | estado, pagina, tamanio; sin búsqueda de código ni filtros por cliente inventados. |
+| Crear | POST `/cupones` | CuponCreateRequest. |
+| Leer / editar | GET/PATCH `/cupones/{cuponId}` | CuponAdmin / CuponUpdateRequest. |
+| Estado | POST `/cupones/{cuponId}/activar` o `/desactivar` | Confirmación explícita; respuesta contractual. |
+| Promoción asociada | GET `/promociones/administracion` y `/promociones/{promocionId}` | Selección de modalidad CUPON; nombre/vigencia provienen de PromocionAdmin. |
+
+Los filtros son parámetros publicados, no sugerencias visuales de búsqueda. Los contratos internos administrativos conservan su condición provisional; la documentación no promete backend productivo.
 
 ## 10. Especificación por pantalla
 
 ### MK-005-S01 — Listado de cupones
 
-**Propósito:** listado de cupones respetando las fuentes y manteniendo contexto.
-
-**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Filtros admitidos de estado y tipo/modalidad cuando corresponda → tabla semántica (nombre/código, estado, vigencia o referencia pertinente) → paginación conocida. Crear/abrir detalle/editar, sin selección masiva.
-
-**Componentes:** shell común, DS-C28 breadcrumbs, DS-C01 botones, DS-C19 card; tabla DS-C17 y filtros DS-C13 en consulta; DS-C03–09/11 para campos; DS-C21 para confirmación; DS-C22/24/25 para feedback.
-
-**Acción primaria:** Crear.
-**Secundarias:** Volver/Cancelar; ver detalle o editar según navegación. Retorno explícito conserva filtros y borrador si existe.
-
-**Estados:** default, loading, error, permisos (403), sesion (401), empty, sin-resultados. Empty solo describe colección vacía, no ficha inexistente; error no presenta ceros. Carga sin progreso ficticio. Error de guardar confirmado permite corregir; resultado desconocido no reenvía automáticamente.
-
-**Copy:** título «Listado de cupones»; «Guardar cambios», «Cancelar», «No pudimos cargar la información. Vuelve a intentarlo»; error de campo explica el requisito concreto. Fuente: WF/UXG-006/011/020/021.
+- **Propósito y entrada:** Consultar estado/configuración y elegir un cupón. Sidebar o ruta directa.
+- **Estructura/contenido:** Filtro Estado; columnas Código, Promoción asociada, Estado, Uso global y Límite global; acciones Ver detalle/Editar y paginación contractual. No buscador remoto de código.
+- **Jerarquía y componentes:** título/tarea primero; estado/contexto después; datos editables o lectura central; acciones al final. DS-C13/17/18 para consulta; DS-C25/24/22 para vacío/carga/error. No incluir componentes irrelevantes por completar catálogo.
+- **Acción primaria / salida:** Crear cupón. S02 o S03/S04 del registro elegido.
+- **Acciones secundarias:** Volver/Cancelar con destino explícito; conservar filtros/página o borrador según §6.
+- **Estados requeridos:** default, loading, empty, sin-resultados, error, sesion, permisos; sumar los fixtures específicos de §13 aplicables a esta pantalla. Empty y sin-resultados solo en colecciones; no se representan como una ficha inexistente.
+- **Copy propio:** «Todavía no hay cupones. Crea el primero.»; botones con nombre de acción y entidad, sin MK/WF/UUID/eventos/códigos internos visibles.
+- **Reglas y accesibilidad:** fuentes SPEC/HU/WF/FLOW-005, campos/operaciones de §9; UXG-001/006/011/017/020/021/022. Label y error asociados; foco al primer campo inválido; diálogo controla/restaura foco; estado anunciado sin depender del color. Un fallo conserva valores y estado previo.
+- **Verificación futura:** entrada directa `/MK005/S01` + `?estado=<fixture>`, interacción del destino, regreso sin pérdida, captura 1440×900 y teclado. Estas rutas son contrato de implementación, **todavía no páginas construidas**.
 ### MK-005-S02 — Crear cupón
 
-**Propósito:** crear cupón respetando las fuentes y manteniendo contexto.
-
-**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Código normalizado único por trim y mayúsculas ASCII (letras ASCII, números, guion y guion bajo; al editar se excluye el propio registro); promoción asociada; estado; monto mínimo >0 opcional; límite global y por cliente enteros >=1 opcionales; política de restitución. Vacío significa Sin límite / Sin monto mínimo, nunca cero. La vigencia se consulta en la promoción asociada, no se crea una vigencia propia del cupón.
-
-**Componentes:** shell común, DS-C28 breadcrumbs, DS-C01 botones, DS-C19 card; tabla DS-C17 y filtros DS-C13 en consulta; DS-C03–09/11 para campos; DS-C21 para confirmación; DS-C22/24/25 para feedback.
-
-**Acción primaria:** Guardar configuración.
-**Secundarias:** Volver/Cancelar; ver detalle o editar según navegación. Retorno explícito conserva filtros y borrador si existe.
-
-**Estados:** default, loading, error, permisos (403), sesion (401), validacion, guardar-error, salida con cambios. Empty solo describe colección vacía, no ficha inexistente; error no presenta ceros. Carga sin progreso ficticio. Error de guardar confirmado permite corregir; resultado desconocido no reenvía automáticamente.
-
-**Copy:** título «Crear cupón»; «Guardar cambios», «Cancelar», «No pudimos cargar la información. Vuelve a intentarlo»; error de campo explica el requisito concreto. Fuente: WF/UXG-006/011/020/021.
+- **Propósito y entrada:** Registrar una configuración válida. S01 / Crear cupón.
+- **Estructura/contenido:** Campos de §9, grupos Identificación/Límites/Restitución y ayuda de null. Selección de promoción CUPON dentro del formulario; sin una pantalla P0 extra.
+- **Jerarquía y componentes:** título/tarea primero; estado/contexto después; datos editables o lectura central; acciones al final. DS-C19/03/04/06/09/11 para grupos pertinentes; DS-C21 solo para confirmación/descarte; DS-C22 para feedback. No incluir componentes irrelevantes por completar catálogo.
+- **Acción primaria / salida:** Crear cupón. S04 del cupón creado solo tras guardado confirmado; cancelar vuelve a S01.
+- **Acciones secundarias:** Volver/Cancelar con destino explícito; conservar filtros/página o borrador según §6.
+- **Estados requeridos:** default, guardando, validacion, guardar-error, resultado-desconocido, salida-con-cambios, sesion, permisos; sumar los fixtures específicos de §13 aplicables a esta pantalla. Empty y sin-resultados solo en colecciones; no se representan como una ficha inexistente.
+- **Copy propio:** «Deja el límite vacío para permitir usos sin límite.»; botones con nombre de acción y entidad, sin MK/WF/UUID/eventos/códigos internos visibles.
+- **Reglas y accesibilidad:** fuentes SPEC/HU/WF/FLOW-005, campos/operaciones de §9; UXG-001/002/003/006/011/018/020/021/022. Label y error asociados; foco al primer campo inválido; diálogo controla/restaura foco; estado anunciado sin depender del color. Un fallo conserva valores y estado previo.
+- **Verificación futura:** entrada directa `/MK005/S02` + `?estado=<fixture>`, interacción del destino, regreso sin pérdida, captura 1440×900 y teclado. Estas rutas son contrato de implementación, **todavía no páginas construidas**.
 ### MK-005-S03 — Editar cupón
 
-**Propósito:** editar cupón respetando las fuentes y manteniendo contexto.
-
-**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Código normalizado único por trim y mayúsculas ASCII (letras ASCII, números, guion y guion bajo; al editar se excluye el propio registro); promoción asociada; estado; monto mínimo >0 opcional; límite global y por cliente enteros >=1 opcionales; política de restitución. Vacío significa Sin límite / Sin monto mínimo, nunca cero. La vigencia se consulta en la promoción asociada, no se crea una vigencia propia del cupón. Ante fallo se conservan valores; salir con cambios requiere confirmar descarte.
-
-**Componentes:** shell común, DS-C28 breadcrumbs, DS-C01 botones, DS-C19 card; tabla DS-C17 y filtros DS-C13 en consulta; DS-C03–09/11 para campos; DS-C21 para confirmación; DS-C22/24/25 para feedback.
-
-**Acción primaria:** Guardar configuración.
-**Secundarias:** Volver/Cancelar; ver detalle o editar según navegación. Retorno explícito conserva filtros y borrador si existe.
-
-**Estados:** default, loading, error, permisos (403), sesion (401), validacion, guardar-error, salida con cambios. Empty solo describe colección vacía, no ficha inexistente; error no presenta ceros. Carga sin progreso ficticio. Error de guardar confirmado permite corregir; resultado desconocido no reenvía automáticamente.
-
-**Copy:** título «Editar cupón»; «Guardar cambios», «Cancelar», «No pudimos cargar la información. Vuelve a intentarlo»; error de campo explica el requisito concreto. Fuente: WF/UXG-006/011/020/021.
+- **Propósito y entrada:** Modificar el cupón seleccionado sin perder identidad ni entradas. S01 o S04 con cuponId.
+- **Estructura/contenido:** Precargar los campos del cupón elegido, excluir su propio código de unicidad; mostrar asociación, límites y política. Uso es de lectura, no contador editable.
+- **Jerarquía y componentes:** título/tarea primero; estado/contexto después; datos editables o lectura central; acciones al final. DS-C19/03/04/06/09/11 para grupos pertinentes; DS-C21 solo para confirmación/descarte; DS-C22 para feedback. No incluir componentes irrelevantes por completar catálogo.
+- **Acción primaria / salida:** Guardar cambios. S04 del mismo cupón; cancelar conserva registro anterior.
+- **Acciones secundarias:** Volver/Cancelar con destino explícito; conservar filtros/página o borrador según §6.
+- **Estados requeridos:** default, loading, error, no-encontrado, guardando, validacion, guardar-error, resultado-desconocido, salida-con-cambios, sesion, permisos; sumar los fixtures específicos de §13 aplicables a esta pantalla. Empty y sin-resultados solo en colecciones; no se representan como una ficha inexistente.
+- **Copy propio:** «No pudimos guardar los cambios. Revisa la información e inténtalo de nuevo.»; botones con nombre de acción y entidad, sin MK/WF/UUID/eventos/códigos internos visibles.
+- **Reglas y accesibilidad:** fuentes SPEC/HU/WF/FLOW-005, campos/operaciones de §9; UXG-001/002/003/006/011/018/020/021/022. Label y error asociados; foco al primer campo inválido; diálogo controla/restaura foco; estado anunciado sin depender del color. Un fallo conserva valores y estado previo.
+- **Verificación futura:** entrada directa `/MK005/S03` + `?estado=<fixture>`, interacción del destino, regreso sin pérdida, captura 1440×900 y teclado. Estas rutas son contrato de implementación, **todavía no páginas construidas**.
 ### MK-005-S04 — Detalle de cupón
 
-**Propósito:** detalle de cupón respetando las fuentes y manteniendo contexto.
-
-**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Código normalizado único por trim y mayúsculas ASCII (letras ASCII, números, guion y guion bajo; al editar se excluye el propio registro); promoción asociada; estado; monto mínimo >0 opcional; límite global y por cliente enteros >=1 opcionales; política de restitución. Vacío significa Sin límite / Sin monto mínimo, nunca cero. La vigencia se consulta en la promoción asociada, no se crea una vigencia propia del cupón. Valores de configuración en lectura, estado en texto y acciones Editar / Cambiar estado / Volver.
-
-**Componentes:** shell común, DS-C28 breadcrumbs, DS-C01 botones, DS-C19 card; tabla DS-C17 y filtros DS-C13 en consulta; DS-C03–09/11 para campos; DS-C21 para confirmación; DS-C22/24/25 para feedback.
-
-**Acción primaria:** Editar.
-**Secundarias:** Volver/Cancelar; ver detalle o editar según navegación. Retorno explícito conserva filtros y borrador si existe.
-
-**Estados:** default, loading, error, permisos (403), sesion (401). Empty solo describe colección vacía, no ficha inexistente; error no presenta ceros. Carga sin progreso ficticio. Error de guardar confirmado permite corregir; resultado desconocido no reenvía automáticamente.
-
-**Copy:** título «Detalle de cupón»; «Guardar cambios», «Cancelar», «No pudimos cargar la información. Vuelve a intentarlo»; error de campo explica el requisito concreto. Fuente: WF/UXG-006/011/020/021.
+- **Propósito y entrada:** Leer configuración, promoción y uso confirmado. S01 o guardado confirmado.
+- **Estructura/contenido:** Código, Estado, promoción/vigencia consultada, límites, mínimo y política; fechas de creación/modificación solo si recibidas. Acciones explícitas, sin UUID/eventos visibles.
+- **Jerarquía y componentes:** título/tarea primero; estado/contexto después; datos editables o lectura central; acciones al final. DS-C19/03/04/06/09/11 para grupos pertinentes; DS-C21 solo para confirmación/descarte; DS-C22 para feedback. No incluir componentes irrelevantes por completar catálogo.
+- **Acción primaria / salida:** Editar cupón. S03; Límites y uso a S05; Cambiar estado a S06; volver a S01.
+- **Acciones secundarias:** Volver/Cancelar con destino explícito; conservar filtros/página o borrador según §6.
+- **Estados requeridos:** default, loading, error, no-encontrado, sesion, permisos; sumar los fixtures específicos de §13 aplicables a esta pantalla. Empty y sin-resultados solo en colecciones; no se representan como una ficha inexistente.
+- **Copy propio:** «Validar un cupón en una compra no consume un uso.»; botones con nombre de acción y entidad, sin MK/WF/UUID/eventos/códigos internos visibles.
+- **Reglas y accesibilidad:** fuentes SPEC/HU/WF/FLOW-005, campos/operaciones de §9; UXG-001/006/011/017/020/021/022. Label y error asociados; foco al primer campo inválido; diálogo controla/restaura foco; estado anunciado sin depender del color. Un fallo conserva valores y estado previo.
+- **Verificación futura:** entrada directa `/MK005/S04` + `?estado=<fixture>`, interacción del destino, regreso sin pérdida, captura 1440×900 y teclado. Estas rutas son contrato de implementación, **todavía no páginas construidas**.
 ### MK-005-S05 — Límites y uso
 
-**Propósito:** límites y uso respetando las fuentes y manteniendo contexto.
-
-**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Uso global y límites del fixture contractual, disponibles conocidos o Sin límite; política y promoción/vigencia; sin botón Consumir/Restituir ni historial por cliente inventado.
-
-**Componentes:** shell común, DS-C28 breadcrumbs, DS-C01 botones, DS-C19 card; tabla DS-C17 y filtros DS-C13 en consulta; DS-C03–09/11 para campos; DS-C21 para confirmación; DS-C22/24/25 para feedback.
-
-**Acción primaria:** Editar.
-**Secundarias:** Volver/Cancelar; ver detalle o editar según navegación. Retorno explícito conserva filtros y borrador si existe.
-
-**Estados:** default, loading, error, permisos (403), sesion (401). Empty solo describe colección vacía, no ficha inexistente; error no presenta ceros. Carga sin progreso ficticio. Error de guardar confirmado permite corregir; resultado desconocido no reenvía automáticamente.
-
-**Copy:** título «Límites y uso»; «Guardar cambios», «Cancelar», «No pudimos cargar la información. Vuelve a intentarlo»; error de campo explica el requisito concreto. Fuente: WF/UXG-006/011/020/021.
+- **Propósito y entrada:** Consultar cupos derivados y política sin actuar sobre pedidos. S04 / Límites y uso.
+- **Estructura/contenido:** Uso global confirmado, límite global, disponibles conocidos o Sin límite, límite por cliente y política. No desglose de clientes o historial de pedidos inventados.
+- **Jerarquía y componentes:** título/tarea primero; estado/contexto después; datos editables o lectura central; acciones al final. DS-C19/03/04/06/09/11 para grupos pertinentes; DS-C21 solo para confirmación/descarte; DS-C22 para feedback. No incluir componentes irrelevantes por completar catálogo.
+- **Acción primaria / salida:** Volver al detalle. S04 del mismo cupón.
+- **Acciones secundarias:** Volver/Cancelar con destino explícito; conservar filtros/página o borrador según §6.
+- **Estados requeridos:** default, loading, error, no-encontrado, sesion, permisos; sumar los fixtures específicos de §13 aplicables a esta pantalla. Empty y sin-resultados solo en colecciones; no se representan como una ficha inexistente.
+- **Copy propio:** «El consumo y la restitución se procesan desde el pedido.»; botones con nombre de acción y entidad, sin MK/WF/UUID/eventos/códigos internos visibles.
+- **Reglas y accesibilidad:** fuentes SPEC/HU/WF/FLOW-005, campos/operaciones de §9; UXG-001/006/011/017/020/021/022. Label y error asociados; foco al primer campo inválido; diálogo controla/restaura foco; estado anunciado sin depender del color. Un fallo conserva valores y estado previo.
+- **Verificación futura:** entrada directa `/MK005/S05` + `?estado=<fixture>`, interacción del destino, regreso sin pérdida, captura 1440×900 y teclado. Estas rutas son contrato de implementación, **todavía no páginas construidas**.
 ### MK-005-S06 — Cambiar estado
 
-**Propósito:** cambiar estado respetando las fuentes y manteniendo contexto.
-
-**Layout:** breadcrumbs → título/acción → contenido agrupado → acciones finales. Detalle contextual bajo diálogo de 480 px con entidad, estado actual, impacto y acción Activar/Desactivar. Confirmación no cambia estado antes del resultado; rechazo conserva estado. Escape/Cancelar vuelve al detalle y restituye foco.
-
-**Componentes:** shell común, DS-C28 breadcrumbs, DS-C01 botones, DS-C19 card; tabla DS-C17 y filtros DS-C13 en consulta; DS-C03–09/11 para campos; DS-C21 para confirmación; DS-C22/24/25 para feedback.
-
-**Acción primaria:** Confirmar estado.
-**Secundarias:** Volver/Cancelar; ver detalle o editar según navegación. Retorno explícito conserva filtros y borrador si existe.
-
-**Estados:** default, loading, error, permisos (403), sesion (401), rechazo. Empty solo describe colección vacía, no ficha inexistente; error no presenta ceros. Carga sin progreso ficticio. Error de guardar confirmado permite corregir; resultado desconocido no reenvía automáticamente.
-
-**Copy:** título «Cambiar estado»; «Guardar cambios», «Cancelar», «No pudimos cargar la información. Vuelve a intentarlo»; error de campo explica el requisito concreto. Fuente: WF/UXG-006/011/020/021.
+- **Propósito y entrada:** Confirmar Activar o Desactivar el cupón seleccionado. S04 / Cambiar estado; entrada directa reproduce detalle + diálogo.
+- **Estructura/contenido:** Detalle detrás de diálogo 480 px; código, estado actual/destino e impacto. Desactivar no borra usos ni cambia pedidos históricos; esperar respuesta antes de cambiar badge.
+- **Jerarquía y componentes:** título/tarea primero; estado/contexto después; datos editables o lectura central; acciones al final. DS-C19/03/04/06/09/11 para grupos pertinentes; DS-C21 solo para confirmación/descarte; DS-C22 para feedback. No incluir componentes irrelevantes por completar catálogo.
+- **Acción primaria / salida:** Activar cupón / Desactivar cupón. Confirmado: S04 con nuevo estado; cancelar/rechazo conserva el anterior.
+- **Acciones secundarias:** Cancelar; cerrar con Escape devuelve foco al disparador.
+- **Estados requeridos:** default, loading, guardando, rechazo, resultado-desconocido, sesion, permisos; sumar los fixtures específicos de §13 aplicables a esta pantalla. Empty y sin-resultados solo en colecciones; no se representan como una ficha inexistente.
+- **Copy propio:** «Desactivar este cupón impide nuevos usos. Sus usos registrados se conservan.»; botones con nombre de acción y entidad, sin MK/WF/UUID/eventos/códigos internos visibles.
+- **Reglas y accesibilidad:** fuentes SPEC/HU/WF/FLOW-005, campos/operaciones de §9; UXG-001/002/003/006/011/018/020/021/022. Label y error asociados; foco al primer campo inválido; diálogo controla/restaura foco; estado anunciado sin depender del color. Un fallo conserva valores y estado previo.
+- **Verificación futura:** entrada directa `/MK005/S06` + `?estado=<fixture>`, interacción del destino, regreso sin pérdida, captura 1440×900 y teclado. Estas rutas son contrato de implementación, **todavía no páginas construidas**.
 
 ## 11. Decisiones UX locales
 
-LUX-01: composición propia de esta configuración. Cupón en formulario completo de 640 px y uso en una pantalla de lectura separada (WF-005); evita esconder límites y preserva consulta directa. Alternativa: panel breve; descartado por el contenido pertinente del WF. Trade-off: una navegación más. Verificación: entrada directa y vuelta sin pérdida. No redefine patrón transversal UXD-001/002.
+### LUX-01 — Composición propia de gestión de cupones de descuento
+
+Formulario completo breve (hasta 640 px) y vista de uso separada. Fuente WF-005 Campos/Pantallas. Alternativa: límites ocultos en un panel breve; descartada por legibilidad y lectura conjunta de límites/política. Trade-off: una navegación adicional a S05. Verificar regreso al mismo cupón/contexto y lectura sin controles de compra. Se subordina a UXD-001/002 y UXG-001/002/003; no modifica tokens ni un patrón transversal. Validación de la elección visual pendiente de raw y revisión.
 
 ## 12. Reglas de layout PC
 
-1440×900 canónico, scroll vertical; header64/sidebar240/padding32/contenido1136; formulario 640 px alineado izquierda; gap24 y secciones32. Inter 16/24 y Oswald 32/40 uppercase en H1; tonos/radios/foco desde tema único. Sin overflow horizontal involuntario ni variantes mobile/tablet. La responsividad mobile antigua de WF-007 se subordina al alcance desktop de #64/README, sin alterar negocio.
+Viewport canónico **1440×900**, scroll vertical. Header64, sidebar240 y padding32 de DESIGN §5; contenido útil1136 antes del scrollbar. Formulario máximo **640 px** alineado a izquierda, gaps24 y separación de secciones32. Inter para cuerpo, Oswald H1 según DESIGN; no uppercase global. Tokens exactos centralizados; iconos Tabler16/20/24. Tabla limita su scroll a la región, página sin overflow horizontal. Alcance web desktop de mockups: la antigua indicación móvil de WF-007 no crea una variante móvil en esta entrega. Responsive desktop no altera reglas del formulario.
 
 ## 13. Fixtures
 
-Datos exclusivamente ficticios: BIENVENIDA15, promoción Bienvenida (modalidad Cupón), máximo global 100, consumidos 28, disponibles 72; por cliente 1; restitución al cancelar. RUN10 sin límites.
+Cupón BIENVENIDA15 asociado a Bienvenida, ACTIVO, maxUsosGlobal=100, maxUsosPorCliente=1, usosGlobalesConsumidos=28, usosDisponibles=72, montoMinimo=null y RESTAURAR_EN_CANCELACION. Cupón RUN10: límites null, consumidos 0, disponibles null y NO_RESTAURAR. Promoción asociada: CUPON, inicio 2026-10-01T00:00:00-05:00 y fin 2026-11-01T00:00:00-05:00. Los identificadores de muestra son estables y se resuelven al registro correcto; no confundir los dos cupones al abrir edición.
 
-| Fixture | Caso | Representación |
+### Estados comunes, aplicados según §10
+
+| Fixture | Entrada controlada | Resultado / fuente |
 |---|---|---|
-| default | Datos coherentes con schemas Admin | Entidades configuradas |
-| loading | Lectura pendiente | Skeleton y texto accesible |
-| empty | Colección sin registros | Vacío con acción permitida |
-| sin-resultados | Filtros sin coincidencias | Limpiar filtros |
-| error | Lectura fallida | Alert y reintento localizado |
-| permisos / sesion | 403 / 401 contractuales | Bloqueo sin mutación; retorno |
-| validacion / guardar-error | Envío inválido o rechazo confirmado | Campo/alert, entradas preservadas |
-| rechazo | Cambio estado rechazado | Estado previo conservado |
+| default | Registro/colección válida de este MK | Datos ficticios identificados, referencias resueltas al registro correcto; UXG-022. |
+| loading / guardando | Lectura/envío pendiente | Skeleton/loader localizado, texto accesible, sin porcentaje; UXG-007/008/011. |
+| empty | Colección vacía antes de filtrar | Acción Crear cuando existe; nunca convertir detalle 404 en vacío; UXG-006/011. |
+| sin-resultados | Filtros aplicados sin coincidencias | Limpiar filtros; conservar filtros al abrir/regresar; UXG-001/006. |
+| error / no-encontrado | Lectura fallida / 404 de recurso | Reintentar consulta / Volver a listado; sin cifras ficticias; contrato GET, UXG-011/017. |
+| sesion / permisos | 401 / 403 | Mensaje comprensible, escritura bloqueada; no inventar login ni scopes; contrato y UXG-020. |
+| validacion / guardar-error | Campos inválidos / rechazo conocido | Errores localizados, conservar entradas y corregir; SPEC/HU, UXG-002/006/011/021. |
+| salida-con-cambios | Cancelar con draft distinto al inicial | Seguir editando/Descartar; retorno/foco; UXG-002/021. |
+| rechazo | Cambio de estado rechazado | Estado previo intacto y explicación; UXG-018. |
+| resultado-desconocido | Respuesta perdida/no confirmada | No afirmar éxito ni reenviar mutación automáticamente; consultar/reconciliar resultado por contrato; UXG-011/018. |
 
-Casos específicos: detalle-registro-seleccionado: código/límites/política propios; duplicado: código bienvenida15 con espacios extremos equivale a BIENVENIDA15; edición-propia: conserva código sin falso duplicado; código-vacio; monto-negativo; limite-cero/fraccionario; agotado: límite 100/uso 100; sin-limite: null; guardar-error: fallo confirmado sin efecto, entradas conservadas.
+### Casos específicos
+
+| Fixture | Pantallas | Resultado esperado |
+| --- | --- | --- |
+| codigo-duplicado | S02/S03 | Ingresar " bienvenida15 ": normalizar BIENVENIDA15; rechazar si otro registro ya lo tiene, conservar campos. |
+| edicion-propia | S03 | Conservar el código del propio registro permite guardar; otro cupón equivalente se rechaza. |
+| limites-invalidos | S02/S03 | Cero, negativo o fracción en límites, mínimo cero/negativo y código no ASCII: error localizado; corregir permite guardar. |
+| sin-limite | S05 | Límites null: mostrar Sin límite y uso global real, sin inventar disponibilidad numérica. |
+| uso-no-disponible | S05 | Dato no recibido: No disponible; nunca 0 ni éxito de carga. |
+
+Todos son escenarios por implementar y verificar; un dato fixture no certifica una integración ni aprobación. Los ejemplos monetarios no fijan moneda/precisión del sistema por composición visual.
 
 ## 14. Preguntas y supuestos
 
-No hay pregunta funcional bloqueante para las pantallas administrativas descritas. Las rutas internas de administración son provisionales según OpenAPI, por lo que se construye mockup, no integración productiva.
+No hay vacío funcional que impida documentar estos formularios. La integración futura debe devolver CuponAdmin y consultar PromocionAdmin para nombre/vigencia; aquí no se acredita esa integración. Restitución tras devoluciones no forma parte del contrato vigente de cancelación.
 
-Supuestos: datos de fixtures no acreditan llamadas API; usuario autorizado salvo estado explícito 401/403; no se crean nuevos permisos. Supuestos se revisan al integrar backend. Visto bueno de Leonardo y fidelidad Figma permanecen pendientes.
+La base raw está **pendiente de Vera**, confirmada por Axel. No se solicita otra búsqueda ni se sustituye por el HTML de wireframes. La revisión UX transversal y la fidelidad Figma siguen pendientes. Supuesto de representación: gestor autorizado salvo fixture 401/403; fixtures no conceden permisos reales. Base futura debe venir identificada con MK/pantallas/ancla/supuestos/dudas.
 
 ## 15. Criterios de aceptación
 
-- Pantallas P0 con rutas independientes y estados reproducibles de §5/10/13.
-- Campos y validaciones trazables a §2/9; navegación sin checkout añadido.
-- Valores conservados en fallo/cancelación; confirmación con impacto y foco restaurado.
-- Tokens/componentes compartidos y PC1440 sin overflow; controles etiquetados y errores localizables.
-- Autovalidación objetiva antes de revisión UX; no declarar APROBADO PARA FIGMA ni aprobación final sin revisor/evidencia.
+- 6 pantallas/rutas P0 de §5 y estados aplicables reproducibles, sin rutas ya declaradas construidas.
+- Campos/operaciones/validaciones de §9 fieles a SPEC/HU/WF/FLOW/contratos; ningún botón técnico ni acción de otro módulo.
+- Formularios/selecciones/registros y retorno contextual preservados; guardado/estado solo confirmados con resultado.
+- Aplicación de DS/UX y accesibilidad desktop1440: tokens compartidos, labels, foco, error localizable y sin overflow.
+- Tareas ejecutables y evidencia propia del mockup antes de revisión de Vera; visto bueno verificable antes de Figma/promoción del código.
+- Cierre de #64 solo con revisión, Figma/fidelidad y reporte final; este paquete documental habilita raw, no cierra el issue.

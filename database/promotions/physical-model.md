@@ -495,6 +495,12 @@ Correspondencia uno a uno entre entidades de lógico §3.1–3.12 y tablas §4.1
 
 UUID propios con función nativa, numeric exacto y CHECK de finitud, valores controlados mediante CHECK; sin extensiones. Fechas finales exclusivas. Política de restitución se captura al consumir; conteos se derivan de historia no restituida. Desempate por ID estable después de prioridad/orden sin imponer unicidad de esos campos. Constraint triggers diferidos soportan creación/edición de agregados completos. Runtime no tiene DDL, ledger, borrado de historia/mensajes ni edición de identidad de usos/envelopes. No se incorpora un worker/backend adicional bajo la apariencia de una migración.
 
+### 14.1. Separación entre escenarios y restricciones
+
+PEN y visualización con dos decimales pueden representar ejemplos de Hito 2, pero no originan CHECK de moneda única ni redondeo de columnas. Las cantidades comerciales propias son numeric sin escala fija; la moneda explícita que provea Pricing se conserva en snapshot, no se reemplaza ni deduce. Los fixtures de validación comprueban snapshots en PEN y USD sin declarar conversión monetaria implementada.
+
+No se añaden datos de IGV/base imponible, costo de envío, Pickup, ubicación/terminal Retail, pedido/pago ni reservas. Su propiedad y orquestación se mantienen fuera de promotions según Arquitectura/Contrato API. La restitución persiste el contrato de **cancelación** vigente; ninguna constraint fija cómo repartir descuentos en devoluciones parciales ni restaurar cupones después de una devolución. Los enriquecimientos abiertos de SPEC-007 mantienen sus límites de §9.2.
+
 ## 15. Migración
 
 Administrador: bootstrap.sql + provision-runtime.sql. Deployer: python database/migrate.py promotions. Versiones 0001_promotions_persistence.sql y 0002_promotions_global_price_projection.sql; SHA-256 de ambas y evidencia en validation-report.md. La segunda cambia la clave física de price_projection, habilita canal global NULL y conserva datos existentes. Runner envuelve DDL y ledger en la misma transacción, toma advisory lock por schema y detiene checksum alterado/huecos/error SQL. Reaplicar el mismo archivo conserva ledger/fecha/objetos. Se corrigió encoding UTF-8 explícito en el runner para PostgreSQL en Windows. Una vez aplicado en un entorno compartido, corregir mediante una versión nueva; no modificar 0001.
@@ -520,4 +526,3 @@ Resultados verificables en [validation-report.md](validation-report.md) y [valid
 - [x] Seguridad invoker, revocación PUBLIC, runtime limitado comprobados.
 - [ ] Revisión de Leonardo Lopez y Marco Castilla.
 - [ ] Despliegue compartido y evidencia real de Supabase.
-

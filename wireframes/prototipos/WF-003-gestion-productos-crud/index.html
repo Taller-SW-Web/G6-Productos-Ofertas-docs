@@ -1,202 +1,830 @@
 <!doctype html>
 <html lang="es">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gestión de productos</title>
-<style>
-:root{
-  --surface:#FFFFFF;
-  --neutral-10:#F3F4F6;
-  --neutral-30:#D1D5DB;
-  --neutral-50:#6B7280;
-  --neutral-90:#111827;
-  --primary:#111827;
-  --space-xs:4px;
-  --space-sm:8px;
-  --space-md:16px;
-  --space-lg:32px;
-  --space-xl:64px;
-  --radius-sm:4px;
-  --radius-md:8px;
-}
-*{box-sizing:border-box}
-html{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--neutral-90);background:var(--surface)}
-body{margin:0;background:var(--surface);line-height:1.5}
-button,input,select,textarea{font:inherit;color:inherit}
-button{min-height:44px;cursor:pointer}
-button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--neutral-90);outline-offset:2px}
-.topbar{border-bottom:1px solid var(--neutral-30);background:var(--surface)}
-.topbar-inner{max-width:1200px;margin:auto;min-height:64px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.brand{display:flex;align-items:center;gap:12px;font-weight:700}
-.brand-mark{width:36px;height:36px;border:2px solid var(--neutral-90);display:grid;place-items:center;font-weight:700}
-.user{font-size:14px;color:var(--neutral-50)}
-.shell{max-width:1200px;margin:auto;padding:24px}
-.breadcrumb{font-size:14px;color:var(--neutral-50);margin-bottom:8px}
-.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px;flex-wrap:wrap}
-.page-head h1{font-size:32px;line-height:1.2;margin:0 0 8px}
-.page-head p{margin:0;color:var(--neutral-50);max-width:760px}
-.actions{display:flex;gap:8px;flex-wrap:wrap}
-.btn{border:1px solid var(--neutral-90);background:var(--surface);padding:10px 16px;border-radius:var(--radius-sm);font-weight:600;min-height:44px}
-.btn.primary{background:var(--neutral-90);color:var(--surface)}
-.btn.ghost{border-color:var(--neutral-30)}
-.btn[disabled]{color:var(--neutral-50);border-color:var(--neutral-30);background:var(--neutral-10);cursor:not-allowed}
-.card{border:1px solid var(--neutral-30);border-radius:var(--radius-md);padding:20px;background:var(--surface)}
-.card h2{font-size:20px;margin:0 0 8px}
-.card h3{font-size:16px;margin:0 0 8px}
-.muted{color:var(--neutral-50)}
-.small{font-size:14px}
-.mono{font-family:"Roboto Mono",ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;letter-spacing:.02em}
-.grid{display:grid;gap:16px}
-.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
-.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
-.grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
-.stack{display:grid;gap:16px}
-.field{display:grid;gap:6px}
-.field label{font-size:14px;font-weight:600}
-.input,.select,.textarea{width:100%;border:1px solid var(--neutral-30);border-radius:var(--radius-sm);background:var(--surface);padding:11px 12px;min-height:44px}
-.textarea{min-height:110px;resize:vertical}
-.help{font-size:13px;color:var(--neutral-50)}
-.section-title{font-size:20px;margin:8px 0 12px}
-.table-wrap{overflow:auto;border:1px solid var(--neutral-30);border-radius:var(--radius-md)}
-table{width:100%;border-collapse:collapse;min-width:720px}
-th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--neutral-30);vertical-align:top}
-th{font-size:12px;font-family:"Roboto Mono",ui-monospace,monospace;letter-spacing:.04em;text-transform:uppercase;background:var(--neutral-10)}
-tbody tr:last-child td{border-bottom:0}
-.badge{display:inline-flex;align-items:center;min-height:28px;border:1px solid var(--neutral-30);border-radius:9999px;padding:3px 10px;font-size:13px;background:var(--surface)}
-.badge.dark{background:var(--neutral-90);color:var(--surface);border-color:var(--neutral-90)}
-.badge.soft{background:var(--neutral-10)}
-.kpi{border:1px solid var(--neutral-30);padding:16px;border-radius:var(--radius-md)}
-.kpi .value{font-size:28px;font-weight:700;line-height:1.1;margin-top:8px}
-.notice{border:1px solid var(--neutral-90);padding:14px 16px;border-radius:var(--radius-sm);background:var(--surface)}
-.notice.soft{border-color:var(--neutral-30);background:var(--neutral-10)}
-.progress{height:10px;border:1px solid var(--neutral-30);background:var(--surface)}
-.progress > span{display:block;height:100%;background:var(--neutral-90)}
-.tabs{display:flex;gap:0;border-bottom:1px solid var(--neutral-30);margin-bottom:20px;overflow:auto}
-.tab{background:var(--surface);border:0;border-bottom:3px solid transparent;padding:12px 16px;white-space:nowrap}
-.tab.active{border-bottom-color:var(--neutral-90);font-weight:700}
-.divider{border:0;border-top:1px solid var(--neutral-30);margin:24px 0}
-.placeholder{min-height:120px;background:var(--neutral-10);position:relative;display:grid;place-items:center;color:var(--neutral-50);border:1px solid var(--neutral-30)}
-.placeholder:before,.placeholder:after{content:"";position:absolute;left:0;top:50%;width:100%;border-top:1px solid var(--neutral-30);transform-origin:center}
-.placeholder:before{transform:rotate(17deg)}
-.placeholder:after{transform:rotate(-17deg)}
-.overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
-.overlay.open{display:flex}
-.modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:var(--surface);border:2px solid var(--neutral-90);padding:24px}
-.modal-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}
-.modal-head h2{margin:0;font-size:24px}
-.icon-btn{width:44px;height:44px;border:1px solid var(--neutral-90);background:var(--surface);font-size:20px}
-.empty{text-align:center;border:1px dashed var(--neutral-30);padding:48px 24px}
-.hidden{display:none!important}
-.toolbar{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
-.toolbar .field{min-width:180px;flex:1}
-.stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px}
-.step{border-top:4px solid var(--neutral-30);padding-top:8px;color:var(--neutral-50);font-size:13px}
-.step.active,.step.done{border-top-color:var(--neutral-90);color:var(--neutral-90);font-weight:700}
-.checkbox-row,.radio-row{display:flex;gap:10px;align-items:flex-start}
-input[type="checkbox"],input[type="radio"]{width:18px;height:18px;margin-top:3px;accent-color:#111827}
-.summary-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
-.summary-list li{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--neutral-30);padding-bottom:10px}
-.summary-list li:last-child{border-bottom:0;padding-bottom:0}
-.inline-status{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.dot{width:10px;height:10px;border-radius:50%;background:var(--neutral-90)}
-@media(max-width:820px){
-  .shell{padding:16px}
-  .topbar-inner{padding:0 16px}
-  .grid.two,.grid.three,.grid.four{grid-template-columns:1fr}
-  .page-head h1{font-size:28px}
-  .stepper{grid-template-columns:1fr 1fr}
-  .actions{width:100%}
-  .actions .btn{flex:1}
-  table{min-width:640px}
-}
-@media(max-width:520px){
-  .user{display:none}
-  .stepper{grid-template-columns:1fr}
-  .modal{padding:16px}
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Gestión de productos</title>
+  <style>
+    :root {
+      --surface: #FFFFFF;
+      --neutral-10: #F3F4F6;
+      --neutral-30: #D1D5DB;
+      --neutral-50: #6B7280;
+      --neutral-90: #111827;
+      --primary: #111827;
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 32px;
+      --space-xl: 64px;
+      --radius-sm: 4px;
+      --radius-md: 8px;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--neutral-90);
+      background: var(--surface)
+    }
+
+    body {
+      margin: 0;
+      background: var(--surface);
+      line-height: 1.5
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+      color: inherit
+    }
+
+    button {
+      min-height: 44px;
+      cursor: pointer
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 3px solid var(--neutral-90);
+      outline-offset: 2px
+    }
+
+    .topbar {
+      border-bottom: 1px solid var(--neutral-30);
+      background: var(--surface)
+    }
+
+    .topbar-inner {
+      max-width: 1200px;
+      margin: auto;
+      min-height: 64px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--neutral-90);
+      display: grid;
+      place-items: center;
+      font-weight: 700
+    }
+
+    .user {
+      font-size: 14px;
+      color: var(--neutral-50)
+    }
+
+    .shell {
+      max-width: 1200px;
+      margin: auto;
+      padding: 24px
+    }
+
+    .breadcrumb {
+      font-size: 14px;
+      color: var(--neutral-50);
+      margin-bottom: 8px
+    }
+
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+      flex-wrap: wrap
+    }
+
+    .page-head h1 {
+      font-size: 32px;
+      line-height: 1.2;
+      margin: 0 0 8px
+    }
+
+    .page-head p {
+      margin: 0;
+      color: var(--neutral-50);
+      max-width: 760px
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .btn {
+      border: 1px solid var(--neutral-90);
+      background: var(--surface);
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      min-height: 44px
+    }
+
+    .btn.primary {
+      background: var(--neutral-90);
+      color: var(--surface)
+    }
+
+    .btn.ghost {
+      border-color: var(--neutral-30)
+    }
+
+    .btn[disabled] {
+      color: var(--neutral-50);
+      border-color: var(--neutral-30);
+      background: var(--neutral-10);
+      cursor: not-allowed
+    }
+
+    .card {
+      border: 1px solid var(--neutral-30);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      background: var(--surface)
+    }
+
+    .card h2 {
+      font-size: 20px;
+      margin: 0 0 8px
+    }
+
+    .card h3 {
+      font-size: 16px;
+      margin: 0 0 8px
+    }
+
+    .muted {
+      color: var(--neutral-50)
+    }
+
+    .small {
+      font-size: 14px
+    }
+
+    .mono {
+      font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 12px;
+      letter-spacing: .02em
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr))
+    }
+
+    .grid.four {
+      grid-template-columns: repeat(4, minmax(0, 1fr))
+    }
+
+    .stack {
+      display: grid;
+      gap: 16px
+    }
+
+    .field {
+      display: grid;
+      gap: 6px
+    }
+
+    .field label {
+      font-size: 14px;
+      font-weight: 600
+    }
+
+    .input,
+    .select,
+    .textarea {
+      width: 100%;
+      border: 1px solid var(--neutral-30);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      padding: 11px 12px;
+      min-height: 44px
+    }
+
+    .textarea {
+      min-height: 110px;
+      resize: vertical
+    }
+
+    .help {
+      font-size: 13px;
+      color: var(--neutral-50)
+    }
+
+    .section-title {
+      font-size: 20px;
+      margin: 8px 0 12px
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--neutral-30);
+      border-radius: var(--radius-md)
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--neutral-30);
+      vertical-align: top
+    }
+
+    th {
+      font-size: 12px;
+      font-family: "Roboto Mono", ui-monospace, monospace;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      background: var(--neutral-10)
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border: 1px solid var(--neutral-30);
+      border-radius: 9999px;
+      padding: 3px 10px;
+      font-size: 13px;
+      background: var(--surface)
+    }
+
+    .badge.dark {
+      background: var(--neutral-90);
+      color: var(--surface);
+      border-color: var(--neutral-90)
+    }
+
+    .badge.soft {
+      background: var(--neutral-10)
+    }
+
+    .kpi {
+      border: 1px solid var(--neutral-30);
+      padding: 16px;
+      border-radius: var(--radius-md)
+    }
+
+    .kpi .value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-top: 8px
+    }
+
+    .notice {
+      border: 1px solid var(--neutral-90);
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      background: var(--surface)
+    }
+
+    .notice.soft {
+      border-color: var(--neutral-30);
+      background: var(--neutral-10)
+    }
+
+    .progress {
+      height: 10px;
+      border: 1px solid var(--neutral-30);
+      background: var(--surface)
+    }
+
+    .progress>span {
+      display: block;
+      height: 100%;
+      background: var(--neutral-90)
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--neutral-30);
+      margin-bottom: 20px;
+      overflow: auto
+    }
+
+    .tab {
+      background: var(--surface);
+      border: 0;
+      border-bottom: 3px solid transparent;
+      padding: 12px 16px;
+      white-space: nowrap
+    }
+
+    .tab.active {
+      border-bottom-color: var(--neutral-90);
+      font-weight: 700
+    }
+
+    .divider {
+      border: 0;
+      border-top: 1px solid var(--neutral-30);
+      margin: 24px 0
+    }
+
+    .placeholder {
+      min-height: 120px;
+      background: var(--neutral-10);
+      position: relative;
+      display: grid;
+      place-items: center;
+      color: var(--neutral-50);
+      border: 1px solid var(--neutral-30)
+    }
+
+    .placeholder:before,
+    .placeholder:after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 100%;
+      border-top: 1px solid var(--neutral-30);
+      transform-origin: center
+    }
+
+    .placeholder:before {
+      transform: rotate(17deg)
+    }
+
+    .placeholder:after {
+      transform: rotate(-17deg)
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 24, 39, .5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 20
+    }
+
+    .overlay.open {
+      display: flex
+    }
+
+    .modal {
+      width: min(680px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      background: var(--surface);
+      border: 2px solid var(--neutral-90);
+      padding: 24px
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 20px
+    }
+
+    .modal-head h2 {
+      margin: 0;
+      font-size: 24px
+    }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--neutral-90);
+      background: var(--surface);
+      font-size: 20px
+    }
+
+    .empty {
+      text-align: center;
+      border: 1px dashed var(--neutral-30);
+      padding: 48px 24px
+    }
+
+    .hidden {
+      display: none !important
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: end;
+      flex-wrap: wrap;
+      margin-bottom: 16px
+    }
+
+    .toolbar .field {
+      min-width: 180px;
+      flex: 1
+    }
+
+    .stepper {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 24px
+    }
+
+    .step {
+      border-top: 4px solid var(--neutral-30);
+      padding-top: 8px;
+      color: var(--neutral-50);
+      font-size: 13px
+    }
+
+    .step.active,
+    .step.done {
+      border-top-color: var(--neutral-90);
+      color: var(--neutral-90);
+      font-weight: 700
+    }
+
+    .checkbox-row,
+    .radio-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      margin-top: 3px;
+      accent-color: #111827
+    }
+
+    .summary-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none
+    }
+
+    .summary-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--neutral-30);
+      padding-bottom: 10px
+    }
+
+    .summary-list li:last-child {
+      border-bottom: 0;
+      padding-bottom: 0
+    }
+
+    .inline-status {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--neutral-90)
+    }
+
+    @media(max-width:820px) {
+      .shell {
+        padding: 16px
+      }
+
+      .topbar-inner {
+        padding: 0 16px
+      }
+
+      .grid.two,
+      .grid.three,
+      .grid.four {
+        grid-template-columns: 1fr
+      }
+
+      .page-head h1 {
+        font-size: 28px
+      }
+
+      .stepper {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .actions {
+        width: 100%
+      }
+
+      .actions .btn {
+        flex: 1
+      }
+
+      table {
+        min-width: 640px
+      }
+    }
+
+    @media(max-width:520px) {
+      .user {
+        display: none
+      }
+
+      .stepper {
+        grid-template-columns: 1fr
+      }
+
+      .modal {
+        padding: 16px
+      }
+    }
+
+    dialog {
+      width: min(560px, calc(100% - 32px));
+      border: 2px solid var(--neutral-90);
+      border-radius: 8px;
+      padding: 24px
+    }
+
+    dialog::backdrop {
+      background: rgba(17, 24, 39, .45)
+    }
+
+    [hidden] {
+      display: none !important
+    }
+
+    input:disabled,
+    select:disabled {
+      background: var(--neutral-10)
+    }
+
+    .actions a {
+      text-decoration: none
+    }
+
+    .checks {
+      margin: 0;
+      padding-left: 22px
+    }
+
+    .checks li {
+      margin: 6px 0
+    }
+
+    .prototype-note {
+      margin-bottom: 20px
+    }
+
+    h2[tabindex] {
+      outline: none
+    }
+
+    #message {
+      margin-bottom: 16px
+    }
+
+    .image-marker {
+      min-height: 110px
+    }
+
+    .readonly {
+      background: var(--neutral-10)
+    }
+  </style>
 </head>
+
 <body>
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand"><span class="brand-mark">PO</span><span>Productos y ofertas</span></div>
-    <div class="user">Gestor comercial</div>
-  </div>
-</header>
-<main class="shell">
-  <div class="breadcrumb">Productos / Gestión</div>
-  
-<div class="page-head">
-  <div><h1>Gestión de productos</h1><p>Administra la información comercial y publica productos solo cuando su preparación esté completa.</p></div>
-  <div class="actions"><button class="btn primary" onclick="show('form')">Nuevo producto</button></div>
-</div>
-<section id="list" class="stack">
-  <div class="toolbar">
-    <div class="field"><label for="productSearch">Buscar</label><input id="productSearch" class="input" placeholder="Nombre o SKU"></div>
-    <div class="field"><label for="productStatus">Estado</label><select id="productStatus" class="select"><option>Todos</option><option>Borrador</option><option>Preparando</option><option>Activo</option></select></div>
-  </div>
-  <div class="table-wrap"><table><thead><tr><th>Producto</th><th>SKU base</th><th>Modelo</th><th>Preparación</th><th>Estado</th><th>Acciones</th></tr></thead>
-  <tbody>
-    <tr><td><strong>Camisa Oxford</strong><div class="small muted">Ropa / Camisas</div></td><td>CAM-OXF</td><td>Con variantes</td><td><span class="badge dark">Lista</span></td><td><span class="badge dark">Activo</span></td><td><button class="btn ghost" onclick="detail('Camisa Oxford','Lista','Activo')">Ver</button></td></tr>
-    <tr><td><strong>Mochila urbana</strong><div class="small muted">Accesorios</div></td><td>MOC-URB-01</td><td>Simple</td><td><span class="badge soft">Preparando precio e inventario</span></td><td><span class="badge">Borrador</span></td><td><button class="btn ghost" onclick="detail('Mochila urbana','Preparando precio e inventario','Borrador')">Ver</button></td></tr>
-    <tr><td><strong>Casaca ligera</strong><div class="small muted">Ropa / Casacas</div></td><td>CAS-LIG</td><td>Con variantes</td><td><span class="badge">Pendiente de variantes</span></td><td><span class="badge">Borrador</span></td><td><button class="btn ghost" onclick="detail('Casaca ligera','Pendiente de variantes','Borrador')">Ver</button></td></tr>
-  </tbody></table></div>
-</section>
-
-<section id="form" class="hidden stack">
-  <div class="page-head"><div><h2>Nuevo producto</h2><p class="muted">Guarda primero un borrador. La preparación de precio e inventario se completará después.</p></div></div>
-  <form class="stack" onsubmit="saveProduct(event)">
-    <div class="card stack">
-      <h2>Datos generales</h2>
-      <div class="grid two">
-        <div class="field"><label for="name">Nombre</label><input required class="input" id="name" value="Bolso compacto"></div>
-        <div class="field"><label for="baseSku">SKU base</label><input required class="input" id="baseSku" value="BOL-COM-01"></div>
-        <div class="field"><label for="category">Categoría</label><select class="select" id="category"><option>Accesorios</option><option>Ropa</option></select></div>
-        <div class="field"><label for="brand">Marca</label><select class="select" id="brand"><option>Marca urbana</option><option>Marca clásica</option></select></div>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><span class="brand-mark">PO</span><span>Productos y ofertas</span></div>
+      <div class="user">Gestor comercial</div>
+    </div>
+  </header>
+  <main class="shell">
+    <div class="breadcrumb">Productos / Gestión</div>
+    <div class="page-head">
+      <div>
+        <h1>Gestión de productos</h1>
+        <p>Administra productos simples y productos con variantes. Publica solo cuando estén preparados.</p>
+      </div><button class="btn primary" id="newProduct">Nuevo producto</button>
+    </div>
+    <p class="small muted prototype-note">Wireframe interactivo independiente · Los datos de ejemplo se conservan en
+      este navegador. Las preparaciones son simuladas.</p>
+    <div id="message" role="status" hidden></div>
+    <h2 id="viewHeading" class="section-title" tabindex="-1">Productos</h2>
+    <section id="list" class="stack">
+      <div class="toolbar">
+        <div class="field"><label for="productSearch">Buscar</label><input class="input" id="productSearch"
+            placeholder="Nombre o SKU"></div>
+        <div class="field"><label for="productStatus">Estado</label><select class="select" id="productStatus">
+            <option>Todos</option>
+            <option>Borrador</option>
+            <option>Activo</option>
+            <option>Inactivo</option>
+          </select></div>
       </div>
-      <div class="field"><label for="desc">Descripción</label><textarea class="textarea" id="desc">Bolso compacto para uso diario.</textarea></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>SKU base</th>
+              <th>Modelo</th>
+              <th>Preparación</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="productRows"></tbody>
+        </table>
+      </div>
+    </section>
+    <section id="form" class="hidden">
+      <form id="productForm" class="stack" novalidate>
+        <div id="formError" class="notice" role="alert" hidden></div>
+        <div class="card stack">
+          <h2>Datos generales</h2>
+          <div class="grid two">
+            <div class="field"><label for="pName">Nombre</label><input class="input" id="pName" required></div>
+            <div class="field"><label for="pSku">SKU base</label><input class="input" id="pSku" required></div>
+            <div class="field"><label for="pCategory">Categoría</label><select class="select" id="pCategory">
+                <option>Ropa</option>
+                <option>Accesorios</option>
+                <option>Calzado</option>
+              </select></div>
+            <div class="field"><label for="pType">Tipo de producto</label><select class="select" id="pType">
+                <option>Camisa</option>
+                <option>Casaca</option>
+                <option>Mochila</option>
+                <option>Bolso</option>
+                <option>Zapatilla</option>
+              </select></div>
+            <div class="field"><label for="pBrand">Marca</label><select class="select" id="pBrand">
+                <option>Marca urbana</option>
+                <option>Marca clásica</option>
+              </select></div>
+            <div class="field"><label for="pPrice">Precio base inicial (S/)</label><input class="input" id="pPrice"
+                type="number" min="0.000001" step="any" required></div>
+          </div>
+          <div class="field"><label for="pDescription">Descripción</label><textarea id="pDescription" class="textarea"
+              required></textarea></div>
+          <p id="editPriceNote" class="help" hidden>El precio vigente se administra desde Gestión de precios.</p>
+        </div>
+        <div class="card stack">
+          <h2>Modelo de venta</h2><label class="radio-row"><input type="radio" name="model" value="simple"
+              checked><span><strong>Producto simple</strong><br>El SKU base es la unidad vendible.</span></label><label
+            class="radio-row"><input type="radio" name="model" value="variants"><span><strong>Producto con
+                variantes</strong><br>El padre agrupa variantes; no tiene peso, dimensiones ni inventario
+              propios.</span></label>
+          <p class="help">El SKU base, el tipo y el modelo de venta se conservan en la edición ordinaria.</p>
+        </div>
+        <div class="card stack">
+          <h2>Información para publicar</h2>
+          <div class="field"><label for="pMaterial">Material · característica obligatoria de estos tipos de
+              ejemplo</label><input class="input" id="pMaterial" placeholder="Por ejemplo, algodón"></div>
+          <div class="field"><label for="pImage">URL de imagen del producto</label><input class="input" id="pImage"
+              type="url" placeholder="https://ejemplo.com/imagen.jpg"></div>
+          <p class="help">Las características y la imagen pueden completarse después del borrador.</p>
+        </div>
+        <div class="card stack" id="pphysical">
+          <h2>Datos físicos de la unidad vendible</h2>
+          <p class="muted">Puedes completar estas medidas después de guardar el borrador. Para activar, las cuatro deben
+            ser mayores que cero.</p>
+          <div class="grid four">
+            <div class="field"><label for="pweight">Peso (kg)</label><input class="input" id="pweight" data-physical="p"
+                type="number" min="0.000001" step="any"></div>
+            <div class="field"><label for="plength">Largo (cm)</label><input class="input" id="plength"
+                data-physical="p" type="number" min="0.000001" step="any"></div>
+            <div class="field"><label for="pwidth">Ancho (cm)</label><input class="input" id="pwidth" data-physical="p"
+                type="number" min="0.000001" step="any"></div>
+            <div class="field"><label for="pheight">Alto (cm)</label><input class="input" id="pheight" data-physical="p"
+                type="number" min="0.000001" step="any"></div>
+          </div>
+          <p class="small">Volumen calculado: <strong id="pvolume">Completa las tres dimensiones</strong></p>
+        </div>
+        <div class="notice soft" id="parentNotice" hidden>Registra el peso y las dimensiones en cada variante desde
+          Gestión de variantes. Este padre no es una unidad física.</div><label class="checkbox-row" id="identityRow"
+          hidden><input type="checkbox" id="pIdentity"><span>Confirmo que la edición conserva el mismo producto
+            comercial y la coherencia con sus variantes. Para ofrecer otro producto, crearé una nueva
+            alta.</span></label>
+        <div class="actions"><button type="button" class="btn" id="cancelProduct">Cancelar</button><button
+            class="btn primary" id="saveProduct">Guardar borrador</button></div>
+      </form>
+    </section>
+    <section id="detail" class="hidden stack">
+      <div id="productDetail"></div>
+      <div class="actions" id="productActions"></div>
+    </section>
+  </main>
+  <dialog id="confirmation" aria-labelledby="confirmTitle">
+    <div class="stack">
+      <h2 id="confirmTitle"></h2>
+      <p id="confirmText"></p>
+      <div class="actions"><button id="confirmCancel" class="btn">Cancelar</button><button id="confirmApply"
+          class="btn primary">Confirmar</button></div>
     </div>
-    <div class="card stack">
-      <h2>Modelo de venta</h2>
-      <label class="radio-row"><input type="radio" name="model" value="simple" checked onchange="togglePhysical()"> <span><strong>Producto simple</strong><br><span class="muted small">Se vende directamente mediante su SKU base.</span></span></label>
-      <label class="radio-row"><input type="radio" name="model" value="variants" onchange="togglePhysical()"> <span><strong>Producto con variantes</strong><br><span class="muted small">Las unidades vendibles se administran como variantes.</span></span></label>
-    </div>
-    <div id="physical" class="card stack">
-      <h2>Datos físicos para despacho</h2><p class="muted">Completa estas medidas solo para productos simples.</p>
-      <div class="grid four"><div class="field"><label>Peso (kg)</label><input class="input" type="number" step=".01" value=".65"></div><div class="field"><label>Largo (cm)</label><input class="input" type="number" value="28"></div><div class="field"><label>Ancho (cm)</label><input class="input" type="number" value="20"></div><div class="field"><label>Alto (cm)</label><input class="input" type="number" value="8"></div></div>
-    </div>
-    <div class="actions"><button type="button" class="btn" onclick="show('list')">Cancelar</button><button class="btn primary">Guardar borrador</button></div>
-  </form>
-</section>
+  </dialog>
+  <script>
 
-<section id="prep" class="hidden stack">
-  <div class="card stack">
-    <h2>Borrador guardado</h2>
-    <p class="muted">Estamos preparando el precio base y la unidad vendible de inventario. El producto seguirá como borrador hasta que ambos estén listos.</p>
-    <div class="grid two">
-      <div class="card"><h3>Precio</h3><p id="pricePrep"><span class="badge soft">Preparando</span></p></div>
-      <div class="card"><h3>Inventario</h3><p id="stockPrep"><span class="badge soft">Preparando</span></p></div>
-    </div>
-    <div class="actions"><button id="activateBtn" class="btn primary" disabled onclick="activate()">Activar producto</button><button class="btn" onclick="show('list')">Volver a productos</button></div>
-  </div>
-</section>
+    const $ = id => document.getElementById(id);
+    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const label = s => ({ BORRADOR: 'Borrador', ACTIVO: 'Activo', INACTIVO: 'Inactivo', ACTIVA: 'Activa', INACTIVA: 'Inactiva', PENDING: 'Preparando', COMPLETED: 'Preparado', REJECTED: 'Preparación rechazada' }[s] || s);
+    const badge = s => '<span class="badge ' + (['ACTIVO', 'ACTIVA', 'COMPLETED'].includes(s) ? 'dark' : '') + '">' + escapeHtml(label(s)) + '</span>';
+    const money = n => new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
+    const physicalComplete = p => p && ['weight', 'length', 'width', 'height'].every(k => Number.isFinite(p[k]) && p[k] > 0);
+    function physicalIssues(p) { return ['weight', 'length', 'width', 'height'].some(k => p[k] !== null && (!Number.isFinite(p[k]) || p[k] <= 0)) ? ['Las medidas informadas deben ser mayores que cero.'] : []; }
+    function physicalRead(prefix) { return Object.fromEntries(['weight', 'length', 'width', 'height'].map(k => [k, $(prefix + k).value.trim() === '' ? null : Number($(prefix + k).value)])); }
+    function physicalFill(prefix, p) { for (const k of ['weight', 'length', 'width', 'height']) $(prefix + k).value = p?.[k] ?? ''; updateVolume(prefix); }
+    function updateVolume(prefix) { const p = physicalRead(prefix); $(prefix + 'volume').textContent = ['length', 'width', 'height'].every(k => p[k] > 0) ? (p.length * p.width * p.height).toLocaleString('es-PE') + ' cm³' : 'Completa las tres dimensiones'; }
+    function physicalSummary(p) { return physicalComplete(p) ? escapeHtml(p.weight + ' kg · ' + p.length + ' × ' + p.width + ' × ' + p.height + ' cm') : 'Datos físicos incompletos'; }
+    function message(text, error = false) { $('message').textContent = text; $('message').className = 'notice' + (error ? '' : ' soft'); $('message').hidden = !text; }
+    function errors(id, items) { $(id).innerHTML = items.length ? '<strong>No se guardaron los cambios.</strong><ul>' + items.map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul>' : ''; $(id).hidden = !items.length; if (items.length) $(id).scrollIntoView({ block: 'center' }); }
+    function show(view) { for (const id of ['list', 'form', 'detail']) $(id).classList.toggle('hidden', id !== view); message(''); $('viewHeading').focus(); }
+    let confirmAction = null;
+    function ask(title, text, action) { $('confirmTitle').textContent = title; $('confirmText').textContent = text; confirmAction = action; $('confirmation').showModal(); }
+    $('confirmApply').addEventListener('click', () => { const action = confirmAction; confirmAction = null; $('confirmation').close(); if (action) action(); });
+    $('confirmCancel').addEventListener('click', () => { $('confirmation').close(); confirmAction = null; });
+    document.addEventListener('input', e => { const prefix = e.target.dataset.physical; if (prefix) updateVolume(prefix); });
+    const emptyPhysical = () => ({ weight: null, length: null, width: null, height: null });
+    function imageIssues(value) { if (!value) return []; try { const u = new URL(value); if (!['http:', 'https:'].includes(u.protocol)) throw 0; return []; } catch { return ['La referencia de imagen debe ser una URL http o https válida.']; } }
+    // Persistencia aislada de cada wireframe. No sincroniza estos dos prototipos.
+    function load(key, seed) { try { const saved = JSON.parse(localStorage.getItem(key)); return saved?.version === 1 ? saved : structuredClone(seed); } catch { return structuredClone(seed); } }
+    function persist() { try { localStorage.setItem(storageKey, JSON.stringify(data)); } catch {/* La sesión sigue siendo utilizable sin almacenamiento local. */ } }
+    function preparationMarkup(item, key, title) { const state = item[key]; return '<div class="card"><h3>' + title + '</h3>' + badge(state) + (state !== 'COMPLETED' ? '<p class="small muted">' + (state === 'REJECTED' ? 'La preparación no pudo completarse. Puedes reintentar sin crear otro registro.' : 'La preparación aún no concluyó; no habilita la activación.') + '</p><button class="btn" data-retry="' + key + '">' + (state === 'PENDING' ? 'Reintentar preparación pendiente' : 'Reintentar') + '</button>' : '') + '</div>'; }
+    function resumePreparation(item, keys) { const id = item.id; for (const key of keys) { item[key] = 'PENDING'; } persist(); renderDetail(id); setTimeout(() => { const current = findItem(id); for (const key of keys) if (current[key] === 'PENDING') current[key] = 'COMPLETED'; persist(); renderList(); if (currentId === id && !$('detail').classList.contains('hidden')) renderDetail(id); }, 900); }
+    document.addEventListener('click', e => { const b = e.target.closest('[data-retry]'); if (b) resumePreparation(findItem(currentId), [b.dataset.retry]); });
 
-<section id="detail" class="hidden stack">
-  <div class="card">
-    <div class="page-head"><div><h2 id="detailName">Producto</h2><p id="detailState" class="muted"></p></div><span id="detailBadge" class="badge"></span></div>
-    <div class="grid three"><div class="kpi"><span class="muted">Categoría</span><div><strong>Accesorios</strong></div></div><div class="kpi"><span class="muted">Modelo</span><div><strong>Simple</strong></div></div><div class="kpi"><span class="muted">Preparación</span><div><strong id="detailPrep">—</strong></div></div></div>
-  </div>
-  <div class="actions"><button class="btn" onclick="show('list')">Volver a productos</button><button class="btn">Editar</button></div>
-</section>
+    const storageKey = 'wf003-independent-v1';
+    const seed = {
+      version: 1, products: [
+        { id: 'shirt', name: 'Camisa Oxford', sku: 'CAM-OXF', category: 'Ropa', type: 'Camisa', brand: 'Marca urbana', description: 'Camisa Oxford de manga larga.', variants: true, price: 89.9, material: 'Algodón', image: 'https://ejemplo.com/camisa.jpg', physical: emptyPhysical(), status: 'ACTIVO', pricePrep: 'COMPLETED', inventoryPrep: null, children: [{ sku: 'CAM-OXF-M-BLA', name: 'M · Blanco', status: 'ACTIVA', inventoryPrep: 'COMPLETED', physical: { weight: .3, length: 30, width: 25, height: 3 } }, { sku: 'CAM-OXF-L-BLA', name: 'L · Blanco', status: 'BORRADOR', inventoryPrep: 'REJECTED', physical: emptyPhysical() }, { sku: 'CAM-OXF-M-NEG', name: 'M · Negro', status: 'INACTIVA', inventoryPrep: 'COMPLETED', physical: { weight: .3, length: 30, width: 25, height: 3 } }] },
+        { id: 'bag', name: 'Mochila urbana', sku: 'MOC-URB-01', category: 'Accesorios', type: 'Mochila', brand: 'Marca urbana', description: 'Mochila para uso diario.', variants: false, price: 119, material: 'Poliéster', image: '', physical: { weight: .65, length: null, width: 20, height: 8 }, status: 'BORRADOR', pricePrep: 'REJECTED', inventoryPrep: 'PENDING', children: [] },
+        { id: 'coat', name: 'Casaca ligera', sku: 'CAS-LIG', category: 'Ropa', type: 'Casaca', brand: 'Marca clásica', description: 'Casaca ligera con variantes de talla.', variants: true, price: 149, material: 'Nylon', image: 'https://ejemplo.com/casaca.jpg', physical: emptyPhysical(), status: 'BORRADOR', pricePrep: 'COMPLETED', inventoryPrep: null, children: [] }]
+    };
+    let data = load(storageKey, seed), currentId = null, editingId = null;
+    const findItem = id => data.products.find(p => p.id === id);
+    function activationIssues(p) { const issues = []; if (!p.name.trim() || !p.description.trim()) issues.push('Completa nombre y descripción.'); if (!p.category || !p.type || !p.brand) issues.push('Completa categoría, tipo y marca.'); const expected = { Camisa: 'Ropa', Casaca: 'Ropa', Mochila: 'Accesorios', Bolso: 'Accesorios', Zapatilla: 'Calzado' }[p.type]; if (expected !== p.category) issues.push('La categoría debe ser compatible con el tipo de producto.'); if (!p.material.trim()) issues.push('Completa la característica obligatoria: material.'); if (!p.image.trim()) issues.push('Asocia una imagen del producto.'); if (p.pricePrep !== 'COMPLETED') issues.push('Espera o reintenta la preparación del precio.'); if (p.variants) { const active = p.children.filter(v => v.status === 'ACTIVA'); if (!active.length) issues.push('Necesitas al menos una variante activa y preparada.'); if (active.some(v => v.inventoryPrep !== 'COMPLETED' || !physicalComplete(v.physical))) issues.push('Todas las variantes activas deben tener inventario preparado y medidas completas.'); } else { if (p.inventoryPrep !== 'COMPLETED') issues.push('Espera o reintenta la preparación del inventario.'); if (!physicalComplete(p.physical)) issues.push('Completa peso, largo, ancho y alto con valores mayores que cero.'); } return issues; }
+    function prepText(p) { return p.pricePrep !== 'COMPLETED' ? label(p.pricePrep) + ' de precio' : p.variants ? (p.children.some(v => v.status === 'ACTIVA') ? 'Variantes activas preparadas' : 'Pendiente de variantes activas') : label(p.inventoryPrep) + ' de inventario'; }
+    function renderList() { const q = $('productSearch').value.toLowerCase(), filter = $('productStatus').value; const rows = data.products.filter(p => (p.name + ' ' + p.sku).toLowerCase().includes(q) && (filter === 'Todos' || label(p.status) === filter)); $('productRows').innerHTML = rows.map(p => '<tr><td><strong>' + escapeHtml(p.name) + '</strong><div class="small muted">' + escapeHtml(p.category) + '</div></td><td>' + escapeHtml(p.sku) + '</td><td>' + (p.variants ? 'Con variantes' : 'Simple') + '</td><td>' + escapeHtml(prepText(p)) + '</td><td>' + badge(p.status) + '</td><td><button class="btn ghost" data-product="' + p.id + '">Ver detalle</button></td></tr>').join('') || '<tr><td colspan="6">No hay productos que coincidan.</td></tr>'; }
+    function renderDetail(id) {
+      currentId = id; const p = findItem(id); const issues = activationIssues(p); $('viewHeading').textContent = 'Detalle del producto'; $('productDetail').innerHTML = '<div class="stack"><div class="card"><div class="page-head"><div><h2>' + escapeHtml(p.name) + '</h2><p>' + escapeHtml(p.sku) + ' · ' + (p.variants ? 'Con variantes' : 'Simple') + '</p></div>' + badge(p.status) + '</div><p>' + escapeHtml(p.description) + '</p><div class="grid three"><div class="kpi">Clasificación<br><strong>' + escapeHtml(p.category + ' · ' + p.type) + '</strong></div><div class="kpi">Marca / material<br><strong>' + escapeHtml(p.brand + ' · ' + (p.material || 'Pendiente')) + '</strong></div><div class="kpi">Precio del producto<br><strong>' + money(p.price) + '</strong></div></div></div><div class="grid two">' + preparationMarkup(p, 'pricePrep', 'Precio') + (p.variants ? '<div class="card"><h3>Unidades vendibles</h3><p>El padre no inicializa inventario propio. Las variantes se preparan por separado.</p></div>' : preparationMarkup(p, 'inventoryPrep', 'Inventario')) + '</div><div class="card"><h3>Imagen</h3><div class="placeholder image-marker">' + (p.image ? 'Imagen del producto asociada' : 'Sin imagen') + '</div></div>' + (p.variants ? '<div class="card"><h3>Variantes de referencia</h3><p class="small muted">Sus estados se conservan al desactivar o reactivar el padre. Los borradores no bloquean su activación. Este prototipo no modifica el de Variantes.</p>' + (p.children.length ? '<ul class="summary-list">' + p.children.map(v => '<li><span>' + escapeHtml(v.name) + ' · ' + escapeHtml(v.sku) + '</span><span>' + badge(v.status) + '<br><span class="small">' + (p.status === 'ACTIVO' && v.status === 'ACTIVA' ? 'Habilitada por el estado del catálogo' : 'No habilitada comercialmente') + '</span></span></li>').join('') + '</ul>' : '<p>Sin variantes. Crea y activa al menos una desde Gestión de variantes.</p>') + '</div>' : '<div class="card"><h3>Perfil físico</h3><p>' + physicalSummary(p.physical) + '</p></div>') + '<div class="card"><h3>' + (p.status === 'ACTIVO' ? 'Condiciones de publicación' : 'Antes de activar o reactivar') + '</h3>' + (issues.length ? '<ul class="checks">' + issues.map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul>' : '<p>Se cumplen las condiciones de activación.</p>') + '<p class="small muted">La visibilidad también depende de la elegibilidad del canal; la disponibilidad se consulta por separado.</p></div></div>';
+      $('productActions').innerHTML = '<button class="btn" id="backProducts">Volver a productos</button><button class="btn" id="editProduct">Editar</button>' + (p.status === 'ACTIVO' ? '<button class="btn primary" id="stateProduct">Desactivar producto</button>' : '<button class="btn primary" id="stateProduct" ' + (issues.length ? 'disabled' : '') + '>' + (p.status === 'INACTIVO' ? 'Reactivar producto' : 'Activar producto') + '</button>'); $('backProducts').onclick = () => { show('list'); $('viewHeading').textContent = 'Productos'; renderList(); }; $('editProduct').onclick = () => openForm(id); $('stateProduct').onclick = () => stateProduct(id);
+    }
+    function detail(id) { show('detail'); renderDetail(id); }
+    function togglePhysical() { const variants = document.querySelector('input[name=model]:checked').value === 'variants'; $('pphysical').hidden = variants; $('parentNotice').hidden = !variants; for (const k of ['weight', 'length', 'width', 'height']) $('p' + k).disabled = variants; }
+    function openForm(id = null) { editingId = id; const p = id ? findItem(id) : { name: '', sku: '', category: 'Accesorios', type: 'Bolso', brand: 'Marca urbana', description: '', variants: false, price: '', material: '', image: '', physical: emptyPhysical() }; show('form'); $('viewHeading').textContent = id ? 'Editar producto' : 'Nuevo producto'; for (const [key, fieldId] of Object.entries({ name: 'pName', sku: 'pSku', category: 'pCategory', type: 'pType', brand: 'pBrand', description: 'pDescription', price: 'pPrice', material: 'pMaterial', image: 'pImage' })) $(fieldId).value = p[key]; $('pSku').disabled = !!id; $('pType').disabled = !!id; $('pPrice').disabled = !!id; document.querySelectorAll('input[name=model]').forEach(r => { r.checked = r.value === (p.variants ? 'variants' : 'simple'); r.disabled = !!id; }); $('identityRow').hidden = !id; $('pIdentity').checked = false; $('editPriceNote').hidden = !id; $('saveProduct').textContent = id ? 'Guardar cambios' : 'Guardar borrador'; physicalFill('p', p.physical); togglePhysical(); errors('formError', []); }
+    function saveProduct(e) { e.preventDefault(); const previous = editingId ? findItem(editingId) : null; const variants = previous ? previous.variants : document.querySelector('input[name=model]:checked').value === 'variants'; const p = { ...(previous ? structuredClone(previous) : {}), name: $('pName').value.trim(), sku: previous?.sku || $('pSku').value.trim(), category: $('pCategory').value, type: previous?.type || $('pType').value, brand: $('pBrand').value, description: $('pDescription').value.trim(), price: previous?.price ?? Number($('pPrice').value), variants, material: $('pMaterial').value.trim(), image: $('pImage').value.trim(), physical: variants ? emptyPhysical() : physicalRead('p') }; const issues = []; if (!p.name || !p.sku || !p.description) issues.push('Completa nombre, SKU base y descripción.'); if (!Number.isFinite(p.price) || p.price <= 0) issues.push('El precio base inicial debe ser mayor que cero.'); if (data.products.some(x => x.id !== editingId && (x.sku === p.sku || x.children.some(v => v.sku === p.sku)))) issues.push('El SKU debe ser único.'); const expected = { Camisa: 'Ropa', Casaca: 'Ropa', Mochila: 'Accesorios', Bolso: 'Accesorios', Zapatilla: 'Calzado' }[p.type]; if (p.category !== expected) issues.push('La categoría no es compatible con el tipo de producto.'); if (!variants) issues.push(...physicalIssues(p.physical)); issues.push(...imageIssues(p.image)); if (previous && !$('pIdentity').checked) issues.push('Confirma que conservas el mismo producto comercial.'); if (previous?.status === 'ACTIVO') issues.push(...activationIssues(p)); if (issues.length) { errors('formError', [...new Set(issues)]); return; } if (previous) { data.products[data.products.findIndex(x => x.id === editingId)] = p; persist(); detail(p.id); message('Producto actualizado. Se conservaron su identidad y sus variantes.'); } else { p.id = crypto.randomUUID(); p.status = 'BORRADOR'; p.children = []; p.pricePrep = 'PENDING'; p.inventoryPrep = variants ? null : 'PENDING'; data.products.push(p); persist(); detail(p.id); resumePreparation(p, variants ? ['pricePrep'] : ['pricePrep', 'inventoryPrep']); message('Borrador guardado. Completa los requisitos antes de activar.'); } renderList(); }
+    function stateProduct(id) { const p = findItem(id); if (p.status === 'ACTIVO') ask('Desactivar producto', p.variants ? 'Todas sus variantes quedarán bloqueadas comercialmente; conservarán sus estados individuales.' : 'El producto dejará de estar habilitado comercialmente. Su identidad se conserva.', () => { p.status = 'INACTIVO'; persist(); renderDetail(id); renderList(); message('Producto desactivado.'); }); else { const issues = activationIssues(p); if (issues.length) { message(issues.join(' '), true); return; } ask(p.status === 'INACTIVO' ? 'Reactivar producto' : 'Activar producto', 'Se revalidarán sus condiciones. Las variantes inactivas no se reactivarán automáticamente.', () => { const latest = findItem(id), issues = activationIssues(latest); if (issues.length) { message(issues.join(' '), true); return; } latest.status = 'ACTIVO'; persist(); renderDetail(id); renderList(); message('Producto activo.'); }); } }
+    $('newProduct').onclick = () => openForm(); $('cancelProduct').onclick = () => editingId ? detail(editingId) : (show('list'), $('viewHeading').textContent = 'Productos'); $('productForm').onsubmit = saveProduct; document.querySelectorAll('input[name=model]').forEach(r => r.onchange = togglePhysical); $('productSearch').oninput = renderList; $('productStatus').onchange = renderList; document.addEventListener('click', e => { const b = e.target.closest('[data-product]'); if (b) detail(b.dataset.product); }); renderList(); persist();
 
-</main>
-<script>
-function show(id){['list','form','prep','detail'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));}
-function togglePhysical(){const val=document.querySelector('input[name=model]:checked').value; document.getElementById('physical').classList.toggle('hidden',val==='variants');}
-function saveProduct(e){e.preventDefault(); show('prep'); const p=document.getElementById('pricePrep'),s=document.getElementById('stockPrep'),b=document.getElementById('activateBtn'); setTimeout(()=>p.innerHTML='<span class="badge dark">Lista</span>',800); setTimeout(()=>{s.innerHTML='<span class="badge dark">Lista</span>';b.disabled=false},1450);}
-function activate(){document.getElementById('activateBtn').textContent='Producto activado';document.getElementById('activateBtn').disabled=true;}
-function detail(name,prep,state){document.getElementById('detailName').textContent=name;document.getElementById('detailPrep').textContent=prep;document.getElementById('detailState').textContent='Consulta la información y su estado de preparación.';const b=document.getElementById('detailBadge');b.textContent=state;b.className='badge '+(state==='Activo'?'dark':'');show('detail');}
-</script>
+  </script>
 </body>
+
 </html>

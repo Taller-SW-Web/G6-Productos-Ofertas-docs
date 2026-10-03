@@ -1,6 +1,6 @@
 {
   "result": "PASS",
-  "sql_assertions": 77,
+  "sql_assertions": 80,
   "integration_checks": 29,
   "checks": [
     "base objetivo vacía",
