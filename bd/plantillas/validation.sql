@@ -1,5 +1,5 @@
 ﻿-- =============================================================================
--- _TEMPLATE 窶・validation.sql
+-- _TEMPLATE・validation.sql
 -- Checks verificables del modelo fisico de un bounded context
 -- =============================================================================
 -- Uso:
@@ -19,7 +19,7 @@
 
 
 -- =============================================================================
--- SECCION 0 窶・CONFIGURACION
+-- SECCION 0・CONFIGURACION
 -- Editar estos dos bloques antes de ejecutar.
 -- =============================================================================
 
@@ -39,7 +39,7 @@
 
 
 -- =============================================================================
--- SECCION 1 窶・VERIFICACION GLOBAL
+-- SECCION 1・VERIFICACION GLOBAL
 -- Devuelve una fila por check con PASS / FAIL.
 -- Copiar el bloque completo y ajustar los dos VALUES de arriba.
 -- =============================================================================
