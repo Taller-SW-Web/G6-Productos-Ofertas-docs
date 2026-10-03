@@ -148,7 +148,9 @@ flowchart LR
     subgraph S["Sistema · Catálogo"]
         direction TB
         VALIDAR["Validar cambios y perfil simple proporcionado<br/>en kg/cm con valores mayores que 0"]
-        EDICION{"¿Cambios válidos sin recodificar sku_base ni<br/>cambiar tiene_variantes?"}
+        EDICION{"¿Cambios válidos que conservan naturaleza<br/>comercial y coherencia con variantes,<br/>sin recodificar SKU ni cambiar modelo?"}
+        EDIT_ACTIVO{"¿Producto ACTIVO?"}
+        EDIT_CONDICIONES{"¿Resultado conserva las condiciones<br/>de activación del producto?"}
         GUARDAR["Guardar cambios sin repetir alta ni<br/>inicializaciones completadas"]
         ESTADO{"¿Estado de origen compatible con la acción?"}
         MINIMOS{"¿Datos mínimos válidos?"}
@@ -156,9 +158,10 @@ flowchart LR
         CARACTERISTICAS{"¿Características obligatorias completas?"}
         IMAGEN{"¿Imagen disponible?"}
         PRECIO{"¿Pricing preparado con COMPLETED?"}
-        STOCK{"¿Inventario COMPLETED para los SKU vendibles<br/>requeridos?"}
+        STOCK{"¿Inventario COMPLETED para sku_base simple<br/>o todas las variantes activas?"}
         MODELO{"¿Usa variantes?"}
         VARIANTES{"¿Existe al menos una variante activa?"}
+        FISICO{"¿Perfil simple completo en kg/cm<br/>con los cuatro valores mayores que 0?"}
         PUBLICAR["Persistir producto ACTIVO"]
         BLOQUEAR["Informar condiciones pendientes y conservar<br/>BORRADOR o INACTIVO"]
         RECHAZAR["Informar solicitud inválida y conservar datos<br/>y estado"]
@@ -168,7 +171,11 @@ flowchart LR
     end
     INICIO --> ACCION
     ACCION -->|"Editar"| EDITAR --> VALIDAR --> EDICION
-    EDICION -->|"Sí"| GUARDAR --> FIN_EDICION
+    EDICION -->|"Sí"| EDIT_ACTIVO
+    EDIT_ACTIVO -->|"No"| GUARDAR
+    EDIT_ACTIVO -->|"Sí"| EDIT_CONDICIONES
+    EDIT_CONDICIONES -->|"Sí"| GUARDAR --> FIN_EDICION
+    EDIT_CONDICIONES -->|"No"| RECHAZAR
     EDICION -->|"No"| RECHAZAR --> FIN_BLOQUEO
     ACCION -->|"Activar"| ACTIVAR --> ESTADO
     ACCION -->|"Reactivar"| REACTIVAR --> ESTADO
@@ -186,7 +193,9 @@ flowchart LR
     PRECIO -->|"No"| BLOQUEAR
     STOCK -->|"Sí"| MODELO
     STOCK -->|"No"| BLOQUEAR
-    MODELO -->|"No"| PUBLICAR
+    MODELO -->|"No"| FISICO
+    FISICO -->|"Sí"| PUBLICAR
+    FISICO -->|"No"| BLOQUEAR
     MODELO -->|"Sí"| VARIANTES
     VARIANTES -->|"Sí"| PUBLICAR
     VARIANTES -->|"No"| BLOQUEAR
@@ -194,7 +203,9 @@ flowchart LR
     BLOQUEAR --> FIN_BLOQUEO
 ```
 
-Reactivar usa las mismas comprobaciones de activación y conserva la identidad. `sku_base` no se recodifica por edición ordinaria; `tiene_variantes` no cambia tras publicar la identidad. Preparación completa no activa automáticamente el producto: el gestor solicita el cambio. Un rechazo de inicialización durante el alta mantiene `BORRADOR`, sin rollback distribuido ni deshacer lo que otra dependencia ya completó.
+Reactivar usa las mismas comprobaciones de activación y conserva la identidad. `sku_base` no se recodifica por edición ordinaria; `tiene_variantes` no cambia tras publicar la identidad. Preparación completa no activa automáticamente el producto: el gestor solicita el cambio. Un rechazo de una dependencia requerida durante el alta mantiene `BORRADOR`, sin rollback distribuido ni deshacer lo que otra dependencia ya completó; el rechazo de una variante no activa no bloquea por sí solo al padre ni lo inactiva.
+
+La edición conserva la naturaleza comercial del producto y la coherencia con sus variantes en cualquier estado; si representa otro producto, requiere una nueva alta. No crea ni sustituye variantes. Para un producto activo se valida el resultado completo antes de guardar; un incumplimiento rechaza toda la edición y conserva datos y estado anteriores. Para activar/reactivar al padre cuentan todas las variantes activas y debe existir al menos una; los hijos en borrador o inactivos no bloquean ni se ofrecen comercialmente. El perfil físico simple puede estar incompleto en borrador, pero debe completarse antes de activar/reactivar; el padre con variantes no registra peso ni dimensiones. El volumen es derivado, no una entrada independiente.
 
 ### 4.5. Desactivación lógica
 
@@ -209,7 +220,7 @@ flowchart LR
     subgraph S["Sistema · Catálogo"]
         direction TB
         VALIDAR{"¿Producto admite desactivación?"}
-        BAJA["Persistir baja lógica del producto a INACTIVO"]
+        BAJA["Persistir producto INACTIVO y bloquear<br/>comercialmente sus variantes sin cambiar<br/>sus estados individuales"]
         EVENTO["Publicar catalog.product.deactivated mediante<br/>RabbitMQ"]
         ERROR["Informar estado incompatible sin aplicar baja"]
         FIN_OK((("Producto desactivado")))
@@ -223,6 +234,8 @@ flowchart LR
 ```
 
 RabbitMQ realiza el fan-out de `catalog.product.deactivated` a los consumidores declarados en AsyncAPI 0.4.0 (`promotions-svc`, `combos-svc`, `api-gateway/bff`); Catálogo no realiza llamadas directas a ellos. La baja conserva identidad y bloquea resolución comercial mientras el producto esté inactivo. Estar `ACTIVO` no garantiza visibilidad en todos los canales: también aplica la elegibilidad comercial de SPEC-003.
+
+Reactivar al padre no reactiva hijos inactivos; reactivar una variante tampoco reactiva al padre. Desactivar la última variante activa solo inactiva automáticamente a un padre que estaba `ACTIVO`; un padre en borrador o inactivo conserva su estado, conforme a FLOW-004.
 
 ## 5. Reglas de preparación y trazabilidad
 
