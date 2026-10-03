@@ -1,5 +1,7 @@
 # Validation Report — MK-XXX
 
+> **Instanciación:** Copiar a `mockups/MK-XXX/validation-report.md`. Los enlaces relativos de esta plantilla se interpretan desde ese destino; el Design System está en `../DESIGN.md`.
+
 > **Propósito y rol documental:**
 > Documento formal de evidencia y validación (cómo demostrar que el resultado cumple).
 > Registra objetivamente la comprobación del mockup contra las fuentes de verdad oficiales.
@@ -60,7 +62,7 @@ Relación directa entre las unidades de trabajo ejecutadas en `tasks.md`, las pa
 
 ## 7. UI y Design System
 
-- **Referencia visual consumida:** [mockups/DESIGN.md](../../DESIGN.md), versión [versión consumida].
+- **Referencia visual consumida:** [mockups/DESIGN.md](../DESIGN.md), versión [versión consumida].
 - [ ] Variantes, tamaños y estados de los componentes DS-CXX coinciden con el component-spec y el Design System.
 - [ ] Colores aplicados estrictamente mediante tokens oficiales del tema.
 - [ ] Escala tipográfica oficial respetada.
