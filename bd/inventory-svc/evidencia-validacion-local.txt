@@ -1,0 +1,16 @@
+EVIDENCIA DE VALIDACION LOCAL - inventory-svc (issue #54)
+Fecha: 2026-10-02
+Entorno: PostgreSQL local (Windows) - conexion postgres/postgres
+Comandos:
+  1) psql -f bd\inventory-svc\migration.sql   (schema + tipos + 13 tablas, incidencias/traslados alineados
+     a FLOW-015 4.6/4.9 y OpenAPI TrasladoInventario; reserva modelada como agregado order-level con
+     location_id a nivel de linea reservation_lines, sin restriccion de una unica ubicacion por reserva)
+  2) psql -f bd\inventory-svc\validation.sql   (invariantes, idempotencia, ciclo reserva/consumo, TTL,
+     carrera terminal unica, outbox/inbox, umbral global+por SKU sin ubicacion, incidencias ABIERTA->REHABILITADO
+     con bloqueo y desbloqueo, traslado EN_TRANSITO->RECIBIDO_PARCIAL->COMPLETADO_CON_DISCREPANCIA con
+     missing_quantity, idempotencia de recepcion y de reporte de incidencia, transicion terminal irreversible,
+     sin FK externos)
+MIGRATION_EXIT=0
+VALIDATION_EXIT=0
+NOTICE: VALIDACION OK: schema inventory con 13 tablas cumple esquema, invariantes, idempotencia, ciclo reserva/consumo, TTL, carrera de terminal unica, outbox/inbox, incidencias y traslados, y ausencia de FK externos.
+Salida final: VALIDACION_FINALIZADA_SATISFACTORIAMENTE | total_tablas = 13

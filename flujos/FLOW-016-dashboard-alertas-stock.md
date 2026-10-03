@@ -8,7 +8,7 @@
 - **Funcionalidad:** Dashboard analítico y alertas de stock
 - **Relacionado con:** HU-016 / SPEC-016 / WF-016
 - **Responsable:** Miguel Ángel Taco Zavala
-- **Última actualización:** 2026-10-01
+- **Última actualización:** 2026-10-02
 
 ---
 
@@ -21,8 +21,10 @@ Representar la carga, agrupación y actualización de las proyecciones del dashb
 ## 3. Actores participantes
 
 - Gestor comercial con capacidades de consulta de inventario
-- Sistema de Inventario (autoridad del saldo y flujo WF-015)
-- Dashboard (proyección de solo lectura)
+- Sistema de Inventario (inventory-svc): autoridad del saldo, productor de `inventory.stock.changed` y owner del dominio de Inventario y del dashboard operativo
+- Broker RabbitMQ (transporte del evento según AsyncAPI/topología 0.4.0)
+- api-gateway/bff: consumidor técnico de `inventory.stock.changed`
+- Dashboard UI: interfaz de consulta/refresco sobre proyección de solo lectura
 
 ---
 
@@ -94,19 +96,30 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    subgraph INV["Sistema de Inventario"]
+    subgraph INV["Sistema de Inventario (inventory-svc)"]
         direction TB
-        E1(("inventory.stock.changed recibido"))
+        A0["Mutación autoritativa de saldo confirmada tras el commit"]
+        A1["Productor: publicar inventory.stock.changed"]
     end
 
-    subgraph DASH["Dashboard"]
+    subgraph INTER["Broker RabbitMQ (transporte AsyncAPI 0.4.0)"]
         direction TB
-        A1["Validar evento del contrato AsyncAPI"]
-        A2["Actualizar la proyección de los saldos afectados"]
-        A3["Recalcular KPIs, estados y alertas"]
+        E1(("inventory.stock.changed"))
+    end
+
+    subgraph BFF["api-gateway/bff (consumidor técnico)"]
+        direction TB
+        A2["Consumir y validar contra el contrato AsyncAPI 0.4.0"]
+        A3["Actualizar read model / proyección sin trasladar reglas de negocio de saldo"]
+    end
+
+    subgraph DASH["Dashboard UI (interfaz de consulta/refresco)"]
+        direction TB
+        A4["Consultar la proyección de los saldos afectados"]
+        A5["Recalcular KPIs, estados y alertas"]
         D1{"¿La mutación fue una recepción de traslado?"}
-        A4["Refrescar KPIs de traslados por consulta"]
-        A5["Refrescar vista sin republicar eventos ni mutar saldos"]
+        A6["Refrescar KPIs de traslados por consulta GET /api/v1/inventario/traslados"]
+        A7["Refrescar vista sin republicar eventos ni mutar saldos"]
     end
 
     subgraph RES["Resultado"]
@@ -114,14 +127,17 @@ flowchart LR
         FIN(((Fin de la actualización)))
     end
 
-    E1 --> A1
-    A1 --> A2
+    A0 --> A1
+    A1 --> E1
+    E1 --> A2
     A2 --> A3
-    A3 --> D1
-    D1 -->|"Sí"| A4
-    D1 -->|"No"| A5
+    A3 --> A4
     A4 --> A5
-    A5 --> FIN
+    A5 --> D1
+    D1 -->|"Sí"| A6
+    D1 -->|"No"| A7
+    A6 --> A7
+    A7 --> FIN
 ```
 
 ### 4.4 KPIs de traslados por consulta
@@ -182,6 +198,7 @@ flowchart LR
 ## 5. Notas generales
 
 - **Solo lectura:** el dashboard no publica eventos de Inventario ni modifica saldos ni Kardex (HU-016 CA-10, SPEC-016 §4).
-- **Traslados:** no existe evento contractual de traslados; los KPIs se obtienen por consulta del estado confirmado y la recepción la ejecuta un gestor comercial autorizado en WF-015, no desde el dashboard (SPEC-016 §6). Un traslado con discrepancia no altera por sí mismo las unidades disponibles (HU-016 CA-11).
+- **Reactividad:** `inventory.stock.changed` es el evento funcional de actualización (SPEC-016 §4, HU-016 CA-07). inventory-svc es su productor; api-gateway/bff es su consumidor técnico (AsyncAPI/topología 0.4.0) y actualiza la proyección sin trasladar reglas de negocio de saldo; el Dashboard UI consulta y se refresca sin consumir RabbitMQ directamente (HU-016 CA-10).
+- **Triggers funcionales:** solo `inventory.stock.changed` acciona la actualización del dashboard; `inventory.stock.adjusted` no es trigger funcional de FLOW-016 aunque el BFF también lo consuma (SPEC-016/HU-016).
+- **Traslados:** no existe evento contractual de traslados; los KPIs se obtienen por consulta `GET /api/v1/inventario/traslados` y la recepción la ejecuta un gestor comercial autorizado en WF-015, no desde el dashboard (SPEC-016 §6). Un traslado con discrepancia no altera por sí mismo las unidades disponibles (HU-016 CA-11).
 - **Estados:** `available = max(on_hand - reserved - blocked, 0)`; `AGOTADO` cuando `available = 0`, `STOCK_BAJO` cuando `0 < available <= umbral_efectivo` y `DISPONIBLE` en el resto (SPEC-016 §3).
-- **Actualización:** la proyección se recalcula ante mutaciones confirmadas de reserva, consumo, liberación, incidencia/bloqueo, rehabilitación, merma, reintegro, conciliación offline y recepción de traslados (SPEC-016 §4, HU-016 CA-07).
