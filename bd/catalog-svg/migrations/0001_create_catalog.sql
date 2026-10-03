@@ -320,8 +320,12 @@ BEGIN
             RAISE EXCEPTION 'ID inmutable' USING ERRCODE = '23514';
         END IF;
         IF TG_TABLE_NAME = 'products' THEN
-            IF (NEW.sku_base, NEW.tiene_variantes, NEW.tipo_producto_id)
-                IS DISTINCT FROM (OLD.sku_base, OLD.tiene_variantes, OLD.tipo_producto_id) THEN
+            -- tipo_producto_id: SPEC-010 admite correccion condicionada.
+            -- Q-06 sigue abierta: no fijar inmutabilidad absoluta ni inferir
+            -- identidad comercial publicada desde estado/SKU/preparacion.
+            -- La habilitacion por CRUD y sus precondiciones requieren resolucion oficial.
+            IF (NEW.sku_base, NEW.tiene_variantes)
+                IS DISTINCT FROM (OLD.sku_base, OLD.tiene_variantes) THEN
                 RAISE EXCEPTION 'Edicion no admite migracion estructural' USING ERRCODE = '23514';
             END IF;
         ELSE
