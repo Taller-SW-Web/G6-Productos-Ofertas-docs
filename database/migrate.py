@@ -26,8 +26,9 @@ def main():
     for number, file in enumerate(files, 1):
         if not re.fullmatch(rf'{number:04d}_[a-z0-9_]+\.sql', file.name):
             raise ValueError(f'Orden/nombre inválido: {file.name}; se esperaba {number:04d}_descripcion.sql')
-        data = file.read_bytes()
-        migrations.append((file.name, hashlib.sha256(data).hexdigest(), data.decode('utf-8-sig')))
+        source = file.read_bytes().decode('utf-8-sig').replace('\r\n', '\n')
+        checksum = hashlib.sha256(source.encode('utf-8')).hexdigest()
+        migrations.append((file.name, checksum, source))
     s = args.schema
     ledger = f'{s}.schema_migrations'
     sql = [r'\set ON_ERROR_STOP on', f'SET ROLE po_{s}_owner;',

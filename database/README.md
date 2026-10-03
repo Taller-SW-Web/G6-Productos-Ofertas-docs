@@ -19,7 +19,7 @@ Estado: procedimiento verificable localmente; no se ha ejecutado contra un proye
 
 Mientras este repositorio contiene los entregables de BD, guardar SQL en `database/<schema>/migrations/0001_descripcion.sql`, `physical-model.md` y `validation.sql`. Al incorporar el backend, conservar los mismos archivos y versiones en `infrastructure/persistence/migrations/` del servicio (Arquitectura §4). No mantener dos historiales activos ni volver a ejecutar una versión trasladada.
 
-Versiones de cuatro dígitos consecutivas desde 0001, un cambio por archivo, SQL PostgreSQL UTF-8, nombres snake_case y objetos calificados con schema. No editar ni borrar migraciones aplicadas. Cambios destructivos requieren estrategia expand/contract, respaldo y coordinación de versión. Cada archivo es transaccional: no BEGIN/COMMIT, VACUUM ni CREATE INDEX CONCURRENTLY. Para cambios no transaccionales se necesita un procedimiento independiente revisado, no introducirlos en este ejecutor.
+Versiones de cuatro dígitos consecutivas desde 0001, un cambio por archivo, SQL PostgreSQL UTF-8, nombres snake_case y objetos calificados con schema. El checksum usa texto UTF-8 sin BOM y saltos LF, para que Windows/Linux produzcan el mismo resultado. No editar ni borrar migraciones aplicadas. Cambios destructivos requieren estrategia expand/contract, respaldo y coordinación de versión. Cada archivo es transaccional: no BEGIN/COMMIT, VACUUM ni CREATE INDEX CONCURRENTLY. Para cambios no transaccionales se necesita un procedimiento independiente revisado, no introducirlos en este ejecutor.
 
 ## 2. Preparación única del proyecto
 
