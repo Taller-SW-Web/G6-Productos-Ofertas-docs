@@ -65,9 +65,17 @@ altoCm > 0
 
 Despacho consulta todas las unidades vendibles mediante el mismo endpoint físico.
 
-## 6. Desactivación
+## 6. Edición, activación, desactivación y reactivación
+
+La edición ordinaria permite actualizar atributos no identificadores, imagen y perfil físico válido. Conserva `variant_id`, el SKU comercial publicado y los atributos identificadores, conforme a `VarianteUpdateRequest` en OpenAPI vigente.
+
+Activar requiere un padre con `tiene_variantes=true`, SKU globalmente único, combinación identificadora única dentro del producto, atributos e imagen válidos, perfil físico completo en kg/cm con valores mayores que cero e Inventario confirmado mediante `inventory.sku.initialization.completed`. Las comprobaciones de unicidad excluyen la propia variante.
 
 Desactivar una variante publica `catalog.sku.deactivated`. Si era la última variante activa, el producto padre se inactiva conforme a SPEC-003.
+
+Reactivar una variante `INACTIVA` conserva `variant_id` y SKU, revalida las mismas condiciones de activación y solo entonces la devuelve a `ACTIVA`. Si no cumple, permanece `INACTIVA`. La preparación de Inventario rechazada o pendiente puede reintentarse idempotentemente conservando la identidad de operación; una inicialización completada no se repite. Reactivar no crea precio base ni activa automáticamente al padre: este se revalida conforme a SPEC-003.
+
+La ruta `POST /productos/{productoId}/variantes/{variantId}/reactivar` está declarada en [OpenAPI vigente](../api/openapi.yaml), con estado `provisional-internal`. Los eventos de desactivación se publican mediante RabbitMQ y su fan-out corresponde a AsyncAPI 0.4.0.
 
 ## 7. No pertenece a esta capacidad
 
