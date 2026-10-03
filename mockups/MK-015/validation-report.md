@@ -122,7 +122,7 @@ Estado de autovalidación: PENDIENTE (En espera de versión raw para iniciar fas
 
 ## 12. Fidelidad en Figma
 
-- **Enlace canónico de Figma:** `[Registrar enlace a Figma]`
+- **Enlace canónico de Figma:** «Enlace a Figma pendiente»
 - **Validación de fidelidad completada:** Pendiente
 - **Divergencias detectadas:** Ninguna
 

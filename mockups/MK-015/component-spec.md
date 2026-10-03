@@ -24,15 +24,15 @@ Define las fuentes oficiales de verdad consumidas por esta funcionalidad. Cualqu
 
 | Fuente | Referencia | Alcance |
 |---|---|---|
-| SPEC | [SPEC-015](../specs/SPEC-015-control-stock-disponibilidad.md) | §1‑38 Reglas de negocio, invariantes, SKU/ubicación, reservas, consumos, liberaciones, expiraciones, ajustes, concurrencia, eventos, integraciones |
-| HU | [HU-015](../hu/HU-015-control-stock-disponibilidad.md) | CA‑01…CA‑42 Criterios de aceptación, historias de usuario |
-| WF | [WF-015](../wireframes/flows/WF-015-control-stock-disponibilidad.md) | S‑01…S‑05 Pantallas, columnas, detalle de saldo, recepción, umbrales |
-| Flow | [FLOW-015](../flujos/FLOW-015-control-stock-disponibilidad.md) | §4.2‑4.9 Reserva, consumo, liberación, expiración, Bulk, incidencia, reintegro, conciliación, traslado |
+| SPEC | [SPEC-015](../../specs/SPEC-015-control-stock-disponibilidad.md) | §1‑38 Reglas de negocio, invariantes, SKU/ubicación, reservas, consumos, liberaciones, expiraciones, ajustes, concurrencia, eventos, integraciones |
+| HU | [HU-015](../../hu/HU-015-control-stock-disponibilidad.md) | CA‑01…CA‑42 Criterios de aceptación, historias de usuario |
+| WF | [WF-015](../../wireframes/flows/WF-015-control-stock-disponibilidad.md) | S‑01…S‑05 Pantallas, columnas, detalle de saldo, recepción, umbrales |
+| Flow | [FLOW-015](../../flujos/FLOW-015-control-stock-disponibilidad.md) | §4.2‑4.9 Reserva, consumo, liberación, expiración, Bulk, incidencia, reintegro, conciliación, traslado |
 | Propuesta UX módulo | `mockups/ux/propuesta-ux.md` | §3‑5 UX‑P01, UX‑P02, UX‑P03; matriz 015 |
 | UX Decisions | `mockups/ux/ux-decisions.md` | UXD‑001, UXD‑011 decisiones de interacción |
 | UX Guidelines | `mockups/ux/ux-guidelines.md` | UXG‑001…UXG‑022 reglas operativas |
-| API Contract | [OpenAPI](../api/openapi.yaml) / [Contrato_Api.md](../Contrato_Api.md) | Endpoints `/inventario/disponibilidad`, `/inventario/umbrales`, `/inventario/traslados`, `/inventario/traslados/{id}/recepciones`; HTTP 0.5.0 |
-| Design System | [mockups/DESIGN.md](../DESIGN.md), versión 1.0.0 | Tokens, componentes DS‑C01‑DS‑C29, layout 1440 px, estados de interacción |
+| API Contract | [OpenAPI](../../api/openapi.yaml) / [Contrato_Api.md](../../Contrato_Api.md) | Endpoints `/inventario/disponibilidad`, `/inventario/umbrales`, `/inventario/traslados`, `/inventario/traslados/{id}/recepciones`; HTTP 0.5.0 |
+| Design System | [mockups/DESIGN.md](../../DESIGN.md), versión 1.0.0 | Tokens, componentes DS‑C01‑DS‑C29, layout 1440 px, estados de interacción |
 
 ## 3. Objetivo funcional
 
@@ -49,7 +49,7 @@ Define las fuentes oficiales de verdad consumidas por esta funcionalidad. Cualqu
 - Mostrar `on_hand`, `reserved`, `blocked`, `available`, `estado`, `umbral_stock_bajo_resuelto`, `stock_version`.
 - Cálculo `available = max(on_hand - reserved - blocked, 0)`.
 - Determinar estado comercial: `AGOTADO` (available = 0), `STOCK_BAJO` (0 < available ≤ umbral), `DISPONIBLE` (available > umbral).
-- Configurar umbrales por SKU (`PUT /inventario/umbrales`).
+- Configurar umbrales por SKU mediante los endpoints correctos: `GET /inventario/umbrales` para obtener la configuración actual, `PUT /inventario/umbrales/global` para aplicar un umbral global, y `PUT /inventario/umbrales/skus/{sku}` para aplicar umbral a un SKU específico.
 - Listar traslados pendientes (`GET /inventario/traslados`).
 - Registrar recepción de traslado (`POST …/traslados/{id}/recepciones`).
 - Mostrar badges de estado (DISPONIBLE / STOCK_BAJO / AGOTADO) con ícono según DS‑C14.
@@ -73,7 +73,7 @@ Define qué pantallas existen y su propósito dentro de la funcionalidad.
 |---|---|---|---|---|---|---|---|
 | MK‑015‑S01 | Control de stock | Consultar disponibilidad por SKU/ubicación | `GET /inventario/disponibilidad?skus=…&location_id=…` | Filtrar, agrupar | Tabla con Físico/Reservado/Bloqueado/Disponible/Estado/Umbral | P0 | `/MK015/S01` |
 | MK‑015‑S02 | Detalle del saldo | Ver detalle de un SKU/ubicación | misma llamada, drawer 640 px | — | Ficha con Físico/Reservado/Bloqueado/Disponible/Umbral/Estado | P0 | `/MK015/S02` |
-| MK‑015‑S03 | Configuración de umbrales | Definir umbral_stock_bajo por SKU | `GET/PUT /inventario/umbrales` | Aplicar umbral | Confirmación de actualización | P1 | `/MK015/S03` |
+| MK‑015‑S03 | Configuración de umbrales | Definir umbral_stock_bajo por SKU | `GET /inventario/umbrales`, `PUT /inventario/umbrales/global`, `PUT /inventario/umbrales/skus/{sku}` | Aplicar umbral | Confirmación de actualización | P1 | `/MK015/S03` |
 | MK‑015‑S04 | Traslados pendientes | Listar traslados sin recibir | `GET /inventario/traslados?estado&target_location_id&pagina&tamanio` | — | Lista con SKU/origen/destino/cantidad pendiente/estado | P0 | `/MK015/S04` |
 | MK‑015‑S05 | Registrar recepción | Confirmar/rechazar traslado recibido | `POST …/traslados/{id}/recepciones` Cantidad Disposición Nota | Registrar recepción final | Estado COMPLETADO / COMPLETADO_CON_DISCREPANCIA | P0 | `/MK015/S05` |
 
@@ -231,8 +231,8 @@ Define la estructura, componentes, acciones, estados y contenido clave de cada p
 **Propósito y objetivo:** Permite al usuario inspeccionar el detalle de saldos para un SKU y ubicación seleccionados, mostrando los valores de físico, reservado, bloqueado, disponible, umbral y estado.
 
 **Estructura y layout:**
-1. **Cabecera:** Título “Detalle del saldo”, botón de cierre del drawer.
-2. **Cuerpo:** Lista de campos clave con componentes `DS‑C03 PO/TextInput` (solo lectura) para cada valor y badge de estado `DS‑C14 PO/Badge`.
+1. **Cabecera:** Título “Detalle del saldo”, botón de cierre del drawer. (Acción primaria: visualizar detalle del saldo en drawer)
+2. **Cuerpo:** Lista de campos clave con componentes `DS‑C03 PO/TextInput` (solo lectura) para cada valor y badge de estado `DS‑C14 PO/Badge`. (Estados requeridos: default, loading, error; microtexto explicativo sobre cálculo de disponible)
 3. **Acciones:** Botón “Cerrar” que retorna a la tabla S01.
 
 **Componentes presentes:**
@@ -251,7 +251,7 @@ Define la estructura, componentes, acciones, estados y contenido clave de cada p
 **Estructura y layout:**
 1. **Cabecera:** Título “Configuración de umbral”.
 2. **Campo umbral:** `DS‑C04 PO/NumberInput` pre‑poblado con valor actual.
-3. **Botón Aplicar:** Acción que envía `PUT /inventario/umbrales`.
+3. **Botón Aplicar:** Acción que envía `PUT /inventario/umbrales`. (Estados de respuesta: success → confirmación, error → mensaje de validación, loading → spinner)
 4. **Feedback:** Mensaje de éxito o error tras la actualización.
 
 **Componentes presentes:**
@@ -269,7 +269,7 @@ Define la estructura, componentes, acciones, estados y contenido clave de cada p
 
 **Estructura y layout:**
 1. **Tabla:** `DS‑C17 PO/Table` con columnas SKU, Origen, Destino, Cantidad, Estado.
-2. **Acciones fila:** Botón “Registrar recepción” (`DS‑C02 PO/ActionIcon`) en cada fila.
+2. **Acciones fila:** Botón “Registrar recepción” (`DS‑C02 PO/ActionIcon`) en cada fila. (Acción primaria: abrir pantalla S05 para registrar recepción)
 3. **Filtrado:** `DS‑C13 PO/FilterBar` para refinar por SKU o estado.
 
 **Componentes presentes:**
@@ -288,7 +288,7 @@ Define la estructura, componentes, acciones, estados y contenido clave de cada p
 **Estructura y layout:**
 1. **Formulario:** Campos `DS‑C03 PO/TextInput` (solo lectura) para SKU, origen, destino, cantidad esperada.
 2. **Entrada recepción:** `DS‑C03 PO/TextInput` para cantidad recibida y `DS‑C08 PO/Checkbox` para marcar discrepancia.
-3. **Botón Confirmar:** `DS‑C02 PO/ActionIcon` que envía `POST /inventario/traslados/{id}/recepciones`.
+3. **Botón Confirmar:** `DS‑C02 PO/ActionIcon` que envía `POST /inventario/traslados/{id}/recepciones`. (Estados de respuesta: success → mensaje de éxito, error → descripción del problema, loading → indicador)
 4. **Feedback inline:** Mensaje de éxito o error mostrado bajo el formulario.
 
 **Componentes presentes:**
@@ -380,7 +380,7 @@ Conjunto de datos deterministas requeridos para reproducir de forma predecible c
 
 | ID | Pregunta | Bloquea ejecución | Responsable | Estado |
 |---|---|---|---|---|
-| Q‑01 | ¿Sobre regla de negocio o interfaz que afecta la clasificación de umbrales? | Sí / No | Miguel Taco | Abierta / Resuelta |
+| Q‑01 | ¿Sobre regla de negocio o interfaz que afecta la clasificación de umbrales? | Sí / No | Miguel Taco | Resuelta / Cerrada |
 
 ### Supuestos adoptados
 

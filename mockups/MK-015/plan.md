@@ -72,9 +72,9 @@ Detener inmediatamente la ejecución, marcar la tarea como `BLOCKED` y escalar a
 | UX Decisions | `mockups/ux/ux-decisions.md` | Vigente |
 | UX Guidelines | `mockups/ux/ux-guidelines.md` | Vigente |
 | Component Spec | `component-spec.md` | Aprobado |
-| SPEC/HU | [Refs] | Vigentes |
-| WF | [Ref] | Vigente |
-| Flow | [Ref] | Vigente |
+| SPEC/HU | Información pendiente de definir | Vigentes |
+| WF | Información pendiente de definir | Vigente |
+| Flow | Información pendiente de definir | Vigente |
 | Design System | [mockups/DESIGN.md](../DESIGN.md), versión 1.0.0 | Vigente y coherente con el component-spec |
 
 ## 4. Objetivo

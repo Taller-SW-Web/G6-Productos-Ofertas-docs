@@ -120,10 +120,10 @@
 
 ### MK-015-S05 — Registrar recepción
 
-- [ ] **MK-015-T50 — P0:** Implementar estructura de MK-015-S05. `[TODO]`
-- [ ] **MK-015-T51 — P0:** Implementar confirmación inline (LUX‑03) sin modal anidado. `[TODO]`
-- [ ] **MK-015-T52 — P0:** Implementar campos: Cantidad recibida, Disposición (Reingresar/Mantener bloqueado/Confirmar merma), Nota opcional, “Esta es la recepción final”. `[TODO]`
-- [ ] **MK-015-T53 — P0:** Mostrar texto literal WF‑015: “El traslado se cerrará con una discrepancia. Las unidades faltantes no se agregarán al inventario.” `[TODO]`
+- [x] **MK-015-T50 — P0:** Implementar estructura de MK-015-S05. `[DONE]`
+- [x] **MK-015-T51 — P0:** Implementar confirmación inline (LUX‑03) sin modal anidado. `[DONE]`
+- [x] **MK-015-T52 — P0:** Implementar campos: Cantidad recibida, Disposición (Reingresar/Mantener bloqueado/Confirmar merma), Nota opcional, “Esta es la recepción final”. `[DONE]`
+- [x] **MK-015-T53 — P0:** Mostrar texto literal WF‑015: “El traslado se cerrará con una discrepancia. Las unidades faltantes no se agregarán al inventario.” `[DONE]`
 - [ ] **MK-015-T54 — P0:** Verificar que no se inventen cifras de faltantes. `[TODO]`
 
 ### 5. Normalización
@@ -159,7 +159,7 @@
 
 ## 7. Revisión transversal y visto bueno
 
-- [ ] **MK-015-T70 — P0:** Confirmar en `validation-report.md` que la autovalidación local está completa y cerrada. `[TODO]`
+- [ ] **MK-015-T70‑A — P0:** Confirmar en `validation-report.md` que la autovalidación local está completa y cerrada. `[TODO]`
 - [ ] **MK-015-T71 — P0:** Solicitar formalmente revisión transversal a Leonardo Vera Rodríguez. `[TODO]`
 - [ ] **MK-015-T72 — P0:** Atender y corregir todos los hallazgos bloqueantes e importantes formulados en la revisión transversal. `[TODO]`
 - [ ] **MK-015-T73 — P0:** Obtener visto bueno formal de Leonardo Vera Rodríguez. `[TODO]`
