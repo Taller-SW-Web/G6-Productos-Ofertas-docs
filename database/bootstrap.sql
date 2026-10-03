@@ -18,6 +18,18 @@ BEGIN
     EXECUTE format('REVOKE ALL ON SCHEMA %I FROM PUBLIC', s);
     EXECUTE format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA %I REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC', r, s);
   END LOOP;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'taxonomy_app') THEN
+    EXECUTE 'CREATE ROLE taxonomy_app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION';
+  END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM pg_roles
+    WHERE rolname = 'taxonomy_app'
+      AND (rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls)
+  ) OR pg_has_role('taxonomy_app', 'po_taxonomy_owner', 'MEMBER') THEN
+    RAISE EXCEPTION 'Runtime taxonomy_app tiene privilegios inesperados; revisar configuracion';
+  END IF;
 END
 $bootstrap$;
 COMMIT;
