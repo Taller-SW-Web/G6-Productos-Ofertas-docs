@@ -1,5 +1,7 @@
 # Plan de Mockup — MK-XXX
 
+> **Instanciación:** Copiar a `mockups/MK-XXX/plan.md`. Los enlaces relativos de esta plantilla se interpretan desde ese destino; el Design System está en `../DESIGN.md`.
+
 > **Propósito y rol documental:**
 > Define la estrategia de ejecución (cómo debe construirse la funcionalidad).
 > Establece fases, orden constructivo, restricciones operativas y Quality Gates.
@@ -26,7 +28,7 @@ Referencias documentales oficiales que deben consultarse obligatoriamente antes 
 - Propuesta UX Integral del módulo (`mockups/ux/propuesta-ux.md`).
 - Wireframe oficial (`WF-XXX`).
 - Flujo de navegación oficial (`FLOW-XXX`).
-- Design System de mockups ([mockups/DESIGN.md](../../DESIGN.md), versión consumida, tokens y componentes DS-CXX).
+- Design System de mockups ([mockups/DESIGN.md](../DESIGN.md), versión consumida, tokens y componentes DS-CXX).
 
 *(Ver detalle de estados requeridos en la sección 3. Entradas obligatorias).*
 
@@ -67,7 +69,7 @@ Detener inmediatamente la ejecución, marcar la tarea como `BLOCKED` y escalar a
 | SPEC/HU | [Refs] | Vigentes |
 | WF | [Ref] | Vigente |
 | Flow | [Ref] | Vigente |
-| Design System | [mockups/DESIGN.md](../../DESIGN.md), versión [versión consumida] | Vigente y coherente con el component-spec |
+| Design System | [mockups/DESIGN.md](../DESIGN.md), versión [versión consumida] | Vigente y coherente con el component-spec |
 
 ## 4. Objetivo
 
