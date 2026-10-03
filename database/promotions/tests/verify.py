@@ -67,11 +67,26 @@ def main():
     check('historial completo', len(ledger.splitlines()) == len(migrations))
     repeated = migrate()
     check('repetición sin aplicar de nuevo', repeated.returncode == 0 and text(sql(ledger_sql)) == ledger)
-    validation = text(sql((FOLDER / 'validation.sql').read_text(encoding='utf-8')))
+    validation_source = (FOLDER / 'validation.sql').read_text(encoding='utf-8')
+    validation = text(sql(validation_source))
     match = re.search(r'\{"assertions"\s*:\s*(\d+),\s*"result"\s*:\s*"PASS"\}', validation)
     check('assertions SQL', match is not None)
     assertions = int(match.group(1))
     check('fixtures SQL con rollback', text(sql("SELECT (SELECT count(*) FROM promotions.promotions)+(SELECT count(*) FROM promotions.coupons)+(SELECT count(*) FROM promotions.inbox)+(SELECT count(*) FROM promotions.outbox);")) == '0')
+    # Probar que la validación realmente detecta regresiones de convención.
+    # Cada alteración vive en su transacción/conexión desechable y se revierte.
+    for label, alteration, expected in [
+        ('detecta created_at ausente', 'ALTER TABLE promotions.combination_policy DROP COLUMN created_at;', 'combination_policy.created_at obligatorio'),
+        ('detecta timestamp nullable', 'ALTER TABLE promotions.catalog_projection ALTER COLUMN created_at DROP NOT NULL;', 'catalog_projection.created_at obligatorio'),
+        ('detecta timestamp sin zona', 'ALTER TABLE promotions.stock_projection ALTER COLUMN created_at TYPE timestamp;', 'stock_projection.created_at obligatorio'),
+        ('detecta default ausente', 'ALTER TABLE promotions.coupon_uses ALTER COLUMN updated_at DROP DEFAULT;', 'coupon_uses.updated_at obligatorio'),
+        ('detecta trigger ausente', 'DROP TRIGGER trg_promotion_scopes_updated_at ON promotions.promotion_scopes;', 'promotion_scopes.updated_at trigger'),
+        ('detecta FK sin RESTRICT', 'ALTER TABLE promotions.coupons DROP CONSTRAINT fk_coupons_promotion; ALTER TABLE promotions.coupons ADD CONSTRAINT fk_coupons_promotion FOREIGN KEY(promotion_id) REFERENCES promotions.promotions(id);', 'seis FK con RESTRICT explícito'),
+        ('detecta customer_ref text', 'ALTER TABLE promotions.coupon_uses ALTER COLUMN customer_ref TYPE text USING customer_ref::text;', 'customer_ref permanece UUID'),
+        ('detecta nombre fuera del inventario aprobado', 'ALTER TABLE promotions.promotions RENAME TO promotion;', 'solo entidades del contexto y ledger')]:
+        rejected = sql('BEGIN; SET LOCAL ROLE po_promotions_owner;\n' + alteration + '\n' + validation_source, success=False)
+        check(label, rejected.returncode != 0 and 'ASSERTION FAILED: ' + expected in rejected.stderr.decode('utf-8'))
+    check('regresiones de convención revertidas', text(sql("SELECT count(*)=6 AND bool_and(confdeltype='r') FROM pg_constraint WHERE contype='f' AND connamespace='promotions'::regnamespace;")) == 't')
     with tempfile.TemporaryDirectory(prefix='po-promotions-test-') as tmp:
         fixtures = pathlib.Path(tmp) / 'promotions' / 'migrations'
         fixtures.mkdir(parents=True)
@@ -108,18 +123,50 @@ def main():
         created = True
         first_name = next(iter(migrations))
         sql(bootstrap + '\nSET ROLE po_promotions_owner; BEGIN;\n' + migrations[first_name] + '\nCOMMIT;', race_db)
-        sql("SET ROLE po_promotions_runtime; INSERT INTO promotions.price_projection(sku,channel_id,snapshot,source_occurred_at,source_message_id) VALUES('upgrade-fixture','RETAIL','{\"preserved\":true}','2026-10-03','upgrade-price');", race_db)
+        sql("""
+SET ROLE po_promotions_runtime;
+BEGIN;
+INSERT INTO promotions.promotions(id,name,discount_type,discount_value,modality,state,valid_from,valid_until,priority,enabled_channels)
+VALUES('54000000-0000-0000-0000-000000000001','Upgrade','PORCENTAJE',10,'CUPON','ACTIVO','2000-01-01','2100-01-01',1,ARRAY['MARKETPLACE']);
+INSERT INTO promotions.promotion_scopes(promotion_id,product_id,created_at) VALUES('54000000-0000-0000-0000-000000000001','upgrade-product','2000-01-01');
+INSERT INTO promotions.combination_policy(promotion_id,pricing_offer,automatic_promotion,coupon,updated_at) VALUES('54000000-0000-0000-0000-000000000001',false,false,false,'2000-01-01');
+INSERT INTO promotions.coupons(id,promotion_id,code,state,cancellation_policy) VALUES('54000000-0000-0000-0000-000000000011','54000000-0000-0000-0000-000000000001','UPGRADE','ACTIVO','RESTAURAR_EN_CANCELACION');
+SELECT promotions.fn_consume_coupon('upgrade-order','54000000-0000-0000-0000-000000000011','54000000-0000-0000-0000-000000000099','MARKETPLACE','2026-10-03');
+SELECT promotions.fn_restore_coupon('upgrade-order','2026-10-04');
+INSERT INTO promotions.price_projection(sku,channel_id,snapshot,source_occurred_at,source_message_id,updated_at) VALUES('upgrade-fixture','RETAIL','{"preserved":true}','2026-10-03','upgrade-price','2000-01-01');
+INSERT INTO promotions.catalog_projection(reference_type,reference_id,product_id,active,snapshot,source_occurred_at,source_message_id,updated_at) VALUES('PRODUCTO','upgrade-product','upgrade-product',true,'{"preserved":true}','2026-10-03','upgrade-catalog','2000-01-01');
+INSERT INTO promotions.stock_projection(sku,availability,snapshot,source_occurred_at,source_message_id,updated_at) VALUES('upgrade-fixture','DISPONIBLE','{"preserved":true}','2026-10-03','upgrade-stock','2000-01-01');
+INSERT INTO promotions.inbox(message_id,handler,envelope,received_at) VALUES('upgrade-inbox','consume','{"message_id":"upgrade-inbox","schema_version":1,"occurred_at":"2026-10-03T00:00:00Z","correlation_id":"upgrade","producer":"ventas-svc","kind":"command","name":"promotions.coupon.consumption.requested","data":{}}','2000-01-01');
+COMMIT;
+""", race_db)
+        upgrade_tables = ('combination_policy','coupon_uses','catalog_projection','price_projection','stock_projection','inbox','promotion_scopes')
+        before_upgrade = {table: json.loads(text(sql(f'SELECT jsonb_agg(to_jsonb(t)) FROM promotions.{table} t;', race_db))) for table in upgrade_tables}
         for name, source in migrations.items():
             if name != first_name:
                 sql('SET ROLE po_promotions_owner; BEGIN;\n' + source + '\nCOMMIT;', race_db)
         check('upgrade conserva snapshot y asigna id', text(sql("SELECT id IS NOT NULL AND snapshot='{\"preserved\":true}'::jsonb FROM promotions.price_projection WHERE sku='upgrade-fixture' AND channel_id='RETAIL';", race_db)) == 't')
+        for table in upgrade_tables:
+            after = json.loads(text(sql(f'SELECT jsonb_agg(to_jsonb(t)) FROM promotions.{table} t;', race_db)))
+            check('upgrade preserva datos de ' + table, len(after) == len(before_upgrade[table]) and all(any(all(row.get(key) == value for key, value in old.items()) for row in after) for old in before_upgrade[table]))
+        check('upgrade rellena timestamps históricos', text(sql("""
+SELECT (SELECT created_at=updated_at FROM promotions.combination_policy)
+AND (SELECT created_at=consumed_at AND updated_at=restored_at AND customer_ref='54000000-0000-0000-0000-000000000099'::uuid FROM promotions.coupon_uses)
+AND (SELECT created_at=updated_at FROM promotions.catalog_projection)
+AND (SELECT created_at=updated_at FROM promotions.price_projection)
+AND (SELECT created_at=updated_at FROM promotions.stock_projection)
+AND (SELECT created_at=received_at FROM promotions.inbox)
+AND (SELECT updated_at=created_at FROM promotions.promotion_scopes);
+""", race_db)) == 't')
+        # El snapshot histórico creado en 0001 sigue protegido después del upgrade.
+        immutable = sql("SET ROLE po_promotions_runtime; UPDATE promotions.coupon_uses SET restored_at='2026-10-05' WHERE order_id='upgrade-order';", race_db, success=False)
+        check('upgrade mantiene restitución histórica inmutable', immutable.returncode != 0 and 'COUPON_HISTORY_IMMUTABLE' in immutable.stderr.decode('utf-8'))
         sql("""
 SET ROLE po_promotions_runtime;
 BEGIN;
 INSERT INTO promotions.promotions(id,name,discount_type,discount_value,modality,state,valid_from,valid_until,priority,enabled_channels)
 VALUES('53000000-0000-0000-0000-000000000001','Race','PORCENTAJE',10,'CUPON','ACTIVO','2000-01-01','2100-01-01',1,ARRAY['MARKETPLACE']);
 INSERT INTO promotions.promotion_scopes(promotion_id,product_id) VALUES('53000000-0000-0000-0000-000000000001','race-product');
-INSERT INTO promotions.combination_policy VALUES('53000000-0000-0000-0000-000000000001',false,false,false,now());
+INSERT INTO promotions.combination_policy(promotion_id,pricing_offer,automatic_promotion,coupon) VALUES('53000000-0000-0000-0000-000000000001',false,false,false);
 INSERT INTO promotions.coupons(id,promotion_id,code,state,max_global_uses,max_customer_uses,cancellation_policy) VALUES
 ('53000000-0000-0000-0000-000000000011','53000000-0000-0000-0000-000000000001','RACE-GLOBAL','ACTIVO',1,NULL,'RESTAURAR_EN_CANCELACION'),
 ('53000000-0000-0000-0000-000000000012','53000000-0000-0000-0000-000000000001','RACE-CUSTOMER','ACTIVO',NULL,1,'RESTAURAR_EN_CANCELACION'),

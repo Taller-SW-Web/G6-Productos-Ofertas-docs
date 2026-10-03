@@ -2,7 +2,7 @@
 
 ## 1. Identificación
 
-Funcionalidad: **Gestión de cupones de descuento**. Owner: Axel Andree Cueva Alcalá. Issue: [#64](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/64). Versión **1.1**, fecha **2026-10-03**, estado **DOCUMENTACIÓN PREPARADA PARA BASE RAW; EN REVISIÓN**. Rama documental `cueva`; construcción/iteración futura en `lab/cueva`. Base visual de Leonardo Vera aún pendiente; no hay mockup implementado, autovalidación visual ni visto bueno.
+Funcionalidad: **Gestión de cupones de descuento**. Owner: Axel Andree Cueva Alcalá. Issue: [#64](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/64). Versión **1.2**, fecha **2026-10-03**, estado **EN REVISIÓN — APROBACIÓN DOCUMENTAL PENDIENTE**. Rama documental `cueva`; construcción/iteración futura en `lab/cueva`. La implementación está bloqueada hasta aprobar este component-spec y confirmar las entradas oficiales. No hay mockup implementado, autovalidación visual ni visto bueno.
 
 ## 2. Trazabilidad
 
@@ -10,14 +10,14 @@ Funcionalidad: **Gestión de cupones de descuento**. Owner: Axel Andree Cueva Al
 |---|---|---|
 | SPEC | [SPEC-005](../../specs/SPEC-005-gestion-cupones-descuento.md) | Reglas de negocio, campos y límites. |
 | HU | [HU-005](../../hu/HU-005-gestion-cupones-descuento.md) | Criterios de aceptación y actor Gestor Comercial. |
-| Wireframe | [WF-005](../../wireframes/flows/WF-005-gestion-cupones-descuento.md) | Inventario/estructura/copy; no es la base raw de alta fidelidad. |
+| Wireframe | [WF-005](../../wireframes/flows/WF-005-gestion-cupones-descuento.md) | Inventario/estructura/copy; no constituye el mockup de alta fidelidad. |
 | Navegación | [FLOW-005](../../flujos/FLOW-005-gestion-cupones-descuento.md) | Entradas, retornos, guardado y estados. |
 | Contratos | [OpenAPI 0.5.0](../../api/openapi.yaml), [AsyncAPI 0.4.0](../../asyncapi/asyncapi.yaml), [Contrato API](../../Contrato_Api.md) | Campos/operaciones vigentes; mensajería solo contexto, no botones técnicos. |
 | UX | [Propuesta 2.0](../ux/propuesta-ux.md), [UXD](../ux/ux-decisions.md), [UXG](../ux/ux-guidelines.md) | Patrones/normas transversales; aplicabilidad por pantalla y estado. |
 | Design System | [DESIGN 1.0.0](../DESIGN.md) | Tokens, tipografía, shell y DS-C aplicables. |
 | Pipeline | [Mockups](../README.md), [prototipo](../prototipo/README.md), [INDEX](../../wireframes/INDEX.md), [equipo](../../EQUIPO_Y_RESPONSABILIDADES.md) | Rutas, DoR/DoD, ownership y revisión. |
 
-SPEC/HU/contratos prevalecen sobre artefactos visuales. La base de Stitch es una propuesta exploratoria, no una fuente funcional. El wireframe previo guía estructura; los valores visuales de alta fidelidad proceden de DESIGN. Consumir versiones vigentes en la rama del equipo al iniciar laboratorio, sin congelar un hash antiguo de master como autoridad.
+SPEC/HU/contratos prevalecen sobre artefactos visuales. Una propuesta visual exploratoria no es una fuente funcional ni una aprobación documental. El wireframe previo guía estructura; los valores visuales de alta fidelidad proceden de DESIGN. Consumir versiones vigentes en la rama del equipo al iniciar laboratorio, sin congelar un hash antiguo de master como autoridad.
 
 ## 3. Objetivo funcional
 
@@ -25,7 +25,7 @@ El Gestor Comercial consulta y configura cupones, límites y política de restit
 
 ## 4. Alcance
 
-**Incluido:** 6 pantallas P0 de §5, estados/fixtures de §10/13, lectura/alta/edición/cambio de estado documentados, navegación y accesibilidad desktop. Documentación de entrada para que Vera prepare raw; posteriormente el owner refina, normaliza y autovalida.
+**Incluido:** 6 pantallas P0 de §5, estados/fixtures de §10/13, lectura/alta/edición/cambio de estado documentados, navegación y accesibilidad desktop. Documentación funcional pendiente de aprobación; después el owner implementa/refina, normaliza y autovalida conforme a #61/#64.
 
 **Fuera de alcance:** Sin validar una cesta, consumir/restaurar manualmente, checkout, pagos, historial por cliente no publicado ni vigencia independiente del cupón. SPEC-005 CA/flujo comercial se explica como contexto; la administración no lo ejecuta. La integración backend no se acredita mediante fixtures. No crear nuevos endpoints/permisos/maestros ni pantallas fuera del inventario.
 
@@ -183,7 +183,7 @@ Los filtros son parámetros publicados, no sugerencias visuales de búsqueda. Lo
 
 ### LUX-01 — Composición propia de gestión de cupones de descuento
 
-Formulario completo breve (hasta 640 px) y vista de uso separada. Fuente WF-005 Campos/Pantallas. Alternativa: límites ocultos en un panel breve; descartada por legibilidad y lectura conjunta de límites/política. Trade-off: una navegación adicional a S05. Verificar regreso al mismo cupón/contexto y lectura sin controles de compra. Se subordina a UXD-001/002 y UXG-001/002/003; no modifica tokens ni un patrón transversal. Validación de la elección visual pendiente de raw y revisión.
+Formulario completo breve (hasta 640 px) y vista de uso separada. Fuente WF-005 Campos/Pantallas. Alternativa: límites ocultos en un panel breve; descartada por legibilidad y lectura conjunta de límites/política. Trade-off: una navegación adicional a S05. Verificar regreso al mismo cupón/contexto y lectura sin controles de compra. Se subordina a UXD-001/002 y UXG-001/002/003; no modifica tokens ni un patrón transversal. Validación de la elección visual pendiente de implementación, autovalidación y revisión UX.
 
 ## 12. Reglas de layout PC
 
@@ -224,7 +224,7 @@ Todos son escenarios por implementar y verificar; un dato fixture no certifica u
 
 No hay vacío funcional que impida documentar estos formularios. La integración futura debe devolver CuponAdmin y consultar PromocionAdmin para nombre/vigencia; aquí no se acredita esa integración. Restitución tras devoluciones no forma parte del contrato vigente de cancelación.
 
-La base raw está **pendiente de Vera**, confirmada por Axel. No se solicita otra búsqueda ni se sustituye por el HTML de wireframes. La revisión UX transversal y la fidelidad Figma siguen pendientes. Supuesto de representación: gestor autorizado salvo fixture 401/403; fixtures no conceden permisos reales. Base futura debe venir identificada con MK/pantallas/ancla/supuestos/dudas.
+La propuesta exploratoria está **pendiente de Vera**, confirmada por Axel. No se solicita otra búsqueda ni se sustituye por el HTML de wireframes. La revisión UX transversal y la fidelidad Figma siguen pendientes. Supuesto de representación: gestor autorizado salvo fixture 401/403; fixtures no conceden permisos reales. Base futura debe venir identificada con MK/pantallas/ancla/supuestos/dudas.
 
 ## 15. Criterios de aceptación
 
@@ -233,4 +233,4 @@ La base raw está **pendiente de Vera**, confirmada por Axel. No se solicita otr
 - Formularios/selecciones/registros y retorno contextual preservados; guardado/estado solo confirmados con resultado.
 - Aplicación de DS/UX y accesibilidad desktop1440: tokens compartidos, labels, foco, error localizable y sin overflow.
 - Tareas ejecutables y evidencia propia del mockup antes de revisión de Vera; visto bueno verificable antes de Figma/promoción del código.
-- Cierre de #64 solo con revisión, Figma/fidelidad y reporte final; este paquete documental habilita raw, no cierra el issue.
+- Cierre de #64 solo con revisión, Figma/fidelidad y reporte final; la redacción de este paquete no acredita aprobación ni cierra el issue.
