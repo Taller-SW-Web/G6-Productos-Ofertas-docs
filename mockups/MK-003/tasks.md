@@ -6,9 +6,9 @@
 
 - **Mockup:** MK-003 · **Funcionalidad:** `productos_crud`.
 - **Responsable:** Gabriel Poma Gutierrez · **Rama funcional:** `poma`.
-- **Plan de referencia:** [plan.md](plan.md), v0.1.
-- **Component Spec:** [component-spec.md](component-spec.md), v0.1.
-- **Fecha:** 2026-10-02.
+- **Plan de referencia:** [plan.md](plan.md), v0.2.
+- **Component Spec:** [component-spec.md](component-spec.md), v0.2.
+- **Fecha:** 2026-10-03.
 - **Baseline documental:** UX 2.0, [DS](../DESIGN.md) 1.0.0, OpenAPI HTTP 0.5.0 y AsyncAPI 0.4.0.
 - **Estado general:** Pendiente; dependencias conocidas `BLOCKED` en §9. No hay tareas de implementación marcadas DONE.
 
@@ -41,7 +41,7 @@
 
 ```mermaid
 flowchart TD
-    A["T01/T02/T04/T05/T06–T09 — Gate 0"] --> F["T03 — Fixtures"]
+    A["T01/T02/T04/T05/T06–T09/T27 — Gate 0"] --> F["T03 — Fixtures"]
     F --> C["T10–T12 — Ancla S02"]
     C --> ED["T13–T18 — S03/S04"]
     ED --> P["T20–T22 — S06"]
@@ -54,7 +54,7 @@ flowchart TD
     R --> FI["T75–T79 — Figma y cierre"]
 ```
 
-El diagrama representa el cierre del alcance completo; análisis y tareas sin dependencia bloqueada pueden avanzar. T20 admite booleanos/ausencia publicados; T21 exige resolver Q-02/Q-03. T13/T16/T18/T30 dependen de Q-01; T12 de moneda Q-04; físico parcial persistido de Q-05.
+El diagrama representa el cierre del alcance completo; análisis y tareas sin dependencia bloqueada pueden avanzar. T20 admite booleanos/ausencia publicados; T21 exige resolver Q-02/Q-03. T13/T16/T18/T30 dependen de Q-01; T12 de moneda Q-04; físico parcial persistido de Q-05. T13 y los fixtures/verificaciones de corrección del tipo dependen también de Q-06/T27; no se aprueba S03 con esa discrepancia abierta.
 
 ## 3. Preparación
 
@@ -83,7 +83,7 @@ El diagrama representa el cierre del alcance completo; análisis y tareas sin de
   - **Verificación:** se puede construir bajo `src/pantallas/MK003/` sin aplicación/tema/router nuevos exclusivos del MK.
 
 - [ ] **MK-003-T05 — P0 — Confirmar Component Spec, plan, ancla y mapa DS** `[TODO]`
-  - **Entrada:** component-spec §§5/8/11/14/15; plan §§5–6/8/13; resoluciones T02/T06–T09.
+  - **Entrada:** component-spec §§5/8/11/14/15; plan §§5–6/8/13; resoluciones T02/T06–T09/T27.
   - **Acción:** revisar inventario, LUX-01–03, criterios, ancla S02 y variantes/tokens del DS; registrar aprobación documental antes de construir alcance dependiente.
   - **Salida esperada:** especificación/plan aprobados y mapa DS-C→pantalla.
   - **Verificación:** sin Q bloqueantes abiertas para el alcance autorizado y siete pantallas/rutas consistentes; no aprobación implícita por este checklist.
@@ -112,6 +112,12 @@ El diagrama representa el cierre del alcance completo; análisis y tareas sin de
   - **Salida esperada:** lectura/edición del perfil parcial con fuente formal.
   - **Verificación:** no fecha/medida inventadas para satisfacer esquema completo; null no se transforma en cero.
 
+- [ ] **MK-003-T27 — P0 — Alinear SPEC-010 y OpenAPI para la corrección del tipo** `[BLOCKED]`
+  - **Entrada:** component-spec Q-06; SPEC-010 §4, Requisito 10; `ProductoUpdateRequest` de OpenAPI 0.5.0; plan Gate 0 para S03 y Q-01/T02 para lectura de precondiciones.
+  - **Acción:** acordar con Taxonomía/integración API si se amplía el request administrativo con `tipoProductoId` o se ajusta SPEC-010; obtener resolución oficial y fuente verificable de BORRADOR, ausencia de variantes y ausencia de identidad comercial publicada, sin decidir el contrato desde el mockup.
+  - **Salida esperada:** regla funcional y request administrativo oficialmente alineados, con referencia de resolución y precondiciones trazables para S03; component-spec/plan/tasks actualizados según esa decisión.
+  - **Verificación:** no read-only universal impuesto ni envío por `additionalProperties`; los casos elegible, no elegible y no verificable tienen regla/fuente acordadas. El cambio con variantes o identidad publicada no se convierte en corrección ordinaria, y no reescribe identidades SKU ni snapshots históricos.
+
 ## 4. Implementación por pantalla
 
 ### MK-003-S02 — Crear producto (ancla)
@@ -136,11 +142,11 @@ El diagrama representa el cierre del alcance completo; análisis y tareas sin de
 
 ### MK-003-S03 — Editar producto
 
-- [ ] **MK-003-T13 — P0 — Implementar edición y campos de identidad en lectura** `[TODO]`
-  - **Entrada:** T02/T09, `ProductoUpdateRequest`, component-spec S03/C01–C03.
-  - **Acción:** reutilizar grupos del ancla y restringir campos al request de edición.
-  - **Salida esperada:** `/MK003/S03` con datos editables y SKU/tipo/modelo copiable en lectura.
-  - **Verificación:** PATCH no contiene precio inicial, cambio de SKU/modelo/tipo o creación de variantes; mismo `product_id`.
+- [ ] **MK-003-T13 — P0 — Implementar edición y corrección condicionada del tipo** `[TODO]`
+  - **Entrada:** T02/T09/T27, request de edición oficialmente alineado, component-spec S03/C01–C03 y fixtures `edit-type-correction-eligible`, `edit-type-correction-ineligible`, `edit-type-correction-unverifiable`.
+  - **Acción:** reutilizar grupos del ancla y restringir campos al request publicado; aplicar a la corrección del tipo la regla resuelta por Q-06, verificando sus precondiciones con fuente administrativa.
+  - **Salida esperada:** `/MK003/S03` con datos editables, SKU/modelo copiable en lectura y tipo según elegibilidad confirmada; sin asumir elegibilidad por BORRADOR únicamente.
+  - **Verificación:** PATCH no contiene precio inicial, cambio de SKU/modelo o creación de variantes; mismo `product_id`. No se envía `tipoProductoId` antes de su formalización; la excepción de SPEC-010 y los casos no elegibles/no verificables siguen la resolución oficial de Q-06, sin migración de modelo desde S03.
 
 - [ ] **MK-003-T14 — P0 — Implementar rechazo activo y cambio de categoría** `[TODO]`
   - **Entrada:** SPEC-003 §7, SPEC-010 §4; fixtures `edit-active-rejected`, `category-change` y lectura del esquema del tipo.
@@ -316,9 +322,9 @@ El diagrama representa el cierre del alcance completo; análisis y tareas sin de
 
 - [ ] **MK-003-T60 — P0 — Validar SPEC y ownership** `[TODO]`
   - **Entrada:** SPEC-003/004/009/010, component-spec §15, fixtures y código.
-  - **Acción:** comprobar reglas de borrador/activación, identidad y reparto Catálogo/Pricing/Inventario.
+  - **Acción:** comprobar reglas de borrador/activación, identidad y reparto Catálogo/Pricing/Inventario; verificar corrección del tipo de SPEC-010 §4, Requisito 10 contra la resolución Q-06/T27.
   - **Salida esperada:** matriz fuente→pantalla/estado→evidencia.
-  - **Verificación:** cero reglas nuevas; no precio/saldo/empaque/pedido incorporados indebidamente.
+  - **Verificación:** cero reglas nuevas; no precio/saldo/empaque/pedido incorporados indebidamente; corrección del tipo con condiciones verificadas, sin read-only absoluto impuesto ni modificación de SKU/snapshots.
 
 - [ ] **MK-003-T61 — P0 — Validar HU-003 CA-01–CA-15** `[TODO]`
   - **Entrada:** HU-003 y tabla de cobertura inferior.
@@ -333,10 +339,10 @@ El diagrama representa el cierre del alcance completo; análisis y tareas sin de
   - **Verificación:** lista/alta/edición/detalle/preparación/confirmaciones presentes, sin restricciones de categoría o checkbox de identidad inventados.
 
 - [ ] **MK-003-T63 — P0 — Validar FLOW y contratos HTTP/AsyncAPI** `[TODO]`
-  - **Entrada:** FLOW-003/004, OpenAPI/AsyncAPI, tareas T40–T43.
+  - **Entrada:** FLOW-003/004, OpenAPI/AsyncAPI, tareas T40–T43 y resolución Q-06/T27 con fixtures de corrección del tipo.
   - **Acción:** recorrer caminos éxito/rechazo/timeout y auditar request/response/resultados por dependencia.
   - **Salida esperada:** transiciones y operaciones trazables, sin rutas huérfanas.
-  - **Verificación:** `requested` no completa; eventos documentan transporte interno, no operación UI; respuesta `200` no recibe espera ficticia.
+  - **Verificación:** `requested` no completa; eventos documentan transporte interno, no operación UI; respuesta `200` no recibe espera ficticia; request de corrección del tipo coincide con el contrato alineado, sin propiedad inferida por `additionalProperties`.
 
 - [ ] **MK-003-T64 — P0 — Validar UX Guidelines aplicables** `[TODO]`
   - **Entrada:** UXG-001–013/017–018/020–022 y fixtures.
@@ -388,6 +394,8 @@ El diagrama representa el cierre del alcance completo; análisis y tareas sin de
 | CA-15 | S04/S05/S07 + MK-004; `reactivate-parent`, `detail-parent-inactive` | T17/T22/T24/T26/T41, T61/T63 |
 
 El mockup comprueba la interacción y la simulación acordada, no certifica idempotencia o fan-out de servicios reales. La validación de integración requiere evidencia de backend/contratos fuera de esta construcción visual.
+
+Cobertura complementaria de SPEC-010 (sin añadir criterios a HU-003): §4, Requisito 10 se verifica en S03 con `edit-type-correction-eligible`, `edit-type-correction-ineligible` y `edit-type-correction-unverifiable`, mediante T27/T13/T60/T63. Esta cobertura sigue bloqueada por Q-06 hasta contar con fuentes oficialmente alineadas.
 
 ## 7. Revisión transversal y visto bueno
 
@@ -455,7 +463,7 @@ El mockup comprueba la interacción y la simulación acordada, no certifica idem
 
 ## 9. Registro de bloqueos
 
-Impedimentos identificados en revisión de fuentes del 2026-10-02. Las tareas de alineación/baseline están BLOCKED; las de implementación dependientes permanecen TODO hasta cumplir su entrada. Solo registrar una resolución cuando exista evidencia oficial, no un fixture sustituto.
+Impedimentos identificados en revisión de fuentes del 2026-10-02 y corrección Q-06 del 2026-10-03. Las tareas de alineación/baseline están BLOCKED; las de implementación dependientes permanecen TODO hasta cumplir su entrada. Solo registrar una resolución cuando exista evidencia oficial, no un fixture sustituto.
 
 | Tarea | Fecha | Causa del bloqueo | Fuente / documento a resolver | Responsable de resolución | Condición de desbloqueo | Estado |
 |---|---|---|---|---|---|---|
@@ -465,5 +473,6 @@ Impedimentos identificados en revisión de fuentes del 2026-10-02. Las tareas de
 | MK-003-T07 | 2026-10-02 | Reintento exigido funcionalmente sin operación HTTP administrativa | SPEC/WF/FLOW-003, OpenAPI; Q-03 | Gabriel Poma + integración | Operación idempotente oficial con alcance/identidad | Activo |
 | MK-003-T08 | 2026-10-02 | Moneda del comando inicial no tiene origen explicitado en request de alta | ProductoCreateRequest / AsyncAPI; Q-04 | Gabriel Poma + Leonardo Vera / Pricing | Fuente de moneda confirmada contractualmente | Activo |
 | MK-003-T09 | 2026-10-02 | Input parcial admitido; response físico requiere completo | PerfilFisicoInput / DatosFisicosSku; Q-05 | Gabriel Poma + integración | Lectura administrativa de perfil parcial publicada | Activo |
+| MK-003-T27 | 2026-10-03 | SPEC-010 permite corrección del tipo en BORRADOR, sin variantes ni identidad publicada; `ProductoUpdateRequest` no expone `tipoProductoId` | SPEC-010 §4, Requisito 10 / OpenAPI 0.5.0; Q-06; plan Gate 0 S03 | Gabriel Poma + Taxonomía / integración API | Resolución oficial: request ampliado o SPEC ajustada; fuentes alineadas y precondiciones verificables para S03 | Activo |
 
 No resolver bloqueos mediante `additionalProperties`, flags falsos, endpoints inventados, escritura directa en otro servicio o restricciones provenientes únicamente de notas temporales. Documentar cambios de fuentes y actualizar component-spec/plan/tasks afectados antes de reanudar.
