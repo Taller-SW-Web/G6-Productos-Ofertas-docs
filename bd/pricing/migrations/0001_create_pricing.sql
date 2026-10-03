@@ -218,6 +218,12 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pricing.price_validities WHERE price_id = target) THEN
         RAISE EXCEPTION 'Una definicion requiere al menos una vigencia' USING ERRCODE = '23514';
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM pricing.prices p
+                   JOIN pricing.price_validities v
+                     ON v.price_id = p.id AND v.price_version = p.price_version
+                   WHERE p.id = target) THEN
+        RAISE EXCEPTION 'La version del agregado requiere su snapshot correspondiente' USING ERRCODE = '23514';
+    END IF;
     IF EXISTS (SELECT 1 FROM pricing.price_validities v JOIN pricing.prices p ON p.id = v.price_id
                WHERE v.price_id = target AND v.price_version > p.price_version) THEN
         RAISE EXCEPTION 'Vigencia con version superior a su definicion' USING ERRCODE = '23514';

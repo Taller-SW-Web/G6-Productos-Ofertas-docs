@@ -295,7 +295,7 @@ SKU/product_id pertenecen a Catálogo; usuario_id a Seguridad; batch_id/correlat
 
 - Snapshot: regular positivo y fin posterior a inicio; oferta ausente o positiva menor que regular. Moneda abierta de tres caracteres, nunca CHECK PEN ni columnas fiscales. Cada definición exige al menos una vigencia al confirmar la transacción, mediante constraint trigger diferido.
 - Intervalos `[valid_from, valid_until)` por definición; exclusion GiST rechaza superposición y admite extremos contiguos. Canal nulo y objetivo único se protegen con UNIQUE NULLS NOT DISTINCT (PostgreSQL 15+).
-- `prices.price_version` es la versión del agregado para CAS; avanza exactamente una unidad por mutación. La vigencia conserva la versión en que se construyó. No puede adelantar la versión del agregado.
+- `prices.price_version` es la versión del agregado para CAS; avanza exactamente una unidad por mutación. La vigencia conserva la versión en que se construyó. Al confirmar la transacción debe existir un snapshot con la misma versión actual del agregado; ningún snapshot puede adelantarla. El chequeo diferido permite avanzar CAS y crear el snapshot dentro de una misma transacción.
 - Una programación identifica una vigencia del mismo price_id; importe/tipo y cancelación deben coincidir con el snapshot. Un constraint trigger diferido permite construir el cambio atómico antes de verificar esa coherencia.
 - Las filas son únicas por batch_id/row_id, no por SKU global. Contadores no negativos y coherentes con total; PARTIAL requiere política parcial, éxitos y fallos; COMPLETED implica todas confirmadas.
 - La BD rechaza NaN; el adaptador debe validar precisión monetaria antes de convertir a numeric(12,2), evitando redondeo silencioso de entradas no admitidas.
@@ -422,7 +422,7 @@ Referencias externas se materializan como escalares; ningún enlace conceptual r
 | AsyncAPI 0.4.0 | Inbox, identidad message_id y Outbox solo cuando publica |
 | Arquitectura/Modelo_Conceptual | Entidades/tables base y aislamiento por owner |
 | Convenciones BD/plantillas | UUID, nombres, tipos, timestamps, índices, estructura de entrega |
-| Procedimiento #49 | Owner/runtime, migración transaccional, ledger y checksum; layout adaptado con --root bd |
+| Procedimiento #49 | Owner/runtime, migración transaccional, ledger y checksum; historial en bd/; usar --root bd explícitamente |
 
 ## 22. Decisiones físicas
 
@@ -441,7 +441,7 @@ Referencias externas se materializan como escalares; ningún enlace conceptual r
 | P-PRI-01 | Formato/cabeceras/versionado del archivo y política de prevalidación con errores no definidos completamente | No para DDL; sí para implementar parser/confirmación completa. Ver Q-013-01/02 en mockups/MK-013 |
 | P-PRI-02 | Mensajes de cambio/aplicación masiva usan GenericData | No para DDL; validar payload del handler con contrato antes de publicar backend |
 | P-PRI-03 | Lógica de reajuste de intervalos futuros y resolución fallback/herencia | Persistencia preparada; caso de uso y carreras multiusuario pendientes |
-| P-PRI-04 | Proyecto Supabase, servidor/roles/extensión y PR/revisión | Sí para despliegue y cierre #55 |
+| P-PRI-04 | Proyecto Supabase, servidor/roles/extensión y revisión (PR #81 asociado) | Sí para despliegue y cierre #55 |
 
 Contradicción documental transversal: Convenciones §16.3 menciona exponer schemas, pero el procedimiento #49 indica **no exponer contextos internos por Data API**. Se sigue el aislamiento arquitectónico y el procedimiento de despliegue: sin permisos anon/authenticated, sin exposición añadida; requiere revisión transversal de esa redacción antes de usar Data API. No se modifica silenciosamente la convención global.
 
@@ -461,7 +461,7 @@ Manifest explícito de tablas/columnas/tipos/nullabilidad, PK/constraints, enums
 
 [validation-report.md](validation-report.md) y [local-validation.json](evidence/local-validation.json) registran ejecución **local embebida** del 2026-10-03. No equivalen a psql contra servidor, pruebas multiusuario, recuperación real de storage ni Supabase.
 
-Destino Supabase: pendiente de nombre/ID y conexión del entorno autorizado. Registrar después proyecto/entorno, commit, schema, versión, SHA-256, fecha, server_version, resultados validation.sql/repetición del ejecutor y PR. Referencia de procedimiento: [database/README.md](../../database/README.md); no exponer schema de escritura por Data API.
+Destino Supabase: Módulo de Productos y Ofertas, project ref `slzglmtiyrzygpkiuthf`, declarado Desarrollo / Staging. Proyecto identificado; pendientes clasificación exacta del entorno, acceso PostgreSQL autenticado y ejecución real. Ver detalles en [validation-report.md](validation-report.md). Registrar después proyecto/entorno, commit, schema, versión, SHA-256, fecha, server_version, resultados validation.sql/repetición del ejecutor. PR asociado: [#81](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/pull/81). Referencia de procedimiento: [database/README.md](../../database/README.md); no exponer schema de escritura por Data API.
 
 ## 27. Checklist de revisión
 
@@ -474,7 +474,8 @@ Destino Supabase: pendiente de nombre/ID y conexión del entorno autorizado. Reg
 - [ ] Ejecutar migrate.py con psql en servidor limpio/repetir y comprobar ledger real.
 - [ ] Integración de handlers/worker y carreras con conexiones independientes.
 - [ ] Despliegue/evidencia Supabase y revisión transversal de Leonardo Lopez.
-- [ ] Pull Request asociado y QA final de Marco Renato Castilla Huanca.
+- [x] Pull Request asociado: [#81](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/pull/81).
+- [ ] QA final de Marco Renato Castilla Huanca.
 
 ## 28. Resultado de revisión
 

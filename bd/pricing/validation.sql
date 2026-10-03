@@ -244,6 +244,14 @@ BEGIN
     PERFORM pg_temp.fn_expect_error('INSERT INTO pricing.prices DEFAULT VALUES','23514');
     PERFORM pg_temp.fn_expect_error(format('UPDATE pricing.prices SET sku=%L WHERE id=%L','SKU-FIXTURE',p),'23514');
     PERFORM pg_temp.fn_expect_error(format('UPDATE pricing.prices SET price_version=9 WHERE id=%L',p),'23514');
+    -- Fuerza el mismo chequeo diferido que COMMIT; el subbloque revierte el avance rechazado.
+    PERFORM pg_temp.fn_expect_error(format($s$SET CONSTRAINTS ALL DEFERRED;
+        UPDATE pricing.prices SET price_version=price_version+1 WHERE id=%L;
+        SET CONSTRAINTS ALL IMMEDIATE$s$,p),'23514');
+    IF (SELECT price_version FROM pricing.prices WHERE id=p) <> 1 THEN
+        RAISE EXCEPTION 'El avance sin snapshot no se revirtio';
+    END IF;
+    SET CONSTRAINTS ALL DEFERRED;
     UPDATE pricing.prices SET price_version=price_version+1 WHERE id=p AND price_version=0;
     GET DIAGNOSTICS n = ROW_COUNT;
     IF n <> 0 THEN RAISE EXCEPTION 'CAS con version obsoleta modifico filas'; END IF;
@@ -254,6 +262,7 @@ BEGIN
     VALUES(v2,p,120,'USD','2100-01-01Z','2101-01-01Z',2,'Programacion fixture');
     INSERT INTO pricing.scheduled_prices(price_id,validity_id,tipo_precio,importe)
     VALUES(p,v2,'REGULAR',120);
+    SET CONSTRAINTS ALL IMMEDIATE;
     PERFORM pg_temp.fn_expect_error(format($s$INSERT INTO pricing.price_validities(price_id,precio_regular,currency,valid_from,valid_until,price_version,motivo_cambio)
         VALUES(%L,110,'PEN','2050-01-01Z','2060-01-01Z',3,'Solapado')$s$,p),'23P01');
     PERFORM pg_temp.fn_expect_error(format($s$INSERT INTO pricing.price_validities(price_id,precio_regular,precio_oferta,currency,valid_from,valid_until,price_version,motivo_cambio)

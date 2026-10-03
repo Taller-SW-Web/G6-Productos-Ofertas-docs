@@ -317,7 +317,7 @@ Referencias externas se materializan como escalares; ningún enlace conceptual r
 | AsyncAPI 0.4.0 | Inbox, identidad message_id y Outbox solo cuando publica |
 | Arquitectura/Modelo_Conceptual | Entidades/tables base y aislamiento por owner |
 | Convenciones BD/plantillas | UUID, nombres, tipos, timestamps, índices, estructura de entrega |
-| Procedimiento #49 | Owner/runtime, migración transaccional, ledger y checksum; layout adaptado con --root bd |
+| Procedimiento #49 | Owner/runtime, migración transaccional, ledger y checksum; historial en bd/; usar --root bd explícitamente |
 
 ## 22. Decisiones físicas
 
@@ -336,7 +336,7 @@ Referencias externas se materializan como escalares; ningún enlace conceptual r
 | P-AUD-01 | RegistroAuditoriaPrecio no publica moneda | No para DDL contractual; sí para atribuir moneda histórica en UI/exportación. Q-014-01 permanece abierto; no añadir PEN |
 | P-AUD-02 | Payload pricing.price.changed usa GenericData | No para DDL; confirmar mapeo/variación y nulabilidad real del consumidor |
 | P-AUD-03 | Storage/recuperabilidad y formato canónico del worker | SQL protege precondiciones, pero verificación contra objeto real y límites de memoria del hash agregador pendientes |
-| P-AUD-04 | Proyecto Supabase, roles reales y revisión/PR | Sí para despliegue y cierre #56 |
+| P-AUD-04 | Proyecto Supabase, roles reales y revisión BD/QA (PR #81 asociado) | Sí para despliegue y cierre #56 |
 
 Contradicción documental transversal: Convenciones §16.3 menciona exponer schemas, pero el procedimiento #49 indica **no exponer contextos internos por Data API**. Se sigue el aislamiento arquitectónico y el procedimiento de despliegue: sin permisos anon/authenticated, sin exposición añadida; requiere revisión transversal de esa redacción antes de usar Data API. No se modifica silenciosamente la convención global.
 
@@ -356,7 +356,7 @@ Manifest explícito de tablas/columnas/tipos/nullabilidad, PK/constraints, enums
 
 [validation-report.md](validation-report.md) y [local-validation.json](evidence/local-validation.json) registran ejecución **local embebida** del 2026-10-03. No equivalen a psql contra servidor, pruebas multiusuario, recuperación real de storage ni Supabase.
 
-Destino Supabase: pendiente de nombre/ID y conexión del entorno autorizado. Registrar después proyecto/entorno, commit, schema, versión, SHA-256, fecha, server_version, resultados validation.sql/repetición del ejecutor y PR. Referencia de procedimiento: [database/README.md](../../database/README.md); no exponer schema de escritura por Data API.
+Destino Supabase: Módulo de Productos y Ofertas, project ref `slzglmtiyrzygpkiuthf`, declarado Desarrollo / Staging. Proyecto identificado; pendientes clasificación exacta del entorno, acceso PostgreSQL autenticado y ejecución real. Ver detalles en [validation-report.md](validation-report.md). Registrar después proyecto/entorno, commit, schema, versión, SHA-256, fecha, server_version, resultados validation.sql/repetición del ejecutor. PR asociado: [#81](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/pull/81). Referencia de procedimiento: [database/README.md](../../database/README.md); no exponer schema de escritura por Data API.
 
 ## 27. Checklist de revisión
 
@@ -369,7 +369,8 @@ Destino Supabase: pendiente de nombre/ID y conexión del entorno autorizado. Reg
 - [ ] Ejecutar migrate.py con psql en servidor limpio/repetir y comprobar ledger real.
 - [ ] Integración de handlers/worker y carreras con conexiones independientes.
 - [ ] Despliegue/evidencia Supabase y revisión transversal de Leonardo Lopez.
-- [ ] Pull Request asociado y QA final de Marco Renato Castilla Huanca.
+- [x] Pull Request asociado: [#81](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/pull/81).
+- [ ] QA final de Marco Renato Castilla Huanca.
 
 ## 28. Resultado de revisión
 

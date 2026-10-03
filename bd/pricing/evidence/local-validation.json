@@ -7,6 +7,12 @@
       "result": "PASS"
     },
     {
+      "name": "negative_commit_version_without_snapshot",
+      "result": "PASS",
+      "sqlstate": "23514",
+      "rollback": "no persisted rows"
+    },
+    {
       "name": "validation_1_and_no_fixtures",
       "result": "PASS",
       "groups": [
@@ -68,13 +74,13 @@
       "result": "PASS"
     },
     {
-      "name": "migration_runner_sql_generation",
+      "name": "runner_bd_root_and_manifest_generation",
       "result": "PASS",
-      "note": "migrate.py main() con subprocess capturado: --root bd, owner, ledger, checksum y UTF-8; no ejecucion psql/servidor"
+      "note": "subprocess captured with --root bd; versions/checksums verified; psql/server not executed; common runner unchanged"
     }
   ],
   "server": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
-  "sha256": "6a42f72fa0f92645a80ba193a5ad399fd4e4d3d1e9beededb25ea2b74e60d584",
+  "sha256": "5a3590e1d5149d081d491c4919ec9bab916ae892998b10aecdeb2087b0b6a98b",
   "tables": [
     "bulk_price_jobs",
     "bulk_price_rows",
@@ -85,5 +91,6 @@
     "scheduled_prices"
   ],
   "result": "PASS",
-  "reviewed_origin_revision": "fc771b9"
+  "reviewed_checkout_revision": "6d2c739ef27fdb635ae6a0a95d92e0f36a4db5d3",
+  "pull_request": 81
 }
