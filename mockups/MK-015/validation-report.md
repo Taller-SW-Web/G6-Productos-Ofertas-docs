@@ -36,11 +36,11 @@ Relación directa entre las unidades de trabajo ejecutadas en `tasks.md`, las pa
 
 | Tarea (`Task`) | Pantalla / Componente | Qué se validó | Fuente de referencia | Evidencia objetiva | Resultado |
 |---|---|---|---|---|---|
-| MK-015-T01 | General | UX integral, UX Guidelines y UX Decisions | `mockups/ux/` | Se respetaron patrones UXD-001 y normativas UXG-001 a UXG-022 | PASS |
-| MK-015-T02 | General | Aprobación de component-spec.md | `component-spec.md` | Documento consolidado sin vacíos bloqueantes | PASS |
-| MK-015-T03 | S01 - S05 | Fixtures deterministas | `component-spec.md` §13 | Datasets para estados default, loading, empty y error listos | PASS |
-| MK-015-T04 | Transversal | Componentes DS-CXX del Design System | `mockups/DESIGN.md` | Mapeo de DS-C17, DS-C14, DS-C13, DS-C20, DS-C04, DS-C21 | PASS |
-| MK-015-T05 | MK-015-S01 | Pantalla ancla y patrones base | `component-spec.md` §10 | Estructura visual y jerarquía definidas en S01 | PASS |
+| MK-015-T01 | General | UX integral, UX Guidelines y UX Decisions | `mockups/ux/` | Se respetaron patrones UXD-001 y normativas UXG-001 a UXG-022 | PENDIENTE |
+| MK-015-T02 | General | Aprobación de component-spec.md | `component-spec.md` | Documento consolidado sin vacíos bloqueantes | PENDIENTE |
+| MK-015-T03 | S01 - S05 | Fixtures deterministas | `component-spec.md` §13 | Datasets para estados default, loading, empty y error listos | PENDIENTE |
+| MK-015-T04 | Transversal | Componentes DS-CXX del Design System | `mockups/DESIGN.md` | Mapeo de DS-C17, DS-C14, DS-C13, DS-C20, DS-C04, DS-C21 | PENDIENTE |
+| MK-015-T05 | MK-015-S01 | Pantalla ancla y patrones base | `component-spec.md` §10 | Estructura visual y jerarquía definidas en S01 | PENDIENTE |
 | MK-015-T10 | MK-015-S01 | Estructura de zonas y jerarquía de S01 | `component-spec.md` / `WF-015` | En espera de entrega de base raw por Leonardo Vera | PENDIENTE |
 | MK-015-T11 | MK-015-S01 / C01 | Componentes de la tabla de stock | `DESIGN.md` / `component-spec.md` | En espera de entrega de base raw por Leonardo Vera | PENDIENTE |
 | MK-015-T12 | MK-015-S01 | Navegación e interacción de S01 | `FLOW-015` | En espera de entrega de base raw por Leonardo Vera | PENDIENTE |

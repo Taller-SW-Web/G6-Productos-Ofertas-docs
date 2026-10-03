@@ -226,7 +226,79 @@ Define la estructura, componentes, acciones, estados y contenido clave de cada p
 | CTA Primario | “Registrar recepción” | WF‑015 S‑05 |
 | Mensaje de ayuda | “Unidades reservadas están comprometidas en pedidos. Las bloqueadas permanecen físicamente pero temporariamente no se ofrecen para venta.” | WF‑015 |
 
-*(Repetir la sección 10 por cada pantalla inventariada `MK‑015‑SXX`).*
+### MK‑015‑S02 — Detalle del saldo
+
+**Propósito y objetivo:** Permite al usuario inspeccionar el detalle de saldos para un SKU y ubicación seleccionados, mostrando los valores de físico, reservado, bloqueado, disponible, umbral y estado.
+
+**Estructura y layout:**
+1. **Cabecera:** Título “Detalle del saldo”, botón de cierre del drawer.
+2. **Cuerpo:** Lista de campos clave con componentes `DS‑C03 PO/TextInput` (solo lectura) para cada valor y badge de estado `DS‑C14 PO/Badge`.
+3. **Acciones:** Botón “Cerrar” que retorna a la tabla S01.
+
+**Componentes presentes:**
+- `DS‑C03 PO/TextInput` (solo lectura) para cada atributo (Físico, Reservado, Bloqueado, Disponible, Umbral).
+- `DS‑C14 PO/Badge` para visualización del estado.
+- `DS‑C02 PO/ActionIcon` para cerrar el drawer.
+
+**Acciones secundarias:** Ninguna; el drawer es informativo.
+
+---
+
+### MK‑015‑S03 — Configuración de umbrales
+
+**Propósito y objetivo:** Permite al usuario definir o actualizar el umbral de stock bajo para un SKU específico.
+
+**Estructura y layout:**
+1. **Cabecera:** Título “Configuración de umbral”.
+2. **Campo umbral:** `DS‑C04 PO/NumberInput` pre‑poblado con valor actual.
+3. **Botón Aplicar:** Acción que envía `PUT /inventario/umbrales`.
+4. **Feedback:** Mensaje de éxito o error tras la actualización.
+
+**Componentes presentes:**
+- `DS‑C04 PO/NumberInput` para entrada numérica.
+- `DS‑C02 PO/ActionIcon` como botón “Aplicar”.
+- `DS‑C08 PO/Checkbox` opcional para aplicar a nivel global.
+
+**Acciones secundarias:** Validación de valor ≥ 0 antes de enviar.
+
+---
+
+### MK‑015‑S04 — Traslados pendientes
+
+**Propósito y objetivo:** Muestra la lista de traslados que aún no han sido recibidos, permitiendo al usuario revisar y seleccionar uno para registrar su recepción.
+
+**Estructura y layout:**
+1. **Tabla:** `DS‑C17 PO/Table` con columnas SKU, Origen, Destino, Cantidad, Estado.
+2. **Acciones fila:** Botón “Registrar recepción” (`DS‑C02 PO/ActionIcon`) en cada fila.
+3. **Filtrado:** `DS‑C13 PO/FilterBar` para refinar por SKU o estado.
+
+**Componentes presentes:**
+- `DS‑C17 PO/Table` para listado.
+- `DS‑C13 PO/FilterBar` para filtros.
+- `DS‑C02 PO/ActionIcon` para iniciar registro de recepción.
+
+**Acciones secundarias:** Navegar a pantalla S05 al seleccionar una fila.
+
+---
+
+### MK‑015‑S05 — Registrar recepción
+
+**Propósito y objetivo:** Permite al usuario registrar la recepción de un traslado, confirmando cantidades y anotando discrepancias.
+
+**Estructura y layout:**
+1. **Formulario:** Campos `DS‑C03 PO/TextInput` (solo lectura) para SKU, origen, destino, cantidad esperada.
+2. **Entrada recepción:** `DS‑C03 PO/TextInput` para cantidad recibida y `DS‑C08 PO/Checkbox` para marcar discrepancia.
+3. **Botón Confirmar:** `DS‑C02 PO/ActionIcon` que envía `POST /inventario/traslados/{id}/recepciones`.
+4. **Feedback inline:** Mensaje de éxito o error mostrado bajo el formulario.
+
+**Componentes presentes:**
+- `DS‑C03 PO/TextInput` para datos de traslado.
+- `DS‑C08 PO/Checkbox` para indicar discrepancia.
+- `DS‑C02 PO/ActionIcon` como botón “Confirmar”.
+- `DS‑C21 PO/Modal` no usado; confirmación se muestra inline según LUX‑03.
+
+**Acciones secundarias:** Ninguna; al confirmar, vuelve a la tabla S04.
+
 
 ## 11. Decisiones UX locales
 

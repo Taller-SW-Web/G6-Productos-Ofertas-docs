@@ -33,40 +33,40 @@ Relación directa entre las unidades de trabajo ejecutadas en `tasks.md`, las pa
 
 | Tarea (`Task`) | Pantalla / Componente | Qué se validó | Fuente de referencia | Evidencia objetiva | Resultado |
 |---|---|---|---|---|---|
-| MK-016-T01 | General | UX integral, UX Guidelines y UX Decisions | `mockups/ux/` | Se respetaron patrones UXD-001 y normativas UXG-001 a UXG-022 | PASS |
-| MK-016-T02 | General | Aprobación de component-spec.md | `component-spec.md` | Documento consolidado sin vacíos bloqueantes | PASS |
-| MK-016-T03 | S01 | Fixtures deterministas | `component-spec.md` §13 | Datasets para estados default, loading, empty y error listos | PASS |
-| MK-016-T04 | Transversal | Componentes DS-CXX del Design System | `mockups/DESIGN.md` | Consumo de DS-C19 (KPIs), DS-C17 (Table), DS-C14 (Badge), DS-C13 (FilterBar), DS-C15 (Alert) | PASS |
-| MK-016-T05 | MK-016-S01 | Pantalla ancla y patrones base | `component-spec.md` §10 | Estructura visual, jerarquía y cuadrícula definida en S01 | PASS |
-| MK-016-T10 | MK-016-S01 | Estructura de zonas y jerarquía de S01 | `component-spec.md` / `WF-016` | Cabecera, KPIs (4+3), barra de filtros, grid analítica (Alertas + Distribución) y tabla de SKUs | PASS |
-| MK-016-T11 | MK-016-S01 | Componentes específicos y compartidos | `DESIGN.md` / `component-spec.md` | Tarjetas KPI DS-C19, tablas DS-C17 y badges semánticos DS-C14 | PASS |
-| MK-016-T12 | MK-016-S01 | Interacción de filtrado y navegación | `FLOW-016` | Filtrado instantáneo por texto, ubicación y estado; enlaces funcionales hacia MK-015 | PASS |
-| MK-016-T13 | MK-016-S01 | Estado default con datos representativos | Fixture `default` | Renderizado completo con 128 disponibles, 9 bloqueadas, 6 bajo stock, 3 agotados | PASS |
-| MK-016-T14 | MK-016-S01 | Estados alternativos (Loading, Empty, Error) | Fixtures alternativos | Skeletons de carga, mensaje EmptyState DS-C25 y aviso de error controlados por query param | PASS |
-| MK-016-T15 | MK-016-S01 | Ajuste de copy y microtexto | `UX Guidelines` | Cero nombres técnicos (`on_hand`, `reserved`, etc.); textos 100% funcionales en español | PASS |
-| MK-016-T16 | MK-016-S01 | Coherencia con flujo integral de inventario | `FLOW-016` / `FLOW-015` | Enlaces contextuales desde alertas de stock y traslados hacia el flujo transaccional de MK-015 | PASS |
-| MK-016-T50 | Transversal | Normalización técnica | `DESIGN.md` | Código estructurado modularmente sin dependencias no aprobadas | PASS |
-| MK-016-T51 | Transversal | Normalización de colores y tokens | `DESIGN.md` §4.1 | Tokens `--neutral-*`, `--success-*`, `--warning-*`, `--error-*` respetados | PASS |
-| MK-016-T52 | Transversal | Escala de espaciados y radios | `DESIGN.md` §3 | Margen de 24 px, gutters, padding de tarjetas (20 px) y radios (8 px) alineados | PASS |
-| MK-016-T53 | Transversal | Escala tipográfica oficial | `DESIGN.md` §3.1 | Tipografía Inter con jerarquía H1 (32 px), H2 (20 px), KPI (28 px), tabla (14 px) | PASS |
-| MK-016-T54 | Transversal | Iconografía Tabler | `DESIGN.md` §3.4 | Iconos oficiales Tabler para badges, avisos y filtros | PASS |
-| MK-016-T55 | Transversal | Eliminación de términos técnicos indebidos | `SPEC-016` §8 / `WF-016` | Cabeceras funcionales: Físico, Reservado, Bloqueado, Disponible | PASS |
-| MK-016-T56 | Transversal | Semántica y accesibilidad básica | `UX Guidelines` | Tablas con `th` estructurados, botones con foco visible y contraste verificado | PASS |
+| MK-016-T01 | General | UX integral, UX Guidelines y UX Decisions | `mockups/ux/` | Se respetaron patrones UXD-001 y normativas UXG-001 a UXG-022 | PENDIENTE |
+| MK-016-T02 | General | Aprobación de component-spec.md | `component-spec.md` | Documento consolidado sin vacíos bloqueantes | PENDIENTE |
+| MK-016-T03 | S01 | Fixtures deterministas | `component-spec.md` §13 | Datasets para estados default, loading, empty y error listos | PENDIENTE |
+| MK-016-T04 | Transversal | Componentes DS-CXX del Design System | `mockups/DESIGN.md` | Consumo de DS-C19 (KPIs), DS-C17 (Table), DS-C14 (Badge), DS-C13 (FilterBar), DS-C15 (Alert) | PENDIENTE |
+| MK-016-T05 | MK-016-S01 | Pantalla ancla y patrones base | `component-spec.md` §10 | Estructura visual, jerarquía y cuadrícula definida en S01 | PENDIENTE |
+| MK-016-T10 | MK-016-S01 | Estructura de zonas y jerarquía de S01 | `component-spec.md` / `WF-016` | Cabecera, KPIs (4+3), barra de filtros, grid analítica (Alertas + Distribución) y tabla de SKUs | PENDIENTE |
+| MK-016-T11 | MK-016-S01 | Componentes específicos y compartidos | `DESIGN.md` / `component-spec.md` | Tarjetas KPI DS-C19, tablas DS-C17 y badges semánticos DS-C14 | PENDIENTE |
+| MK-016-T12 | MK-016-S01 | Interacción de filtrado y navegación | `FLOW-016` | Filtrado instantáneo por texto, ubicación y estado; enlaces funcionales hacia MK-015 | PENDIENTE |
+| MK-016-T13 | MK-016-S01 | Estado default con datos representativos | Fixture `default` | Renderizado completo con 128 disponibles, 9 bloqueadas, 6 bajo stock, 3 agotados | PENDIENTE |
+| MK-016-T14 | MK-016-S01 | Estados alternativos (Loading, Empty, Error) | Fixtures alternativos | Skeletons de carga, mensaje EmptyState DS-C25 y aviso de error controlados por query param | PENDIENTE |
+| MK-016-T15 | MK-016-S01 | Ajuste de copy y microtexto | `UX Guidelines` | Cero nombres técnicos (`on_hand`, `reserved`, etc.); textos 100% funcionales en español | PENDIENTE |
+| MK-016-T16 | MK-016-S01 | Coherencia con flujo integral de inventario | `FLOW-016` / `FLOW-015` | Enlaces contextuales desde alertas de stock y traslados hacia el flujo transaccional de MK-015 | PENDIENTE |
+| MK-016-T50 | Transversal | Normalización técnica | `DESIGN.md` | Código estructurado modularmente sin dependencias no aprobadas | PENDIENTE |
+| MK-016-T51 | Transversal | Normalización de colores y tokens | `DESIGN.md` §4.1 | Tokens `--neutral-*`, `--success-*`, `--warning-*`, `--error-*` respetados | PENDIENTE |
+| MK-016-T52 | Transversal | Escala de espaciados y radios | `DESIGN.md` §3 | Margen de 24 px, gutters, padding de tarjetas (20 px) y radios (8 px) alineados | PENDIENTE |
+| MK-016-T53 | Transversal | Escala tipográfica oficial | `DESIGN.md` §3.1 | Tipografía Inter con jerarquía H1 (32 px), H2 (20 px), KPI (28 px), tabla (14 px) | PENDIENTE |
+| MK-016-T54 | Transversal | Iconografía Tabler | `DESIGN.md` §3.4 | Iconos oficiales Tabler para badges, avisos y filtros | PENDIENTE |
+| MK-016-T55 | Transversal | Eliminación de términos técnicos indebidos | `SPEC-016` §8 / `WF-016` | Cabeceras funcionales: Físico, Reservado, Bloqueado, Disponible | PENDIENTE |
+| MK-016-T56 | Transversal | Semántica y accesibilidad básica | `UX Guidelines` | Tablas con `th` estructurados, botones con foco visible y contraste verificado | PENDIENTE |
 
 ## 4. Trazabilidad de requisitos funcionales
 
 | Requisito / Regla | Fuente | Pantalla / Componente | Qué se validó | Evidencia | Resultado | Observación |
 |---|---|---|---|---|---|---|
-| Muestra SKU por Disponible/Stock bajo/Agotado | HU-016 CA-01 / SPEC-016 §3 | S01 / DS-C14 | Clasificación visual mediante badges semánticos | 3 categorías representadas con badges verde, ámbar y rojo | PASS | LUX-01 aplicado estrictamente |
-| Muestra unidades físicas, reservadas, bloqueadas y disponibles | HU-016 CA-02 / SPEC-016 §2 | S01 / Tabla y KPIs | Desglose completo de inventario sin omitir bloqueos | Columnas: Físico, Reservado, Bloqueado, Disponible | PASS | No se ocultan unidades bloqueadas |
-| Cálculo autoritativo: `available = max(on_hand - reserved - blocked, 0)` | HU-016 CA-03 / SPEC-016 §3 | S01 / Tabla principal | Verificación matemática del disponible por fila | Fixtures verificados: `10 - 3 - 1 = 6`, `4 - 1 - 2 = 1`, `0 - 0 - 0 = 0` | PASS | Nunca negativo |
-| Clasificación de stock bajo usando umbral efectivo | HU-016 CA-04 / SPEC-016 §3 | S01 / Badges | Comparación entre disponible y umbral | Si `0 < available <= umbral`, badge es `Stock bajo` | PASS | Fila ZAP-URB-42 con 1 disp vs umbral 2 |
-| Distribución por ubicación incluye bloqueadas | HU-016 CA-05 / SPEC-016 §5 | S01 / Panel distribución | Tabla de totales por almacén/tienda | Tienda Miraflores (5 bloqueadas) y Almacén Central (4 bloqueadas) visibles | PASS | Respalda auditoría física |
-| Reactivo ante `inventory.stock.changed` | HU-016 CA-06 / SPEC-016 §4 | S01 / Global | Actualización de cifras sin perder filtros aplicados | Recalculado determinista al simular evento de cambio de stock | PASS | Preserva texto de búsqueda |
-| KPIs de traslados en tránsito, recibidos y discrepancia | HU-016 CA-08 / SPEC-016 §6 | S01 / KPIs traslados | Conteo visual de traslados pendientes | 4 en tránsito, 2 parciales, 1 con discrepancia | PASS | Alerta directa al gestor comercial |
-| Filtros combinados por ubicación y estado | HU-016 CA-09 / SPEC-016 §7 | S01 / DS-C13 | Filtrado dinámico simultáneo | Selector de tienda/almacén y selector de estado filtran la tabla reactivamente | PASS | Búsqueda por texto integrada |
-| Operación estrictamente de solo lectura | HU-016 CA-10 / SPEC-016 §1 | S01 / Interfaz | Ausencia de botones para mutar saldos o emitir eventos | Cero botones de guardado o ajuste directo en el dashboard | PASS | Mutaciones restringidas a MK-015 |
-| Traslado con discrepancia no altera disponible | HU-016 CA-11 / SPEC-016 §6 | S01 / Alertas | Las unidades faltantes no incrementan disponible | Alerta muestra 2 faltantes sin agregarlas al inventario disponible | PASS | Conforme a regla de oro de Inventario |
+| Muestra SKU por Disponible/Stock bajo/Agotado | HU-016 CA-01 / SPEC-016 §3 | S01 / DS-C14 | Clasificación visual mediante badges semánticos | 3 categorías representadas con badges verde, ámbar y rojo | PENDIENTE | LUX-01 aplicado estrictamente |
+| Muestra unidades físicas, reservadas, bloqueadas y disponibles | HU-016 CA-02 / SPEC-016 §2 | S01 / Tabla y KPIs | Desglose completo de inventario sin omitir bloqueos | Columnas: Físico, Reservado, Bloqueado, Disponible | PENDIENTE | No se ocultan unidades bloqueadas |
+| Cálculo autoritativo: `available = max(on_hand - reserved - blocked, 0)` | HU-016 CA-03 / SPEC-016 §3 | S01 / Tabla principal | Verificación matemática del disponible por fila | Fixtures verificados: `10 - 3 - 1 = 6`, `4 - 1 - 2 = 1`, `0 - 0 - 0 = 0` | PENDIENTE | Nunca negativo |
+| Clasificación de stock bajo usando umbral efectivo | HU-016 CA-04 / SPEC-016 §3 | S01 / Badges | Comparación entre disponible y umbral | Si `0 < available <= umbral`, badge es `Stock bajo` | PENDIENTE | Fila ZAP-URB-42 con 1 disp vs umbral 2 |
+| Distribución por ubicación incluye bloqueadas | HU-016 CA-05 / SPEC-016 §5 | S01 / Panel distribución | Tabla de totales por almacén/tienda | Tienda Miraflores (5 bloqueadas) y Almacén Central (4 bloqueadas) visibles | PENDIENTE | Respalda auditoría física |
+| Reactivo ante `inventory.stock.changed` | HU-016 CA-06 / SPEC-016 §4 | S01 / Global | Actualización de cifras sin perder filtros aplicados | Recalculado determinista al simular evento de cambio de stock | PENDIENTE | Preserva texto de búsqueda |
+| KPIs de traslados en tránsito, recibidos y discrepancia | HU-016 CA-08 / SPEC-016 §6 | S01 / KPIs traslados | Conteo visual de traslados pendientes | 4 en tránsito, 2 parciales, 1 con discrepancia | PENDIENTE | Alerta directa al gestor comercial |
+| Filtros combinados por ubicación y estado | HU-016 CA-09 / SPEC-016 §7 | S01 / DS-C13 | Filtrado dinámico simultáneo | Selector de tienda/almacén y selector de estado filtran la tabla reactivamente | PENDIENTE | Búsqueda por texto integrada |
+| Operación estrictamente de solo lectura | HU-016 CA-10 / SPEC-016 §1 | S01 / Interfaz | Ausencia de botones para mutar saldos o emitir eventos | Cero botones de guardado o ajuste directo en el dashboard | PENDIENTE | Mutaciones restringidas a MK-015 |
+| Traslado con discrepancia no altera disponible | HU-016 CA-11 / SPEC-016 §6 | S01 / Alertas | Las unidades faltantes no incrementan disponible | Alerta muestra 2 faltantes sin agregarlas al inventario disponible | PENDIENTE | Conforme a regla de oro de Inventario |
 
 ## 5. UX del módulo
 
@@ -79,8 +79,8 @@ Relación directa entre las unidades de trabajo ejecutadas en `tasks.md`, las pa
 
 | ID | Decisión | Justificación en spec | Comportamiento aplicado | Evidencia | Resultado |
 |---|---|---:|---:|---|---|
-| LUX-01 | Mapeo semántico de Badges de Estado (Heredada) | Sí (DESIGN.md §4.1) | Badges DISPONIBLE (success), STOCK_BAJO (warning), AGOTADO (error) sin usar `signal`/`volt` | DS-C14 renderizado con tokens oficiales | PASS |
-| LUX-04 | Alertas operativas con enlace contextual de navegación | Sí (SPEC-016 §8 / WF-016) | Avisos de discrepancia y stock bajo enlazan a MK-015 sin incrustar formularios de edición | Enlace "Ver traslado" y "Revisar saldo" activos | PASS |
+| LUX-01 | Mapeo semántico de Badges de Estado (Heredada) | Sí (DESIGN.md §4.1) | Badges DISPONIBLE (success), STOCK_BAJO (warning), AGOTADO (error) sin usar `signal`/`volt` | DS-C14 renderizado con tokens oficiales | PENDIENTE |
+| LUX-04 | Alertas operativas con enlace contextual de navegación | Sí (SPEC-016 §8 / WF-016) | Avisos de discrepancia y stock bajo enlazan a MK-015 sin incrustar formularios de edición | Enlace "Ver traslado" y "Revisar saldo" activos | PENDIENTE |
 
 ## 7. UI y Design System
 

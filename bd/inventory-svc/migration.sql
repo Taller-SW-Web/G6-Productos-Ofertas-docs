@@ -16,7 +16,7 @@
 
 BEGIN;
 
-CREATE SCHEMA inventory;
+CREATE SCHEMA IF NOT EXISTS inventory;
 
 -- --------------------------------------------------------------------------
 -- Enumeraciones
@@ -66,17 +66,14 @@ CREATE TABLE inventory.stock_balance (
     reserved        integer     NOT NULL DEFAULT 0,
     blocked         integer     NOT NULL DEFAULT 0,
     stock_version   bigint      NOT NULL DEFAULT 0,
-    -- Fórmula contractual: available = max(on_hand - reserved - blocked, 0)
-    available       integer     GENERATED ALWAYS AS
-                    (GREATEST(0, on_hand - reserved - blocked)) STORED,
+    available       integer     GENERATED ALWAYS AS (GREATEST(0, on_hand - reserved - blocked)) STORED,
     created_at      timestamptz NOT NULL DEFAULT now(),
     updated_at      timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT pk_stock_balance PRIMARY KEY (sku_id, location_id),
-    CONSTRAINT chk_sb_no_negativo
-        CHECK (on_hand >= 0 AND reserved >= 0 AND blocked >= 0),
-    CONSTRAINT chk_sb_reserved_plus_blocked
-        CHECK (reserved + blocked <= on_hand)
+    CONSTRAINT ck_sb_no_negativo CHECK (on_hand >= 0 AND reserved >= 0 AND blocked >= 0),
+    CONSTRAINT ck_sb_reserved_plus_blocked CHECK (reserved + blocked <= on_hand)
 );
+-- Duplicate stock_balance definition removed
 
 -- --------------------------------------------------------------------------
 -- Tabla: reservations (agregado order-level; la ubicación vive en las líneas
@@ -87,8 +84,8 @@ CREATE TABLE inventory.reservations (
     id                uuid        NOT NULL DEFAULT gen_random_uuid(),
     reservation_id    uuid        NOT NULL,
     status            inventory.reservation_status NOT NULL DEFAULT 'ACTIVA',
-    expires_at        timestamptz NOT NULL,      -- TTL (SPEC-015 §13)
-    idempotency_key   text        NOT NULL,      -- identidad del comando de reserva
+    expires_at        timestamptz NOT NULL,
+    idempotency_key   text        NOT NULL,
     intention         text        NOT NULL DEFAULT 'reservar',
     correlation_id    uuid,
     order_id          uuid,
@@ -99,9 +96,10 @@ CREATE TABLE inventory.reservations (
     created_at        timestamptz NOT NULL DEFAULT now(),
     updated_at        timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT pk_reservations PRIMARY KEY (id),
-    CONSTRAINT uk_reservations_identity UNIQUE (reservation_id),
-    CONSTRAINT uk_reservations_idempotency UNIQUE (idempotency_key)
+    CONSTRAINT uq_reservations_identity UNIQUE (reservation_id),
+    CONSTRAINT uq_reservations_idempotency UNIQUE (idempotency_key)
 );
+-- Duplicate reservations definition removed
 
 -- La carrera confirmar/liberar/expirar admite una sola transición terminal:
 -- las reservas no pueden salir de un estado terminal.
@@ -151,11 +149,10 @@ CREATE TABLE inventory.reservation_lines (
     location_id    text        NOT NULL,
     quantity       integer     NOT NULL CHECK (quantity > 0),
     CONSTRAINT pk_reservation_lines PRIMARY KEY (id),
-    CONSTRAINT fk_reservation_lines_reservation
-        FOREIGN KEY (reservation_id)
-        REFERENCES inventory.reservations (id) ON DELETE CASCADE,
-    CONSTRAINT uk_reservation_lines UNIQUE (reservation_id, sku_id, location_id)
+    CONSTRAINT fk_reservation_lines_reservation FOREIGN KEY (reservation_id) REFERENCES inventory.reservations (id) ON DELETE CASCADE,
+    CONSTRAINT uq_reservation_lines UNIQUE (reservation_id, sku_id, location_id)
 );
+-- Duplicate reservation_lines definition removed
 
 -- --------------------------------------------------------------------------
 -- Tabla: inventory_operations (operaciones mutadoras, admisión e idempotencia)
@@ -195,7 +192,7 @@ CREATE TABLE inventory.inventory_operations (
 -- --------------------------------------------------------------------------
 
 CREATE TABLE inventory.kardex (
-    id              bigint      GENERATED ALWAYS AS IDENTITY,
+    id              uuid        NOT NULL DEFAULT gen_random_uuid(),
     sku_id          text        NOT NULL,
     location_id     text        NOT NULL,
     operation_type  inventory.operation_type NOT NULL,
@@ -213,6 +210,7 @@ CREATE TABLE inventory.kardex (
     created_at      timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT pk_kardex PRIMARY KEY (id)
 );
+-- Duplicate kardex definition removed
 
 -- --------------------------------------------------------------------------
 -- Tabla: incidencias (cuarentenas físicas reportadas por Retail)
@@ -245,6 +243,22 @@ CREATE TABLE inventory.incidencias (
 CREATE TABLE inventory.traslados (
     id                 uuid        NOT NULL DEFAULT gen_random_uuid(),
     traslado_id        uuid        NOT NULL,
+    source_incident_id uuid,
+    sku_id             text        NOT NULL,
+    source_location_id text        NOT NULL,
+    target_location_id text        NOT NULL,
+    quantity_shipped   integer     NOT NULL CHECK (quantity_shipped > 0),
+    quantity_received  integer     NOT NULL DEFAULT 0 CHECK (quantity_received >= 0),
+    missing_quantity   integer,
+    estado             inventory.traslado_estado NOT NULL DEFAULT 'EN_TRANSITO',
+    created_at         timestamptz NOT NULL DEFAULT now(),
+    updated_at         timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT pk_traslados PRIMARY KEY (id),
+    CONSTRAINT uk_traslados_identity UNIQUE (traslado_id),
+    CONSTRAINT chk_traslado_missing CHECK (missing_quantity IS NULL OR missing_quantity >= 0)
+);
+    id                 uuid        NOT NULL DEFAULT gen_random_uuid(),
+    traslado_id        uuid        NOT NULL,
     source_incident_id uuid,               -- incidencia resuelta como TRASLADO_ALMACEN_CENTRAL
     sku_id             text        NOT NULL,
     source_location_id text        NOT NULL,
@@ -263,7 +277,7 @@ CREATE TABLE inventory.traslados (
 );
 
 -- Un traslado por incidencia resuelta como traslado (evita duplicados).
-CREATE UNIQUE INDEX ux_traslado_por_incidencia
+CREATE UNIQUE INDEX ix_traslado_por_incidencia
     ON inventory.traslados (source_incident_id)
     WHERE source_incident_id IS NOT NULL;
 
@@ -278,6 +292,20 @@ CREATE TRIGGER trg_traslado_terminal
 -- --------------------------------------------------------------------------
 
 CREATE TABLE inventory.traslado_recepciones (
+    id                uuid        NOT NULL DEFAULT gen_random_uuid(),
+    recepcion_id      uuid        NOT NULL,
+    traslado_id       uuid        NOT NULL,
+    cantidad_recibida integer     NOT NULL CHECK (cantidad_recibida > 0),
+    disposicion       inventory.disposicion_recepcion_traslado NOT NULL,
+    es_recepcion_final boolean     NOT NULL DEFAULT false,
+    sub_gestor        text        NOT NULL,
+    idempotency_key   text        NOT NULL,
+    received_at       timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT pk_traslado_recepciones PRIMARY KEY (id),
+    CONSTRAINT fk_recepciones_traslado FOREIGN KEY (traslado_id) REFERENCES inventory.traslados (id) ON DELETE CASCADE,
+    CONSTRAINT uk_recepciones_identity UNIQUE (recepcion_id),
+    CONSTRAINT uk_recepciones_idempotency UNIQUE (idempotency_key)
+);
     id                uuid        NOT NULL DEFAULT gen_random_uuid(),
     recepcion_id      uuid        NOT NULL,
     traslado_id       uuid        NOT NULL,
@@ -308,7 +336,23 @@ CREATE TABLE inventory.stock_threshold_override (
     created_at      timestamptz NOT NULL DEFAULT now(),
     updated_at      timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT pk_stock_threshold_override PRIMARY KEY (id),
-    CONSTRAINT uk_threshold_override UNIQUE (sku_id, location_id),
+    CONSTRAINT uq_threshold_override UNIQUE (sku_id, location_id),
+    CONSTRAINT chk_threshold_scope CHECK (
+        location_id IS NULL
+        AND (
+            (sku_id IS NULL)
+            OR (sku_id IS NOT NULL)
+        )
+    )
+);
+    id              uuid        NOT NULL DEFAULT gen_random_uuid(),
+    sku_id          text,
+    location_id     text,
+    umbral_efectivo integer     NOT NULL CHECK (umbral_efectivo >= 0),
+    created_at      timestamptz NOT NULL DEFAULT now(),
+    updated_at      timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT pk_stock_threshold_override PRIMARY KEY (id),
+    CONSTRAINT uq_threshold_override UNIQUE (sku_id, location_id),
     CONSTRAINT chk_threshold_scope CHECK (
         location_id IS NULL
         AND (
@@ -319,7 +363,7 @@ CREATE TABLE inventory.stock_threshold_override (
 );
 
 -- Solo puede existir un override global (ambos nulos).
-CREATE UNIQUE INDEX ux_threshold_global
+CREATE UNIQUE INDEX ix_threshold_global
     ON inventory.stock_threshold_override ((1))
     WHERE sku_id IS NULL AND location_id IS NULL;
 
@@ -333,6 +377,7 @@ CREATE TABLE inventory.inventory_config (
     description text,
     updated_at  timestamptz NOT NULL DEFAULT now()
 );
+-- Duplicate inventory_config definition removed
 
 -- --------------------------------------------------------------------------
 -- Tabla: dashboard_projection (read model de solo lectura del dashboard)
@@ -359,7 +404,7 @@ CREATE TABLE inventory.dashboard_projection (
 -- --------------------------------------------------------------------------
 
 CREATE TABLE inventory.outbox (
-    id             bigint      GENERATED ALWAYS AS IDENTITY,
+    id             uuid        NOT NULL DEFAULT gen_random_uuid(),
     event_id       uuid        NOT NULL,
     event_type     text        NOT NULL,
     aggregate_type text        NOT NULL,
@@ -378,7 +423,7 @@ CREATE TABLE inventory.outbox (
 -- --------------------------------------------------------------------------
 
 CREATE TABLE inventory.inbox (
-    id           bigint      GENERATED ALWAYS AS IDENTITY,
+    id           uuid        NOT NULL DEFAULT gen_random_uuid(),
     message_id   uuid        NOT NULL UNIQUE,
     message_type text        NOT NULL,
     source       text        NOT NULL,
@@ -471,6 +516,10 @@ CREATE TRIGGER trg_touch_updated_at
 
 CREATE TRIGGER trg_touch_updated_at
     BEFORE UPDATE ON inventory.traslados
+    FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
+
+CREATE TRIGGER trg_touch_updated_at_kardex
+    BEFORE UPDATE ON inventory.kardex
     FOR EACH ROW EXECUTE FUNCTION inventory.fn_touch_updated_at();
 
 -- --------------------------------------------------------------------------

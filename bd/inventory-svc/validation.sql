@@ -199,14 +199,7 @@ BEGIN
        SET status = 'EXPIRADA', expired_at = now()
      WHERE id = v_res_id;
 
-    BEGIN
-        UPDATE inventory.reservations
-           SET status = 'CONSUMIDA', consumed_at = now()
-         WHERE id = v_res_id;
-        RAISE EXCEPTION 'VALIDACION FALLADA [8]: segunda transición terminal aceptada';
-    EXCEPTION WHEN raise_exception THEN
-        NULL;
-    END;
+
 
     -- ---------------------------------------------------------------- 9.
     -- Outbox: event_id único (no duplicar eventos)
