@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-03",
+  "engine": "PGlite 0.5.8 / WASM",
+  "checks": [
+    {
+      "name": "migration_clean_isolated",
+      "result": "PASS"
+    },
+    {
+      "name": "validation_1_and_no_fixtures",
+      "result": "PASS",
+      "groups": [
+        {
+          "comprobacion": "estructura, tipos, constraints, FK globales, indices, permisos y enums",
+          "resultado": "PASS"
+        },
+        {
+          "comprobacion": "timestamps, triggers y aislamiento del runtime",
+          "resultado": "PASS"
+        },
+        {
+          "comprobacion": "objetivo, CAS, dinero, as-of, vigencias/programaciones, parcial, inbox/outbox atomicos",
+          "resultado": "PASS"
+        },
+        {
+          "comprobacion": "runtime escribe con triggers/constraints; sin DELETE/TRUNCATE/DDL",
+          "resultado": "PASS"
+        }
+      ]
+    },
+    {
+      "name": "validation_2_and_no_fixtures",
+      "result": "PASS",
+      "groups": [
+        {
+          "comprobacion": "estructura, tipos, constraints, FK globales, indices, permisos y enums",
+          "resultado": "PASS"
+        },
+        {
+          "comprobacion": "timestamps, triggers y aislamiento del runtime",
+          "resultado": "PASS"
+        },
+        {
+          "comprobacion": "objetivo, CAS, dinero, as-of, vigencias/programaciones, parcial, inbox/outbox atomicos",
+          "resultado": "PASS"
+        },
+        {
+          "comprobacion": "runtime escribe con triggers/constraints; sin DELETE/TRUNCATE/DDL",
+          "resultado": "PASS"
+        }
+      ]
+    },
+    {
+      "name": "ledger_checksum_replay_model",
+      "result": "PASS",
+      "note": "SQL ledger checked; migrate.py/psql not executed"
+    },
+    {
+      "name": "negative_missing_index",
+      "result": "PASS"
+    },
+    {
+      "name": "negative_fk_other_schema",
+      "result": "PASS"
+    },
+    {
+      "name": "failed_transaction_rollback",
+      "result": "PASS"
+    },
+    {
+      "name": "migration_runner_sql_generation",
+      "result": "PASS",
+      "note": "migrate.py main() con subprocess capturado: --root bd, owner, ledger, checksum y UTF-8; no ejecucion psql/servidor"
+    }
+  ],
+  "server": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+  "sha256": "6a42f72fa0f92645a80ba193a5ad399fd4e4d3d1e9beededb25ea2b74e60d584",
+  "tables": [
+    "bulk_price_jobs",
+    "bulk_price_rows",
+    "inbox",
+    "outbox",
+    "price_validities",
+    "prices",
+    "scheduled_prices"
+  ],
+  "result": "PASS",
+  "reviewed_origin_revision": "fc771b9"
+}
