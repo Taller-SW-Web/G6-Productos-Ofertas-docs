@@ -1,6 +1,6 @@
 # Evidencia local — promotions-svc / #53
 
-Fecha: **2026-10-03**, America/Lima. Responsable: Axel Cueva. Estado: **VALIDADO LOCALMENTE; DESPLIEGUE COMPARTIDO PENDIENTE**. Rama: `codex/promotions-persistence-53`.
+Fecha: **2026-10-03**, America/Lima. Responsable: Axel Cueva. Estado: **VALIDADO LOCALMENTE; DESPLIEGUE COMPARTIDO PENDIENTE**. Rama de entrega: `cueva`. La implementación y su evidencia se conservaron íntegramente al retirar la rama auxiliar.
 
 ## Entorno y artefacto
 
