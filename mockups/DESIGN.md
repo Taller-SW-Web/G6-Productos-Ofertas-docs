@@ -1,7 +1,7 @@
 # Design System de mockups — Productos y Ofertas
 
-**Versión:** 1.0.0 · **Fecha:** 2026-10-02 · **Responsable:** Leonardo Vera Rodríguez (`LeonardoVera`).
-**Estado:** vigente para la especificación visual de mockups. Consolidación documental del [issue #60](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/60), contrastada con la UX 2.0 del #59.
+**Versión:** 1.1.0 · **Fecha:** 2026-10-02 · **Responsable:** Leonardo Vera Rodríguez (`LeonardoVera`).
+**Estado:** vigente para la especificación visual de mockups. Consolidación documental del [issue #60](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/60), contrastada con la UX 2.0 del #59. La versión 1.1.0 incorpora gobernanza cromática y austeridad visual.
 
 ## 1. Propósito, alcance y fuentes
 
@@ -138,6 +138,110 @@ Ratios calculados con luminancia relativa sRGB, usando colores sólidos; las dec
 | #1B1812 | #C3E504 | 12.25:1 | Distintivo de promoción |
 
 El error usa el tono más oscuro en texto y botón destructivo; sus pares con blanco/error-background se verifican junto a los anteriores. Un borde tenue es decorativo y no acredita contraste de un control. Referencias de umbral: [WCAG contraste de texto](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html) y [contraste no textual](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html).
+
+#### 4.1.1 Política de austeridad cromática y presupuesto visual
+
+Los tokens disponibles no constituyen una paleta decorativa. La existencia de un color en el sistema no autoriza a utilizarlo para diferenciar categorías, módulos, tipos de entidad o bloques visuales.
+
+La composición normal del backoffice debe estar dominada por superficies y contenido neutros: surface/cloud, surface/default, surface/cloud-subtle, text/primary, text/secondary y border/default/control.
+
+El color se introduce únicamente cuando comunica una de estas funciones:
+1. acción primaria;
+2. selección o navegación activa;
+3. foco;
+4. estado semántico confirmado;
+5. información/promoción cuando la semántica lo justifica.
+
+Ante la duda sobre qué color corresponde a un elemento, usar la variante neutral. Nunca crear un nuevo significado cromático local.
+
+Reglas obligatorias de uso por token:
+
+- **Naranja primary #F76707:** usar como fondo de la acción primaria y en elementos de marca autorizados. No utilizar como color genérico de iconos, métricas, labels, encabezados, SKU, estados o decoración.
+- **Primary-hover #C2410C:** puede utilizarse para enlaces y estados hover/active conforme a este documento. Los enlaces deben seguir siendo reconocibles mediante subrayado en hover/focus cuando corresponda. No convertir todos los textos interactivos en naranja.
+- **Focus:** TODO foco interactivo de controles debe utilizar `color/focus/default` #4361EE. Está prohibido utilizar naranja como sustituto del anillo de foco. Error y foco pueden coexistir: borde error + ring focus.
+- **Selection:** usar `color/selection/background` #FCE3D0 + `color/selection/indicator` #C2410C + texto ink (#1B1812). No usar fondo naranja vivo para representar selección.
+- **Success:** únicamente para resultados realmente confirmados, disponibles o completados cuando esa semántica corresponde. No utilizar verde para representar simplemente una categoría, un tipo de entidad o «algo positivo visualmente».
+- **Warning:** únicamente para advertencias, resultados parciales o situaciones que requieren atención. No utilizar amarillo/ámbar para diferenciar una categoría arbitraria.
+- **Error:** únicamente para errores, estados críticos o acciones destructivas. No utilizar rojo para jerarquía visual ordinaria.
+- **Info:** únicamente para información, seguimiento o estado informativo. No utilizar azul para diferenciar un tipo de producto, regla o entidad.
+- **Volt:** únicamente para contenido promocional real. No utilizar volt/lime para identificar categorías, taxonomías, estados de inventario u otras entidades.
+
+Está prohibido introducir directamente escalas cromáticas del framework o valores locales cuando existe un token de este Design System.
+
+Ejemplos prohibidos:
+- emerald-50 / emerald-600 / emerald-800;
+- green-*;
+- amber-*;
+- yellow-*;
+- rose-*;
+- red-*;
+- blue-*;
+- orange-*;
+- lime-*;
+- colores HEX nuevos definidos directamente por cada owner.
+
+Los nombres anteriores son ejemplos, no una lista exhaustiva.
+
+Si un estado necesita success, warning, error o info, debe utilizar los tokens correspondientes de §4.1. Si no existe una semántica correspondiente, utilizar neutros. Tailwind/Mantine puede implementar internamente los estilos, pero el valor visual final debe corresponder a los tokens del DESIGN.md.
+
+Los owners no pueden introducir colores HEX locales ni familias cromáticas fuera de los tokens vigentes de este Design System.
+
+Si aparece una necesidad cromática transversal que no puede representarse correctamente con los tokens existentes, NO se resuelve agregando un HEX directamente en un MK. La necesidad debe proponerse primero como una modificación versionada de DESIGN.md, con:
+- propósito semántico;
+- casos de uso;
+- contraste;
+- componentes afectados;
+- MK afectados;
+- justificación de por qué los tokens actuales no son suficientes.
+
+Solo después de aprobar y versionar esa modificación puede utilizarse el nuevo token.
+
+**Iconografía y color**
+
+- Los iconos sin significado semántico usan por defecto:
+  - `color/text/primary`; o
+  - `color/text/secondary`.
+- No utilizar primary, signal, success, warning, error, info o volt en un icono únicamente para:
+  - decorar;
+  - diferenciar cards;
+  - aportar variedad;
+  - «hacer más visual» una tabla;
+  - hacer que cada KPI parezca distinto.
+- Un icono puede usar un color semántico únicamente cuando ese icono comunica el mismo estado semántico que el componente.
+
+Ejemplos:
+- **PERMITIDO:**
+  - `IconAlertTriangle` con warning dentro de un Alert de advertencia.
+  - `IconCircleCheck` con success dentro de un resultado confirmado.
+  - `IconAlertCircle` con error dentro de un mensaje de error.
+- **NO PERMITIDO:**
+  - icono azul para «Producto»;
+  - icono naranja para «Combo»;
+  - icono verde para «Inventario»;
+  - un icono de diferente color en cada KPI únicamente por decoración.
+
+Si el color del icono desaparece y se pierde información necesaria, debe existir además texto, label o símbolo que comunique el significado.
+
+**Regla contra propagación de color:**
+
+Un mismo estado no debe colorear innecesariamente toda una región.
+
+Por defecto, comunicar un estado mediante un componente localizado:
+- Badge;
+- Alert;
+- icono;
+- indicador/borde;
+- texto semántico cuando realmente sea necesario.
+
+Evitar utilizar simultáneamente para el mismo mensaje:
+- fondo de card coloreado;
+- borde de card coloreado;
+- icono coloreado;
+- título coloreado;
+- cifra coloreada;
+- badge coloreado.
+
+Elegir la mínima cantidad de señales suficiente para reconocer el estado. Esto no impide que un Alert utilice su fondo semántico completo, porque ese componente está específicamente diseñado para feedback.
 
 ### 4.2 Tipografía
 
@@ -284,12 +388,12 @@ Nombres `PO/…` identifican componentes en documentación/Figma, sin aparecer e
 | DS-C11 PO/DateField | md 40 px; calendario en popover con padding 16, días con área mínimo 32×32 | Fecha/rango y hora cuando contrato lo requiera; formato legible, zona horaria indicada si afecta vigencia. No fijar fechas límite por diseño |
 | DS-C12 PO/Search | TextInput con IconSearch 20 y limpiar 32×32; label de tarea | Búsqueda soportada; loader localizado, sin resultados y error distinguibles; no timeout/debounce universal |
 | DS-C13 PO/FilterBar | Card plana, padding 16, gaps 16; filtros sm/md, acciones gap 8; fila de pills abajo con gap 8 | «Aplicar filtros» cuando corresponda, «Limpiar filtros», cantidad conocida. Envuelve sin overflow; parámetros y orden admitidos |
-| DS-C14 PO/Badge | sm mínimo 24 px alto / md 28, padding horizontal 8/12, texto Inter 14/20 500, radio full | Neutral/info/success/warning/error/promotion; estado en palabras e icono si ayuda. No botón ni truncamiento de estado crítico |
+| DS-C14 PO/Badge | sm mínimo 24 px alto / md 28, padding horizontal 8/12, texto Inter 14/20 500, radio full | Neutral/info/success/warning/error/promotion; estado en palabras e icono si ayuda. No botón ni truncamiento de estado crítico. Que un valor sea un estado de negocio no significa automáticamente que sea un estado semántico. Estados de negocio que NO requieren necesariamente color semántico: «Activo», «Inactivo», «Borrador», «Publicado», «Archivado», «Individual», «Masivo», «Automática», «Cupón», «Producto», «Categoría». Estos valores pueden presentarse con Badge neutral cuando no representan éxito, riesgo, error, advertencia, seguimiento o atención requerida. `Activo` NO debe mapearse automáticamente a success/verde en todos los MK; si «Activo» es simplemente el estado ordinario y esperado de una entidad, puede y preferentemente debe representarse de forma neutral. `Inactivo` NO debe mapearse automáticamente a error o warning. `Disponible` solo debe usar success cuando la disponibilidad constituye un resultado semántico relevante para la tarea actual; en una tabla donde es simplemente un estado ordinario, puede utilizar neutral. `Procesando` puede utilizar info cuando representa seguimiento de una operación en curso. `Stock bajo` sí puede utilizar warning porque requiere atención. `Agotado` puede utilizar error/warning según la severidad definida por la tarea, pero no debe asumirse automáticamente sin contexto. Las variantes semantic no se utilizan para diferenciar categorías visualmente («Venta cruzada» vs «Upselling», «Producto» vs «Categoría», «Individual» vs «Masivo» y diferentes tipos de catálogo deben utilizar por defecto una presentación neutral, salvo semántica transversal documentada) |
 | DS-C15 PO/Chip y PO/Pill | Chip mínimo 32 px alto, pill 32 si removible; padding 12, gap 8, radio full | Chip seleccionable con indicador; pill de filtro aplicado con remover nombrado y área 24×24 dentro. No convertir badge en control |
 | DS-C16 PO/Tooltip | Padding 8, máximo 280 px ancho, fondo ink/texto inverse, radio 8 | Complemento breve visible por hover/foco; nunca contiene acción, requisito o error como única fuente; no sobre control nativo disabled inaccesible |
 | DS-C17 PO/Table | Header mínimo 40 px; fila default mínimo 48 / compacta 40; padding horizontal 16 | Comparación administrativa con reglas §9. Tabla semántica; selección/ordenamiento solo si permitidos. Carga/error/empty corresponden a región, no valores inventados |
 | DS-C18 PO/Pagination | Botones 32×32, gap 8, texto 14/20; footer padding 16 | Página actual con fondo seleccionado y numeral visible. Contador/tamaño de página según contrato; no imponer total o «ir al final» si no existe |
-| DS-C19 PO/Card y PO/Kpi | Padding 24, radio 12, borde decorativo, sin sombra; KPI etiqueta 14/20, cifra 28/36 | Agrupar información relacionada; no card clicable sin destino explícito. Estado parcial/antigüedad por sección; unidad y fuente del dato |
+| DS-C19 PO/Card y PO/Kpi | Padding 24, radio 12, borde decorativo, sin sombra; KPI etiqueta 14/20, cifra 28/36 | Agrupar información relacionada; no card clicable sin destino explícito. Card y KPI son neutros por defecto. Un KPI no recibe un color distinto solo para distinguirse de otro KPI. La composición base debe utilizar superficie blanca, borde neutral, título secondary, valor primary e icono neutral cuando no existe estado. Un estado semántico puede introducir un indicador localizado. No utilizar una paleta diferente para cada KPI de un dashboard. No colorear simultáneamente cifra, icono, borde y fondo salvo que el componente represente explícitamente un Alert/Result y no un KPI ordinario. Estado parcial/antigüedad por sección; unidad y fuente del dato |
 | DS-C20 PO/Drawer | Derecha; ancho 480 px breve / 640 px con detalle ampliado; padding 24, sin radio en unión al viewport, sombra dialog | Elegido según UXD-001, no obligatorio. Header con título y cerrar 40×40, body scroll, footer de acciones; modal si bloquea fondo. Foco/retorno y cambios sin guardar |
 | DS-C21 PO/Modal | Ancho 480 px confirmación / 640 formulario breve; max-height calc(100vh − 64px); padding 24, radio 16 | Título, contenido, impacto, cancelar y acción específica. Overlay y foco contenido; Escape/cierre no descarta trabajo sin aviso. Usar vista completa para configuración extensa |
 | DS-C22 PO/Alert y PO/Result | Padding 16 para alert / 24 resultado; icono 20, gap 8, radio 12; texto 16/24 o 14/20 contextual | Info/success/warning/error, título opcional 14/20 600. Persistente para parcial/crítico; acciones localizadas y contenido confirmado separado del pendiente |
@@ -303,13 +407,48 @@ Nombres `PO/…` identifican componentes en documentación/Figma, sin aparecer e
 
 ### 7.1 Variantes de acciones
 
-- **Primaria:** fondo primary, texto ink y borde primary-hover de 1 px. Hover/pressed: primary-hover e inverse. Una acción primaria por grupo de tarea; no todos los botones del header son filled.
-- **Secundaria:** fondo default, borde y texto primary-hover. Hover: cloud-subtle, manteniendo texto. No usar primary-soft como fondo con texto primary-hover porque ese par no alcanza 4.5:1.
-- **Terciaria:** sin fondo/borde visible, texto primary-hover; hover cloud-subtle. Un enlace de texto se subraya, al menos en hover/foco; los enlaces dentro de párrafo permanecen subrayados.
-- **Destructiva:** fondo error-strong y texto blanco; hover/pressed mantiene ese par y añade borde ink. Solo cuando existe efecto destructivo real; no usar rojo para «Volver» o un cierre sin efecto.
-- **Disabled:** tokens disabled, causa legible al lado cuando es necesaria. **Loading:** conservar etiqueta y ancho, añadir loader 16/20; explicar estado junto a la tarea.
+- **Primaria:**
+  - fondo: #F76707 (`color/action/primary`);
+  - texto: #1B1812 (`color/surface/ink` / `color/text/primary`);
+  - borde: #C2410C (`color/action/primary-hover`) de 1 px si corresponde;
+  - hover/pressed: #C2410C (`color/action/primary-hover`);
+  - texto hover/pressed: #F7F5F0 (`color/text/inverse`);
+  - foco: #4361EE (`color/focus/default`).
+  Está prohibido representar el botón primary default como #F76707 con texto blanco. Una acción primaria por grupo de tarea; no todos los botones del header son filled.
+- **Secundaria:** fondo neutral/blanco (`color/surface/default`), borde y texto #C2410C (`color/action/primary-hover`). Hover: `color/surface/cloud-subtle`, manteniendo texto. Mantener fondo neutral/blanco; no convertirla en un segundo CTA naranja. No usar `color/action/primary-soft` como fondo con texto `primary-hover` porque ese par no alcanza 4.5:1.
+- **Terciaria:** sin fondo/borde visible, texto #C2410C (`color/action/primary-hover`); hover `color/surface/cloud-subtle`. Mantener tratamiento discreto. No utilizar naranja vivo #F76707 para todos los enlaces de texto. Un enlace de texto se subraya, al menos en hover/foco; los enlaces dentro de párrafo permanecen subrayados.
+- **Destructiva:** fondo `color/error-strong` (#B42318) y texto blanco (#FFFFFF); hover/pressed mantiene ese par y añade borde ink. Solo rojo cuando la acción realmente es destructiva; no usar rojo para «Volver» o un cierre sin efecto.
+- **Disabled:** tokens disabled, causa legible al lado cuando es necesaria.
+- **Loading:** conservar etiqueta y ancho, añadir loader 16/20; explicar estado junto a la tarea.
 
 En este backoffice una confirmación no cambia automáticamente a signal: el primario naranja conserva la jerarquía. Signal se reserva principalmente para foco y acentos de marca; no sustituye info/success.
+
+### 7.2 Antipatrones cromáticos
+
+Casos explícitos de implementación visual incorrecta y su corrección normativa:
+
+- **PROHIBIDO:** `bg-[#F76707] + text-white`
+  **CORRECTO:** `bg-[#F76707] + text-[#1B1812]`
+
+- **PROHIBIDO:** `focus:ring-[#F76707]` o `focus:border-[#F76707]` usado como única indicación de foco.
+  **CORRECTO:** `focus:ring-[#4361EE]`, manteniendo el borde semántico correspondiente cuando exista.
+
+- **PROHIBIDO:**
+  - `bg-emerald-100 text-emerald-800`
+  - `bg-blue-50 text-blue-700`
+  - `bg-amber-100 text-amber-900`
+  - `bg-rose-50 text-rose-800`
+  **CORRECTO:** tokens `success`/`info`/`warning`/`error` definidos en §4.1.
+
+- **PROHIBIDO:** Asignar un color diferente a cada KPI.
+  **CORRECTO:** KPI neutrales y color localizado solamente para estados que necesitan atención.
+
+- **PROHIBIDO:**
+  - azul = tipo A
+  - naranja = tipo B
+  - verde = tipo C
+  sin que esos significados existan en el Design System.
+  **CORRECTO:** variantes neutrales distinguidas mediante texto, icono, label o composición.
 
 ## 8. Formularios y revelación progresiva
 
@@ -346,6 +485,27 @@ Texto/identidad/fechas a izquierda; cantidades y precios a derecha con cifras ta
 | Error parcial | Alert de región y detalle por fila si existe resultado. No toda fila roja ni desaparición de confirmados |
 
 KPI en card: etiqueta, cantidad y unidad, contexto/fecha si disponibles; no confundir suma de unidades con cantidad de SKUs. Grid de 3 cards por fila a 1440 px como composición base, gap 24; si el contenido demanda mayor ancho, 2 o 1, sin modificar datos. Dashboard representa solo lectura y enlaces autorizados a MK-015.
+
+### Disciplina cromática en tablas y dashboards
+
+Las filas y celdas normales permanecen neutrales.
+
+Los colores no representan categorías arbitrarias. Un Badge puede representar el estado de una fila, pero ese estado no debe extender su color al resto de la fila.
+
+En dashboards:
+- las cards permanecen neutrales por defecto;
+- success/warning/error/info indican situaciones semánticas reales;
+- los colores no se reparten entre métricas simplemente para hacerlas visualmente diferentes;
+- si todas las métricas llaman la atención, ninguna tiene jerarquía.
+
+La jerarquía se obtiene primero mediante:
+1. tipografía;
+2. espacio;
+3. tamaño;
+4. posición;
+5. agrupación;
+6. peso visual neutral;
+y solo después mediante color cuando exista significado.
 
 No introducir gráficos para llenar el Dashboard ni series temporales inexistentes. Si una fuente exige un gráfico, debe tener leyenda textual, unidades y tabla/valores accesibles; las series no se distinguen solo por color. La elección y los datos de ese gráfico pertenecen al component-spec.
 
@@ -463,7 +623,15 @@ La guía menciona Mantine 9.6.2. Este repositorio aún no fija dependencias de p
 | Stepper/Tabs/Breadcrumbs/Menu/Popover/Tooltip | Usarlos bajo las condiciones de §7, sin crear flujos por disponer del componente |
 | Shell y grid | AppShell/Grid u organización equivalente; padding/ancho del contenido y z-index según §5/§4.5 |
 
-Se permite adaptar componentes mediante tema, variables y Styles API documentadas; no modificar internos de Mantine ni crear un tema por MK. Las referencias a componentes son correspondencias conceptuales, no código que se declara compilado. Referencias: [tema Mantine](https://mantine.dev/theming/theme-object/) y [Styles API](https://mantine.dev/styles/styles-api/).
+Se permite adaptar componentes mediante tema, variables y Styles API documentadas; no modificar internos de Mantine ni crear un tema por MK. Las referencias a componentes son correspondencias conceptuales, no código que se declara compilado.
+
+Mantine no es fuente de verdad cromática. No utilizar colores predeterminados como `color='green'`, `color='blue'`, `color='orange'`, `color='red'` o `color='lime'` solo porque el componente los ofrezca. Las variantes Mantine deben mapearse a tokens de este Design System. El theme común debe controlar los valores finales. Un owner no puede elegir una familia Mantine distinta para su MK. Los defaults visuales de Mantine se aceptan únicamente cuando coinciden con los tokens, dimensiones y estados definidos aquí.
+
+Las propiedades `color` de Mantine no deben derivarse directamente del nombre de un estado de negocio.
+- Ejemplo incorrecto: `estado === 'ACTIVO' → color='green'`
+- Ejemplo correcto: `estado === 'ACTIVO' →` determinar primero si el estado requiere semántica visual según la tarea; si no, usar variante neutral.
+
+Los iconos de Tabler heredan `currentColor`. Su color debe provenir de los tokens del componente o de text/primary/text/secondary; no asignar una familia cromática distinta por icono. Referencias: [tema Mantine](https://mantine.dev/theming/theme-object/) y [Styles API](https://mantine.dev/styles/styles-api/).
 
 Cada component-spec registra ID DS-C, variante, size, estados y tokens aplicables. El plan consume la versión y prevé reutilización; tasks verifica UI y accesibilidad. Todo estado inventariado debe ser reproducible por ruta/fixture según el pipeline, sin mostrar identificadores de documentación al Gestor Comercial.
 
@@ -495,10 +663,19 @@ Checklist de fidelidad posterior: mismos tokens y familias, tamaños/paddings, j
 | Datos y tiempos disponibles identificados | Cero, timestamp o porcentaje inventados |
 | Reutilizar tokens/variantes centrales | Defaults divergentes de Mantine o valores arbitrarios por owner |
 | Confirmar impacto y seguir comprobaciones funcionales | Usar confirm modal para saltar validaciones |
+| Usar neutros como estado visual por defecto | Utilizar todos los colores disponibles porque existen como tokens |
+| Reservar semánticos para estados que realmente significan success/warning/error/info | Utilizar semánticos para distinguir categorías |
+| Usar focus/default en todos los controles | Utilizar primary como ring de foco |
+| Usar un indicador semántico localizado en KPI/card | Colorear fondo + borde + icono + cifra + badge para el mismo estado |
+| Utilizar únicamente los tokens de §4.1 | Agregar colores emerald/blue/amber/rose o HEX locales |
+| Usar iconos neutrales cuando no representan un estado | Dar un color diferente a cada icono para decorar |
+| Separar estado de negocio de estado semántico | Mapear automáticamente Activo=verde, Inactivo=rojo o cada enum a un color |
+| Permitir nuevos tokens solo mediante una actualización versionada del Design System | Crear un HEX local dentro de un MK porque falta un color |
+| Evaluar la jerarquía de la pantalla completa | Validar cada componente de forma aislada y terminar con una pantalla cromáticamente saturada |
 
 ## 18. Validación documental y habilitación
 
-La versión 1.0.0 cubre los criterios de #60 a nivel documental: auditoría de wireframes, foundations completos, layout desktop, catálogo/estados, formularios/tablas, feedback, contenido, accesibilidad, correspondencia con prototipo y Figma. La tabla de §2 contrasta las 12 UXD y las 22 UXG del resultado definitivo de #59; no cambia sus condiciones de interacción ni requisitos funcionales.
+La versión 1.1.0 incorpora gobernanza cromática y austeridad visual, manteniendo la cobertura documental de los criterios de #60: auditoría de wireframes, foundations completos, layout desktop, catálogo/estados, formularios/tablas, feedback, contenido, accesibilidad, correspondencia con prototipo y Figma. La tabla de §2 contrasta las 12 UXD y las 22 UXG del resultado definitivo de #59; no cambia sus condiciones de interacción ni requisitos funcionales.
 
 | Criterio de #60 | Evidencia |
 |---|---|
@@ -513,10 +690,35 @@ La versión 1.0.0 cubre los criterios de #60 a nivel documental: auditoría de w
 | Traslado posterior a Figma sin foundations nuevos | §16 |
 | Documento vigente, sin cambiar fuentes funcionales | Encabezado, §1, §14 |
 
+### Checklist de revisión cromática previa a la aprobación de un MK
+
+Antes de aprobar un MK se debe verificar:
+- no existen colores no definidos por DESIGN.md;
+- primary default no usa texto blanco;
+- todos los focus rings usan focus/default;
+- success/warning/error/info tienen una justificación semántica real;
+- volt solo representa promoción;
+- ninguna categoría fue diferenciada únicamente mediante color;
+- cards y KPI son neutrales por defecto;
+- no existe un «rainbow dashboard»;
+- los estados están localizados y no colorean regiones innecesarias;
+- el color no reemplaza texto, icono o etiqueta de estado;
+- la pantalla conserva una jerarquía visual comprensible si se ignoran los colores;
+- al observar la pantalla completa durante 3–5 segundos, los elementos que primero atraen la atención deben corresponder a:
+  1. título/jerarquía principal;
+  2. acción primaria;
+  3. estado o riesgo que realmente necesita atención;
+- una colección de badges, iconos o cards de diferentes colores NO debe dominar la percepción inicial;
+- si varios elementos de una misma jerarquía compiten por atención únicamente debido al color, neutralizar los elementos que no tengan prioridad semántica;
+- si una pantalla sigue siendo comprensible pero pierde jerarquía al pasar mentalmente los colores a neutros, revisar si se está usando color para sustituir estructura;
+- revisar que el color refuerza una jerarquía ya creada mediante espacio, tamaño, posición, tipografía y agrupación, y no que intente crear por sí solo la jerarquía.
+
+Un reviewer debe poder responder claramente: «¿Cuál es la acción principal y qué estado requiere mi atención?» sin que múltiples regiones de igual jerarquía compitan visualmente mediante colores diferentes.
+
 Validación realizada: revisión documental, comprobación de referencias/IDs/tablas y cálculo de contrastes de pares sólidos. **No se declara implementado ni certificado el prototipo, ni validada visualmente una biblioteca Figma inaccesible.** Estas comprobaciones de código/pantalla corresponden a la ejecución de cada MK.
 
 Comprobación de esta revisión: 36 tokens de color sin duplicados, 15 pares de contraste dentro de sus umbrales, 29 componentes DS-C, cobertura de las 12 UXD y 22 UXG, y matriz de las 16 funcionalidades. Se verificaron los enlaces/anchors incorporados, la estructura de tablas Markdown, la geometría de 1136 px útiles y la ausencia de errores de whitespace mediante `git diff --check`.
 
 Con el #59 cerrado y este Design System adoptado en la base compartida, los owners disponen de las entradas transversales para `component-spec.md` → `plan.md` → `tasks.md`. El gate transversal corresponde a #59 + #60; el #61 organiza la ejecución general de los mockups. El #66 es la asignación individual de Leonardo Vera para MK-013 y MK-014, no un gate de consolidación transversal. Antes de aprobar una pantalla se resuelven sus hallazgos funcionales/contractuales; no se bloquea la elección de tokens por esa causa ni se declara resuelto un hallazgo ajeno por crear DESIGN.md.
 
-El cierre del issue y la integración del cambio son acciones separadas del entregable documental. Un cambio futuro registra versión, fecha, motivo y componentes/MK afectados; un cambio incompatible debe indicar migración y evitar mantener dos reglas vigentes contradictorias.
+El cierre del issue y la integración del cambio son acciones separadas del entregable documental. Un cambio futuro registra versión, fecha, motivo y componentes/MK afectados; un cambio incompatible debe indicar migración y evitar mantener dos reglas vigentes contradictorias. La versión 1.1.0 formaliza el control normativo de austeridad visual y gobernanza cromática.
