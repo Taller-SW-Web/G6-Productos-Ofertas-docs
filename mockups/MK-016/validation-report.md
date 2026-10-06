@@ -14,10 +14,10 @@
 - **Responsable funcional (Owner):** Miguel Ángel Taco Zavala
 - **Revisor UX transversal:** Leonardo Vera Rodríguez
 - **Commit / Versión del prototipo:** `master @ taco`
-- **Autovalidación completada:** No (DoR consolidado, en espera de versión raw)
-- **Fecha de autovalidación:** —
-- **Fecha de revisión transversal:** —
-- **Resultado general:** REQUIERE CAMBIOS (En atención de observaciones de auditoría)
+- **Autovalidación completada:** Sí (Completada y verificada)
+- **Fecha de autovalidación:** 2026-10-03
+- **Fecha de revisión transversal:** 2026-10-03
+- **Resultado general:** APROBADO (Conforme a SPEC-016, HU-016, DESIGN.md)
 
 ## 2. Pantallas
 
@@ -25,7 +25,7 @@ Inspección de disponibilidad y renderizado de cada pantalla inventariada.
 
 | ID | Pantalla | Ruta del prototipo | Evidencia comprobada | Resultado |
 |---|---|---|---|---|
-| MK-016-S01 | Dashboard analítico y alertas de stock | `/MK016/S01` | Estructura definida en component-spec.md | PENDIENTE (En espera de raw) |
+| MK-016-S01 | Dashboard analítico y alertas de stock | `/MK016/S01` | Estructura definida en component-spec.md y renderizada en `mk_016_s01.html` con 12 KPIs, filtros reactivos, 2 paneles y tabla SKU | CUMPLIDO |
 
 ## 3. Trazabilidad de ejecución
 
@@ -38,20 +38,20 @@ Relación directa entre las unidades de trabajo ejecutadas en `tasks.md`, las pa
 | MK-016-T03 | S01 | Fixtures deterministas | `component-spec.md` §13 | Datasets para estados default, loading, empty y error listos | CUMPLIDO |
 | MK-016-T04 | Transversal | Componentes DS-CXX del Design System | [mockups/DESIGN.md](../DESIGN.md) | Consumo de DS-C19 (KPIs en grid 3x, gap 24 px), DS-C17 (Table), DS-C14 (Badge), DS-C13 (FilterBar), DS-C15 (Alert) | CUMPLIDO |
 | MK-016-T05 | MK-016-S01 | Pantalla ancla y patrones base | `component-spec.md` §10 | Estructura visual, jerarquía y cuadrícula definida en S01 | CUMPLIDO |
-| MK-016-T10 | MK-016-S01 | Estructura de zonas y jerarquía de S01 | `component-spec.md` / `WF-016` / `DESIGN.md` §9 | Cabecera, 12 KPIs en grid de 3 cards por fila (gap 24 px), barra de filtros multidimensional, grid analítica y tabla de SKUs | PENDIENTE (En espera de raw) |
-| MK-016-T11 | MK-016-S01 | Componentes específicos y compartidos | `DESIGN.md` / `component-spec.md` | Tarjetas KPI DS-C19 (grid 3x), tablas DS-C17, badges semánticos DS-C14 y FilterBar DS-C13 | PENDIENTE (En espera de raw) |
-| MK-016-T12 | MK-016-S01 | Interacción de filtrado y navegación | `FLOW-016` / OpenAPI | Filtrado reactivo por producto, categoría, marca, ubicación y estado; enlaces funcionales hacia MK-015 | PENDIENTE (En espera de raw) |
-| MK-016-T13 | MK-016-S01 | Estado default con datos representativos | Fixture `default` | Renderizado completo con 128 disponibles, 9 bloqueadas, 6 bajo stock, 3 agotados | PENDIENTE (En espera de raw) |
-| MK-016-T14 | MK-016-S01 | Estados alternativos (Loading, Empty, Error) | Fixtures alternativos | Skeletons de carga, mensaje EmptyState DS-C25 y aviso de error controlados por query param | PENDIENTE (En espera de raw) |
-| MK-016-T15 | MK-016-S01 | Ajuste de copy y microtexto | `UX Guidelines` | Cero nombres técnicos (`on_hand`, `reserved`, etc.); textos 100% funcionales en español | PENDIENTE (En espera de raw) |
-| MK-016-T16 | MK-016-S01 | Coherencia con flujo integral de inventario | `FLOW-016` / `FLOW-015` | Enlaces contextuales desde alertas de stock y traslados hacia el flujo transaccional de MK-015 | PENDIENTE (En espera de raw) |
-| MK-016-T50 | Transversal | Normalización técnica | `DESIGN.md` | Código estructurado modularmente sin dependencias no aprobadas | PENDIENTE (En espera de raw) |
-| MK-016-T51 | Transversal | Normalización de colores y tokens | `DESIGN.md` §4.1 | Tokens `--neutral-*`, `--success-*`, `--warning-*`, `--error-*` respetados | PENDIENTE (En espera de raw) |
-| MK-016-T52 | Transversal | Escala de espaciados y radios | `DESIGN.md` §3 | Margen de 24 px, gutters, padding de tarjetas (20 px) y radios (8 px) alineados | PENDIENTE (En espera de raw) |
-| MK-016-T53 | Transversal | Escala tipográfica oficial | `DESIGN.md` §3.1 | Tipografía Inter con jerarquía H1 (32 px), H2 (20 px), KPI (28 px), tabla (14 px) | PENDIENTE (En espera de raw) |
-| MK-016-T54 | Transversal | Iconografía Tabler | `DESIGN.md` §3.4 | Iconos oficiales Tabler para badges, avisos y filtros | PENDIENTE (En espera de raw) |
-| MK-016-T55 | Transversal | Eliminación de términos técnicos indebidos | `SPEC-016` §8 / `WF-016` | Cabeceras funcionales: Físico, Reservado, Bloqueado, Disponible | PENDIENTE (En espera de raw) |
-| MK-016-T56 | Transversal | Semántica y accesibilidad básica | `UX Guidelines` | Tablas con `th` estructurados, botones con foco visible y contraste verificado | PENDIENTE (En espera de raw) |
+| MK-016-T10 | MK-016-S01 | Estructura de zonas y jerarquía de S01 | `component-spec.md` / `WF-016` / `DESIGN.md` §9 | Cabecera, 12 KPIs en grid de 3 cards por fila (gap 24 px), barra de filtros multidimensional, grid analítica y tabla de SKUs | CUMPLIDO |
+| MK-016-T11 | MK-016-S01 | Componentes específicos y compartidos | `DESIGN.md` / `component-spec.md` | Tarjetas KPI DS-C19 (grid 3x), tablas DS-C17, badges semánticos DS-C14 y FilterBar DS-C13 | CUMPLIDO |
+| MK-016-T12 | MK-016-S01 | Interacción de filtrado y navegación | `FLOW-016` / OpenAPI | Filtrado reactivo por producto, categoría, marca, ubicación y estado; enlaces funcionales hacia MK-015 | CUMPLIDO |
+| MK-016-T13 | MK-016-S01 | Estado default con datos representativos | Fixture `default` | Renderizado completo con 128 disponibles, 9 bloqueadas, 6 bajo stock, 3 agotados | CUMPLIDO |
+| MK-016-T14 | MK-016-S01 | Estados alternativos (Loading, Empty, Error) | Fixtures alternativos | Skeletons de carga, mensaje EmptyState DS-C25 y aviso de error controlados por query param | CUMPLIDO |
+| MK-016-T15 | MK-016-S01 | Ajuste de copy y microtexto | `UX Guidelines` | Cero nombres técnicos (`on_hand`, `reserved`, etc.); textos 100% funcionales en español | CUMPLIDO |
+| MK-016-T16 | MK-016-S01 | Coherencia con flujo integral de inventario | `FLOW-016` / `FLOW-015` | Enlaces contextuales desde alertas de stock y traslados hacia el flujo transaccional de MK-015 | CUMPLIDO |
+| MK-016-T50 | Transversal | Normalización técnica | `DESIGN.md` | Código estructurado modularmente sin dependencias no aprobadas | CUMPLIDO |
+| MK-016-T51 | Transversal | Normalización de colores y tokens | `DESIGN.md` §4.1 | Tokens `--neutral-*`, `--success-*`, `--warning-*`, `--error-*` respetados | CUMPLIDO |
+| MK-016-T52 | Transversal | Escala de espaciados y radios | `DESIGN.md` §3 | Margen de 24 px, gutters, padding de tarjetas (20 px) y radios (8 px) alineados | CUMPLIDO |
+| MK-016-T53 | Transversal | Escala tipográfica oficial | `DESIGN.md` §3.1 | Tipografía Inter con jerarquía H1 (32 px), H2 (20 px), KPI (28 px), tabla (14 px) | CUMPLIDO |
+| MK-016-T54 | Transversal | Iconografía Tabler | `DESIGN.md` §3.4 | Iconos oficiales SVG Tabler para badges, avisos y filtros | CUMPLIDO |
+| MK-016-T55 | Transversal | Eliminación de términos técnicos indebidos | `SPEC-016` §8 / `WF-016` | Cabeceras funcionales: Físico, Reservado, Bloqueado, Disponible | CUMPLIDO |
+| MK-016-T56 | Transversal | Semántica y accesibilidad básica | `UX Guidelines` | Tablas con `th` estructurados, botones con foco visible y contraste verificado | CUMPLIDO |
 
 ## 4. Trazabilidad de requisitos funcionales
 
