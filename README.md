@@ -74,7 +74,7 @@ flowchart TD
     F --> DS["Design System de mockups — DESIGN.md"] --> MK
 ```
 
-El inventario detallado de funcionalidades, responsables y artefactos canónicos se encuentra en [`wireframes/INDEX.md`](wireframes/INDEX.md) y en [`mockups/README.md`](mockups/README.md).
+El inventario detallado de funcionalidades, responsables y artefactos canónicos se encuentra en [`wireframes/INDEX.md`](ux\wireframes\INDEX.md) y en [`mockups/README.md`](ux\mockups\README.md).
 
 ---
 
@@ -82,28 +82,28 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 
 | Artefacto | Ubicación | Propósito |
 |---|---|---|
-| Especificaciones funcionales | [`specs/`](specs/) | Reglas de negocio y comportamiento esperado |
-| Historias de usuario | [`hu/`](hu/) | Necesidades del usuario y criterios funcionales |
-| Flujos funcionales complementarios | [`flujos/`](flujos/) | Flujos detallados de procesos relevantes |
-| Wireframes (Baja fidelidad) | [`wireframes/flows/`](wireframes/flows/) | Definición funcional y estructural de interfaces |
-| Prototipos HTML de wireframe | [`wireframes/prototipos/`](wireframes/prototipos/) | Representaciones navegables de los wireframes |
-| Guía visual de wireframes | [`wireframes/DESIGN.md`](wireframes/DESIGN.md) | Lineamientos visuales aplicables exclusivamente a wireframes |
-| Índice funcional canónico | [`wireframes/INDEX.md`](wireframes/INDEX.md) | Mapeo de las 16 funcionalidades y responsables |
-| Visor de prototipos | [`wireframes/Visor_Prototipos_PO.html`](wireframes/Visor_Prototipos_PO.html) | Acceso unificado a prototipos de wireframes |
-| Pipeline de Mockups (Alta fidelidad) | [`mockups/`](mockups/) | UX transversal, decisiones, plantillas y código de prototipado |
-| Arquitectura | [`Arquitectura.md`](Arquitectura.md) | Diseño técnico y decisiones arquitectónicas |
-| Modelo conceptual | [`Modelo_Conceptual.md`](Modelo_Conceptual.md) | Ownership y relaciones conceptuales de datos |
-| Contrato de integración | [`Contrato_Api.md`](Contrato_Api.md) | Responsabilidades e integración con otros módulos |
-| OpenAPI | [`api/openapi.yaml`](api/openapi.yaml) | Contrato HTTP ejecutable |
-| AsyncAPI | [`asyncapi/asyncapi.yaml`](asyncapi/asyncapi.yaml) | Contrato de mensajería asíncrona |
-| Catálogo de errores | [`api/catalogo-errores.md`](api/catalogo-errores.md) | Semántica estable de errores del módulo |
-| Catálogo de eventos | [`api/catalogo-eventos.md`](api/catalogo-eventos.md) | Eventos publicados y consumidos |
-| Topología RabbitMQ | [`api/rabbitmq-topologia.md`](api/rabbitmq-topologia.md) | Definición física de exchanges, colas y retries |
-| Kit de integración | [`api/kit-integracion.md`](api/kit-integracion.md) | Guía práctica de integración para otros módulos |
-| Matriz de pruebas de contrato | [`api/pruebas-contrato.md`](api/pruebas-contrato.md) | Casos estáticos, provider, consumer/provider, seguridad e integración |
+| Especificaciones funcionales | [`specs/`](requisitos\specs) | Reglas de negocio y comportamiento esperado |
+| Historias de usuario | [`hu/`](requisitos\hu) | Necesidades del usuario y criterios funcionales |
+| Flujos funcionales complementarios | [`flujos/`](requisitos\flujos) | Flujos detallados de procesos relevantes |
+| Wireframes (Baja fidelidad) | [`wireframes/flows/`](ux\wireframes\flows) | Definición funcional y estructural de interfaces |
+| Prototipos HTML de wireframe | [`wireframes/prototipos/`](ux\wireframes\prototipos) | Representaciones navegables de los wireframes |
+| Guía visual de wireframes | [`wireframes/DESIGN.md`](ux\wireframes\DESIGN.md) | Lineamientos visuales aplicables exclusivamente a wireframes |
+| Índice funcional canónico | [`wireframes/INDEX.md`](ux\wireframes\INDEX.md) | Mapeo de las 16 funcionalidades y responsables |
+| Visor de prototipos | [`wireframes/Visor_Prototipos_PO.html`](ux\wireframes\Visor_Prototipos_PO.html) | Acceso unificado a prototipos de wireframes |
+| Pipeline de Mockups (Alta fidelidad) | [`mockups/`](ux\mockups) | UX transversal, decisiones, plantillas y código de prototipado |
+| Arquitectura | [`Arquitectura.md`](arquitectura\Arquitectura.md) | Diseño técnico y decisiones arquitectónicas |
+| Modelo conceptual | [`Modelo_Conceptual.md`](arquitectura\Modelo_Conceptual.md) | Ownership y relaciones conceptuales de datos |
+| Contrato de integración | [`Contrato_Api.md`](contratos\http\Contrato_Api.md) | Responsabilidades e integración con otros módulos |
+| OpenAPI | [`api/openapi.yaml`](contratos\http\openapi.yaml) | Contrato HTTP ejecutable |
+| AsyncAPI | [`asyncapi/asyncapi.yaml`](contratos\eventos\asyncapi.yaml) | Contrato de mensajería asíncrona |
+| Catálogo de errores | [`api/catalogo-errores.md`](contratos\http\catalogo-errores.md) | Semántica estable de errores del módulo |
+| Catálogo de eventos | [`api/catalogo-eventos.md`](contratos\eventos\catalogo-eventos.md) | Eventos publicados y consumidos |
+| Topología RabbitMQ | [`api/rabbitmq-topologia.md`](contratos\eventos\rabbitmq-topologia.md) | Definición física de exchanges, colas y retries |
+| Kit de integración | [`api/kit-integracion.md`](contratos\http\kit-integracion.md) | Guía práctica de integración para otros módulos |
+| Matriz de pruebas de contrato | [`api/pruebas-contrato.md`](contratos\pruebas\pruebas-contrato.md) | Casos estáticos, provider, consumer/provider, seguridad e integración |
 | Acuerdos de integración | [`integraciones/`](integraciones/) | Acuerdos homologados con Marketplace, Retail, Chatbot y Ventas; las integraciones restantes se documentan en sus artefactos canónicos |
 | Equipo y responsabilidades | [`EQUIPO_Y_RESPONSABILIDADES.md`](EQUIPO_Y_RESPONSABILIDADES.md) | Roles transversales, ownership funcional y mecanismos de revisión del equipo |
-| Persistencia por bounded context | [`bd/`](bd/) | Modelo físico, migraciones y scripts de validación SQL por servicio |
+| Persistencia por bounded context | [`bd/`](datos) | Modelo físico, migraciones y scripts de validación SQL por servicio |
 
 ---
 
@@ -130,7 +130,7 @@ No todos los documentos tienen la misma autoridad.
 
 Ante una diferencia entre documentación narrativa y un contrato ejecutable, se debe revisar primero la fuente de verdad correspondiente y posteriormente propagar la corrección a los documentos derivados.
 
-> **Nota sobre diseño:** `wireframes/DESIGN.md` gobierna únicamente la representación visual de baja fidelidad de los wireframes históricos. Los mockups de alta fidelidad se rigen exclusivamente por la Propuesta UX Integral del módulo, las UX Decisions, las UX Guidelines y el Design System correspondiente bajo [`mockups/`](mockups/).
+> **Nota sobre diseño:** `wireframes/DESIGN.md` gobierna únicamente la representación visual de baja fidelidad de los wireframes históricos. Los mockups de alta fidelidad se rigen exclusivamente por la Propuesta UX Integral del módulo, las UX Decisions, las UX Guidelines y el Design System correspondiente bajo [`mockups/`](ux\mockups).
 
 ---
 
@@ -151,7 +151,7 @@ El módulo se divide en ocho bounded contexts de negocio.
 
 Adicionalmente existe un `api-gateway` / BFF como punto de acceso, pero no constituye un bounded context de negocio.
 
-La descripción completa, reglas de dependencias, persistencia, mensajería, resiliencia, seguridad, observabilidad y diagramas C4 se encuentran en [`Arquitectura.md`](Arquitectura.md).
+La descripción completa, reglas de dependencias, persistencia, mensajería, resiliencia, seguridad, observabilidad y diagramas C4 se encuentran en [`Arquitectura.md`](arquitectura\Arquitectura.md).
 
 ---
 
@@ -245,15 +245,15 @@ Ejemplos:
 
 El contrato HTTP completo se encuentra en:
 
-[`api/openapi.yaml`](api/openapi.yaml)
+[`api/openapi.yaml`](contratos\http\openapi.yaml)
 
 La mensajería asíncrona se encuentra en:
 
-[`asyncapi/asyncapi.yaml`](asyncapi/asyncapi.yaml)
+[`asyncapi/asyncapi.yaml`](contratos\eventos\asyncapi.yaml)
 
 La explicación humana de responsabilidades e integración se mantiene en:
 
-[`Contrato_Api.md`](Contrato_Api.md)
+[`Contrato_Api.md`](contratos\http\Contrato_Api.md)
 
 ### Versiones contractuales actuales
 
@@ -275,24 +275,24 @@ El módulo cuenta con dos niveles de diseño formalmente articulados:
 ### 9.1. Baja fidelidad (Wireframes)
 Las 16 funcionalidades disponen de definición de wireframe funcional y prototipo HTML navegable gobernados por:
 
-[`wireframes/DESIGN.md`](wireframes/DESIGN.md)
+[`wireframes/DESIGN.md`](ux\wireframes\DESIGN.md)
 
 Este documento define exclusivamente los lineamientos de los **wireframes de baja fidelidad**. Los prototipos HTML correspondientes son artefactos estáticos de documentación y validación estructural; no constituyen el frontend productivo.
 
 Para recorrer los wireframes desde un único punto puede utilizarse:
-[`wireframes/Visor_Prototipos_PO.html`](wireframes/Visor_Prototipos_PO.html)
+[`wireframes/Visor_Prototipos_PO.html`](ux\wireframes\Visor_Prototipos_PO.html)
 
 ### 9.2. Alta fidelidad (Pipeline de Mockups)
 La evolución hacia mockups de alta fidelidad se rige de forma estricta por la gobernanza transversal del módulo documentada en:
 
-[`mockups/`](mockups/)
+[`mockups/`](ux\mockups)
 
 Este pipeline no mezcla las reglas visuales de los wireframes con las decisiones de alta fidelidad. Se fundamenta en:
-- [`mockups/ux/propuesta-ux.md`](mockups/ux/propuesta-ux.md): Las 3 propuestas UX finales de #59, matriz de las 16 funcionalidades, evaluación de los borradores y Propuesta UX Integral Adoptada para el Gestor Comercial.
-- [`mockups/ux/ux-decisions.md`](mockups/ux/ux-decisions.md): Decisiones transversales justificadas (`UXD-001` a `UXD-012`).
-- [`mockups/ux/ux-guidelines.md`](mockups/ux/ux-guidelines.md): Reglas normativas operativas y accesibilidad en PC Desktop (viewport canónico de 1440 px).
-- [`mockups/DESIGN.md`](mockups/DESIGN.md): Design System vigente de mockups, con foundations, layout desktop, componentes y estados visuales alineados con la UX transversal.
-- [`mockups/prototipo/`](mockups/prototipo/): Código interactivo normalizado de prototipado (bajo `src/pantallas/MKXXX`).
+- [`mockups/ux/propuesta-ux.md`](ux\mockups\ux\propuesta-ux.md): Las 3 propuestas UX finales de #59, matriz de las 16 funcionalidades, evaluación de los borradores y Propuesta UX Integral Adoptada para el Gestor Comercial.
+- [`mockups/ux/ux-decisions.md`](ux\mockups\ux\ux-decisions.md): Decisiones transversales justificadas (`UXD-001` a `UXD-012`).
+- [`mockups/ux/ux-guidelines.md`](ux\mockups\ux\ux-guidelines.md): Reglas normativas operativas y accesibilidad en PC Desktop (viewport canónico de 1440 px).
+- [`mockups/DESIGN.md`](ux\mockups\DESIGN.md): Design System vigente de mockups, con foundations, layout desktop, componentes y estados visuales alineados con la UX transversal.
+- [`mockups/prototipo/`](ux\mockups\prototipo): Código interactivo normalizado de prototipado (bajo `src/pantallas/MKXXX`).
 
 La cadena completa de diseño de alta fidelidad es:
 
@@ -338,7 +338,7 @@ flowchart TD
 | `vera` | Leonardo Vera Rodríguez | Precios y auditoría de precios |
 | `taco` | Miguel Ángel Taco Zavala | Inventario, analítica y alertas |
 
-La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`wireframes/INDEX.md`](wireframes/INDEX.md) y [`mockups/README.md`](mockups/README.md).
+La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`wireframes/INDEX.md`](ux\wireframes\INDEX.md) y [`mockups/README.md`](ux\mockups\README.md).
 
 Los roles transversales, los límites de responsabilidad y los mecanismos de revisión del equipo se documentan en [`EQUIPO_Y_RESPONSABILIDADES.md`](EQUIPO_Y_RESPONSABILIDADES.md).
 
@@ -411,7 +411,7 @@ Este repositorio busca mantener:
 Los siguientes artefactos ampliarán la trazabilidad hacia el Hito 2:
 
 - Implementación incremental y validación de los 16 mockups (`mockups/MK-001` a `MK-016`).
-- Modelo lógico de base de datos (resto de bounded contexts; `inventory-svc` ya cuenta con [`bd/inventory-svc/physical-model.md`](bd/inventory-svc/physical-model.md)).
+- Modelo lógico de base de datos (resto de bounded contexts; `inventory-svc` ya cuenta con [`bd/inventory-svc/physical-model.md`](datos\inventory-svc\physical-model.md)).
 - Modelo físico de base de datos (`inventory-svc` implementado en `migration.sql`).
 - Scripts SQL y migraciones (`inventory-svc` validado localmente con `validation.sql`).
 - Evidencia de implementación en Supabase (despliegue del schema `inventory`, coordinado con Axel Cueva).
