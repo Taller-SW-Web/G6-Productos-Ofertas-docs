@@ -1,7 +1,7 @@
 # Alineación Marketplace ↔ Productos y Ofertas
 
 **Estado:** homologación contractual HTTP 0.5.0
-**Fuente HTTP autoritativa:** [`../api/openapi.yaml`](../api/openapi.yaml)
+**Fuente HTTP autoritativa:** [`../api/openapi.yaml`](..\contratos\http\openapi.yaml)
 
 ## 1. Objetivo
 
