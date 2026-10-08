@@ -4,7 +4,7 @@ info:
   version: 0.5.0
   summary: Contrato HTTP de integración y administración del módulo Productos y Ofertas
   description: Contrato HTTP consolidado P0/P1/P2 del módulo Productos y Ofertas. P2 cierra la recepción de traslados internos de Inventario
-    y la autorización local del operador de inventario. La topología RabbitMQ física se documenta en AsyncAPI 0.4.0 y api/rabbitmq-topologia.md.
+    y la autorización local del operador de inventario. La topología RabbitMQ física se documenta en AsyncAPI 0.5.0 y api/rabbitmq-topologia.md.
 servers:
 - url: /api/v1
   description: Base relativa del módulo
@@ -5791,6 +5791,334 @@ paths:
       - modulo-marketplace
       - modulo-chatbot
       - modulo-retail
+  /productos/{productoId}/preparacion:
+    get:
+      tags:
+      - Productos
+      operationId: obtenerPreparacionProducto
+      summary: Obtener estado de preparación del producto y sus dependencias
+      description: Permite a la interfaz administrativa del Gestor Comercial consultar el estado detallado de preparación técnica del producto (Pricing) y sus unidades vendibles (Inventario de sku_base o variantes).
+      x-status: provisional-internal
+      x-source-spec:
+      - SPEC-003
+      - SPEC-004
+      x-route-basis: derived-from-capability
+      security:
+      - userBearer: []
+      parameters:
+      - $ref: '#/components/parameters/ProductoId'
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Estado de preparación del producto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductoPreparacion'
+        '400':
+          description: Error de validación
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      enum:
+                      - VALIDACION
+                  required:
+                  - status
+                  - code
+        '401':
+          description: No autenticado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 401
+                    code:
+                      type: string
+                      enum:
+                      - TOKEN_INVALIDO
+                  required:
+                  - status
+                  - code
+        '403':
+          description: No autorizado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 403
+                    code:
+                      type: string
+                      enum:
+                      - SCOPE_INSUFICIENTE
+                  required:
+                  - status
+                  - code
+        '404':
+          description: Producto no encontrado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 404
+                    code:
+                      type: string
+                      enum:
+                      - PRODUCTO_NO_ENCONTRADO
+                  required:
+                  - status
+                  - code
+        '500':
+          description: Error interno
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 500
+                    code:
+                      type: string
+                      enum:
+                      - ERROR_INTERNO
+                  required:
+                  - status
+                  - code
+        '503':
+          description: Servicio no disponible
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 503
+                    code:
+                      type: string
+                      enum:
+                      - SERVICIO_NO_DISPONIBLE
+                  required:
+                  - status
+                  - code
+      x-error-codes:
+        '400':
+        - VALIDACION
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
+        '404':
+        - PRODUCTO_NO_ENCONTRADO
+        '500':
+        - ERROR_INTERNO
+        '503':
+        - SERVICIO_NO_DISPONIBLE
+  /productos/{productoId}/preparacion/reintentar:
+    post:
+      tags:
+      - Productos
+      operationId: reintentarPreparacionProducto
+      summary: Reintentar preparación de Pricing o Inventario del producto simple
+      description: Solicita la recuperación manual de la preparación de Pricing o del Inventario del sku_base (solo producto simple). Requiere que la dependencia se encuentre en un estado que admita recuperación manual (manual_retry_allowed=true).
+      x-status: provisional-internal
+      x-source-spec:
+      - SPEC-003
+      x-route-basis: derived-from-capability
+      security:
+      - userBearer: []
+      parameters:
+      - $ref: '#/components/parameters/ProductoId'
+      - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReintentarPreparacionProductoRequest'
+      responses:
+        '202':
+          description: Solicitud de reintento admitida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationAccepted'
+        '400':
+          description: Error de validación
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      enum:
+                      - VALIDACION
+                  required:
+                  - status
+                  - code
+        '401':
+          description: No autenticado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 401
+                    code:
+                      type: string
+                      enum:
+                      - TOKEN_INVALIDO
+                  required:
+                  - status
+                  - code
+        '403':
+          description: No autorizado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 403
+                    code:
+                      type: string
+                      enum:
+                      - SCOPE_INSUFICIENTE
+                  required:
+                  - status
+                  - code
+        '404':
+          description: Producto no encontrado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 404
+                    code:
+                      type: string
+                      enum:
+                      - PRODUCTO_NO_ENCONTRADO
+                  required:
+                  - status
+                  - code
+        '409':
+          description: Preparación no admite reintento manual
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 409
+                    code:
+                      type: string
+                      enum:
+                      - PREPARACION_NO_REINTENTABLE
+                  required:
+                  - status
+                  - code
+        '500':
+          description: Error interno
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 500
+                    code:
+                      type: string
+                      enum:
+                      - ERROR_INTERNO
+                  required:
+                  - status
+                  - code
+        '503':
+          description: Servicio no disponible
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 503
+                    code:
+                      type: string
+                      enum:
+                      - SERVICIO_NO_DISPONIBLE
+                  required:
+                  - status
+                  - code
+      x-error-codes:
+        '400':
+        - VALIDACION
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
+        '404':
+        - PRODUCTO_NO_ENCONTRADO
+        '409':
+        - PREPARACION_NO_REINTENTABLE
+        '500':
+        - ERROR_INTERNO
+        '503':
+        - SERVICIO_NO_DISPONIBLE
   /productos/{productoId}/variantes:
     get:
       tags:
@@ -6908,6 +7236,186 @@ paths:
         '404': *id223
         '409': *id224
         '422': *id225
+  /productos/{productoId}/variantes/{variantId}/preparacion/reintentar:
+    post:
+      tags:
+      - Variantes
+      operationId: reintentarPreparacionVariante
+      summary: Reintentar preparación de inventario de variante
+      description: Solicita la recuperación manual de la inicialización de inventario para una variante específica. Requiere que la preparación admita recuperación manual (manual_retry_allowed=true).
+      x-status: provisional-internal
+      x-source-spec:
+      - SPEC-004
+      x-route-basis: derived-from-capability
+      security:
+      - userBearer: []
+      parameters:
+      - $ref: '#/components/parameters/ProductoId'
+      - $ref: '#/components/parameters/VarianteId'
+      - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReintentarPreparacionVarianteRequest'
+      responses:
+        '202':
+          description: Solicitud de reintento admitida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationAccepted'
+        '400':
+          description: Error de validación
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      enum:
+                      - VALIDACION
+                  required:
+                  - status
+                  - code
+        '401':
+          description: No autenticado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 401
+                    code:
+                      type: string
+                      enum:
+                      - TOKEN_INVALIDO
+                  required:
+                  - status
+                  - code
+        '403':
+          description: No autorizado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 403
+                    code:
+                      type: string
+                      enum:
+                      - SCOPE_INSUFICIENTE
+                  required:
+                  - status
+                  - code
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 404
+                    code:
+                      type: string
+                      enum:
+                      - PRODUCTO_NO_ENCONTRADO
+                      - VARIANTE_NO_ENCONTRADA
+                  required:
+                  - status
+                  - code
+        '409':
+          description: Preparación no admite reintento manual
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 409
+                    code:
+                      type: string
+                      enum:
+                      - PREPARACION_NO_REINTENTABLE
+                  required:
+                  - status
+                  - code
+        '500':
+          description: Error interno
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 500
+                    code:
+                      type: string
+                      enum:
+                      - ERROR_INTERNO
+                  required:
+                  - status
+                  - code
+        '503':
+          description: Servicio no disponible
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 503
+                    code:
+                      type: string
+                      enum:
+                      - SERVICIO_NO_DISPONIBLE
+                  required:
+                  - status
+                  - code
+      x-error-codes:
+        '400':
+        - VALIDACION
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
+        '404':
+        - PRODUCTO_NO_ENCONTRADO
+        - VARIANTE_NO_ENCONTRADA
+        '409':
+        - PREPARACION_NO_REINTENTABLE
+        '500':
+        - ERROR_INTERNO
+        '503':
+        - SERVICIO_NO_DISPONIBLE
   /combos:
     get:
       tags:
@@ -20868,6 +21376,7 @@ components:
       - DISPOSICION_RECEPCION_INVALIDA
       - CODIGO_BARRAS_NO_ENCONTRADO
       - RATE_LIMIT_EXCEDIDO
+      - PREPARACION_NO_REINTENTABLE
     CodigoRechazoCupon:
       type: string
       description: Motivo estable de no aplicabilidad del cupón. No implica por sí mismo error HTTP.
@@ -20911,6 +21420,89 @@ components:
       - operation_id
       - status
       - correlation_id
+    EstadoPreparacionDependencia:
+      type: object
+      description: Estado detallado de una inicialización o preparación asíncrona de dependencia.
+      properties:
+        status:
+          type: string
+          enum:
+          - PENDING
+          - COMPLETED
+          - REJECTED
+        manual_retry_allowed:
+          type: boolean
+          description: Indica si Catálogo admite una solicitud de recuperación manual en el estado actual.
+        code:
+          oneOf:
+          - type: string
+          - type: 'null'
+          description: Causa o código de rechazo/resultado funcional si está disponible.
+      required:
+      - status
+      - manual_retry_allowed
+    VariantePreparacion:
+      type: object
+      description: Estado de preparación de inventario para una variante de producto.
+      properties:
+        variant_id:
+          type: string
+        sku:
+          type: string
+        inventario:
+          $ref: '#/components/schemas/EstadoPreparacionDependencia'
+      required:
+      - variant_id
+      - sku
+      - inventario
+    ProductoPreparacion:
+      type: object
+      description: Estado administrativo consolidado de la preparación de Pricing e Inventario del producto.
+      properties:
+        product_id:
+          type: string
+        tiene_variantes:
+          type: boolean
+        pricing:
+          $ref: '#/components/schemas/EstadoPreparacionDependencia'
+        inventario:
+          oneOf:
+          - $ref: '#/components/schemas/EstadoPreparacionDependencia'
+          - type: 'null'
+          description: Estado de preparación de inventario de sku_base si el producto es simple; null si tiene_variantes=true.
+        variantes:
+          type: array
+          items:
+            $ref: '#/components/schemas/VariantePreparacion'
+          description: Lista de estados de preparación de inventario de las variantes si tiene_variantes=true; lista vacía si es producto simple.
+      required:
+      - product_id
+      - tiene_variantes
+      - pricing
+      - inventario
+      - variantes
+    ReintentarPreparacionProductoRequest:
+      type: object
+      description: Solicitud de recuperación manual de una preparación de producto.
+      properties:
+        dependencia:
+          type: string
+          enum:
+          - PRICING
+          - INVENTARIO
+          description: Dependencia a reintentar. PRICING aplica al producto; INVENTARIO aplica al sku_base de un producto simple.
+        motivo:
+          type: string
+          description: Motivo opcional de la solicitud de reintento.
+      required:
+      - dependencia
+    ReintentarPreparacionVarianteRequest:
+      type: object
+      description: Solicitud opcional de recuperación manual de inventario de variante.
+      properties:
+        motivo:
+          type: string
+          description: Motivo opcional de la solicitud de reintento.
     EstadoEntidad:
       type: string
       enum:

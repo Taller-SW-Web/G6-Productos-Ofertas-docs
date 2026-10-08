@@ -3,11 +3,11 @@
 **Fecha de actualización:** 2026-10-01  
 **Módulo propietario:** Productos y Ofertas  
 **Documento de integración:** `Contrato_Api.md`  
-**Contrato HTTP canónico:** `api/openapi.yaml` (`0.4.0`)  
-**Contrato asíncrono canónico:** `asyncapi/asyncapi.yaml` (`0.4.0`)  
-**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.4.0`)  
-**Catálogo de errores canónico:** `api/catalogo-errores.md` (`0.4.0`)  
-**Estado:** OpenAPI, AsyncAPI, topología RabbitMQ y recepción de traslados consolidados en `0.4.0`.
+**Contrato HTTP canónico:** `api/openapi.yaml` (`0.5.0`)
+**Contrato asíncrono canónico:** `asyncapi/asyncapi.yaml` (`0.5.0`)
+**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.5.0`)
+**Catálogo de errores canónico:** `api/catalogo-errores.md` (`0.5.0`)
+**Estado:** OpenAPI `0.5.0`, AsyncAPI `0.5.0`, topología RabbitMQ y recepción de traslados consolidados.
 
 ## Fuentes utilizadas
 
@@ -299,6 +299,106 @@ Esta decisión evita que Chatbot, Marketplace o Retail deban realizar una segund
 
 ---
 
+## 5.3. Estado de preparación del producto
+
+```http
+GET /api/v1/productos/{productoId}/preparacion
+```
+
+Consulta administrativa del Gestor Comercial (autenticación `userBearer`). Permite a la interfaz conocer el estado real y detallado de preparación técnica sin inferirlo de los booleanos binarios de compatibilidad (`pricing_preparado`, `inventario_inicializado`).
+
+Esta operación lee el estado de coordinación local mantenido por Catálogo; **no** realiza llamadas síncronas a Pricing ni a Inventario para construir la respuesta. Pricing e Inventario actualizan indirectamente este estado mediante los resultados asíncronos ya definidos en AsyncAPI (`*.completed`, `*.rejected`).
+
+Respuesta: DTO `ProductoPreparacion`:
+- `product_id`: identificador del producto.
+- `tiene_variantes`: indica si el producto administra variantes.
+- `pricing`: estado de preparación de Pricing a nivel producto (`EstadoPreparacionDependencia`).
+- `inventario`: estado de inicialización de inventario para `sku_base` en producto simple (`EstadoPreparacionDependencia`). Si `tiene_variantes=true`, el padre no tiene saldo propio y este campo es `null`.
+- `variantes`: lista de estados de preparación de inventario de las variantes (`VariantePreparacion`) si `tiene_variantes=true`; lista vacía si es producto simple.
+
+Cada dependencia expone:
+- `status`: `PENDING`, `COMPLETED` o `REJECTED`.
+- `manual_retry_allowed`: booleano que indica si Catálogo admite una recuperación manual excepcional en el momento actual (calculado de forma autoritativa por Catálogo).
+- `code`: código o causa de resultado funcional/rechazo disponible (o `null`).
+
+No expone nombres físicos de RabbitMQ, colas, DLQ, contadores de retry, `operation_id`, `message_id` ni `causation_id`.
+
+---
+
+## 5.4. Reintentar preparación de producto
+
+```http
+POST /api/v1/productos/{productoId}/preparacion/reintentar
+```
+
+Operación administrativa del Gestor Comercial para solicitar la recuperación manual de la preparación de Pricing o del Inventario del `sku_base` (solo producto simple).
+
+Body:
+```json
+{
+  "dependencia": "PRICING",
+  "motivo": "Corrección de causa o umbral operativo superado"
+}
+```
+
+Reglas:
+- `dependencia`: `PRICING` (aplica a nivel de producto) o `INVENTARIO` (aplica exclusivamente al `sku_base` de producto simple).
+- Si el producto tiene variantes (`tiene_variantes=true`), el reintento de inventario debe realizarse a nivel de cada variante mediante el endpoint específico.
+- El cliente no envía `operation_id` ni `message_id`: Catálogo reutiliza la `operation_id` de la preparación original.
+- Respuesta exitosa: `202 Accepted` con schema `OperationAccepted`. Devuelve la `operation_id` original de la preparación. `202` formaliza admisión del reintento, **no** que la preparación haya concluido.
+- La admisión de recuperación manual es **atómica por preparación**: exactamente una solicitud concurrente puede cambiar `manual_retry_allowed=true` a `PENDING` (`manual_retry_allowed=false`) y obtiene `HTTP 202 Accepted`. Las solicitudes que compitan después de que la primera haya adquirido la transición obtienen `HTTP 409 PREPARACION_NO_REINTENTABLE`. Nunca deben generarse dos publicaciones RabbitMQ ni dos efectos de negocio.
+- Si la preparación no admite reintento manual (p. ej. continúa en recuperación técnica ordinaria, ya está `COMPLETED`, no cumple precondiciones funcionales, o ya fue admitida por una solicitud concurrente), devuelve HTTP `409 PREPARACION_NO_REINTENTABLE`.
+- El endpoint vuelve a comprobar las precondiciones de forma autoritativa en backend para prevenir condiciones de carrera (TOCTOU) entre la lectura previa y la ejecución del POST.
+
+---
+
+## 5.5. Reintentar preparación de variante
+
+```http
+POST /api/v1/productos/{productoId}/variantes/{variantId}/preparacion/reintentar
+```
+
+Operación administrativa del Gestor Comercial para solicitar la recuperación manual de la inicialización de inventario de una variante específica.
+
+Body opcional:
+```json
+{
+  "motivo": "Corrección de configuración de almacén o umbral operativo superado"
+}
+```
+
+Reglas:
+- Recupera **únicamente INVENTARIO**. No admite ni ejecuta inicialización de Pricing, ya que las variantes heredan el precio del producto y nunca emiten `pricing.product.initialization.requested`.
+- Respuesta exitosa: `202 Accepted` (`OperationAccepted`) conservando la `operation_id` original de la preparación de inventario de la variante.
+- Aplica la misma regla de concurrencia atómica: la primera solicitud adquiere la transición y obtiene `202 Accepted`; las solicitudes concurrentes perdedoras obtienen HTTP `409 PREPARACION_NO_REINTENTABLE`.
+- Si no admite reintento manual o fallan las precondiciones revalidadas en backend, devuelve HTTP `409 PREPARACION_NO_REINTENTABLE`.
+
+---
+
+## 5.6. Política empresarial de recuperación de preparación (FLOW-003 / FLOW-004)
+
+1. **Recuperación técnica automática:** Los fallos técnicos transitorios (timeouts, indisponibilidad momentánea de broker o base de datos) se recuperan automáticamente mediante la infraestructura y política RabbitMQ existente de cada servicio consumidor (hasta 3 reintentos automáticos con 30 s de espera antes de DLQ). La UI y el Gestor Comercial nunca gestionan retries técnicos individuales ni interactúan con colas.
+2. **PENDING ordinario:** Tras solicitar la preparación, el estado permanece `PENDING` con `manual_retry_allowed=false`. Un `PENDING` normal representa trabajo en curso o recuperación técnica automática; no requiere ni admite intervención del Gestor Comercial.
+3. **Ausencia prolongada de resultado:** Catálogo mantiene `PENDING` y **no inspecciona directamente la DLQ** del servicio consumidor. Si transcurre un umbral operativo configurable sin confirmación concluyente y Catálogo determina que la preparación admite recuperación, Catálogo actualiza `manual_retry_allowed=true` manteniendo `PENDING`.
+4. **REJECTED de negocio y transición autoritativa:** Al recibir `REJECTED`, Catálogo registra `status=REJECTED` y el código recibido en `code`. El producto permanece en `BORRADOR` o la variante como no publicable; no se reintenta automáticamente por infraestructura. El indicador `manual_retry_allowed` es calculado y autoritativo en Catálogo (la UI nunca es la autoridad). Catálogo evalúa si la causa puede corregirse mediante una capacidad actualmente publicada:
+   - **No publicada:** Si la causa no admite corrección mediante operaciones publicadas de la API (p. ej., rechazo de Pricing que exija modificar el precio base inicial, dado que `ProductoUpdateRequest` no incluye `precioBaseInicial`), se conserva `REJECTED` con `manual_retry_allowed=false`. El paso del tiempo nunca convierte en reintentable un rechazo que exige mutaciones no expuestas.
+   - **Publicada:** Si la causa es subsanable con capacidades publicadas, el Gestor Comercial efectúa la modificación en el borrador de Catálogo; Catálogo revalida autoritativamente las precondiciones locales de esa preparación. Si la preparación vuelve a ser elegible para un nuevo intento: Catálogo establece `manual_retry_allowed=true`; si las precondiciones siguen siendo inválidas: permanece en `manual_retry_allowed=false`.
+5. **Comprobación autoritativa en POST (anti-TOCTOU):** El POST de recuperación vuelve a comprobar autoritativamente las precondiciones y el estado de la preparación. Si entre la consulta y el POST la preparación dejó de ser reintentable o fue tomada por otra solicitud concurrente, devuelve `HTTP 409 PREPARACION_NO_REINTENTABLE`.
+6. **Conservación de identidades y nuevo intento:** Toda recuperación manual admitida conserva estrictamente la `operation_id` original (que identifica la preparación lógica de larga vida). Catálogo genera una **nueva `message_id`** para la nueva publicación del comando a través de Outbox hacia RabbitMQ. El consumidor debe reconocer que una nueva `message_id` con la misma `operation_id` tras un `REJECTED` autorizado representa un nuevo intento de la misma preparación y no una segunda entidad de negocio. Las entregas técnicas repetidas del mismo mensaje conservan su `message_id` original y se deduplican en el consumidor.
+7. **Correlación por intento con `causation_id` y descarte de resultados stale:**
+   - Cada comando `*.requested` tiene su propia `message_id`.
+   - El resultado asíncrono correspondiente (`*.completed` o `*.rejected`) emitido por el servicio dependiente debe portar `causation_id = message_id` del `*.requested` que originó ese resultado.
+   - Catálogo conserva internamente cuál es la `message_id` del intento actualmente activo.
+   - Catálogo solo puede modificar el estado actual de la preparación con un resultado cuyo `causation_id` coincida con la `message_id` del intento activo.
+   - Un resultado tardío de un intento anterior se registra/ignora idempotentemente como stale y NO puede reemplazar ni alterar el estado del intento actual.
+   - `operation_id` identifica la preparación lógica de larga vida; `message_id` identifica cada publicación/intento; `causation_id` conecta resultado ↔ intento concreto.
+8. **Reconstrucción del comando con estado actual validado:** Cuando la recuperación ocurre después de que el gestor corrigió datos en el borrador (atributos, perfil físico, clasificación), el nuevo comando `*.requested` se construye usando el **estado actual validado** del borrador (no se republica ciegamente el payload antiguo rechazado). Si la causa de rechazo de pricing exigiese alterar el precio base inicial, `manual_retry_allowed` permanece en `false` dado que la API de Catálogo no ofrece un endpoint de mutación para modificar el precio base inicial en el borrador (`ProductoUpdateRequest` no incluye `precioBaseInicial`). Conservar `operation_id` no significa congelar el payload rechazado.
+9. **Concurrencia atómica e idempotencia:** La admisión de reintento es atómica por preparación. Exactamente una solicitud concurrente pasa `manual_retry_allowed=true` a `PENDING` / `manual_retry_allowed=false` y recibe `202 Accepted`. Las solicitudes concurrentes competidoras reciben `409 PREPARACION_NO_REINTENTABLE`. Se garantiza que nunca se duplican publicaciones RabbitMQ ni efectos de negocio (sin duplicar producto, precio, SKU ni inicializaciones).
+10. **Inmutabilidad de COMPLETED:** Una dependencia que ya alcanzó el estado `COMPLETED` es terminal: nunca vuelve a ejecutarse ni reintentarse, y publicaciones posteriores con la misma `operation_id` se descartan idempotentemente sin reejecutar efectos.
+11. **Aislamiento de mensajería y consulta desacoplada:** La UI del Gestor Comercial interactúa exclusivamente mediante los endpoints HTTP de la API de Catálogo; nunca se comunica directamente con RabbitMQ. La consulta de estado (`GET /preparacion`) lee exclusivamente el estado local de Catálogo sin acoplarse sincrónicamente a los servicios dependientes.
+
+---
+
 # 6. Taxonomía
 
 ## 6.1. Categorías
@@ -368,7 +468,7 @@ taxonomy.characteristic-value.updated
 
 ## 6.4. Bajas seguras de entidades maestras
 
-La desactivación/desasociación de entidades con dependencias usa el protocolo asíncrono genérico de baja segura. AsyncAPI `0.4.0` cubre también:
+La desactivación/desasociación de entidades con dependencias usa el protocolo asíncrono genérico de baja segura. AsyncAPI `0.5.0` cubre también:
 
 ```text
 PRODUCT_TYPE
@@ -393,7 +493,7 @@ Una identidad de operación inexistente devuelve:
 
 # 7. Precios
 
-`api/openapi.yaml` (`0.4.0`) es la fuente de verdad HTTP de Pricing. La superficie distingue consultas estables para consumidores y operaciones administrativas internas derivadas de SPEC-013.
+`api/openapi.yaml` (`0.5.0`) es la fuente de verdad HTTP de Pricing. La superficie distingue consultas estables para consumidores y operaciones administrativas internas derivadas de SPEC-013.
 
 ## 7.1. Consultas estables para consumidores
 
@@ -1158,9 +1258,9 @@ Campos mínimos:
 sku
 estado
 pesoKg
-largoCm
-anchoCm
-altoCm
+dimensionesCm.largo
+dimensionesCm.ancho
+dimensionesCm.alto
 actualizadoEn
 ```
 
@@ -1168,9 +1268,9 @@ El volumen puede ser calculado por Despacho:
 
 ```text
 volumenUnitarioM3 =
-(largoCm / 100) *
-(anchoCm / 100) *
-(altoCm / 100)
+(dimensionesCm.largo / 100) *
+(dimensionesCm.ancho / 100) *
+(dimensionesCm.alto / 100)
 ```
 
 ---
@@ -1700,7 +1800,7 @@ Referencia humana:
 api/catalogo-eventos.md
 ```
 
-AsyncAPI `0.4.0` documenta **39 mensajes lógicos** entre eventos, comandos internos y resultados.
+AsyncAPI `0.5.0` documenta **39 mensajes lógicos** entre eventos, comandos internos y resultados.
 
 Entre los mensajes externos/integradores más relevantes están:
 
@@ -2335,7 +2435,7 @@ La tabla completa de queues/bindings vive en:
 api/rabbitmq-topologia.md
 ```
 
-AsyncAPI `0.4.0` contiene la misma topología como `x-rabbitmq-topology`.
+AsyncAPI `0.5.0` contiene la misma topología como `x-rabbitmq-topology`.
 
 
 # 40. Pendientes de integración externa
@@ -2482,7 +2582,7 @@ Seguridad:
 - emite tokens de servicio con `aud` y `scope` para APIs propietarias;
 - permite introspección para cambios de precio según el contrato vigente.
 
-La línea base documental consolidada es OpenAPI `0.5.0`, AsyncAPI `0.4.0`, catálogo de errores `0.4.0` y catálogo de eventos `0.4.0`.
+La línea base documental consolidada es OpenAPI `0.5.0`, AsyncAPI `0.5.0`, catálogo de errores `0.5.0` y catálogo de eventos `0.5.0`.
 
 A partir de esta versión, cualquier cambio de rutas HTTP debe realizarse primero en `api/openapi.yaml`; los cambios de mensajería deben realizarse primero en `asyncapi/asyncapi.yaml`; después se actualizan los documentos humanos derivados.
 

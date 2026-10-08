@@ -135,15 +135,17 @@ Los identificadores 001–006 se mantienen con contenido revisado, sin conservar
 
 **Decisión:** recuperar de forma localizada, conservar entradas y consultar primero cuando el resultado de una escritura sea desconocido. Utilizar identidad/idempotencia y versiones exigidas por el contrato; la UI no altera esos valores para vencer un conflicto.
 
-**Alternativas y motivo:** «Reintentar» universal puede duplicar efectos o repetir un error determinista. Se adopta una acción específica:
+**Alternativas y motivo:** «Reintentar» universal puede duplicar efectos o repetir un error determinista. «Reintentar» no es una acción universal. Se adopta una acción específica:
 - MK-001: reanudar el mismo lote, solo pendientes/reconciliación según operación publicada.
+- MK-003: recuperación automática para fallo técnico; recuperación manual solo cuando el estado publicado la habilita (`manual_retry_allowed=true`).
+- MK-004: misma política, exclusivamente para Inventario de variante.
 - MK-013: corregir e importar un nuevo intento; no existe reanudación equivalente de Pricing. Conflicto de versión exige releer, revisar diferencias y confirmar intención.
 - MK-008: volver a resolver slug, mostrar propuesta y confirmar; la propuesta anterior no reservó el nombre.
 - MK-012: corregir slug manual rechazado, sin sufijarlo automáticamente.
 - MK-014: reducir rango/filtros; cambiar a CSV solo si está dentro del límite CSV.
 - MK-015: comprobar resultado previo antes de reenviar recepción y respetar la identidad del contrato.
 
-**Límites y trade-offs:** reintento técnico no equivale a una nueva intención del usuario. `priceVersion` de lectura se usa en edición PATCH; programación futura tiene su contrato propio, sin exigirle ese campo por analogía. No ofrecer reintento de inicialización sin operación publicada.
+**Límites y trade-offs:** reintento técnico no equivale a una nueva intención del usuario. «Reintentar» no es una acción universal; no se ofrece durante un `PENDING` ordinario ni se trasladan fallos técnicos transitorios al operador. `priceVersion` de lectura se usa en edición PATCH; programación futura tiene su contrato propio, sin exigirle ese campo por analogía.
 
 **Verificación:** conflicto conserva valores propuestos y permite revisión; reanudación de carga no duplica lo confirmado; timeout de recepción no añade un segundo ingreso.
 

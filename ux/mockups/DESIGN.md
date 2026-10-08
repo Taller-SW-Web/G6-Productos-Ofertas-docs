@@ -535,7 +535,7 @@ Aplicación a funcionalidades críticas: lote MK-001 mantiene detalle por fila/d
 
 Alert de región después del título/filtros y antes del contenido afectado, sin desplazar inesperadamente la pantalla. Error de campo junto al control; error de sección en su cabecera y contenido. Los resultados parciales/críticos persisten hasta corrección, nueva consulta válida o salida explícita; no desaparecen por un temporizador.
 
-Mensajes siguen «qué ocurrió → qué se conserva → qué se puede hacer». Ejemplo: «No se pudo confirmar la preparación de inventario. El borrador se conserva. Consulta nuevamente su estado», solo si la consulta existe. No prometer «Reintentar inicialización» si la operación administrativa no está publicada.
+Mensajes siguen «qué ocurrió → qué se conserva → qué se puede hacer». Ejemplo: «No se pudo confirmar la preparación de inventario. El borrador se conserva. Consulta nuevamente su estado». Con las operaciones administrativas de preparación publicadas, la acción «Reintentar preparación» solo se ofrece cuando el estado administrativo permita recuperación manual (`manual_retry_allowed=true`); nunca se muestra durante un `PENDING` normal ni se convierten errores técnicos transitorios en tareas humanas.
 
 Conflicto de precio: bloque de comparación con valor leído/actual y propuesta del usuario, únicamente con datos disponibles; permitir revisar antes de confirmar nueva intención. Slug de categoría: nueva propuesta visible y confirmable, sin sufijo silencioso. Un rechazo de exportación por límite conserva filtros y ofrece reducir consulta; CSV solo si su límite lo admite.
 

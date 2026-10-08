@@ -3,16 +3,16 @@
 **Fecha de actualización:** 2026-10-01  
 **Repositorio de documentación:** `Taller-SW-Web/Productos-y-Ofertas-docs`  
 **Archivo:** `Arquitectura.md`  
-**Contrato HTTP canónico:** `contratos/http/openapi.yaml` (`0.4.0`)
-**Contrato asíncrono canónico:** `contratos/eventos/asyncapi.yaml` (`0.4.0`)
-**Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (`0.4.0`)
-**Catálogo canónico de errores:** `contratos/http/catalogo-errores.md` (`0.4.0`)
-**Contrato humano de integración:** `contratos/http/Contrato_Api.md`
+**Contrato HTTP canónico:** `api/openapi.yaml` (`0.5.0`)
+**Contrato asíncrono canónico:** `asyncapi/asyncapi.yaml` (`0.5.0`)
+**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.5.0`)
+**Catálogo canónico de errores:** `api/catalogo-errores.md` (`0.5.0`)
+**Contrato humano de integración:** `Contrato_Api.md`  
 **Modelo conceptual:** `Modelo_Conceptual.md`  
-**Estado contractual consolidado:** OpenAPI `0.5.0` + AsyncAPI `0.4.0` + topología RabbitMQ consolidada.
+**Estado contractual consolidado:** OpenAPI `0.5.0` + AsyncAPI `0.5.0` + topología RabbitMQ consolidada.
 
 > Esta arquitectura es la guía de implementación del backend y de sus integraciones.  
-> Las SPEC son la fuente de verdad para reglas funcionales; `contratos/http/openapi.yaml` gobierna HTTP; `contratos/eventos/asyncapi.yaml` gobierna mensajería; `contratos/http/catalogo-errores.md` gobierna la semántica estable de `code`.
+> Las SPEC son la fuente de verdad para reglas funcionales; `api/openapi.yaml` gobierna HTTP; `asyncapi/asyncapi.yaml` gobierna mensajería; `api/catalogo-errores.md` gobierna la semántica estable de `code`.
 
 ---
 
@@ -847,12 +847,11 @@ con unicidad por `message_id` o clave semántica equivalente.
 
 ## 10.5. Reintentos
 
-Diferenciar:
+Diferenciar claramente las cuatro situaciones operativas y su responsabilidad:
 
-### Error transitorio
+### A. Error técnico transitorio
 
 Ejemplos:
-
 ```text
 timeout
 broker no disponible
@@ -860,12 +859,12 @@ DB temporalmente indisponible
 HTTP 503
 ```
 
-Puede reintentarse con backoff.
+- **Tratamiento:** Recuperación automática por el propio consumidor mediante la infraestructura RabbitMQ existente (política de reintentos con backoff y dead-lettering técnico).
+- **Responsabilidad:** La UI y el Gestor Comercial **no** deciden ni intervienen en retries técnicos transitorios.
 
-### Rechazo de negocio
+### B. Rechazo de negocio
 
 Ejemplos:
-
 ```text
 STOCK_INSUFICIENTE
 VERSION_CONFLICT
@@ -873,7 +872,38 @@ SKU_INACTIVO
 CUPON_AGOTADO
 ```
 
-No debe reintentarse automáticamente como si fuera un error técnico.
+- **Tratamiento:** Un rechazo de negocio válido se procesa y confirma con ACK en el transporte; no se trata como fallo técnico ni ingresa al retry/DLQ de infraestructura. Cuando el contrato asíncrono correspondiente lo define, el servicio emite su evento de resultado `*.rejected`.
+- **Responsabilidad:** No se reintenta automáticamente por infraestructura. El efecto funcional concreto depende de las reglas del bounded context emisor/receptor (p. ej., fallar una reserva, rechazar una redención de cupón o desestimar una mutación concurrente con versión obsoleta). No proyectar reglas de un bounded context sobre otros dominios.
+
+### C. Ausencia prolongada de resultado
+
+- **Tratamiento:** Catálogo mantiene el estado `PENDING`. Catálogo **no inspecciona directamente la DLQ** del servicio consumidor.
+- **Responsabilidad:** Tras un **umbral operativo configurable para considerar habilitable la recuperación manual**, Catálogo puede habilitar la intervención administrativa (`manual_retry_allowed=true`) sin inferir un rechazo terminal por silencio.
+
+### Recuperación manual de preparación de Catálogo — FLOW-003/FLOW-004
+
+Aplica estrictamente al onboarding y preparación asíncrona de Pricing e Inventario:
+
+1. **Efecto de rechazo en Catálogo:**
+   - Un rechazo de Pricing durante el alta mantiene el producto en estado `BORRADOR`.
+   - Un rechazo de inicialización de Inventario durante el alta mantiene el producto o la variante como no publicable.
+2. **Consulta desacoplada:** `GET /api/v1/productos/{productoId}/preparacion` consulta el estado de coordinación local persistido en Catálogo; **no** realiza llamadas síncronas a Pricing ni a Inventario para construir la respuesta (estos servicios actualizan dicho estado asíncronamente mediante sus eventos de resultado).
+3. **Transición autoritativa de REJECTED a reintentable:**
+   - Al recibir `REJECTED`, Catálogo registra `status=REJECTED` y el código recibido en `code`.
+   - El flag `manual_retry_allowed` es calculado de forma autoritativa por Catálogo (la UI nunca es la autoridad).
+   - Catálogo evalúa si la causa registrada puede corregirse mediante una capacidad actualmente publicada:
+     - **No publicada:** Si la causa no admite corrección mediante una operación publicada de Catálogo (p. ej., Pricing rechazado por un precio base inicial inválido, dado que `ProductoUpdateRequest` no publica mutación de `precioBaseInicial`), se conserva `REJECTED` con `manual_retry_allowed=false`. El paso del tiempo nunca convierte un `REJECTED` no corregible en reintentable.
+     - **Publicada:** Si la causa dispone de una operación publicada para su corrección, el gestor efectúa la corrección en el borrador; Catálogo revalida autoritativamente las precondiciones locales de esa preparación. Si vuelve a ser elegible para intento: `manual_retry_allowed=true`; si no: permanece en `manual_retry_allowed=false`.
+4. **Verificación autoritativa en POST (anti-TOCTOU):** El endpoint de reintento (`POST .../preparacion/reintentar`) revalida autoritativamente las precondiciones y el estado antes de admitir la solicitud. Si entre la consulta y el POST la preparación dejó de ser reintentable, devuelve `HTTP 409 PREPARACION_NO_REINTENTABLE`.
+5. **Concurrencia atómica de admisión:** La admisión es atómica por preparación. Exactamente una solicitud concurrente puede cambiar `manual_retry_allowed=true` a `PENDING` (`manual_retry_allowed=false`) y obtiene `HTTP 202 Accepted`. Las solicitudes concurrentes perdedoras obtienen `HTTP 409 PREPARACION_NO_REINTENTABLE`. Nunca se producen dos publicaciones RabbitMQ ni dos efectos de negocio.
+6. **Conservación de operation_id, nueva message_id y causation_id:**
+   - `operation_id` identifica la preparación lógica de larga vida y se conserva estrictamente para trazabilidad e idempotencia en los consumidores.
+   - Catálogo genera una nueva `message_id` para la nueva publicación del comando a través de Outbox hacia RabbitMQ.
+   - El consumidor reconoce que una nueva `message_id` con la misma `operation_id` tras un `REJECTED` autorizado representa un nuevo intento de la misma preparación y no una segunda entidad de negocio.
+   - Todo resultado asíncrono (`*.completed` o `*.rejected`) porta `causation_id = message_id` del comando `*.requested` que lo originó. Catálogo conserva internamente la `message_id` del intento activo y solo procesa resultados cuyo `causation_id` corresponda a dicho intento, ignorando/registrando resultados tardíos de intentos anteriores como stale.
+   - `operation_id` identifica la preparación lógica de larga vida; `message_id` identifica cada publicación/intento; `causation_id` conecta resultado ↔ intento concreto.
+7. **Reconstrucción con datos actuales del borrador:** Cuando la recuperación se solicita tras corregir datos del borrador, el nuevo comando `*.requested` se construye usando el **estado actual validado** del borrador (no se republica ciegamente el payload antiguo rechazado). Si la causa del rechazo de pricing exigiese modificar `precioBaseInicial`, `manual_retry_allowed` permanece en `false` porque `ProductoUpdateRequest` no incluye dicho campo ni la API vigente expone una operación para alterar el precio base inicial en el borrador. Conservar `operation_id` no significa congelar el payload rechazado.
+8. **Inmutabilidad de COMPLETED:** Una dependencia que ya alcanzó el estado `COMPLETED` nunca vuelve a ejecutarse ni reintentarse; publicaciones posteriores con la misma `operation_id` se descartan idempotentemente sin reejecutar efectos.
 
 ---
 
@@ -900,7 +930,7 @@ Fuente canónica:
 api/openapi.yaml
 ```
 
-La línea base vigente es OpenAPI `3.1.0`, contrato `0.4.0`. El contrato contiene **101 paths, 128 operaciones y 155 schemas**, con cobertura consolidada para las 16 funcionalidades del módulo.
+La línea base vigente es OpenAPI `3.1.0`, contrato `0.5.0`. El contrato contiene **106 paths, 133 operaciones y 170 schemas** (entradas en `components.schemas`), con cobertura consolidada para las 16 funcionalidades del módulo.
 
 Entre los cierres incorporados a esta línea base están:
 
@@ -909,7 +939,8 @@ Entre los cierres incorporados a esta línea base están:
 - CRUD/consulta administrativa de tipos de producto y sus asociaciones de características;
 - consulta del estado de una baja segura mediante `GET /api/v1/taxonomia/operaciones/{operationId}`;
 - consulta y exportación administrativa de Auditoría de precios;
-- códigos HTTP específicos para recurso inexistente, conflicto y límites funcionales de exportación.
+- consulta administrativa del estado de preparación de dependencias (`GET /api/v1/productos/{productoId}/preparacion`) y recuperación manual de producto simple (`POST /api/v1/productos/{productoId}/preparacion/reintentar`) y variantes (`POST /api/v1/productos/{productoId}/variantes/{variantId}/preparacion/reintentar`);
+- códigos HTTP específicos para recurso inexistente, conflicto, preparación no reintentable (`PREPARACION_NO_REINTENTABLE`) y límites funcionales de exportación.
 
 Cambios incompatibles requieren nueva versión de la interfaz; los cambios compatibles dentro de `v1` deben actualizar primero OpenAPI y después los documentos humanos derivados.
 
@@ -952,7 +983,7 @@ AsyncAPI P2 documenta **39 mensajes lógicos**, distribuidos entre:
 - Bulk;
 - Promociones/Cupones.
 
-Además de la baja segura de entidades maestras, AsyncAPI `0.4.0` formaliza:
+Además de la baja segura de entidades maestras, AsyncAPI `0.5.0` formaliza:
 
 ```text
 taxonomy.product-type-schema.changed
@@ -2175,7 +2206,7 @@ Reglas contractuales adicionales del componente SEO/Taxonomía:
 - la creación de categoría recibe `slugConfirmado` y revalida unicidad al persistir;
 - una carrera de unicidad devuelve `409 SLUG_DUPLICADO`; nunca se sustituye silenciosamente el slug ya confirmado por el gestor;
 - `MasterDeactivationCoordinator` persiste/expone el estado consultable por `operationId`;
-- cambios confirmados del esquema de tipo y de valores `LISTA` se publican por los eventos canónicos de AsyncAPI `0.4.0`.
+- cambios confirmados del esquema de tipo y de valores `LISTA` se publican por los eventos canónicos de AsyncAPI `0.5.0`.
 
 ---
 
@@ -3137,7 +3168,7 @@ Los principios arquitectónicos principales son:
 8. Catálogo mantiene perfil físico por SKU.
 9. Despacho mantiene ownership del empaque.
 10. OpenAPI `0.5.0` gobierna la interfaz HTTP de integración y administración.
-11. AsyncAPI `0.4.0` gobierna la mensajería lógica consolidada y sus 39 mensajes.
+11. AsyncAPI `0.5.0` gobierna la mensajería lógica consolidada y sus 39 mensajes.
 12. `api/catalogo-errores.md` gobierna los códigos estables y `api/catalogo-eventos.md` la lectura humana de mensajería.
 13. cada servicio aplica arquitectura por capas/puertos.
 14. no se comparten entidades ORM, repositorios ni schemas.

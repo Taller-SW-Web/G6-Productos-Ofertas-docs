@@ -72,3 +72,54 @@ hasta 3 retries
 ```
 
 La tabla exacta de exchanges, queues y bindings está en `api/rabbitmq-topologia.md`.
+
+## Semántica de operation_id, message_id y causation_id en preparación de Catálogo (FLOW-003 / FLOW-004)
+
+Aplica específicamente a los comandos y resultados de inicialización:
+- `pricing.product.initialization.requested`
+- `pricing.product.initialization.completed`
+- `pricing.product.initialization.rejected`
+- `inventory.sku.initialization.requested`
+- `inventory.sku.initialization.completed`
+- `inventory.sku.initialization.rejected`
+
+### Reglas de identidad, transporte e idempotencia
+
+1. **`operation_id` (Identidad de negocio de la preparación):**
+   - Identifica la **PREPARACIÓN** lógica de larga vida entre Catálogo y el servicio dependiente (Pricing o Inventario).
+   - Se genera en el alta inicial y **se conserva estrictamente** a lo largo de toda la vida de esa preparación, incluyendo cualquier recuperación manual autorizada.
+2. **`message_id` (Identidad de publicación y transporte):**
+   - Identifica una publicación o intento concreto a través de RabbitMQ.
+   - Toda redelivery técnica del mismo mensaje en la infraestructura de transporte conserva su `message_id` original y es deduplicada de forma ordinaria por el consumidor.
+   - Cuando Catálogo autoriza una recuperación manual excepcional tras un rechazo o umbral superado, **conserva la `operation_id` pero genera una nueva `message_id`** para la publicación Outbox hacia RabbitMQ.
+3. **`causation_id` (Correlación por intento y descarte de resultados stale):**
+   - Cada comando `*.requested` tiene su propia `message_id`.
+   - El resultado asíncrono correspondiente (`*.completed` o `*.rejected`) emitido por el servicio dependiente DEBE portar `causation_id = message_id` del comando `*.requested` que originó ese resultado.
+   - Catálogo conserva internamente cuál es la `message_id` del intento actualmente activo.
+   - Catálogo solo puede modificar el estado actual de la preparación con un resultado cuyo `causation_id` coincida con la `message_id` del intento activo.
+   - Un resultado tardío de un intento anterior se registra/ignora idempotentemente como stale y NO puede reemplazar ni degradar el estado del intento actual.
+   - Ejemplo:
+     ```text
+     operation_id = PREP-123
+
+     attempt 1:
+     requested.message_id = MSG-A
+     rejected.causation_id = MSG-A
+
+     manual retry:
+     requested.message_id = MSG-B
+     completed.causation_id = MSG-B
+     ```
+     Si llega un mensaje tardío con `causation_id = MSG-A` mientras el intento activo es `MSG-B`, Catálogo lo registra/ignora como stale y no toca el intento `MSG-B`.
+4. **Reconocimiento en el consumidor tras `REJECTED`:**
+   - Después de emitir un resultado `*.rejected`, el consumidor puede recibir posteriormente un nuevo mensaje con una **nueva `message_id`** pero con la **misma `operation_id`**.
+   - El consumidor debe reconocer que este mensaje representa un nuevo intento autorizado de la misma preparación lógica, y **no** una segunda entidad de negocio.
+   - Las reglas de idempotencia deben seguir impidiendo la creación de precios duplicados, SKUs duplicados o inicializaciones redundantes.
+5. **Terminalidad de `COMPLETED`:**
+   - El estado `COMPLETED` es terminal para esa preparación.
+   - Publicaciones posteriores que porten una `operation_id` ya completada se descartan idempotentemente y **nunca** vuelven a aplicar efectos ni mutaciones en el servicio dependiente.
+6. **Reconstrucción del comando con el estado actual validado del borrador:**
+   - Cuando la recuperación ocurre después de que el Gestor Comercial corrigió datos en el borrador de Catálogo, el nuevo comando `*.requested` se construye usando el **estado actual validado** del borrador.
+   - **No se debe republicar ciegamente el payload antiguo rechazado**.
+   - Si un rechazo de pricing exigiese alterar el precio base inicial, `manual_retry_allowed` permanece en `false` porque la API de Catálogo no expone una operación para modificar el precio base inicial en el borrador; el reintento manual solo puede admitirse para causas subsanables con operaciones vigentes.
+   - Conservar la `operation_id` no significa congelar el payload rechazado.
