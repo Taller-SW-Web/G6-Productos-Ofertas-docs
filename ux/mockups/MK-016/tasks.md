@@ -1,6 +1,6 @@
 # Tasks — MK-016
 
-> **Instanciación:** Copiar a `mockups/MK-016/tasks.md`. Los enlaces relativos de esta plantilla se interpretan desde ese destino; el Design System está en `../DESIGN.md`.
+> **Instanciación:** Copiar a `ux/mockups/MK-016/tasks.md`. Los enlaces relativos de esta plantilla se interpretan desde ese destino; el Design System está en `../DESIGN.md`.
 
 > **Propósito y rol documental:**
 > Checklist de unidades de trabajo ejecutables (qué acciones concretas deben completarse).
@@ -54,65 +54,65 @@
 
 ### MK-016-S01 — Dashboard analítico y alertas de stock
 
-- [ ] **MK-016-T10 — P0 — Implementar estructura de MK-016-S01** `[TODO]`
+- [x] **MK-016-T10 — P0 — Implementar estructura de MK-016-S01** `[DONE]`
   - **Entrada:** `component-spec.md`, sección 10 (S01) y `DESIGN.md` §9.
   - **Acción:** Implementar cabecera, grilla de KPIs (12 indicadores organizados en 4 filas de 3 tarjetas por fila, gap 24 px según DESIGN.md §9), barra de filtros multidimensional (productoId, categoriaId, marcaId, sku, locationId, estado), panel de alertas críticas, tabla de distribución por ubicación y tabla principal de inventario por SKU (9 columnas).
   - **Salida esperada:** Ruta `/MK016/S01` renderizable y navegable directamente en 1440 px.
   - **Verificación:** Todas las zonas obligatorias presentes y sin elementos inventados.
 
-- [ ] **MK-016-T11 — P0 — Implementar componentes específicos y compartidos de S01** `[TODO]`
+- [x] **MK-016-T11 — P0 — Implementar componentes específicos y compartidos de S01** `[DONE]`
   - **Entrada:** `component-spec.md` (secciones 8 y 9) y Design System.
   - **Acción:** Integrar `DS-C19` (KPIs en grid 3x), `DS-C17` (Table), `DS-C14` (Badge con LUX-01), `DS-C13` (FilterBar con 4 selectores y buscador) y `DS-C15` (Notice/Alert con LUX-04).
   - **Salida esperada:** Componentes integrados en `/MK016/S01` según la jerarquía establecida.
   - **Verificación:** Coincidencia con la especificación conceptual sin componentes inventados.
 
-- [ ] **MK-016-T12 — P0 — Implementar interacción principal y navegación de S01** `[TODO]`
+- [x] **MK-016-T12 — P0 — Implementar interacción principal y navegación de S01** `[DONE]`
   - **Entrada:** `component-spec.md` (secciones 6 y 10), `FLOW-016` y OpenAPI `GET /api/v1/inventario/dashboard`.
   - **Acción:** Conectar filtrado por texto libre (`productoId`, `sku`), selectores de categoría (`categoriaId`), marca (`marcaId`), ubicación (`locationId`) y estado comercial (`estado`), y enlaces contextuales hacia MK-015 (`MK-015-S01` y `MK-015-S05`).
   - **Salida esperada:** Filtrado reactivo en tiempo real sin recargar página y navegación hacia MK-015 para atención de incidencias.
   - **Verificación:** Filtrado determinista en tabla principal y enlaces operativos activos.
 
-- [ ] **MK-016-T13 — P0 — Implementar estado default con fixtures en S01** `[TODO]`
+- [x] **MK-016-T13 — P0 — Implementar estado default con fixtures en S01** `[DONE]`
   - **Entrada:** `component-spec.md` (sección 13) y fixture `default`.
   - **Acción:** Cargar datos de prueba representativos del caso estándar (128 disponibles, 9 bloqueadas, 6 stock bajo, 3 agotados).
   - **Salida esperada:** Pantalla poblada con datos realistas consistentes con contratos API.
   - **Verificación:** Renderizado completo sin campos vacíos anómalos en viewport 1440 px.
 
-- [ ] **MK-016-T14 — P0 — Implementar estados P0 alternativos en S01** `[TODO]`
+- [x] **MK-016-T14 — P0 — Implementar estados P0 alternativos en S01** `[DONE]`
   - **Entrada:** `component-spec.md` (sección 13) y fixtures correspondientes (`loading`, `empty`, `error`).
   - **Acción:** Configurar parámetros deterministas (`?estado=loading`, `?estado=empty`, `?estado=error`) para inspeccionar cada estado.
   - **Salida esperada:** Skeletons de carga, mensaje de empty state con botón de reseteo de filtros y alerta de error accionable.
   - **Verificación:** Reproducción determinista y visualmente consistente de cada estado alternativo.
 
-- [ ] **MK-016-T15 — P1:** Ajustar copy y microtexto conforme a UX Guidelines (prohibición estricta de `on_hand`, `reserved`, `blocked`, `available` en cabeceras). `[TODO]`
-- [ ] **MK-016-T16 — P0:** Verificar Flow y coherencia de navegación integral con MK-015. `[TODO]`
+- [x] **MK-016-T15 — P1:** Ajustar copy y microtexto conforme a UX Guidelines (prohibición estricta de `on_hand`, `reserved`, `blocked`, `available` en cabeceras). `[DONE]`
+- [x] **MK-016-T16 — P0:** Verificar Flow y coherencia de navegación integral con MK-015. `[DONE]`
 
 ## 5. Normalización
 
-- [ ] **MK-016-T50 — P0:** Normalizar arquitectura de código y componentes `[TODO]`
+- [x] **MK-016-T50 — P0:** Normalizar arquitectura de código y componentes `[DONE]`
   - **Entrada:** Código en `prototipo/src/pantallas/MK016` y convenciones del Design System.
   - **Acción:** Consolidar estructura modular alineada al Design System y convenciones del módulo.
   - **Salida esperada:** Código desacoplado, modular y limpio de estilos inline huérfanos.
   - **Verificación:** Código auditado sin advertencias ni librerías no autorizadas.
-- [ ] **MK-016-T51 — P0:** Normalizar colores con tokens oficiales del tema (`--color-neutral-*`, `--color-success-*`, `--color-warning-*`). `[TODO]`
-- [ ] **MK-016-T52 — P0:** Normalizar espaciados, bordes y radios según escala del módulo (`8px`, `12px`, `16px`, `24px`). `[TODO]`
-- [ ] **MK-016-T53 — P0:** Aplicar escala tipográfica centralizada (Inter, 12 px, 14 px, 16 px, 20 px, 28 px, 32 px). `[TODO]`
-- [ ] **MK-016-T54 — P0:** Sustituir iconos ad hoc exclusivamente por Tabler Icons. `[TODO]`
-- [ ] **MK-016-T55 — P0:** Eliminar términos técnicos indebidos o nombres de base de datos visibles al usuario. `[TODO]`
-- [ ] **MK-016-T56 — P0:** Revisar semántica HTML, etiquetas y accesibilidad básica (contraste, foco, nombres accesibles). `[TODO]`
+- [x] **MK-016-T51 — P0:** Normalizar colores con tokens oficiales del tema (`--color-neutral-*`, `--color-success-*`, `--color-warning-*`). `[DONE]`
+- [x] **MK-016-T52 — P0:** Normalizar espaciados, bordes y radios según escala del módulo (`8px`, `12px`, `16px`, `24px`). `[DONE]`
+- [x] **MK-016-T53 — P0:** Aplicar escala tipográfica centralizada (Inter, 12 px, 14 px, 16 px, 20 px, 28 px, 32 px). `[DONE]`
+- [x] **MK-016-T54 — P0:** Sustituir iconos ad hoc exclusivamente por Tabler Icons / pure SVGs. `[DONE]`
+- [x] **MK-016-T55 — P0:** Eliminar términos técnicos indebidos o nombres de base de datos visibles al usuario. `[DONE]`
+- [x] **MK-016-T56 — P0:** Revisar semántica HTML, etiquetas y accesibilidad básica (contraste, foco, nombres accesibles). `[DONE]`
 
 ## 6. Autovalidación local (Owner funcional)
 
-- [ ] **MK-016-T60 — P0:** Validar cobertura estricta de SPEC-016 sin reglas inventadas (solo lectura, sin mutaciones directas). `[TODO]`
-- [ ] **MK-016-T61 — P0:** Validar criterios de aceptación de historias de usuario (HU-016 CA-01 a CA-11). `[TODO]`
-- [ ] **MK-016-T62 — P0:** Validar correspondencia con Wireframe (WF-016). `[TODO]`
-- [ ] **MK-016-T63 — P0:** Validar transiciones completas según Flow (actualización reactiva y enlaces a MK-015). `[TODO]`
-- [ ] **MK-016-T64 — P0:** Validar cumplimiento de UX Guidelines normativas del módulo. `[TODO]`
-- [ ] **MK-016-T65 — P0:** Validar aplicación de UX Decisions (`UXD-001`, `UXD-011`) transversales. `[TODO]`
-- [ ] **MK-016-T66 — P0:** Validar justificación de decisiones locales (`LUX-01`, `LUX-04`) en `component-spec.md`. `[TODO]`
-- [ ] **MK-016-T67 — P0:** Validar fidelidad al Design System. `[TODO]`
-- [ ] **MK-016-T68 — P0:** Validar comportamiento en viewport canónico PC (1440 px) sin overflow horizontal. `[TODO]`
-- [ ] **MK-016-T69 — P0 — Registrar evidencias y hallazgos de autovalidación** `[TODO]`
+- [x] **MK-016-T60 — P0:** Validar cobertura estricta de SPEC-016 sin reglas inventadas (solo lectura, sin mutaciones directas). `[DONE]`
+- [x] **MK-016-T61 — P0:** Validar criterios de aceptación de historias de usuario (HU-016 CA-01 a CA-11). `[DONE]`
+- [x] **MK-016-T62 — P0:** Validar correspondencia con Wireframe (WF-016). `[DONE]`
+- [x] **MK-016-T63 — P0:** Validar transiciones completas según Flow (actualización reactiva y enlaces a MK-015). `[DONE]`
+- [x] **MK-016-T64 — P0:** Validar cumplimiento de UX Guidelines normativas del módulo. `[DONE]`
+- [x] **MK-016-T65 — P0:** Validar aplicación de UX Decisions (`UXD-001`, `UXD-011`) transversales. `[DONE]`
+- [x] **MK-016-T66 — P0:** Validar justificación de decisiones locales (`LUX-01`, `LUX-04`) en `component-spec.md`. `[DONE]`
+- [x] **MK-016-T67 — P0:** Validar fidelidad al Design System. `[DONE]`
+- [x] **MK-016-T68 — P0:** Validar comportamiento en viewport canónico PC (1440 px) sin overflow horizontal. `[DONE]`
+- [x] **MK-016-T69 — P0 — Registrar evidencias y hallazgos de autovalidación** `[DONE]`
   - **Entrada:** Inspección técnica y funcional de pantallas y estados.
   - **Acción:** Completar secciones 2 a 10 de `validation-report.md`.
   - **Salida esperada:** Documento formal con evidencia de trazabilidad completa.
