@@ -1,7 +1,7 @@
 # Alineación Retail ↔ Productos y Ofertas — Código de barras → SKU
 
 **Estado:** homologación contractual HTTP 0.5.0
-**Fuente HTTP autoritativa:** [`../api/openapi.yaml`](../api/openapi.yaml)
+**Fuente HTTP autoritativa:** [`../api/openapi.yaml`](..\contratos\http\openapi.yaml)
 
 ## 1. Acuerdo confirmado
 
