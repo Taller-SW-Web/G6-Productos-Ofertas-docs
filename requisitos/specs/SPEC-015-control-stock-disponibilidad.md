@@ -1590,3 +1590,19 @@ AGOTADO
 
 `D-INV-01` permanece abierta: todavía no existe una política respaldada para reducir múltiples saldos `(sku, location_id)` a un único status por SKU. Por ello la ruta comercial se mantiene `provisional`.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
+
+## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+
+**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+
+- `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
+- `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
+- Nuevos contratos provisionales: `GET /inventario/operaciones/{operationId}` (solo Ventas; scope `inventario:operaciones:leer`) y `POST /inventario/disponibilidad/comercial/verificar` (canales, consulta sin efectos).
+- Nuevo evento `inventory.reservation.rejected`; resultados de reserva/consumo/liberación/expiración con datos tipados y correlación obligatoria.
+- `D-INV-01`: no se suman saldos de ubicaciones independientes por defecto. Un canal obtiene `INDETERMINADO` cuando el punto único de cumplimiento no se puede resolver. `SUFICIENTE` exige una fuente de abastecimiento realizable para la cantidad completa; no supone reserva.
+- Cupones: después de reserva confirmada, Ventas envía `reservation_id` y `commercial_snapshot_ref` al solicitar consumo. Los resultados de consumo se tipan y la restauración se vincula a la operación previamente consumida.
+- Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
+- Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
+- Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+**Política explícita D-INV-01 (adoptada):** una sola ubicación elegible por referencia de cumplimiento comercial mientras no exista un plan multi-origen verificable. La configuración de correspondencia `fulfillment_ref`/`location_id` es interna a Inventario. Si falta la correspondencia o hay ambigüedad, devolver `INDETERMINADO`; nunca convertir ambigüedad en `AGOTADO` o `DISPONIBLE`. La verificación comercial no admite mutaciones ni garantiza la compra. Los casos que necesiten sumar ubicaciones requieren otra ADR y capacidad demostrada.

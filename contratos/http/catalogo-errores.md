@@ -54,6 +54,8 @@ Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail
 | `SKU_INACTIVO` | SKU inactivo. |
 | `STOCK_INSUFICIENTE` | No existe disponibilidad suficiente para completar la operación. |
 | `RESERVA_NO_ENCONTRADA` | Reserva no encontrada. |
+| `OPERACION_INVENTARIO_NO_ENCONTRADA` | Operación de inventario inexistente o no visible para el consumidor. |
+| `CONTEXTO_ABASTECIMIENTO_INVALIDO` | Contexto o referencia de cumplimiento comercial inválido. |
 | `RESERVA_NO_ACTIVA` | Reserva no activa. |
 | `RESERVA_EXPIRADA` | Reserva expirada. |
 | `PRECIO_NO_ENCONTRADO` | Precio no encontrado. |
@@ -151,3 +153,17 @@ Los códigos incorporados por HTTP 0.5.0 son `CODIGO_BARRAS_NO_ENCONTRADO`, `RAT
 
 `PREPARACION_NO_REINTENTABLE` indica que la preparación técnica existe pero su estado actual no admite una recuperación manual (p. ej. continúa bajo recuperación técnica ordinaria, ya concluyó con éxito o ya fue admitido un reintento).
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
+
+## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+
+**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+
+- `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
+- `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
+- Nuevos contratos provisionales: `GET /inventario/operaciones/{operationId}` (solo Ventas; scope `inventario:operaciones:leer`) y `POST /inventario/disponibilidad/comercial/verificar` (canales, consulta sin efectos).
+- Nuevo evento `inventory.reservation.rejected`; resultados de reserva/consumo/liberación/expiración con datos tipados y correlación obligatoria.
+- `D-INV-01`: no se suman saldos de ubicaciones independientes por defecto. Un canal obtiene `INDETERMINADO` cuando el punto único de cumplimiento no se puede resolver. `SUFICIENTE` exige una fuente de abastecimiento realizable para la cantidad completa; no supone reserva.
+- Cupones: después de reserva confirmada, Ventas envía `reservation_id` y `commercial_snapshot_ref` al solicitar consumo. Los resultados de consumo se tipan y la restauración se vincula a la operación previamente consumida.
+- Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
+- Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
+- Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.

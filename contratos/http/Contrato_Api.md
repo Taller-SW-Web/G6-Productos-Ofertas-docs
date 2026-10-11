@@ -3,11 +3,11 @@
 **Fecha de actualización:** 2026-10-01  
 **Módulo propietario:** Productos y Ofertas  
 **Documento de integración:** `Contrato_Api.md`  
-**Contrato HTTP canónico:** `api/openapi.yaml` (`0.5.0`)
-**Contrato asíncrono canónico:** `asyncapi/asyncapi.yaml` (`0.5.0`)
+**Contrato HTTP canónico:** `openapi.yaml` (`0.6.0-rc.1`, provisional)
+**Contrato asíncrono canónico:** `../eventos/asyncapi.yaml` (`0.6.0-rc.1`, provisional)
 **Catálogo de eventos:** `api/catalogo-eventos.md` (`0.5.0`)
 **Catálogo de errores canónico:** `api/catalogo-errores.md` (`0.5.0`)
-**Estado:** OpenAPI `0.5.0`, AsyncAPI `0.5.0`, topología RabbitMQ y recepción de traslados consolidados.
+**Estado:** base 0.5.0; candidato OpenAPI/AsyncAPI `0.6.0-rc.1` provisional para los cuatro bloqueantes. No desplegado.
 
 ## Fuentes utilizadas
 
@@ -2656,3 +2656,17 @@ Los contratos administrativos internos de OpenAPI mantienen las rutas existentes
 Los códigos de cupón se comparan después de eliminar espacios extremos y convertir letras ASCII a mayúsculas; la unicidad no depende de cómo el gestor haya escrito las mayúsculas. Los límites vacíos son `null` y los valores informados respetan las restricciones de los schemas.
 
 Estos ajustes documentan reglas administrativas y no acreditan implementación o integración del servicio. Los enriquecimientos de recomendaciones por producto siguen sujetos a D-REC-01/02.
+
+## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+
+**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+
+- `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
+- `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
+- Nuevos contratos provisionales: `GET /inventario/operaciones/{operationId}` (solo Ventas; scope `inventario:operaciones:leer`) y `POST /inventario/disponibilidad/comercial/verificar` (canales, consulta sin efectos).
+- Nuevo evento `inventory.reservation.rejected`; resultados de reserva/consumo/liberación/expiración con datos tipados y correlación obligatoria.
+- `D-INV-01`: no se suman saldos de ubicaciones independientes por defecto. Un canal obtiene `INDETERMINADO` cuando el punto único de cumplimiento no se puede resolver. `SUFICIENTE` exige una fuente de abastecimiento realizable para la cantidad completa; no supone reserva.
+- Cupones: después de reserva confirmada, Ventas envía `reservation_id` y `commercial_snapshot_ref` al solicitar consumo. Los resultados de consumo se tipan y la restauración se vincula a la operación previamente consumida.
+- Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
+- Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
+- Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.

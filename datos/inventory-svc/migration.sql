@@ -159,7 +159,7 @@ CREATE TABLE inventory.reservations (
     idempotency_key text        NOT NULL,
     intention       text        NOT NULL DEFAULT 'reservar',
     correlation_id  uuid,
-    order_id        uuid,
+    order_id        text,
     operation_id    uuid,
     consumed_at     timestamptz,
     released_at     timestamptz,
@@ -211,7 +211,7 @@ CREATE TABLE inventory.inventory_operations (
     quantity_applied   integer,
     result_code        text,       -- STOCK_INSUFICIENTE, VERSION_CONFLICT, etc.
     correlation_id     uuid,
-    order_id           uuid,
+    order_id           text,
     reservation_id     uuid,
     stock_version      bigint,     -- versión usada (ajustes absolutos)
     accepted_at        timestamptz, -- 202 Accepted (admisión, no resultado)

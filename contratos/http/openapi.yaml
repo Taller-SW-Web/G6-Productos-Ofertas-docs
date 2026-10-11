@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: API — Productos y Ofertas
-  version: 0.5.0
+  version: 0.6.0-rc.1
   summary: Contrato HTTP de integración y administración del módulo Productos y Ofertas
   description: Contrato HTTP consolidado P0/P1/P2 del módulo Productos y Ofertas. P2 cierra la recepción de traslados internos de Inventario
     y la autorización local del operador de inventario. La topología RabbitMQ física se documenta en AsyncAPI 0.5.0 y api/rabbitmq-topologia.md.
@@ -20145,8 +20145,9 @@ paths:
       - Inventario
       operationId: consultarDisponibilidadComercial
       summary: Consultar disponibilidad comercial de uno o varios SKU
-      description: Proyección informativa sin cantidades internas. No reserva ni garantiza stock. Permanece provisional mientras D-INV-01 defina
-        la reducción multiubicación.
+      description: Proyección informativa sin cantidades ni ubicaciones internas. No reserva ni garantiza stock. D-INV-01 prohíbe
+        agregar saldos entre puntos de cumplimiento independientes; si no existe una ruta de abastecimiento única y
+        ejecutable, el estado es INDETERMINADO. Para verificar cantidades usar POST /inventario/disponibilidad/comercial/verificar.
       x-status: provisional
       x-source-spec:
       - SPEC-015
@@ -20300,6 +20301,144 @@ paths:
         - SERVICIO_NO_DISPONIBLE
         '429':
         - RATE_LIMIT_EXCEDIDO
+  /inventario/operaciones/{operationId}:
+    get:
+      tags:
+      - Inventario
+      operationId: consultarOperacionInventario
+      summary: Consultar resultado persistido de una operación de inventario
+      description: >-
+        Consulta de recuperación para Ventas/Postventa. No ejecuta de nuevo el comando.
+        El resultado final debe poder recuperarse aun si se pierde el evento asíncrono.
+        Un 202 previo solo acredita admisión. Nunca expone stock interno.
+      x-status: provisional
+      x-adr: DEC-F-003,DEC-F-004,DEC-F-009,DEC-F-010
+      x-consumers:
+      - Ventas/Postventa
+      x-allowed-client-ids:
+      - modulo-ventas
+      x-service-audience: api-productos
+      x-required-scope: inventario:operaciones:leer
+      x-scope-registration-status: pending-security-registration
+      security:
+      - serviceBearer: []
+      parameters:
+      - name: operationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Estado persistido de la operación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsultaOperacionInventario'
+        '400':
+          description: Identificador inválido
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: No autenticado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Sin permiso para consultar la operación
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Operación inexistente o no visible para este consumidor
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: Consulta temporalmente indisponible
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /inventario/disponibilidad/comercial/verificar:
+    post:
+      tags:
+      - Inventario
+      operationId: verificarCantidadComercial
+      summary: Verificar capacidad comercial para cantidades solicitadas
+      description: >-
+        Consulta sin efectos secundarios, sin reserva y sin garantía futura.
+        No se suman saldos entre ubicaciones salvo que exista una modalidad de
+        abastecimiento explícita y ejecutable para atender conjuntamente las líneas.
+        Si no hay una política determinista aplicable, devuelve INDETERMINADO.
+        No revela on_hand, reserved, available ni location_id.
+      x-status: provisional
+      x-adr: DEC-F-002,DEC-F-005
+      x-consumers:
+      - Marketplace
+      - Chatbot
+      - Retail
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
+      x-service-audience: api-productos
+      x-required-scope: inventario:disponibilidad:leer
+      x-scope-registration-status: pending-security-registration
+      security:
+      - serviceBearer: []
+      parameters:
+      - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificarCantidadComercialRequest'
+      responses:
+        '200':
+          description: Evaluación comercial no vinculante
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificarCantidadComercialResponse'
+        '400':
+          description: Solicitud inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: No autenticado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Scope o client_id insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: Canal, modalidad o referencia de cumplimiento inválidos
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: Verificación temporalmente indisponible
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   securitySchemes:
     serviceBearer:
@@ -20334,7 +20473,10 @@ components:
         type: string
         minLength: 8
         maxLength: 128
-      description: Clave idempotente obligatoria para mutaciones de inventario iniciadas por Ventas/Postventa.
+      description: >-
+        Clave de intención. En un mismo consumidor, reutilizarla con misma operación y mismo payload
+        semántico devuelve el resultado original, sin nuevos efectos; reutilizarla con distinta
+        operación o payload devuelve 409 IDEMPOTENCY_CONFLICT. Debe mantenerse en los reintentos.
     Pagina:
       name: pagina
       in: query
@@ -20453,6 +20595,96 @@ components:
       schema:
         type: string
   schemas:
+    ConsultaOperacionInventario:
+      type: object
+      description: Estado durable por operation_id, sin divulgar existencias físicas.
+      properties:
+        operation_id:
+          type: string
+          format: uuid
+        order_id:
+          type: string
+          minLength: 1
+        operation_type:
+          type: string
+          enum: [RESERVAR, CONFIRMAR_CONSUMO, LIBERAR, REINTEGRAR, CONCILIAR_OFFLINE]
+        status:
+          type: string
+          enum: [ACCEPTED, PROCESSING, COMPLETED, REJECTED]
+        reservation_id:
+          type: [string, 'null']
+          format: uuid
+        expires_at:
+          type: [string, 'null']
+          format: date-time
+        result_code:
+          type: [string, 'null']
+        accepted_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: [string, 'null']
+          format: date-time
+      required: [operation_id, order_id, operation_type, status, accepted_at]
+      additionalProperties: false
+    FulfillmentComercial:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [ENVIO_DOMICILIO, RETIRO_TIENDA, VENTA_TIENDA]
+        fulfillment_ref:
+          type: [string, 'null']
+          description: Referencia pública/opaca de cumplimiento; no equivale al location_id interno.
+          minLength: 1
+      required: [mode]
+      additionalProperties: false
+    VerificarCantidadComercialRequest:
+      type: object
+      properties:
+        channel_id:
+          $ref: '#/components/schemas/Canal'
+        fulfillment:
+          $ref: '#/components/schemas/FulfillmentComercial'
+        lines:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            type: object
+            properties:
+              sku: {type: string, minLength: 1}
+              quantity: {type: integer, minimum: 1}
+            required: [sku, quantity]
+            additionalProperties: false
+      required: [channel_id, fulfillment, lines]
+      additionalProperties: false
+    VerificarCantidadComercialResponse:
+      type: object
+      properties:
+        evaluated_at:
+          type: string
+          format: date-time
+        binding:
+          type: boolean
+          const: false
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            properties:
+              sku: {type: string}
+              requested_quantity: {type: integer, minimum: 1}
+              result:
+                type: string
+                enum: [SUFICIENTE, INSUFICIENTE, INDETERMINADO]
+              reason_code:
+                type: [string, 'null']
+            required: [sku, requested_quantity, result]
+            additionalProperties: false
+      required: [evaluated_at, binding, items]
+      additionalProperties: false
     Problem:
       type: object
       properties:
@@ -21106,6 +21338,8 @@ components:
       properties:
         order_id:
           type: string
+          minLength: 1
+          description: Referencia opaca del pedido de Ventas; no asumir UUID.
         operation_id:
           type: string
           format: uuid
@@ -21126,6 +21360,8 @@ components:
       properties:
         order_id:
           type: string
+          minLength: 1
+          description: Referencia opaca del pedido de Ventas; no asumir UUID.
         operation_id:
           type: string
           format: uuid
@@ -21137,6 +21373,8 @@ components:
       properties:
         order_id:
           type: string
+          minLength: 1
+          description: Referencia opaca del pedido de Ventas; no asumir UUID.
         operation_id:
           type: string
           format: uuid
@@ -24330,7 +24568,9 @@ components:
         sku:
           type: string
         status:
-          $ref: '#/components/schemas/EstadoStock'
+          type: string
+          enum: [DISPONIBLE, STOCK_BAJO, AGOTADO, INDETERMINADO]
+          description: INDETERMINADO significa que no hay abastecimiento único verificable; nunca equivale a AGOTADO.
       required:
       - sku
       - status

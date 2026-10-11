@@ -207,3 +207,33 @@ workflow/run
 No almacenar JWT completos, secretos ni PII.
 
 Un mock exitoso no equivale a provider real exitoso.
+
+
+## Pruebas específicas 0.6.0-rc.1 — Cuatro bloqueantes
+
+| ID | Resultado esperado | Estado |
+|---|---|---|
+| CT-G6-B1-01 | `order_id=PED-*` se conserva como cadena opaca y `operation_id` es UUID | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B1-02 | Operación recuperable por GET después de pérdida de respuesta/evento | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B2-01 | Reserva rechazada después de `202` emite evento v2 con código estable | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B2-02 | Mensajes de resultado v2 conservan `operation_id` y `causation_id` | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B3-01 | Cinco unidades en dos tiendas no se suman para una ubicación sin política multi-origen | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B3-02 | Tienda no mapeada devuelve `INDETERMINADO` sin divulgar saldos | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B4-01 | Mismo cupón, operación e intención: replay sin doble consumo | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B4-02 | Operación reutilizada con fingerprint diferente: conflicto | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B4-03 | Cupón consumido + pago fallido: restauración según política y sin duplicaciones | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B4-04 | Fallo técnico entre DB y outbox no pierde resultado definitivo | PENDIENTE_IMPLEMENTACION |
+
+## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+
+**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+
+- `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
+- `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
+- Nuevos contratos provisionales: `GET /inventario/operaciones/{operationId}` (solo Ventas; scope `inventario:operaciones:leer`) y `POST /inventario/disponibilidad/comercial/verificar` (canales, consulta sin efectos).
+- Nuevo evento `inventory.reservation.rejected`; resultados de reserva/consumo/liberación/expiración con datos tipados y correlación obligatoria.
+- `D-INV-01`: no se suman saldos de ubicaciones independientes por defecto. Un canal obtiene `INDETERMINADO` cuando el punto único de cumplimiento no se puede resolver. `SUFICIENTE` exige una fuente de abastecimiento realizable para la cantidad completa; no supone reserva.
+- Cupones: después de reserva confirmada, Ventas envía `reservation_id` y `commercial_snapshot_ref` al solicitar consumo. Los resultados de consumo se tipan y la restauración se vincula a la operación previamente consumida.
+- Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
+- Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
+- Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
