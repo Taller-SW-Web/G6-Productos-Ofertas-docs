@@ -1,2 +1,4 @@
 /frontend
 especificaciones/
+__pycache__/
+*.py[cod]
