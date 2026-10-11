@@ -1531,6 +1531,7 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version: {type: integer, const: 2}
             operation_id:
               type: string
               format: uuid
@@ -1549,6 +1550,7 @@ components:
             data:
               $ref: '#/components/schemas/InventoryReservationCreatedData'
           required:
+          - schema_version
           - operation_id
           - causation_id
           - producer
@@ -1573,6 +1575,7 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version: {type: integer, const: 2}
             operation_id:
               type: string
               format: uuid
@@ -1584,7 +1587,7 @@ components:
             name: {type: string, const: inventory.reservation.rejected}
             data:
               $ref: '#/components/schemas/InventoryReservationRejectedData'
-          required: [operation_id, causation_id, producer, kind, name, data]
+          required: [schema_version, operation_id, causation_id, producer, kind, name, data]
       x-exchange: po.results.x
       x-routing-key: inventory.reservation.rejected
     InventoryReservationConsumed:
@@ -1604,6 +1607,7 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version: {type: integer, const: 2}
             operation_id:
               type: string
               format: uuid
@@ -1622,6 +1626,7 @@ components:
             data:
               $ref: '#/components/schemas/InventoryReservationTransitionData'
           required:
+          - schema_version
           - operation_id
           - causation_id
           - producer
@@ -1647,6 +1652,7 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version: {type: integer, const: 2}
             operation_id:
               type: string
               format: uuid
@@ -1665,6 +1671,7 @@ components:
             data:
               $ref: '#/components/schemas/InventoryReservationTransitionData'
           required:
+          - schema_version
           - operation_id
           - causation_id
           - producer
@@ -1690,6 +1697,7 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version: {type: integer, const: 2}
             operation_id:
               type: string
               format: uuid
@@ -1708,6 +1716,7 @@ components:
             data:
               $ref: '#/components/schemas/InventoryReservationTransitionData'
           required:
+          - schema_version
           - operation_id
           - causation_id
           - producer
@@ -1732,6 +1741,7 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version: {type: integer, const: 2}
             operation_id:
               type: string
               format: uuid
@@ -1750,6 +1760,7 @@ components:
             data:
               $ref: '#/components/schemas/InventoryConsumptionResultData'
           required:
+          - schema_version
           - operation_id
           - causation_id
           - producer
@@ -1774,6 +1785,7 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version: {type: integer, const: 2}
             operation_id:
               type: string
               format: uuid
@@ -1792,6 +1804,7 @@ components:
             data:
               $ref: '#/components/schemas/InventoryConsumptionResultData'
           required:
+          - schema_version
           - operation_id
           - causation_id
           - producer
@@ -2246,6 +2259,7 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version: {type: integer, const: 2}
             operation_id:
               type: string
               format: uuid
@@ -2264,6 +2278,7 @@ components:
             data:
               $ref: '#/components/schemas/CouponConsumptionResultData'
           required:
+          - schema_version
           - operation_id
           - causation_id
           - producer
@@ -2288,6 +2303,7 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version: {type: integer, const: 2}
             operation_id:
               type: string
               format: uuid
@@ -2306,6 +2322,7 @@ components:
             data:
               $ref: '#/components/schemas/CouponConsumptionResultData'
           required:
+          - schema_version
           - operation_id
           - causation_id
           - producer
@@ -2330,6 +2347,7 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version: {type: integer, const: 2}
             operation_id:
               type: string
               format: uuid
@@ -2348,6 +2366,7 @@ components:
             data:
               $ref: '#/components/schemas/CouponConsumptionRequestedData'
           required:
+          - schema_version
           - operation_id
           - causation_id
           - producer
@@ -2372,6 +2391,7 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version: {type: integer, const: 2}
             operation_id:
               type: string
               format: uuid
@@ -2390,6 +2410,7 @@ components:
             data:
               $ref: '#/components/schemas/CouponRestorationRequestedData'
           required:
+          - schema_version
           - operation_id
           - causation_id
           - producer
@@ -2414,6 +2435,7 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version: {type: integer, const: 2}
             operation_id:
               type: string
               format: uuid
@@ -2432,6 +2454,7 @@ components:
             data:
               $ref: '#/components/schemas/CouponRestorationResultData'
           required:
+          - schema_version
           - operation_id
           - causation_id
           - producer
@@ -2456,6 +2479,7 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version: {type: integer, const: 2}
             operation_id:
               type: string
               format: uuid
@@ -2474,6 +2498,7 @@ components:
             data:
               $ref: '#/components/schemas/CouponRestorationResultData'
           required:
+          - schema_version
           - operation_id
           - causation_id
           - producer

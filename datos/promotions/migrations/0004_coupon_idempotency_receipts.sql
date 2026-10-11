@@ -1,7 +1,6 @@
 -- G6 / promotions-svc / migración incremental DEC-F-008/009.
 -- No altera ni borra usos de cupones existentes; mantiene uq_coupon_uses_order_coupon.
 -- Los handlers del servicio deben usar el ledger en una transacción con el consumo/restauración.
-BEGIN;
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '90s';
 
@@ -36,9 +35,14 @@ CREATE TABLE promotions.coupon_command_receipts (
 CREATE INDEX ix_coupon_command_receipts_order ON promotions.coupon_command_receipts(order_id);
 CREATE INDEX ix_coupon_command_receipts_received ON promotions.coupon_command_receipts(received_at);
 
+-- Permisos explícitos mínimos: sin DELETE ni UPDATE arbitrario del fingerprint.
+REVOKE ALL ON promotions.coupon_command_receipts FROM PUBLIC;
+GRANT SELECT, INSERT ON promotions.coupon_command_receipts TO po_promotions_runtime;
+GRANT UPDATE(status,result_payload,completed_at)
+  ON promotions.coupon_command_receipts TO po_promotions_runtime;
+
 -- Actores: solo el servicio Promotions debe gestionar este ledger.
 -- El provisioning/owner existente controla los grants al rol técnico.
-COMMIT;
 
 -- REGLAS BACKEND OBLIGATORIAS (la tabla no ejecuta lógica por sí misma):
 -- 1. Tomar bloqueo transaccional por operation_id antes de aplicar consumo/restauración.

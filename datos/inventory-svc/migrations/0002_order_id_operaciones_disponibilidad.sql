@@ -2,7 +2,6 @@
 -- DEC-F-002,003,004,005,009,010. NO ejecutar a ciegas en producción.
 -- Preflight: comprobar esquema, permisos, datos y compatibilidad del backend.
 -- Debe ejecutarse con owner de inventory y transacción; revisar locks ALTER TYPE.
-BEGIN;
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '90s';
 
@@ -77,9 +76,17 @@ CREATE INDEX ix_commercial_fulfillment_routes_location
     ON inventory.commercial_fulfillment_routes(location_id)
     WHERE active;
 
+-- Acceso mínimo para el runtime; no permite que los canales consulten tablas privadas.
+DO $grants$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='po_inventory_runtime') THEN
+    GRANT SELECT ON inventory.commercial_fulfillment_routes TO po_inventory_runtime;
+  ELSE
+    RAISE NOTICE 'Provisionar po_inventory_runtime antes del arranque del backend';
+  END IF;
+END $grants$;
+
 -- La consulta externa no expone location_id; el mapeo queda detrás del API.
 -- No concede escritura a canales: permisos del runtime del propietario únicamente.
-COMMIT;
 
 -- POSTCHECK MANUAL (ejecutar tras analizar resultados):
 -- SELECT pg_typeof(order_id) FROM inventory.reservations LIMIT 1;

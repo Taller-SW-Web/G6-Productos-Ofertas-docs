@@ -87,7 +87,7 @@
 | `idempotency_key` | `text` | No | — | `uq_reservations_idempotency` (UNIQUE) |
 | `intention` | `text` | No | `'reservar'` | Intención del comando |
 | `correlation_id` | `uuid` | Sí | — | Trazabilidad asíncrona |
-| `order_id` | `uuid` | Sí | — | Referencia externa a Ventas (sin FK) |
+| `order_id` | `text` | Sí | — | Referencia externa a Ventas (sin FK) |
 | `operation_id` | `uuid` | Sí | — | Operación asociada |
 | `consumed_at` | `timestamptz` | Sí | — | Marca de consumo definitivo |
 | `released_at` | `timestamptz` | Sí | — | Marca de liberación |
@@ -130,7 +130,7 @@
 | `quantity_applied` | `integer` | Sí | — | `CHECK (quantity_applied >= 0)` |
 | `result_code` | `text` | Sí | — | Código funcional de resultado |
 | `correlation_id` | `uuid` | Sí | — | Trazabilidad |
-| `order_id` | `uuid` | Sí | — | Ref externa a Ventas |
+| `order_id` | `text` | Sí | — | Ref externa a Ventas |
 | `reservation_id` | `uuid` | Sí | — | Reserva asociada |
 | `stock_version` | `bigint` | Sí | — | Versión usada en ajustes absolutos |
 | `accepted_at` | `timestamptz` | Sí | — | Timestamp 202 Accepted |
@@ -437,3 +437,7 @@ erDiagram
 - Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
 - Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+## Modelo vigente tras 0002 (candidato 0.6.0-rc.1)
+
+El SQL histórico 0001 mantiene `order_id uuid`; 0002 lo convierte a `text`. Los campos `operation_id` de las operaciones nuevas no deben ser NULL; legado se mantiene compatible hasta la migración de datos. El runtime debe mapear explícitamente el enum de BD `RECIBIDO`, `APLICADO`, `RECHAZADO`, `REQUIRES_REVIEW` a los estados del contrato público. `REQUIRES_REVIEW` no debe confundirse con `COMPLETED`.

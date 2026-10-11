@@ -7,6 +7,7 @@
 -- Uso:  psql -v ON_ERROR_STOP=1 -f validation.sql
 -- ============================================================================
 
+BEGIN;
 DO $$
 DECLARE
     v_ns            oid;
@@ -487,21 +488,8 @@ BEGIN
     END;
 
     -- ---------------------------------------------------------------- 19.
-    -- Limpieza de datos de prueba
+    -- Fixtures revertidos por ROLLBACK, sin limpieza global de tablas reales.
     -- ----------------------------------------------------------------
-    DELETE FROM inventory.inbox WHERE message_type = 'inventory.reservation.requested';
-    DELETE FROM inventory.outbox WHERE aggregate_id LIKE 'V-%' OR event_type = 'dup';
-    DELETE FROM inventory.kardex WHERE sku_id LIKE 'V-%';
-    DELETE FROM inventory.reservations WHERE idempotency_key LIKE 'V-%';
-    DELETE FROM inventory.traslados WHERE sku_id LIKE 'V-%';
-    DELETE FROM inventory.incidencias WHERE sku_id LIKE 'V-%';
-    DELETE FROM inventory.inventory_operations WHERE idempotency_key LIKE 'V-%';
-    DELETE FROM inventory.dashboard_projection WHERE sku_id LIKE 'V-%';
-    DELETE FROM inventory.stock_threshold_override WHERE sku_id LIKE 'V-%';
-    DELETE FROM inventory.stock_threshold_override WHERE sku_id IS NULL AND location_id IS NULL;
-    DELETE FROM inventory.stock_balance WHERE sku_id LIKE 'V-%';
-    DELETE FROM inventory.locations WHERE code LIKE 'V-%';
-
     -- ---------------------------------------------------------------- 20.
     -- Resumen
     -- ----------------------------------------------------------------
@@ -518,3 +506,4 @@ SELECT 'VALIDACION_FINALIZADA_SATISFACTORIAMENTE' AS resultado,
        count(*) AS total_tablas
   FROM information_schema.tables
  WHERE table_schema = 'inventory';
+ROLLBACK;

@@ -3816,7 +3816,7 @@ paths:
       - modulo-ventas
       x-async-result-events:
       - inventory.reservation.created
-      - inventory.consumption.rejected
+      - inventory.reservation.rejected
       x-service-audience: api-productos
       x-required-scope: inventario:reservar
       x-scope-registration-status: pending-security-registration
@@ -20610,7 +20610,7 @@ components:
           enum: [RESERVAR, CONFIRMAR_CONSUMO, LIBERAR, REINTEGRAR, CONCILIAR_OFFLINE]
         status:
           type: string
-          enum: [ACCEPTED, PROCESSING, COMPLETED, REJECTED]
+          enum: [ACCEPTED, PROCESSING, COMPLETED, REJECTED, REQUIRES_REVIEW]
         reservation_id:
           type: [string, 'null']
           format: uuid

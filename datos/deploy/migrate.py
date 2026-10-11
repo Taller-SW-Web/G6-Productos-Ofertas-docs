@@ -51,6 +51,16 @@ def main():
     for name, _, _ in migrations:
         n = literal(name)
         sql += [f"DO $guard$ BEGIN IF EXISTS (SELECT 1 FROM {ledger} WHERE version>{n}) AND NOT EXISTS (SELECT 1 FROM {ledger} WHERE version={n}) THEN RAISE EXCEPTION 'Historial con hueco: {name}'; END IF; END $guard$;"]
+    # No ejecutar 0001 automáticamente sobre un schema inventory ya poblado sin baseline.
+    if s == 'inventory':
+        sql.append("""DO $guard$ BEGIN
+          IF NOT EXISTS (SELECT 1 FROM inventory.schema_migrations)
+             AND EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+                         WHERE n.nspname='inventory' AND c.relkind='r'
+                           AND c.relname<>'schema_migrations')
+          THEN RAISE EXCEPTION 'INVENTORY_BASELINE_REQUIRED: verificar y registrar 0001 manualmente';
+          END IF;
+        END $guard$;""")
     for name, checksum, source in migrations:
         n, h = literal(name), literal(checksum)
         sql += [f"DO $guard$ BEGIN IF EXISTS (SELECT 1 FROM {ledger} WHERE version={n} AND checksum<>{h}) THEN RAISE EXCEPTION 'Checksum alterado: {name}'; END IF; END $guard$;",
