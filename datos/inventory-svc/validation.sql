@@ -8,6 +8,8 @@
 -- ============================================================================
 
 BEGIN;
+SET LOCAL ROLE po_inventory_owner;
+
 DO $$
 DECLARE
     v_ns            oid;
