@@ -1,6 +1,6 @@
 # Despliegue por schema en Supabase — issue #49
 
-Estado: procedimiento verificable localmente; no se ha ejecutado contra un proyecto Supabase compartido. Cada owner ejecuta sus migraciones; DevOps mantiene este procedimiento. [Arquitectura §7–8](..\..\arquitectura\Arquitectura.md) y [modelo conceptual](..\..\arquitectura\Modelo_Conceptual.md) gobiernan el aislamiento.
+Estado: procedimiento con despliegue parcial confirmado en Supabase compartido (Inventario 0002 y Promociones 0004, 11/10/2026); el resto de contextos requiere verificacion independiente. Cada owner ejecuta sus migraciones; DevOps mantiene este procedimiento. [Arquitectura §7–8](..\..\arquitectura\Arquitectura.md) y [modelo conceptual](..\..\arquitectura\Modelo_Conceptual.md) gobiernan el aislamiento.
 
 ## 1. Convenciones y responsabilidades
 
@@ -42,7 +42,7 @@ Cada bounded context debe contar con los siguientes cuatro entregables documenta
 3. `migrations/`: scripts DDL ordenados correlativamente (`0001_*.sql`, etc.) ejecutables desde cero.
 4. `validation.sql`: script de validación determinista que comprueba constraints, aislamiento y ausencia de violaciones.
 
-Mientras este repositorio contiene los entregables de BD, guardar en `bd/<schema>/` (o la carpeta asignada al servicio en `bd/`): `logical-model.md`, `physical-model.md`, `migrations/0001_descripcion.sql` y `validation.sql`. Al incorporar el backend, conservar los mismos archivos y versiones en `infrastructure/persistence/` del servicio (Arquitectura §4). No mantener dos historiales activos ni volver a ejecutar una versión trasladada.
+Mientras este repositorio contiene los entregables de BD, guardar en `datos/<schema>/` (o la carpeta asignada al servicio en `datos/`): `logical-model.md`, `physical-model.md`, `migrations/0001_descripcion.sql` y `validation.sql`. Al incorporar el backend, conservar los mismos archivos y versiones en `infrastructure/persistence/` del servicio (Arquitectura §4). No mantener dos historiales activos ni volver a ejecutar una versión trasladada.
 
 Versiones de cuatro dígitos consecutivas desde 0001, un cambio por archivo, SQL PostgreSQL UTF-8, nombres snake_case y objetos calificados con schema. El checksum usa texto UTF-8 sin BOM y saltos LF, para que Windows/Linux produzcan el mismo resultado. No editar ni borrar migraciones aplicadas. Cambios destructivos requieren estrategia expand/contract, respaldo y coordinación de versión. Cada archivo es transaccional: no BEGIN/COMMIT, VACUUM ni CREATE INDEX CONCURRENTLY. Para cambios no transaccionales se necesita un procedimiento independiente revisado, no introducirlos en este ejecutor.
 
@@ -81,20 +81,60 @@ Alternativa: `PGPASSFILE` apuntando a un archivo local protegido fuera del repos
 ## 4. Desplegar desde cero y actualizar
 
 1. Confirmar destino con `psql -X -c "SELECT current_database(), current_user, version();"`. Verificar permisos del deployer y schema propio. Leer el diff y `physical-model.md`, obtener revisión del SQL.
-2. Ejecutar desde la raíz `python bd/deploy/migrate.py <schema>`. Para taxonomy: `python bd/deploy/migrate.py taxonomy`. Sustituir solo el schema propio. Si `psql` no está en PATH, agregar `--psql RUTA_AL_EJECUTABLE`.
+2. Ejecutar desde la raíz `python datos/deploy/migrate.py <schema>`. Para taxonomy: `python datos/deploy/migrate.py taxonomy`. Sustituir solo el schema propio. Si `psql` no está en PATH, agregar `--psql RUTA_AL_EJECUTABLE`.
 3. El ejecutor valida orden, toma un advisory lock por schema, hace SET ROLE del owner y registra versión, SHA-256 y fecha en `<schema>.schema_migrations`. Aplica cada archivo y su registro en la misma transacción. En reejecución comprueba checksum y omite versiones ya aplicadas; un historial alterado/faltante o un error SQL detiene el proceso. No se avanza a la siguiente versión ni se arranca el nuevo servicio si falla.
-4. Ejecutar `psql -X -v ON_ERROR_STOP=1 -f bd/<schema>/validation.sql`. Para taxonomy: `psql -X -v ON_ERROR_STOP=1 -f bd/taxonomy/validation.sql`. Las comprobaciones deben usar ROLLBACK para fixtures; no introducir seeds comerciales permanentes. Revisar tanto constraints/índices como reglas y ausencia de FK/grants externos.
+4. Ejecutar `psql -X -v ON_ERROR_STOP=1 -f datos/<schema>/validation.sql`. Para taxonomy: `psql -X -v ON_ERROR_STOP=1 -f datos/taxonomy/validation.sql`. Las comprobaciones deben usar ROLLBACK para fixtures; no introducir seeds comerciales permanentes. Revisar tanto constraints/índices como reglas y ausencia de FK/grants externos.
 5. Consultar `SELECT version, checksum, applied_at FROM <schema>.schema_migrations ORDER BY version;`; para taxonomy: `SELECT version, checksum, applied_at FROM taxonomy.schema_migrations ORDER BY version;`. Comparar con el manifiesto del ejecutor y commit desplegado. Registrar versión del servidor, commit, schema, checksums, resultado y fecha en evidencia sin secretos. Un exit code 0 confirma la ejecución; un archivo SQL que solo muestra datos sin assertions no constituye validación.
 6. Arrancar la versión compatible del servicio con su login runtime y hacer smoke test. El owner de cada servicio controla su despliegue.
 
 Los ocho contextos son independientes y pueden desplegarse en cualquier orden después del bootstrap. Una migración no espera tablas de otro schema. Integración de eventos/proyecciones se coordina por contrato y versión, no por FK. Dentro de cada schema el orden es estricto. Ante fallo de validación, detener el arranque; corregir con una migración nueva o restaurar el entorno según el respaldo acordado. No hacer rollback destructivo improvisado sobre datos compartidos.
 
+## 4.1 Estado de Supabase compartido, PR #86 (11/10/2026)
+
+**Actualización SQL Editor terminada:** PostgreSQL 17.11; preflight 00, provisionamiento 01,
+Inventario 0002 y Promociones 0004 ejecutados en Supabase. El postcheck 04 informó
+`APROBADO_ESTRUCTURAL`, **24/24 verificaciones**, cero fallos. No ejecutar otra vez
+estas migraciones sobre ese proyecto.
+
+| Schema | Versión | SHA-256 UTF-8/LF registrado |
+| --- | --- | --- |
+| `inventory` | `0001_create_inventory.sql` (legado) | `b93267e287fbf9245881473beb53c1b5715f132b972348225f3786e2fe9cbb69` |
+| `inventory` | `0002_order_id_operaciones_disponibilidad.sql` | `fb34676d4583f6923d04ad2e86acd55857b4a7a63fe3c7b78a61b5ed1bbe148a` |
+| `promotions` | `0001_promotions_persistence.sql` | `ccb75886b2ff993717b46cb923e7983ab4af9038cb1db0af394f997962dac796` |
+| `promotions` | `0002_promotions_global_price_projection.sql` | `ee6c36562c81b6a65682845b01d71c2e10763374c904ea5cb88c9b069f2a5f42` |
+| `promotions` | `0003_promotions_timestamps_and_delete_rules.sql` | `2e3eaf61ffc96b02d6e6bd25c76dcaded3b9a0c6698e306914811c6c912b0eaa` |
+| `promotions` | `0004_coupon_idempotency_receipts.sql` | `84a628ee569abbe62524e8874505f3440ce299487d4cba8d1b88647b8743e061` |
+
+El 0001 histórico de Inventario **no coincide en nombre ni checksum** con
+`0001_inventory_initial.sql`; no se dispone de una copia exacta del original.
+El runner reconoce específicamente el baseline histórico sin insertar un alias ni modificar
+registros anteriores. Véase [`BASELINE_0001.md`](../inventory-svc/BASELINE_0001.md).
+Los archivos de migración 0001/0002/0004 ya publicados **no deben editarse**.
+
+Para **instalaciones nuevas** de Inventario, luego de `datos/deploy/bootstrap.sql`,
+provisionar el rol de mínimo privilegio con `datos/inventory-svc/provision-runtime.sql`
+usando una cuenta administrativa autorizada; luego ejecutar el migrador con el owner.
+Para verificar el SQL generado sin acceder a la base:
+
+```powershell
+py datos/deploy/migrate.py inventory --render-sql
+py datos/deploy/migrate.py promotions --render-sql
+```
+
+Las validaciones `datos/inventory-svc/validation.sql` y
+`datos/promotions/validation.sql` se actualizaron para reconocer los objetos nuevos.
+Sus fixtures se ejecutan en una transacción que finaliza con `ROLLBACK`; al usar psql,
+activar `ON_ERROR_STOP=1`. Verificar dichos scripts en una **copia de ensayo** antes
+de ejecutarlos en la base compartida; son pruebas de escritura reversible, no consultas
+puramente de lectura. La validación estructural 24/24 de SQL Editor **no acredita**
+que las pruebas funcionales E2E de los servicios estén realizadas.
+
 ## 5. Reproducción en limpio
 
 Crear una base local desechable sin datos comerciales. Ejecutar bootstrap, todas las migraciones propias, validation.sql, repetir el ejecutor (sin cambios) y comparar ledger/objetos con el primer despliegue. Probar también una migración inválida: sus tablas y ledger no deben persistir. No limpiar el Supabase compartido para reproducir desde cero; utilizar otro proyecto/base autorizado. [Evidencia local del mecanismo](validation-report.md).
 
-Para prueba local con un contenedor PostgreSQL ya inicializado se admite `python bd/deploy/migrate.py <schema> --container NOMBRE`; por ejemplo `python bd/deploy/migrate.py taxonomy --container NOMBRE`. Usa exclusivamente `docker exec -i NOMBRE psql` y el usuario administrador local del contenedor para SET ROLE. Este modo es de validación local, no una receta para credenciales de producción. Copiar fixtures de prueba a una carpeta aislada y pasar `--root RUTA`; el árbol versionado solo incluye migraciones reales de cada owner.
+Para prueba local con un contenedor PostgreSQL ya inicializado se admite `python datos/deploy/migrate.py <schema> --container NOMBRE`; por ejemplo `python datos/deploy/migrate.py taxonomy --container NOMBRE`. Usa exclusivamente `docker exec -i NOMBRE psql` y el usuario administrador local del contenedor para SET ROLE. Este modo es de validación local, no una receta para credenciales de producción. Copiar fixtures de prueba a una carpeta aislada y pasar `--root RUTA`; el árbol versionado solo incluye migraciones reales de cada owner.
 
 ## 6. Criterio de entrega de cada owner
 
-PR con modelo físico, migraciones, constraints/índices, validation.sql, evidencia en limpio y repetición, aislamiento probado y evidencia del proyecto objetivo cuando tenga acceso. Un despliegue local no acredita un despliegue Supabase. La [entrega local de #53](../promotions/README.md) se valida por separado; Axel ya dispone de acceso, pero indicó esperar a reunir el SQL de **todo el sistema** antes del despliegue compartido.
+PR con modelo físico, migraciones, constraints/índices, validation.sql, evidencia en limpio y repetición, aislamiento probado y evidencia del proyecto objetivo cuando tenga acceso. Un despliegue local no acredita un despliegue Supabase. La [entrega local de #53](../promotions/README.md) se valida por separado. Los despliegues de Inventario 0002 y Promociones 0004 en Supabase compartido tienen postcheck estructural satisfactorio, pero no acreditan backend ni E2E.

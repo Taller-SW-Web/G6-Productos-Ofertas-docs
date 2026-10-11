@@ -22,10 +22,10 @@ BEGIN
   PERFORM pg_temp.assert_true(label,caught);
 END $$;
 
-SELECT pg_temp.assert_true('12 tablas de arquitectura',
- (SELECT count(*)=12 FROM pg_tables WHERE schemaname='promotions' AND tablename<>'schema_migrations'));
+SELECT pg_temp.assert_true('13 tablas de arquitectura',
+ (SELECT count(*)=13 FROM pg_tables WHERE schemaname='promotions' AND tablename<>'schema_migrations'));
 SELECT pg_temp.assert_true('solo entidades del contexto y ledger',
- (SELECT array_agg(tablename::text ORDER BY tablename)=ARRAY['catalog_projection','combination_policy','coupon_uses','coupons','inbox','outbox','price_projection','promotion_scopes','promotions','recommendation_items','recommendation_rules','schema_migrations','stock_projection']
+ (SELECT array_agg(tablename::text ORDER BY tablename)=ARRAY['catalog_projection','combination_policy','coupon_command_receipts','coupon_uses','coupons','inbox','outbox','price_projection','promotion_scopes','promotions','recommendation_items','recommendation_rules','schema_migrations','stock_projection']
   FROM pg_tables WHERE schemaname='promotions'));
 -- §7.2/§7.3: el ledger del runner usa applied_at; inbox/outbox solo
 -- están exentos de updated_at. Verificar cada tabla, no solo un total.
@@ -35,6 +35,21 @@ BEGIN
   FOR item IN SELECT tablename::text AS table_name FROM pg_tables
     WHERE schemaname='promotions' AND tablename<>'schema_migrations' ORDER BY tablename
   LOOP
+    -- El ledger 0004 conserva timestamps de comando, no updated_at:
+    -- received_at obligatorio y completed_at nullable; es una excepcion explicita.
+    IF item.table_name='coupon_command_receipts' THEN
+      PERFORM pg_temp.assert_true('receipts.received_at obligatorio', EXISTS(
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema='promotions' AND table_name='coupon_command_receipts'
+          AND column_name='received_at' AND data_type='timestamp with time zone'
+          AND is_nullable='NO' AND column_default='now()'));
+      PERFORM pg_temp.assert_true('receipts.completed_at nullable', EXISTS(
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema='promotions' AND table_name='coupon_command_receipts'
+          AND column_name='completed_at' AND data_type='timestamp with time zone'
+          AND is_nullable='YES'));
+      CONTINUE;
+    END IF;
     FOREACH stamp IN ARRAY CASE WHEN item.table_name IN ('inbox','outbox')
       THEN ARRAY['created_at'] ELSE ARRAY['created_at','updated_at'] END
     LOOP
@@ -102,6 +117,55 @@ SELECT pg_temp.assert_true('runtime sin ledger',NOT has_table_privilege('po_prom
 SELECT pg_temp.assert_true('runtime sin borrar historia',NOT has_table_privilege('po_promotions_runtime','promotions.coupon_uses','DELETE'));
 SELECT pg_temp.assert_true('runtime sin editar identidad de uso',NOT has_column_privilege('po_promotions_runtime','promotions.coupon_uses','order_id','UPDATE'));
 SELECT pg_temp.assert_true('runtime sin editar envelope',NOT has_column_privilege('po_promotions_runtime','promotions.outbox','data','UPDATE'));
+
+-- Nuevo ledger de idempotencia: privilegios a nivel de columna y restricciones.
+SELECT pg_temp.assert_true('receipts PK UUID', EXISTS(
+  SELECT 1 FROM pg_constraint c WHERE c.conrelid='promotions.coupon_command_receipts'::regclass
+    AND c.contype='p' AND c.conname='coupon_command_receipts_pkey'));
+SELECT pg_temp.assert_true('receipts runtime SELECT e INSERT',
+ has_table_privilege('po_promotions_runtime','promotions.coupon_command_receipts','SELECT')
+ AND has_table_privilege('po_promotions_runtime','promotions.coupon_command_receipts','INSERT'));
+SELECT pg_temp.assert_true('receipts runtime UPDATE solo resultado',
+ has_column_privilege('po_promotions_runtime','promotions.coupon_command_receipts','status','UPDATE')
+ AND has_column_privilege('po_promotions_runtime','promotions.coupon_command_receipts','result_payload','UPDATE')
+ AND has_column_privilege('po_promotions_runtime','promotions.coupon_command_receipts','completed_at','UPDATE')
+ AND NOT has_column_privilege('po_promotions_runtime','promotions.coupon_command_receipts','request_fingerprint','UPDATE')
+ AND NOT has_column_privilege('po_promotions_runtime','promotions.coupon_command_receipts','order_id','UPDATE')
+ AND NOT has_table_privilege('po_promotions_runtime','promotions.coupon_command_receipts','DELETE'));
+SELECT pg_temp.assert_true('0004 en historial con checksum real', EXISTS(
+ SELECT 1 FROM promotions.schema_migrations
+ WHERE version='0004_coupon_idempotency_receipts.sql'
+   AND checksum='84a628ee569abbe62524e8874505f3440ce299487d4cba8d1b88647b8743e061'));
+INSERT INTO promotions.coupon_command_receipts
+ (operation_id,order_id,source_client_id,intention,coupon_code,reservation_id,
+  commercial_snapshot_ref,request_fingerprint,request_payload)
+VALUES
+ ('53000000-0000-0000-0000-000000000099','order-receipt-fixture','VENTAS','CONSUMIR',
+  'TEST-53','53000000-0000-0000-0000-000000000022','snapshot-test',repeat('a',64),'{}');
+SELECT pg_temp.expect_error('receipts exige resultado al completar',
+ $q$UPDATE promotions.coupon_command_receipts SET status='COMPLETED'
+     WHERE order_id='order-receipt-fixture'$q$,'23514');
+UPDATE promotions.coupon_command_receipts
+  SET status='COMPLETED',result_payload='{"ok":true}',completed_at=now()
+  WHERE order_id='order-receipt-fixture';
+SELECT pg_temp.assert_true('receipts resultado durable',EXISTS(
+ SELECT 1 FROM promotions.coupon_command_receipts
+ WHERE order_id='order-receipt-fixture' AND status='COMPLETED'
+   AND result_payload='{"ok":true}'::jsonb AND completed_at IS NOT NULL));
+SELECT pg_temp.expect_error('receipts operation_id unico',
+ $q$INSERT INTO promotions.coupon_command_receipts
+ (operation_id,order_id,source_client_id,intention,coupon_code,reservation_id,
+  commercial_snapshot_ref,request_fingerprint,request_payload)
+ VALUES ('53000000-0000-0000-0000-000000000099','order-second','VENTAS','CONSUMIR',
+ 'TEST-53','53000000-0000-0000-0000-000000000022','snapshot-test',repeat('a',64),'{}')$q$,
+ '23505');
+SELECT pg_temp.expect_error('receipts consumo sin reserva rechazado',
+ $q$INSERT INTO promotions.coupon_command_receipts
+ (operation_id,order_id,source_client_id,intention,coupon_code,
+  commercial_snapshot_ref,request_fingerprint,request_payload)
+ VALUES ('53000000-0000-0000-0000-000000000098','order-no-res','VENTAS','CONSUMIR',
+ 'TEST-53','snapshot-test',repeat('a',64),'{}')$q$,
+ '23514');
 
 INSERT INTO promotions.promotions(id,name,discount_type,discount_value,modality,state,valid_from,valid_until,priority,enabled_channels) VALUES
  ('53000000-0000-0000-0000-000000000001','Fixture cupón','PORCENTAJE',10,'CUPON','ACTIVO','2000-01-01','2100-01-01',1,ARRAY['MARKETPLACE','RETAIL']),
