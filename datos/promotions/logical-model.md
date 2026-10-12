@@ -1,10 +1,10 @@
 # Modelo lógico — Promociones (`promotions-svc`)
 
-Issue [#53](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/53). Responsable: Axel Cueva. Contexto: Promociones. Schema objetivo: `promotions`. Actualizado: 2026-10-03. Estado: **EN REVISIÓN**.
+Issue [#53](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/53). Responsable: Axel Cueva. Contexto: Promociones. Schema objetivo: `promotions`. Revisado contractualmente: 2026-10-12. Estado: **EN REVISIÓN BD/QA; migración 0004 aplicada en Supabase, backend no acreditado**.
 
 ## Fuentes
 
-[Modelo conceptual §7](..\..\arquitectura\Modelo_Conceptual.md), [Arquitectura §7.2](..\..\arquitectura\Arquitectura.md), [Contrato API](..\..\contratos\http\Contrato_Api.md), [OpenAPI 0.5.0](..\..\contratos\http\openapi.yaml), [AsyncAPI 0.4.0](..\..\contratos\eventos\asyncapi.yaml), SPEC/HU/WF/FLOW 005–007 y [convenciones de BD](..\CONVENCIONES_BD.md). Las decisiones de tipos, índices y mecanismo de migración pertenecen al [modelo físico](physical-model.md).
+[Modelo conceptual §7](..\..\arquitectura\Modelo_Conceptual.md), [Arquitectura §7.2](..\..\arquitectura\Arquitectura.md), [Contrato API](..\..\contratos\http\Contrato_Api.md), [OpenAPI 0.6.0-rc.1 (candidato)](..\..\contratos\http\openapi.yaml), [AsyncAPI 0.6.0-rc.1 (candidato)](..\..\contratos\eventos\asyncapi.yaml), SPEC/HU/WF/FLOW 005–007 y [convenciones de BD](..\CONVENCIONES_BD.md). Las decisiones de tipos, índices y mecanismo de migración pertenecen al [modelo físico](physical-model.md).
 
 ## 1. Propósito
 
@@ -122,7 +122,7 @@ Configuración de alcances, política y candidatos se separa de sus padres. Cód
 
 ## 9. Persistencia técnica necesaria
 
-Inbox deduplica entrega de mensajes; outbox permite publicar después del commit. Procedencia de proyecciones permite detectar antigüedad/conflictos. Registro de migraciones es técnico del procedimiento transversal, ajeno al dominio. Retención de inbox/outbox y auditoría externa deben acordarse antes de purgar historia; esta entrega no habilita borrado de mensajes por runtime.
+Inbox deduplica entrega de mensajes; outbox permite publicar después del commit. Procedencia de proyecciones permite detectar antigüedad/conflictos. Registro de migraciones es técnico del procedimiento transversal, ajeno al dominio. Desde la migración incremental `0004_coupon_idempotency_receipts.sql` existe además el ledger técnico `coupon_command_receipts` para correlación e idempotencia de comandos de consumo y restitución: `operation_id` UUID, identidad del pedido textual, intención, cliente origen, fingerprint SHA-256, solicitud, estado y resultado persistido. Esta tabla **no constituye una nueva entidad del dominio**, no añade FK hacia otros schemas ni ejecuta por sí misma handlers, publicación RabbitMQ o reglas de pago. La unicidad de uso `(order_id, cupon_id)` en `coupon_uses` y la idempotencia por operación/fingerprint son protecciones diferentes. Retención de inbox/outbox y auditoría externa deben acordarse antes de purgar historia; esta entrega no habilita borrado de mensajes por runtime.
 
 ## 10. Diagrama entidad-relación lógico
 
@@ -143,7 +143,7 @@ erDiagram
 | Cupones | SPEC/HU/WF/FLOW-005; OpenAPI CuponAdmin; AsyncAPI consumption/restoration | Cupón, uso, inbox/outbox |
 | Promociones | SPEC/HU/WF/FLOW-006; OpenAPI PromocionAdmin | Promoción, alcance, política |
 | Recomendaciones | SPEC/HU/WF/FLOW-007; OpenAPI ReglaRecomendacionAdmin | Regla, recomendado, proyecciones |
-| Persistencia técnica | Arquitectura §7.2; AsyncAPI MessageEnvelope; issue #53 | Tres proyecciones, inbox/outbox |
+| Persistencia técnica | Arquitectura §7.2; AsyncAPI MessageEnvelope; issue #53; migración 0004 | Tres proyecciones, inbox/outbox, `coupon_command_receipts` como ledger técnico y `schema_migrations` del runner |
 
 ## 12. Decisiones del modelo lógico
 
@@ -157,7 +157,7 @@ La semántica tributaria, promociones sobre envío y restitución después de de
 
 ## 14. Derivación esperada hacia el modelo físico
 
-Una tabla por entidad, relaciones exclusivamente internas, unicidad de código y pedido/cupón, integridad diferida de agregados completos, historia protegida, control transaccional de cupos, almacenamiento explícito de envelopes y procedencia. Cada decisión física se detalla en `physical-model.md` y se verifica con fixtures reversibles.
+Una tabla por entidad, relaciones exclusivamente internas, unicidad de código y pedido/cupón, integridad diferida de agregados completos, historia protegida, control transaccional de cupos, almacenamiento explícito de envelopes y procedencia. Cada decisión física se detalla en `physical-model.md` y se verifica con fixtures reversibles. La migración 0004 agrega únicamente el ledger técnico de recibos, cuya integridad y grants se comprobaron mediante `validation.sql` en Supabase; no modifica las doce entidades funcionales ni certifica los flujos backend.
 
 ## 15. Checklist de aprobación
 

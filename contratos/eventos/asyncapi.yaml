@@ -1044,6 +1044,7 @@ components:
         consumption_operation_id:
           type: [string, 'null']
           format: uuid
+          description: Referencia de consumo original; opcional solo en transición, pendiente de conciliación por G5/G6.
         cancellation_reason:
           type: string
           minLength: 1
@@ -1082,6 +1083,18 @@ components:
       - restored
       - outcome
       - completed_at
+    CouponRestorationRejectedData:
+      type: object
+      description: Rechazo definitivo de restauración, separado de los outcomes de restauración completada.
+      properties:
+        order_id: {type: string, minLength: 1}
+        consumption_operation_id:
+          type: [string, 'null']
+          format: uuid
+          description: Referencia del consumo original, opcional durante la transición con Ventas.
+        result_code: {type: string, minLength: 1, pattern: '\S'}
+        completed_at: {type: string, format: date-time}
+      required: [order_id, result_code, completed_at]
     PricingProductInitializationRequestedData:
       type: object
       properties:
@@ -1227,6 +1240,15 @@ components:
         decided_at: {type: string, format: date-time}
         result_code: {type: [string, 'null']}
       required: [order_id, reservation_id, decided_at]
+    InventoryConsumptionRejectedData:
+      type: object
+      description: Rechazo definitivo de consumo posterior a admisión, con causa funcional obligatoria.
+      properties:
+        order_id: {type: string, minLength: 1}
+        reservation_id: {type: string, format: uuid}
+        decided_at: {type: string, format: date-time}
+        result_code: {type: string, minLength: 1, pattern: '\S'}
+      required: [order_id, reservation_id, decided_at, result_code]
     CouponConsumptionResultData:
       type: object
       properties:
@@ -1238,6 +1260,18 @@ components:
         consumption_id: {type: [string, 'null'], format: uuid}
         decided_at: {type: string, format: date-time}
       required: [order_id, coupon_code, reservation_id, commercial_snapshot_ref, decided_at]
+    CouponConsumptionRejectedData:
+      type: object
+      description: Rechazo de consumo de cupón; el código de negocio es obligatorio y no representa consumo exitoso.
+      properties:
+        order_id: {type: string, minLength: 1}
+        coupon_code: {type: string, minLength: 1}
+        reservation_id: {type: string, format: uuid}
+        commercial_snapshot_ref: {type: string, minLength: 1}
+        result_code: {type: string, minLength: 1, pattern: '\S'}
+        consumption_id: {type: [string, 'null'], format: uuid}
+        decided_at: {type: string, format: date-time}
+      required: [order_id, coupon_code, reservation_id, commercial_snapshot_ref, decided_at, result_code]
   messages:
     TaxonomyCategoryUpdated:
       name: taxonomy.category.updated
@@ -1802,7 +1836,7 @@ components:
               type: string
               const: inventory.consumption.rejected
             data:
-              $ref: '#/components/schemas/InventoryConsumptionResultData'
+              $ref: '#/components/schemas/InventoryConsumptionRejectedData'
           required:
           - schema_version
           - operation_id
@@ -2320,7 +2354,7 @@ components:
               type: string
               const: promotions.coupon.consumption.rejected
             data:
-              $ref: '#/components/schemas/CouponConsumptionResultData'
+              $ref: '#/components/schemas/CouponConsumptionRejectedData'
           required:
           - schema_version
           - operation_id
@@ -2496,7 +2530,7 @@ components:
               type: string
               const: promotions.coupon.restoration.rejected
             data:
-              $ref: '#/components/schemas/CouponRestorationResultData'
+              $ref: '#/components/schemas/CouponRestorationRejectedData'
           required:
           - schema_version
           - operation_id

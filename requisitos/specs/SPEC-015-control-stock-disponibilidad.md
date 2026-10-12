@@ -2,7 +2,7 @@
 
 **Responsable:** Miguel Ángel Taco Zavala  
 **Rama:** taco  
-**Trazabilidad:** HU [HU-015](../hu/HU-015-control-stock-disponibilidad.md) | Wireframe [WF-015](..\..\ux\wireframes\flows\WF-015-control-stock-disponibilidad.md)
+**Trazabilidad:** HU [HU-015](../hu/HU-015-control-stock-disponibilidad.md) | Wireframe [WF-015](../../ux/wireframes/flows/WF-015-control-stock-disponibilidad.md)
 
 ---
 
@@ -189,7 +189,7 @@ available >= 0
 
 # 6. Estados de disponibilidad
 
-El estado comercial del saldo se calcula sobre `available`.
+El estado del **saldo autoritativo por `(sku, location_id)`** se calcula sobre `available`. La proyección comercial se obtiene con la política D-INV-01 y puede ser `INDETERMINADO` si no se determina una fuente única y ejecutable de cumplimiento; no se calcula sumando ubicaciones independientes.
 
 ```text
 available = 0
@@ -251,7 +251,8 @@ stock_version, cuando el consumidor autorizado lo requiera
 - La consulta no garantiza disponibilidad futura.
 - `location_id` puede omitirse únicamente cuando exista una única ubicación inequívoca o el contrato permita una agregación explícita.
 - Un agregado no reemplaza los saldos autoritativos por ubicación.
-- Marketplace, Chatbot y Retail pueden consultar disponibilidad.
+- La lectura detallada/autoritativa de `/inventario/disponibilidad` es para Ventas/Postventa y usuarios autorizados; **Marketplace, Chatbot y Retail solo acceden a la proyección** `/inventario/disponibilidad/comercial` o a la verificación comercial por cantidades, conforme a sus allowlists.
+- Las consultas comerciales no exponen saldos ni `location_id` y no reservan stock.
 
 ## 7.3. Escenario — SKU disponible
 
@@ -1125,6 +1126,7 @@ inventory.stock.changed
 inventory.stock.adjusted
 
 inventory.reservation.created
+inventory.reservation.rejected
 inventory.reservation.consumed
 inventory.reservation.released
 inventory.reservation.expired
@@ -1197,7 +1199,7 @@ La creación de reserva puede terminar posteriormente en:
 inventory.reservation.created
 ```
 
-o en un rechazo de negocio correlacionado.
+o en `inventory.reservation.rejected` con `operation_id`, `causation_id` y `result_code` no vacío. La admisión previa con HTTP `202` no es prueba de stock reservado.
 
 La confirmación puede terminar en:
 
@@ -1233,7 +1235,7 @@ y no debe tratarse como una segunda operación asíncrona.
 Los nombres, envelopes y payloads canónicos pertenecen a:
 
 ```text
-asyncapi/asyncapi.yaml
+contratos/eventos/asyncapi.yaml
 ```
 
 ---
@@ -1243,7 +1245,7 @@ asyncapi/asyncapi.yaml
 El catálogo canónico de códigos pertenece a:
 
 ```text
-api/catalogo-errores.md
+contratos/http/catalogo-errores.md
 ```
 
 ## 31.1. Admisión HTTP
@@ -1327,14 +1329,15 @@ y propone el scope técnico:
 inventario:disponibilidad:leer
 ```
 
-Consumidores previstos:
+Consumidores previstos de las **consultas comerciales** (`GET /inventario/disponibilidad/comercial` y `POST /inventario/disponibilidad/comercial/verificar`):
 
 ```text
 modulo-marketplace
 modulo-chatbot
 modulo-retail
-modulo-ventas
 ```
+
+La consulta **detallada** (`GET /inventario/disponibilidad`) corresponde a Ventas/Postventa y usuarios autorizados, bajo el esquema de seguridad y scopes definidos por OpenAPI; tener el mismo scope nominal no elimina las restricciones por consumidor.
 
 El token de servicio debe validar `iss`, `exp`, `tipo=servicio`, `aud` y el scope requerido. El scope permanece pendiente de registro con Seguridad.
 
@@ -1523,7 +1526,7 @@ Esta SPEC no define:
 Al completarse esta funcionalidad:
 
 - cada SKU vendible tiene disponibilidad autoritativa por ubicación;
-- Marketplace, Chatbot y Retail pueden consultar stock;
+- Marketplace, Chatbot y Retail pueden consultar exclusivamente la **disponibilidad comercial**, sin saldos ni ubicaciones internas;
 - Marketplace y Chatbot no mutan Inventario; Retail solo reporta/resuelve incidencias físicas mediante contratos autorizados;
 - Ventas reserva al crear el pedido;
 - Ventas confirma consumo al quedar pagado;
@@ -1556,8 +1559,8 @@ SPEC-015 se considera implementada cuando:
 - la concurrencia está cubierta por pruebas;
 - los ajustes absolutos respetan `stock_version`;
 - los eventos están versionados;
-- las rutas coinciden con `api/openapi.yaml`;
-- los contratos asíncronos coinciden con `asyncapi/asyncapi.yaml`;
+- las rutas coinciden con `contratos/http/openapi.yaml`;
+- los contratos asíncronos coinciden con `contratos/eventos/asyncapi.yaml`;
 - Ventas/Postventa tiene pruebas de contrato sobre reserva/consumo/liberación;
 - Marketplace y Chatbot no poseen permisos de mutación; Retail solo posee capacidades de incidencias físicas; Ventas/Postventa concentra las mutaciones comerciales.
 
@@ -1580,15 +1583,31 @@ GET /api/v1/inventario/disponibilidad/comercial
 
 La proyección comercial no expone `location_id`, `on_hand`, `reserved`, `blocked`, `available`, `threshold` ni `stock_version`; no reserva ni garantiza stock.
 
-Estados:
+Estados del **GET comercial**:
 
 ```text
 DISPONIBLE
 STOCK_BAJO
 AGOTADO
+INDETERMINADO
 ```
 
-`D-INV-01` permanece abierta: todavía no existe una política respaldada para reducir múltiples saldos `(sku, location_id)` a un único status por SKU. Por ello la ruta comercial se mantiene `provisional`.
+`D-INV-01` está **adoptada** en el ADR de bloqueantes (0.6.0-rc.1): la disponibilidad comercial se determina por una única ubicación elegible y un plan de cumplimiento realmente ejecutable, nunca sumando saldos independientes. Si el mapeo del contexto de cumplimiento falta, es ambiguo o no permite justificar un resultado, responder `INDETERMINADO`; **no** inferir `AGOTADO`. El contrato sigue `provisional` porque falta comprobar su implementación, no porque la decisión siga abierta.
+### Verificación comercial de cantidades — contrato 0.6.0-rc.1
+
+```http
+POST /api/v1/inventario/disponibilidad/comercial/verificar
+```
+
+- **Consumidores:** Marketplace, Chatbot y Retail con el scope `inventario:disponibilidad:leer` y `client_id` autorizado; registro de scopes sujeto a G7.
+- **Entrada:** `channel_id` (`MARKETPLACE`, `CHATBOT` o `RETAIL`), `fulfillment` (`mode`: `ENVIO_DOMICILIO`, `RETIRO_TIENDA` o `VENTA_TIENDA`; `fulfillment_ref` opaca y opcional según modalidad) y `lines` de uno a cien elementos `{sku, quantity}`, con cantidades enteras positivas.
+- **Salida:** `evaluated_at`, `binding: false` y `items` con `{sku, requested_quantity, result, reason_code?}`. `result` pertenece a `SUFICIENTE`, `INSUFICIENTE`, `INDETERMINADO`.
+- **Política:** solo `SUFICIENTE` si existe una ubicación elegible/mecanismo único capaz de atender íntegramente la cantidad requerida. No sumar tiendas por defecto.
+- **Contexto:** falta de correspondencia interna o ambigüedad de abastecimiento → `200 INDETERMINADO` (resultado de negocio). Contexto **semánticamente inválido** → `422 CONTEXTO_ABASTECIMIENTO_INVALIDO`; request malformado → `400 VALIDACION`.
+- **Límites:** nunca exponer `location_id`, `on_hand`, `reserved`, `blocked`, `available` ni `stock_version`. No muta Inventario ni garantiza disponibilidad al pagar: Ventas es responsable de reservar y esperar confirmación definitiva.
+
+No confundir `GET.status` (`DISPONIBLE/STOCK_BAJO/AGOTADO/INDETERMINADO`) con `POST.items[].result` (`SUFICIENTE/INSUFICIENTE/INDETERMINADO`).
+
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
 
 ## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6

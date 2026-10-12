@@ -95,12 +95,25 @@ Respuesta mínima:
 
 ```text
 sku
-status ∈ {DISPONIBLE, STOCK_BAJO, AGOTADO}
+status ∈ {DISPONIBLE, STOCK_BAJO, AGOTADO, INDETERMINADO}
 ```
 
 No se exponen cantidades internas ni desglose por ubicación.
 
-**Estado:** provisional mientras `D-INV-01` siga abierta, porque el saldo autoritativo existe por `(sku, location_id)` y todavía no se ha definido la reducción multiubicación a un único estado comercial.
+**Política:** `D-INV-01` ya fue adoptada: la proyección no suma saldos de tiendas o ubicaciones independientes. Si no existe una ubicación elegible única o el mapeo de cumplimiento es ambiguo, se devuelve `INDETERMINADO`, no `AGOTADO`. **El endpoint permanece provisional hasta contar con implementación y pruebas de conformidad**, no porque falte decidir la política.
+
+### 6.1. Verificación de cantidad para un contexto de cumplimiento
+
+```text
+POST /api/v1/inventario/disponibilidad/comercial/verificar
+scope: inventario:disponibilidad:leer
+client_id: modulo-marketplace
+body: channel_id=MARKETPLACE, fulfillment={mode, fulfillment_ref?}, lines=[{sku, quantity}]
+```
+
+La respuesta `binding=false` solo devuelve resultados por línea: `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO`. `SUFICIENTE` exige una única fuente de cumplimiento factible para toda la cantidad solicitada; no constituye reserva ni garantía de checkout. Una referencia de cumplimiento sin mapeo interno inequívoco genera `INDETERMINADO`, nunca una suma de tiendas. El contexto estructuralmente o semánticamente inválido se trata según OpenAPI, sin exponer `location_id`.
+
+El **GET** comercial devuelve estados (`DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`, `INDETERMINADO`); no devuelve `SUFICIENTE`. Solo Ventas/Postventa ejecuta reservas.
 
 ## 7. Cupones y promociones
 
@@ -206,4 +219,4 @@ La homologación no se considera cerrada runtime hasta que las pruebas aplicable
 - Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
 
-**Canales:** una consulta comercial `SUFICIENTE` es informativa; Ventas sigue siendo quien reserva. `INDETERMINADO` obliga a no prometer disponibilidad de la cantidad solicitada.
+**Canales:** un resultado `SUFICIENTE` del **POST de verificación** es informativo; Ventas sigue siendo quien reserva. `INDETERMINADO` obliga a no prometer disponibilidad de la cantidad solicitada.

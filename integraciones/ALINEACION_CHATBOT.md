@@ -90,12 +90,18 @@ La disponibilidad consumida por Chatbot es la proyección comercial:
 
 ```text
 sku + status
-status ∈ {DISPONIBLE, STOCK_BAJO, AGOTADO}
+status ∈ {DISPONIBLE, STOCK_BAJO, AGOTADO, INDETERMINADO}
 ```
 
 Chatbot no recibe `location_id`, `on_hand`, `reserved`, `blocked`, `available`, `threshold` ni `stock_version`.
 
-La proyección permanece provisional por `D-INV-01`. Recomendaciones continúan disponibles mediante `GET /api/v1/recomendaciones?productoId=...&canal=CHATBOT`.
+La política `D-INV-01` ya está adoptada: no se suman saldos entre ubicaciones independientes. Cuando el cumplimiento es incierto, Chatbot debe presentar disponibilidad no confirmada (`INDETERMINADO`), nunca afirmar que hay stock o que está agotado por falta de mapeo. La implementación de esta proyección continúa provisional. Recomendaciones conservan su contrato `GET /api/v1/recomendaciones?productoId=...&canal=CHATBOT`.
+### Verificación de cantidades
+
+Cuando el usuario consulta una cantidad específica, Chatbot puede usar `POST /api/v1/inventario/disponibilidad/comercial/verificar` con `channel_id=CHATBOT`, `fulfillment={mode, fulfillment_ref?}` y `lines=[{sku, quantity}]`. Solo recibe `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO`, con `binding=false`. `SUFICIENTE` significa capacidad informativa del cumplimiento solicitado, no una reserva; la confirmación real corresponde a Ventas. Una correspondencia de ubicación ausente/ambigua devuelve `INDETERMINADO` (no `AGOTADO`). No divulgar `location_id` ni saldos.
+
+No confundir los estados del GET con los resultados del POST. La autorización por `client_id` y scope depende de G7.
+
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
 
 ## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
@@ -112,4 +118,4 @@ La proyección permanece provisional por `D-INV-01`. Recomendaciones continúan 
 - Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
 
-**Canales:** una consulta comercial `SUFICIENTE` es informativa; Ventas sigue siendo quien reserva. `INDETERMINADO` obliga a no prometer disponibilidad de la cantidad solicitada.
+**Canales:** un resultado `SUFICIENTE` del **POST de verificación** es informativo; Ventas sigue siendo quien reserva. `INDETERMINADO` obliga a no prometer disponibilidad de la cantidad solicitada.

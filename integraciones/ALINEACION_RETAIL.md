@@ -147,13 +147,22 @@ La respuesta comercial usa:
 DISPONIBLE
 STOCK_BAJO
 AGOTADO
+INDETERMINADO
 ```
 
-y no expone saldos internos. Esta proyección sigue provisional mientras `D-INV-01` esté abierta.
+y no expone saldos internos. `D-INV-01` ya fue adoptada: no se combinan existencias de tiendas independientes. Si no existe una tienda/ubicación única elegible, devolver `INDETERMINADO` en lugar de inferir `AGOTADO`. El endpoint sigue provisional hasta probar su implementación.
+
+### 9.1. Verificación por cantidad y tienda
+
+Después de resolver el código de barras a `sku`, Retail puede consultar `POST /api/v1/inventario/disponibilidad/comercial/verificar` con `channel_id=RETAIL`, `fulfillment.mode=VENTA_TIENDA` o `RETIRO_TIENDA`, una `fulfillment_ref` pública/opaca de tienda y líneas `{sku, quantity}`. Inventario resuelve internamente tienda → `location_id`; Retail **nunca** recibe esa ubicación interna.
+
+La respuesta `binding=false` contiene `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO`. Si el mapeo no existe o es ambiguo, se responde `INDETERMINADO` y no debe confirmarse stock. No sumar tiendas. Un `SUFICIENTE` es informativo: Ventas orquesta las reservas y confirmaciones de la venta online; una venta Retail offline se concilia sin reserva retroactiva según SPEC-015. El acceso sigue sujeto a Seguridad/G7.
+
+El **GET** comercial devuelve estados (`DISPONIBLE/STOCK_BAJO/AGOTADO/INDETERMINADO`), no resultados `SUFICIENTE`.
 
 ## 10. Casos contractuales mínimos
 
-- `CT-RTL-BAR-01`: simple → `sku_base`.
+- `CT-RTL-BAR-01`: producto simple → respuesta con campo `sku`, cuyo valor corresponde al SKU base vendible (no existe un campo de respuesta `sku_base`).
 - `CT-RTL-BAR-02`: variante → SKU de variante.
 - `CT-RTL-BAR-03`: inexistente → 404.
 - `CT-RTL-BAR-04`: preserva ceros a la izquierda.

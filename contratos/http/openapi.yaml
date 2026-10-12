@@ -4078,6 +4078,7 @@ paths:
         required: true
         schema:
           type: string
+          format: uuid
       - $ref: '#/components/parameters/IdempotencyKey'
       - $ref: '#/components/parameters/CorrelationId'
       requestBody:
@@ -4347,6 +4348,7 @@ paths:
         required: true
         schema:
           type: string
+          format: uuid
       - $ref: '#/components/parameters/IdempotencyKey'
       - $ref: '#/components/parameters/CorrelationId'
       requestBody:
@@ -20360,6 +20362,21 @@ paths:
           content:
             application/problem+json:
               schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    code:
+                      type: string
+                      const: OPERACION_INVENTARIO_NO_ENCONTRADA
+                  required: [code]
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          description: Error interno
+          content:
+            application/problem+json:
+              schema:
                 $ref: '#/components/schemas/Problem'
         '503':
           description: Consulta temporalmente indisponible
@@ -20367,6 +20384,21 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+      x-error-codes:
+        '400':
+        - VALIDACION
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
+        '404':
+        - OPERACION_INVENTARIO_NO_ENCONTRADA
+        '429':
+        - RATE_LIMIT_EXCEDIDO
+        '500':
+        - ERROR_INTERNO
+        '503':
+        - SERVICIO_NO_DISPONIBLE
   /inventario/disponibilidad/comercial/verificar:
     post:
       tags:
@@ -20428,7 +20460,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '422':
-          description: Canal, modalidad o referencia de cumplimiento inválidos
+          description: Contexto de cumplimiento semánticamente inválido. Si solo falta un mapeo interno, responder 200 INDETERMINADO.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    code:
+                      type: string
+                      const: CONTEXTO_ABASTECIMIENTO_INVALIDO
+                  required: [code]
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          description: Error interno
           content:
             application/problem+json:
               schema:
@@ -20439,6 +20486,21 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+      x-error-codes:
+        '400':
+        - VALIDACION
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
+        '422':
+        - CONTEXTO_ABASTECIMIENTO_INVALIDO
+        '429':
+        - RATE_LIMIT_EXCEDIDO
+        '500':
+        - ERROR_INTERNO
+        '503':
+        - SERVICIO_NO_DISPONIBLE
 components:
   securitySchemes:
     serviceBearer:
@@ -20626,6 +20688,19 @@ components:
           type: [string, 'null']
           format: date-time
       required: [operation_id, order_id, operation_type, status, accepted_at]
+      allOf:
+      - if:
+          properties:
+            status:
+              const: REJECTED
+          required: [status]
+        then:
+          required: [result_code]
+          properties:
+            result_code:
+              type: string
+              minLength: 1
+              pattern: '\S'
       additionalProperties: false
     FulfillmentComercial:
       type: object
@@ -21549,6 +21624,8 @@ components:
       - SKU_INACTIVO
       - STOCK_INSUFICIENTE
       - RESERVA_NO_ENCONTRADA
+      - OPERACION_INVENTARIO_NO_ENCONTRADA
+      - CONTEXTO_ABASTECIMIENTO_INVALIDO
       - RESERVA_NO_ACTIVA
       - RESERVA_EXPIRADA
       - PRECIO_NO_ENCONTRADO

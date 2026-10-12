@@ -1,8 +1,11 @@
 # Matriz de pruebas de contrato e integración — Productos y Ofertas
 
-**Contrato HTTP objetivo:** OpenAPI 0.5.0
-**Contrato asíncrono objetivo:** AsyncAPI 0.5.0
-**Estado inicial:** definición documental; ningún caso se marca `PASS` sin evidencia reproducible.
+**Contrato HTTP objetivo:** OpenAPI `0.6.0-rc.1` (candidato, no publicado).
+**Contrato asíncrono objetivo:** AsyncAPI `0.6.0-rc.1` (candidato, no publicado).
+**Baseline revisado:** PR #86, rama `nueva`, commit `b7a3e59e7d886a34d42653609a6b51640cf736a8`.
+**Estado:** definición documental de casos; no asignar `PASS` a pruebas de API, eventos, seguridad o integración sin ejecución reproducible.
+
+Esta matriz contempla las correcciones candidatas de `contratos/http/openapi.yaml` (entrega 03) y `contratos/eventos/asyncapi.yaml` (entrega 02). **Hasta sustituir ambos YAML y validar el conjunto, los casos estáticos de las correcciones siguen pendientes.** Los contratos `0.5.0` permanecen como referencia de compatibilidad; no se anuncian implementados ni desplegados los contratos `0.6.0-rc.1`.
 
 ## Estados
 
@@ -15,6 +18,8 @@ PENDIENTE_EJECUCION
 PASS
 FAIL
 ```
+
+`PENDIENTE_IMPLEMENTACION`: requiere desarrollar o completar el proveedor/consumidor. `PENDIENTE_EJECUCION`: existe una comprobación definida, pero falta evidencia verificable de su ejecución sobre la versión objetivo. `BLOQUEADA_DECISION`: falta acuerdo contractual explícito. `BLOQUEADA_DEPENDENCIA_EXTERNA`: falta una autorización, servicio o confirmación de otro módulo. No convertir resultados de SQL aislado ni mocks en `PASS` de extremo a extremo.
 
 ## Tipos
 
@@ -31,14 +36,24 @@ ARCHITECTURE_INVARIANT
 
 | ID | Tipo | Resultado esperado | Estado |
 |---|---|---|---|
-| CT-STATIC-01 | STATIC_CONTRACT | YAML válido, OpenAPI 3.1.x, `info.version=0.5.0`, `$ref` resolubles | PENDIENTE_EJECUCION |
+| CT-STATIC-01 | STATIC_CONTRACT | YAML válido, OpenAPI 3.1.x, `info.version=0.6.0-rc.1`, `$ref` locales resolubles | PENDIENTE_EJECUCION |
 | CT-STATIC-02 | STATIC_CONTRACT | `operationId` únicos | PENDIENTE_EJECUCION |
-| CT-STATIC-03 | STATIC_CONTRACT | `ErrorCode` OpenAPI = tabla activa de `catalogo-errores.md` | PENDIENTE_EJECUCION |
-| CT-STATIC-04 | STATIC_CONTRACT | Header canónico `X-Correlation-Id`; no nuevo `X-Request-Id` | PENDIENTE_EJECUCION |
+| CT-STATIC-03 | STATIC_CONTRACT | `ErrorCode` de OpenAPI coincide con la tabla activa de `contratos/http/catalogo-errores.md`, incluidos `OPERACION_INVENTARIO_NO_ENCONTRADA` y `CONTEXTO_ABASTECIMIENTO_INVALIDO` | PENDIENTE_EJECUCION |
+| CT-STATIC-04 | STATIC_CONTRACT | Header canónico `X-Correlation-Id`; no introducir `X-Request-Id` alternativo | PENDIENTE_EJECUCION |
 | CT-STATIC-05 | STATIC_CONTRACT | Código de barras reutiliza `catalogo:leer`; sin scope nuevo | PENDIENTE_EJECUCION |
-| CT-STATIC-06 | STATIC_CONTRACT | `DisponibilidadComercial` no contiene saldos internos | PENDIENTE_EJECUCION |
-| CT-STATIC-07 | STATIC_CONTRACT | Schemas comerciales de Catálogo no contienen flags administrativos/perfiles físicos internos | PENDIENTE_EJECUCION |
-| CT-STATIC-08 | STATIC_CONTRACT | YAML válido, AsyncAPI 3.0.0, `info.version=0.5.0`, 39 canales, 39 mensajes, `$ref` resolubles, `operation_id` requerido en inicializaciones y `causation_id` requerido en resultados | PENDIENTE_EJECUCION |
+| CT-STATIC-06 | STATIC_CONTRACT | `DisponibilidadComercial` expone `sku` y `status`, sin saldos ni ubicaciones internas | PENDIENTE_EJECUCION |
+| CT-STATIC-07 | STATIC_CONTRACT | Schemas comerciales de Catálogo no contienen flags administrativos ni perfiles físicos internos | PENDIENTE_EJECUCION |
+| CT-STATIC-08 | STATIC_CONTRACT | YAML válido, AsyncAPI 3.0.0, `info.version=0.6.0-rc.1`, **40 canales y 40 mensajes**, `$ref` resolubles; se conservan `operation_id` y `causation_id` obligatorios en resultados v2 críticos y en inicializaciones donde corresponda | PENDIENTE_EJECUCION |
+| CT-STATIC-09 | STATIC_CONTRACT | `reservaId` de `POST /inventario/reservas/{reservaId}/confirmar` y `/liberar` tiene `type: string`, `format: uuid`; `order_id` sigue siendo cadena opaca | PENDIENTE_EJECUCION |
+| CT-STATIC-10 | STATIC_CONTRACT | `GET /inventario/operaciones/{operationId}` exige UUID y restringe consumidor a `modulo-ventas`, scope `inventario:operaciones:leer`, sin publicar stock interno | PENDIENTE_EJECUCION |
+| CT-STATIC-11 | STATIC_CONTRACT | `POST /inventario/disponibilidad/comercial/verificar` devuelve evaluación no vinculante sin `location_id` ni cantidades internas; `INDETERMINADO` es una salida de negocio válida | PENDIENTE_EJECUCION |
+| CT-STATIC-12 | STATIC_CONTRACT | Los mensajes `inventory.consumption.rejected`, `promotions.coupon.consumption.rejected` y `promotions.coupon.restoration.rejected` requieren `result_code` no vacío y usan esquemas de rechazo propios | PENDIENTE_EJECUCION |
+| CT-STATIC-13 | STATIC_CONTRACT | Los esquemas de éxito de consumo/restauración siguen independientes de los de rechazo; las nuevas referencias no alteran nombres de mensajes, exchanges ni routing keys existentes | PENDIENTE_EJECUCION |
+| CT-STATIC-14 | STATIC_CONTRACT | `ConsultaOperacionInventario` con `status=REJECTED` requiere `result_code` no vacío; sus estados `ACCEPTED`, `PROCESSING`, `COMPLETED`, `REJECTED` y `REQUIRES_REVIEW` conservan la semántica declarada | PENDIENTE_EJECUCION |
+| CT-STATIC-15 | STATIC_CONTRACT | Respuestas `404` de consulta de operación y `422` por contexto comercial inválido usan los códigos del catálogo; `429` y `500` están declarados en las rutas nuevas | PENDIENTE_EJECUCION |
+| CT-STATIC-16 | STATIC_CONTRACT | OpenAPI y AsyncAPI mantienen la misma versión candidata y no reemplazan la versión publicada sin adaptadores y pruebas de transición | PENDIENTE_EJECUCION |
+
+**Control de conteos:** 40 canales y 40 mensajes es el inventario observado en el AsyncAPI del commit indicado, no una cifra universal ni una autorización para añadir/eliminar eventos. Si cambia intencionadamente el catálogo, actualizar el conteo **y** justificar las diferencias mediante revisión del contrato.
 
 ## 2. Marketplace ↔ Productos y Ofertas
 
@@ -52,7 +67,7 @@ ARCHITECTURE_INVARIANT
 | CT-MKT-06 | Producto con variantes | `variant_id != sku` | PENDIENTE_EJECUCION |
 | CT-MKT-07 | Precio regular | Contrato de Pricing por SKU | PENDIENTE_EJECUCION |
 | CT-MKT-08 | Precio con oferta | Regular/oferta diferenciados | PENDIENTE_EJECUCION |
-| CT-MKT-09 | SKU agotado | 200 + `AGOTADO`, no 404 | PENDIENTE_EJECUCION |
+| CT-MKT-09 | SKU sin existencias en fuente de cumplimiento determinada | HTTP 200 + `AGOTADO`, no 404; si la fuente no puede determinarse, `INDETERMINADO` | PENDIENTE_EJECUCION |
 | CT-MKT-10 | Cupón no aplicable | Resultado de negocio conforme OpenAPI | PENDIENTE_EJECUCION |
 | CT-MKT-11 | Recomendaciones | Marketplace autorizado | PENDIENTE_EJECUCION |
 | CT-MKT-12 | No fuga administrativa | Allowlist de campos comerciales; sin flags internos | PENDIENTE_EJECUCION |
@@ -62,12 +77,12 @@ ARCHITECTURE_INVARIANT
 
 | ID | Caso | Resultado esperado | Estado |
 |---|---|---|---|
-| CT-RTL-BAR-01 | Producto simple | 200 + `sku_base` | PENDIENTE_EJECUCION |
-| CT-RTL-BAR-02 | Variante | 200 + SKU de variante | PENDIENTE_EJECUCION |
-| CT-RTL-BAR-03 | Código inexistente | 404 `CODIGO_BARRAS_NO_ENCONTRADO` | PENDIENTE_EJECUCION |
-| CT-RTL-BAR-04 | `0001234567890` | Se preserva string completo | PENDIENTE_EJECUCION |
-| CT-RTL-BAR-05 | Asociación no vendible | 404 sin filtrar motivo interno | PENDIENTE_EJECUCION |
-| CT-RTL-BAR-06 | Response | Solo requiere `sku` | PENDIENTE_EJECUCION |
+| CT-RTL-BAR-01 | Producto simple | HTTP 200 + campo `sku` que identifica al SKU base vendible | PENDIENTE_EJECUCION |
+| CT-RTL-BAR-02 | Variante | HTTP 200 + campo `sku` de la variante vendible | PENDIENTE_EJECUCION |
+| CT-RTL-BAR-03 | Código inexistente | HTTP 404 `CODIGO_BARRAS_NO_ENCONTRADO` | PENDIENTE_EJECUCION |
+| CT-RTL-BAR-04 | `0001234567890` | Se preserva la cadena completa, incluidos ceros iniciales | PENDIENTE_EJECUCION |
+| CT-RTL-BAR-05 | Asociación no vendible | HTTP 404 sin filtrar motivo interno | PENDIENTE_EJECUCION |
+| CT-RTL-BAR-06 | Response | Solo requiere `sku` (`ResolverCodigoBarrasResponse`) | PENDIENTE_EJECUCION |
 | CT-RTL-BAR-07 | Allowlist | Solo `modulo-retail` | PENDIENTE_EJECUCION |
 | IT-RTL-BAR-01 | Integridad | Un código no resuelve a dos SKU | PENDIENTE_IMPLEMENTACION |
 | IT-RTL-BAR-02 | Continuidad | Resolver → SKU → precio/disponibilidad por SKU | PENDIENTE_IMPLEMENTACION |
@@ -76,17 +91,21 @@ ARCHITECTURE_INVARIANT
 
 | ID | Caso | Resultado esperado | Estado |
 |---|---|---|---|
-| CT-AVL-01 | Marketplace | Accede a `/disponibilidad/comercial` | PENDIENTE_EJECUCION |
-| CT-AVL-02 | Chatbot | Accede a `/disponibilidad/comercial` | PENDIENTE_EJECUCION |
-| CT-AVL-03 | Retail | Accede a `/disponibilidad/comercial` | PENDIENTE_EJECUCION |
-| CT-AVL-04 | Canal intenta detallada | Rechazado por allowlist | PENDIENTE_EJECUCION |
-| CT-AVL-05 | Ventas intenta detallada | Permitido con grant correcto | PENDIENTE_EJECUCION |
-| CT-AVL-06 | Shape comercial | Solo `sku + status` | PENDIENTE_EJECUCION |
-| CT-AVL-07 | Vocabulario | `DISPONIBLE/STOCK_BAJO/AGOTADO` | PENDIENTE_EJECUCION |
-| CT-AVL-08 | Lectura | No muta saldos/reservas/Kardex | PENDIENTE_EJECUCION |
-| CT-AVL-B01 | Multiubicación | Política todavía no definida | BLOQUEADA_DECISION |
+| CT-AVL-01 | Marketplace | Accede a `/disponibilidad/comercial` con scope y client_id válidos | PENDIENTE_EJECUCION |
+| CT-AVL-02 | Chatbot | Accede a `/disponibilidad/comercial` con scope y client_id válidos | PENDIENTE_EJECUCION |
+| CT-AVL-03 | Retail | Accede a `/disponibilidad/comercial` con scope y client_id válidos | PENDIENTE_EJECUCION |
+| CT-AVL-04 | Canal intenta disponibilidad detallada | Rechazado por allowlist | PENDIENTE_EJECUCION |
+| CT-AVL-05 | Ventas intenta disponibilidad detallada | Permitido únicamente con concesión efectiva | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-AVL-06 | Shape comercial | `sku` y `status`; sin on_hand/reserved/blocked/available ni `location_id` | PENDIENTE_EJECUCION |
+| CT-AVL-07 | Vocabulario | `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`, `INDETERMINADO` | PENDIENTE_EJECUCION |
+| CT-AVL-08 | Lectura | No muta saldos, reservas ni Kardex | PENDIENTE_EJECUCION |
+| CT-AVL-B01 | Política D-INV-01 | No sumar ubicaciones independientes; un origen de cumplimiento único determinable o `INDETERMINADO` | PENDIENTE_IMPLEMENTACION |
+| CT-AVL-B02 | Verificación comercial por cantidad | `SUFICIENTE` solo si una fuente ejecutable abastece toda la cantidad; `INSUFICIENTE` si está determinada pero no alcanza | PENDIENTE_IMPLEMENTACION |
+| CT-AVL-B03 | Fuente no mapeada o ambigua | HTTP 200 + `INDETERMINADO`, sin revelar ubicación ni saldos | PENDIENTE_IMPLEMENTACION |
+| CT-AVL-B04 | Contexto comercial semánticamente inválido | HTTP 422 + `CONTEXTO_ABASTECIMIENTO_INVALIDO`; no confundir con falta de mapeo | PENDIENTE_IMPLEMENTACION |
+| CT-AVL-B05 | Verificación no vinculante | `binding=false`; no crea reserva ni promete stock futuro | PENDIENTE_IMPLEMENTACION |
 
-`CT-AVL-B01` depende de `D-INV-01/B-INV-01`.
+**D-INV-01:** la **decisión contractual ya está adoptada** en `arquitectura/decisiones/ADR-DEC-F-BLOQUEANTES.md` y `SPEC-015`. El bloqueo ahora es de implementación/validación, no de decisión. Se mantienen bloqueadas las políticas de recomendaciones multi-SKU no resueltas por D-REC, que constituyen un asunto distinto.
 
 ## 5. Recomendaciones
 
@@ -96,10 +115,10 @@ ARCHITECTURE_INVARIANT
 | CT-REC-02 | Chatbot | Autorizado con `canal=CHATBOT` | PENDIENTE_EJECUCION |
 | CT-REC-03 | Retail | Autorizado con `canal=RETAIL` | PENDIENTE_EJECUCION |
 | CT-REC-04 | No elegible | Candidato excluido | PENDIENTE_EJECUCION |
-| CT-REC-05 | Sin candidatos | 200 + `recommendations=[]` | PENDIENTE_EJECUCION |
+| CT-REC-05 | Sin candidatos | HTTP 200 + `recommendations=[]` | PENDIENTE_EJECUCION |
 | CT-REC-06 | Identidad | Recomendación principal por `product_id` | PENDIENTE_EJECUCION |
 | CT-REC-07 | No fuga stock | Sin cantidades internas | PENDIENTE_EJECUCION |
-| CT-REC-B01 | Availability product-level | Reutiliza `EstadoStock`, policy multi-SKU pendiente | BLOQUEADA_DECISION |
+| CT-REC-B01 | Availability product-level | Reutiliza `EstadoStock`, policy multi-SKU pendiente de decisión propia de Recomendaciones | BLOQUEADA_DECISION |
 | CT-REC-B02 | Variantes → availability | Depende de `D-REC-01` | BLOQUEADA_DECISION |
 | CT-REC-B03 | Variantes → current_price | Depende de `D-REC-02` | BLOQUEADA_DECISION |
 
@@ -107,10 +126,10 @@ ARCHITECTURE_INVARIANT
 
 | ID | Resultado esperado | Estado |
 |---|---|---|
-| CT-RATE-01 | 429 + `RATE_LIMIT_EXCEDIDO` | PENDIENTE_EJECUCION |
+| CT-RATE-01 | HTTP 429 + `RATE_LIMIT_EXCEDIDO` | PENDIENTE_EJECUCION |
 | CT-RATE-02 | `Retry-After` presente | PENDIENTE_EJECUCION |
 | CT-RATE-03 | Correlación preservada | PENDIENTE_EJECUCION |
-| CT-RATE-04 | Request limitada no produce side effects | PENDIENTE_IMPLEMENTACION |
+| CT-RATE-04 | Request limitada no produce efectos secundarios | PENDIENTE_IMPLEMENTACION |
 | CT-RATE-05 | Test determinista con política controlable | PENDIENTE_IMPLEMENTACION |
 
 ## 7. Seguridad
@@ -119,11 +138,13 @@ ARCHITECTURE_INVARIANT
 |---|---|---|
 | CT-SEC-01 | Token inválido → 401 `TOKEN_INVALIDO` | PENDIENTE_EJECUCION |
 | CT-SEC-02 | `aud` sin `api-productos` → rechazo | PENDIENTE_EJECUCION |
-| CT-SEC-03 | Scope insuficiente → 403 | PENDIENTE_EJECUCION |
+| CT-SEC-03 | Scope insuficiente → HTTP 403 | PENDIENTE_EJECUCION |
 | CT-SEC-04 | Scope correcto + cliente no permitido → rechazo | PENDIENTE_EJECUCION |
 | CT-SEC-05 | Scope de disponibilidad no habilita automáticamente lectura detallada | PENDIENTE_EJECUCION |
+| CT-SEC-06 | `modulo-ventas` con `inventario:operaciones:leer` obtiene token con `aud=api-productos`; otros clientes no reciben acceso a consultas de operaciones | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-SEC-07 | Los scopes de Productos para Chatbot definidos por G6 constan como confirmados y otorgados por G7, no solo propuestos | BLOQUEADA_DEPENDENCIA_EXTERNA |
 
-Las pruebas con grants reales permanecen `BLOQUEADA_DEPENDENCIA_EXTERNA` mientras Seguridad no registre las concesiones.
+Las pruebas con grants reales permanecen `BLOQUEADA_DEPENDENCIA_EXTERNA` mientras Seguridad no registre y aprovisione las concesiones. La existencia de `x-required-scope` en OpenAPI **no prueba** que G7 emita el scope.
 
 ## 8. Regresión Chatbot
 
@@ -137,12 +158,16 @@ Las pruebas con grants reales permanecen `BLOQUEADA_DEPENDENCIA_EXTERNA` mientra
 
 | ID | Resultado esperado | Estado |
 |---|---|---|
-| CT-SALES-01 | `CREADO` → reservar | PENDIENTE_IMPLEMENTACION |
+| CT-SALES-01 | `CREADO` → reservar; `202` de Inventario **no** equivale a reserva confirmada | PENDIENTE_IMPLEMENTACION |
 | CT-SALES-02 | `PAGADO` → confirmar consumo sin doble descuento | PENDIENTE_IMPLEMENTACION |
-| CT-SALES-03 | anulación pre-consumo → liberar | PENDIENTE_IMPLEMENTACION |
-| CT-SALES-04 | retry idéntico → replay seguro | PENDIENTE_IMPLEMENTACION |
-| CT-SALES-05 | misma idempotency + intención distinta → `IDEMPOTENCY_CONFLICT` | PENDIENTE_IMPLEMENTACION |
-| CT-SALES-06 | Ventas puede leer saldo detallado con grant correcto | PENDIENTE_EJECUCION |
+| CT-SALES-03 | Anulación pre-consumo → liberar | PENDIENTE_IMPLEMENTACION |
+| CT-SALES-04 | Retry idéntico → replay seguro | PENDIENTE_IMPLEMENTACION |
+| CT-SALES-05 | Misma identidad idempotente e intención distinta → `IDEMPOTENCY_CONFLICT` | PENDIENTE_IMPLEMENTACION |
+| CT-SALES-06 | Ventas puede leer saldo detallado con grant correcto | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-SALES-07 | G5 no responde al canal `201 Created` declarando stock reservado/cupón consumido hasta tener confirmación definitiva, salvo nuevo acuerdo formal sobre semántica externa | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-SALES-08 | Correlación `order_id` opaco, `operation_id` UUID y resultado posterior recuperable por GET sin reejecutar comando | PENDIENTE_IMPLEMENTACION |
+
+**Acuerdo externo pendiente:** el contrato de G5 documenta `201 Created` con reserva/cupón confirmados. G6 documenta `202 Accepted` como admisión, no finalización. No alterar unilateralmente la API pública de G5: acordar espera interna de resultado o evolución versionada de su API.
 
 ## 10. OPEN-09 — Despacho ↔ Productos
 
@@ -153,7 +178,7 @@ Las pruebas con grants reales permanecen `BLOQUEADA_DEPENDENCIA_EXTERNA` mientra
 | CT-DSP-03 | Solo consumidor autorizado | PENDIENTE_EJECUCION |
 | CT-DSP-04 | Sin stock/precio/pedido en respuesta física | PENDIENTE_EJECUCION |
 
-## 11. Recuperación de preparación — Catálogo (FLOW-003 / FLOW-004 / Endurecimiento contractual)
+## 11. Recuperación de preparación — Catálogo (FLOW-003 / FLOW-004 / endurecimiento contractual)
 
 | ID | Tipo | Caso / Resultado esperado | Estado |
 |---|---|---|---|
@@ -172,7 +197,7 @@ Las pruebas con grants reales permanecen `BLOQUEADA_DEPENDENCIA_EXTERNA` mientra
 | CT-PREP-13 | PROVIDER_CONTRACT | Solicitud de reintento sobre preparación no recuperable (en curso técnico, COMPLETED o sin precondiciones) devuelve HTTP 409 `PREPARACION_NO_REINTENTABLE` | PENDIENTE_EJECUCION |
 | CT-PREP-14 | INTEGRATION | Concurrencia atómica de reintento: exactamente 1 solicitud obtiene 202 Accepted, solicitudes concurrentes competidoras obtienen 409 PREPARACION_NO_REINTENTABLE, exactamente 1 sola publicación efectiva | PENDIENTE_IMPLEMENTACION |
 | CT-PREP-15 | STATIC_CONTRACT | Schemas comerciales (`ProductoResumenComercial`, `ProductoDetalleComercial`, variantes comerciales) no exponen estado administrativo de preparación | PENDIENTE_EJECUCION |
-| CT-PREP-16 | ARCHITECTURE_INVARIANT | No se crean mensajes AsyncAPI nuevos; se reutilizan comandos y resultados existentes de Pricing e Inventario | PENDIENTE_EJECUCION |
+| CT-PREP-16 | ARCHITECTURE_INVARIANT | Recuperación manual de preparación no introduce mensajes propios adicionales; reutiliza comandos/resultados de inicialización de Pricing e Inventario (sin prohibir los mensajes nuevos de otros flujos de `0.6.0-rc.1`) | PENDIENTE_EJECUCION |
 | CT-PREP-17 | PROVIDER_CONTRACT | REJECTED no habilita automáticamente un reintento (`manual_retry_allowed=false`) mientras las precondiciones funcionales sigan inválidas | PENDIENTE_IMPLEMENTACION |
 | CT-PREP-18 | PROVIDER_CONTRACT | Edición válida del borrador provoca reevaluación autoritativa de elegibilidad en Catálogo; si las precondiciones de la preparación quedan satisfechas, `manual_retry_allowed=true`; de lo contrario permanece `false` | PENDIENTE_IMPLEMENTACION |
 | CT-PREP-19 | ARCHITECTURE_INVARIANT | `manual_retry_allowed` es potestad exclusiva del backend; la UI no puede forzar la admisión sin precondiciones validadas | PENDIENTE_IMPLEMENTACION |
@@ -188,52 +213,82 @@ Las pruebas con grants reales permanecen `BLOQUEADA_DEPENDENCIA_EXTERNA` mientra
 | CT-PREP-29 | STATIC_CONTRACT | Validación de schema AsyncAPI: mensaje de inicialización sin `operation_id` o resultado de inicialización sin `causation_id` es rechazado | PENDIENTE_EJECUCION |
 | CT-PREP-30 | PROVIDER_CONTRACT | PENDING prolongado tras umbral operativo configurable habilita `manual_retry_allowed=true` manteniendo `PENDING` sin consultar DLQ del consumidor | PENDIENTE_IMPLEMENTACION |
 
-## 12. Evidencia futura
+## 12. Evidencia y control de ejecución
 
-Cada ejecución debe registrar:
+Cada prueba ejecutada debe registrar, cuando aplique:
 
 ```text
 test_id
 timestamp
 commit SHA provider
-commit SHA consumer cuando aplique
-OpenAPI version
+commit SHA consumer
+OpenAPI version y AsyncAPI version
 entorno
-resultado
-correlation_id cuando aplique
-workflow/run
+resultado y salida reproducible
+correlation_id
+workflow/run o evidencia de ejecución SQL
 ```
 
-No almacenar JWT completos, secretos ni PII.
+No almacenar JWT completos, secretos ni PII. Una ejecución exitosa contra mocks **no** equivale a un proveedor real funcionando. No deducir del código de una prueba que esta fue ejecutada.
 
-Un mock exitoso no equivale a provider real exitoso.
+**Evidencia SQL obtenida durante la revisión del PR #86, sin elevar los casos HTTP/eventos a PASS:**
 
-
-## Pruebas específicas 0.6.0-rc.1 — Cuatro bloqueantes
-
-| ID | Resultado esperado | Estado |
+| Verificación | Evidencia comunicada | Alcance |
 |---|---|---|
-| CT-G6-B1-01 | `order_id=PED-*` se conserva como cadena opaca y `operation_id` es UUID | PENDIENTE_IMPLEMENTACION |
-| CT-G6-B1-02 | Operación recuperable por GET después de pérdida de respuesta/evento | PENDIENTE_IMPLEMENTACION |
-| CT-G6-B2-01 | Reserva rechazada después de `202` emite evento v2 con código estable | PENDIENTE_IMPLEMENTACION |
-| CT-G6-B2-02 | Mensajes de resultado v2 conservan `operation_id` y `causation_id` | PENDIENTE_IMPLEMENTACION |
-| CT-G6-B3-01 | Cinco unidades en dos tiendas no se suman para una ubicación sin política multi-origen | PENDIENTE_IMPLEMENTACION |
-| CT-G6-B3-02 | Tienda no mapeada devuelve `INDETERMINADO` sin divulgar saldos | PENDIENTE_IMPLEMENTACION |
-| CT-G6-B4-01 | Mismo cupón, operación e intención: replay sin doble consumo | PENDIENTE_IMPLEMENTACION |
-| CT-G6-B4-02 | Operación reutilizada con fingerprint diferente: conflicto | PENDIENTE_IMPLEMENTACION |
-| CT-G6-B4-03 | Cupón consumido + pago fallido: restauración según política y sin duplicaciones | PENDIENTE_IMPLEMENTACION |
-| CT-G6-B4-04 | Fallo técnico entre DB y outbox no pierde resultado definitivo | PENDIENTE_IMPLEMENTACION |
+| Postcheck estructural Supabase | 24/24 verificaciones satisfactorias | Estructura, permisos e historial; no integración E2E |
+| `datos/inventory-svc/validation.sql` | `VALIDACION_FINALIZADA_SATISFACTORIAMENTE`, 16 tablas | Validación SQL de Inventario con reversión de datos de prueba |
+| `datos/promotions/validation.sql` | `132` aserciones, `PASS` | Validación SQL de Promociones con reversión de datos de prueba |
 
-## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+Esta evidencia proviene de las ejecuciones comunicadas por el responsable; no sustituye logs, SHA exacto de cada ejecución ni pruebas concurrentes de servicios desplegados. Las migraciones `0002` de Inventario y `0004` de Promociones ya se aplicaron: **no reejecutarlas** para validar cambios documentales.
 
-**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+## 13. Pruebas específicas `0.6.0-rc.1` — Cuatro bloqueantes G6
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-G6-B1-01 | PROVIDER_CONTRACT | `order_id=PED-*` se conserva como cadena opaca; `operation_id` y `reservation_id` son UUID | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B1-02 | INTEGRATION | Operación recuperable por GET después de pérdida de respuesta/evento; consultar no dispara una segunda operación | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B1-03 | INTEGRATION | Correlación estable entre solicitud, fila persistida, `operation_id`, `message_id`, `correlation_id` y `causation_id` | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B2-01 | INTEGRATION | Reserva rechazada después de HTTP `202` emite `inventory.reservation.rejected` v2 con código funcional no vacío | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B2-02 | INTEGRATION | Mensajes críticos v2 conservan `operation_id` y `causation_id`; replay no duplica efectos | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B2-03 | PROVIDER_CONTRACT | Consumo rechazado de Inventario y de cupón requiere `result_code` estable no vacío, compatible con AsyncAPI | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B2-04 | PROVIDER_CONTRACT | Restauración de cupón rechazada usa payload propio con `result_code`; `outcome` se reserva a resultados completados | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B3-01 | INTEGRATION | Cinco unidades en dos tiendas no se suman para una ubicación sin política multi-origen | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B3-02 | PROVIDER_CONTRACT | Tienda no mapeada o ambigua devuelve `INDETERMINADO` sin divulgar saldos | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B3-03 | PROVIDER_CONTRACT | Verificación comercial por cantidad devuelve `binding=false`, no reserva y no expone `location_id` | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B4-01 | INTEGRATION | Mismo cupón, operación e intención: replay sin doble consumo | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B4-02 | INTEGRATION | Operación reutilizada con fingerprint diferente: `IDEMPOTENCY_CONFLICT` | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B4-03 | INTEGRATION | Cupón consumido + pago fallido: restauración según política y sin duplicaciones | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B4-04 | INTEGRATION | Fallo técnico entre persistencia y outbox no pierde resultado definitivo | PENDIENTE_IMPLEMENTACION |
+| CT-G6-B4-05 | INTEGRATION | Sin `consumption_operation_id`, una restauración transitoria solo puede resolverse inequívocamente por pedido; con ambigüedad no ejecuta efectos | BLOQUEADA_DECISION |
+| CT-G6-B4-06 | INTEGRATION | Con `consumption_operation_id` explícito, restauración corresponde al consumo original; no se acepta correlación cruzada entre pedidos | PENDIENTE_IMPLEMENTACION |
+
+### Puertas de integración pendientes
+
+1. **G5 Ventas:** acordar si espera la confirmación asíncrona de stock y cupón antes de responder `201 Created` al canal, o publica una evolución versionada de su API. `202` de Inventario nunca equivale por sí mismo a éxito.
+2. **G5 y G6 Promociones:** acordar el carácter obligatorio o transitorio de `consumption_operation_id`, verificando correlación unívoca por pedido en la versión actual. No volver obligatorio ese campo en AsyncAPI sin acuerdo y transición.
+3. **G7 Seguridad:** registrar y aprobar `inventario:operaciones:leer` para `modulo-ventas` y confirmar la lista de scopes de Productos para Chatbot (A9). La documentación `x-required-scope` no acredita emisión de tokens.
+4. **G1/G3/G4 y otros consumidores:** comunicar el estado `INDETERMINADO` y la prohibición de sumar saldos de ubicaciones independientes; ejecutar pruebas consumer-provider al contar con APIs reales.
+5. **G6 backend:** completar handlers, outbox/inbox, adaptadores v1↔v2 cuando correspondan, autorización y pruebas E2E; no declarar `0.6.0-rc.1` desplegado antes de terminar.
+
+## 14. Política de compatibilidad y trazabilidad
+
+- `ADR-DEC-F-BLOQUEANTES.md` establece las decisiones B1–B4; esta matriz aporta pruebas, **no crea nuevas decisiones de negocio**.
+- OpenAPI y AsyncAPI son las fuentes canónicas de forma, rutas, mensajes y errores. `catalogo-errores.md` es catálogo humano del vocabulario; los códigos deben coincidir con `ErrorCode`.
+- Los identificadores `CT-STATIC-*`, `CT-AVL-*`, `CT-G6-*` y los 30 `CT-PREP-*` existentes se conservan para trazabilidad; los nuevos casos se agregan con IDs diferentes.
+- Los conteos de canales, mensajes, rutas y códigos deben recalcularse tras cada modificación; no adaptar expectativas para ocultar una pérdida accidental de contratos.
+- Cambiar una restricción de payload puede afectar consumidores aun sin cambiar el nombre del mensaje. Revisar compatibilidad, versionado de `schema_version` y adaptadores antes del despliegue.
+- Mantener los casos funcionales `PENDIENTE_IMPLEMENTACION` o `PENDIENTE_EJECUCION` hasta contar con evidencias del proveedor real. `PASS` requiere resultado reproducible asociado a un commit y un entorno.
+
+## Addendum contractual `0.6.0-rc.1` — Cuatro bloqueantes G6
+
+**Decisiones internas aceptadas; publicación y despliegue pendientes.**
 
 - `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
-- `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
-- Nuevos contratos provisionales: `GET /inventario/operaciones/{operationId}` (solo Ventas; scope `inventario:operaciones:leer`) y `POST /inventario/disponibilidad/comercial/verificar` (canales, consulta sin efectos).
-- Nuevo evento `inventory.reservation.rejected`; resultados de reserva/consumo/liberación/expiración con datos tipados y correlación obligatoria.
-- `D-INV-01`: no se suman saldos de ubicaciones independientes por defecto. Un canal obtiene `INDETERMINADO` cuando el punto único de cumplimiento no se puede resolver. `SUFICIENTE` exige una fuente de abastecimiento realizable para la cantidad completa; no supone reserva.
-- Cupones: después de reserva confirmada, Ventas envía `reservation_id` y `commercial_snapshot_ref` al solicitar consumo. Los resultados de consumo se tipan y la restauración se vincula a la operación previamente consumida.
-- Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
-- Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
-- Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+- `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando admiten el comando. El éxito/rechazo se determina por resultado persistido y evento.
+- Contratos provisionales: `GET /inventario/operaciones/{operationId}` (solo Ventas; scope `inventario:operaciones:leer`) y `POST /inventario/disponibilidad/comercial/verificar` (canales; consulta sin efectos secundarios).
+- Nuevo evento `inventory.reservation.rejected`; reserva/consumo/liberación/expiración publican datos tipados y correlación obligatoria. Los rechazos definitivos v2 llevan `result_code` no vacío conforme a la corrección candidata de AsyncAPI.
+- D-INV-01: no sumar saldos independientes; devolver `INDETERMINADO` cuando no puede resolverse un punto único de cumplimiento. `SUFICIENTE` exige una fuente realizable para la cantidad completa y no supone reserva.
+- Cupones: después de reserva confirmada, Ventas envía `reservation_id` y `commercial_snapshot_ref` para solicitar consumo; restauración según política y correlación acordada. La obligatoriedad de `consumption_operation_id` en nuevos contratos queda pendiente de G5/G6.
+- Misma identidad/operación/payload semántico produce replay sin efectos nuevos; identidad reutilizada con payload diferente produce conflicto. `message_id` identifica cada entrega RabbitMQ.
+- Las transiciones pagar/expirar/liberar se serializan por reserva y respetan el `expires_at` real de Inventario.
+- Estos contratos siguen **provisionales** hasta que backend, seguridad y pruebas integradas demuestren conformidad. No comunicar disponibilidad real por el solo hecho de que el esquema SQL fue validado.
