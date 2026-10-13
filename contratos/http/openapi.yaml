@@ -20184,7 +20184,8 @@ paths:
         in: query
         required: true
         schema:
-          $ref: '#/components/schemas/Canal'
+          $ref: '#/components/schemas/CanalComercial'
+        description: Canal comercial solicitante. Debe corresponder al client_id autenticado (modulo-marketplace -> MARKETPLACE, modulo-chatbot -> CHATBOT, modulo-retail -> RETAIL).
       - $ref: '#/components/parameters/CorrelationId'
       responses:
         '200':
@@ -20406,10 +20407,10 @@ paths:
       operationId: verificarCantidadComercial
       summary: Verificar capacidad comercial para cantidades solicitadas
       description: >-
-        Consulta sin efectos secundarios, sin reserva y sin garantía futura.
-        No se suman saldos entre ubicaciones salvo que exista una modalidad de
-        abastecimiento explícita y ejecutable para atender conjuntamente las líneas.
-        Si no hay una política determinista aplicable, devuelve INDETERMINADO.
+        Consulta sin efectos secundarios, sin reserva y sin garantía futura (binding=false).
+        D-INV-01 fija una única ubicación física elegible por contexto de cumplimiento;
+        queda prohibido sumar existencias entre ubicaciones independientes.
+        Si el mapeo de cumplimiento falta, es ambiguo o no es ejecutable, devuelve INDETERMINADO.
         No revela on_hand, reserved, available ni location_id.
       x-status: provisional
       x-adr: DEC-F-002,DEC-F-005
@@ -20718,7 +20719,8 @@ components:
       type: object
       properties:
         channel_id:
-          $ref: '#/components/schemas/Canal'
+          $ref: '#/components/schemas/CanalComercial'
+          description: Canal comercial solicitante. Debe coincidir con el client_id del token (modulo-marketplace -> MARKETPLACE, modulo-chatbot -> CHATBOT, modulo-retail -> RETAIL).
         fulfillment:
           $ref: '#/components/schemas/FulfillmentComercial'
         lines:
@@ -20791,6 +20793,18 @@ components:
       - code
       description: Problema HTTP uniforme basado en RFC 7807. La lógica cliente debe usar code; title y detail son texto humano.
       x-error-catalog: api/catalogo-errores.md
+    CanalComercial:
+      type: string
+      enum:
+      - MARKETPLACE
+      - CHATBOT
+      - RETAIL
+      description: >-
+        Canales autorizados para consultar proyecciones comerciales de inventario.
+        El canal solicitado debe corresponder al client_id autenticado:
+        modulo-marketplace -> MARKETPLACE, modulo-chatbot -> CHATBOT, modulo-retail -> RETAIL.
+        El backend valida la concordancia entre el token y el canal; una identidad con scope
+        pero canal/client_id incompatible es rechazada con SCOPE_INSUFICIENTE (403) o VALIDACION (400).
     Canal:
       type: string
       enum:

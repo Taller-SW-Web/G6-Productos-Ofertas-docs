@@ -493,7 +493,7 @@ Una identidad de operación inexistente devuelve:
 
 # 7. Precios
 
-`contratos/http/openapi.yaml` (`0.5.0`) es la fuente de verdad HTTP de Pricing. La superficie distingue consultas estables para consumidores y operaciones administrativas internas derivadas de SPEC-013.
+`contratos/http/openapi.yaml` (contrato candidato `0.6.0-rc.1` en la rama `nueva`, con baseline histórico `0.5.0`; no desplegado) es la fuente de verdad HTTP de Pricing. La superficie distingue consultas estables para consumidores y operaciones administrativas internas derivadas de SPEC-013.
 
 ## 7.1. Consultas estables para consumidores
 
@@ -510,7 +510,7 @@ Estas rutas usan el contrato técnico `precios:leer` cuando son invocadas módul
 
 ## 7.2. Administración de precio base y override
 
-OpenAPI `0.5.0` publica además:
+OpenAPI (`0.6.0-rc.1` candidato / baseline histórico `0.5.0`) publica además:
 
 | Método | Ruta | Estado |
 |---|---|---|
@@ -2265,7 +2265,7 @@ Principios:
 - reconciliación ante aplicación parcial;
 - no rollback distribuido ficticio.
 
-La cobertura HTTP administrativa de Bulk ya forma parte del OpenAPI `0.5.0`. La forma exacta de rutas, requests, estados y errores se toma del contrato ejecutable; este documento conserva únicamente las reglas de ownership y coordinación.
+La cobertura HTTP administrativa de Bulk forma parte del contrato OpenAPI (`0.6.0-rc.1` candidato en la rama `nueva`, con línea base histórica `0.5.0`; no desplegado). La forma exacta de rutas, requests, estados y errores se toma del contrato ejecutable; este documento conserva únicamente las reglas de ownership y coordinación.
 
 ---
 
@@ -2275,7 +2275,7 @@ Price Audit conserva el historial inmutable de cambios de precio.
 
 No se expone como parte de los contratos de canales; su superficie es administrativa.
 
-OpenAPI `0.5.0` publica:
+OpenAPI (`0.6.0-rc.1` candidato / baseline histórico `0.5.0`) publica:
 
 ```text
 GET  /api/v1/auditoria-precios

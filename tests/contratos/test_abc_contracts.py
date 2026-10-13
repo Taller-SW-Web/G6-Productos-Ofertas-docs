@@ -55,4 +55,28 @@ class ContractChecks(unittest.TestCase):
         self.assertIn('BEGIN;',s)
         self.assertTrue(s.rstrip().endswith('ROLLBACK;'))
         self.assertNotIn('DELETE FROM inventory.stock_threshold_override',s)
+    def test_commercial_channel_restriction(self):
+        self.assertEqual(self.o['info']['version'],'0.6.0-rc.1')
+        self.assertEqual(self.o['components']['schemas']['Canal']['enum'],['MARKETPLACE','CHATBOT','RETAIL','VENTAS'])
+        self.assertEqual(self.o['components']['schemas']['CanalComercial']['enum'],['MARKETPLACE','CHATBOT','RETAIL'])
+        # GET /inventario/disponibilidad/comercial
+        get_op=self.o['paths']['/inventario/disponibilidad/comercial']['get']
+        get_canal_param=next(p for p in get_op['parameters'] if p.get('name')=='canal')
+        self.assertEqual(get_canal_param['schema']['$ref'],'#/components/schemas/CanalComercial')
+        self.assertEqual(get_op['x-allowed-client-ids'],['modulo-marketplace','modulo-chatbot','modulo-retail'])
+        self.assertEqual(get_op['x-required-scope'],'inventario:disponibilidad:leer')
+        # POST /inventario/disponibilidad/comercial/verificar
+        post_op=self.o['paths']['/inventario/disponibilidad/comercial/verificar']['post']
+        post_body_schema=self.o['components']['schemas']['VerificarCantidadComercialRequest']
+        self.assertEqual(post_body_schema['properties']['channel_id']['$ref'],'#/components/schemas/CanalComercial')
+        self.assertEqual(post_op['x-allowed-client-ids'],['modulo-marketplace','modulo-chatbot','modulo-retail'])
+        self.assertEqual(post_op['x-required-scope'],'inventario:disponibilidad:leer')
+    def test_single_location_policy_documented(self):
+        desc=self.o['paths']['/inventario/disponibilidad/comercial/verificar']['post']['description']
+        self.assertIn('D-INV-01',desc)
+        self.assertIn('única ubicación',desc)
+        self.assertIn('prohibido sumar existencias',desc)
+        self.assertIn('INDETERMINADO',desc)
+        self.assertIn('binding=false',desc)
+        self.assertNotIn('salvo que exista una modalidad de abastecimiento explícita y ejecutable para atender conjuntamente',desc)
 if __name__=='__main__':unittest.main()
