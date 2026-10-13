@@ -1,18 +1,18 @@
 # Arquitectura del Módulo de Productos y Ofertas
 
-**Fecha de actualización:** 2026-10-01  
-**Repositorio de documentación:** `Taller-SW-Web/Productos-y-Ofertas-docs`  
-**Archivo:** `Arquitectura.md`  
-**Contrato HTTP canónico:** `api/openapi.yaml` (`0.5.0`)
-**Contrato asíncrono canónico:** `asyncapi/asyncapi.yaml` (`0.5.0`)
-**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.5.0`)
-**Catálogo canónico de errores:** `api/catalogo-errores.md` (`0.5.0`)
-**Contrato humano de integración:** `Contrato_Api.md`  
+**Fecha de actualización:** 2026-10-12  
+**Repositorio de documentación:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
+**Archivo:** `arquitectura/Arquitectura.md`  
+**Contrato HTTP canónico:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.1`; referencia histórica `0.5.0`)
+**Contrato asíncrono canónico:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.1`; referencia histórica `0.5.0`)
+**Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (referencia humana; base histórica `0.5.0`)
+**Catálogo canónico de errores:** `contratos/http/catalogo-errores.md` (códigos autoritativos para el contrato candidato)
+**Contrato humano de integración:** `contratos/http/Contrato_Api.md`  
 **Modelo conceptual:** `Modelo_Conceptual.md`  
-**Estado contractual consolidado:** OpenAPI `0.5.0` + AsyncAPI `0.5.0` + topología RabbitMQ consolidada.
+**Estado contractual:** línea base `0.5.0` conservada para compatibilidad; OpenAPI/AsyncAPI `0.6.0-rc.1` son contratos **candidatos** para B1–B4. Las decisiones internas están adoptadas, pero su implementación, despliegue y conformidad E2E no se acreditan mediante este documento. La topología RabbitMQ física se conserva.
 
 > Esta arquitectura es la guía de implementación del backend y de sus integraciones.  
-> Las SPEC son la fuente de verdad para reglas funcionales; `api/openapi.yaml` gobierna HTTP; `asyncapi/asyncapi.yaml` gobierna mensajería; `api/catalogo-errores.md` gobierna la semántica estable de `code`.
+> Las SPEC son la fuente de verdad para reglas funcionales; `contratos/http/openapi.yaml` gobierna HTTP; `contratos/eventos/asyncapi.yaml` gobierna mensajería; `contratos/http/catalogo-errores.md` gobierna la semántica estable de `code`.
 
 ---
 
@@ -495,7 +495,7 @@ API Gateway
 
 Los servicios de dominio permanecen privados siempre que el despliegue lo permita.
 
-Las rutas públicas siguen `api/openapi.yaml`.
+Las rutas públicas siguen `contratos/http/openapi.yaml`.
 
 ---
 
@@ -792,7 +792,7 @@ Rechazos de negocio (`STOCK_INSUFICIENTE`, cupón sin cupo, etc.) se ACKean y pr
 
 Publicaciones sin binding terminan en `po.unrouted.x` / `po.unrouted.q` y el publisher usa `mandatory=true`.
 
-La matriz completa de bindings está en `api/rabbitmq-topologia.md` y en `asyncapi/asyncapi.yaml`.
+La matriz completa de bindings está en `contratos/eventos/rabbitmq-topologia.md` y en `contratos/eventos/asyncapi.yaml`.
 
 ## 10.2. Envelope estándar
 
@@ -927,10 +927,10 @@ Un rechazo de negocio válido no es poison message.
 Fuente canónica:
 
 ```text
-api/openapi.yaml
+contratos/http/openapi.yaml
 ```
 
-La línea base vigente es OpenAPI `3.1.0`, contrato `0.5.0`. El contrato contiene **106 paths, 133 operaciones y 170 schemas** (entradas en `components.schemas`), con cobertura consolidada para las 16 funcionalidades del módulo.
+La línea base **histórica** `0.5.0` utiliza OpenAPI `3.1.0` y documentaba **106 paths, 133 operaciones y 170 schemas** (`components.schemas`). Estas cifras son una fotografía de esa línea base, **no un inventario del candidato `0.6.0-rc.1`**. El contrato candidato, que también utiliza OpenAPI `3.1.0`, incorpora las superficies provisionales de B1–B4 y no se declara desplegado.
 
 Entre los cierres incorporados a esta línea base están:
 
@@ -951,7 +951,7 @@ Cambios incompatibles requieren nueva versión de la interfaz; los cambios compa
 Fuente canónica:
 
 ```text
-asyncapi/asyncapi.yaml
+contratos/eventos/asyncapi.yaml
 ```
 
 El contrato AsyncAPI P0 ya formaliza:
@@ -971,10 +971,10 @@ El contrato AsyncAPI P0 ya formaliza:
 El catálogo de eventos correspondiente es:
 
 ```text
-api/catalogo-eventos.md
+contratos/eventos/catalogo-eventos.md
 ```
 
-AsyncAPI P2 documenta **39 mensajes lógicos**, distribuidos entre:
+La línea base histórica AsyncAPI `0.5.0` documentaba **39 mensajes lógicos**. El contrato candidato AsyncAPI `0.6.0-rc.1` documenta **40 canales y 40 mensajes**, incluido `inventory.reservation.rejected`, con datos tipados para resultados críticos. La existencia del contrato no prueba publicaciones efectivas ni despliegue. Los mensajes se distribuyen entre:
 
 - Taxonomía;
 - Catálogo;
@@ -992,7 +992,7 @@ taxonomy.characteristic-value.updated
 
 El primero propaga a Catálogo cambios confirmados del esquema asociado a un `tipo_producto_id`; el segundo propaga renombres confirmados de valores `LISTA`. El flujo genérico de baja segura cubre también `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC`.
 
-P2 fija los nombres físicos de exchange, queue, retry y DLQ en `api/rabbitmq-topologia.md`.
+P2 fija los nombres físicos de exchange, queue, retry y DLQ en `contratos/eventos/rabbitmq-topologia.md`.
 
 Los contratos Catálogo → Pricing, Catálogo → Inventario, consumo/restitución de cupón y reintegro físico ya están formalizados en OpenAPI/AsyncAPI según corresponda.
 ## 11.3. Catálogos humanos
@@ -1000,8 +1000,8 @@ Los contratos Catálogo → Pricing, Catálogo → Inventario, consumo/restituci
 Dos documentos complementan los contratos ejecutables:
 
 ```text
-api/catalogo-eventos.md
-api/catalogo-errores.md
+contratos/eventos/catalogo-eventos.md
+contratos/http/catalogo-errores.md
 ```
 
 `catalogo-eventos.md` explica productores, consumidores, correlación, idempotencia, retries y relación OpenAPI ↔ AsyncAPI.
@@ -1687,13 +1687,13 @@ scope requerido por la operación
 
 El `sub` identifica al `client_id` del módulo consumidor. Los scopes viajan en `scope` separados por espacios.
 
-La validación de `aud` evita que un token emitido para otra API pueda reutilizarse contra Productos y Ofertas.
+La validación de `aud` evita que un token emitido para otra API pueda reutilizarse contra Productos y Ofertas. Para JWT de servicio, el receptor también valida la **allowlist de `client_id` por operación**, cuando corresponde; poseer un scope nominal no elimina esa restricción.
 
 ---
 
 ## 21.5. Scopes propios de Productos y Ofertas
 
-`0.4.0` conserva 16 scopes técnicos bajo `aud=api-productos`.
+El baseline conserva **16 scopes técnicos** de `api-productos` (catálogo heredado `0.5.0`). El candidato OpenAPI `0.6.0-rc.1` propone **un scope adicional**: `inventario:operaciones:leer`, exclusivo para el cliente de servicio `modulo-ventas` al consultar `GET /api/v1/inventario/operaciones/{operationId}`. G7 aún debe registrar y conceder ese scope; documentarlo **no** equivale a un grant activo. Los 16 scopes siguientes permanecen como línea base:
 
 ```text
 catalogo:leer
@@ -1713,6 +1713,8 @@ inventario:incidencias:reportar
 inventario:incidencias:resolver
 productos:fisicos:leer
 ```
+
+**Scope propuesto fuera de la lista histórica:** `inventario:operaciones:leer` (`modulo-ventas`; `pending-security-registration` en OpenAPI). No otorgarlo a Marketplace, Chatbot, Retail ni otros clientes.
 
 Agrupación:
 
@@ -1748,6 +1750,8 @@ catalog physical projection:
   productos:fisicos:leer
 ```
 
+**Separación obligatoria de representaciones:** `GET /api/v1/inventario/disponibilidad` expone saldos autoritativos por SKU/ubicación. La allowlist de servicio para esta ruta admite únicamente `modulo-ventas`, además de los usuarios humanos específicamente autorizados por las reglas administrativas aplicables. `GET /api/v1/inventario/disponibilidad/comercial` y `POST /api/v1/inventario/disponibilidad/comercial/verificar` sirven a `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`; comparten el scope `inventario:disponibilidad:leer`, pero **no** exponen cantidades ni `location_id`. El backend debe aplicar tanto scope como identidad cliente, sin extrapolar los permisos entre rutas.
+
 Mínimo privilegio:
 
 ```text
@@ -1774,13 +1778,13 @@ continúa siendo obligatorio.
 Fuente canónica de códigos:
 
 ```text
-api/catalogo-errores.md
+contratos/http/catalogo-errores.md
 ```
 
 Fuente canónica de respuestas por endpoint:
 
 ```text
-api/openapi.yaml
+contratos/http/openapi.yaml
 ```
 
 Todos los adapters HTTP producen:
@@ -2018,7 +2022,7 @@ No aplicar retries automáticos indiscriminados a mutaciones HTTP sin idempotenc
 Definida en:
 
 ```text
-api/openapi.yaml
+contratos/http/openapi.yaml
 ```
 
 ---
@@ -3167,9 +3171,9 @@ Los principios arquitectónicos principales son:
 7. Marketplace/Chatbot solo consultan; Retail además reporta/resuelve incidencias físicas sin orquestar ventas.
 8. Catálogo mantiene perfil físico por SKU.
 9. Despacho mantiene ownership del empaque.
-10. OpenAPI `0.5.0` gobierna la interfaz HTTP de integración y administración.
-11. AsyncAPI `0.5.0` gobierna la mensajería lógica consolidada y sus 39 mensajes.
-12. `api/catalogo-errores.md` gobierna los códigos estables y `api/catalogo-eventos.md` la lectura humana de mensajería.
+10. OpenAPI `0.5.0` es la línea base histórica; `contratos/http/openapi.yaml` `0.6.0-rc.1` es la fuente HTTP candidata para B1–B4, aún no acreditada como desplegada.
+11. AsyncAPI `0.5.0` documentó 39 mensajes históricos; `contratos/eventos/asyncapi.yaml` `0.6.0-rc.1` documenta 40 canales y 40 mensajes candidatos, sin afirmar su ejecución real.
+12. `contratos/http/catalogo-errores.md` gobierna los códigos estables y `contratos/eventos/catalogo-eventos.md` la lectura humana de mensajería.
 13. cada servicio aplica arquitectura por capas/puertos.
 14. no se comparten entidades ORM, repositorios ni schemas.
 15. Outbox/Inbox, idempotencia, correlación y pruebas de contrato forman parte de la arquitectura, no son mejoras opcionales.
@@ -3217,7 +3221,7 @@ CommercialAvailabilityQuery
 CommercialAvailabilityPolicy
 ```
 
-La policy multiubicación no está cerrada (`D-INV-01`), por lo que la proyección comercial sigue provisional.
+**D-INV-01 está adoptada** en `arquitectura/decisiones/ADR-DEC-F-BLOQUEANTES.md`: para esta primera entrega, cada contexto `fulfillment_ref` se resuelve mediante mapeo interno a **una sola ubicación elegible**. No sumar existencias de ubicaciones independientes ni inferir disponibilidad por agregación. Si el mapeo falta, es ambiguo o no permite justificar cumplimiento, la proyección comercial responde `INDETERMINADO` (no `AGOTADO` ni `DISPONIBLE`). `POST /api/v1/inventario/disponibilidad/comercial/verificar` evalúa cantidades completas con `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO`, sin revelar saldos ni `location_id`, con `binding=false` y **sin reservar stock**. La ruta permanece provisional por implementación/pruebas pendientes, **no** porque la decisión continúe abierta. Una agregación real multi-origen requeriría otra ADR y capacidad verificable.
 
 ### promotions-svc
 
@@ -3236,7 +3240,7 @@ La correlación se genera/preserva antes del rechazo.
 
 ### Scopes
 
-Se mantienen 16 scopes. `catalogo:leer` no habilita el resolver a clientes distintos de Retail; `inventario:disponibilidad:leer` no habilita automáticamente la lectura detallada a canales.
+Se conservan 16 scopes del baseline; la candidata añade `inventario:operaciones:leer` como permiso **pendiente de registro/concesión por G7 y limitado a Ventas**. `catalogo:leer` no habilita el resolver de códigos de barras a clientes distintos de Retail; `inventario:disponibilidad:leer` no habilita saldos detallados a canales sin allowlist. Una credencial efectiva debe acreditar `aud=api-productos`, scope y consumidor admitido; las autorizaciones humanas son independientes.
 
-Los conteos históricos de paths/operaciones/schemas/ErrorCode deben recalcularse mecánicamente o eliminarse; no reutilizar cifras de 0.4.0.
+No reutilizar como cifras actuales los conteos históricos de paths, operaciones, schemas, mensajes o `ErrorCode` de versiones anteriores. Para una publicación definitiva, recalcularlos a partir de OpenAPI/AsyncAPI de la versión aprobada.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->

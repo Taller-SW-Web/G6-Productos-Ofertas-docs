@@ -8,13 +8,14 @@
 - **Funcionalidad:** Control de stock y disponibilidad
 - **Relacionado con:** HU-015 / SPEC-015 / WF-015
 - **Responsable:** Miguel Ángel Taco Zavala
-- **Última actualización:** 2026-10-02
+- **Última actualización de origen:** 2026-10-02
+- **Revisión de alineación contractual (PR #86):** 2026-10-12; esta revisión documental no acredita implementación ni despliegue.
 
 ---
 
 ## 2. Objetivo del flujo
 
-Representar el ciclo de inventario por `(sku, location_id)`: consulta determinística del saldo y su estado, reserva, consumo definitivo, liberación, expiración por TTL, ajustes masivos, incidencias físicas, reintegros, conciliación de ventas offline y recepción de traslados, garantizando en cada mutación las invariantes del saldo, el registro de Kardex, la idempotencia y la publicación de eventos posterior al commit.
+Representar el ciclo de inventario por `(sku, location_id)`: consulta detallada autorizada, proyección y verificación comercial de solo lectura, reserva, consumo definitivo, liberación, expiración por TTL, ajustes masivos, incidencias físicas, reintegros, conciliación de ventas offline y recepción de traslados. Cada mutación preserva invariantes de saldo, Kardex, idempotencia, resultados durables y publicación asíncrona posterior al commit. La política comercial D-INV-01, ya adoptada, exige una sola ubicación de cumplimiento elegible por contexto en esta entrega; no se agregan ubicaciones independientes.
 
 ---
 
@@ -22,7 +23,8 @@ Representar el ciclo de inventario por `(sku, location_id)`: consulta determiní
 
 - Gestor comercial con capacidades de inventario
 - Ventas/Postventa
-- Retail
+- Marketplace y Chatbot (únicamente consultas comerciales)
+- Retail (consultas comerciales e incidencias físicas autorizadas)
 - Carga masiva (Bulk)
 - Worker de expiración
 - Sistema de Inventario
@@ -79,7 +81,7 @@ flowchart LR
     F1 --> FIN
 ```
 
-> Marketplace y Chatbot solo consultan Inventario; la consulta nunca modifica saldos (HU-015 CA-06).
+> Este subflujo 4.1 representa la **consulta detallada** y su saldo por `(sku, location_id)`: la usan gestores humanos autorizados o `modulo-ventas` con JWT de servicio. Marketplace, Chatbot y Retail usan **solamente las consultas comerciales** de 4.11/4.12; compartir `inventario:disponibilidad:leer` no concede acceso al detalle. Ninguna lectura modifica saldos (HU-015 CA-06/CA-49).
 
 ### 4.2 Reserva de unidades
 
@@ -97,8 +99,8 @@ flowchart LR
         D1{"¿Misma identidad con intención distinta?"}
         A2["Rechazar con 409 IDEMPOTENCY_CONFLICT"]
         D2{"¿Misma identidad con misma intención?"}
-        A3["Responder resultado previo sin efectos"]
-        A4["Admitir comando - 202 Accepted"]
+        A3["Recuperar estado/resultado previo sin reejecutar"]
+        A4["Admitir comando - 202 Accepted (no confirma reserva)"]
         D3{"¿Hay stock suficiente?"}
         A5["Reservar: reserved aumenta y available disminuye"]
         A6["Persistir Kardex y Outbox en la misma transacción"]
@@ -108,7 +110,9 @@ flowchart LR
     subgraph RES["Resultado"]
         direction TB
         A8["Reserva ACTIVA disponible para el pedido"]
-        B1["Rechazo de negocio correlacionado STOCK_INSUFICIENTE"]
+        B1["Persistir rechazo tipado y publicar inventory.reservation.rejected por Outbox"]
+        A9["Ventas consulta resultado persistido o recibe evento tipado"]
+        FIN_REPLAY(((Fin replay sin nuevo efecto)))
         FIN_OK(((Fin reservada)))
         FIN_CONF(((Fin conflicto de idempotencia)))
         FIN_NEG(((Fin sin stock)))
@@ -122,16 +126,19 @@ flowchart LR
     D2 -->|"Sí"| A3
     D2 -->|"No"| A4
     A2 --> FIN_CONF
-    A3 --> A8
+    A3 --> FIN_REPLAY
     A4 --> D3
     D3 -->|"No"| B1
     D3 -->|"Sí"| A5
-    B1 --> FIN_NEG
+    B1 --> A9
+    A9 --> FIN_NEG
     A5 --> A6
     A6 --> A7
     A7 --> A8
     A8 --> FIN_OK
 ```
+
+> El resultado `202` es solo admisión. Una reserva **se considera confirmada únicamente** tras `inventory.reservation.created` o lectura de su resultado terminal persistido. Un rechazo por stock insuficiente produce `inventory.reservation.rejected`, con `result_code` tipado y correlación; no incrementa saldos ni registra un Kardex de reserva exitosa. El replay puede recuperar `ACCEPTED` o `PROCESSING`, o un resultado terminal `COMPLETED`/`REJECTED`/`REQUIRES_REVIEW`; nunca presume éxito.
 
 ### 4.3 Consumo definitivo y liberación
 
@@ -153,7 +160,7 @@ flowchart LR
         A4["Responder resultado previo sin efectos"]
         A5["Admitir comando - 202 Accepted"]
         D3{"¿Reserva ACTIVA?"}
-        A6["Rechazo de negocio: RESERVA_NO_ACTIVA / RESERVA_EXPIRADA"]
+        A6["Persistir rechazo de negocio tipado; en consumo emitir inventory.consumption.rejected"]
         D4{"¿Operación a aplicar?"}
         A7["Confirmar consumo: on_hand y reserved disminuyen"]
         A8["Liberar: reserved disminuye y on_hand sin cambios"]
@@ -184,6 +191,7 @@ flowchart LR
     D2 -->|"No"| A5
     A4 -->|"Consumo previo"| B1
     A4 -->|"Liberación previa"| B2
+    A4 -->|"Rechazo previo"| B3
     A5 --> D3
     D3 -->|"No"| A6
     D3 -->|"Sí"| D4
@@ -199,6 +207,8 @@ flowchart LR
     B1 --> FIN_OK
     B2 --> FIN_LIB
 ```
+
+> La ausencia de una reserva `ACTIVA` no convierte un `202` previo en éxito. Ventas espera el resultado final correlacionado y puede recuperar su estado por `operation_id` sin reenviar el comando. `inventory.consumption.rejected` es un evento de rechazo tipado de consumo; no se inventa un evento de rechazo de liberación que no exista en AsyncAPI.
 
 ### 4.4 Expiración por TTL y carrera hacia una única terminal
 
@@ -557,22 +567,119 @@ flowchart LR
     B1 --> FIN
 ```
 
+### 4.11 Proyección comercial informativa (GET)
+
+```mermaid
+flowchart LR
+    subgraph CANAL["Marketplace / Chatbot / Retail"]
+        A1["GET disponibilidad/comercial con skus y canal"]
+    end
+    subgraph INV["inventory-svc: lectura comercial"]
+        A2["Validar JWT de servicio, scope y client_id permitido"]
+        D1{"¿Solicitud autorizada?"}
+        A3["Verificar identidad de SKU sin confundir inexistencia y agotamiento"]
+        D2{"¿SKU existente?"}
+        R2["Tratar SKU inexistente según contrato, nunca como AGOTADO"]
+        A4["Resolver fuente de cumplimiento desde contexto del canal"]
+        D3{"¿Fuente única elegible/resoluble?"}
+        A5["Consultar available de una sola ubicación y clasificar"]
+        A6["Clasificar INDETERMINADO por mapeo ausente/ambiguo"]
+        A7["Responder proyección sku + status sin saldos internos"]
+        R1["Rechazar acceso: 401 o 403 según corresponda"]
+    end
+    A1 --> A2 --> D1
+    D1 -->|"No"| R1
+    D1 -->|"Sí"| A3 --> D2
+    D2 -->|"No"| R2
+    D2 -->|"Sí"| A4 --> D3
+    D3 -->|"No hay fuente comprobable"| A6 --> A7
+    D3 -->|"Sí"| A5 --> A7
+```
+
+- `GET /api/v1/inventario/disponibilidad/comercial` admite `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`, `INDETERMINADO`; `AGOTADO` corresponde a SKU existente cuya fuente se conoce y no tiene disponibilidad. Un SKU inexistente no se convierte en `AGOTADO`: se trata conforme al contrato de identidad/errores de la operación.
+- La ruta comercial usa el scope `inventario:disponibilidad:leer` **más** la allowlist de clientes técnicos `modulo-marketplace`, `modulo-chatbot`, `modulo-retail`. La disponibilidad detallada tiene otra allowlist (solo `modulo-ventas` con service JWT; acceso humano autorizado independiente). No existe consulta de saldos detallados para canales.
+- Este GET no recibe necesariamente un contexto `fulfillment` completo. La evaluación depende de una fuente inequívoca resoluble internamente para el canal; si no se puede determinar, se responde `INDETERMINADO`, nunca se inventa un almacén por defecto.
+
+### 4.12 Verificación de cantidad comercial (POST, no vinculante)
+
+```mermaid
+flowchart LR
+    subgraph CANAL["Marketplace / Chatbot / Retail"]
+        A1["POST verificar: channel_id + fulfillment + lines {sku, quantity}"]
+    end
+    subgraph INV["inventory-svc: evaluación sin efectos"]
+        A2["Validar JWT, scope, client_id y formato"]
+        D1{"¿Petición bien formada y autorizada?"}
+        R1["Rechazar con 400/401/403 según causa"]
+        D2{"¿Contexto semánticamente válido?"}
+        R2["422 CONTEXTO_ABASTECIMIENTO_INVALIDO"]
+        A3["Resolver correspondencia interna de modalidad/fulfillment_ref"]
+        D3{"¿Única ubicación elegible y realizable?"}
+        A4["Evaluar cantidad completa por SKU solo en ubicación elegible"]
+        A5["Por línea: INDETERMINADO"]
+        A6["Por línea: SUFICIENTE o INSUFICIENTE"]
+        A7["200: items por línea, evaluated_at y binding=false"]
+    end
+    A1 --> A2 --> D1
+    D1 -->|"No"| R1
+    D1 -->|"Sí"| D2
+    D2 -->|"No"| R2
+    D2 -->|"Sí"| A3 --> D3
+    D3 -->|"No"| A5 --> A7
+    D3 -->|"Sí"| A4 --> A6 --> A7
+```
+
+- Entrada del POST candidato: `channel_id` (`MARKETPLACE`, `CHATBOT`, `RETAIL`), `fulfillment` con `mode` y `fulfillment_ref` opaca cuando aplique, y `lines` de 1 a 100 pares `{sku,quantity}`, con cantidades positivas. `GET.status` **no** es `POST.items[].result`: el POST usa `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO`.
+- El estado `INDETERMINADO` por ausencia, ambigüedad o inviabilidad de un mapeo interno corresponde a **200**, no a `422`; `422 CONTEXTO_ABASTECIMIENTO_INVALIDO` corresponde al contexto *semánticamente inválido*; `400 VALIDACION`, a petición malformada.
+- No se agregan cantidades de distintas ubicaciones independientes. Para esta entrega, una sola fuente debe poder atender la cantidad solicitada. Si no se puede demostrar, nunca se responde `SUFICIENTE` por suma arbitraria. El POST no reserva, no modifica Kardex/Outbox y no garantiza disponibilidad futura: `binding=false`.
+
+### 4.13 Recuperación de resultado asíncrono de Inventario
+
+```mermaid
+flowchart LR
+    subgraph VENT["Ventas / Postventa"]
+        A1["Enviar comando con operation_id UUID, correlación y orden opaca"]
+        A2["Recibir 202: operación admitida, no confirmada"]
+        D1{"¿Recibió evento tipado final?"}
+        A3["GET inventario/operaciones/{operationId} con scope de lectura"]
+        A4["Usar estado/result_code persistido sin reejecutar"]
+        FIN(((Decidir flujo de Ventas según resultado final)))
+    end
+    subgraph INV["inventory-svc"]
+        B1["Persistir resultado y Outbox idempotentes"]
+        B2["Publicar created/rejected o completed/rejected tipado"]
+    end
+    A1 --> A2 --> B1 --> B2 --> D1
+    D1 -->|"Sí"| FIN
+    D1 -->|"No; pérdida, retraso o incertidumbre"| A3 --> A4 --> FIN
+```
+
+- `GET /api/v1/inventario/operaciones/{operationId}` consulta el resultado persistido, no reenvía el comando. Está reservado a `modulo-ventas` y exige el scope candidato `inventario:operaciones:leer`; su alta/grant en Seguridad (G7) y las pruebas runtime siguen pendientes.
+- `order_id` es texto **opaco** de Ventas, mientras `operation_id` y `reservation_id` tienen formato UUID. Los eventos relevantes incluyen, según operación, `inventory.reservation.created`, `inventory.reservation.rejected`, `inventory.consumption.completed` e `inventory.consumption.rejected`. El consumidor verifica correlación y procesa de forma idempotente; un retraso no transforma la admisión en éxito.
+- El diagrama expresa una recuperación conceptual: si la operación sigue `ACCEPTED` o `PROCESSING`, Ventas no debe marcar éxito y sigue la política de consulta/espera prevista; no se presume que cada GET devuelva una terminal. La documentación de este flujo no acredita implementación ni pruebas E2E.
+
 ---
 
 ## 5. Notas generales
 
 - **Actor humano:** el usuario del backoffice en este flujo es el `GESTOR_COMERCIAL`; la granularidad de inventario se expresa mediante capacidades locales asociadas a su `sub`, no mediante un rol global independiente.
 - **Idempotencia:** repetir un comando con la misma identidad y la misma intención responde el resultado previo sin efectos secundarios; reutilizar la identidad con otra intención produce `409 IDEMPOTENCY_CONFLICT` (HU-015 CA-14, SPEC-015 §30).
-- **202 Accepted:** es la admisión del comando, no el resultado final. Los resultados asíncronos se correlacionan mediante `order_id`, `operation_id`, `correlation_id` y `reservation_id` (SPEC-015 §30).
+- **202 Accepted:** es solo admisión. El éxito/rechazo de reserva y consumo se confirma por **resultado durable** y evento tipado; tras pérdida del evento, Ventas recupera con `GET /api/v1/inventario/operaciones/{operationId}` sin reejecución. `operation_id`/`reservation_id` son UUID; `order_id` es texto opaco de Ventas; se preservan `correlation_id` y `causation_id` según AsyncAPI v2 (HU-015 CA-50/CA-51 y ADR B1).
 - **Kardex y Outbox:** toda mutación autoritativa registra Kardex con saldos anterior/posterior, operación, SKU y ubicación, y persiste el Outbox en la misma transacción local; la publicación de eventos ocurre después del commit (HU-015 CA-16/CA-19, SPEC-015 §27).
 - **Invariantes:** en toda operación se cumple `on_hand >= 0`, `reserved >= 0`, `blocked >= 0`, `reserved + blocked <= on_hand` y `available = max(on_hand - reserved - blocked, 0)` con `available >= 0` (HU-015 CA-04, SPEC-015 §13).
 - **Concurrencia:** confirmar, liberar y expirar la misma reserva produce una única transición terminal; dos operaciones concurrentes nunca comprometen las mismas unidades disponibles (HU-015 CA-13/CA-15).
-- **Consulta:** el subflujo 4.1 es de solo lectura y nunca modifica saldos ni registra eventos (HU-015 CA-06).
+- **Consultas:** 4.1 es el saldo detallado autorizado; 4.11 y 4.12 son consultas comerciales limitadas y sin efectos. Todas son solo lectura. La política D-INV-01 está **adoptada**, pero no se considera implementada/validada; el contrato comercial continúa `provisional` por pruebas runtime pendientes (HU-015 CA-43 a CA-49).
+- **Seguridad por operación:** `inventario:disponibilidad:leer` por sí solo no habilita rutas. JWT de servicio de `modulo-ventas` puede leer el detalle; los JWT de `modulo-marketplace`, `modulo-chatbot` y `modulo-retail` solo las rutas comerciales, y sujetos a su scope/allowlist. La consulta de resultado de operación requiere el nuevo permiso `inventario:operaciones:leer` aún pendiente de registro y grant por G7.
+- **No confundir estados:** `GET.status` es `DISPONIBLE/STOCK_BAJO/AGOTADO/INDETERMINADO`; `POST.items[].result` es `SUFICIENTE/INSUFICIENTE/INDETERMINADO`. La ambigüedad de mapeo no equivale a agotamiento ni a contexto semánticamente inválido.
 
 ### Contratos de referencia
 
-| Endpoint (OpenAPI 0.5.0) | Subflujo |
+| Endpoint (baseline `0.5.0` y/o candidato `0.6.0-rc.1`) | Subflujo |
 |---|---|
+| `GET /api/v1/inventario/disponibilidad` | 4.1 — Consulta detallada autorizada (baseline) |
+| `GET /api/v1/inventario/disponibilidad/comercial` | 4.11 — Proyección comercial informativa (ruta candidata) |
+| `POST /api/v1/inventario/disponibilidad/comercial/verificar` | 4.12 — Verificación de cantidades no vinculante (ruta candidata) |
+| `GET /api/v1/inventario/operaciones/{operationId}` | 4.13 — Recuperación persistida para Ventas (ruta candidata; grant G7 pendiente) |
 | `POST /api/v1/inventario/reservas` | 4.2 — Reserva de unidades |
 | `POST /api/v1/inventario/reservas/{reservaId}/confirmar` | 4.3 — Consumo definitivo |
 | `POST /api/v1/inventario/reservas/{reservaId}/liberar` | 4.3 — Liberación |
@@ -583,36 +690,64 @@ flowchart LR
 | `GET /api/v1/inventario/traslados` | 4.9 — Consulta de traslados |
 | `POST /api/v1/inventario/traslados/{trasladoId}/recepciones` | 4.9 — Recepción de traslado |
 
-Los eventos publicados corresponden al catálogo de AsyncAPI (`inventory.reservation.*`, `inventory.consumption.*`, `inventory.stock.changed`, `inventory.stock.adjusted`, `inventory.bulk.stock.adjust.*`, `inventory.sku.initialization.*`).
+Los eventos publicados corresponden al catálogo de AsyncAPI (`inventory.reservation.*`, `inventory.consumption.*`, `inventory.stock.changed`, `inventory.stock.adjusted`, `inventory.bulk.stock.adjust.*`, `inventory.sku.initialization.*`), con `inventory.reservation.rejected` e `inventory.consumption.rejected` tipados en el candidato. AsyncAPI `0.6.0-rc.1` declara **40 canales y 40 mensajes**; la línea base histórica tenía 39. Publicación contractual no equivale a despliegue ni a aprobación de pruebas.
 
 ---
 
 <!-- HOMOLOGACION-HTTP-0.5.0:START -->
-## Flujos de lectura 0.5.0
+## Flujos de lectura — baseline 0.5.0 y extensión candidata 0.6.0-rc.1
+
+La línea base `0.5.0` se conserva como referencia histórica. Los contratos HTTP y asíncronos del PR #86 son candidatos `0.6.0-rc.1`; los subflujos comerciales y la lectura de resultados siguen provisionales hasta validación de implementación, grants y E2E. La adopción de D-INV-01 **no significa** que esos controles estén ya desplegados.
 
 ### Consulta detallada
 
 ```text
-Gestor/Ventas autorizado
-→ leer (sku, location_id)
-→ calcular available
-→ validar invariantes
-→ determinar status
-→ devolver saldo detallado
+GESTOR_COMERCIAL autorizado o modulo-ventas con JWT de servicio + allowlist
+→ GET /api/v1/inventario/disponibilidad
+→ leer saldo autoritativo (sku, location_id) sin agregar ubicaciones
+→ calcular available, validar invariantes y determinar status
+→ devolver on_hand/reserved/blocked/available/status/stock_version
 ```
 
-### Consulta comercial
+`modulo-marketplace`, `modulo-chatbot` y `modulo-retail` no tienen acceso a esa lectura detallada. Para el JWT técnico de Ventas, además del cliente autorizado, se verifica `inventario:disponibilidad:leer`; la ruta permite también acceso humano debidamente autorizado con `userBearer`.
+
+### Proyección comercial GET
 
 ```text
-Marketplace/Chatbot/Retail
-→ solicitar skus + canal
-→ inventory-svc obtiene disponibilidad autoritativa
-→ resolver disponibilidad comercial según política
-→ proyectar sku + status
-→ responder
+Marketplace / Chatbot / Retail (JWT técnico + scope + allowlist)
+→ GET /api/v1/inventario/disponibilidad/comercial?skus=...&canal=...
+→ validar SKU y resolver internamente una fuente de cumplimiento única y elegible
+→ si no se puede resolver, status=INDETERMINADO
+→ si se resuelve, evaluar available de esa ubicación y clasificar status
+→ devolver sku + status, sin ubicación, cantidades, umbral ni stock_version
 ```
 
-La política multiubicación sigue marcada `D-INV-01`; no se inventa suma, máximo ni ubicación por defecto.
+`AGOTADO` solo representa SKU **existente** con fuente evaluable sin disponibilidad; la consulta nunca efectúa una reserva.
 
-Ambas consultas son de solo lectura.
+### Verificación comercial POST por cantidad
+
+```text
+Marketplace / Chatbot / Retail (JWT técnico + scope + allowlist)
+→ POST /api/v1/inventario/disponibilidad/comercial/verificar
+→ validar channel_id, fulfillment {mode, fulfillment_ref?}, lines {sku,quantity}
+→ contexto semánticamente inválido: 422 CONTEXTO_ABASTECIMIENTO_INVALIDO
+→ request malformado: 400 VALIDACION
+→ mapeo interno ausente/ambiguo: 200, item.result=INDETERMINADO
+→ mapeo único ejecutable: evaluar la cantidad completa en la fuente elegible
+→ 200, items[].result=SUFICIENTE/INSUFICIENTE/INDETERMINADO; binding=false
+```
+
+D-INV-01 está **adoptada**: se resuelve una sola ubicación elegible por contexto de cumplimiento, sin sumar saldos de fuentes independientes. Si no puede probarse ese cumplimiento, se responde `INDETERMINADO`, no `AGOTADO` ni `SUFICIENTE`. Una futura agregación multi-origen necesita otra ADR y capacidad demostrable.
+
+### Recuperación de operación de Inventario
+
+```text
+Ventas admite un 202 para reserva/consumo/liberación
+→ espera evento final tipado (resultado exitoso o rechazo)
+→ si falta o se retrasa: GET /api/v1/inventario/operaciones/{operationId}
+→ inventory-svc devuelve estado/resultado persistido sin reejecutar
+→ Ventas decide solo cuando el resultado confirma éxito o rechazo
+```
+
+La recuperación se limita a `modulo-ventas`, con scope candidato `inventario:operaciones:leer`, cuyo registro/grant por G7 permanece pendiente. Las tres consultas de disponibilidad (detalle, GET comercial y POST comercial) son de solo lectura; **ninguna** altera saldo, Kardex ni reservas.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
