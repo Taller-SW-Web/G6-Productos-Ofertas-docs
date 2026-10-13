@@ -628,6 +628,20 @@ REQUIRES_REVIEW
 
 `REQUIRES_REVIEW` contiene cantidades no conciliadas y nunca implica saldo negativo.
 
+### Alcance y pendientes de homologación
+
+La secuencia documentada actualmente por G6 es: Retail realiza la venta física offline, la sincroniza con Ventas/Postventa y `modulo-ventas` invoca Inventario. La alternativa Retail→G6 directo sigue pendiente de homologación; esta descripción no fija un nuevo orden entre venta, pedido, pago y conciliación.
+
+DEC-F-013 establece que Inventario conserva la autoridad del stock central y concilia solo cantidades admisibles, sin reserva retroactiva, saldo negativo ni consumo de unidades reservadas o bloqueadas. Una conciliación parcial conserva las cantidades solicitadas, aplicadas y no resueltas. Si `applied_quantity=0`, el resultado puede quedar registrado sin generar movimiento Kardex de cantidad cero. Un replay semánticamente idéntico devuelve el resultado anterior sin nuevos efectos; reutilizar la identidad con contenido diferente produce `409 IDEMPOTENCY_CONFLICT`.
+
+La identidad estable de la venta física, su ámbito de unicidad y su correspondencia con `ventaLocalUuid`, `offline_sale_id`, `operation_id` y `order_id` siguen pendientes de homologación. Esas referencias no se consideran equivalentes ni definen por sí solas la deduplicación entre reintentos técnicos.
+
+DEC-F-014 requiere que Inventario resuelva y autorice internamente la ubicación antes de mutar. Sin embargo, el request OpenAPI candidato todavía requiere `location_id` en cada línea; esta incompatibilidad contractual no se resuelve en esta guía. DEC-F-015 requiere minimizar la información destinada a Retail: el response candidato actual incluye cantidades funcionales, saldos y ubicación interna, y su consumidor contractual es `modulo-ventas`. No hay una representación mínima para Retail homologada.
+
+El scope `inventario:conciliar-offline` sigue pendiente de registro y grant efectivo con G7. Esta guía no autoriza a Retail a invocar la conciliación: los permisos de disponibilidad no conceden permiso de conciliación. También siguen pendientes el tratamiento de ventas offline sincronizadas después del límite de 72 horas documentado por G5 y cualquier flujo de cupones offline sin reserva confirmada.
+
+Referencias: [DEC-F-009 y DEC-F-013–015](../../arquitectura/decisiones/REGISTRO_DEC_F.md), [SPEC-015 §24.5](../../requisitos/specs/SPEC-015-control-stock-disponibilidad.md), [alineación Retail](../../integraciones/ALINEACION_RETAIL.md) y [alineación Ventas](../../integraciones/ALINEACION_VENTAS.md).
+
 ## 7.6. Regla de ownership
 
 Ventas no actualiza tablas de Inventario. Inventario no decide pagos, reembolsos ni política comercial de devolución.
