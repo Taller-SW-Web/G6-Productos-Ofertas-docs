@@ -36,7 +36,7 @@ Registra por separado el estado interno, externo y de implementación. No declar
 ## Límites de cambio
 
 - No inventes contratos, acuerdos, rutas, scopes, campos, políticas ni decisiones. No crees identificadores DEC-F posteriores al 012 sin solicitud expresa.
-- No reescribas migraciones aplicadas ni sus checksums. SQL de escritura en Supabase requiere autorización expresa de Marco, alcance definido y proceso de despliegue aprobado; sin esos requisitos no se ejecuta. En esta tarea está prohibido ejecutar SQL de escritura.
+- No reescribas migraciones aplicadas ni sus checksums. SQL de escritura en Supabase requiere autorización expresa de Marco, alcance definido y proceso de despliegue aprobado; sin esos requisitos no se ejecuta.
 - Cambia únicamente los archivos del alcance aprobado. No aproveches una tarea para normalizar documentos adyacentes.
 - No hagas commit, push, publicación o merge salvo que la solicitud lo autorice expresamente. Nunca abras PR si se indicó que no.
 

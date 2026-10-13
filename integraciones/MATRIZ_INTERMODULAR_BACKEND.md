@@ -1,0 +1,94 @@
+# Matriz intermodular para backend G6
+
+**Corte de fuentes remotas:** 2026-10-12, ramas `main` en los commits indicados por integración.
+**Uso:** insumo documental para backend. No equivale a aprobación externa, grant de Seguridad, provisión de credenciales, implementación ni prueba runtime.
+
+## Convenciones de evidencia
+
+- **HECHO_G6:** contenido de documentación o contrato G6.
+- **HECHO_EXTERNO:** contenido publicado por el otro módulo; estado de aprobación según su fuente.
+- **ACUERDO_COMUNICADO_NO_HOMOLOGADO:** antecedente comunicado que requiere registro y aceptación externa.
+- **PROPUESTA_TECNICA_G6:** alternativa que requiere aprobación de Marco y, cuando aplique, homologación.
+- **PENDIENTE_SIN_SOLUCION_APROBADA:** dato o decisión que las fuentes no resuelven.
+
+En cada ficha se separa la existencia de la fuente, la regla que realmente documenta, contradicciones y evidencia de runtime. La mención de un scope o cliente no acredita que exista un grant, token o credencial efectiva.
+
+## G4 — Retail
+
+1. **Proveedor / consumidor:** G6 provee catálogo, disponibilidad comercial y conciliación de Inventario; G4 Retail consume. G5 es el owner de pedido/pago y su orquestación según las fuentes consultadas.
+2. **Responsabilidad y owner:** G4 es dueño del POS, la venta presencial y sincronización offline; G6 es dueño del catálogo e Inventario; G5 es dueño del pedido, pago y orquestación; G7 es dueño de autenticación y concesión de permisos. No se transfiere ownership por integración.
+3. **Operación/evento:** G4 documenta consultas de producto, disponibilidad, resolución de código de barras, evaluación de promociones e incidencias en G6. G4 v0.4 indica que Retail no invoca conciliación offline; Ventas la solicita después de registrar la venta. El antecedente comunicado más reciente indica Retail→G6 directo para conciliar (no homologado).
+4. **Ruta/identificador exacto publicado:** G4 §4.2 lista `GET /api/v1/productos`, `GET /api/v1/productos/{id}`, `GET /api/v1/inventario/disponibilidad/comercial`, `POST /api/v1/productos/codigos-barras/resolver`, `POST /api/v1/promociones/evaluar` y `POST /api/v1/inventario/incidencias`; §4.3 documenta `POST /pedidos`, consulta de pedido, confirmación de pago y registro offline todavía por definir con G5, idempotente por `ventaLocalUuid`. La operación G6 publicada es `POST /inventario/conciliaciones-offline` (`operationId: conciliarVentaOffline`); el contrato G6 limita `x-allowed-client-ids` a `modulo-ventas`.
+5. **Autenticación / audiencia / scope / cliente:** G4 documenta JWT emitido por G7; el contrato G4 marca scopes de consulta sujetos al registro de G7. G6 OpenAPI declara `api-productos`, `inventario:conciliar-offline` y cliente permitido `modulo-ventas` para conciliación; el registro del scope está pendiente. No consta grant para `modulo-retail` a la operación.
+6. **Identificadores/datos:** G4 §4.3 documenta `tiendaId` como código público de tienda, `terminalPos`, `pedidoId` opaco e `Idempotency-Key` UUID. G6 OpenAPI usa `order_id`, `offline_sale_id` y `operation_id` con propósitos distintos. No está aprobado qué identificador estable deduplica la venta offline; no asumir que un retry técnico la identifica.
+7. **Precondiciones / resultados / reintentos:** G4 v0.4 define venta offline y sincronización, pero su secuencia difiere del antecedente de llamada directa. G5 v1.5.0 para Retail reporta pedido `PAGADO` y `ENTREGADO`, sin reserva. G6 admite conciliación con cantidades aplicadas/no resueltas; no hay reserva retroactiva ni saldo negativo. No inferir orden de pedido, cobro, conciliación o consumo. Deben acordarse semántica de repetición y una identidad estable de venta.
+8. **Aprobación documental:** el documento G4 se identifica como v0.4 y declara pendiente de aprobación de PO y Tech Lead; dice que endpoints no se implementan/consumen hasta `APROBADO` (§1). Por tanto, es una fuente publicada, no contrato homologado.
+9. **Seguridad: aprobación / grant / provisión:** G4 declara scopes pendientes de registro G7. G7 distingue aprobación de provisión y no hay evidencia de credenciales para esta llamada. Grant efectivo de conciliación para Retail: no acreditado.
+10. **Contradicciones con G6:** G4 v0.4 prohíbe Retail→G6 conciliación y sitúa a Ventas como solicitante; G6 también permite solo `modulo-ventas`. El antecedente comunicado posterior indica Retail→G6 directo. Es una contradicción pendiente de homologación. G4 v0.4 y G5 v1.5.0 describen secuencias distintas.
+11. **DEC-F vinculada:** adoptadas DEC-F-002, -003, -008 y -009; propuestas no adoptadas DEC-F-013, -014 y -015 en [propuestas](../arquitectura/decisiones/PROPUESTAS_DEC_F_BACKEND.md).
+12. **Evidencia y bloqueo de backend:** [G4 `specs/api-contracts.md`](https://github.com/Taller-SW-Web/G4-Retail-specs/blob/main/specs/api-contracts.md), `main`, `99fb06d`, §§1, 4.2–4.3 y 5.10; [G5 `specs/api/api-ventas.md`](https://github.com/Taller-SW-Web/G5-Ventas-Postventas/blob/main/specs/api/api-ventas.md), `main`, `a846ca4`, §1.1; G6 [OpenAPI](../contratos/http/openapi.yaml) y [SPEC-015](../requisitos/specs/SPEC-015-control-stock-disponibilidad.md) §24.5. **Bloqueo: sí** para implementar conciliación directa desde Retail; faltan homologación G4/G5/G6, contrato de identidad offline y autorización/provisión G7. Las consultas documentadas no demuestran runtime.
+
+## G5 — Ventas/Postventa
+
+1. **Proveedor / consumidor:** G5 provee pedido/pago y orquestación a los canales; G6 provee catálogo, promociones e Inventario a G5 cuando corresponda.
+2. **Responsabilidad y owner:** G5 es dueño de pedido, pago y orquestación. G6 es dueño de SKU, promociones/cupones e Inventario. Retail posee el POS y su venta física.
+3. **Operación/evento:** API de creación y consulta de pedidos, notificación de pago y operaciones de inventario coordinadas por canal; la API G5 documenta además eventos internos de pedido. No se define aquí una secuencia combinada nueva.
+4. **Ruta/identificador exacto publicado:** `POST /api/v1/pedidos`, `GET /api/v1/pedidos/{pedidoId}`, `POST /api/v1/pedidos/{pedidoId}/pagos/notificacion`; API version `1.5.0`, audiencia `api-ventas`.
+5. **Autenticación / audiencia / scope / cliente:** `POST /api/v1/pedidos` usa token de servicio del canal con `ventas:pedidos:crear` e `Idempotency-Key` UUID v4. Para llamadas de G5 a G6, las fuentes G6 deben leerse junto con sus allowlists/scopes; la existencia de éstos no acredita grant efectivo. No se documenta aquí un grant específico de conciliación G5 sin revisar Security.
+6. **Identificadores/datos:** G5 publica `pedidoId` opaco y `Idempotency-Key` de la creación/reintento. G6 especifica `order_id` opaco para vinculación a pedido, `operation_id` UUID para operación, `reservation_id` UUID para reserva confirmada y `offline_sale_id` en la respuesta actual. La identidad estable de venta offline es un pendiente distinto.
+7. **Precondiciones / resultados / reintentos:** API G5 §1.1: Marketplace y Chatbot comienzan en `CREADO` y coordinan reserva; Retail se registra como `PAGADO` y `ENTREGADO` en la misma operación, no reserva ni usa notificación de pago. La misma clave/cuerpo reintenta con el mismo pedido; clave reutilizada con cuerpo distinto da conflicto. G6 mantiene reserva confirmada como precondición global de consumo de cupón; no hay mecanismo de cupón aprobado para Retail sin reserva.
+8. **Aprobación documental:** API publicada v1.5.0; la fuente consultada no acredita homologación específica de la conciliación directa Retail→G6.
+9. **Seguridad: aprobación / grant / provisión:** G5 API lista scope para crear pedidos. La matriz G7 consultada acredita aprobación de algunos permisos a `modulo-retail` para Ventas, pero las credenciales/provisión están pendientes; no se extiende esa aprobación a un scope G6.
+10. **Contradicciones con G6:** la secuencia Retail `PAGADO`/`ENTREGADO` sin reserva difiere de Marketplace/Chatbot y de la secuencia de G4 v0.4. Los documentos G6 sitúan Retail→Ventas→G6; el antecedente comunicado reciente indica Retail→G6. G6 OpenAPI hoy permite `modulo-ventas` en conciliación. No establecer un orden definitivo entre pedido, pago, conciliación y consumo.
+11. **DEC-F vinculada:** adoptadas DEC-F-003, -004, -007, -008 y -009; propuestas DEC-F-013 y -015 sujetas a aprobación.
+12. **Evidencia y bloqueo de backend:** [G5 `api-ventas.md`](https://github.com/Taller-SW-Web/G5-Ventas-Postventas/blob/main/specs/api/api-ventas.md), `main`, `a846ca4`, §§1.1–1.2; G6 [SPEC-005](../requisitos/specs/SPEC-005-gestion-cupones-descuento.md), [SPEC-015](../requisitos/specs/SPEC-015-control-stock-disponibilidad.md), [OpenAPI](../contratos/http/openapi.yaml); G7 [matriz de scopes](https://github.com/Taller-SW-Web/Modulo-de-Seguridad/blob/main/docs/integracion/matriz-scopes.md), `main`, `c0e0b61`. **Bloqueo: sí** para cerrar la secuencia Retail y cualquier cambio en llamadas/consumo; falta homologación intermodular. La API documental no prueba implementación E2E.
+
+## G7 — Seguridad
+
+1. **Proveedor / consumidor:** G7 provee identidad, autenticación y autorización; G6 y los módulos consumidores solicitan y usan credenciales conforme a grants aprobados.
+2. **Responsabilidad y owner:** G7 es owner del registro/aprobación de scopes, emisión y provisión de credenciales. G6 declara requisitos de acceso en su API; no concede sus propios permisos.
+3. **Operación/evento:** autenticación JWT y gestión de permisos/scope; la matriz publicada registra consumidores y estado de aprobación/provisión.
+4. **Ruta/identificador exacto publicado:** la fuente consultada es la matriz documental [matriz-scopes.md](https://github.com/Taller-SW-Web/Modulo-de-Seguridad/blob/main/docs/integracion/matriz-scopes.md); no se infiere una ruta runtime a partir de ella.
+5. **Autenticación / audiencia / scope / cliente:** G6 OpenAPI especifica para conciliación audiencia `api-productos`, scope `inventario:conciliar-offline` y cliente `modulo-ventas`. El antecedente Retail→G6 requeriría coordinar con G7; no implica otorgar ese scope a `modulo-retail`. Para G2, el contrato documenta `productos:fisicos:leer` para `modulo-despacho`, con registro/grant aún no acreditados.
+6. **Identificadores/datos:** cliente técnico, audiencia, scope y subject/claims siguen semánticas de Seguridad; no inventar identidad técnica, claims ni scopes. Los ids de pedido, venta offline y operación no son datos intercambiables.
+7. **Precondiciones / resultados / reintentos:** scope registrado/aprobado y cliente autorizado deben preceder la provisión y uso. La matriz G7 declara explícitamente que permiso propuesto o aprobado no prueba credencial provisionada. El manejo técnico de reintentos no cambia autorización ni sustituye la idempotencia del negocio.
+8. **Aprobación documental:** matriz G7 `main` publicada; enumera estados de aprobación y pendientes. Para los scopes G6 conciliación offline y G2 datos físicos no se encontró aprobación/grant efectivo en la fuente consultada.
+9. **Seguridad: aprobación / grant / provisión:** separados. G6 `inventario:conciliar-offline` figura pendiente de registro en el OpenAPI. G7 incluye `productos:fisicos:leer` para `modulo-despacho` como pendiente de registro de Seguridad; no se acredita provisión de credenciales.
+10. **Contradicciones con G6:** el consumidor G6 allowlisted para conciliación es `modulo-ventas`; Retail directo requeriría cambio coordinado de consumidor autorizado y decisión de G7. Un scope en OpenAPI es requisito declarado, no permiso concedido.
+11. **DEC-F vinculada:** adoptadas DEC-F-003, -011 y -012; propuestas DEC-F-014 y -015 sujetas a revisión de Seguridad.
+12. **Evidencia y bloqueo de backend:** [G7 matriz-scopes.md](https://github.com/Taller-SW-Web/Modulo-de-Seguridad/blob/main/docs/integracion/matriz-scopes.md), `main`, `c0e0b61`, §§ de consumidores Productos, Retail y Despacho; G6 [OpenAPI](../contratos/http/openapi.yaml), conciliación y scope pendiente. **Bloqueo: sí** para integración autenticada de Retail→G6 hasta aprobación, grant y credenciales verificables; también falta acreditar acceso efectivo G2→G6. La matriz documental no prueba runtime.
+
+## G2 — Despacho
+
+1. **Proveedor / consumidor:** G6 Productos provee lectura de datos físicos; G2 Despacho consume.
+2. **Responsabilidad y owner:** G6 es owner de los atributos físicos de catálogo expuestos; G2 es owner del consumo por Despacho; G7 es owner del grant y credenciales.
+3. **Operación/evento:** consulta por lote de datos físicos de productos. Es consulta, no mutación de inventario.
+4. **Ruta/identificador exacto publicado:** `POST /api/v1/productos/datos-fisicos/consulta`, documentado en §3.4 y §5.2 de G2.
+5. **Autenticación / audiencia / scope / cliente:** cliente `modulo-despacho`, audiencia `api-productos`, scope `productos:fisicos:leer`. G2 señala que Seguridad debe registrar/conceder el scope. Esto no acredita grant ni credenciales provisionadas.
+6. **Identificadores/datos:** consulta usa SKU(s) y devuelve datos físicos de producto conforme al contrato G2/G6; no se agregan campos no publicados.
+7. **Precondiciones / resultados / reintentos:** solicitud autorizada y SKU existentes conforme al contrato. El documento establece consulta de datos físicos; no se atribuyen garantías de reintento, idempotencia o respuesta que no consten allí.
+8. **Aprobación documental:** operación y scope constan en contrato oficial G2 y se documenta acuerdo de equipos sobre ruta/unidades/autorización. Estado de aprobación contractual integral y consumo en runtime no se acredita por esa presencia.
+9. **Seguridad: aprobación / grant / provisión:** la matriz G7 consultada dice que `productos:fisicos:leer` para `modulo-despacho` permanece `pending-security-registration`; grant y provisión de credenciales no acreditados.
+10. **Contradicciones con G6:** no se marca ausencia de contrato: G2 sí documenta consulta física y scope. La tensión es el estado pendiente de registro/grant frente a cualquier interpretación de disponibilidad operativa.
+11. **DEC-F vinculada:** adoptada DEC-F-011; propuesta DEC-F-014 solo si la operación se extiende a mutaciones, lo que el contrato de consulta no hace.
+12. **Evidencia y bloqueo de backend:** [G2 integraciones/api-contract.md](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/integraciones/api-contract.md), `main`, `e727f41`, §§3.4 y 5.2; [G7 matriz-scopes.md](https://github.com/Taller-SW-Web/Modulo-de-Seguridad/blob/main/docs/integracion/matriz-scopes.md), `main`, `c0e0b61`, § “Catálogo de Productos contrastado — no concedido automáticamente”; G6 [OpenAPI](../contratos/http/openapi.yaml). **Bloqueo: sí** para habilitar consumo autenticado hasta evidencia de grant, credenciales y validación de runtime. La documentación de la operación no demuestra implementación.
+
+## Contradicciones y pendientes transversales
+
+| Tema | Hecho G6 | Hecho externo / antecedente | Estado y responsable | Bloqueo |
+|---|---|---|---|---|
+| Conciliación Retail | OpenAPI `POST /inventario/conciliaciones-offline` permite hoy cliente `modulo-ventas`; SPEC-015 y alineaciones describen a Ventas en la ruta. | **ACUERDO_COMUNICADO_NO_HOMOLOGADO:** Retail llamaría directamente a G6. G4 v0.4 explícitamente prohíbe esa llamada y la asigna a Ventas. | Homologar G4/G5/G6 y actualizar contrato aprobado; G7 debe revisar el consumidor autorizado. No asumir secuencia. | Sí, para llamada directa y autorización. |
+| Secuencia comercial Retail | G6 exige reserva confirmada antes del consumo de cupón. | G5 v1.5.0 describe `PAGADO` y `ENTREGADO` sin reserva; G4 v0.4 documenta otra secuencia y estado de aprobación pendiente. | Owners G4/G5/G6 homologan; Marco decide propuesta G6. No imponer orden entre pedido, cobro, conciliación o consumo. | Sí, para diseñar coordinación completa. |
+| Identificadores | `order_id` opaco vincula pedido; `operation_id` UUID identifica operación de conciliación. | G5 publica `pedidoId` e `Idempotency-Key`; la identidad durable de venta offline sigue sin definición contractual. | Mantener identidades distintas. G4/G5/G6 deben acordar identidad estable offline, idempotente frente a cambios del retry técnico. | Sí, para deduplicación de negocio. |
+| Cupón Retail | DEC-F-008 exige reserva efectivamente confirmada para consumo. | Retail se documenta sin reserva en G5 v1.5.0. | No hay mecanismo de cupón aprobado para el flujo Retail sin reserva. No crear reserva ficticia, mensaje o DTO. | Sí, si Retail necesita cupón. |
+| Permisos Retail | G6 declara `inventario:conciliar-offline`; el cliente permitido actual es `modulo-ventas`. | G7 no acredita concesión a Retail para conciliación. | G6 y Retail solicitan homologación a G7; presencia del scope en OpenAPI no es grant. | Sí, hasta aprobación/provisión verificables. |
+| Consulta física G2 | G6 documenta/provee semánticamente datos físicos de producto. | G2 publica POST de consulta y scope `productos:fisicos:leer` para `modulo-despacho`; G7 dice pendiente de registro. | Contrato existe; grant y credenciales no acreditados. Owner de la concesión: G7. | Sí, para consumo autenticado en runtime. |
+
+## Fuentes oficiales consultadas
+
+| Módulo | URL | Rama y commit consultado | Sección usada |
+|---|---|---|---|
+| G4 Retail | [api-contracts.md](https://github.com/Taller-SW-Web/G4-Retail-specs/blob/main/specs/api-contracts.md) | `main`, `99fb06d634e1642673c2577e61528f4ab3ac70a1` | §1 estado; §§4.2–4.3 integraciones; §5.10 contingencia offline |
+| G5 Ventas/Postventa | [api-ventas.md](https://github.com/Taller-SW-Web/G5-Ventas-Postventas/blob/main/specs/api/api-ventas.md) | `main`, `a846ca4e61a1ea324a09466f425a3b1063dddff7` | §1.1 crear pedido y tabla por canal; §1.2 notificación de pago |
+| G7 Seguridad | [matriz-scopes.md](https://github.com/Taller-SW-Web/Modulo-de-Seguridad/blob/main/docs/integracion/matriz-scopes.md) | `main`, `c0e0b618030cd3ff298d3b4914d40f22ea764060` | Consumidores Retail/Productos/Despacho; catálogo de Productos contrastado |
+| G2 Despacho | [api-contract.md](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/integraciones/api-contract.md) | `main`, `e727f41ce76f9434e2099e02f2653de3c257c16d` | §3.4 y §5.2 consulta física y autorización |
