@@ -1,14 +1,14 @@
 # Propuestas DEC-F para backend e integración
 
-**Estado de las tres propuestas:** `PROPUESTA_G6`
-**Aprobador:** Marco, después de auditoría independiente
-**Alcance:** propuestas para evaluación; no forman parte del registro normativo y no están adoptadas, homologadas ni implementadas.
+**Estado histórico:** DEC-F-013, 014 y 015 fueron aprobadas internamente por Marco el 2026-10-13 y adoptadas por G6.
+**Fuente normativa vigente:** [REGISTRO_DEC_F.md](REGISTRO_DEC_F.md).
+**Alcance:** este documento conserva la evidencia histórica de propuestas evaluadas; no es una fuente normativa paralela. Los contratos externos y los detalles de integración siguen pendientes de homologación.
 
 Estas propuestas no modifican contratos ejecutables. Las contradicciones indicadas deben resolverse con los owners concernidos antes de implementar cambios que dependan de ellas.
 
 ## DEC-F-013 — Conciliación offline autoritativa
 
-**Estado:** `PROPUESTA_G6`
+**Estado histórico de propuesta:** adoptada por G6 el 2026-10-13; véase [REGISTRO_DEC_F.md](REGISTRO_DEC_F.md).
 
 ### Enunciado
 
@@ -44,7 +44,7 @@ El OpenAPI actual permite `modulo-ventas` para la operación de conciliación y 
 
 ## DEC-F-014 — Resolución segura de tienda a ubicación
 
-**Estado:** `PROPUESTA_G6`
+**Estado histórico de propuesta:** adoptada por G6 el 2026-10-13; véase [REGISTRO_DEC_F.md](REGISTRO_DEC_F.md).
 
 ### Enunciado
 
@@ -79,7 +79,7 @@ La propuesta no fija campos, rutas, códigos de error, mecanismo de mapeo ni nue
 - [Matriz de scopes G7](https://github.com/Taller-SW-Web/Modulo-de-Seguridad/blob/main/docs/integracion/matriz-scopes.md), `main`, commit `c0e0b61`.
 ## DEC-F-015 — Información de conciliación visible a Retail
 
-**Estado:** `PROPUESTA_G6`
+**Estado histórico de propuesta:** adoptada por G6 el 2026-10-13; véase [REGISTRO_DEC_F.md](REGISTRO_DEC_F.md).
 
 ### Enunciado
 
@@ -93,7 +93,7 @@ El OpenAPI G6 actual define `ConciliacionOfflineResponse` con resultado y datos 
 
 En `contratos/http/openapi.yaml`, `ConciliacionOfflineResponse` incluye `operation_id`, `order_id`, `offline_sale_id`, `status`, `lines` y `completed_at`. Cada `ConciliacionOfflineLineaResultado` requiere `sku`, `location_id`, `requested_quantity`, `applied_quantity`, `unresolved_quantity`, `on_hand`, `reserved`, `blocked`, `available` y `stock_version`. En particular, `location_id`, `stock_version` y los saldos/cantidades internas (`on_hand`, `reserved`, `blocked`, `available`) deben evaluarse para evitar exposición innecesaria a Retail.
 
-La propuesta difiere de ese contrato existente. No lo modifica ni cambia DTO, OpenAPI, política de autorización o lista de clientes permitidos. La modificación, si Marco la adopta, requiere revisión y aprobación contractual con los módulos concernidos antes de cualquier implementación.
+La decisión adoptada difiere de ese contrato existente. No lo modifica ni cambia DTO, OpenAPI, política de autorización o lista de clientes permitidos. Cualquier modificación requiere revisión y aprobación contractual con los módulos concernidos antes de su implementación.
 
 ### Invariantes propuestas
 

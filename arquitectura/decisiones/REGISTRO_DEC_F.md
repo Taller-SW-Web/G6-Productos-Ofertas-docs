@@ -2,8 +2,8 @@
 
 - **Corte de contraste:** `origin/master` `78a923bbc6bada31b39b3d386331f90a4f812b31` (merge de PR #86).
 - **Antecedente:** `G6_REGISTRO_MAESTRO_12_DECISIONES_DEC-F_2026-10-12.md`, recibido el 12-10-2026.
-- **Alcance:** formaliza únicamente DEC-F-001–DEC-F-012, aprobadas conceptualmente por G6. B1–B4 son bloqueantes de integración del PR #86, no decisiones adicionales ni sustitutos. Se conserva [ADR-DEC-F-BLOQUEANTES.md](ADR-DEC-F-BLOQUEANTES.md).
-- **Estado global:** adopción interna conceptual registrada; la homologación externa, implementación y verificación integral no se infieren de este documento.
+- **Alcance:** DEC-F-001–DEC-F-015 son decisiones internas adoptadas por G6. DEC-F-013 a DEC-F-015 fueron aprobadas por Marco el 2026-10-13 y sus invariantes se limitan a la autoridad de Productos y Ofertas. B1–B4 son bloqueantes de integración del PR #86, no decisiones adicionales ni sustitutos. Se conserva [ADR-DEC-F-BLOQUEANTES.md](ADR-DEC-F-BLOQUEANTES.md).
+- **Estado global:** DEC-F-001–DEC-F-015 adoptadas internamente. La homologación externa, implementación y verificación integral no se infieren de este documento.
 
 ## Estados y lectura
 
@@ -154,6 +154,42 @@ PR #86 está fusionado en el `master` contrastado. OpenAPI y AsyncAPI `0.6.0-rc.
 **Estados.** Interno: adoptado como gobernanza. Externo: pendientes de homologación concretos, incluida conciliación Retail. Implementación: OpenAPI/AsyncAPI `0.6.0-rc.1` candidatos en master tras merge #86, no evidencia de backend/E2E. Pruebas: varios casos explícitamente pendientes.
 
 **Referencias y pendientes.** README, SPEC/HU/FLOW afectados, OpenAPI/AsyncAPI, contratos guía, Arquitectura/Modelo, alineaciones, persistencia/migraciones y matriz de pruebas. La matriz adjunta clasifica referencias sin declarar completa ninguna decisión.
+
+## DEC-F-013 — Conciliación offline autoritativa
+
+**Enunciado y justificación.** Inventario conserva autoridad sobre el stock central al conciliar ventas offline que ya ocurrieron físicamente. La conciliación refleja únicamente cantidades admisibles y evita reservas retroactivas y dobles descuentos.
+
+**Invariantes G6.** Aplicar solo las cantidades admisibles conforme a SPEC-015; permitir conciliación parcial y registrar cantidades no resueltas; no producir saldos negativos ni consumir unidades reservadas o bloqueadas; registrar mutaciones efectivas mediante Kardex y el mecanismo transaccional correspondiente. Una misma venta física no puede causar un segundo descuento por reintentos o mensajes repetidos.
+
+**Responsabilidades externas.** Retail conserva la venta física y sus datos locales; la invocación y la secuencia con pedido/pago requieren homologación. No se atribuye a Retail o Ventas una identidad o mecanismo no acordado.
+
+**Estados.** Interno: `ADOPTADA_G6`, aprobada por Marco el 2026-10-13. Externo: invocador y secuencia pendientes de homologación. Implementación: no acreditada por OpenAPI 0.6.0-rc.1. Pruebas: autorización y pruebas integradas pendientes.
+
+**Referencias y pendientes.** SPEC-015 §24.4–24.5 documenta conciliación parcial (`applied_quantity`, `unresolved_quantity`) y ausencia de reserva retroactiva; OpenAPI define `offline_sale_id` y `operation_id`. Pendientes: correspondencia G4 `ventaLocalUuid`/G6 `offline_sale_id`, estabilidad y ámbito de unicidad de identidad offline, idempotencia frente a múltiples `operation_id`, homologación del invocador G4/G5, secuencia con pedido/pago, autorización y pruebas integradas. No se crean campos, índices, DTO ni mecanismos.
+
+## DEC-F-014 — Resolución segura de tienda a ubicación
+
+**Enunciado y justificación.** Una referencia pública de tienda no identifica por sí misma una ubicación interna; Inventario debe resolver y autorizar internamente la ubicación antes de una mutación.
+
+**Invariantes G6.** Inventario resuelve tienda a ubicación física. Una lectura comercial suficiente no autoriza escritura. El consumidor no escoge libremente una ubicación para mutar saldos. Se rechaza de forma segura la mutación cuando el mapeo es inexistente o ambiguo, o el actor no está autorizado para la operación y ubicación.
+
+**Responsabilidades externas.** Retail aporta la referencia pública convenida y Seguridad conserva la autoridad sobre grants y credenciales. Aprobación del consumidor técnico y homologación G4/G7 siguen pendientes.
+
+**Estados.** Interno: `ADOPTADA_G6`, aprobación de Marco 2026-10-13. Externo: pendiente. Implementación: no acreditada; el contrato actual no se modifica. Pruebas: acceso indebido y mapeos ambiguos pendientes.
+
+**Referencias y pendientes.** OpenAPI `ConciliacionOfflineRequest.lines` referencia `LineaInventarioUbicada`, cuyo `location_id` es obligatorio. Esta incompatibilidad contractual permanece; la decisión no cambia automáticamente el contrato. Pendientes: contrato de entrada compatible con Retail, mecanismo exacto de resolución/autorización, aprobación del consumidor técnico y homologación G4/G7. No se inventa solución contractual.
+
+## DEC-F-015 — Minimización de datos de conciliación para Retail
+
+**Enunciado y justificación.** Retail debe conocer el resultado de su conciliación con la información necesaria, bajo mínimo privilegio.
+
+**Invariantes G6.** No exponer saldos internos ni ubicaciones internas innecesarios para ese propósito. Aplicar mínimo privilegio según identidad, scope, allowlist y operación. Se distinguen las cantidades funcionales `requested_quantity`, `applied_quantity` y `unresolved_quantity` de los saldos internos.
+
+**Responsabilidades externas.** Los consumidores autorizados y Seguridad deben homologar representación y acceso. No se afirma una operación GET de recuperación para Retail.
+
+**Estados.** Interno: `ADOPTADA_G6`, aprobación de Marco 2026-10-13. Externo: pendiente de homologación G4/G7. Implementación: representación contractual definitiva no aprobada; OpenAPI 0.6.0-rc.1 no se considera implementación. Pruebas: compatibilidad y autorización pendientes.
+
+**Referencias y pendientes.** OpenAPI `ConciliacionOfflineLineaResultado` incluye `location_id`, `on_hand`, `reserved`, `blocked`, `available` y `stock_version`, además de las cantidades funcionales. Pendientes: DTO compatible, consumidores autorizados, mecanismo eventual de consulta posterior, homologación G4/G7, compatibilidad y pruebas. No se afirma que exista un GET autorizado para Retail.
 
 ## Pendientes transversales
 

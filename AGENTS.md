@@ -35,7 +35,7 @@ Registra por separado el estado interno, externo y de implementación. No declar
 
 ## Límites de cambio
 
-- No inventes contratos, acuerdos, rutas, scopes, campos, políticas ni decisiones. No crees identificadores DEC-F posteriores al 012 sin solicitud expresa.
+- No inventes contratos, acuerdos, rutas, scopes, campos, políticas ni decisiones. DEC-F-001 a DEC-F-015 son las decisiones internas aprobadas que constan en el registro. No crees DEC-F-016 ni posteriores sin aprobación expresa de Marco. No amplíes mediante inferencias el contenido de una decisión aprobada. Toda adopción posterior exige actualizar registro, trazabilidad e integraciones afectadas.
 - No reescribas migraciones aplicadas ni sus checksums. SQL de escritura en Supabase requiere autorización expresa de Marco, alcance definido y proceso de despliegue aprobado; sin esos requisitos no se ejecuta.
 - Cambia únicamente los archivos del alcance aprobado. No aproveches una tarea para normalizar documentos adyacentes.
 - No hagas commit, push, publicación o merge salvo que la solicitud lo autorice expresamente. Nunca abras PR si se indicó que no.
