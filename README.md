@@ -103,6 +103,9 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 | Matriz de pruebas de contrato | [`contratos/pruebas/pruebas-contrato.md`](contratos/pruebas/pruebas-contrato.md) | Casos estáticos, provider, consumer/provider, seguridad e integración |
 | Acuerdos de integración | [`integraciones/`](integraciones/) | Acuerdos homologados con Marketplace, Retail, Chatbot y Ventas; las integraciones restantes se documentan en sus artefactos canónicos |
 | Equipo y responsabilidades | [`EQUIPO_Y_RESPONSABILIDADES.md`](EQUIPO_Y_RESPONSABILIDADES.md) | Roles transversales, ownership funcional y mecanismos de revisión del equipo |
+| Instrucciones para agentes | [`AGENTS.md`](AGENTS.md) | Orden de lectura, límites de cambios y validaciones mínimas |
+| Registro DEC-F | [`arquitectura/decisiones/REGISTRO_DEC_F.md`](arquitectura/decisiones/REGISTRO_DEC_F.md) | Formalización de DEC-F-001 a DEC-F-012 y pendientes |
+| Matriz de trazabilidad DEC-F | [`arquitectura/decisiones/MATRIZ_TRAZABILIDAD_DEC_F.md`](arquitectura/decisiones/MATRIZ_TRAZABILIDAD_DEC_F.md) | Estado de referencias documentales y contradicciones |
 | Persistencia por bounded context | [`bd/`](datos) | Modelo físico, migraciones y scripts de validación SQL por servicio |
 
 ---
