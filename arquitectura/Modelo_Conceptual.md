@@ -767,7 +767,7 @@ flowchart TB
   R_BAL_MOV ---|"0..N"| MOVEMENT
 
   OP ---|"1"| R_OP_MOV
-  R_OP_MOV ---|"1..N"| MOVEMENT
+  R_OP_MOV ---|"0..N"| MOVEMENT
 
   RESERVATION ---|"1"| R_RES_OP
   R_RES_OP ---|"1..N"| OP
@@ -952,8 +952,6 @@ misma identidad + intención distinta
 En una venta offline se distinguen conceptualmente el hecho/identidad estable de la venta, la identidad técnica de operación/comando (`operation_id`) y la identidad de entrega de mensaje (`message_id`). `correlation_id` agrupa trazas y no sustituye ninguna identidad idempotente. La relación entre `ventaLocalUuid`, `offline_sale_id`, `order_id` y `operation_id`, así como el campo contractual, ámbito de unicidad y persistencia de la identidad estable, sigue pendiente de definición/homologación. No se prescribe fingerprint, clave ni mecanismo.
 
 Una misma venta física no puede generar descuentos repetidos aunque cambie la identidad técnica del reintento. Identidad e intención/payload semántico equivalentes producen replay del resultado previo; reutilizar la identidad estable con intención/payload distinto produce `IDEMPOTENCY_CONFLICT`. Estas son reglas conceptuales, no evidencia de una implementación de deduplicación.
-
-`correlation_id` sirve para trazabilidad y no sustituye la identidad idempotente.
 
 Una operación registrada puede no producir movimientos Kardex si no cambia el saldo; si hay efectos, puede producir uno o varios movimientos. No se crea un movimiento de cantidad cero.
 
