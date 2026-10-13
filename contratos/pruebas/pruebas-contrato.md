@@ -266,6 +266,65 @@ Esta evidencia proviene de las ejecuciones comunicadas por el responsable; no su
 | CT-G6-B4-05 | INTEGRATION | Sin `consumption_operation_id`, una restauración transitoria solo puede resolverse inequívocamente por pedido; con ambigüedad no ejecuta efectos | BLOQUEADA_DECISION |
 | CT-G6-B4-06 | INTEGRATION | Con `consumption_operation_id` explícito, restauración corresponde al consumo original; no se acepta correlación cruzada entre pedidos | PENDIENTE_IMPLEMENTACION |
 
+## 13.1. Conciliación Retail offline — DEC-F-013/014/015
+
+Estos casos describen la fotografía del contrato candidato `0.6.0-rc.1` y las pruebas futuras requeridas. Las verificaciones estáticas no aprueban la permanencia futura de sus incompatibilidades conocidas; los estados no afirman implementación, grants efectivos ni homologación.
+
+### 13.1.1. Contrato estático candidato
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-OFF-STATIC-01 | STATIC_CONTRACT | Existe `POST /inventario/conciliaciones-offline`, `operationId=conciliarVentaOffline`, `x-status=provisional`; request y respuesta `200` referencian `ConciliacionOfflineRequest` y `ConciliacionOfflineResponse` | PENDIENTE_EJECUCION |
+| CT-OFF-STATIC-02 | STATIC_CONTRACT | Allowlist actual exclusiva `modulo-ventas`; scope `inventario:conciliar-offline`; `serviceBearer`; registro de scope `pending-security-registration` | PENDIENTE_EJECUCION |
+| CT-OFF-STATIC-03 | STATIC_CONTRACT | Request actual: `operation_id` UUID, `order_id` string opaco, `offline_sale_id` string independiente, `channel_id=RETAIL`, `occurred_at` date-time y `lines` array; no confundir `channel_id` con cliente técnico | PENDIENTE_EJECUCION |
+| CT-OFF-STATIC-04 | STATIC_CONTRACT | `ConciliacionOfflineRequest.lines` referencia actualmente `LineaInventarioUbicada`, cuyo `location_id` es requerido. Es una fotografía del candidato e incompatibilidad pendiente frente a DEC-F-014, no aprobación de permanencia | PENDIENTE_EJECUCION |
+| CT-OFF-STATIC-05 | STATIC_CONTRACT | `ConciliacionOfflineResponse` requiere `operation_id`, `order_id`, `offline_sale_id`, `status`, `lines` y `completed_at`; línea expone cantidades funcionales y actualmente requiere `location_id`, `on_hand`, `reserved`, `blocked`, `available`, `stock_version`. Fotografía candidata e incompatibilidad DEC-F-015; no aprobación futura | PENDIENTE_EJECUCION |
+| CT-OFF-STATIC-06 | STATIC_CONTRACT | Los estados candidatos son `COMPLETED` y `REQUIRES_REVIEW`; la conciliación exitosa responde `200` | PENDIENTE_EJECUCION |
+| CT-OFF-STATIC-07 | STATIC_CONTRACT | La ruta declara `409` con `IDEMPOTENCY_CONFLICT` en la respuesta y en `x-error-codes` | PENDIENTE_EJECUCION |
+
+### 13.1.2. Invariantes provider y conciliación
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-OFF-PROV-01 | PROVIDER_CONTRACT | Venta completamente aplicada devuelve `COMPLETED` | PENDIENTE_IMPLEMENTACION |
+| CT-OFF-PROV-02 | PROVIDER_CONTRACT | Aplicación parcial devuelve `REQUIRES_REVIEW` y conserva `requested_quantity`, `applied_quantity` y `unresolved_quantity` | PENDIENTE_IMPLEMENTACION |
+| CT-OFF-PROV-03 | PROVIDER_CONTRACT | Con cero unidades aplicadas el resultado queda registrado y no se genera movimiento Kardex de cantidad cero | PENDIENTE_IMPLEMENTACION |
+| CT-OFF-PROV-04 | PROVIDER_CONTRACT | La conciliación no consume unidades reservadas ni bloqueadas | PENDIENTE_IMPLEMENTACION |
+| CT-OFF-PROV-05 | PROVIDER_CONTRACT | La conciliación nunca produce `on_hand` negativo | PENDIENTE_IMPLEMENTACION |
+| CT-OFF-PROV-06 | PROVIDER_CONTRACT | Una mutación efectiva registra Kardex y el cambio de saldo/resultado se mantiene atómico | PENDIENTE_IMPLEMENTACION |
+| CT-OFF-PROV-07 | PROVIDER_CONTRACT | Para la misma identidad técnica del comando, replay semánticamente idéntico devuelve el resultado previo sin nuevos efectos; no prueba la deduplicación de una venta con otro `operation_id` | PENDIENTE_IMPLEMENTACION |
+| CT-OFF-PROV-08 | PROVIDER_CONTRACT | Para la misma identidad técnica del comando, contenido distinto produce `409 IDEMPOTENCY_CONFLICT` sin efectos; no prueba la deduplicación de una venta con otro `operation_id` | PENDIENTE_IMPLEMENTACION |
+| CT-OFF-PROV-09 | INTEGRATION | La misma venta física con otro `operation_id` no causa doble descuento | BLOQUEADA_DECISION |
+| CT-OFF-PROV-10 | INTEGRATION | Sin reserva de Inventario confirmada, el flujo vigente de conciliación offline no inicia consumo de cupón | PENDIENTE_IMPLEMENTACION |
+
+El caso de replay entre distintos `operation_id` queda bloqueado hasta homologar la identidad estable de venta y su ámbito de unicidad. Los casos de replay/conflicto del comando con identidad técnica estable no resuelven esa brecha. No se prescriben campo, clave, fingerprint, índice ni mecanismo de persistencia.
+
+### 13.1.3. Seguridad y autorización
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-OFF-SEC-01 | SECURITY_INTEGRATION | Token ausente o inválido es rechazado antes de procesar la conciliación | PENDIENTE_IMPLEMENTACION |
+| CT-OFF-SEC-02 | SECURITY_INTEGRATION | Token sin `inventario:conciliar-offline` es rechazado | PENDIENTE_IMPLEMENTACION |
+| CT-OFF-SEC-03 | SECURITY_INTEGRATION | Cliente fuera de la allowlist es rechazado aunque presente el scope nominal | PENDIENTE_IMPLEMENTACION |
+| CT-OFF-SEC-04 | SECURITY_INTEGRATION | Verificar el registro y grant efectivo de G7 para el cliente autorizado | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-OFF-SEC-05 | PROVIDER_CONTRACT | Una vez homologada una entrada compatible con la resolución interna, mapeo inexistente o ambiguo impide la mutación | BLOQUEADA_DECISION |
+| CT-OFF-SEC-06 | SECURITY_INTEGRATION | Actor no autorizado para la operación o ubicación no puede mutar | PENDIENTE_IMPLEMENTACION |
+| CT-OFF-SEC-07 | SECURITY_INTEGRATION | Se autoriza al actor antes de devolver cualquier resultado persistido de replay | PENDIENTE_IMPLEMENTACION |
+| CT-OFF-SEC-08 | SECURITY_INTEGRATION | El permiso de consulta comercial de disponibilidad no autoriza conciliación | PENDIENTE_IMPLEMENTACION |
+
+La allowlist y el scope documentados no acreditan permisos efectivos. No atribuir a G7 concesiones aún pendientes ni habilitar Retail directamente.
+
+### 13.1.4. Homologación y compatibilidad externa
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-OFF-HOM-01 | CONSUMER_PROVIDER | Una vez aprobada la correspondencia, la prueba verifica que la identidad G4 de la venta corresponde inequívocamente a la identidad estable declarada en G6 | BLOQUEADA_DECISION |
+| CT-OFF-HOM-02 | CONSUMER_PROVIDER | Una vez homologados invocador y secuencia, la prueba verifica que el consumidor invoca el actor acordado y sigue el flujo publicado, sin inferir orden previo entre venta, pedido, pago y conciliación | BLOQUEADA_DECISION |
+| CT-OFF-HOM-03 | CONSUMER_PROVIDER | Una vez publicado el tratamiento G4/G5, para una venta sincronizada después de 72 horas la respuesta observable coincide con ese tratamiento | BLOQUEADA_DECISION |
+| CT-OFF-HOM-04 | CONSUMER_PROVIDER | Una vez acordada la representación, la respuesta observada por Retail contiene solo los datos minimizados convenidos y la respuesta contractual actual de Ventas conserva su forma aprobada | BLOQUEADA_DECISION |
+| CT-OFF-HOM-05 | CONSUMER_PROVIDER | Cualquier flujo alternativo de cupón offline sin reserva confirmada requiere contrato y acuerdo explícitos antes de probarse | BLOQUEADA_DECISION |
+| CT-OFF-HOM-06 | CONSUMER_PROVIDER | La prueba consumer-provider valida la compatibilidad y transición de los consumidores desde la línea base `0.5.0` antes de publicar cambios incompatibles | BLOQUEADA_DECISION |
+
 ### Puertas de integración pendientes
 
 1. **G5 Ventas:** acordar si espera la confirmación asíncrona de stock y cupón antes de responder `201 Created` al canal, o publica una evolución versionada de su API. `202` de Inventario nunca equivale por sí mismo a éxito.
@@ -278,7 +337,7 @@ Esta evidencia proviene de las ejecuciones comunicadas por el responsable; no su
 
 - `ADR-DEC-F-BLOQUEANTES.md` establece las decisiones B1–B4; esta matriz aporta pruebas, **no crea nuevas decisiones de negocio**.
 - OpenAPI y AsyncAPI son las fuentes canónicas de forma, rutas, mensajes y errores. `catalogo-errores.md` es catálogo humano del vocabulario; los códigos deben coincidir con `ErrorCode`.
-- Los identificadores `CT-STATIC-*`, `CT-AVL-*`, `CT-G6-*` y los 30 `CT-PREP-*` existentes se conservan para trazabilidad; los nuevos casos se agregan con IDs diferentes.
+- Los identificadores `CT-STATIC-*`, `CT-AVL-*`, `CT-G6-*`, los 30 `CT-PREP-*` existentes y `CT-OFF-*` se conservan para trazabilidad; los nuevos casos se agregan con IDs únicos.
 - Los conteos de canales, mensajes, rutas y códigos deben recalcularse tras cada modificación; no adaptar expectativas para ocultar una pérdida accidental de contratos.
 - Cambiar una restricción de payload puede afectar consumidores aun sin cambiar el nombre del mensaje. Revisar compatibilidad, versionado de `schema_version` y adaptadores antes del despliegue.
 - Mantener los casos funcionales `PENDIENTE_IMPLEMENTACION` o `PENDIENTE_EJECUCION` hasta contar con evidencias del proveedor real. `PASS` requiere resultado reproducible asociado a un commit y un entorno. La inspección documental de esta tarea **no cambia estados** ni satisface los grants de Seguridad/G7.

@@ -56,14 +56,13 @@ El contrato `0.6.0-rc.1` modela `consumption_operation_id` como opcional y anula
 
 ## Inventario
 
-Acuerdos de inventario homologados:
+Reglas documentadas para el flujo comercial de inventario correspondiente (no son por sí solas evidencia de implementación ni homologación global):
 
 ```text
 CREADO -> reservar
 PAGADO -> consumir reserva
 cancelación pre-consumo -> liberar
 retorno físico aceptado -> reintegrar
-venta Retail offline -> conciliar
 ```
 
 ### Diferencia entre la admisión interna y la respuesta de Ventas
@@ -76,6 +75,22 @@ El contrato de G5 (`specs/api/api-ventas.md`, rama `main`, consultado el 11/10/2
 **Estado del acuerdo externo:** pendiente de ratificación explícita con G5. Esta sección documenta la compatibilidad requerida, no afirma que el backend actual implemente la espera, el sondeo o el consumo de eventos.
 
 Ventas conserva el mismo `operation_id` al reintentar un comando, trata `message_id` como identificador de entrega y no declara stock reservado después del mero `202`. La confirmación de una reserva proporciona `reservation_id` y `expires_at`; se deben respetar al continuar al pago o al liberar. Los rechazos y los tiempos de espera no deben transformarse en confirmaciones implícitas.
+
+### Conciliación Retail offline — homologación específica pendiente
+
+La documentación G6 vigente conserva la secuencia Retail→Ventas/Postventa→G6: la venta física ya ocurrió, Retail la sincroniza con Ventas y `modulo-ventas` invoca la conciliación. Inventario mantiene la autoridad del saldo y concilia sin reserva retroactiva, aplicando solo cantidades admisibles, sin consumir reservas/bloqueos ni producir saldos negativos. No se fija un orden nuevo entre venta, pedido, pago y conciliación.
+
+`COMPLETED` y `REQUIRES_REVIEW` son resultados distintos. La respuesta parcial conserva `requested_quantity`, `applied_quantity` y `unresolved_quantity`. La operación puede quedar registrada con cantidad aplicada cero, pero no se crea movimiento Kardex de cantidad cero. La misma venta física no debe generar un segundo descuento: identidad estable e intención/payload semántico iguales reproducen exactamente el resultado anterior; la identidad reutilizada con contenido distinto se rechaza con `409 IDEMPOTENCY_CONFLICT`, sin nuevos efectos.
+
+El campo contractual de identidad estable de la venta, su ámbito de unicidad y persistencia no están definidos por completo. G4 usa `ventaLocalUuid`; OpenAPI G6 contiene `offline_sale_id`, `order_id` y `operation_id`, que cumplen referencias distintas. Su correspondencia y la deduplicación entre diferentes `operation_id` siguen pendientes de homologación. La existencia de esos nombres no acredita una estrategia implementada; no se prescribe campo ni mecanismo de persistencia.
+
+DEC-F-014 exige que Inventario resuelva internamente la referencia pública de tienda a la ubicación efectiva y autorice actor, operación y ubicación. Un mapeo ausente/ambiguo, un actor no autorizado o un permiso de lectura comercial impiden la mutación. Sin embargo, el request OpenAPI actual exige `location_id` en cada línea; esa incompatibilidad contractual permanece pendiente y no se resuelve aquí. El endpoint candidato permite actualmente solo `modulo-ventas`, con scope `inventario:conciliar-offline` cuyo registro/grant efectivo de G7 sigue pendiente; Retail no es consumidor autorizado.
+
+DEC-F-015 no obliga a retirar campos del response contractual vigente para Ventas: actualmente incluye `location_id`, `on_hand`, `reserved`, `blocked`, `available` y `stock_version`, además de cantidades funcionales. No se afirma que Retail reciba esa respuesta. La representación futura destinada a Retail, su consumidor, scope y eventual consulta posterior requieren acuerdo G4/G7.
+
+La alternativa comunicada Retail→G6 directo continúa **no homologada**. G4 v0.4 prohíbe esa ruta y G4/G5 describen secuencias distintas; la invocación y secuencia requieren acuerdo específico G4/G5/G6. Para ventas sincronizadas con `pago.fechaVenta` de más de 72 horas, G4/G5 todavía deben definir el tratamiento contractual.
+
+El estado Retail `PAGADO`/`ENTREGADO` sin reserva no habilita por sí mismo consumo de cupón offline. El mecanismo documentado de consumo de Promociones conserva como precondición una reserva de Inventario confirmada; no se crea aquí una excepción ni se altera consumo/restauración.
 
 ## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
 

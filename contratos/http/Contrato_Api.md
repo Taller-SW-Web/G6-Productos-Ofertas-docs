@@ -959,6 +959,8 @@ Inventario:
 - devuelve `COMPLETED` cuando todo pudo aplicarse;
 - devuelve `REQUIRES_REVIEW` y `unresolved_quantity` cuando existe discrepancia.
 
+La secuencia Ventas→Inventario refleja la posición documental actual de G6, no una homologación definitiva de G4/G5. La identidad estable de la venta física y la deduplicación entre reintentos técnicos siguen pendientes de homologación. También están pendientes la incompatibilidad entre `location_id` requerido por línea en el request candidato y la resolución interna segura de tienda, y la futura minimización destinada a Retail frente a los datos internos del response vigente. No se establece un nuevo orden entre venta, pedido, pago y conciliación. Para el alcance, estados y pendientes, véanse el [kit de integración §7.5](kit-integracion.md) y las [DEC-F-009 y DEC-F-013–015](../../arquitectura/decisiones/REGISTRO_DEC_F.md).
+
 ## 13.6. Reportar incidencia física
 
 ```http

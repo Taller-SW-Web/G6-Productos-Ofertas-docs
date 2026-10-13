@@ -185,7 +185,7 @@ La integración se realiza mediante contratos HTTP y mensajería asíncrona publ
 
 ## 6. Integración con Ventas/Postventa
 
-El flujo homologado de inventario es:
+El flujo documentado para los canales web es:
 
 ```mermaid
 flowchart TD
@@ -201,7 +201,7 @@ flowchart TD
     L --> INV
 ```
 
-Marketplace y Chatbot consultan disponibilidad. Retail también puede reportar y resolver incidencias físicas mediante sus capacidades autorizadas, pero no realiza directamente las mutaciones comerciales de reserva, consumo, liberación, reintegro o conciliación de una venta.
+Marketplace y Chatbot consultan disponibilidad. Para pedidos de esos canales, Ventas/Postventa orquesta las mutaciones comerciales de reserva, consumo y liberación; la secuencia consta en documentación G6 y no acredita por sí sola homologación, implementación o prueba runtime. La conciliación de ventas offline de Retail sigue pendiente de homologación: G4/G5/G6 documentan invocadores, rutas e identidades incompatibles, y OpenAPI G6 solo permite actualmente `modulo-ventas`. La lógica interna de conciliación ya definida (stock autoritativo, aplicación parcial sin saldo negativo, Kardex e idempotencia) puede implementarse en G6; el invocador, mapeo, request/response compatible, grant G7 y secuencia intermodular requieren acuerdo. Retail puede reportar y resolver incidencias físicas mediante sus capacidades autorizadas.
 
 Ventas/Postventa coordina el ciclo asociado al pedido y Productos y Ofertas mantiene el estado autoritativo del inventario.
 
