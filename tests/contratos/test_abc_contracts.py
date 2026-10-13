@@ -94,4 +94,59 @@ class ContractChecks(unittest.TestCase):
         self.assertIn('INDETERMINADO',desc)
         self.assertIn('binding=false',desc)
         self.assertNotIn('salvo que exista una modalidad de abastecimiento explícita y ejecutable para atender conjuntamente',desc)
+    def test_offline_reconciliation_candidate_operation(self):
+        self.assertEqual(self.o['info']['version'],'0.6.0-rc.1')
+        op=self.o['paths']['/inventario/conciliaciones-offline']['post']
+        self.assertEqual(op['operationId'],'conciliarVentaOffline')
+        self.assertEqual(op['x-status'],'provisional')
+        self.assertEqual(op['x-allowed-client-ids'],['modulo-ventas'])
+        self.assertEqual(op['x-required-scope'],'inventario:conciliar-offline')
+        self.assertEqual(op['x-scope-registration-status'],'pending-security-registration')
+        self.assertIn('serviceBearer',op['security'][0])
+        request=op['requestBody']['content']['application/json']['schema']
+        self.assertEqual(request['$ref'],'#/components/schemas/ConciliacionOfflineRequest')
+        response=op['responses']['200']['content']['application/json']['schema']
+        self.assertEqual(response['$ref'],'#/components/schemas/ConciliacionOfflineResponse')
+        conflict=op['responses']['409']
+        self.assertIn('IDEMPOTENCY_CONFLICT',op['x-error-codes']['409'])
+        conflict_schema=conflict['content']['application/problem+json']['schema']
+        self.assertEqual(conflict_schema['allOf'][1]['properties']['code']['enum'],['IDEMPOTENCY_CONFLICT'])
+    def test_offline_reconciliation_request_candidate_shape(self):
+        request=self.o['components']['schemas']['ConciliacionOfflineRequest']
+        props=request['properties']
+        self.assertEqual(props['operation_id']['type'],'string')
+        self.assertEqual(props['operation_id']['format'],'uuid')
+        self.assertEqual(props['order_id']['type'],'string')
+        self.assertNotIn('format',props['order_id'])
+        self.assertEqual(props['offline_sale_id']['type'],'string')
+        self.assertNotIn('format',props['offline_sale_id'])
+        self.assertIn('order_id',props)
+        self.assertIn('offline_sale_id',props)
+        self.assertNotEqual(props['order_id'],props['offline_sale_id'])
+        self.assertEqual(props['channel_id']['const'],'RETAIL')
+        self.assertEqual(props['occurred_at']['format'],'date-time')
+        self.assertEqual(props['lines']['items']['$ref'],'#/components/schemas/LineaInventarioUbicada')
+        self.assertEqual(request['required'],['operation_id','order_id','offline_sale_id','channel_id','occurred_at','lines'])
+        line=self.o['components']['schemas']['LineaInventarioUbicada']
+        self.assertEqual(line['properties']['location_id']['type'],'string')
+        self.assertIn('location_id',line['required'])
+        # Current-candidate snapshot only: required location_id conflicts with DEC-F-014.
+    def test_offline_reconciliation_response_candidate_shape(self):
+        response=self.o['components']['schemas']['ConciliacionOfflineResponse']
+        props=response['properties']
+        self.assertEqual(props['status']['enum'],['COMPLETED','REQUIRES_REVIEW'])
+        self.assertEqual(response['required'],['operation_id','order_id','offline_sale_id','status','lines','completed_at'])
+        line_ref=props['lines']['items']['$ref']
+        self.assertEqual(line_ref,'#/components/schemas/ConciliacionOfflineLineaResultado')
+        line=self.o['components']['schemas']['ConciliacionOfflineLineaResultado']
+        for field in ('requested_quantity','applied_quantity','unresolved_quantity','location_id','on_hand','reserved','blocked','available','stock_version'):
+            self.assertIn(field,line['properties'])
+            self.assertIn(field,line['required'])
+        # Current-candidate snapshot only: internal fields conflict with DEC-F-015 minimization intent for Retail.
+    def test_offline_reconciliation_conflict_and_status_responses(self):
+        op=self.o['paths']['/inventario/conciliaciones-offline']['post']
+        self.assertIn('200',op['responses'])
+        self.assertIn('409',op['responses'])
+        self.assertEqual(op['responses']['409']['description'],'Conflicto de idempotencia')
+        self.assertIn('IDEMPOTENCY_CONFLICT',op['x-error-codes']['409'])
 if __name__=='__main__':unittest.main()
