@@ -74,7 +74,7 @@ flowchart TD
     F --> DS["Design System de mockups — DESIGN.md"] --> MK
 ```
 
-El inventario detallado de funcionalidades, responsables y artefactos canónicos se encuentra en [`wireframes/INDEX.md`](ux\wireframes\INDEX.md) y en [`mockups/README.md`](ux\mockups\README.md).
+El inventario detallado de funcionalidades, responsables y artefactos canónicos se encuentra en [`wireframes/INDEX.md`](ux/wireframes/INDEX.md) y en [`mockups/README.md`](ux/mockups/README.md).
 
 ---
 
@@ -82,25 +82,25 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 
 | Artefacto | Ubicación | Propósito |
 |---|---|---|
-| Especificaciones funcionales | [`specs/`](requisitos\specs) | Reglas de negocio y comportamiento esperado |
-| Historias de usuario | [`hu/`](requisitos\hu) | Necesidades del usuario y criterios funcionales |
-| Flujos funcionales complementarios | [`flujos/`](requisitos\flujos) | Flujos detallados de procesos relevantes |
-| Wireframes (Baja fidelidad) | [`wireframes/flows/`](ux\wireframes\flows) | Definición funcional y estructural de interfaces |
-| Prototipos HTML de wireframe | [`wireframes/prototipos/`](ux\wireframes\prototipos) | Representaciones navegables de los wireframes |
-| Guía visual de wireframes | [`wireframes/DESIGN.md`](ux\wireframes\DESIGN.md) | Lineamientos visuales aplicables exclusivamente a wireframes |
-| Índice funcional canónico | [`wireframes/INDEX.md`](ux\wireframes\INDEX.md) | Mapeo de las 16 funcionalidades y responsables |
-| Visor de prototipos | [`wireframes/Visor_Prototipos_PO.html`](ux\wireframes\Visor_Prototipos_PO.html) | Acceso unificado a prototipos de wireframes |
-| Pipeline de Mockups (Alta fidelidad) | [`mockups/`](ux\mockups) | UX transversal, decisiones, plantillas y código de prototipado |
-| Arquitectura | [`Arquitectura.md`](arquitectura\Arquitectura.md) | Diseño técnico y decisiones arquitectónicas |
-| Modelo conceptual | [`Modelo_Conceptual.md`](arquitectura\Modelo_Conceptual.md) | Ownership y relaciones conceptuales de datos |
-| Contrato de integración | [`Contrato_Api.md`](contratos\http\Contrato_Api.md) | Responsabilidades e integración con otros módulos |
-| OpenAPI | [`api/openapi.yaml`](contratos\http\openapi.yaml) | Contrato HTTP ejecutable |
-| AsyncAPI | [`asyncapi/asyncapi.yaml`](contratos\eventos\asyncapi.yaml) | Contrato de mensajería asíncrona |
-| Catálogo de errores | [`api/catalogo-errores.md`](contratos\http\catalogo-errores.md) | Semántica estable de errores del módulo |
-| Catálogo de eventos | [`api/catalogo-eventos.md`](contratos\eventos\catalogo-eventos.md) | Eventos publicados y consumidos |
-| Topología RabbitMQ | [`api/rabbitmq-topologia.md`](contratos\eventos\rabbitmq-topologia.md) | Definición física de exchanges, colas y retries |
-| Kit de integración | [`api/kit-integracion.md`](contratos\http\kit-integracion.md) | Guía práctica de integración para otros módulos |
-| Matriz de pruebas de contrato | [`api/pruebas-contrato.md`](contratos\pruebas\pruebas-contrato.md) | Casos estáticos, provider, consumer/provider, seguridad e integración |
+| Especificaciones funcionales | [`specs/`](requisitos/specs) | Reglas de negocio y comportamiento esperado |
+| Historias de usuario | [`hu/`](requisitos/hu) | Necesidades del usuario y criterios funcionales |
+| Flujos funcionales complementarios | [`flujos/`](requisitos/flujos) | Flujos detallados de procesos relevantes |
+| Wireframes (Baja fidelidad) | [`wireframes/flows/`](ux/wireframes/flows) | Definición funcional y estructural de interfaces |
+| Prototipos HTML de wireframe | [`wireframes/prototipos/`](ux/wireframes/prototipos) | Representaciones navegables de los wireframes |
+| Guía visual de wireframes | [`wireframes/DESIGN.md`](ux/wireframes/DESIGN.md) | Lineamientos visuales aplicables exclusivamente a wireframes |
+| Índice funcional canónico | [`wireframes/INDEX.md`](ux/wireframes/INDEX.md) | Mapeo de las 16 funcionalidades y responsables |
+| Visor de prototipos | [`wireframes/Visor_Prototipos_PO.html`](ux/wireframes/Visor_Prototipos_PO.html) | Acceso unificado a prototipos de wireframes |
+| Pipeline de Mockups (Alta fidelidad) | [`mockups/`](ux/mockups) | UX transversal, decisiones, plantillas y código de prototipado |
+| Arquitectura | [`Arquitectura.md`](arquitectura/Arquitectura.md) | Diseño técnico y decisiones arquitectónicas |
+| Modelo conceptual | [`Modelo_Conceptual.md`](arquitectura/Modelo_Conceptual.md) | Ownership y relaciones conceptuales de datos |
+| Contrato de integración | [`Contrato_Api.md`](contratos/http/Contrato_Api.md) | Responsabilidades e integración con otros módulos |
+| OpenAPI | [`contratos/http/openapi.yaml`](contratos/http/openapi.yaml) | Contrato HTTP ejecutable |
+| AsyncAPI | [`contratos/eventos/asyncapi.yaml`](contratos/eventos/asyncapi.yaml) | Contrato de mensajería asíncrona |
+| Catálogo de errores | [`contratos/http/catalogo-errores.md`](contratos/http/catalogo-errores.md) | Semántica estable de errores del módulo |
+| Catálogo de eventos | [`contratos/eventos/catalogo-eventos.md`](contratos/eventos/catalogo-eventos.md) | Eventos publicados y consumidos |
+| Topología RabbitMQ | [`contratos/eventos/rabbitmq-topologia.md`](contratos/eventos/rabbitmq-topologia.md) | Definición física de exchanges, colas y retries |
+| Kit de integración | [`contratos/http/kit-integracion.md`](contratos/http/kit-integracion.md) | Guía práctica de integración para otros módulos |
+| Matriz de pruebas de contrato | [`contratos/pruebas/pruebas-contrato.md`](contratos/pruebas/pruebas-contrato.md) | Casos estáticos, provider, consumer/provider, seguridad e integración |
 | Acuerdos de integración | [`integraciones/`](integraciones/) | Acuerdos homologados con Marketplace, Retail, Chatbot y Ventas; las integraciones restantes se documentan en sus artefactos canónicos |
 | Equipo y responsabilidades | [`EQUIPO_Y_RESPONSABILIDADES.md`](EQUIPO_Y_RESPONSABILIDADES.md) | Roles transversales, ownership funcional y mecanismos de revisión del equipo |
 | Persistencia por bounded context | [`bd/`](datos) | Modelo físico, migraciones y scripts de validación SQL por servicio |
@@ -113,24 +113,24 @@ No todos los documentos tienen la misma autoridad.
 
 | Tema | Fuente de verdad |
 |---|---|
-| Reglas funcionales | `specs/SPEC-XXX-*.md` |
-| Necesidad y comportamiento desde usuario | `hu/HU-XXX-*.md` |
+| Reglas funcionales | `requisitos/specs/SPEC-XXX-*.md` |
+| Necesidad y comportamiento desde usuario | `requisitos/hu/HU-XXX-*.md` |
 | Comportamiento de interfaz (Baja fidelidad) | `wireframes/flows/WF-XXX-*.md` |
 | Representación visual de wireframes | `wireframes/DESIGN.md` |
 | UX transversal y decisiones de mockups | `mockups/ux/propuesta-ux.md` y `mockups/ux/ux-decisions.md` |
 | Reglas operativas de mockups | `mockups/ux/ux-guidelines.md` |
-| Contrato HTTP | `api/openapi.yaml` |
-| Mensajería asíncrona | `asyncapi/asyncapi.yaml` |
-| Topología física RabbitMQ | `api/rabbitmq-topologia.md` |
-| Códigos de error | `api/catalogo-errores.md` |
-| Eventos | `api/catalogo-eventos.md` |
+| Contrato HTTP | `contratos/http/openapi.yaml` |
+| Mensajería asíncrona | `contratos/eventos/asyncapi.yaml` |
+| Topología física RabbitMQ | `contratos/eventos/rabbitmq-topologia.md` |
+| Códigos de error | `contratos/http/catalogo-errores.md` |
+| Eventos | `contratos/eventos/catalogo-eventos.md` |
 | Ownership e integración entre módulos | `Contrato_Api.md` |
 | Arquitectura interna | `Arquitectura.md` |
 | Ownership conceptual de datos | `Modelo_Conceptual.md` |
 
 Ante una diferencia entre documentación narrativa y un contrato ejecutable, se debe revisar primero la fuente de verdad correspondiente y posteriormente propagar la corrección a los documentos derivados.
 
-> **Nota sobre diseño:** `wireframes/DESIGN.md` gobierna únicamente la representación visual de baja fidelidad de los wireframes históricos. Los mockups de alta fidelidad se rigen exclusivamente por la Propuesta UX Integral del módulo, las UX Decisions, las UX Guidelines y el Design System correspondiente bajo [`mockups/`](ux\mockups).
+> **Nota sobre diseño:** `wireframes/DESIGN.md` gobierna únicamente la representación visual de baja fidelidad de los wireframes históricos. Los mockups de alta fidelidad se rigen exclusivamente por la Propuesta UX Integral del módulo, las UX Decisions, las UX Guidelines y el Design System correspondiente bajo [`mockups/`](ux/mockups).
 
 ---
 
@@ -151,7 +151,7 @@ El módulo se divide en ocho bounded contexts de negocio.
 
 Adicionalmente existe un `api-gateway` / BFF como punto de acceso, pero no constituye un bounded context de negocio.
 
-La descripción completa, reglas de dependencias, persistencia, mensajería, resiliencia, seguridad, observabilidad y diagramas C4 se encuentran en [`Arquitectura.md`](arquitectura\Arquitectura.md).
+La descripción completa, reglas de dependencias, persistencia, mensajería, resiliencia, seguridad, observabilidad y diagramas C4 se encuentran en [`Arquitectura.md`](arquitectura/Arquitectura.md).
 
 ---
 
@@ -245,26 +245,29 @@ Ejemplos:
 
 El contrato HTTP completo se encuentra en:
 
-[`api/openapi.yaml`](contratos\http\openapi.yaml)
+[`contratos/http/openapi.yaml`](contratos/http/openapi.yaml)
 
 La mensajería asíncrona se encuentra en:
 
-[`asyncapi/asyncapi.yaml`](contratos\eventos\asyncapi.yaml)
+[`contratos/eventos/asyncapi.yaml`](contratos/eventos/asyncapi.yaml)
 
 La explicación humana de responsabilidades e integración se mantiene en:
 
-[`Contrato_Api.md`](contratos\http\Contrato_Api.md)
+[`Contrato_Api.md`](contratos/http/Contrato_Api.md)
 
 ### Versiones contractuales actuales
 
 | Artefacto | Versión |
 |---|---|
-| OpenAPI | `0.5.0` |
-| AsyncAPI | `0.5.0` |
-| Catálogo de errores | `0.5.0` |
-| Catálogo de eventos | `0.5.0` |
-| Topología RabbitMQ | `0.5.0` |
-| Kit de integración | `0.5.0` |
+| OpenAPI 3.1.0 | `0.6.0-rc.1`, contrato candidato de la rama `nueva` |
+| AsyncAPI 3.0.0 | `0.6.0-rc.1`, contrato candidato; 40 canales / 40 mensajes |
+| Línea base histórica OpenAPI/AsyncAPI | `0.5.0` (compatibilidad; no sustituida automáticamente en runtime) |
+| Catálogo de errores | Vocabulario humano de códigos, alineado con el contrato candidato |
+| Catálogo de eventos | 40 mensajes documentados; publicación real pendiente de comprobación |
+| Topología RabbitMQ | Contrato físico documentado, sin inferir aprovisionamiento del entorno |
+| Kit de integración | Guía documental derivada del contrato candidato |
+
+**Estado de publicación:** la presencia de `0.6.0-rc.1` en GitHub **no acredita** handlers desplegados, grants de G7, pruebas E2E ni compatibilidad de consumidores. No anunciar estos contratos como APIs vivas por el mero contenido YAML.
 
 ---
 
@@ -275,24 +278,24 @@ El módulo cuenta con dos niveles de diseño formalmente articulados:
 ### 9.1. Baja fidelidad (Wireframes)
 Las 16 funcionalidades disponen de definición de wireframe funcional y prototipo HTML navegable gobernados por:
 
-[`wireframes/DESIGN.md`](ux\wireframes\DESIGN.md)
+[`wireframes/DESIGN.md`](ux/wireframes/DESIGN.md)
 
 Este documento define exclusivamente los lineamientos de los **wireframes de baja fidelidad**. Los prototipos HTML correspondientes son artefactos estáticos de documentación y validación estructural; no constituyen el frontend productivo.
 
 Para recorrer los wireframes desde un único punto puede utilizarse:
-[`wireframes/Visor_Prototipos_PO.html`](ux\wireframes\Visor_Prototipos_PO.html)
+[`wireframes/Visor_Prototipos_PO.html`](ux/wireframes/Visor_Prototipos_PO.html)
 
 ### 9.2. Alta fidelidad (Pipeline de Mockups)
 La evolución hacia mockups de alta fidelidad se rige de forma estricta por la gobernanza transversal del módulo documentada en:
 
-[`mockups/`](ux\mockups)
+[`mockups/`](ux/mockups)
 
 Este pipeline no mezcla las reglas visuales de los wireframes con las decisiones de alta fidelidad. Se fundamenta en:
-- [`mockups/ux/propuesta-ux.md`](ux\mockups\ux\propuesta-ux.md): Las 3 propuestas UX finales de #59, matriz de las 16 funcionalidades, evaluación de los borradores y Propuesta UX Integral Adoptada para el Gestor Comercial.
-- [`mockups/ux/ux-decisions.md`](ux\mockups\ux\ux-decisions.md): Decisiones transversales justificadas (`UXD-001` a `UXD-012`).
-- [`mockups/ux/ux-guidelines.md`](ux\mockups\ux\ux-guidelines.md): Reglas normativas operativas y accesibilidad en PC Desktop (viewport canónico de 1440 px).
-- [`mockups/DESIGN.md`](ux\mockups\DESIGN.md): Design System vigente de mockups, con foundations, layout desktop, componentes y estados visuales alineados con la UX transversal.
-- [`mockups/prototipo/`](ux\mockups\prototipo): Código interactivo normalizado de prototipado (bajo `src/pantallas/MKXXX`).
+- [`mockups/ux/propuesta-ux.md`](ux/mockups/ux/propuesta-ux.md): Las 3 propuestas UX finales de #59, matriz de las 16 funcionalidades, evaluación de los borradores y Propuesta UX Integral Adoptada para el Gestor Comercial.
+- [`mockups/ux/ux-decisions.md`](ux/mockups/ux/ux-decisions.md): Decisiones transversales justificadas (`UXD-001` a `UXD-012`).
+- [`mockups/ux/ux-guidelines.md`](ux/mockups/ux/ux-guidelines.md): Reglas normativas operativas y accesibilidad en PC Desktop (viewport canónico de 1440 px).
+- [`mockups/DESIGN.md`](ux/mockups/DESIGN.md): Design System vigente de mockups, con foundations, layout desktop, componentes y estados visuales alineados con la UX transversal.
+- [`mockups/prototipo/`](ux/mockups/prototipo): Código interactivo normalizado de prototipado (bajo `src/pantallas/MKXXX`).
 
 La cadena completa de diseño de alta fidelidad es:
 
@@ -338,7 +341,7 @@ flowchart TD
 | `vera` | Leonardo Vera Rodríguez | Precios y auditoría de precios |
 | `taco` | Miguel Ángel Taco Zavala | Inventario, analítica y alertas |
 
-La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`wireframes/INDEX.md`](ux\wireframes\INDEX.md) y [`mockups/README.md`](ux\mockups\README.md).
+La asignación detallada de cada una de las 16 funcionalidades se mantiene en [`wireframes/INDEX.md`](ux/wireframes/INDEX.md) y [`mockups/README.md`](ux/mockups/README.md).
 
 Los roles transversales, los límites de responsabilidad y los mecanismos de revisión del equipo se documentan en [`EQUIPO_Y_RESPONSABILIDADES.md`](EQUIPO_Y_RESPONSABILIDADES.md).
 
@@ -411,7 +414,7 @@ Este repositorio busca mantener:
 Los siguientes artefactos ampliarán la trazabilidad hacia el Hito 2:
 
 - Implementación incremental y validación de los 16 mockups (`mockups/MK-001` a `MK-016`).
-- Modelo lógico de base de datos (resto de bounded contexts; `inventory-svc` ya cuenta con [`bd/inventory-svc/physical-model.md`](datos\inventory-svc\physical-model.md)).
+- Modelo lógico de base de datos (resto de bounded contexts; `inventory-svc` ya cuenta con [`bd/inventory-svc/physical-model.md`](datos/inventory-svc/physical-model.md)).
 - Modelo físico de base de datos (`inventory-svc` implementado en `migration.sql`).
 - Scripts SQL y migraciones (`inventory-svc` validado localmente con `validation.sql`).
 - Evidencia de implementación en Supabase (despliegue del schema `inventory`, coordinado con Axel Cueva).
@@ -440,7 +443,7 @@ El objetivo es mantener una cadena verificable desde la necesidad funcional hast
 <!-- HOMOLOGACION-HTTP-0.5.0:START -->
 ## Homologación HTTP 0.5.0
 
-El contrato HTTP vigente se publica como OpenAPI 0.5.0.
+La homologación `0.5.0` queda como antecedente histórico. En el PR #86, los contratos ejecutables **candidatos** OpenAPI/AsyncAPI tienen versión `0.6.0-rc.1` (40 canales y mensajes en AsyncAPI). Su vigencia en producción no se presupone.
 
 Nuevos acuerdos locales:
 
@@ -449,7 +452,7 @@ integraciones/ALINEACION_MARKETPLACE.md
 integraciones/ALINEACION_RETAIL.md
 ```
 
-Chatbot consume la proyección de disponibilidad comercial. La matriz de pruebas inter-módulo se encuentra en `api/pruebas-contrato.md`.
+Chatbot, Marketplace y Retail consumen las proyecciones comerciales de Inventario (GET estados o POST verificación de cantidades); la lectura detallada por servicio queda permitida únicamente a Ventas, sin perjuicio de usuarios administrativos autorizados. El scope nominal `inventario:disponibilidad:leer` **no suprime** las allowlists por operación. `inventario:operaciones:leer` es nuevo permiso candidato exclusivo de Ventas, pendiente de concesión por G7. La matriz de pruebas inter-módulo se encuentra en `contratos/pruebas/pruebas-contrato.md`.
 
-Las capacidades que dependen de `D-INV-01` o `D-REC-01/02` permanecen explícitamente provisionales; esta documentación no inventa esas decisiones.
+**D-INV-01 está adoptada**: una sola ubicación elegible por referencia de cumplimiento; no sumar saldos independientes. Mapeo ausente/ambiguo o cumplimiento no demostrable: `INDETERMINADO`. El GET comercial y el POST de verificación por cantidad son consultas sin efectos; el POST devuelve `binding=false` y no reserva. Las rutas siguen `provisional` por implementación/pruebas pendientes. **D-REC-01/02** continúan abiertas y son decisiones distintas.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->

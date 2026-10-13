@@ -2,10 +2,10 @@
 
 **Contrato HTTP objetivo:** OpenAPI `0.6.0-rc.1` (candidato, no publicado).
 **Contrato asíncrono objetivo:** AsyncAPI `0.6.0-rc.1` (candidato, no publicado).
-**Baseline revisado:** PR #86, rama `nueva`, commit `b7a3e59e7d886a34d42653609a6b51640cf736a8`.
+**Referencia exacta auditada:** PR #86, rama `nueva`, commit `c1769607f30e2cabf1449e33c877fa4ef41defe5`.
 **Estado:** definición documental de casos; no asignar `PASS` a pruebas de API, eventos, seguridad o integración sin ejecución reproducible.
 
-Esta matriz contempla las correcciones candidatas de `contratos/http/openapi.yaml` (entrega 03) y `contratos/eventos/asyncapi.yaml` (entrega 02). **Hasta sustituir ambos YAML y validar el conjunto, los casos estáticos de las correcciones siguen pendientes.** Los contratos `0.5.0` permanecen como referencia de compatibilidad; no se anuncian implementados ni desplegados los contratos `0.6.0-rc.1`.
+En el commit auditado, **ambos YAML candidatos ya están presentes**: `contratos/http/openapi.yaml` y `contratos/eventos/asyncapi.yaml`, con `info.version=0.6.0-rc.1`. Por tanto, no procede describir su sustitución como un paso futuro. Los casos estáticos permanecen `PENDIENTE_EJECUCION` **hasta disponer de ejecución reproducible de validadores y evidencia vinculada al commit**; tampoco se consideran superadas pruebas provider, seguridad o E2E. `0.5.0` es línea base de compatibilidad, no prueba de despliegue del candidato.
 
 ## Estados
 
@@ -52,8 +52,10 @@ ARCHITECTURE_INVARIANT
 | CT-STATIC-14 | STATIC_CONTRACT | `ConsultaOperacionInventario` con `status=REJECTED` requiere `result_code` no vacío; sus estados `ACCEPTED`, `PROCESSING`, `COMPLETED`, `REJECTED` y `REQUIRES_REVIEW` conservan la semántica declarada | PENDIENTE_EJECUCION |
 | CT-STATIC-15 | STATIC_CONTRACT | Respuestas `404` de consulta de operación y `422` por contexto comercial inválido usan los códigos del catálogo; `429` y `500` están declarados en las rutas nuevas | PENDIENTE_EJECUCION |
 | CT-STATIC-16 | STATIC_CONTRACT | OpenAPI y AsyncAPI mantienen la misma versión candidata y no reemplazan la versión publicada sin adaptadores y pruebas de transición | PENDIENTE_EJECUCION |
+| CT-STATIC-17 | STATIC_CONTRACT | GET detallado de Inventario solo admite `modulo-ventas` mediante `serviceBearer`, aparte de la autorización administrativa `userBearer`; los canales solo están autorizados en las operaciones comerciales | PENDIENTE_EJECUCION |
+| CT-STATIC-18 | STATIC_CONTRACT | GET y POST comerciales incluyen allowlist `modulo-marketplace`, `modulo-chatbot`, `modulo-retail`, con el scope común `inventario:disponibilidad:leer`; `GET /inventario/operaciones/{operationId}` usa `inventario:operaciones:leer` y `modulo-ventas` | PENDIENTE_EJECUCION |
 
-**Control de conteos:** 40 canales y 40 mensajes es el inventario observado en el AsyncAPI del commit indicado, no una cifra universal ni una autorización para añadir/eliminar eventos. Si cambia intencionadamente el catálogo, actualizar el conteo **y** justificar las diferencias mediante revisión del contrato.
+**Control de conteos:** el contrato AsyncAPI candidato del commit `c1769607` contiene 40 canales y 40 mensajes (el baseline histórico `0.5.0` tenía 39 mensajes). Este recuento de estructuras **no equivale a pasar CT-STATIC-08**: los `$ref`, formatos UUID, schemas y obligatoriedad de campos siguen pendientes de un validador reproducible. Un cambio intencional exige actualizar conteos y justificarlo.
 
 ## 2. Marketplace ↔ Productos y Ofertas
 
@@ -104,6 +106,8 @@ ARCHITECTURE_INVARIANT
 | CT-AVL-B03 | Fuente no mapeada o ambigua | HTTP 200 + `INDETERMINADO`, sin revelar ubicación ni saldos | PENDIENTE_IMPLEMENTACION |
 | CT-AVL-B04 | Contexto comercial semánticamente inválido | HTTP 422 + `CONTEXTO_ABASTECIMIENTO_INVALIDO`; no confundir con falta de mapeo | PENDIENTE_IMPLEMENTACION |
 | CT-AVL-B05 | Verificación no vinculante | `binding=false`; no crea reserva ni promete stock futuro | PENDIENTE_IMPLEMENTACION |
+| CT-AVL-B06 | Canal con scope de disponibilidad intenta GET detallado | HTTP 403 aun con `inventario:disponibilidad:leer`, por client_id fuera de la allowlist; usuario administrador usa autorización `userBearer` distinta | PENDIENTE_IMPLEMENTACION |
+| CT-AVL-B07 | Contexto sin mapeo vs inválido | Falta de mapping o fuente ambigua produce respuesta de negocio `200 INDETERMINADO`; contexto semánticamente inválido `422 CONTEXTO_ABASTECIMIENTO_INVALIDO`; ninguna operación modifica stock | PENDIENTE_IMPLEMENTACION |
 
 **D-INV-01:** la **decisión contractual ya está adoptada** en `arquitectura/decisiones/ADR-DEC-F-BLOQUEANTES.md` y `SPEC-015`. El bloqueo ahora es de implementación/validación, no de decisión. Se mantienen bloqueadas las políticas de recomendaciones multi-SKU no resueltas por D-REC, que constituyen un asunto distinto.
 
@@ -277,7 +281,7 @@ Esta evidencia proviene de las ejecuciones comunicadas por el responsable; no su
 - Los identificadores `CT-STATIC-*`, `CT-AVL-*`, `CT-G6-*` y los 30 `CT-PREP-*` existentes se conservan para trazabilidad; los nuevos casos se agregan con IDs diferentes.
 - Los conteos de canales, mensajes, rutas y códigos deben recalcularse tras cada modificación; no adaptar expectativas para ocultar una pérdida accidental de contratos.
 - Cambiar una restricción de payload puede afectar consumidores aun sin cambiar el nombre del mensaje. Revisar compatibilidad, versionado de `schema_version` y adaptadores antes del despliegue.
-- Mantener los casos funcionales `PENDIENTE_IMPLEMENTACION` o `PENDIENTE_EJECUCION` hasta contar con evidencias del proveedor real. `PASS` requiere resultado reproducible asociado a un commit y un entorno.
+- Mantener los casos funcionales `PENDIENTE_IMPLEMENTACION` o `PENDIENTE_EJECUCION` hasta contar con evidencias del proveedor real. `PASS` requiere resultado reproducible asociado a un commit y un entorno. La inspección documental de esta tarea **no cambia estados** ni satisface los grants de Seguridad/G7.
 
 ## Addendum contractual `0.6.0-rc.1` — Cuatro bloqueantes G6
 
