@@ -14,7 +14,7 @@ Estas propuestas no modifican contratos ejecutables. Las contradicciones indicad
 
 Inventario mantiene el saldo central autoritativo. La conciliación de una venta Retail ocurrida físicamente durante una desconexión registra el efecto de esa venta sin crear una reserva retroactiva. Debe permitir aplicación parcial: aplica únicamente la cantidad admisible conforme a las invariantes vigentes y deja el resto pendiente de revisión. Nunca genera saldo negativo. Cada movimiento queda asociado al mecanismo de trazabilidad autorizado para movimientos de Inventario.
 
-La misma venta no puede descontarse dos veces aunque una repetición técnica llegue con un identificador de reintento distinto. La deduplicación debe apoyarse en una identidad estable de la venta offline, distinta de `order_id` e `operation_id`.
+La misma venta no puede descontarse dos veces aunque una repetición técnica llegue con un identificador de reintento distinto. OpenAPI G6 ya exige `offline_sale_id` de tipo `string`; G4 v0.4 utiliza `ventaLocalUuid` para identificar una venta offline. Estos identificadores son distintos de `order_id`, que vincula el pedido, y `operation_id`, que identifica la operación de conciliación.
 
 ### Justificación
 
@@ -32,7 +32,7 @@ SPEC-015 y el OpenAPI G6 describen conciliación, cantidades aplicadas y no resu
 
 ### Límites y pendientes
 
-No se fija el identificador contractual definitivo de venta offline, columnas, índice, fingerprint, clave compuesta ni esquema nuevo. Deben acordarse con Retail y reflejarse en un contrato aprobado antes de implementar la deduplicación. `order_id` identifica el pedido según su contrato; `operation_id` identifica la operación de conciliación; ninguno se declara identidad estable de la venta offline.
+Quedan pendientes el mapeo contractual entre G4 `ventaLocalUuid` y G6 `offline_sale_id`, la estabilidad de esa identidad entre reintentos y el ámbito de deduplicación. OpenAPI ya exige `offline_sale_id` como string, pero no resuelve por sí solo esa correspondencia ni esas semánticas. No se proponen índices, claves nuevas ni cambios de esquema. `order_id` identifica el pedido y `operation_id` la operación de conciliación; cumplen funciones distintas de la identidad de venta.
 
 El OpenAPI actual permite `modulo-ventas` para la operación de conciliación y G6 mantiene documentación que sitúa a Ventas como intermediario. El antecedente comunicado de Retail llamando directamente a G6 aún requiere homologación con G4, G5 y Seguridad. Esta propuesta no determina el orden entre creación del pedido, cobro, conciliación o consumo de stock.
 
@@ -53,6 +53,10 @@ Para una mutación de Inventario solicitada en contexto Retail, un identificador
 ### Justificación
 
 D-INV-01 regula la proyección comercial de disponibilidad: una fuente elegible por contexto y `INDETERMINADO` cuando no se puede resolver una fuente única. Esa política de lectura no concede autoridad para mutar inventario ni acredita que una tienda pueda seleccionar una ubicación. La autorización de una mutación debe comprobarse por separado.
+
+### Diferencia explícita frente al contrato actual
+
+OpenAPI define `ConciliacionOfflineRequest.lines`; cada elemento referencia `LineaInventarioUbicada`, cuyo esquema exige actualmente `location_id`. Esa exigencia del contrato requiere que el request lleve la ubicación interna, mientras esta propuesta plantea resolver internamente la tienda pública a una ubicación autorizada. Existe incompatibilidad contractual pendiente de cambio aprobado y homologación con Retail y Seguridad. Esta propuesta no modifica OpenAPI ni introduce campos.
 
 ### Invariantes propuestas
 
@@ -79,7 +83,7 @@ La propuesta no fija campos, rutas, códigos de error, mecanismo de mapeo ni nue
 
 ### Enunciado
 
-El consumidor Retail debe recibir solo la información necesaria para conocer el estado de su conciliación y recuperar su operación de forma segura. La respuesta no debería revelar saldos internos de Inventario que Retail no necesita.
+El consumidor Retail debe recibir solo la información necesaria para conocer el resultado de su conciliación. Cualquier mecanismo para recuperar posteriormente una operación debe definirse aparte; esta propuesta no afirma que Retail ya tenga una operación GET autorizada para consultar conciliaciones. La respuesta no debería revelar saldos internos de Inventario que Retail no necesita.
 
 ### Justificación
 
@@ -87,13 +91,14 @@ El OpenAPI G6 actual define `ConciliacionOfflineResponse` con resultado y datos 
 
 ### Diferencia explícita frente al contrato actual
 
-En `contratos/http/openapi.yaml`, `ConciliacionOfflineResponse` incluye `operation_id`, `order_id`, `offline_sale_id`, `status`, `lines` y `completed_at`. Cada `ConciliacionOfflineLineaResultado` requiere `sku`, `location_id`, `requested_quantity`, `applied_quantity`, `unresolved_quantity`, `on_hand`, `reserved`, `blocked`, `available` y `stock_version`. En particular, `location_id` y los saldos/cantidades internas (`on_hand`, `reserved`, `blocked`, `available`) exceden la información que esta propuesta presume necesaria para Retail.
+En `contratos/http/openapi.yaml`, `ConciliacionOfflineResponse` incluye `operation_id`, `order_id`, `offline_sale_id`, `status`, `lines` y `completed_at`. Cada `ConciliacionOfflineLineaResultado` requiere `sku`, `location_id`, `requested_quantity`, `applied_quantity`, `unresolved_quantity`, `on_hand`, `reserved`, `blocked`, `available` y `stock_version`. En particular, `location_id`, `stock_version` y los saldos/cantidades internas (`on_hand`, `reserved`, `blocked`, `available`) deben evaluarse para evitar exposición innecesaria a Retail.
 
 La propuesta difiere de ese contrato existente. No lo modifica ni cambia DTO, OpenAPI, política de autorización o lista de clientes permitidos. La modificación, si Marco la adopta, requiere revisión y aprobación contractual con los módulos concernidos antes de cualquier implementación.
 
 ### Invariantes propuestas
 
-- Retail recibe información suficiente para saber el estado y recuperar la operación, conforme a una interfaz aprobada.
+- El resultado de la conciliación informa su estado conforme a un contrato aprobado; no se presume que incluya un medio para recuperar una operación posteriormente.
+- El mecanismo de recuperación o consulta posterior, su autorización y su contrato quedan pendientes de definición y aprobación. No se afirma que exista una operación GET autorizada para Retail.
 - La respuesta no expone saldos internos o ubicación interna que no sean necesarios para ese propósito.
 - El contrato vigente gobierna hasta que una modificación sea aprobada y publicada; esta propuesta no autoriza ignorarlo.
 - La política de autorización se coordina con G7. La presencia de `inventario:conciliar-offline` en el OpenAPI G6 y `modulo-ventas` en la allowlist no prueba que Retail tenga acceso.
