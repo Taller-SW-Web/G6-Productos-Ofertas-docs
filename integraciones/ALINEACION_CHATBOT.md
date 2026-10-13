@@ -90,10 +90,32 @@ La disponibilidad consumida por Chatbot es la proyección comercial:
 
 ```text
 sku + status
-status ∈ {DISPONIBLE, STOCK_BAJO, AGOTADO}
+status ∈ {DISPONIBLE, STOCK_BAJO, AGOTADO, INDETERMINADO}
 ```
 
 Chatbot no recibe `location_id`, `on_hand`, `reserved`, `blocked`, `available`, `threshold` ni `stock_version`.
 
-La proyección permanece provisional por `D-INV-01`. Recomendaciones continúan disponibles mediante `GET /api/v1/recomendaciones?productoId=...&canal=CHATBOT`.
+La política `D-INV-01` ya está adoptada: no se suman saldos entre ubicaciones independientes. Cuando el cumplimiento es incierto, Chatbot debe presentar disponibilidad no confirmada (`INDETERMINADO`), nunca afirmar que hay stock o que está agotado por falta de mapeo. La implementación de esta proyección continúa provisional. Recomendaciones conservan su contrato `GET /api/v1/recomendaciones?productoId=...&canal=CHATBOT`.
+### Verificación de cantidades
+
+Cuando el usuario consulta una cantidad específica, Chatbot puede usar `POST /api/v1/inventario/disponibilidad/comercial/verificar` con `channel_id=CHATBOT`, `fulfillment={mode, fulfillment_ref?}` y `lines=[{sku, quantity}]`. Solo recibe `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO`, con `binding=false`. `SUFICIENTE` significa capacidad informativa del cumplimiento solicitado, no una reserva; la confirmación real corresponde a Ventas. Una correspondencia de ubicación ausente/ambigua devuelve `INDETERMINADO` (no `AGOTADO`). No divulgar `location_id` ni saldos.
+
+No confundir los estados del GET con los resultados del POST. La autorización por `client_id` y scope depende de G7.
+
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
+
+## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+
+**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+
+- `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
+- `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
+- Nuevos contratos provisionales: `GET /inventario/operaciones/{operationId}` (solo Ventas; scope `inventario:operaciones:leer`) y `POST /inventario/disponibilidad/comercial/verificar` (canales, consulta sin efectos).
+- Nuevo evento `inventory.reservation.rejected`; resultados de reserva/consumo/liberación/expiración con datos tipados y correlación obligatoria.
+- `D-INV-01`: no se suman saldos de ubicaciones independientes por defecto. Un canal obtiene `INDETERMINADO` cuando el punto único de cumplimiento no se puede resolver. `SUFICIENTE` exige una fuente de abastecimiento realizable para la cantidad completa; no supone reserva.
+- Cupones: después de reserva confirmada, Ventas envía `reservation_id` y `commercial_snapshot_ref` al solicitar consumo. Los resultados de consumo se tipan y la restauración se vincula a la operación previamente consumida.
+- Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
+- Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
+- Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+**Canales:** un resultado `SUFICIENTE` del **POST de verificación** es informativo; Ventas sigue siendo quien reserva. `INDETERMINADO` obliga a no prometer disponibilidad de la cantidad solicitada.

@@ -6,11 +6,11 @@
 - Responsable: Axel Andree Cueva Alcalá.
 - Bounded context: Promociones. Microservicio y owner exclusivo: `promotions-svc`.
 - Schema: `promotions`. Owner PostgreSQL: `po_promotions_owner`; runtime: `po_promotions_runtime`.
-- Última actualización: 2026-10-03. Estado: **EN REVISIÓN — REQUIERE APROBACIÓN BD/QA**.
+- Última actualización documental: 2026-10-12. Estado: **DDL 0004 VALIDADO EN SUPABASE; REVISIÓN FORMAL BD/QA E INTEGRACIÓN PENDIENTES**.
 - Modelo lógico: [logical-model.md](logical-model.md).
-- Migraciones: [migrations](migrations/), versiones 0001/0002/0003.
+- Migraciones: [migrations](migrations/), versiones 0001/0002/0003/0004; 0004 aplicada en Supabase compartido.
 - Validación: [validation.sql](validation.sql), [verify.py](tests/verify.py), [evidencia](validation-report.md).
-- Motor objetivo: PostgreSQL/Supabase. Evidencia local: PostgreSQL 17.11; despliegue compartido pendiente.
+- Motor: PostgreSQL/Supabase 17.11 (reportado); DDL de 0004 aplicado en el proyecto compartido; backend/E2E pendientes.
 
 ## 2. Fuentes y precedencia
 
@@ -27,7 +27,7 @@ Precedencia: fuentes funcionales/contractuales → conceptual → lógico → f�
 
 ## 3. Propósito
 
-Materializar la persistencia de las doce entidades/relaciones/necesidades técnicas de Arquitectura §7.2 y del modelo lógico. Documentar columnas, constraints, índices, funciones, triggers, historia, proyecciones e idempotencia realmente implementados. El ledger adicional pertenece al mecanismo común. Este documento sigue las 28 secciones de la plantilla vigente y su diccionario deriva del catálogo local después de aplicar 0001–0003.
+Materializar la persistencia de las doce entidades/relaciones/necesidades técnicas de Arquitectura §7.2 y del modelo lógico. Documentar columnas, constraints, índices, funciones, triggers, historia, proyecciones e idempotencia realmente implementados. El ledger adicional pertenece al mecanismo común. Este documento sigue las 28 secciones de la plantilla vigente; el diccionario histórico de §8.1–§8.13 deriva de 0001–0003 y §8.14 documenta el objeto adicional de 0004.
 
 ## 4. Alcance del bounded context
 
@@ -58,7 +58,7 @@ Schema privado, fuera de Exposed schemas/Data API. PUBLIC sin USAGE ni EXECUTE; 
 | Pedido/mensaje/correlación | text no vacío: AsyncAPI dice string sin formato UUID; no imponer uno. operation_id sí es UUID según MessageEnvelope. |
 | Cantidades comerciales | numeric exacto, sin typmod que redondee. OpenAPI no fija escala: 100.001 debe rechazarse como porcentaje, no convertirse silenciosamente en 100; mínimo 0.001 es positivo. NaN/Infinity rechazados. Se desvía de numeric(12,2) genérico por precisión contractual. No se inventa currency para estos campos. |
 | Fechas | timestamptz finito; vigencia [inicio, fin); reloj técnico del servidor para creación/modificación/primera activación. |
-| Migraciones | Numeración continua de cuatro dígitos y transacción del ejecutor bd/deploy/migrate.py; no añadir BEGIN/COMMIT a los archivos. CLI Supabase 2.119.0 generó el archivo original; 0001/0002 conservan sus checksums y 0003 incorpora las correcciones. Se mantiene una única historia común. |
+| Migraciones | Numeración continua de cuatro dígitos y transacción del ejecutor bd/deploy/migrate.py; no añadir BEGIN/COMMIT a los archivos. CLI Supabase 2.119.0 generó el archivo original; 0001/0002 conservan sus checksums, 0003 incorpora las correcciones y 0004 añade recibos idempotentes sin modificar la historia aplicada. Se mantiene el ledger del runner por schema. |
 | Canal global de precio | channel_id nullable; UNIQUE NULLS NOT DISTINCT(SKU, canal) representa un global por SKU y un override por canal, conforme al contrato de Pricing. |
 | Catálogos propios | CHECK en lugar de enums nativos sugeridos por convenciones: mismos valores publicados, migración autocontenida y sin tipos extra; excepción a revisar con el owner de BD. |
 | Data API | Se aplica el procedimiento bd/deploy/README.md de schemas privados; la sugerencia general de exponer nueve schemas en convenciones contradice ese procedimiento. Resolver en revisión transversal antes de cualquier exposición; esta entrega conserva el acceso por backend y no concede acceso anónimo. |
@@ -86,6 +86,7 @@ El ledger usa applied_at y PK natural del runner; las proyecciones catalog/stock
 | `outbox` | Envelope transaccional inmutable y seguimiento de publicación. | logical-model.md §3.11 — Outbox | `PRIMARY KEY (message_id)` | Envelope inmutable; seguimiento operativo mutable. |
 | `inbox` | Deduplicación por mensaje/handler, envelope inmutable y resultado del procesamiento. | logical-model.md §3.12 — Inbox | `PRIMARY KEY (message_id, handler)` | Envelope inmutable; seguimiento operativo mutable. |
 | `schema_migrations` | Ledger técnico del mecanismo común; versiones/checksums/applied_at. | Necesidad técnica: logical-model.md §9; bd/deploy/migrate.py | `PRIMARY KEY (version)` | Append-only, exclusivo del runner. |
+| `coupon_command_receipts` | Recibos idempotentes de comandos consumo/restauración, resultado y actor. | Migración 0004, ADR B4 y SPEC-005; tabla técnica nueva | `PRIMARY KEY (operation_id)` | Estado transicional `RECIBIDO` → `COMPLETED/REJECTED`, sin mutación de identidad ni DELETE runtime. |
 
 ## 7. Enumeraciones y tipos propios
 
@@ -910,6 +911,64 @@ No se requieren triggers específicos; el runner administra esta tabla.
 
 **Notas:** Tabla del runner; versión/checksum inmutables y applied_at técnico. Excepciones de nombres/PK/timestamps deben homologarse transversalmente, no alterar aquí el runner compartido.
 
+### 8.14. `coupon_command_receipts` — recibos de comando (migración 0004)
+
+**Origen:** [`0004_coupon_idempotency_receipts.sql`](migrations/0004_coupon_idempotency_receipts.sql),
+ADR B4 y SPEC-005. Esta es una **tabla técnica adicional** a las doce entidades
+funcionales del modelo lógico. No crea una entidad de dominio ni una FK cruzada.
+El registro conserva la identidad idempotente de un comando de consumo/restauración;
+**la tabla sola no implementa el handler ni garantiza una publicación RabbitMQ**.
+
+| Columna | Tipo PostgreSQL | Nulo | Default | Restricción / uso |
+|---|---|---|---|---|
+| `operation_id` | `uuid` | No | — | PK `coupon_command_receipts_pkey`; identidad idempotente |
+| `order_id` | `text` | No | — | No vacío; referencia opaca de G5, no UUID |
+| `source_client_id` | `text` | No | — | No vacío; actor módulo que emitió el comando |
+| `intention` | `text` | No | — | CHECK: `CONSUMIR` o `RESTAURAR` |
+| `coupon_code` | `text` | Sí | — | Obligatorio y no vacío para `CONSUMIR` |
+| `reservation_id` | `uuid` | Sí | — | Obligatorio para `CONSUMIR`; precondición de reserva confirmada en backend |
+| `commercial_snapshot_ref` | `text` | Sí | — | Obligatorio y no vacío para `CONSUMIR` |
+| `request_fingerprint` | `text` | No | — | Patrón SHA-256 en minúsculas, 64 caracteres hexadecimales |
+| `request_payload` | `jsonb` | No | — | Debe ser objeto JSON |
+| `status` | `text` | No | `'RECIBIDO'` | `RECIBIDO`, `COMPLETED` o `REJECTED` |
+| `result_payload` | `jsonb` | Sí | — | Objeto JSON exigido al alcanzar estado terminal |
+| `received_at` | `timestamptz` | No | `now()` | Registro de recepción, sin `created_at` |
+| `completed_at` | `timestamptz` | Sí | — | No nulo solo en resultado terminal |
+
+**Constraints de 0004:** `coupon_command_receipts_pkey`, seis CHECK de columna
+(`order_id`, `source_client_id`, `intention`, `request_fingerprint`,
+`request_payload`, `status`) y dos CHECK de tabla:
+`ck_coupon_command_complete` y `ck_coupon_command_consumption_context`.
+En `RECIBIDO`, `result_payload` y `completed_at` deben ser `NULL`;
+en `COMPLETED`/`REJECTED`, ambos son obligatorios y el resultado debe ser objeto JSON.
+La base no valida todos los atributos semánticos del payload: es responsabilidad del handler.
+
+**Índices reales:** PK por `operation_id`; `ix_coupon_command_receipts_order(order_id)`;
+`ix_coupon_command_receipts_received(received_at)`. No hay FK entre schemas ni
+FK con `coupon_uses`; la relación es transaccional/lógica, no física.
+
+**Permisos:** el rol `po_promotions_runtime` tiene únicamente `SELECT` e `INSERT`
+sobre la tabla y `UPDATE(status, result_payload, completed_at)`; **no** recibe
+`DELETE`, `UPDATE(request_fingerprint)` ni modificación de identidad/intención.
+`PUBLIC` no recibe privilegios sobre esta tabla. La gestión del historial de
+migraciones continúa exclusiva del runner/owner.
+
+**Idempotencia y transacciones obligatorias en el backend:** tomar lock por
+`operation_id`; comparar `source_client_id`, `intention` y fingerprint; reenviar
+el resultado anterior si son idénticos; devolver `IDEMPOTENCY_CONFLICT` ante
+la misma identidad con payload/actor/intención incompatibles **sin efectos**.
+Consumo/restauración, cierre del recibo e inserción de Outbox pertenecen a la
+misma transacción. El publicador de Outbox opera después del commit. La regla
+histórica `UNIQUE(order_id, coupon_id)` de `coupon_uses` impide un segundo consumo
+de negocio, y el recibo impide efectos nuevos bajo la misma operación; **ambas
+protecciones se complementan**. El validador SQL acredita estructura y permisos,
+no ejecución E2E de los handlers.
+
+**Excepción técnica de timestamps:** la tabla 0004 utiliza `received_at` y
+`completed_at` (no `created_at`, `updated_at` ni trigger `fn_touch_updated_at`).
+Esta excepción está contrastada con la migración y el validador; requiere
+homologación formal si las convenciones transversales la exigen.
+
 ## 9. Referencias externas
 
 | Tabla / columna | Tipo | Owner | Se obtiene desde | Versión / proyección |
@@ -997,6 +1056,10 @@ No existen FK hacia Catálogo, Taxonomía, Pricing, Inventario, Seguridad/auth.u
 | pk_recommendation_rules | recommendation_rules | `CREATE UNIQUE INDEX pk_recommendation_rules ON promotions.recommendation_rules USING btree (id)` | btree | Acceso e integridad de la identidad física de la tabla. |
 | schema_migrations_pkey | schema_migrations | `CREATE UNIQUE INDEX schema_migrations_pkey ON promotions.schema_migrations USING btree (version)` | btree | Acceso e integridad de la identidad física de la tabla. |
 | pk_stock_projection | stock_projection | `CREATE UNIQUE INDEX pk_stock_projection ON promotions.stock_projection USING btree (sku)` | btree | Acceso e integridad de la identidad física de la tabla. |
+
+| coupon_command_receipts_pkey | coupon_command_receipts | `PRIMARY KEY (operation_id)` (índice único implícito) | btree | Idempotencia única por operación UUID; creado por 0004. |
+| ix_coupon_command_receipts_order | coupon_command_receipts | `CREATE INDEX ix_coupon_command_receipts_order ON promotions.coupon_command_receipts(order_id)` | btree | Consultar recibos por pedido. |
+| ix_coupon_command_receipts_received | coupon_command_receipts | `CREATE INDEX ix_coupon_command_receipts_received ON promotions.coupon_command_receipts(received_at)` | btree | Seguimiento cronológico de comandos. |
 
 Los índices únicos asociados a constraints figuran aquí para representar el catálogo real; no son índices duplicados creados adicionalmente. No se añaden optimizaciones sin consulta/proceso concreto.
 
@@ -1127,6 +1190,18 @@ PK (message_id,handler), envelope jsonb, received_at, created_at, completed_at y
 
 Cupón bloqueado antes de comprobar cupos e insertar uso; advisory lock por pedido para consumir/restituir. Hijos bloquean padre antes de mutar configuración. Constraint triggers comprueban completitud al commit, permitiendo escritura transaccional del agregado. Usar READ COMMITTED y retry de la transacción completa ante 40P01/40001; no repetir una sentencia aislada. Carrera real de dos sesiones sobre último cupo y reentrega comprobada en verify.py.
 
+### 15.3. Recibos de operaciones 0004 (B4)
+
+`coupon_command_receipts.operation_id` es la clave primaria UUID por comando.
+El servicio compara identidad de actor (`source_client_id`), intención
+(`CONSUMIR`/`RESTAURAR`) y huella SHA-256 del payload de negocio antes de
+aplicar efectos. La PK y los CHECK por sí solos no validan la igualdad del
+fingerprint entre intentos ni coordinan consumo, recibo y publicación: el
+backend debe serializarlos en una transacción local y persistir Outbox.
+La referencia de G5 `order_id` continúa siendo texto opaco, nunca un UUID
+ficticio. `reservation_id` y `commercial_snapshot_ref` son precondiciones del
+consumo y no crean propiedad de Inventario/Ventas en este schema.
+
 ## 16. Proyecciones locales
 
 | Tabla / dato | Owner original | Actualización desde | Versionado | Reconstruible |
@@ -1161,6 +1236,7 @@ El backend valida autenticación, autorización, actividad de referencias y snap
 | coupon_uses | Sin estado/deleted_at | Hecho de consumo, política y restitución retenidos; borrado prohibido. Sí posee created_at/updated_at. |
 | catalog/price/stock_projection | Sin estado administrativo/deleted_at | Snapshot reconstruible; actividad/disponibilidad procede del owner, no nuevo ciclo de negocio. |
 | schema_migrations | applied_at en lugar de created_at; sin updated_at/deleted_at | Ledger del runner compartido. Apartamiento técnico pendiente de homologación BD, no una exención ya aprobada. |
+| coupon_command_receipts (0004) | received_at/completed_at; sin created_at ni updated_at | Excepción de ledger técnico declarada en migración/validation.sql; el owner BD debe homologarla si las convenciones generales la exigen. |
 
 promotion_scopes y coupon_uses no se declaran exentos de updated_at. Las seis tablas corregidas poseen created_at con NOT NULL/default now(). En registros previos, combinación/proyecciones usan updated_at conocido; uso usa consumed_at (y restored_at para updated_at); inbox usa received_at; scope usa created_at para updated_at. No se confunde esta aproximación con una auditoría histórica recuperada.
 
@@ -1248,9 +1324,19 @@ erDiagram
     schema_migrations {
         string version PK
     }
+    coupon_command_receipts {
+        uuid operation_id PK
+        string order_id
+        string source_client_id
+        string intention
+        string request_fingerprint
+        string status
+        timestamptz received_at
+        timestamptz completed_at
+    }
 ```
 
-Únicamente se dibujan las seis FK locales reales. Proyecciones/mensajes/ledger no crean FK externas; las claves únicas parciales por alcance se detallan en §8.
+Únicamente se dibujan las seis FK locales reales. Proyecciones/mensajes/ledger y `coupon_command_receipts` no crean FK externas; las claves únicas parciales por alcance se detallan en §8 y los índices nuevos en §8.14.
 
 ## 20. Trazabilidad lógico → físico
 
@@ -1269,6 +1355,7 @@ erDiagram
 | logical-model.md §3.11 — Outbox | `outbox` — detalle §8.11; migraciones 0001–0003 y validation.sql |
 | logical-model.md §3.12 — Inbox | `inbox` — detalle §8.12; migraciones 0001–0003 y validation.sql |
 | Necesidad técnica: logical-model.md §9; bd/deploy/migrate.py | `schema_migrations` — detalle §8.13; migraciones 0001–0003 y validation.sql |
+| ADR B4 / SPEC-005 / migración 0004 | `coupon_command_receipts` — detalle §8.14; migración 0004 y validation.sql |
 
 Campos derivados puedeCambiarModalidad/usosGlobalesConsumidos/usosDisponibles no se duplican; se obtienen de configuración e historia. Referencias externas permanecen escalares.
 
@@ -1280,6 +1367,7 @@ Campos derivados puedeCambiarModalidad/usosGlobalesConsumidos/usosDisponibles no
 | SPEC/HU/WF/FLOW-006, OpenAPI Promocion*, AlcancePromocionInput/PoliticaCombinacion | promotions, promotion_scopes, combination_policy; valores/canales/alcance/completitud/modalidad/historia. |
 | SPEC/HU/WF/FLOW-007, OpenAPI Regla*/RecomendadoRegla | recommendation_rules y recommendation_items; origen/candidatos/criterios/orden/periodo. |
 | Arquitectura §7.2 / AsyncAPI GenericData y MessageEnvelope | Tres proyecciones privadas, inbox/outbox y aislamiento. |
+| ADR B4, SPEC-005 y migración 0004 | `coupon_command_receipts`; identidad idempotente y resultado duradero por operación. |
 
 Fuentes funcionales: [SPEC-005](..\..\requisitos\specs\SPEC-005-gestion-cupones-descuento.md), [HU-005](..\..\requisitos\hu\HU-005-gestion-cupones-descuento.md), [WF-005](..\..\ux\wireframes\flows\WF-005-gestion-cupones-descuento.md), [FLOW-005](..\..\requisitos\flujos\FLOW-005-gestion-cupones-descuento.md); [SPEC-006](..\..\requisitos\specs\SPEC-006-gestion-ofertas-promociones.md), [HU-006](..\..\requisitos\hu\HU-006-gestion-ofertas-promociones.md), [WF-006](..\..\ux\wireframes\flows\WF-006-gestion-ofertas-promociones.md), [FLOW-006](..\..\requisitos\flujos\FLOW-006-gestion-ofertas-promociones.md); [SPEC-007](..\..\requisitos\specs\SPEC-007-reglas-venta-cruzada-upselling.md), [HU-007](..\..\requisitos\hu\HU-007-reglas-venta-cruzada-upselling.md), [WF-007](..\..\ux\wireframes\flows\WF-007-reglas-venta-cruzada-upselling.md), [FLOW-007](..\..\requisitos\flujos\FLOW-007-reglas-venta-cruzada-upselling.md).
 
@@ -1309,7 +1397,7 @@ No se añaden datos de IGV/base imponible, costo de envío, Pickup, ubicación/t
 | P-PHY-03 | Homologar claves heredadas y estructura inbox/outbox con convenciones §6/§10 | Catalog/stock y mensajes sin surrogate id; estructura MessageEnvelope implementada difiere de ejemplo | Aprobación BD y despliegue; no declarar excepción autorizada |
 | P-PHY-04 | Ledger compartido: PK/nombres/applied_at, runner transversal | No modificar mecanismo de otros schemas desde promotions | Dictamen transversal sobre excepciones |
 | P-PHY-05 | Resolver CHECK vs ENUM y exposición/roles contradictorios | Decisiones documentadas, no alterar contratos ni conceder permisos por inercia | Aprobación BD/seguridad previa al despliegue |
-| P-PHY-06 | Reunir SQL de todo el sistema y dictamen BD/QA | Despliegue conjunto pendiente por indicación de Axel | Despliegue compartido y cierre #53 |
+| P-PHY-06 | Cerrar dictamen BD/QA, pruebas de backend e integración tras 0004 | El DDL se desplegó en Supabase compartido, pero servicios/eventos siguen sin validación E2E | Bloquea aprobación funcional/final y cierre #53; no bloquea constatar instalación SQL |
 
 No se cambia customer_ref a text ni se renombra un nombre heredado sin modificar primero la fuente transversal que contiene la contradicción.
 
@@ -1320,36 +1408,71 @@ No se cambia customer_ref a text ni se renombra un nombre heredado sin modificar
 | [0001](migrations/0001_promotions_persistence.sql) | Persistencia inicial, funciones/grants/protecciones. | Publicada; checksum conservado. |
 | [0002](migrations/0002_promotions_global_price_projection.sql) | Canal global NULL, surrogate ID y UNIQUE NULLS NOT DISTINCT para precio. | Upgrade conserva snapshots. |
 | [0003](migrations/0003_promotions_timestamps_and_delete_rules.sql) | Seis created_at, dos updated_at, seis RESTRICT, triggers convencionales y guard histórico compatible. | Backfill atómico de registros existentes; no eliminar tablas/filas ni cambiar UUID. |
+| [0004](migrations/0004_coupon_idempotency_receipts.sql) | Nuevo ledger `coupon_command_receipts`, PK `operation_id`, huella de solicitud, resultado persistido e índices por pedido/recepción; grants mínimos. | Migración incremental **aplicada y validada** en Supabase compartido el 11/10/2026; checksum `84a628ee569abbe62524e8874505f3440ce299487d4cba8d1b88647b8743e061`. No modifica `0001`–`0003` ni implementa handlers. |
 
-Administrador ejecuta bootstrap/provisión; deployer usa bd/deploy/migrate.py promotions. Runner por schema con advisory lock, transacción DDL+ledger, checksum canónico UTF-8/LF, numeración continua y rollback ante fallo. 0003 suspende temporalmente solo triggers de usuario afectados para backfill, dentro de la transacción del runner, y los habilita antes de confirmar; pruebas comprueban restauración y datos históricos. Nunca se editan 0001/0002. No hay cambios destructivos de modelo ni segundo historial Supabase.
+Administrador ejecuta bootstrap/provisión; deployer usa bd/deploy/migrate.py promotions. Runner por schema con advisory lock, transacción DDL+ledger, checksum canónico UTF-8/LF, numeración continua y rollback ante fallo. 0003 suspende temporalmente solo triggers de usuario afectados para backfill, dentro de la transacción del runner, y los habilita antes de confirmar; pruebas comprueban restauración y datos históricos. Nunca se editan 0001/0002/0003/0004 aplicadas. No hay cambios destructivos de modelo ni segundo historial Supabase; las nuevas reglas de handler pertenecen al backend.
 
 ## 25. Validación
 
-[validation.sql](validation.sql): **122 assertions PASS**. [verify.py](tests/verify.py): **47 comprobaciones PASS**.
+**Validación actual de Supabase:** [`validation.sql`](validation.sql) ejecutó
+**132 aserciones con resultado `PASS`**, según la evidencia SQL aportada para
+el despliegue de Promociones (11–12/10/2026). Su transacción de fixtures
+termina en `ROLLBACK`; no registra datos comerciales persistentes.
+El procedimiento transversal `datos/deploy/README.md` también consigna la
+instalación de 0004 y el postcheck estructural del despliegue.
 
-Cobertura: inventario de doce tablas/ledger; tipos/NOT NULL/defaults de timestamps por tabla; diez triggers de updated_at; UUID de customer_ref; seis FK RESTRICT e índices; aislamiento/grants/invoker; invariantes/idempotencia/restitución; proyecciones y rollback inbox/outbox. El diccionario se coteja con 116 columnas, 94 constraints, 31 índices, 15 funciones y 26 triggers de usuario.
+**Cobertura vigente:** las doce tablas funcionales, el ledger técnico
+`schema_migrations` y la nueva tabla `coupon_command_receipts` (**14 tablas
+en total; 13 excluyendo `schema_migrations`**). Se comprueban tipos, CHECK,
+PK, los dos índices adicionales, permisos por columna, inmutabilidad de
+fingerprint/identidad, ausencia de DELETE runtime, historia de usos,
+restauración, transacciones/rollback y aislamiento de ownership.
 
-Pruebas negativas alteran esquema solo en transacciones locales: columna ausente, null permitido, timestamp sin zona, default/trigger ausentes, FK implícita, customer_ref text y nombre fuera del inventario; el validador debe fallar con el diagnóstico esperado. Todas las alteraciones se revierten. Upgrade sembrado en 0001 conserva siete tablas afectadas y fechas/snapshots/cliente; comprobaciones de concurrencia con sesiones reales en base efímera. Los fixtures de validación usan ROLLBACK y el schema principal termina sin datos comerciales. Evidencia y límites en [validation-report](validation-report.md). No se confunde PASS local con aprobación BD o integración backend.
+**Evidencia histórica:** el informe previo registraba 122 aserciones SQL y
+47 comprobaciones locales con `verify.py`, correspondientes a la revisión
+anterior a 0004. Esas cifras se preservan solo como antecedente, no como
+cobertura vigente ni como ejecución nuevamente observada de `verify.py`.
+El inventario físico anterior (116 columnas, 94 constraints, 31 índices,
+15 funciones y 26 triggers) tampoco incluye los objetos adicionales de 0004;
+no debe presentarse como total actual. La migración agrega 13 columnas, una
+PK, ocho CHECK y dos índices explícitos (además del índice de PK); verificar
+sus totales completos contra `pg_catalog` si se publican como inventario formal.
+
+**Alcance de PASS:** conformidad de estructura/permisos y lógica SQL probada,
+no contratos HTTP/AsyncAPI ejecutados, no consumidor/proveedor real, no
+publicador RabbitMQ y no aceptación formal de decisiones transversales.
+Las pruebas de backend/concurrencia de mensajes deben permanecer pendientes
+hasta disponer de servicios reales y evidencia trazable de sus commits.
 
 ## 26. Despliegue en Supabase
 
-**PENDIENTE.** Axel indicó reunir primero el SQL de todo el sistema. Antes de ejecutar: cerrar dictamen BD/QA y decisiones transversales bloqueantes, comprobar proyecto/versión, preparar roles privados, ejecutar runner y validation, verificar permisos/exposición/advisors e integración real.
+**Promociones 0004: DESPLEGADA Y VALIDADA ESTRUCTURALMENTE.** La evidencia
+aportada incluye PostgreSQL 17.11 en Supabase, migración aplicada en el
+ledger del schema `promotions`, postcheck estructural del despliegue y
+`validation.sql` con 132/132 aserciones `PASS`. El checksum esperado de
+`0004_coupon_idempotency_receipts.sql` es
+`84a628ee569abbe62524e8874505f3440ce299487d4cba8d1b88647b8743e061`.
 
-| Evidencia requerida | Estado |
+| Evidencia | Estado comprobado / pendiente |
 |---|---|
-| Entorno/schema/versión PostgreSQL real | Pendiente de proyecto compartido. |
-| Commit de entrega y PR asociado | Pendientes de entrega/revisión formal; no atribuir 0003 a un commit anterior. |
-| Versiones 0001–0003 y checksums | Locales, capturados en validation-result.json; falta ledger del proyecto. |
-| Fecha/resultado validation y smoke test del servicio | Evidencia local disponible; proyecto/backend pendientes. |
-| Seguridad del proyecto: schema privado, grants/advisors | Pendiente de comprobación real. |
+| Entorno | Proyecto compartido Supabase; PostgreSQL 17.11 reportado. |
+| DDL de Promotions | 0001–0004 forman la secuencia documentada; 0004 aplicada y registrada en su ledger. |
+| Validación SQL | `validation.sql`: 132 assertions `PASS`, fixtures transaccionales sin persistencia. |
+| Permisos runtime | SQL valida acceso `SELECT`/`INSERT`, `UPDATE` limitado y denegaciones críticas. |
+| Checksums | Conservar los valores ya aplicados; 0004 usa SHA-256 del manifiesto anterior. No modificar migraciones publicadas. |
+| Auditoría formal BD/QA | Pendiente de dictamen y homologaciones documentales §23. |
+| Servicios y eventos de integración | **No acreditados**: backend, Outbox worker real, consumos por broker, integración con Ventas/G7 y E2E. |
 
-No guardar secretos, tokens, connection strings ni credenciales. El despliegue deberá coincidir con la revisión versionada completa. No cerrar #53 por validación local.
+Este cambio documental no ejecuta ni reejecuta SQL. No alterar ledger,
+migraciones antiguas, usuarios o permisos de Supabase. No incluir credenciales,
+JWT, cadenas de conexión ni secretos en el repositorio. Las migraciones
+verificadas no deben presentarse como una API ya desplegada.
 
 ## 27. Checklist de aprobación
 
 ### 27.1. Correspondencia lógica
 
-- [x] Doce entidades/necesidades técnicas y ledger trazables, sin reglas funcionales nuevas.
+- [x] Doce entidades funcionales y dos objetos técnicos (`schema_migrations`, `coupon_command_receipts`) trazables; sin nuevas reglas de dominio.
 - [x] Referencias externas sin ownership ni FK cruzados; cardinalidades protegidas.
 
 ### 27.2. Aislamiento
@@ -1364,7 +1487,8 @@ No guardar secretos, tokens, connection strings ni credenciales. El despliegue d
 ### 27.4. Tipos y timestamps
 
 - [x] Sin float/money/timestamp sin zona para valores e instantes.
-- [x] Doce tablas con created_at; updated_at y triggers salvo inbox/outbox exentos.
+- [x] Las doce tablas originales conservan su régimen de timestamps; `schema_migrations` y `coupon_command_receipts` mantienen sus excepciones técnicas documentadas.
+- [ ] Homologar formalmente la excepción de `received_at/completed_at` del ledger 0004.
 - [ ] Resolver decisión de tipos CHECK/ENUM y excepción técnica del ledger.
 
 ### 27.5. Integridad
@@ -1398,12 +1522,36 @@ No guardar secretos, tokens, connection strings ni credenciales. El despliegue d
 ### 27.11. Evidencia
 
 - [x] Validación local, upgrade y concurrencia satisfactorios.
-- [ ] Dictamen BD/QA, PR y evidencia del despliegue Supabase.
+- [x] Evidencia de despliegue estructural de 0004 en Supabase y 132 aserciones SQL `PASS`.
+- [ ] Dictamen BD/QA, pruebas de backend/Outbox/E2E y cierre formal del PR.
 
 ## 28. Resultado de revisión
 
-Resultado: **REQUIERE CAMBIOS**; dictamen formal BD/QA pendiente.
+**Resultado acotado:** `PASS` para estructura y verificaciones SQL ejecutadas
+en Supabase, incluyendo `coupon_command_receipts` de 0004; **aprobación final
+del diseño físico e integración todavía pendiente**. La evidencia SQL no
+constituye dictamen de BD/QA ni conformidad de consumidores externos.
 
-Correcciones de timestamps, FK, plantilla y cobertura completadas con evidencia local. Mantener abiertos dictamen de Leonardo Lopez/Marco Castilla, homologaciones de §23, integración de consumidores/backend y despliegue conjunto. Las verificaciones locales no resuelven decisiones transversales ni representan aprobación externa.
+**Pendientes explícitos:** homologar excepciones de timestamps/ledger y
+estructura técnica (§23), resolver integración con G5/G7 y probar servicio,
+Outbox, concurrencia, errores idempotentes y eventos end-to-end. No se anuncia
+`promotions-svc` como desplegado por tener una migración instalada.
 
-Revisor BD/QA: **pendiente**. Fecha de dictamen: **pendiente**. Revisión técnica local registrada por Axel: 2026-10-03, con alcance y resultados de validation-report.
+**Revisor BD/QA:** dictamen formal pendiente. **Historia:** revisión inicial
+de Axel (03/10/2026); migración 0004 y validación estructural del proyecto
+compartido registradas el 11–12/10/2026. No cerrar la issue #53 basándose
+solo en el resultado de pruebas SQL.
+
+## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+
+**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+
+- `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
+- `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
+- Nuevos contratos provisionales: `GET /inventario/operaciones/{operationId}` (solo Ventas; scope `inventario:operaciones:leer`) y `POST /inventario/disponibilidad/comercial/verificar` (canales, consulta sin efectos).
+- Nuevo evento `inventory.reservation.rejected`; resultados de reserva/consumo/liberación/expiración con datos tipados y correlación obligatoria.
+- `D-INV-01`: no se suman saldos de ubicaciones independientes por defecto. Un canal obtiene `INDETERMINADO` cuando el punto único de cumplimiento no se puede resolver. `SUFICIENTE` exige una fuente de abastecimiento realizable para la cantidad completa; no supone reserva.
+- Cupones: después de reserva confirmada, Ventas envía `reservation_id` y `commercial_snapshot_ref` al solicitar consumo. Los resultados de consumo se tipan y la restauración se vincula a la operación previamente consumida.
+- Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
+- Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
+- Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.

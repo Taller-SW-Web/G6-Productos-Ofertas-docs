@@ -1,7 +1,7 @@
 # Alineación Marketplace ↔ Productos y Ofertas
 
 **Estado:** homologación contractual HTTP 0.5.0
-**Fuente HTTP autoritativa:** [`../api/openapi.yaml`](..\contratos\http\openapi.yaml)
+**Fuente HTTP autoritativa:** [`../contratos/http/openapi.yaml`](../contratos/http/openapi.yaml)
 
 ## 1. Objetivo
 
@@ -95,12 +95,25 @@ Respuesta mínima:
 
 ```text
 sku
-status ∈ {DISPONIBLE, STOCK_BAJO, AGOTADO}
+status ∈ {DISPONIBLE, STOCK_BAJO, AGOTADO, INDETERMINADO}
 ```
 
 No se exponen cantidades internas ni desglose por ubicación.
 
-**Estado:** provisional mientras `D-INV-01` siga abierta, porque el saldo autoritativo existe por `(sku, location_id)` y todavía no se ha definido la reducción multiubicación a un único estado comercial.
+**Política:** `D-INV-01` ya fue adoptada: la proyección no suma saldos de tiendas o ubicaciones independientes. Si no existe una ubicación elegible única o el mapeo de cumplimiento es ambiguo, se devuelve `INDETERMINADO`, no `AGOTADO`. **El endpoint permanece provisional hasta contar con implementación y pruebas de conformidad**, no porque falte decidir la política.
+
+### 6.1. Verificación de cantidad para un contexto de cumplimiento
+
+```text
+POST /api/v1/inventario/disponibilidad/comercial/verificar
+scope: inventario:disponibilidad:leer
+client_id: modulo-marketplace
+body: channel_id=MARKETPLACE, fulfillment={mode, fulfillment_ref?}, lines=[{sku, quantity}]
+```
+
+La respuesta `binding=false` solo devuelve resultados por línea: `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO`. `SUFICIENTE` exige una única fuente de cumplimiento factible para toda la cantidad solicitada; no constituye reserva ni garantía de checkout. Una referencia de cumplimiento sin mapeo interno inequívoco genera `INDETERMINADO`, nunca una suma de tiendas. El contexto estructuralmente o semánticamente inválido se trata según OpenAPI, sin exponer `location_id`.
+
+El **GET** comercial devuelve estados (`DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`, `INDETERMINADO`); no devuelve `SUFICIENTE`. Solo Ventas/Postventa ejecuta reservas.
 
 ## 7. Cupones y promociones
 
@@ -191,3 +204,19 @@ El registro efectivo de grants depende del módulo de Seguridad.
 - `CT-MKT-13`: correlación.
 
 La homologación no se considera cerrada runtime hasta que las pruebas aplicables cuenten con evidencia reproducible.
+
+## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+
+**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+
+- `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
+- `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
+- Nuevos contratos provisionales: `GET /inventario/operaciones/{operationId}` (solo Ventas; scope `inventario:operaciones:leer`) y `POST /inventario/disponibilidad/comercial/verificar` (canales, consulta sin efectos).
+- Nuevo evento `inventory.reservation.rejected`; resultados de reserva/consumo/liberación/expiración con datos tipados y correlación obligatoria.
+- `D-INV-01`: no se suman saldos de ubicaciones independientes por defecto. Un canal obtiene `INDETERMINADO` cuando el punto único de cumplimiento no se puede resolver. `SUFICIENTE` exige una fuente de abastecimiento realizable para la cantidad completa; no supone reserva.
+- Cupones: después de reserva confirmada, Ventas envía `reservation_id` y `commercial_snapshot_ref` al solicitar consumo. Los resultados de consumo se tipan y la restauración se vincula a la operación previamente consumida.
+- Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
+- Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
+- Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+**Canales:** un resultado `SUFICIENTE` del **POST de verificación** es informativo; Ventas sigue siendo quien reserva. `INDETERMINADO` obliga a no prometer disponibilidad de la cantidad solicitada.

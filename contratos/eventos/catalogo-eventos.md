@@ -16,6 +16,8 @@ routing key = nombre lógico del mensaje
 
 ## Mensajes
 
+**Alcance editorial:** esta tabla refleja **40 mensajes lógicos** del AsyncAPI candidato `0.6.0-rc.1`, junto con **40 canales**. El antecedente `0.5.0` contenía 39 mensajes. Los estados `stable`, `closed` y `provisional` describen contratos, **no** prueban publicación efectiva ni conformidad E2E.
+
 | Nombre | Tipo | Productor | Consumidores | Estado |
 |---|---|---|---|---|
 | `catalog.bulk.upsert.completed` | `result` | `catalog-svc` | bulk-svc | `internal-provisional` |
@@ -31,6 +33,7 @@ routing key = nombre lógico del mensaje
 | `inventory.consumption.rejected` | `result` | `inventory-svc` | modulo-ventas | `provisional` |
 | `inventory.reservation.consumed` | `event` | `inventory-svc` | modulo-ventas, api-gateway/bff | `provisional` |
 | `inventory.reservation.created` | `event` | `inventory-svc` | modulo-ventas, api-gateway/bff | `provisional` |
+| `inventory.reservation.rejected` | `result` | `inventory-svc` | modulo-ventas | `provisional` |
 | `inventory.reservation.expired` | `event` | `inventory-svc` | modulo-ventas, api-gateway/bff | `provisional` |
 | `inventory.reservation.released` | `event` | `inventory-svc` | modulo-ventas, api-gateway/bff | `provisional` |
 | `inventory.sku.initialization.completed` | `result` | `inventory-svc` | catalog-svc | `closed` |
@@ -71,7 +74,7 @@ hasta 3 retries
 <main>.dlq
 ```
 
-La tabla exacta de exchanges, queues y bindings está en `api/rabbitmq-topologia.md`.
+La tabla exacta de exchanges, queues y bindings está en [`rabbitmq-topologia.md`](./rabbitmq-topologia.md). La topología documentada no sustituye la verificación de recursos realmente creados en RabbitMQ.
 
 ## Semántica de operation_id, message_id y causation_id en preparación de Catálogo (FLOW-003 / FLOW-004)
 
@@ -100,17 +103,17 @@ Aplica específicamente a los comandos y resultados de inicialización:
    - Un resultado tardío de un intento anterior se registra/ignora idempotentemente como stale y NO puede reemplazar ni degradar el estado del intento actual.
    - Ejemplo:
      ```text
-     operation_id = PREP-123
+     operation_id = 11111111-1111-4111-8111-111111111111
 
-     attempt 1:
-     requested.message_id = MSG-A
-     rejected.causation_id = MSG-A
+      attempt 1:
+      requested.message_id = 22222222-2222-4222-8222-222222222222
+      rejected.causation_id = 22222222-2222-4222-8222-222222222222
 
-     manual retry:
-     requested.message_id = MSG-B
-     completed.causation_id = MSG-B
+      manual retry:
+      requested.message_id = 33333333-3333-4333-8333-333333333333
+      completed.causation_id = 33333333-3333-4333-8333-333333333333
      ```
-     Si llega un mensaje tardío con `causation_id = MSG-A` mientras el intento activo es `MSG-B`, Catálogo lo registra/ignora como stale y no toca el intento `MSG-B`.
+     Si llega un resultado tardío del intento `22222222-2222-4222-8222-222222222222` mientras el intento activo es `33333333-3333-4333-8333-333333333333`, Catálogo lo registra/ignora como stale y no modifica el intento activo. Estos UUID son ilustrativos y no son identificadores reales del entorno.
 4. **Reconocimiento en el consumidor tras `REJECTED`:**
    - Después de emitir un resultado `*.rejected`, el consumidor puede recibir posteriormente un nuevo mensaje con una **nueva `message_id`** pero con la **misma `operation_id`**.
    - El consumidor debe reconocer que este mensaje representa un nuevo intento autorizado de la misma preparación lógica, y **no** una segunda entidad de negocio.
@@ -123,3 +126,17 @@ Aplica específicamente a los comandos y resultados de inicialización:
    - **No se debe republicar ciegamente el payload antiguo rechazado**.
    - Si un rechazo de pricing exigiese alterar el precio base inicial, `manual_retry_allowed` permanece en `false` porque la API de Catálogo no expone una operación para modificar el precio base inicial en el borrador; el reintento manual solo puede admitirse para causas subsanables con operaciones vigentes.
    - Conservar la `operation_id` no significa congelar el payload rechazado.
+
+## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+
+**Decisión interna aprobada; objetivo `0.6.0-rc.1` (no desplegado).** La decisión D-INV-01 está adoptada; la implementación y las pruebas de sus flujos siguen pendientes. Los resultados tipados de rechazo son resultados de negocio válidos, no mensajes poison; los fallos técnicos siguen la política retry/DLQ.
+
+- `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
+- `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
+- Nuevos contratos provisionales: `GET /inventario/operaciones/{operationId}` (solo Ventas; scope `inventario:operaciones:leer`) y `POST /inventario/disponibilidad/comercial/verificar` (canales, consulta sin efectos).
+- Nuevo mensaje de resultado `inventory.reservation.rejected` (no tratarlo como reserva creada); resultados de reserva/consumo/liberación/expiración con datos tipados y correlación obligatoria. Los rechazos definitivos v2 llevan `result_code` no vacío. Un `202 Accepted` por HTTP no acredita el éxito de la reserva; Ventas debe correlacionar el resultado final o recuperar el estado durable de la operación.
+- `D-INV-01`: no se suman saldos de ubicaciones independientes por defecto. Un canal obtiene `INDETERMINADO` cuando el punto único de cumplimiento no se puede resolver. `SUFICIENTE` exige una fuente de abastecimiento realizable para la cantidad completa; no supone reserva.
+- Cupones: después de reserva confirmada, Ventas envía `reservation_id` y `commercial_snapshot_ref` al solicitar consumo. Los resultados de consumo se tipan y la restauración se vincula a la operación previamente consumida.
+- Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
+- Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
+- Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.

@@ -1,7 +1,7 @@
 # Alineación Retail ↔ Productos y Ofertas — Código de barras → SKU
 
 **Estado:** homologación contractual HTTP 0.5.0
-**Fuente HTTP autoritativa:** [`../api/openapi.yaml`](..\contratos\http\openapi.yaml)
+**Fuente HTTP autoritativa:** [`../contratos/http/openapi.yaml`](../contratos/http/openapi.yaml)
 
 ## 1. Acuerdo confirmado
 
@@ -147,13 +147,22 @@ La respuesta comercial usa:
 DISPONIBLE
 STOCK_BAJO
 AGOTADO
+INDETERMINADO
 ```
 
-y no expone saldos internos. Esta proyección sigue provisional mientras `D-INV-01` esté abierta.
+y no expone saldos internos. `D-INV-01` ya fue adoptada: no se combinan existencias de tiendas independientes. Si no existe una tienda/ubicación única elegible, devolver `INDETERMINADO` en lugar de inferir `AGOTADO`. El endpoint sigue provisional hasta probar su implementación.
+
+### 9.1. Verificación por cantidad y tienda
+
+Después de resolver el código de barras a `sku`, Retail puede consultar `POST /api/v1/inventario/disponibilidad/comercial/verificar` con `channel_id=RETAIL`, `fulfillment.mode=VENTA_TIENDA` o `RETIRO_TIENDA`, una `fulfillment_ref` pública/opaca de tienda y líneas `{sku, quantity}`. Inventario resuelve internamente tienda → `location_id`; Retail **nunca** recibe esa ubicación interna.
+
+La respuesta `binding=false` contiene `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO`. Si el mapeo no existe o es ambiguo, se responde `INDETERMINADO` y no debe confirmarse stock. No sumar tiendas. Un `SUFICIENTE` es informativo: Ventas orquesta las reservas y confirmaciones de la venta online; una venta Retail offline se concilia sin reserva retroactiva según SPEC-015. El acceso sigue sujeto a Seguridad/G7.
+
+El **GET** comercial devuelve estados (`DISPONIBLE/STOCK_BAJO/AGOTADO/INDETERMINADO`), no resultados `SUFICIENTE`.
 
 ## 10. Casos contractuales mínimos
 
-- `CT-RTL-BAR-01`: simple → `sku_base`.
+- `CT-RTL-BAR-01`: producto simple → respuesta con campo `sku`, cuyo valor corresponde al SKU base vendible (no existe un campo de respuesta `sku_base`).
 - `CT-RTL-BAR-02`: variante → SKU de variante.
 - `CT-RTL-BAR-03`: inexistente → 404.
 - `CT-RTL-BAR-04`: preserva ceros a la izquierda.
@@ -162,3 +171,19 @@ y no expone saldos internos. Esta proyección sigue provisional mientras `D-INV-
 - `CT-RTL-BAR-07`: allowlist exclusiva de Retail.
 - `IT-RTL-BAR-01`: un código no resuelve a dos SKU.
 - `IT-RTL-BAR-02`: después de resolver, Pricing/Inventario usan SKU.
+
+## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+
+**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+
+- `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
+- `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
+- Nuevos contratos provisionales: `GET /inventario/operaciones/{operationId}` (solo Ventas; scope `inventario:operaciones:leer`) y `POST /inventario/disponibilidad/comercial/verificar` (canales, consulta sin efectos).
+- Nuevo evento `inventory.reservation.rejected`; resultados de reserva/consumo/liberación/expiración con datos tipados y correlación obligatoria.
+- `D-INV-01`: no se suman saldos de ubicaciones independientes por defecto. Un canal obtiene `INDETERMINADO` cuando el punto único de cumplimiento no se puede resolver. `SUFICIENTE` exige una fuente de abastecimiento realizable para la cantidad completa; no supone reserva.
+- Cupones: después de reserva confirmada, Ventas envía `reservation_id` y `commercial_snapshot_ref` al solicitar consumo. Los resultados de consumo se tipan y la restauración se vincula a la operación previamente consumida.
+- Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
+- Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
+- Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+**Retail:** `fulfillment_ref` es una referencia pública de tienda (no se permite exponer `location_id`). La correspondencia tienda→ubicación debe provisionarse en Inventario y validarse antes de afirmar suficiencia.

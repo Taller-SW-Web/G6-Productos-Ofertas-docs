@@ -7,6 +7,9 @@
 -- Uso:  psql -v ON_ERROR_STOP=1 -f validation.sql
 -- ============================================================================
 
+BEGIN;
+SET LOCAL ROLE po_inventory_owner;
+
 DO $$
 DECLARE
     v_ns            oid;
@@ -75,6 +78,56 @@ BEGIN
         RAISE EXCEPTION 'VALIDACION FALLADA [2e]: locations.external_ref debe ser nullable';
     END IF;
 
+    -- ---------------------------------------------------------------- 2f.
+    -- Integracion Inventario 0002: identidad, correlacion y rutas comerciales.
+    -- ----------------------------------------------------------------
+    IF (SELECT count(*) FROM inventory.schema_migrations) <> 2
+       OR NOT EXISTS (SELECT 1 FROM inventory.schema_migrations
+            WHERE version='0002_order_id_operaciones_disponibilidad.sql'
+              AND checksum='fb34676d4583f6923d04ad2e86acd55857b4a7a63fe3c7b78a61b5ed1bbe148a')
+       OR NOT EXISTS (SELECT 1 FROM inventory.schema_migrations
+            WHERE (version='0001_create_inventory.sql' AND
+                   checksum='b93267e287fbf9245881473beb53c1b5715f132b972348225f3786e2fe9cbb69')
+               OR (version='0001_inventory_initial.sql' AND
+                   checksum='3f9db5f62391680a5fae6d16a77a86b67cf0b9d02837bf22c6b73890165bd0b8')) THEN
+        RAISE EXCEPTION 'VALIDACION FALLADA [2f]: historial de inventory inesperado';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE
+        attrelid='inventory.reservations'::regclass AND attname='order_id'
+        AND atttypid='text'::regtype AND NOT attisdropped)
+       OR NOT EXISTS (SELECT 1 FROM pg_attribute WHERE
+        attrelid='inventory.inventory_operations'::regclass AND attname='order_id'
+        AND atttypid='text'::regtype AND NOT attisdropped)
+       OR NOT EXISTS (SELECT 1 FROM pg_attribute WHERE
+        attrelid='inventory.inventory_operations'::regclass AND attname='operation_id'
+        AND atttypid='uuid'::regtype AND NOT attisdropped)
+       OR NOT EXISTS (SELECT 1 FROM pg_attribute WHERE
+        attrelid='inventory.reservations'::regclass AND attname='accepted_payload'
+        AND atttypid='jsonb'::regtype AND NOT attisdropped)
+       OR to_regclass('inventory.commercial_fulfillment_routes') IS NULL THEN
+        RAISE EXCEPTION 'VALIDACION FALLADA [2g]: faltan columnas/tipos o rutas de 0002';
+    END IF;
+    IF (SELECT count(*) FROM pg_index i
+         JOIN pg_class c ON c.oid=i.indexrelid
+         JOIN pg_namespace n ON n.oid=c.relnamespace
+         WHERE n.nspname='inventory' AND i.indisvalid AND i.indisunique
+           AND c.relname IN ('uq_inventory_operations_operation_id',
+                             'uq_inventory_reservations_operation_id',
+                             'uq_commercial_fulfillment_routes_active')) <> 3 THEN
+        RAISE EXCEPTION 'VALIDACION FALLADA [2h]: faltan indices unicos de 0002';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='po_inventory_runtime')
+       OR NOT has_schema_privilege('po_inventory_runtime','inventory','USAGE')
+       OR has_schema_privilege('po_inventory_runtime','inventory','CREATE')
+       OR NOT has_table_privilege('po_inventory_runtime',
+                       'inventory.commercial_fulfillment_routes','SELECT')
+       OR has_table_privilege('po_inventory_runtime',
+                       'inventory.commercial_fulfillment_routes','INSERT,UPDATE,DELETE')
+       OR has_table_privilege('po_inventory_runtime',
+                       'inventory.schema_migrations','INSERT,UPDATE,DELETE') THEN
+        RAISE EXCEPTION 'VALIDACION FALLADA [2i]: permisos runtime de inventario';
+    END IF;
+
     -- ---------------------------------------------------------------- 3.
     -- Coherencia de tipos y FK internas hacia inventory.locations
     -- ----------------------------------------------------------------
@@ -126,6 +179,19 @@ BEGIN
     INSERT INTO inventory.locations (code, name, type, external_ref)
     VALUES ('V-LOC-DEST', 'Almacén Destino Prueba', 'TIENDA', NULL)
     RETURNING id INTO v_loc_dest_id;
+
+    -- Prueba de ruta activa unica por canal/modo/referencia.
+    INSERT INTO inventory.commercial_fulfillment_routes
+        (channel_id, mode, fulfillment_ref, location_id)
+    VALUES ('RETAIL','RETIRO_TIENDA','V-REF-ROUTE',v_loc_id);
+    BEGIN
+        INSERT INTO inventory.commercial_fulfillment_routes
+            (channel_id, mode, fulfillment_ref, location_id)
+        VALUES ('RETAIL','RETIRO_TIENDA','V-REF-ROUTE',v_loc_dest_id);
+        RAISE EXCEPTION 'VALIDACION FALLADA [5r]: se admitio una ruta activa duplicada';
+    EXCEPTION WHEN unique_violation THEN
+        NULL;
+    END;
 
     -- Unicidad de código de ubicación
     BEGIN
@@ -487,21 +553,8 @@ BEGIN
     END;
 
     -- ---------------------------------------------------------------- 19.
-    -- Limpieza de datos de prueba
+    -- Fixtures revertidos por ROLLBACK, sin limpieza global de tablas reales.
     -- ----------------------------------------------------------------
-    DELETE FROM inventory.inbox WHERE message_type = 'inventory.reservation.requested';
-    DELETE FROM inventory.outbox WHERE aggregate_id LIKE 'V-%' OR event_type = 'dup';
-    DELETE FROM inventory.kardex WHERE sku_id LIKE 'V-%';
-    DELETE FROM inventory.reservations WHERE idempotency_key LIKE 'V-%';
-    DELETE FROM inventory.traslados WHERE sku_id LIKE 'V-%';
-    DELETE FROM inventory.incidencias WHERE sku_id LIKE 'V-%';
-    DELETE FROM inventory.inventory_operations WHERE idempotency_key LIKE 'V-%';
-    DELETE FROM inventory.dashboard_projection WHERE sku_id LIKE 'V-%';
-    DELETE FROM inventory.stock_threshold_override WHERE sku_id LIKE 'V-%';
-    DELETE FROM inventory.stock_threshold_override WHERE sku_id IS NULL AND location_id IS NULL;
-    DELETE FROM inventory.stock_balance WHERE sku_id LIKE 'V-%';
-    DELETE FROM inventory.locations WHERE code LIKE 'V-%';
-
     -- ---------------------------------------------------------------- 20.
     -- Resumen
     -- ----------------------------------------------------------------
@@ -518,3 +571,4 @@ SELECT 'VALIDACION_FINALIZADA_SATISFACTORIAMENTE' AS resultado,
        count(*) AS total_tablas
   FROM information_schema.tables
  WHERE table_schema = 'inventory';
+ROLLBACK;

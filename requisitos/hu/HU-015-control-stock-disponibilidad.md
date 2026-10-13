@@ -2,7 +2,7 @@
 
 **Responsable:** Miguel Ángel Taco Zavala  
 **Rama:** taco  
-**Trazabilidad:** SPEC [SPEC-015](../specs/SPEC-015-control-stock-disponibilidad.md) | Wireframe [WF-015](..\..\ux\wireframes\flows\WF-015-control-stock-disponibilidad.md)
+**Trazabilidad:** SPEC [SPEC-015](../specs/SPEC-015-control-stock-disponibilidad.md) | Wireframe [WF-015](../../ux/wireframes/flows/WF-015-control-stock-disponibilidad.md) | Decisión [ADR-DEC-F-BLOQUEANTES](../../arquitectura/decisiones/ADR-DEC-F-BLOQUEANTES.md) (B3 — D-INV-01)
 
 ---
 
@@ -33,10 +33,10 @@ available = max(on_hand - reserved - blocked, 0)
 | ID | Criterio |
 |---|---|
 | **CA-01** | Cada saldo autoritativo se identifica por `(sku, location_id)`. |
-| **CA-02** | La consulta devuelve como mínimo `on_hand`, `reserved`, `blocked`, `available`, `status` y `stock_version` cuando corresponda. |
+| **CA-02** | La **consulta detallada de saldo autoritativo** devuelve como mínimo `on_hand`, `reserved`, `blocked`, `available`, `status` y `stock_version` cuando corresponda; la proyección comercial tiene contrato diferente. |
 | **CA-03** | `available = max(on_hand - reserved - blocked, 0)`. |
 | **CA-04** | Siempre se cumple `on_hand >= 0`, `reserved >= 0`, `blocked >= 0`, `reserved + blocked <= on_hand` y `available >= 0`. |
-| **CA-05** | El estado `AGOTADO/STOCK_BAJO/DISPONIBLE` se calcula sobre `available`. |
+| **CA-05** | El estado del saldo autoritativo `AGOTADO/STOCK_BAJO/DISPONIBLE` se calcula sobre `available` por `(sku, location_id)`; la proyección comercial aplica adicionalmente D-INV-01 y puede ser `INDETERMINADO`. |
 | **CA-06** | Marketplace y Chatbot solo consultan Inventario. |
 | **CA-07** | Retail no reserva, consume, libera, reintegra ni concilia stock por una venta directamente. |
 | **CA-08** | Cuando un pedido entra en `CREADO`, Ventas/Postventa puede solicitar idempotentemente una reserva. |
@@ -65,7 +65,7 @@ available = max(on_hand - reserved - blocked, 0)
 | **CA-31** | Si no puede aplicarse toda la venta offline, el resultado es `REQUIRES_REVIEW` con `unresolved_quantity > 0`; nunca se permite saldo negativo. |
 | **CA-32** | Repetir la misma conciliación offline con la misma identidad no duplica efectos. |
 | **CA-33** | `modulo-ventas` usa `inventario:reservar`, `inventario:consumir`, `inventario:liberar`, `inventario:reintegrar` e `inventario:conciliar-offline`. |
-| **CA-34** | `modulo-retail` usa `inventario:incidencias:reportar` e `inventario:incidencias:resolver`, además de la consulta de disponibilidad. |
+| **CA-34** | `modulo-retail` usa `inventario:incidencias:reportar` e `inventario:incidencias:resolver`, además de la **consulta de disponibilidad comercial**, no del saldo detallado. |
 | **CA-35** | Una operación técnica sin token utilizable responde `401 TOKEN_INVALIDO`; una identidad sin scope responde `403 SCOPE_INSUFICIENTE`. |
 | **CA-36** | Resolver una incidencia como `TRASLADO_ALMACEN_CENTRAL` descuenta origen y crea un traslado `EN_TRANSITO`, sin acreditar destino. |
 | **CA-37** | La recepción del traslado la ejecuta un gestor comercial con capacidad local de inventario, no Retail ni Despacho. |
@@ -74,6 +74,15 @@ available = max(on_hand - reserved - blocked, 0)
 | **CA-40** | Una recepción parcial con `final_receipt=false` deja `RECIBIDO_PARCIAL`. |
 | **CA-41** | Cerrar con unidades faltantes produce `COMPLETADO_CON_DISCREPANCIA` y `missing_quantity`; las faltantes no se acreditan. |
 | **CA-42** | Repetir la misma recepción con la misma identidad no duplica saldos. |
+| **CA-43** | `D-INV-01` está **adoptada**: para la primera entrega, cada referencia/contexto comercial de cumplimiento se resuelve internamente a una sola ubicación elegible y ejecutable; Inventario conserva la autoridad por `(sku, location_id)`. |
+| **CA-44** | No se suman por defecto cantidades de ubicaciones independientes ni se toma como cumplimiento viable un máximo/suma arbitrarios. El abastecimiento multi-origen agregado está fuera del alcance de esta versión y requerirá otra ADR y pruebas de viabilidad. |
+| **CA-45** | Si falta la correspondencia interna del contexto comercial (incluida `fulfillment_ref` cuando aplique), hay ambigüedad o no puede probarse una fuente realizable, la disponibilidad comercial responde `INDETERMINADO`; nunca infiere `AGOTADO`, `DISPONIBLE` ni `SUFICIENTE`. |
+| **CA-46** | `GET /api/v1/inventario/disponibilidad/comercial` devuelve la proyección `sku + status`, con `status` en `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO` o `INDETERMINADO`, sin ubicación ni saldos internos; su `AGOTADO` presupone un SKU existente con abastecimiento evaluable, no un SKU inexistente. |
+| **CA-47** | `POST /api/v1/inventario/disponibilidad/comercial/verificar` evalúa `{sku, quantity}` para un `channel_id` y contexto `fulfillment`, devolviendo por línea `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO`, con `binding=false`; es una consulta sin efectos, no reserva y no garantiza disponibilidad futura. `SUFICIENTE` exige que una fuente elegible pueda atender la cantidad completa. |
+| **CA-48** | La ausencia/ambigüedad de mapeo interno produce `200` con resultado `INDETERMINADO`; un contexto de cumplimiento semánticamente inválido se rechaza con `422 CONTEXTO_ABASTECIMIENTO_INVALIDO`, y una petición malformada con `400 VALIDACION`. |
+| **CA-49** | Para JWT de servicio, `GET /api/v1/inventario/disponibilidad` detallado solo admite `modulo-ventas`; las consultas comerciales `GET` y `POST /verificar` admiten `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`. El scope compartido `inventario:disponibilidad:leer` no anula las allowlists por operación ni la autorización humana de la ruta detallada. |
+| **CA-50** | Un `202 Accepted` en reserva, consumo o liberación acredita únicamente la aceptación del comando. Ventas determina el éxito/rechazo por resultado persistido y evento tipado; `GET /api/v1/inventario/operaciones/{operationId}` es recuperación sin reejecución, exclusiva de `modulo-ventas`. |
+| **CA-51** | `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. La consulta de operaciones requiere `inventario:operaciones:leer`, scope candidato aún pendiente de registro/grant por Seguridad (G7); no se presupone su habilitación real. |
 
 ---
 
@@ -147,6 +156,36 @@ available = max(on_hand - reserved - blocked, 0)
 - **CUANDO** el gestor comercial autorizado cierra la recepción sin recibir las 2 restantes,
 - **ENTONCES** queda `COMPLETADO_CON_DISCREPANCIA`, `missing_quantity=2` y ninguna unidad faltante se acredita.
 
+## Escenario 12 — Dos ubicaciones independientes no cubren una sola solicitud
+
+- **DADO** un SKU con 2 unidades disponibles en la ubicación A y 3 en la ubicación B, sin plan de cumplimiento conjunto,
+- **CUANDO** un canal verifica comercialmente una solicitud de 4 unidades bajo una referencia que resuelve a A,
+- **ENTONCES** no obtiene `SUFICIENTE` sumando A+B; se evalúa únicamente la fuente A, por lo que el resultado es `INSUFICIENTE`.
+
+## Escenario 13 — Correspondencia de cumplimiento ausente o ambigua
+
+- **DADO** un SKU existente y un canal/contexto de cumplimiento válido, cuya correspondencia interna a una ubicación elegible no existe o es ambigua,
+- **CUANDO** Marketplace, Chatbot o Retail solicita la proyección comercial o verifica una cantidad,
+- **ENTONCES** la consulta devuelve `INDETERMINADO` (en el campo `status` del GET o `result` del POST); no se fabrica un `AGOTADO` ni una ubicación por defecto.
+
+## Escenario 14 — Verificación comercial informativa
+
+- **DADO** un contexto que resuelve inequívocamente a una ubicación con 5 unidades disponibles de un SKU,
+- **CUANDO** un canal autorizado invoca `POST /api/v1/inventario/disponibilidad/comercial/verificar` con cantidad 4,
+- **ENTONCES** obtiene `200`, `result=SUFICIENTE` y `binding=false`, sin incrementar reservas, modificar Kardex ni garantizar la operación de venta.
+
+## Escenario 15 — Distinguir ambigüedad de contexto inválido
+
+- **DADO** un contexto de abastecimiento semánticamente inválido según el schema/las reglas de la modalidad,
+- **CUANDO** el canal solicita verificación comercial,
+- **ENTONCES** se responde `422 CONTEXTO_ABASTECIMIENTO_INVALIDO`; si el contexto es válido pero falla únicamente su mapeo interno, corresponde `200` con `INDETERMINADO`.
+
+## Escenario 16 — Separación de permisos por consumidor
+
+- **DADO** un token técnico válido de `modulo-chatbot` con `inventario:disponibilidad:leer`,
+- **CUANDO** solicita `GET /api/v1/inventario/disponibilidad` (detalle) y la consulta comercial,
+- **ENTONCES** Inventario deniega el detalle (`403`) y admite únicamente la ruta comercial conforme a la allowlist y a las demás verificaciones de seguridad.
+
 # Dependencias
 
 | Módulo | Responsabilidad |
@@ -155,14 +194,14 @@ available = max(on_hand - reserved - blocked, 0)
 | Retail | Hechos físicos de tienda y acta de resolución |
 | Marketplace / Chatbot | Consulta |
 | Catálogo | Identidad SKU |
-| Seguridad | JWT/service tokens/scopes |
+| Seguridad (G7) | JWT/service tokens/scopes; registro y grant efectivo del scope candidato `inventario:operaciones:leer` para Ventas |
 | Inventario | Autoridad del saldo, Kardex, idempotencia y concurrencia |
 
 ---
 
 # Criterio de completitud
 
-La HU se considera cubierta cuando existen pruebas unitarias/contrato para las invariantes y, cuando exista backend real, pruebas de integración de concurrencia, idempotencia, reintegro, incidencias y conciliación offline.
+La HU se considera cubierta cuando existen pruebas unitarias y de contrato para las invariantes, las allowlists, la proyección comercial y la política D-INV-01; además, cuando exista backend real, deben aprobarse las pruebas de integración de concurrencia, idempotencia, resultados durables, reintegro, incidencias, conciliación offline y verificación comercial sin efectos. Los cambios contractuales `0.6.0-rc.1` siguen **provisionales de implementación**: documentarlos no acredita CI/E2E aprobado, grants G7 ni despliegue.
 
 ---
 
@@ -179,5 +218,7 @@ Para evitar ambigüedad, los criterios de consulta se interpretan así:
 - `AGOTADO` representa un SKU existente sin disponibilidad, no un SKU inexistente;
 - el mismo scope `inventario:disponibilidad:leer` no elimina las allowlists por operación.
 
-Los casos multiubicación permanecen bloqueados por `D-INV-01`.
+**Estado D-INV-01:** decisión **adoptada** para la entrega candidata `0.6.0-rc.1` (ADR B3). La política exige una fuente de cumplimiento elegible, única y realizable por contexto de canal/modalidad; la falta de correspondencia o ambigüedad se expresa como `INDETERMINADO`, no como ausencia de stock. La agregación entre ubicaciones independientes permanece **fuera de alcance**, no pendiente de resolver dentro de D-INV-01: exigiría otra ADR y un plan multi-origen demostrablemente ejecutable.
+
+**Contratos candidatos, no desplegados:** los criterios CA-43 a CA-51 amplían la interpretación del baseline HTTP `0.5.0` conforme a OpenAPI/AsyncAPI `0.6.0-rc.1`; no añaden tablas ni autoridad de negocio nueva. Distinguir el `GET.status` (`DISPONIBLE/STOCK_BAJO/AGOTADO/INDETERMINADO`) del `POST.items[].result` (`SUFICIENTE/INSUFICIENTE/INDETERMINADO`). La nueva lectura de operaciones queda condicionada al registro de scope por G7 y a pruebas runtime.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->

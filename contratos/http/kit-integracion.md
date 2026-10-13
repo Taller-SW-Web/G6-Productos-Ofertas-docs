@@ -1,16 +1,18 @@
 # Kit de integración — Productos y Ofertas
 
-**Fecha de actualización:** 2026-10-01  
-**Repositorio:** `Taller-SW-Web/Productos-y-Ofertas-docs`  
+**Fecha de actualización:** 2026-10-12
+
+**Repositorio:** `Taller-SW-Web/G6-Productos-Ofertas-docs`
 **API propietaria:** `api-productos`  
-**Contrato HTTP canónico:** `api/openapi.yaml`  
+**Contrato HTTP canónico:** `openapi.yaml`
 **Contrato de integración:** `Contrato_Api.md`  
-**Contrato asíncrono:** `asyncapi/asyncapi.yaml`  
-**Catálogo de errores:** `api/catalogo-errores.md`  
-**Catálogo de eventos:** `api/catalogo-eventos.md`
+**Contrato asíncrono:** `../eventos/asyncapi.yaml`
+**Catálogo de errores:** `catalogo-errores.md`
+
+**Catálogo de eventos:** `../eventos/catalogo-eventos.md`
 
 > Este documento es una guía práctica para integrar otros módulos con Productos y Ofertas.  
-> Si existe una contradicción, prevalecen `api/openapi.yaml` para HTTP y `asyncapi/asyncapi.yaml` para mensajería.
+> Si existe una contradicción, prevalecen `openapi.yaml` para HTTP y `../eventos/asyncapi.yaml` para mensajería.
 
 ---
 
@@ -55,11 +57,7 @@ Ejemplo conceptual:
 {PRO}/api/v1/productos
 ```
 
-La versión contractual de este kit es:
-
-```text
-0.5.0
-```
+**Versión documental de referencia:** `0.6.0-rc.1` (contrato candidato OpenAPI/AsyncAPI, aún no acreditado como backend desplegado o integración E2E). Las reglas anteriores no modificadas conservan `0.5.0` como baseline de compatibilidad; su mención histórica no reemplaza los contratos candidatos.
 
 ---
 
@@ -170,7 +168,7 @@ Un consumidor no debe inventar un scope que Productos y Ofertas no haya publicad
 
 # 5. Scopes propios de `api-productos`
 
-`0.4.0` conserva 16 scopes.
+La línea base conserva **16 scopes** de `api-productos`; la candidata `0.6.0-rc.1` incorpora como propuesta contractual adicional `inventario:operaciones:leer` para `modulo-ventas`. **G7 todavía debe registrar y conceder este scope**. No se considera parte de los 16 scopes heredados ni un permiso ya aprovisionado.
 
 | Scope | Operación principal | `client_id` previsto |
 |---|---|---|
@@ -191,6 +189,10 @@ Un consumidor no debe inventar un scope que Productos y Ofertas no haya publicad
 | `inventario:incidencias:resolver` | Resolver incidencia/acta | Retail |
 | `productos:fisicos:leer` | Peso/dimensiones | Despacho |
 
+**Scope adicional candidato:** `inventario:operaciones:leer` — consulta durable `GET /api/v1/inventario/operaciones/{operationId}`, exclusiva para el cliente de servicio `modulo-ventas`. OpenAPI `0.6.0-rc.1` registra `x-scope-registration-status: pending-security-registration`; su utilización efectiva requiere concesión explícita de G7.
+
+**El scope compartido de disponibilidad no concede acceso indistinto a todas las representaciones.** `GET /api/v1/inventario/disponibilidad` devuelve saldo detallado y su allowlist de clientes de servicio contiene únicamente `modulo-ventas`. En cambio, `GET /api/v1/inventario/disponibilidad/comercial` y `POST /api/v1/inventario/disponibilidad/comercial/verificar` tienen allowlist de servicio para `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`. Comparten el scope `inventario:disponibilidad:leer`, pero no el acceso a cantidades ni ubicaciones internas. La lectura detallada administrativa mediante JWT de usuario conserva su autorización humana correspondiente. El proveedor debe comprobar audiencia, scope y cliente admitido en la operación; un token de canal con el scope correcto no autoriza el endpoint detallado.
+
 Todo endpoint técnico valida:
 
 ```text
@@ -200,6 +202,7 @@ aud contiene api-productos
 exp vigente
 sub autorizado por la operación
 scope contiene x-required-scope
+client_id del servicio está incluido en x-allowed-client-ids, cuando corresponda
 ```
 
 El estado sigue siendo:
@@ -233,6 +236,8 @@ modulo-ventas:
 modulo-despacho:
   productos:fisicos:leer
 ```
+
+**Extensión candidata de la matriz (sin concesión efectiva):** `modulo-ventas` podrá utilizar `inventario:operaciones:leer` solo cuando G7 registre y otorgue el permiso para `api-productos`. No corresponde a Marketplace, Chatbot ni Retail, y su documentación no prueba que la API ya esté activa.
 
 # 6. Integración de canales — Marketplace, Chatbot y Retail
 
@@ -761,7 +766,7 @@ Si se conservan esos identificadores, son capacidades internas del módulo.
 
 # 11. Pricing: consultas, programaciones e importación
 
-`api/openapi.yaml` es la fuente de verdad HTTP. Esta sección resume la superficie de Pricing publicada en OpenAPI `0.5.0` y su política de autorización.
+`contratos/http/openapi.yaml` es la fuente de verdad HTTP. Esta sección resume la superficie de Pricing publicada en OpenAPI `0.5.0` y su política de autorización.
 
 ## 11.1. Consultas
 
@@ -1034,7 +1039,7 @@ GET /productos/{productoId}
 GET /categorias
 GET /marcas
 GET /precios
-GET /inventario/disponibilidad
+GET /inventario/disponibilidad/comercial?skus={SKU}&canal=CHATBOT
 GET /promociones
 POST /promociones/evaluar
 POST /cupones/validar
@@ -1044,8 +1049,11 @@ GET /recomendaciones
 No usar:
 
 ```text
+GET /inventario/disponibilidad
 GET /recomendaciones/candidatos
 ```
+
+`/inventario/disponibilidad` expone saldos detallados y **no autoriza a `modulo-chatbot`**, aunque posea el scope `inventario:disponibilidad:leer`. Para consultar una cantidad determinada, Chatbot podrá utilizar `POST /api/v1/inventario/disponibilidad/comercial/verificar` con `channel_id=CHATBOT`, `fulfillment={mode, fulfillment_ref?}` y `lines=[{sku, quantity}]`. El resultado `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO` es informativo (`binding=false`) y no reserva stock. Si el contexto de cumplimiento no tiene mapeo inequívoco, corresponde `INDETERMINADO`, no prometer disponibilidad ni asumir agotamiento.
 
 Búsqueda libre:
 
@@ -1165,11 +1173,11 @@ No agregar esos nombres a los scopes `api-productos`: son capacidades humanas lo
 
 Antes de declarar una integración cerrada:
 
-1. El consumidor conoce la ruta canónica en `api/openapi.yaml`.
+1. El consumidor conoce la ruta canónica en `contratos/http/openapi.yaml`.
 2. El `client_id` está identificado.
 3. El scope pertenece a `api-productos` y está registrado en Seguridad cuando corresponda.
 4. El JWT técnico contiene `api-productos` en `aud`.
-5. El receptor valida `iss`, `aud`, `tipo`, `exp` y scope.
+5. El receptor valida `iss`, `aud`, `tipo`, `exp`, scope y, para JWT de servicio, `client_id` contra la allowlist de la operación; el scope compartido no autoriza saldos detallados a los canales.
 6. El consumidor ramifica por `Problem.code`.
 7. Las mutaciones idempotentes utilizan las cabeceras exigidas.
 8. Los `202 Accepted` no se interpretan como resultado final.
@@ -1182,7 +1190,8 @@ Antes de declarar una integración cerrada:
 
 | Pendiente | Estado |
 |---|---|
-| Registro de los 16 scopes/grants en Seguridad | Externo; no bloquea desarrollo |
+| Registro de los 16 scopes de la línea base y sus grants en Seguridad | Externo; no bloquea documentación, sí el acceso real |
+| Registro de `inventario:operaciones:leer` para `modulo-ventas` (candidato `0.6.0-rc.1`) | G7; pendiente de confirmación y concesión, no operativo por el mero OpenAPI |
 | Crear recursos RabbitMQ del entorno desde la topología P2 | Implementación/infra |
 | Contract tests runtime Ventas ↔ Inventario | Implementación |
 | Consumer/provider tests Despacho ↔ Productos | Implementación |
@@ -1194,13 +1203,13 @@ P2 ya cerró la topología y la recepción de traslados.
 La fuente de verdad HTTP es:
 
 ```text
-api/openapi.yaml
+contratos/http/openapi.yaml
 ```
 
 La fuente de verdad asíncrona es:
 
 ```text
-asyncapi/asyncapi.yaml
+contratos/eventos/asyncapi.yaml
 ```
 
 Un cambio incompatible requiere una nueva versión contractual.
@@ -1221,7 +1230,7 @@ No se deben crear rutas nuevas únicamente en documentación de un consumidor.
 Sincronización documental 2026-10-01:
 
 ```text
-kit-integracion.md se alinea con api/openapi.yaml 0.5.0 para Pricing.
+kit-integracion.md se alinea con contratos/http/openapi.yaml 0.5.0 para Pricing.
 No se agregan rutas HTTP nuevas.
 Se documentan explícitamente consultas administrativas, prevalidación,
 importación, seguimiento y reporte ya presentes en OpenAPI.
@@ -1291,7 +1300,7 @@ Respuesta:
 {"items":[{"sku":"SKU-001","status":"DISPONIBLE"}]}
 ```
 
-No expone `location_id`, `on_hand`, `reserved`, `blocked`, `available`, `threshold` ni `stock_version`. Sigue provisional por `D-INV-01`.
+No expone `location_id`, `on_hand`, `reserved`, `blocked`, `available`, `threshold` ni `stock_version`. La política **D-INV-01 ya fue adoptada**: solo se considera una ubicación elegible por contexto de cumplimiento, sin sumar ubicaciones independientes. El endpoint sigue provisional **por implementación y pruebas pendientes**, no por una decisión abierta. Una correspondencia de cumplimiento inexistente o ambigua produce `INDETERMINADO`.
 
 ### Recomendaciones
 
@@ -1305,3 +1314,17 @@ GET /api/v1/recomendaciones?productoId={id}&canal={MARKETPLACE|CHATBOT|RETAIL}
 
 `429 RATE_LIMIT_EXCEDIDO` puede incluir `Retry-After`. No se publica una cuota numérica universal.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
+
+## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+
+**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+
+- `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
+- `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
+- Nuevos contratos provisionales: `GET /inventario/operaciones/{operationId}` (solo Ventas; scope `inventario:operaciones:leer`) y `POST /inventario/disponibilidad/comercial/verificar` (canales, consulta sin efectos).
+- Nuevo evento `inventory.reservation.rejected`; resultados de reserva/consumo/liberación/expiración con datos tipados y correlación obligatoria.
+- `D-INV-01`: no se suman saldos de ubicaciones independientes por defecto. Un canal obtiene `INDETERMINADO` cuando el punto único de cumplimiento no se puede resolver. `SUFICIENTE` exige una fuente de abastecimiento realizable para la cantidad completa; no supone reserva.
+- Cupones: después de reserva confirmada, Ventas envía `reservation_id` y `commercial_snapshot_ref` al solicitar consumo. Los resultados de consumo se tipan y la restauración se vincula a la operación previamente consumida.
+- Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
+- Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
+- Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.

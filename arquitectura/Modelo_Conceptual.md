@@ -1,14 +1,14 @@
 # Modelos conceptuales de datos — Módulo de Productos y Ofertas
 
-**Fecha de actualización:** 2026-10-01  
-**Repositorio:** `Taller-SW-Web/Productos-y-Ofertas-docs`  
-**Archivo:** `Modelo_Conceptual.md`  
-**Arquitectura de referencia:** `Arquitectura.md`  
-**Contrato HTTP de referencia:** `api/openapi.yaml` (`0.5.0`)
-**Contrato asíncrono de referencia:** `asyncapi/asyncapi.yaml` (`0.5.0`)
-**Catálogo de errores:** `api/catalogo-errores.md` (`0.5.0`)
-**Catálogo de eventos:** `api/catalogo-eventos.md` (`0.5.0`)
-**Contrato humano de referencia:** `Contrato_Api.md`
+**Fecha de actualización:** 2026-10-12  
+**Repositorio:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
+**Archivo:** `arquitectura/Modelo_Conceptual.md`  
+**Arquitectura de referencia:** `arquitectura/Arquitectura.md` (versión corregida en revisión)  
+**Contrato HTTP de referencia:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.1`; baseline histórico `0.5.0`)
+**Contrato asíncrono de referencia:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.1`; baseline histórico `0.5.0`)
+**Catálogo de errores:** `contratos/http/catalogo-errores.md` (fuente semántica de códigos; compatibilidad `0.5.0`)
+**Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (guía humana; referencia histórica `0.5.0`)
+**Contrato humano de referencia:** `contratos/http/Contrato_Api.md`
 
 > **Alcance:** este documento define los modelos conceptuales de datos de los ocho bounded contexts del módulo Productos y Ofertas.  
 > Las relaciones entre bounded contexts son conceptuales y **no implican foreign keys ni acceso directo cross-schema**.
@@ -62,11 +62,13 @@ Esta versión incorpora las decisiones de diseño del modelo de datos:
 9. `SPEC/HU/WF-003`, `004` y `015` ya incorporan estas decisiones; dejan de ser propagaciones futuras.
 10. La idempotencia de Inventario distingue retry legítimo de `IDEMPOTENCY_CONFLICT`.
 11. Los contratos HTTP/asíncronos y códigos estables ya están publicados en OpenAPI, AsyncAPI y `catalogo-errores.md`.
-12. OpenAPI y AsyncAPI `0.5.0` constituyen el baseline contractual vigente de este modelo.
+12. OpenAPI y AsyncAPI `0.5.0` se conservan como **línea base histórica y de compatibilidad**. Los artefactos ejecutables en la rama `nueva` identifican un contrato **candidato** `0.6.0-rc.1` para B1–B4, que no debe confundirse con implementación, grants efectivos, despliegue o conformidad de extremo a extremo.
 13. Taxonomía expone operaciones observables de **baja maestra segura** para recursos con dependencias.
 14. Una operación de baja maestra puede permanecer pendiente después de un `202 Accepted`; su resultado definitivo se resuelve de forma asíncrona.
 15. La operación de baja pertenece a Taxonomía y no implica acceso directo a las tablas del bounded context consumidor.
 16. El actor humano canónico de administración del módulo es `GESTOR_COMERCIAL`; capacidades de auditoría o inventario no crean roles globales adicionales.
+17. **D-INV-01 fue adoptada**: el saldo autoritativo sigue definido por `(sku, location_id)`; la disponibilidad comercial es una proyección derivada, no una segunda autoridad. Para el contrato candidato, cada contexto de cumplimiento se resuelve mediante mapeo interno a **una sola ubicación elegible**. No se suman saldos independientes; si el mapeo falta, es ambiguo o no permite acreditar una fuente realizable, se informa `INDETERMINADO`, sin deducir `AGOTADO` ni `DISPONIBLE`. Agregación multi-origen exige una decisión y capacidad posteriores.
+18. La verificación de disponibilidad comercial por cantidad es **no vinculante** (`binding=false`) y no crea reservas, garantías futuras ni nuevas tablas de saldos; el ciclo reserva/consumo continúa bajo coordinación de Ventas. Los canales acceden a proyecciones comerciales sin `location_id` ni cantidades internas. La consulta detallada de Inventario corresponde a consumidores autorizados y no se habilita por compartir un scope nominal.
 
 ---
 
@@ -1438,17 +1440,17 @@ Las decisiones conceptuales principales ya fueron propagadas.
 
 | Artefacto | Estado |
 |---|---|
-| `Arquitectura.md` | Actualizado con `GESTOR_COMERCIAL` como actor humano canónico, Ventas como orquestador, inventario extendido, datos físicos, AsyncAPI, errores e idempotencia |
-| `Contrato_Api.md` | Baseline `0.5.0`, ownership e integración consolidados |
+| `arquitectura/Arquitectura.md` | Documento arquitectónico de referencia; su revisión candidata alinea D-INV-01, restricciones por consumidor y baseline `0.5.0` frente a contratos `0.6.0-rc.1` |
+| `contratos/http/Contrato_Api.md` | Referencia humana del baseline `0.5.0`; su conciliación con las decisiones B1–B4 candidatas `0.6.0-rc.1` sigue siendo una tarea documental separada |
 | `SPEC/HU/WF-003` | Actualizados: perfil físico de producto simple y Seguridad |
 | `SPEC/HU/WF-004` | Actualizados: perfil físico de variante/SKU y Seguridad |
 | `SPEC/HU/WF-014` | Auditoría alineada con `GESTOR_COMERCIAL` y capacidades internas, sin rol global de Auditor |
 | `SPEC/HU/WF-015` | Reserva/consumo/liberación, TTL, idempotencia, incidencias, reintegros, conciliación y traslados |
 | `HU/WF-016` | Dashboard y alertas alineados con Gestor Comercial autorizado y proyección de solo lectura |
-| `api/openapi.yaml` | `0.5.0`: contrato HTTP consolidado P0/P1/P2 |
-| `asyncapi/asyncapi.yaml` | `0.5.0`: mensajería consolidada y topología RabbitMQ consolidada |
-| `api/catalogo-eventos.md` | `0.5.0`: referencia humana alineada con 39 mensajes y consumidores |
-| `api/catalogo-errores.md` | `0.5.0`: catálogo consolidado, incluidos errores de traslados |
+| `contratos/http/openapi.yaml` | OpenAPI 3.1.0, `info.version=0.6.0-rc.1` en la rama `nueva`; fuente ejecutable **candidata** de B1–B4, sin declaración de despliegue |
+| `contratos/eventos/asyncapi.yaml` | AsyncAPI 3.0.0, `info.version=0.6.0-rc.1`, con **40 canales y 40 mensajes** candidatos; conserva topología física sin acreditar publicación en runtime |
+| `contratos/eventos/catalogo-eventos.md` | Catálogo humano; la cifra de **39 mensajes** identifica el baseline histórico `0.5.0`, no la cobertura completa del AsyncAPI candidato de 40 mensajes |
+| `contratos/http/catalogo-errores.md` | Catálogo autoritativo de errores para la compatibilidad base y los códigos del contrato candidato |
 | Operación de baja maestra | Incorporada conceptualmente en Taxonomía y observable por `GET /api/v1/taxonomia/operaciones/{operationId}` |
 
 Los contratos Catálogo → Pricing, Catálogo → Inventario y el reintegro físico ya están formalizados en el baseline `0.5.0`; no se mantienen como pendientes del modelo conceptual.
@@ -1456,7 +1458,10 @@ Los contratos Catálogo → Pricing, Catálogo → Inventario y el reintegro fí
 Pendientes que sí pueden afectar el modelo lógico o la implementación futura:
 
 1. decisión final sobre tabla/abstracción física para representar SKU vendible dentro de Catálogo;
-2. registro definitivo de scopes/grants técnicos de `api-productos` en Seguridad.
+2. registro y concesión efectivos de scopes/grants técnicos de `api-productos` en Seguridad, incluido el nuevo scope **propuesto** `inventario:operaciones:leer` para `modulo-ventas` (`pending-security-registration`), sin grants implícitos a canales;
+3. implementación y pruebas de conformidad de la política ya aprobada D-INV-01, sin convertir el carácter provisional de la proyección comercial en una decisión abierta.
+
+Estos pendientes no crean un nuevo bounded context ni modifican la autoridad de Inventario. La ruta detallada `GET /api/v1/inventario/disponibilidad` conserva su acceso restringido por consumidor; las rutas comerciales `GET /api/v1/inventario/disponibilidad/comercial` y `POST /api/v1/inventario/disponibilidad/comercial/verificar` evitan revelar saldos o ubicaciones y no generan reservas.
 
 Ninguno requiere compartir schemas entre bounded contexts.
 
@@ -1476,7 +1481,8 @@ La actualización confirma que:
 10. `on_hand`, `reserved`, `blocked` y `available` pertenecen al saldo por `(sku, location_id)`.
 11. Taxonomía modela explícitamente la operación de baja maestra segura como concepto observable, sin compartir schema ni convertir el `202 Accepted` en resultado definitivo.
 12. La autorización humana del módulo se apoya en `GESTOR_COMERCIAL`; la granularidad adicional de auditoría o inventario se modela como capacidad interna, no como rol global independiente.
-13. Arquitectura, Contrato API, OpenAPI/AsyncAPI `0.4.0` y las funcionalidades relacionadas reflejan estas decisiones; los pendientes restantes son de modelo lógico/implementación o registro de grants, no de ownership conceptual.
+13. Los contratos OpenAPI/AsyncAPI candidatos `0.6.0-rc.1` de la rama `nueva` reflejan B1–B4, mientras la documentación histórica `0.5.0` conserva el contexto previo. El cierre no acredita backend desplegado ni grants efectivos; quedan tareas documentales, de implementación y de validación sin redefinir ownership.
+14. D-INV-01 ya fija la proyección comercial por una sola fuente elegible de cumplimiento y el resultado `INDETERMINADO` ante falta o ambigüedad del mapeo, sin introducir entidades maestras adicionales.
 
 ---
 
@@ -1488,7 +1494,8 @@ La actualización confirma que:
 - No se fija todavía la cardinalidad inversa ni una tabla física para la asociación.
 - La elegibilidad comercial por canal es una regla de Catálogo; su persistencia/default siguen abiertos (`D-CAT-05/06`).
 - Inventario conserva el saldo autoritativo por `(sku, location_id)`.
-- La disponibilidad comercial es una **proyección derivada** `sku + status`, no una segunda autoridad. `D-INV-01` sigue abierta.
+- La disponibilidad comercial es una **proyección derivada** `sku + status`, no una segunda autoridad. **D-INV-01 está adoptada** en `arquitectura/decisiones/ADR-DEC-F-BLOQUEANTES.md`: una referencia de cumplimiento se resuelve a una sola ubicación elegible mediante mapeo interno; no se suman ubicaciones independientes. La ambigüedad o ausencia de un cumplimiento justificable produce `INDETERMINADO`, no una afirmación de agotamiento o disponibilidad. El contrato comercial continúa **provisional por implementación y conformidad pendientes**, no por decisión abierta.
+- La verificación comercial por líneas `{sku, quantity}` devuelve `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO` sin exponer cantidades internas ni `location_id`, con `binding=false` y sin reservar stock. La agregación real de múltiples fuentes requeriría otra ADR.
 - Recomendaciones siguen siendo producto→producto. `current_price` y `availability` son enriquecimientos derivados; `D-REC-01/02` continúan abiertas.
 - No materializar automáticamente `CODIGO_BARRAS`, `PRODUCTO_CANAL`, `DISPONIBILIDAD_COMERCIAL` o `PRECIO_RECOMENDACION` como entidades maestras.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
