@@ -422,7 +422,7 @@ flowchart LR
     subgraph RET["Retail"]
         direction TB
         INICIO((Venta realizada sin conectividad))
-        A1["Registrar venta offline en Ventas/Postventa"]
+        A1["Registrar la venta offline en Ventas/Postventa"]
     end
 
     subgraph VENT["Ventas / Postventa"]
@@ -433,38 +433,55 @@ flowchart LR
     subgraph INV["Sistema de Inventario"]
         direction TB
         E1(("Conciliación recibida"))
-        D1{"¿Misma identidad ya procesada?"}
-        A3["Aplicar min(requested, available) sin tocar reserved ni blocked"]
-        D2{"¿Puede aplicarse todo lo solicitado?"}
-        A4["Calcular unresolved_quantity conservando saldos no negativos"]
-        A5["Persistir Kardex y Outbox en la misma transacción"]
-        A6["Publicar inventory.stock.adjusted o inventory.stock.changed tras el commit"]
+        A4["Resolver internamente tienda → ubicación y validar autorización del actor para la operación y ubicación"]
+        D2{"¿Mapeo único y actor autorizado?"}
+        D1{"¿Esta misma venta física ya fue conciliada?"}
+        A3["Devolver el resultado previo y sus cantidades originales, sin nuevos descuentos"]
+        A5["Rechazar la mutación sin cambiar el saldo"]
+        A6["Aplicar min(requested, available) con control de concurrencia; excluir reserved y blocked"]
+        D3{"¿Hay cantidad efectivamente aplicada?"}
+        A7["Registrar el resultado durable de conciliación; no crear movimiento Kardex de cantidad cero"]
+        A8["En la misma transacción, registrar resultado, Kardex solo para cantidades aplicadas > 0 y Outbox correspondiente"]
+        A9["Publicar el evento de stock correspondiente después del commit"]
     end
 
     subgraph RES["Resultado"]
         direction TB
-        B1["Conciliación COMPLETED"]
-        B2["Conciliación REQUIRES_REVIEW con unresolved_quantity > 0"]
+        B1["Devolver el estado y las cantidades del resultado previo"]
+        B2["Conciliación COMPLETED"]
+        B3["Conciliación REQUIRES_REVIEW con requested, applied y unresolved originales"]
+        B4["Rechazo de la mutación según el contrato aplicable"]
         FIN_OK(((Fin conciliado)))
         FIN_REV(((Fin con revisión)))
+        FIN_REJ(((Fin sin mutación)))
     end
 
     INICIO --> A1
     A1 --> A2
     A2 --> E1
-    E1 --> D1
-    D1 -->|"Sí"| B1
-    D1 -->|"No"| A3
-    A3 --> D2
-    D2 -->|"Sí"| A5
-    D2 -->|"No"| A4
-    A4 --> A5
-    A5 --> A6
-    A6 -->|"COMPLETED"| B1
-    A6 -->|"REQUIRES_REVIEW"| B2
-    B1 --> FIN_OK
-    B2 --> FIN_REV
+    E1 --> A4
+    A4 --> D2
+    D2 -->|"No"| A5
+    A5 --> B4
+    B4 --> FIN_REJ
+    D2 -->|"Sí"| D1
+    D1 -->|"Sí"| A3
+    A3 --> B1
+    B1 -->|"COMPLETED"| FIN_OK
+    B1 -->|"REQUIRES_REVIEW"| FIN_REV
+    D1 -->|"No"| A6
+    A6 --> D3
+    D3 -->|"No; applied_quantity = 0"| A7
+    D3 -->|"Sí"| A8
+    A8 --> A9
+    A7 -->|"Con faltantes"| B3
+    A9 -->|"Sin faltantes"| B2
+    A9 -->|"Con faltantes"| B3
+    B2 --> FIN_OK
+    B3 --> FIN_REV
 ```
+
+Ventas/Postventa es el invocador contractual vigente en la documentación G6. La alternativa Retail→G6 sigue pendiente de homologación; este diagrama no establece un orden nuevo entre venta, pedido, pago y conciliación. La regla de DEC-F-014 exige resolver tienda→ubicación internamente y autorizar al actor, pero OpenAPI todavía requiere `location_id` en la entrada: esa incompatibilidad contractual no se resuelve aquí ni se inventa un mecanismo de mapeo. La identidad estable de la venta y su deduplicación frente a reintentos técnicos distintos siguen pendientes de definición; repetir una conciliación reconocida debe devolver el resultado original (`COMPLETED` o `REQUIRES_REVIEW`) sin volver a descontar.
 
 ### 4.9 Traslado a almacén central y recepción
 
@@ -663,7 +680,7 @@ flowchart LR
 ## 5. Notas generales
 
 - **Actor humano:** el usuario del backoffice en este flujo es el `GESTOR_COMERCIAL`; la granularidad de inventario se expresa mediante capacidades locales asociadas a su `sub`, no mediante un rol global independiente.
-- **Idempotencia:** repetir un comando con la misma identidad y la misma intención responde el resultado previo sin efectos secundarios; reutilizar la identidad con otra intención produce `409 IDEMPOTENCY_CONFLICT` (HU-015 CA-14, SPEC-015 §30).
+- **Idempotencia:** repetir un comando con la misma identidad y la misma intención responde el resultado previo sin efectos secundarios; reutilizar la identidad con otra intención produce `409 IDEMPOTENCY_CONFLICT` (HU-015 CA-14, SPEC-015 §30). Para una venta offline, la identidad estable debe impedir un segundo descuento aunque cambie la identidad técnica del reintento; su campo/mecanismo y el ámbito de unicidad siguen pendientes, por lo que no se consideran implementados.
 - **202 Accepted:** es solo admisión. El éxito/rechazo de reserva y consumo se confirma por **resultado durable** y evento tipado; tras pérdida del evento, Ventas recupera con `GET /api/v1/inventario/operaciones/{operationId}` sin reejecución. `operation_id`/`reservation_id` son UUID; `order_id` es texto opaco de Ventas; se preservan `correlation_id` y `causation_id` según AsyncAPI v2 (HU-015 CA-50/CA-51 y ADR B1).
 - **Kardex y Outbox:** toda mutación autoritativa registra Kardex con saldos anterior/posterior, operación, SKU y ubicación, y persiste el Outbox en la misma transacción local; la publicación de eventos ocurre después del commit (HU-015 CA-16/CA-19, SPEC-015 §27).
 - **Invariantes:** en toda operación se cumple `on_hand >= 0`, `reserved >= 0`, `blocked >= 0`, `reserved + blocked <= on_hand` y `available = max(on_hand - reserved - blocked, 0)` con `available >= 0` (HU-015 CA-04, SPEC-015 §13).

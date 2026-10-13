@@ -816,7 +816,7 @@ Pueden consultar disponibilidad, pero no ejecutan ninguna mutación de Inventari
 
 ## Retail
 
-Retail no ejecuta mutaciones comerciales de venta:
+En la secuencia actualmente documentada para G6, Retail no ejecuta directamente mutaciones comerciales de venta:
 
 ```text
 reservar
@@ -825,6 +825,8 @@ liberar
 reintegrar
 conciliar-offline
 ```
+
+La secuencia vigente en G6 conserva a Ventas/Postventa como consumidor contractual de la conciliación. El antecedente de una llamada directa Retail→G6 está pendiente de homologación con los módulos involucrados; no se presume que Retail tenga actualmente acceso al endpoint ni se cambia aquí la secuencia documentada.
 
 Retail sí puede reportar hechos físicos:
 
@@ -846,6 +848,8 @@ PAGO_NO_COMPLETADO/anulación pre-consumo -> inventario:liberar
 retorno físico aceptado -> inventario:reintegrar
 venta Retail offline ya registrada -> inventario:conciliar-offline
 ```
+
+En la conciliación offline, Ventas/Postventa es el consumidor contractual vigente en la documentación G6. La eventual llamada directa Retail→G6 permanece pendiente de homologación; esta secuencia no fija un orden nuevo entre venta, pedido, pago y conciliación.
 
 Una reserva `CONSUMIDA` no se puede liberar.
 
@@ -980,8 +984,6 @@ son capacidades locales asociadas al `sub` del usuario, no scopes de servicio.
 
 ## 24.5. Conciliación de venta Retail offline
 
-## 24.4. Conciliación de venta Retail offline
-
 Una venta offline ya ocurrió físicamente, por lo que no se crea una reserva retroactiva.
 
 Flujo:
@@ -991,6 +993,8 @@ Retail sincroniza venta -> Ventas/Postventa
 Ventas registra la venta
 Ventas -> POST /inventario/conciliaciones-offline
 ```
+
+Ventas/Postventa conserva el rol de invocador contractual vigente en la documentación G6. La propuesta de invocación directa Retail→G6 permanece pendiente de homologación; este flujo no establece un orden nuevo entre la venta, el pedido, el pago y la conciliación.
 
 Por línea:
 
@@ -1010,6 +1014,14 @@ Si existe una cantidad no conciliable:
 ```text
 status = REQUIRES_REVIEW
 ```
+
+La conciliación no crea reservas retroactivas. Inventario conserva la autoridad del saldo central y solo aplica unidades disponibles; `reserved` y `blocked` no se consumen. El resultado de conciliación se registra aunque no haya unidades aplicadas, pero solo un cambio efectivo de saldo genera movimiento de Kardex. No se registra un movimiento de cantidad cero. Si hay aplicación parcial, se conserva el resultado `REQUIRES_REVIEW` con las cantidades originales de la solicitud y las cantidades aplicadas/no resueltas.
+
+La misma venta física no puede descontar stock más de una vez, aunque un reintento técnico use otra identidad. La identidad estable, su ámbito de unicidad y el mecanismo de deduplicación continúan pendientes de definición/homologación; esta regla funcional no acredita que la idempotencia esté implementada ni autoriza elegir un campo, clave o índice.
+
+Antes de mutar, Inventario debe resolver internamente la referencia de tienda a ubicación y autorizar al actor para esa mutación y ubicación. Mapeo inexistente o ambiguo, o falta de autorización, no permite modificar el saldo. El contrato OpenAPI vigente aún requiere `location_id` en las líneas de conciliación; la compatibilidad de contrato y el consumidor autorizado permanecen pendientes, sin modificación contractual en este documento.
+
+La representación destinada a Retail debe limitarse a las cantidades funcionales necesarias (`requested_quantity`, `applied_quantity` y `unresolved_quantity`) y al resultado acordado; no debe exponer saldos ni identificadores de ubicación internos innecesarios. La forma contractual futura y sus consumidores autorizados siguen pendientes de homologación G4/G7. El DTO candidato actual no acredita esa representación ni habilita acceso de Retail.
 
 Nunca se permite:
 
@@ -1367,6 +1379,8 @@ inventario:reintegrar
 inventario:conciliar-offline
 ```
 
+Este consumidor refleja la secuencia contractual actualmente documentada por G6. La eventual invocación directa Retail→G6 y sus permisos requieren homologación; no se consideran concedidos por este texto. La consulta comercial de Retail no autoriza mutaciones de inventario. Para toda mutación, la autorización debe cubrir la operación y la ubicación resuelta internamente.
+
 ## 32.3. Incidencias físicas de Retail
 
 Consumidor autorizado:
@@ -1383,7 +1397,7 @@ inventario:incidencias:reportar
 inventario:incidencias:resolver
 ```
 
-Retail no recibe scopes comerciales de reserva/consumo/liberación/reintegro/conciliación.
+Retail no recibe, según la documentación G6 vigente, scopes comerciales de reserva/consumo/liberación/reintegro/conciliación. La conciliación directa Retail→G6 permanece pendiente de homologación con G4/G7; no se afirma que Retail disponga actualmente de ese permiso o endpoint.
 
 Todos los scopes permanecen pendientes de registro efectivo en Seguridad hasta que G7 los publique.
 

@@ -38,7 +38,7 @@ available = max(on_hand - reserved - blocked, 0)
 | **CA-04** | Siempre se cumple `on_hand >= 0`, `reserved >= 0`, `blocked >= 0`, `reserved + blocked <= on_hand` y `available >= 0`. |
 | **CA-05** | El estado del saldo autoritativo `AGOTADO/STOCK_BAJO/DISPONIBLE` se calcula sobre `available` por `(sku, location_id)`; la proyección comercial aplica adicionalmente D-INV-01 y puede ser `INDETERMINADO`. |
 | **CA-06** | Marketplace y Chatbot solo consultan Inventario. |
-| **CA-07** | Retail no reserva, consume, libera, reintegra ni concilia stock por una venta directamente. |
+| **CA-07** | En la secuencia actualmente documentada por G6, Ventas/Postventa invoca las mutaciones comerciales, incluida la conciliación offline; una eventual invocación directa Retail→G6 permanece pendiente de homologación y este criterio no concede acceso a Retail. |
 | **CA-08** | Cuando un pedido entra en `CREADO`, Ventas/Postventa puede solicitar idempotentemente una reserva. |
 | **CA-09** | Reservar aumenta `reserved` y reduce `available` sin modificar `on_hand` ni `blocked`. |
 | **CA-10** | Una reserva tiene estados `ACTIVA`, `CONSUMIDA`, `LIBERADA` o `EXPIRADA`; un estado terminal no vuelve a `ACTIVA`. |
@@ -60,7 +60,7 @@ available = max(on_hand - reserved - blocked, 0)
 | **CA-26** | `MERMA` y `FALTANTE_CONFIRMADO` disminuyen `blocked` y `on_hand` una sola vez. |
 | **CA-27** | Toda resolución de incidencia exige una referencia de acta y es idempotente. |
 | **CA-28** | Un traslado a almacén central no acredita stock en el destino hasta la confirmación de recepción. |
-| **CA-29** | Una venta Retail offline se registra primero en Ventas/Postventa; Retail no invoca directamente la conciliación. |
+| **CA-29** | El flujo G6 vigente documenta a Ventas/Postventa como invocador de la conciliación offline. La alternativa Retail→G6 y su secuencia con pedido/pago están pendientes de homologación; no se declara que Retail disponga actualmente del endpoint. |
 | **CA-30** | La conciliación offline aplica como máximo la cantidad disponible y nunca consume `reserved` ni `blocked`. |
 | **CA-31** | Si no puede aplicarse toda la venta offline, el resultado es `REQUIRES_REVIEW` con `unresolved_quantity > 0`; nunca se permite saldo negativo. |
 | **CA-32** | Repetir la misma conciliación offline con la misma identidad no duplica efectos. |
@@ -83,6 +83,11 @@ available = max(on_hand - reserved - blocked, 0)
 | **CA-49** | Para JWT de servicio, `GET /api/v1/inventario/disponibilidad` detallado solo admite `modulo-ventas`; las consultas comerciales `GET` y `POST /verificar` admiten `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`. El scope compartido `inventario:disponibilidad:leer` no anula las allowlists por operación ni la autorización humana de la ruta detallada. |
 | **CA-50** | Un `202 Accepted` en reserva, consumo o liberación acredita únicamente la aceptación del comando. Ventas determina el éxito/rechazo por resultado persistido y evento tipado; `GET /api/v1/inventario/operaciones/{operationId}` es recuperación sin reejecución, exclusiva de `modulo-ventas`. |
 | **CA-51** | `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. La consulta de operaciones requiere `inventario:operaciones:leer`, scope candidato aún pendiente de registro/grant por Seguridad (G7); no se presupone su habilitación real. |
+| **CA-52** | Repetir una venta física offline ya conciliada no vuelve a descontar stock, aunque cambie la identidad técnica del reintento. El resultado es un requisito adoptado; la identidad estable de la venta, su unicidad y el mecanismo técnico siguen pendientes de definición/homologación y no se consideran implementados. |
+| **CA-53** | Si una venta repetida tuvo resultado parcial, se devuelve el resultado previo `REQUIRES_REVIEW` y se conservan las cantidades originales solicitadas, aplicadas y no resueltas; no se recalcula ni se crea un nuevo descuento. La identificación estable de la venta permanece pendiente. |
+| **CA-54** | Una correspondencia tienda→ubicación interna inexistente o ambigua no autoriza la mutación. La resolución corresponde internamente a Inventario; la entrada contractual compatible con esta regla está pendiente de homologación porque OpenAPI aún exige `location_id`. |
+| **CA-55** | Un actor sin autorización para la operación y la ubicación resuelta no puede modificar el saldo. La autorización efectiva, el consumidor técnico y su homologación con G4/G7 permanecen pendientes; la consulta comercial no concede permisos de escritura. |
+| **CA-56** | La futura representación destinada a Retail comunica el resultado y solo las cantidades funcionales necesarias; no expone saldos ni ubicaciones internas innecesarias. El DTO compatible, el consumidor autorizado y la homologación G4/G7 están pendientes; este criterio no afirma que Retail disponga hoy de un endpoint de conciliación. |
 
 ---
 
