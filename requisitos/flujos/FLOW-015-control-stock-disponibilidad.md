@@ -435,8 +435,10 @@ flowchart LR
         E1(("Conciliación recibida"))
         A4["Resolver internamente tienda → ubicación y validar autorización del actor para la operación y ubicación"]
         D2{"¿Mapeo único y actor autorizado?"}
-        D1{"¿Esta misma venta física ya fue conciliada?"}
-        A3["Devolver el resultado previo y sus cantidades originales, sin nuevos descuentos"]
+        D1{"¿Esta identidad estable de venta ya fue conciliada?"}
+        D4{"¿Misma intención y payload semántico?"}
+        A3["Devolver exactamente el resultado previo COMPLETED o REQUIRES_REVIEW, con cantidades originales y sin nuevos descuentos"]
+        A10["Rechazar 409 IDEMPOTENCY_CONFLICT sin modificar saldos ni crear movimientos Kardex"]
         A5["Rechazar la mutación sin cambiar el saldo"]
         A6["Aplicar min(requested, available) con control de concurrencia; excluir reserved y blocked"]
         D3{"¿Hay cantidad efectivamente aplicada?"}
@@ -447,10 +449,11 @@ flowchart LR
 
     subgraph RES["Resultado"]
         direction TB
-        B1["Devolver el estado y las cantidades del resultado previo"]
+        B1["Resultado previo idéntico: estado y cantidades originales"]
         B2["Conciliación COMPLETED"]
         B3["Conciliación REQUIRES_REVIEW con requested, applied y unresolved originales"]
         B4["Rechazo de la mutación según el contrato aplicable"]
+        B5["409 IDEMPOTENCY_CONFLICT"]
         FIN_OK(((Fin conciliado)))
         FIN_REV(((Fin con revisión)))
         FIN_REJ(((Fin sin mutación)))
@@ -465,7 +468,11 @@ flowchart LR
     A5 --> B4
     B4 --> FIN_REJ
     D2 -->|"Sí"| D1
-    D1 -->|"Sí"| A3
+    D1 -->|"Sí"| D4
+    D4 -->|"Sí"| A3
+    D4 -->|"No"| A10
+    A10 --> B5
+    B5 --> FIN_REJ
     A3 --> B1
     B1 -->|"COMPLETED"| FIN_OK
     B1 -->|"REQUIRES_REVIEW"| FIN_REV
@@ -481,7 +488,9 @@ flowchart LR
     B3 --> FIN_REV
 ```
 
-Ventas/Postventa es el invocador contractual vigente en la documentación G6. La alternativa Retail→G6 sigue pendiente de homologación; este diagrama no establece un orden nuevo entre venta, pedido, pago y conciliación. La regla de DEC-F-014 exige resolver tienda→ubicación internamente y autorizar al actor, pero OpenAPI todavía requiere `location_id` en la entrada: esa incompatibilidad contractual no se resuelve aquí ni se inventa un mecanismo de mapeo. La identidad estable de la venta y su deduplicación frente a reintentos técnicos distintos siguen pendientes de definición; repetir una conciliación reconocida debe devolver el resultado original (`COMPLETED` o `REQUIRES_REVIEW`) sin volver a descontar.
+Ventas/Postventa es el invocador contractual vigente en la documentación G6. La alternativa Retail→G6 sigue pendiente de homologación; este diagrama no establece un orden nuevo entre venta, pedido, pago y conciliación. La regla de DEC-F-014 exige resolver tienda→ubicación internamente y autorizar al actor, pero OpenAPI todavía requiere `location_id` en la entrada: esa incompatibilidad contractual no se resuelve aquí ni se inventa un mecanismo de mapeo. La identidad estable de la venta y su deduplicación frente a reintentos técnicos distintos siguen pendientes de homologación; la autorización se valida antes de devolver cualquier resultado previo.
+
+La distinción entre replay de igual intención/payload y conflicto por contenido distinto obedece a DEC-F-009. El mecanismo para identificar establemente una venta offline sigue pendiente de homologación; no se define aquí ninguna clave, fingerprint, índice, campo ni mecanismo de persistencia.
 
 ### 4.9 Traslado a almacén central y recepción
 
