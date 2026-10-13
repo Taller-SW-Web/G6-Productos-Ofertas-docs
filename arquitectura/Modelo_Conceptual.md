@@ -46,12 +46,12 @@ Esta versión incorpora las decisiones de diseño del modelo de datos:
 
 1. **Inventario pertenece a Productos y Ofertas**.
 2. Marketplace y Chatbot solo consultan disponibilidad; Retail además reporta/resuelve incidencias físicas sin convertirse en owner del saldo.
-3. **Ventas/Postventa orquesta inventario comercial**:
+3. **Ventas/Postventa orquesta inventario comercial** en los flujos documentados:
    - pedido `CREADO` → reserva;
    - pedido `PAGADO` → consumo definitivo;
    - `PAGO_NO_COMPLETADO` o anulación pre-consumo → liberación;
    - retorno físicamente reintegrable → reintegro;
-   - venta Retail offline registrada → conciliación.
+   - venta Retail offline sincronizada con Ventas/Postventa → conciliación invocada por Ventas en la secuencia G6 vigente. La alternativa Retail→G6 directa está pendiente de homologación, sin imponer orden entre pedido, pago y conciliación.
 4. La reserva tiene expiración configurable.
 5. Los datos físicos propios de una unidad vendible se modelan por **SKU**.
 6. Productos y Ofertas es owner de:
@@ -949,16 +949,18 @@ misma identidad + intención distinta
 -> IDEMPOTENCY_CONFLICT
 ```
 
-Conceptualmente puede conservar un fingerprint semántico de la intención y el resultado conocido; esos campos son una decisión del modelo lógico, no una nueva entidad de dominio.
+En una venta offline se distinguen conceptualmente el hecho/identidad estable de la venta, la identidad técnica de operación/comando (`operation_id`) y la identidad de entrega de mensaje (`message_id`). `correlation_id` agrupa trazas y no sustituye ninguna identidad idempotente. La relación entre `ventaLocalUuid`, `offline_sale_id`, `order_id` y `operation_id`, así como el campo contractual, ámbito de unicidad y persistencia de la identidad estable, sigue pendiente de definición/homologación. No se prescribe fingerprint, clave ni mecanismo.
+
+Una misma venta física no puede generar descuentos repetidos aunque cambie la identidad técnica del reintento. Identidad e intención/payload semántico equivalentes producen replay del resultado previo; reutilizar la identidad estable con intención/payload distinto produce `IDEMPOTENCY_CONFLICT`. Estas son reglas conceptuales, no evidencia de una implementación de deduplicación.
 
 `correlation_id` sirve para trazabilidad y no sustituye la identidad idempotente.
 
-Una operación puede producir múltiples movimientos de Kardex.
+Una operación registrada puede no producir movimientos Kardex si no cambia el saldo; si hay efectos, puede producir uno o varios movimientos. No se crea un movimiento de cantidad cero.
 
 Relación:
 
 ```text
-OPERACIÓN DE INVENTARIO 1 -> N MOVIMIENTOS KARDEX
+OPERACIÓN DE INVENTARIO 1 -> 0..N MOVIMIENTOS KARDEX
 ```
 
 ---
@@ -1029,7 +1031,11 @@ y cierra como `COMPLETADO_CON_DISCREPANCIA`.
 
 Un reintegro es una `OPERACIÓN DE INVENTARIO` originada por Ventas/Postventa después de una recepción física aceptada.
 
-Una conciliación offline es una operación de ajuste por una venta Retail ya ocurrida y ya registrada comercialmente en Ventas.
+Una conciliación offline es una operación autoritativa de Inventario sobre una venta física de Retail ya ocurrida y sincronizada con Ventas/Postventa. No genera reserva retroactiva. Inventario aplica solo cantidades admisibles del saldo central, sin consumir reservas/bloqueos ni permitir saldos negativos. Los resultados `COMPLETED` y `REQUIRES_REVIEW` son distintos; el resultado parcial conserva las cantidades solicitadas, aplicadas y no resueltas. La conciliación puede quedar registrada con cero cantidad aplicada y cero movimientos Kardex.
+
+La referencia pública de tienda de Retail es externa y no equivale a una ubicación interna ni transfiere ownership. Inventario resuelve y autoriza internamente la ubicación efectiva; mapeo ausente/ambiguo o actor no autorizado impiden la mutación. La entrada OpenAPI actual todavía requiere `location_id`, incompatibilidad no resuelta por el modelo conceptual.
+
+La representación funcional destinada a Retail tiene un propósito distinto de la representación interna de Inventario: debe minimizar saldos, ubicación y versión internos. El response contractual actual corresponde a `modulo-ventas`; no se asume que Retail lo consuma ni se modifica su forma. Futuro consumidor, scope, respuesta y consulta posterior quedan pendientes de acuerdo.
 
 La conciliación puede terminar en:
 

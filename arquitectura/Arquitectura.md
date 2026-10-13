@@ -116,6 +116,8 @@ retorno físico aceptado -> REINTEGRO
 venta Retail offline registrada -> CONCILIACIÓN
 ```
 
+Para la venta offline, la secuencia G6 documentada conserva a Retail como origen de la venta, a Ventas/Postventa como registro e invocador y a Inventario como autoridad que concilia. La alternativa Retail→G6 directo está comunicada, pero pendiente de homologación; esta descripción no fija un orden nuevo entre venta, pedido, pago y conciliación.
+
 Hechos físicos de tienda:
 
 ```text
@@ -1330,7 +1332,7 @@ El reintegro incrementa `on_hand`, recalcula `available`, registra Kardex y es i
 
 ## 14.8. Conciliación Retail offline
 
-La venta offline se registra primero en Ventas/Postventa.
+La venta física ya ocurrió en Retail. En la secuencia G6 vigente, Retail sincroniza con Ventas/Postventa y `modulo-ventas` invoca la conciliación. La propuesta Retail→G6 directo está pendiente de homologación con G4/G5/G6; no se establece aquí un nuevo orden entre venta, pedido y pago.
 
 Luego:
 
@@ -1345,7 +1347,7 @@ applied = min(requested, available)
 unresolved = requested - applied
 ```
 
-Nunca consume unidades reservadas/bloqueadas para ocultar una discrepancia ni permite saldos negativos.
+Inventario conserva la autoridad del saldo central. No crea una reserva retroactiva; aplica solo unidades disponibles, sin consumir unidades reservadas o bloqueadas y sin producir saldos negativos. Los resultados parciales conservan las cantidades solicitadas, aplicadas y no resueltas.
 
 Resultado:
 
@@ -1353,6 +1355,14 @@ Resultado:
 unresolved = 0 -> COMPLETED
 unresolved > 0 -> REQUIRES_REVIEW
 ```
+
+`COMPLETED` y `REQUIRES_REVIEW` son resultados distintos. El registro de la conciliación puede existir aunque `applied = 0`; sin cambio efectivo no se registra movimiento Kardex ni movimiento de cantidad cero. Cada movimiento efectivo queda en Kardex y se preserva la transacción local correspondiente.
+
+Conforme a DEC-F-009, el replay con identidad estable e intención/payload semántico igual devuelve el resultado anterior sin repetir descuentos; reutilizar la identidad con contenido distinto se rechaza con `409 IDEMPOTENCY_CONFLICT`, sin modificar saldo. Una venta física no puede descontarse dos veces aunque cambie la identidad técnica del reintento. La identidad estable de venta, su ámbito de unicidad y su persistencia siguen pendientes de definición/homologación: no se equiparan `ventaLocalUuid`, `offline_sale_id`, `operation_id` ni `order_id`, ni se prescribe una clave o mecanismo. El modelo físico revisado no acredita una persistencia/unicidad que cierre este pendiente.
+
+DEC-F-014 mantiene a Inventario como autoridad de ubicaciones. La referencia pública de tienda no equivale a `location_id`: antes de mutar, Inventario debe resolver la ubicación y autorizar actor, operación y ubicación. Mapeo ausente/ambiguo o actor no autorizado impiden modificar saldo; la lectura comercial no concede escritura. El OpenAPI actual todavía exige `location_id` en `ConciliacionOfflineRequest.lines`; esta incompatibilidad permanece sin resolver.
+
+DEC-F-015 distingue el resultado funcional necesario para Retail de los saldos internos. El contrato actual permite la conciliación a `modulo-ventas` y su respuesta incluye ubicación y saldos; no se retiran esos campos ni se afirma que Retail consuma la respuesta. La futura representación, consumidor, scope y eventual consulta posterior siguen pendientes de acuerdo G4/G7.
 
 ## 14.9. Sincronía de capacidades de inventario e incidencias
 
@@ -1365,7 +1375,7 @@ inventory.stock.changed
 inventory.stock.adjusted
 ```
 
-según corresponda.
+según corresponda. En conciliación offline solo un cambio efectivo de saldo produce un movimiento/evento de stock; una operación registrada con cantidad aplicada cero no genera movimiento Kardex de cantidad cero.
 
 ---
 
@@ -1713,6 +1723,8 @@ inventario:incidencias:reportar
 inventario:incidencias:resolver
 productos:fisicos:leer
 ```
+
+La operación de conciliación offline del OpenAPI actual admite `modulo-ventas` y requiere `inventario:conciliar-offline`; el registro/grant del scope sigue sujeto a Seguridad/G7. `inventario:disponibilidad:leer` para consultas comerciales de Retail no habilita la mutación ni agrega a Retail a la allowlist. La alternativa de invocación directa Retail→G6 no está homologada.
 
 **Scope propuesto fuera de la lista histórica:** `inventario:operaciones:leer` (`modulo-ventas`; `pending-security-registration` en OpenAPI). No otorgarlo a Marketplace, Chatbot, Retail ni otros clientes.
 
@@ -2703,6 +2715,10 @@ Retail offline
   -> COMPLETED | REQUIRES_REVIEW
 ```
 
+Esta es la secuencia documentada por G6: Ventas invoca la conciliación. La alternativa Retail→G6 directo está comunicada, pero no homologada. G4 usa `ventaLocalUuid`; G6 tiene `offline_sale_id`, `operation_id` y `order_id` en su contrato actual. Su correspondencia, estabilidad y ámbito de unicidad no están completamente acordados; esos nombres no establecen por sí solos una deduplicación entre reintentos técnicos. No se fija orden adicional entre pedido, pago y conciliación.
+
+El replay semántico idéntico devuelve el resultado previo (`COMPLETED` o `REQUIRES_REVIEW`); reutilizar la identidad estable con intención/payload distinto produce `409 IDEMPOTENCY_CONFLICT`. Esta obligación sigue bloqueada por la homologación y definición de identidad estable, no por una solución de persistencia documentada.
+
 
 ## 39.12. Preparación de cupón antes del pago
 
@@ -3222,6 +3238,8 @@ CommercialAvailabilityPolicy
 ```
 
 **D-INV-01 está adoptada** en `arquitectura/decisiones/ADR-DEC-F-BLOQUEANTES.md`: para esta primera entrega, cada contexto `fulfillment_ref` se resuelve mediante mapeo interno a **una sola ubicación elegible**. No sumar existencias de ubicaciones independientes ni inferir disponibilidad por agregación. Si el mapeo falta, es ambiguo o no permite justificar cumplimiento, la proyección comercial responde `INDETERMINADO` (no `AGOTADO` ni `DISPONIBLE`). `POST /api/v1/inventario/disponibilidad/comercial/verificar` evalúa cantidades completas con `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO`, sin revelar saldos ni `location_id`, con `binding=false` y **sin reservar stock**. La ruta permanece provisional por implementación/pruebas pendientes, **no** porque la decisión continúe abierta. Una agregación real multi-origen requeriría otra ADR y capacidad verificable.
+
+La conciliación offline conserva las reglas de §14.8: mutación solo por cantidades admisibles, replay semántico sin efecto repetido y conflicto de contenido con `409 IDEMPOTENCY_CONFLICT`. La identidad estable de la venta offline y su relación con `operation_id`, `order_id` y el identificador Retail no están resueltas. Inventario debe resolver/autorizar internamente la ubicación; el request OpenAPI actual todavía requiere `location_id`. El endpoint actual admite solo `modulo-ventas` y su response expone datos de saldo a ese consumidor; lectura comercial no concede acceso de escritura ni a la conciliación. La representación futura para Retail y su autorización siguen pendientes de homologación, no implementadas por este texto.
 
 ### promotions-svc
 
