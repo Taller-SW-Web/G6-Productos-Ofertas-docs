@@ -33,6 +33,18 @@ G6 es dueño de ocho bounded contexts: `taxonomy`, `catalog`, `pricing`, `price-
 
 Registra por separado el estado interno, externo y de implementación. No declares contratos implementados, homologados, desplegados o probados solo porque estén documentados.
 
+## Implementación backend y desbloqueo selectivo
+
+Las DEC-F-001 a DEC-F-015 adoptadas internamente se implementan en los bounded contexts de G6 cuando definen lógica e invariantes propias. La falta de homologación externa no impide desarrollar, probar o publicar esa lógica dentro del alcance autorizado; sí impide cambiar unilateralmente interfaces compartidas incompatibles, atribuir responsabilidades externas o conceder permisos de Seguridad.
+
+Clasifica cada trabajo con uno de estos estados operativos:
+
+- **IMPLEMENTAR_AHORA:** trabajo autónomo de G6 respaldado por decisiones y contratos aplicables; puede desarrollarse, probarse y publicarse en el alcance autorizado.
+- **IMPLEMENTAR_PARCIAL:** implementar invariantes, reglas, persistencia y pruebas internas ya definidas, manteniendo aislada la frontera de integración pendiente.
+- **BLOQUEADO_ESPECÍFICO:** bloquear solo la operación, contrato, autorización o secuencia dependiente de una decisión externa. Registrar qué falta, quién debe responder y el criterio concreto de desbloqueo.
+
+Una discrepancia externa no bloquea automáticamente un microservicio completo. G6 comunica a los módulos afectados los cambios previstos, regla aplicable, impacto contractual, versión y adaptación requerida; solicita homologación si hay impacto en contratos compartidos, responsabilidad externa o comportamiento del consumidor. Esa comunicación no es una autorización para lógica interna propia. No publicar como definitivo un cambio incompatible aún no acordado ni atribuir aceptación por silencio.
+
 ## Límites de cambio
 
 - No inventes contratos, acuerdos, rutas, scopes, campos, políticas ni decisiones. DEC-F-001 a DEC-F-015 son las decisiones internas aprobadas que constan en el registro. No crees DEC-F-016 ni posteriores sin aprobación expresa de Marco. No amplíes mediante inferencias el contenido de una decisión aprobada. Toda adopción posterior exige actualizar registro, trazabilidad e integraciones afectadas.

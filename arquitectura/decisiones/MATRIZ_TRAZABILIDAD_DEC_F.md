@@ -11,6 +11,12 @@ Cada fila corresponde a una decisión y enlaza los artefactos G6 principales que
 - **Contradicción pendiente:** diferencias que aún requieren resolución/homologación; “ninguna identificada” no certifica revisión exhaustiva.
 - **Runtime no acreditado:** límites de implementación, grants, despliegue o pruebas que la documentación no demuestra.
 
+## Interpretación operativa de pendientes
+
+Un pendiente de homologación no equivale a un bloqueo general de backend. Implementar en G6 las invariantes y la lógica interna definidas por DEC-F-001 a DEC-F-015; clasificar el trabajo como `IMPLEMENTAR_AHORA` si es autónomo, `IMPLEMENTAR_PARCIAL` si puede aislarse una frontera externa, o `BLOQUEADO_ESPECÍFICO` solo para la operación/contrato/autorización/secuencia que depende de respuesta ajena. Registrar para cada bloqueo el dato pendiente, el owner que debe resolverlo y el criterio de desbloqueo. La matriz documenta estado y trazabilidad, no prueba implementación, homologación ni runtime.
+
+Para conciliación Retail, DEC-F-002 y DEC-F-013/014/015 respaldan `IMPLEMENTAR_AHORA` para stock central autoritativo, conciliación parcial sin saldo negativo, Kardex e idempotencia. Corresponde `IMPLEMENTAR_PARCIAL` a la resolución/autorización interna de ubicaciones y minimización de resultados, conservando el DTO público vigente. Queda `BLOQUEADO_ESPECÍFICO` el invocador externo definitivo, mapeo de identificadores intermodulares, compatibilidad request/response Retail, grants G7 y secuencia intermodular acordada. Se mantienen las contradicciones G4/G5/G6 y los conflictos B1–B8; no se presume homologación externa.
+
 La matriz no declara completa ninguna DEC-F. `0.6.0-rc.1` fusionada como contenido documental sigue siendo candidato/provisional y no demuestra integración E2E. Los contratos G5/G4 se mencionan a través de fuentes G6 cuando su URL no fue proporcionada; su contenido se marca reportado/no verificado, no como fuente externa inspeccionada.
 
 | DEC-F | Referencias G6 principales | Existencia comprobada | Regla efectivamente documentada | Contradicción pendiente | Runtime no acreditado |
