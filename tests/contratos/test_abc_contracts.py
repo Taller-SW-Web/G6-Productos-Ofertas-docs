@@ -65,12 +65,27 @@ class ContractChecks(unittest.TestCase):
         self.assertEqual(get_canal_param['schema']['$ref'],'#/components/schemas/CanalComercial')
         self.assertEqual(get_op['x-allowed-client-ids'],['modulo-marketplace','modulo-chatbot','modulo-retail'])
         self.assertEqual(get_op['x-required-scope'],'inventario:disponibilidad:leer')
+        self.assertIn('400',get_op['responses'])
+        self.assertIn('403',get_op['responses'])
+        self.assertIn('VALIDACION',get_op['x-error-codes']['400'])
+        self.assertIn('SCOPE_INSUFICIENTE',get_op['x-error-codes']['403'])
         # POST /inventario/disponibilidad/comercial/verificar
         post_op=self.o['paths']['/inventario/disponibilidad/comercial/verificar']['post']
         post_body_schema=self.o['components']['schemas']['VerificarCantidadComercialRequest']
         self.assertEqual(post_body_schema['properties']['channel_id']['$ref'],'#/components/schemas/CanalComercial')
         self.assertEqual(post_op['x-allowed-client-ids'],['modulo-marketplace','modulo-chatbot','modulo-retail'])
         self.assertEqual(post_op['x-required-scope'],'inventario:disponibilidad:leer')
+        self.assertIn('400',post_op['responses'])
+        self.assertIn('403',post_op['responses'])
+        self.assertIn('VALIDACION',post_op['x-error-codes']['400'])
+        self.assertIn('SCOPE_INSUFICIENTE',post_op['x-error-codes']['403'])
+        # Distinción explícita en documentación contractual
+        desc=self.o['components']['schemas']['CanalComercial']['description']
+        self.assertIn('400 + VALIDACION',desc)
+        self.assertIn('403 + SCOPE_INSUFICIENTE',desc)
+        self.assertIn('modulo-marketplace -> MARKETPLACE',desc)
+        self.assertIn('modulo-chatbot -> CHATBOT',desc)
+        self.assertIn('modulo-retail -> RETAIL',desc)
     def test_single_location_policy_documented(self):
         desc=self.o['paths']['/inventario/disponibilidad/comercial/verificar']['post']['description']
         self.assertIn('D-INV-01',desc)

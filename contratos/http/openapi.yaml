@@ -20803,8 +20803,9 @@ components:
         Canales autorizados para consultar proyecciones comerciales de inventario.
         El canal solicitado debe corresponder al client_id autenticado:
         modulo-marketplace -> MARKETPLACE, modulo-chatbot -> CHATBOT, modulo-retail -> RETAIL.
-        El backend valida la concordancia entre el token y el canal; una identidad con scope
-        pero canal/client_id incompatible es rechazada con SCOPE_INSUFICIENTE (403) o VALIDACION (400).
+        Reglas deterministas de error:
+        - 400 + VALIDACION: el valor de canal o channel_id no pertenece al enum MARKETPLACE, CHATBOT, RETAIL, o existe un error de formato de la solicitud.
+        - 403 + SCOPE_INSUFICIENTE: el canal solicitado es válido, pero no corresponde al client_id autenticado, o la identidad carece de autorización para la operación.
     Canal:
       type: string
       enum:
