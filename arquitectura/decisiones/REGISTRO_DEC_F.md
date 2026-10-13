@@ -27,9 +27,9 @@ PR #86 está fusionado en el `master` contrastado. OpenAPI y AsyncAPI `0.6.0-rc.
 
 **Enunciado y justificación.** `inventory-svc` es propietario del saldo autoritativo, reservas y movimientos; evita saldos paralelos, dobles consumos y divergencia entre módulos.
 
-**Invariantes G6.** Saldo por `(sku, location_id)`; `available=max(on_hand-reserved-blocked,0)` con componentes no negativos y `reserved+blocked<=on_hand`. Mutaciones dejan trazabilidad Kardex y preservan idempotencia/atomicidad. La proyección comercial no revela saldos privados. La conciliación offline es una capacidad de Inventario; este registro no define quién la invoca.
+**Invariantes G6.** El stock central de Inventario es autoritativo por `(sku, location_id)`; `available=max(on_hand-reserved-blocked,0)` con componentes no negativos y `reserved+blocked<=on_hand`. Durante desconexión, un POS puede mantener estado local/provisional de ventas, pero no sustituye ni actualiza por sí solo el saldo central. La conciliación aplica solo cantidades admisibles (`applied_quantity=min(requested_quantity, available)`), conserva el remanente no conciliado para revisión y nunca crea saldo negativo. Las mutaciones centrales dejan Kardex y preservan idempotencia/atomicidad; la proyección comercial no revela saldos privados.
 
-**Responsabilidades externas.** Ventas orquesta acciones de pedido; Retail informa hechos físicos autorizados. El antecedente comunica que Retail llama directamente a G6 para conciliación offline. Las alineaciones actuales también describen conciliación desde Ventas. La ruta invocadora requiere homologación documental externa; no se infiere orden entre creación del pedido y conciliación.
+**Responsabilidades externas.** Ventas es dueño del pedido/pago y coordina su flujo. Retail conserva una venta POS local/provisional durante desconexión. El nuevo antecedente comunica que Retail llama directamente a G6 para conciliar la venta offline; las alineaciones G6 actuales describen el camino Retail→Ventas→G6. La ruta invocadora requiere homologación documental externa; no se infiere orden entre creación del pedido, cobro, conciliación y consumo de stock.
 
 **Estados.** Interno: adoptado. Externo: contradicción de documentación sobre invocador, pendiente de homologación; demás permisos no se consideran concedidos por aparecer en contrato. Implementación: hay evidencia estructural de migraciones citadas, backend funcional no acreditado. Pruebas: pendientes de ejecución E2E.
 
@@ -37,15 +37,15 @@ PR #86 está fusionado en el `master` contrastado. OpenAPI y AsyncAPI `0.6.0-rc.
 
 ## DEC-F-003 — Ventas/Postventa orquesta el ciclo comercial; `202` no es éxito final
 
-**Enunciado y justificación.** Ventas posee pedido y orquesta inventario/cupones; G6 ejecuta las mutaciones de Inventario y Promociones. `202 Accepted` admite un comando, no confirma su resultado.
+**Enunciado y justificación.** La secuencia depende del canal y del contrato aplicable. Para Marketplace y Chatbot, G5 crea el pedido `CREADO` y coordina la reserva de Inventario conforme a su contrato; `202 Accepted` de G6 admite un comando, no confirma su resultado. Retail tiene una secuencia distinta en el contrato G5 API v1.5.0 reportado: pedido `PAGADO` y `ENTREGADO` sin reserva; el nuevo antecedente de integración indica que Retail llama directamente a G6 para conciliar ventas offline. G4 v0.4 mantiene otra secuencia que aún requiere homologación. Se preservan estas diferencias sin imponer una secuencia común.
 
-**Invariantes G6.** Reserva, consumo y liberación requieren resultado definitivo durable. No afirmar reserva ni continuar un beneficio con cupón rechazado. Inventario emite `expires_at`; Promociones decide consumo/restauración dentro de su política. Pago y estado del pedido no pertenecen a G6.
+**Invariantes G6.** Reserva, consumo y liberación requieren resultado definitivo durable. Para el flujo de Marketplace/Chatbot, no afirmar reserva tras un mero `202`. No continuar un beneficio con cupón rechazado. Inventario emite `expires_at`; Promociones decide consumo/restauración dentro de su política. Pago y estado del pedido no pertenecen a G6. No inferir el orden definitivo entre pedido, cobro, conciliación y consumo de stock para Retail o G4.
 
-**Responsabilidades externas.** Ventas integra los resultados, mantiene el pedido/pago y orquesta el flujo; los canales no convierten una admisión G6 en confirmación de compra. La secuencia exacta de checkout debe respetar SPEC/contratos y homologación.
+**Responsabilidades externas.** G5 mantiene pedido/pago y coordina el flujo de Marketplace/Chatbot según su contrato. Para Retail rige la secuencia distinta que el contrato G5 v1.5.0 describe y el antecedente de llamada directa a G6 para conciliación; la documentación G6 existente difiere y debe homologarse. G4 v0.4 también requiere homologación. Los canales no convierten una admisión G6 en confirmación de compra. No se atribuye aquí una secuencia definitiva común.
 
-**Estados.** Interno: adoptado. Externo: integración G5 requiere ratificación explícita según ALINEACION_VENTAS. Implementación: contratos candidatos; handlers y compatibilidad de consumidores no acreditados. Pruebas: E2E 202+resultado pendientes.
+**Estados.** Interno: adoptado con flujos por canal distinguidos. Externo: Marketplace/Chatbot, Retail y G4 tienen descripciones distintas; homologación Retail/G6 y G4 pendiente, y ratificación G5 donde la alineación la requiere. Implementación: contratos candidatos; handlers y compatibilidad de consumidores no acreditados. Pruebas: E2E por canal y resultado tras `202` pendientes.
 
-**Referencias y pendientes.** SPEC/HU/FLOW-002/005/015, ALINEACION_VENTAS, OpenAPI, AsyncAPI, catálogo de eventos y matriz de pruebas. Validar resultado tras `202`, recuperación, fallo de pago y transiciones concurrentes.
+**Referencias y pendientes.** SPEC/HU/FLOW-002/005/015, [ALINEACION_VENTAS.md](../../integraciones/ALINEACION_VENTAS.md), [ALINEACION_RETAIL.md](../../integraciones/ALINEACION_RETAIL.md), OpenAPI, AsyncAPI, catálogo de eventos y matriz de pruebas. La alineación G5 cita `specs/api/api-ventas.md` v1.5.0; el registro maestro aporta el antecedente Retail y G4 v0.4. Resolver las diferencias de secuencia con los owners sin alterar contratos ni imponer orden de pedido/cobro/conciliación/consumo.
 
 ## DEC-F-004 — Pedido opaco, operación UUID y reserva UUID
 
@@ -75,13 +75,13 @@ PR #86 está fusionado en el `master` contrastado. OpenAPI y AsyncAPI `0.6.0-rc.
 
 **Enunciado y justificación.** `pricing-svc` es autoridad de precio regular/oferta, moneda, alcance, canal, vigencia, versión e historial; evita autoridades monetarias paralelas.
 
-**Invariantes G6.** SKU simple/variante sigue reglas documentadas de herencia/override. Promociones calcula beneficios sobre referencia de precio, no posee precio base. Ventas conserva snapshot de pedido sin editar el catálogo de precios; auditoría conserva hechos de cambio.
+**Invariantes G6.** Según SPEC-013, el SKU vendible simple hereda el precio del producto y una variante puede heredar o usar override propio. Precio por canal sigue precedencia específica/global y su fallback definido en SPEC-013; no se permiten vigencias superpuestas para el mismo objetivo y canal. Las escrituras condicionadas respetan `price_version`; una versión obsoleta produce `VERSION_CONFLICT`. `pricing-svc` calcula y persiste el precio vigente; `price-audit-svc` registra la bitácora/historial y no autoriza ni mantiene un precio mutable paralelo. Promociones calcula beneficios sobre una referencia, no posee precio base; Ventas conserva su snapshot sin editar precios.
 
 **Responsabilidades externas.** Canales y Ventas consultan/respetan precio, canal y vigencia; no escriben precios definitivos en esquemas ajenos.
 
-**Estados.** Interno: adoptado según antecedente. Externo: revisión transversal pendiente. Implementación: documentación y persistencia presentes; ejecución integral y contratos runtime no acreditados. Pruebas: cierre no acreditado.
+**Estados.** Interno: adoptado según antecedente y reglas de SPEC-013. Externo: revisión transversal pendiente. Implementación: documentación y persistencia presentes; ejecución integral y contratos runtime no acreditados. Pruebas: cierre no acreditado.
 
-**Referencias y pendientes.** SPEC/HU/FLOW-013/014, SPEC-003/004, OpenAPI/AsyncAPI, Arquitectura/Modelo, alineaciones y `datos/pricing`, `datos/price_audit`, pruebas. Auditar vigencias, herencia, concurrencia e historial.
+**Referencias y pendientes.** SPEC/HU/FLOW-013/014, SPEC-003/004, OpenAPI/AsyncAPI, Arquitectura/Modelo, alineaciones y `datos/pricing`, `datos/price_audit`, pruebas. Contrastar fallback/prioridad con cada contrato aplicable y ejecutar pruebas de vigencias, herencia, concurrencia, `VERSION_CONFLICT` e historial.
 
 ## DEC-F-007 — Promociones es autoridad de beneficios, campañas y cupones
 
@@ -99,37 +99,37 @@ PR #86 está fusionado en el `master` contrastado. OpenAPI y AsyncAPI `0.6.0-rc.
 
 **Enunciado y justificación.** Consumo tiene efecto a lo sumo una vez; restaurar requiere consumo confirmado y aplica política del owner. Evita doble consumo/restauración y cupos incoherentes.
 
-**Invariantes G6.** Validación no consume. Replay semánticamente idéntico devuelve resultado sin efecto adicional; misma identidad con intención distinta se rechaza. Solo Promociones aplica política `RESTAURAR_EN_CANCELACION`/`NO_RESTAURAR`. El snapshot de Ventas no sustituye elegibilidad/cupo de Promociones.
+**Invariantes G6.** La precondición de consumo del flujo al que aplica es una reserva de Inventario efectivamente confirmada: HTTP `202` por sí solo no basta. La solicitud se relaciona con `reservation_id` UUID de esa reserva, `commercial_snapshot_ref` durable, `order_id` opaco y `operation_id` UUID. En esa secuencia, Promociones debe emitir el consumo y su resultado definitivo tipado antes de que Ventas intente cobrar; rechazo no permite cobrar con ese snapshot. El snapshot no reemplaza la revalidación autoritativa de cupo global, cupo por cliente, elegibilidad y coherencia con el pedido, que debe hacerse atómicamente al consumir. La unicidad de negocio `(order_id, coupon_id)` —a lo sumo un consumo por pedido y cupón— es distinta de la idempotencia técnica del comando por `operation_id`; una operación nueva no habilita segundo consumo. Restaurar exige consumo confirmado y aplica `RESTAURAR_EN_CANCELACION` o `NO_RESTAURAR`, de manera atómica/idempotente; no crea uso inexistente ni excede límites. La secuencia de consumo no se relaja para Retail: el flujo Retail sin reserva no tiene mecanismo de cupón aprobado en este registro.
 
-**Responsabilidades externas.** Ventas solicita consumo/restauración y decide estado/pago del pedido. La llamada directa Retail a G6 informada para conciliación offline no establece un mecanismo de cupón sin reserva; no se infiere uno.
+**Responsabilidades externas.** En el flujo aplicable, Ventas aporta las referencias, solicita consumo/restauración y decide estado/pago del pedido. Retail concilia su venta offline bajo una secuencia aún pendiente de homologación; la llamada directa Retail→G6 no establece un mecanismo de cupón sin reserva. No se inventa reserva ficticia, mensaje ni DTO para ese caso.
 
-**Estados.** Interno: adoptado. Externo: semántica G5/cupón requiere homologación donde aplique. Implementación: B4 candidato; migración 0004 cuenta con postcheck estructural documentado, backend transaccional no acreditado. Pruebas: carreras y E2E pendientes.
+**Estados.** Interno: adoptado con precondiciones preservadas. Externo: semántica G5/cupón requiere homologación donde aplique; no hay mecanismo Retail sin reserva aprobado aquí. Implementación: B4 candidato; migración 0004 cuenta con postcheck estructural documentado, backend transaccional no acreditado. Pruebas: carreras y E2E pendientes.
 
-**Referencias y pendientes.** SPEC-005/002/006, HU/FLOW-005, ADR B4, AsyncAPI, ALINEACION_VENTAS, `datos/promotions/migrations/0004*`, matriz de pruebas. Homologar correlación y política ante ambigüedad; no crear mecanismo de cupón para venta offline.
+**Referencias y pendientes.** SPEC-005/002/006, HU/FLOW-005, ADR B4, AsyncAPI, ALINEACION_VENTAS, `datos/promotions/migrations/0004*`, matriz de pruebas. Homologar correlación/restauración sin cambiar precondiciones; no crear mecanismo de cupón para venta offline.
 
 ## DEC-F-009 — Idempotencia por identidad, intención y contenido
 
 **Enunciado y justificación.** Retry equivalente repite resultado sin efectos; reutilizar identidad con intención/payload semántico distinto produce conflicto. Separa operación de negocio, dedupe de transporte y correlación.
 
-**Invariantes G6.** Fingerprint semántico, ámbito definido y persistencia atómica; `message_id` deduplica entrega, `correlation_id` agrupa traza, ninguno por sí solo sustituye la clave de operación. No prometer “exactly once”.
+**Invariantes G6.** Para mutaciones, distinguir identidad estable del comando, identidad de mensaje/reintento técnico y correlación. En ventas offline, POS puede conservar estado local/provisional mientras no hay conexión; el saldo central sigue siendo autoritativo y solo cantidades admisibles se concilian sin saldo negativo. La deduplicación por identidad estable de la venta offline, independiente del identificador técnico de reintento, está pendiente. No se fija nombre de campo, índice, fingerprint ni clave compuesta sin contrato aprobado. Para el resto de mutaciones se mantiene la regla general: retry semánticamente idéntico sin efecto repetido; identidad de comando reutilizada con intención/contenido distinto, conflicto. `message_id` deduplica entrega, `correlation_id` agrupa traza; ninguno sustituye idempotencia de negocio. No prometer “exactly once”.
 
 **Responsabilidades externas.** Consumidores reintentan con identidad/intención estables y procesan resultados tipados; G6 valida actor, scope y propiedad.
 
-**Estados.** Interno: adoptado como principio. Externo: ámbito transversal completo pendiente de homologación. Implementación: parcial/candidata; constraint/ledger existente no prueba handlers conformes. Pruebas: carreras y fallos entre efecto/Outbox pendientes.
+**Estados.** Interno: adoptado como principio. Externo: ámbito transversal completo y deduplicación de venta offline pendientes de homologación. Implementación: parcial/candidata; constraint/ledger existente no prueba handlers conformes. Pruebas: carreras, retry técnico vs venta offline duplicada y fallos entre efecto/Outbox pendientes.
 
-**Referencias y pendientes.** SPEC-003/004/005/015, OpenAPI, AsyncAPI, catálogo de errores/eventos, Arquitectura, persistencias Inventory/Promotions y pruebas. Resolver y probar ámbito de unicidad; no alterar índices por inferencia.
+**Referencias y pendientes.** SPEC-003/004/005/015, OpenAPI, AsyncAPI, catálogo de errores/eventos, Arquitectura, persistencias Inventory/Promotions y pruebas. Resolver y probar ámbito de unicidad e identidad estable de venta offline; no alterar índices ni elegir nombre/clave por inferencia.
 
 ## DEC-F-010 — Inventario determina TTL y expiración de reservas
 
 **Enunciado y justificación.** Inventario calcula y aplica expiración; consumidores respetan `expires_at`, evitando temporizadores locales contradictorios.
 
-**Invariantes G6.** Toda reserva confirmada publica vencimiento autoritativo. Expiración solo libera reserva aún activa; consumo/liberación/expiración se serializan y estados terminales no reviven por replay. TTL comercial no es TTL de transporte.
+**Invariantes G6.** El TTL comercial es configurable por canal/entorno; Inventario calcula y emite `expires_at` para cada reserva efectivamente creada, y el consumidor respeta ese instante en vez de recalcularlo localmente. Expiración solo libera reserva aún activa; consumo/liberación/expiración se serializan y estados terminales no reviven por replay. TTL comercial de la reserva y TTL de transporte/reintento son distintos. No se fija duración ni condición adicional en este registro.
 
 **Responsabilidades externas.** Ventas usa el vencimiento emitido para checkout y no inventa duración. No decide saldos ni extiende reserva unilateralmente.
 
-**Estados.** Interno: adoptado. Externo: acuerdo descrito en alineación Ventas, integración completa no certificada. Implementación: candidato contractual; worker/transiciones no acreditados. Pruebas: concurrencia y reloj pendientes.
+**Estados.** Interno: adoptado. Externo: regla descrita en alineación Ventas; integración completa no certificada. Implementación: candidato contractual; cálculo, worker y transiciones no acreditados. Pruebas: concurrencia, configuración por canal/entorno y reloj pendientes.
 
-**Referencias y pendientes.** SPEC/HU/FLOW-015, OpenAPI/AsyncAPI, Arquitectura, ALINEACION_VENTAS, persistencia Inventory e integración. Verificar worker, serialización y replay.
+**Referencias y pendientes.** SPEC/HU/FLOW-015, OpenAPI/AsyncAPI, Arquitectura, ALINEACION_VENTAS, persistencia Inventory e integración. Verificar TTL configurable, cálculo/emisión de `expires_at`, worker, serialización y replay sin imponer duración.
 
 ## DEC-F-011 — Catálogo posee perfil físico; Despacho decide logística
 
@@ -139,9 +139,9 @@ PR #86 está fusionado en el `master` contrastado. OpenAPI y AsyncAPI `0.6.0-rc.
 
 **Responsabilidades externas.** Despacho consulta el perfil y mantiene su autoridad logística; no escribe perfil maestro de Catálogo.
 
-**Estados.** Interno: adoptado. Externo: conformidad de Despacho no acreditada en alineaciones disponibles. Implementación: endpoint/modelos documentados; runtime no acreditado. Pruebas: no certificadas.
+**Estados.** Interno: adoptado. Externo: el contrato G2 declara acordadas por ambos equipos la ruta y autorización de consulta física por lote desde `modulo-despacho` con scope `productos:fisicos:leer`. Ese acuerdo documental no acredita la aprobación/registro/concesión administrativa del permiso por Seguridad ni la provisión efectiva de credenciales. Implementación: endpoint/modelos documentados; runtime no acreditado. Pruebas: no certificadas.
 
-**Referencias y pendientes.** SPEC/HU/FLOW-003/004, OpenAPI, Arquitectura §1.4, Modelo, catálogo físico y pruebas. Verificar scope, DTO, SKU variante y activación.
+**Referencias y pendientes.** SPEC/HU/FLOW-003/004, OpenAPI, Arquitectura §1.4, Modelo, catálogo físico y pruebas; contrato externo G2 [`integraciones/api-contract.md`](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/integraciones/api-contract.md) §3.4 y §5.2. La operación documentada es `POST /api/v1/productos/datos-fisicos/consulta`, `aud=api-productos`, `scope=productos:fisicos:leer`, cliente `modulo-despacho`. Verificar separadamente aprobación, grant de Seguridad, provisión de credenciales y pruebas de integración.
 
 ## DEC-F-012 — Fuentes normativas, contratos versionados y compatibilidad
 

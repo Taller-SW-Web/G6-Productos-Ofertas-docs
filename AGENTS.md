@@ -4,7 +4,7 @@
 
 1. Leer este archivo y `README.md`.
 2. Identificar el alcance y leer las `SPEC`, `HU` y `FLOW` pertinentes.
-3. Leer `arquitectura/decisiones/REGISTRO_DEC_F.md`, `MATRIZ_TRAZABILIDAD_DEC_F.md` y los ADR aplicables.
+3. Leer `arquitectura/decisiones/REGISTRO_DEC_F.md`, `arquitectura/decisiones/MATRIZ_TRAZABILIDAD_DEC_F.md` y los ADR aplicables.
 4. Leer los contratos ejecutables aplicables (`contratos/http/openapi.yaml` y/o `contratos/eventos/asyncapi.yaml`), sus guías y acuerdos de integración.
 5. Leer arquitectura, modelo conceptual, persistencia y pruebas vinculadas antes de cambiar alguno de esos artefactos.
 
@@ -21,7 +21,7 @@ No omitas una fuente aplicable por haber encontrado una respuesta en un document
 
 ## Ownership y coordinación
 
-G6 es dueño de Catálogo/SKU vendible, Pricing, Promociones/Cupones e Inventario según sus bounded contexts. Ventas es dueño del pedido, pago y su orquestación; Retail, Marketplace, Chatbot, Despacho y Seguridad conservan sus propias responsabilidades. Integrarse no transfiere ownership ni autoriza acceso directo a datos de otro módulo. No atribuyas aceptación a G1–G5 o G7 sin evidencia formal.
+G6 es dueño de ocho bounded contexts: `taxonomy`, `catalog`, `pricing`, `price-audit`, `promotions`, `combos`, `inventory` y `bulk`. Ventas es dueño del pedido, pago y su orquestación; Retail, Marketplace, Chatbot, Despacho y Seguridad conservan sus propias responsabilidades. Integrarse no transfiere ownership ni autoriza acceso directo a datos de otro módulo. No atribuyas aceptación a G1–G5 o G7 sin evidencia formal.
 
 ## Estados que no deben confundirse
 
@@ -35,8 +35,8 @@ Registra por separado el estado interno, externo y de implementación. No declar
 
 ## Límites de cambio
 
-- No inventes contratos, acuerdos, rutas, scopes, campos, políticas ni decisiones. No crees DEC-F-013 ni posteriores sin solicitud expresa.
-- No reescribas migraciones aplicadas ni sus checksums. Los cambios de esquema requieren migración incremental y el proceso autorizado; no ejecutes SQL de escritura en Supabase.
+- No inventes contratos, acuerdos, rutas, scopes, campos, políticas ni decisiones. No crees identificadores DEC-F posteriores al 012 sin solicitud expresa.
+- No reescribas migraciones aplicadas ni sus checksums. SQL de escritura en Supabase requiere autorización expresa de Marco, alcance definido y proceso de despliegue aprobado; sin esos requisitos no se ejecuta. En esta tarea está prohibido ejecutar SQL de escritura.
 - Cambia únicamente los archivos del alcance aprobado. No aproveches una tarea para normalizar documentos adyacentes.
 - No hagas commit, push, publicación o merge salvo que la solicitud lo autorice expresamente. Nunca abras PR si se indicó que no.
 
