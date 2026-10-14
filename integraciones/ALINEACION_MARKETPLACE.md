@@ -32,7 +32,7 @@ product_id != variant_id != sku
 - Precio, disponibilidad, carrito y pedido se resuelven usando el SKU vendible.
 - G6 determina la elegibilidad comercial; no se exponen variantes inactivas o no vendibles.
 
-El esquema comercial G6 `VarianteComercial` no incorpora un `status`; G1 no debe deducirlo ni añadirlo al esquema. G6 conserva la autoridad de elegibilidad comercial y la proyección debe limitarse a opciones vendibles; el mecanismo exacto de filtrado debe respetar el contrato publicado.
+El esquema comercial G6 `VarianteComercial` no incorpora un `status`; no se añade ese campo al contrato G6. G6 garantiza que la proyección comercial de detalle contiene únicamente variantes elegibles/vendibles. G1 puede transformar una variante de esa proyección a su DTO BFF con `status: ACTIVE` y valida que existan `variant_id`, SKU y atributos requeridos. Esto no constituye una contradicción entre DTOs. Sigue pendiente demostrar la cobertura de producto simple mediante `sku_base` en F-011/F-013; no deducir SKU desde otros IDs.
 
 ## 4. Catálogo y primer corte
 
@@ -52,6 +52,8 @@ GET /api/v1/productos/por-slug/{slug}?canal=MARKETPLACE
 ```
 
 Las tres rutas existen en OpenAPI `0.6.0-rc.1`; su existencia no prueba implementación, disponibilidad de servicio ni concesión de permisos. Para el listado, OpenAPI permite `q` y `canal`; la ruta por slug exige `canal`. Las lecturas comerciales deben limitarse a productos activos y elegibles para Marketplace según la proyección contractual. No se exponen flags administrativos como `catalog_version`, `pricing_preparado`, `inventario_inicializado`, `perfil_fisico` o `physical_profile`.
+
+F-007 usa paginación G1 base cero (`page=0`) y `pageSize`; el adaptador traduce `pagina = page + 1` para la paginación G6 base uno y copia `pageSize` a `tamanio`. Para las tres rutas del corte, el scope previsto/requerido es `catalogo:leer`, incluida la consulta condicional por slug. En OpenAPI el scope de categorías y búsqueda figura `pending-security-registration`; la operación por slug admite `serviceBearer` pero actualmente no declara `x-required-scope`. Esa omisión contractual debe conciliarse antes de tratar el permiso como ejecutable; no prueba que el grant exista.
 
 El ordenamiento publicado se limita a `NOMBRE_ASC` y `NOMBRE_DESC`; ordenar por precio queda fuera mientras no haya una regla product-level para productos con múltiples SKU/overrides. Categorías y búsqueda constituyen la primera evidencia contractual; fixture y prueba reproducible son evidencia propuesta por G1. La integración HTTP real desde el BFF y el despliegue deben acreditarse separadamente.
 
@@ -85,7 +87,9 @@ La respuesta comercial G6 admite `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO` e `INDETE
 
 `UNDETERMINED` es un resultado comercial válido, no un error de infraestructura. El BFF conserva HTTP 200 ante ese resultado, no presenta disponibilidad garantizada ni agotamiento, y permite reintento. Distingue 503, timeout y respuesta inválida; nunca convierte un error técnico en estado de inventario. La política interna `D-INV-01` prohíbe sumar saldos de ubicaciones independientes por defecto: si no se puede demostrar una fuente única y ejecutable, el resultado es `INDETERMINADO`, no `AGOTADO`.
 
-**Discrepancia documental pendiente:** el contrato G1 F-014 consultado en `main` aún enumera solo `AVAILABLE`, `STOCK_LOW` y `OUT_OF_STOCK`; la respuesta M-01 del 13/10 acepta añadir `UNDETERMINED`. Se conserva la respuesta más reciente como propuesta registrada, pero la adaptación consumible requiere que G1 actualice/homologue F-014 y que G6 confirme su conformidad. Hasta entonces M-01 no se declara bilateralmente cerrada.
+**Discrepancia de contrato API pendiente:** F-014 API de G1 enumera solo `AVAILABLE`, `STOCK_LOW` y `OUT_OF_STOCK`; la respuesta M-01 del 13/10 acepta añadir `UNDETERMINED`. G1 debe actualizar/homologar F-014 API y G6 documentar su conformidad antes de cerrar el mapeo bilateral.
+
+**Contradicción funcional pendiente:** F-014 funcional v0.1.0, regla `RN-F014-02`, describe una proyección comercial agregada por SKU sobre ubicaciones elegibles. Esa agregación no puede sumar existencias de puntos de cumplimiento independientes bajo `D-INV-01`. G1 debe actualizar la regla para usar una única fuente de cumplimiento y devolver `INDETERMINADO` cuando no exista resolución inequívoca. La discrepancia funcional es independiente de la omisión de `UNDETERMINED` en F-014 API.
 
 La verificación de cantidades es una operación distinta y no vinculante:
 
@@ -107,7 +111,7 @@ POST /api/v1/promociones/evaluar
 POST /api/v1/cupones/validar
 ```
 
-Evaluar promociones o validar cupones no consume beneficios. G6 conserva la autoridad del beneficio; G5 mantiene la orquestación de consumo/restauración. El DTO vigente de evaluación no garantiza beneficios simultáneos ni publica `applied_benefits[]`; no se inventa esa estructura.
+Evaluar promociones o validar cupones no consume beneficios. G6 conserva la autoridad del beneficio; G5 mantiene la orquestación de consumo/restauración. El DTO vigente de evaluación no garantiza beneficios simultáneos ni publica `applied_benefits[]`; no se inventa esa estructura. Si la regla homologada requiere `customer_ref`, G1 lo obtiene del `sub` del token del usuario; nunca del `sub` del token técnico del BFF. Las decisiones del consumidor ante rechazos utilizan códigos contractuales estables (`code`), no textos humanos como `title`, `detail` o mensajes.
 
 El snapshot comercial conjunto requiere contrato entre G6 (precios y beneficios), G2 (envío), G5 (monto final del pedido) y G1 (visualización/transporte). Siguen pendientes `price_version` y vigencias coordinadas, referencias de promociones/cupones, desglose de beneficios, cotización de envío, total confirmado, correlación y rechazo de referencias vencidas. No se presenta un DTO agregado como publicado.
 
@@ -130,9 +134,7 @@ G1 acepta estas semánticas de estado, sujetas a las fuentes y autoridad de G5:
 - `ANULADO`: fallo terminal conforme al estado autorizado por G5.
 - Timeout: estado incierto; no se infiere éxito ni fallo.
 
-G1 no calcula TTL autónomamente. G5 debe publicar los estados, causas terminales y `expires_at` aplicables. Aún falta acordar el body completo válido de `POST /api/v1/pedidos`, el literal permitido para `pago.metodoPago` y la recuperación tras pérdida de respuesta. G1 propone persistir `checkoutOperationId`, `Idempotency-Key` UUID v4, fingerprint, payload semánticamente idéntico y `pedidoId` cuando exista; la persistencia transitoria y su privacidad requieren resolución de G1. No se inventan métodos de pago ni rutas de recuperación.
-
-**Discrepancia documental pendiente:** el contrato G1 F-026 consultado describe repetir `POST /api/v1/pedidos` con la misma clave/payload para recuperar una respuesta perdida, mientras M-07 declara que la política de recuperación aún debe acordarse con G5. No se trata esa descripción de F-026 como política bilateral aprobada; G1/G5 deben reconciliar las fuentes antes de habilitar recuperación.
+G1 ratifica recuperar la pérdida de la respuesta `201` repitiendo `POST /api/v1/pedidos` con la misma `Idempotency-Key` y el mismo payload semántico; F-026 es compatible con esa regla. Se conservan `checkoutOperationId`, fingerprint y `pedidoId` cuando exista. Siguen pendientes con G5 el body completo válido, el literal permitido para `pago.metodoPago` y los detalles operativos de recuperación. Para poder repetir la misma solicitud tras recarga, G1 debe decidir entre almacenamiento transitorio protegido y de retención corta o reconstrucción determinista demostrada; la decisión y revisión de privacidad corresponden a G1. No se inventan métodos de pago ni rutas.
 
 ## 10. Correlación
 
@@ -144,7 +146,7 @@ Las operaciones externas pueden responder `429 RATE_LIMIT_EXCEDIDO` con `Retry-A
 
 ## 12. Identidad técnica y permisos
 
-La propuesta de identidad técnica de G1 es `client_id=modulo-marketplace`, audiencia `api-productos` y JWT de servicio emitido/obtenido por su BFF. Los secretos no se exponen al navegador. Para las dos primeras rutas del corte G1 prevé `catalogo:leer`. OpenAPI marca el registro de scopes como `pending-security-registration`; el grant efectivo corresponde a G7 y no está acreditado. La URL base absoluta por entorno y la provisión de credenciales siguen pendientes.
+La propuesta de identidad técnica de G1 es `client_id=modulo-marketplace`, audiencia `api-productos` y JWT de servicio emitido/obtenido por su BFF. Los secretos no se exponen al navegador. Para las dos primeras rutas y la ruta condicional por slug del corte se requiere `catalogo:leer`. OpenAPI marca el registro de scopes de categorías y listado como `pending-security-registration`; la operación por slug no declara `x-required-scope` y debe alinearse. El grant efectivo corresponde a G7 y no está acreditado. La URL base absoluta por entorno y la provisión de credenciales siguen pendientes.
 
 Los scopes `precios:leer`, `promociones:leer`, `promociones:evaluar`, `cupones:validar`, `recomendaciones:leer` e `inventario:disponibilidad:leer` se mantienen como previsiones para capacidades posteriores; no forman parte del primer corte ni se afirman concedidos.
 
@@ -152,9 +154,7 @@ Los scopes `precios:leer`, `promociones:leer`, `promociones:evaluar`, `cupones:v
 
 La respuesta de G1 del 13/10 consta en el registro enlazado y contiene tres aceptaciones (M-01, M-02, M-06) y seis propuestas de cambio (M-03 a M-05, M-07 a M-09). Esto acredita la respuesta de G1, no la conformidad de G6 ni una homologación bilateral cerrada. Responsables técnicos no sustituyen aprobación formal.
 
-Además, las fuentes G1 requieren conciliación: F-014 conserva tres estados aunque M-01 acepta cuatro; F-013 representa `status: ACTIVE` aunque G6 `VarianteComercial` no publica `status`; y F-026 describe un retry de recuperación que M-07 deja pendiente con G5. Se mantienen ambas referencias y sus estados; no se elige una semántica por inferencia. Desbloqueo: G1 revisa/actualiza los contratos F afectados y los owners G1/G5/G6 registran conformidad de frontera.
-
-Dependencias: G2/G5/G6 deben resolver origen, formato y validez de `fulfillment_ref`; G2/G5/G6 deben acordar snapshot y vigencias; G5 debe publicar estados, causas terminales, expiración y contrato de creación/recuperación del pedido; G7 debe registrar y conceder los permisos; G1 debe resolver persistencia transitoria y privacidad. La URL base y credenciales por entorno también faltan.
+Pendientes externos: G1 debe alinear RN-F014-02 con D-INV-01 y agregar `UNDETERMINED` a su contrato API; G1/G6 deben registrar conformidad del mapeo. El scope de la ruta por slug requiere declaración contractual G6. G1 debe validar la proyección de variantes y cubrir SKU simple mediante `sku_base`. G2/G5/G6 deben resolver origen, formato y validez de `fulfillment_ref`; G2/G5/G6 deben acordar snapshot y vigencias; G5 debe publicar estados, causas terminales, expiración, body completo, literal de pago y detalles de creación/recuperación; G7 debe registrar y conceder permisos; G1 resuelve persistencia/reconstrucción segura y privacidad. URL base y credenciales por entorno siguen pendientes.
 
 G1 propone contrato, fixture y prueba reproducible como primera evidencia. La llamada real BFF→G6, despliegue, grants y pruebas E2E necesitan evidencia propia ligada a versión/commit. Ni documentación ni YAML acreditan esos estados.
 
@@ -171,24 +171,23 @@ G1 propone contrato, fixture y prueba reproducible como primera evidencia. La ll
 - `CT-MKT-11`: recomendaciones autorizadas.
 - `CT-MKT-12`: no hay filtración de datos administrativos.
 - `CT-MKT-13`: correlación.
+- Primer corte: categorías activas; búsqueda con producto elegible y no elegible; resultado vacío; detalle simple y producto con dos variantes cuando corresponda.
+- Seguridad y disponibilidad técnica: 401 sin token válido, 403 sin autorización y 503 ante indisponibilidad del servicio.
+- Paginación: `page=0`/`pageSize` se traduce a `pagina=1`/`tamanio` y se verifica el mapeo de páginas siguientes.
 
 La existencia de estos casos no acredita que se hayan ejecutado. Las pruebas aplicables requieren evidencia reproducible para considerar cerrada la integración runtime.
 
-## Addendum contractual G6 — decisiones y contratos candidatos
+## Addendum contractual G6 `0.6.0-rc.1` — decisiones y contratos candidatos
 
-Las decisiones internas y contratos candidatos G6 de `0.6.0-rc.1` conservan las siguientes reglas, sin que este resumen modifique OpenAPI o AsyncAPI:
+La versión candidata `0.6.0-rc.1` no acredita despliegue; `0.5.0` permanece como antecedente histórico. Se conservan las reglas internas/contractuales sin sustituir OpenAPI o AsyncAPI:
 
 - `order_id` es referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
-- Las operaciones de reserva, confirmación y liberación responden `202` cuando admiten el comando; resultado de negocio se acredita por persistencia/evento conforme a AsyncAPI.
-- `GET /inventario/operaciones/{operationId}` es solo para Ventas con `inventario:operaciones:leer`; la verificación comercial por cantidad es provisional y no vinculante.
-- `inventory.reservation.rejected` y resultados de consumo/restauración son mensajes tipados con correlación; los nombres y schemas canónicos pertenecen a AsyncAPI.
+- Las operaciones de reserva, confirmación y liberación responden `202` cuando admiten el comando; el resultado de negocio se acredita por persistencia/evento conforme a AsyncAPI.
+- `GET /inventario/operaciones/{operationId}` es solo para Ventas con `inventario:operaciones:leer`; la verificación `POST /inventario/disponibilidad/comercial/verificar` es provisional y no vinculante.
+- `inventory.reservation.rejected` y los resultados de consumo/restauración son mensajes tipados con correlación; los nombres y schemas canónicos pertenecen a AsyncAPI.
 - D-INV-01: no sumar ubicaciones independientes por defecto; mapeo irresoluble resulta `INDETERMINADO`. `SUFICIENTE` no constituye reserva.
-- El consumo de beneficios por Ventas requiere reserva confirmada y referencias contractuales; G1 no consume ni restaura beneficios por su cuenta.
-- Misma identidad y payload semántico deben evitar efectos duplicados; identidad reutilizada con intención distinta produce `IDEMPOTENCY_CONFLICT`, conforme al contrato aplicable.
-- Se respeta `expires_at` emitido por Inventario; las transiciones concurrentes obedecen la regla interna adoptada.
+- El consumo de beneficios por Ventas requiere reserva confirmada y referencias `reservation_id` y `commercial_snapshot_ref`; resultados tipados y restauración ligada a la operación consumida.
+- Misma identidad y payload semántico evitan efectos duplicados; identidad reutilizada con intención distinta produce `IDEMPOTENCY_CONFLICT`. Los eventos usan `message_id` para deduplicación de transporte.
+- Se respeta `expires_at` emitido por Inventario y se serializan las transiciones concurrentes según la decisión interna adoptada.
 
-Estos contratos siguen candidatos/provisionales hasta que implementación y pruebas integradas sean verificadas. La documentación no prueba despliegue ni conformidad externa.
-
-## Addendum contractual G6 `0.6.0-rc.1`
-
-La versión `0.6.0-rc.1` es candidata y no desplegada según las fuentes G6 consultadas; la homologación HTTP `0.5.0` permanece como antecedente histórico. Las decisiones internas y contratos candidatos G6 no prueban aceptación externa, permisos efectivos, handlers ni pruebas de integración. La respuesta M-01 a M-09 se mantiene diferenciada por punto en el [registro de acuerdos](ACUERDOS_G1_MARKETPLACE_2026-10-13.md).
+Estos contratos siguen candidatos/provisionales hasta verificar implementación y pruebas integradas. La documentación no acredita despliegue, permisos efectivos, conformidad externa ni prueba E2E. El registro de la respuesta M-01–M-09 se mantiene en [ACUERDOS G1 Marketplace](ACUERDOS_G1_MARKETPLACE_2026-10-13.md).
