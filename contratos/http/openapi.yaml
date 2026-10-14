@@ -3618,14 +3618,15 @@ paths:
       x-source-spec:
       - SPEC-015
       x-consumers:
-      - Ventas/Postventa
+      - Ventas (M1)
+      - Postventa (M2) para consulta informativa de CAMBIO
       x-service-audience: api-productos
       x-required-scope: inventario:disponibilidad:leer
       x-scope-registration-status: pending-security-registration
       security:
       - userBearer: []
       - serviceBearer: []
-      description: Saldo detallado/autoritativo por SKU/ubicación. No es la representación consumida por canales.
+      description: Saldo detallado/autoritativo por SKU/ubicación para consultas módulo-a-módulo de Ventas (M1) y Postventa (M2). M2 puede usarlo para evaluar disponibilidad informativa de reemplazos CAMBIO; no reserva ni garantiza stock futuro. No es la representación consumida por Marketplace, Chatbot o Retail.
       parameters:
       - name: skus
         in: query
@@ -3800,8 +3801,9 @@ paths:
         '500': *id119
         '503': *id120
       x-route-basis: existing-contract
-      x-allowed-client-ids:
+      x-allowed-client-ids: &id728
       - modulo-ventas
+      - modulo-postventa
   /inventario/reservas:
     post:
       tags:
@@ -19510,20 +19512,20 @@ paths:
       tags:
       - Inventario
       operationId: reintegrarInventario
-      summary: Reintegrar unidades físicamente aceptadas por Ventas/Postventa
+      summary: Reintegrar unidades físicamente recibidas y aptas por Postventa
       x-status: provisional
       x-route-basis: p0-6-p0-7-decision
       x-source-external: G5-Ventas-Postventas F3/ESP-08
       x-allowed-client-ids: &id723
       - modulo-ventas
+      - modulo-postventa
       x-service-audience: api-productos
       x-required-scope: inventario:reintegrar
       x-scope-registration-status: pending-security-registration
       security:
       - serviceBearer: []
       parameters: *id709
-      description: Solo aplica cuando Ventas/Postventa confirma devolución/retorno aceptado y físicamente reintegrable. Incrementa on_hand
-        y available, registra Kardex e idempotencia. Una aprobación comercial sin recepción física no autoriza este endpoint.
+      description: Para F3, M2/Postventa invoca directamente esta operación solo por cantidades físicamente recibidas y aptas para reventa; la aprobación comercial por sí sola no autoriza el reintegro. Usa el SKU de la línea original del pedido y el payload canónico. Reintentos idénticos reutilizan operation_id y payload; cada nueva recepción parcial requiere otra operación. Responde 200 con status COMPLETED. M1/Ventas permanece permitido para otros motivos contractuales, incluidos ANULACION_POST_CONSUMO y RETORNO_LOGISTICO. location_id y los grants efectivos de G7 siguen pendientes.
       requestBody:
         required: true
         content:
@@ -24743,6 +24745,7 @@ x-security-contract:
       - modulo-chatbot
       - modulo-retail
       - modulo-ventas
+      - modulo-postventa
     inventario:reservar:
       clients: *id720
     inventario:consumir:
@@ -24768,12 +24771,12 @@ x-integration-decisions:
   commercial_role: GESTOR_COMERCIAL
   inventory_owner: Productos y Ofertas
   order_owner: Ventas y Postventa
-  inventory_orchestrator: Ventas y Postventa
+  inventory_orchestrator: Ventas para reserva/consumo/liberación; Postventa invoca directamente el reintegro F3
   inventory_flow:
   - CREADO -> reserva
   - PAGADO -> consumo definitivo
   - PAGO_NO_COMPLETADO/anulación pre-consumo -> liberación
-  - devolución/retorno físicamente reintegrable -> reintegro por Ventas/Postventa
+  - F3 devolución física recibida y apta -> reintegro directo por Postventa (M2); otros motivos contractuales pueden usar Ventas (M1)
   - venta Retail offline sincronizada -> conciliación solicitada por Ventas/Postventa
   channels_inventory_role: Marketplace y Chatbot solo consultan. Retail consulta y además puede reportar/resolver incidencias físicas;
     ninguna venta de canal reserva, consume, libera o reintegra stock directamente.

@@ -56,6 +56,19 @@ El contrato `0.6.0-rc.1` modela `consumption_operation_id` como opcional y anula
 
 ## Inventario
 
+### Homologación G5 ↔ G6: reintegro físico de Postventa (F3)
+
+Acuerdo ratificado el 13/10/2026 en el issue [G5 #51](https://github.com/Taller-SW-Web/G5-Ventas-Postventas/issues/51), con alcance limitado a los puntos P-01–P-09 allí confirmados. Esta homologación documental no acredita implementación, despliegue ni prueba E2E.
+
+- M2/Postventa invoca directamente `POST /api/v1/inventario/reintegros` con audiencia `api-productos`, autenticación `client_credentials` y scope `inventario:reintegrar`. La allowlist conserva `modulo-ventas` para otros motivos contractuales (`ANULACION_POST_CONSUMO`, `RETORNO_LOGISTICO`); no se infieren reglas de autorización por motivo. El grant efectivo de G7 sigue pendiente.
+- La aprobación comercial no equivale a recepción. F3 solo reintegra cantidades recibidas físicamente e inspeccionadas como aptas. G5 ha documentado su propio `PATCH /api/v2/devoluciones/{devolucionId}/recepcion`; el mecanismo y evidencia finales deben quedar definidos en ESP-07/ESP-08 antes de activar el flujo real.
+- M2 obtiene el SKU exacto desde `items[].sku` del pedido original de Ventas; nunca lo infiere desde `productoId`.
+- Payload canónico: `operation_id`, `order_id`, `source_ref`, `reason: DEVOLUCION_ACEPTADA` y `lines[]` con `sku`, `quantity` y `location_id`. La ubicación receptora y la representación/resolución de `location_id` siguen pendientes; no usar UUID ni código supuesto.
+- Reintentos idénticos reutilizan `operation_id` y payload. Una nueva recepción parcial genera otro `operation_id`; no duplica Kardex. La respuesta contractual exitosa es `200` con `status: COMPLETED`.
+- Para CAMBIO, M2 consulta `GET /api/v1/inventario/disponibilidad` con `inventario:disponibilidad:leer`. Es una lectura informativa que no reserva ni garantiza stock futuro y no debe usar un `channel_id` de Marketplace, Chatbot o Retail.
+- M2 no obtiene con este acuerdo scopes para reservar, consumir ni liberar el reemplazo. Su reserva y consumo requieren un acuerdo aparte sobre identidad del pedido, responsable, TTL, eventos y compensaciones.
+- El uso real depende de Seguridad G7: `client_credentials`, audiencia `api-productos`, cliente autorizado y scope correcto. La homologación no concede el grant. G5 no comprometió una integración funcional o E2E para el 14/10/2026.
+
 Reglas documentadas para el flujo comercial de inventario correspondiente (no son por sí solas evidencia de implementación ni homologación global):
 
 ```text

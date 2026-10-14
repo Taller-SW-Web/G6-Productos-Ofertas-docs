@@ -236,11 +236,11 @@ La definición exacta de parámetros y schemas está en `contratos/http/openapi.
 | `POST` | `/api/v1/cupones/validar` | stable | Marketplace / Chatbot / Retail |
 | `GET` | `/api/v1/recomendaciones` | provisional | Marketplace / Chatbot / Retail |
 | `GET` | `/api/v1/combos/{comboId}` | stable | Sin concesión externa inicial |
-| `GET` | `/api/v1/inventario/disponibilidad` | stable | Ventas/Postventa / consumo interno autorizado |
+| `GET` | `/api/v1/inventario/disponibilidad` | stable | M1/Ventas y M2/Postventa; usuarios administrativos autorizados |
 | `POST` | `/api/v1/inventario/reservas` | provisional | Solo Ventas/Postventa |
 | `POST` | `/api/v1/inventario/reservas/{reservaId}/confirmar` | provisional | Solo Ventas/Postventa |
 | `POST` | `/api/v1/inventario/reservas/{reservaId}/liberar` | provisional | Solo Ventas/Postventa |
-| `POST` | `/api/v1/inventario/reintegros` | provisional | Solo Ventas/Postventa |
+| `POST` | `/api/v1/inventario/reintegros` | provisional | M2/Postventa para F3; M1/Ventas conserva otros motivos contractuales |
 | `POST` | `/api/v1/inventario/conciliaciones-offline` | provisional | Solo Ventas/Postventa |
 | `POST` | `/api/v1/inventario/incidencias` | provisional | Solo Retail |
 | `POST` | `/api/v1/inventario/incidencias/{incidenciaId}/resolver` | provisional | Solo Retail |
@@ -754,7 +754,7 @@ available >= 0
 GET /api/v1/inventario/disponibilidad
 ```
 
-**Consumidores del GET detallado:** `modulo-ventas` con JWT de servicio, sujeto a `x-allowed-client-ids=[modulo-ventas]`, y usuarios administrativos autorizados mediante `userBearer`. **No** corresponde a Marketplace, Chatbot ni Retail. Todos deben tener autorización efectiva; `inventario:disponibilidad:leer` por sí solo no elimina la allowlist.
+**Consumidores del GET detallado:** `modulo-ventas` y `modulo-postventa` con JWT de servicio, sujetos a `x-allowed-client-ids=[modulo-ventas, modulo-postventa]`, y usuarios administrativos autorizados mediante `userBearer`. M2 puede consultar disponibilidad informativa para CAMBIO; la consulta no reserva ni garantiza stock futuro. **No** corresponde a Marketplace, Chatbot ni Retail. Todos deben tener autorización efectiva; `inventario:disponibilidad:leer` por sí solo no elimina la allowlist.
 
 **Consumidores comerciales:** Marketplace, Chatbot y Retail utilizan `GET /api/v1/inventario/disponibilidad/comercial` (`sku + status`) o `POST /api/v1/inventario/disponibilidad/comercial/verificar` (cantidades solicitadas, respuesta no vinculante). Ambas operaciones limitan `x-allowed-client-ids` a `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`; no exponen `on_hand`, `reserved`, `blocked`, `available`, `stock_version` ni `location_id`. Comparten el scope `inventario:disponibilidad:leer`, pero la autorización se valida operación por operación.
 
@@ -811,8 +811,9 @@ Flujo post-consumo:
 ```text
 PAGADO / reserva CONSUMIDA
   -> nunca se "libera" la reserva consumida
-  -> si las unidades regresan físicamente y Postventa las acepta:
-       Ventas solicita reintegro
+  -> si las unidades regresan físicamente y Postventa confirma recepción y aptitud:
+       Postventa (M2) invoca directamente el reintegro F3
+       Ventas (M1) conserva la allowlist para otros motivos contractuales
 ```
 
 Venta Retail offline:
@@ -849,12 +850,12 @@ Retail:
 
 ## 12.2. Responsabilidad de Ventas/Postventa
 
-Ventas/Postventa:
+Ventas (M1):
 
 - reserva al crear pedido `CREADO`;
 - confirma consumo al pasar a `PAGADO`;
 - libera reservas pre-consumo;
-- autoriza reintegros únicamente cuando existe recepción física aceptada;
+- conserva la allowlist de reintegros para motivos contractuales distintos de F3;
 - registra primero la venta offline y luego solicita conciliación;
 - conserva ownership del pedido, pago y devolución comercial.
 
@@ -914,10 +915,12 @@ Aplica mientras la reserva siga activa. Una reserva `CONSUMIDA` no se libera.
 
 ## 13.4. Reintegrar unidades postventa
 
+Para F3, M2/Postventa invoca directamente el reintegro físico tras recepción y evaluación apta. Ventas/M1 conserva su allowlist para otros motivos contractuales, incluidos `ANULACION_POST_CONSUMO` y `RETORNO_LOGISTICO`; no se infieren políticas de autorización por motivo.
+
 ```http
 POST /api/v1/inventario/reintegros
 scope: inventario:reintegrar
-client_id: modulo-ventas
+client_id: modulo-postventa (F3)
 ```
 
 Condición contractual:
@@ -1505,11 +1508,11 @@ La línea base conserva **16 scopes** técnicos. El candidato `0.6.0-rc.1` añad
 | `cupones:validar` | Validar cupón | Marketplace, Chatbot, Retail |
 | `recomendaciones:leer` | `GET /recomendaciones` | Chatbot |
 | `combos:leer` | Detalle/disponibilidad informativa de combos | Sin concesión externa inicial |
-| `inventario:disponibilidad:leer` | Consultar disponibilidad | Marketplace, Chatbot, Retail, Ventas |
+| `inventario:disponibilidad:leer` | Consultar disponibilidad | Marketplace, Chatbot, Retail, M1/Ventas, M2/Postventa |
 | `inventario:reservar` | Crear reserva | Ventas |
 | `inventario:consumir` | Confirmar consumo | Ventas |
 | `inventario:liberar` | Liberar reserva | Ventas |
-| `inventario:reintegrar` | Reintegrar retorno físico aceptado | Ventas |
+| `inventario:reintegrar` | Reintegrar retorno físico aceptado | M2/Postventa (F3), M1/Ventas (otros motivos contractuales) |
 | `inventario:conciliar-offline` | Conciliar venta Retail offline | Ventas |
 | `inventario:incidencias:reportar` | Reportar cuarentena física | Retail |
 | `inventario:incidencias:resolver` | Resolver incidencia/acta | Retail |
@@ -1555,9 +1558,15 @@ modulo-ventas:
   inventario:reintegrar
   inventario:conciliar-offline
 
+modulo-postventa:
+  inventario:disponibilidad:leer
+  inventario:reintegrar
+
 modulo-despacho:
   productos:fisicos:leer
 ```
+
+Los scopes de `modulo-postventa` (`inventario:disponibilidad:leer` y `inventario:reintegrar`) están pendientes de registro y concesión efectiva de G7; esta matriz expresa el cliente previsto, no un grant emitido.
 
 `combos:leer` existe contractualmente, pero permanece sin `client_id` externo hasta que exista un consumidor documentado.
 
@@ -1895,7 +1904,7 @@ external_incident_id / offline_sale_id / source_ref cuando aplique
 
 # 28. Devoluciones y reintegro físico
 
-El ownership comercial de la devolución pertenece a Ventas/Postventa.
+El ownership comercial de la devolución pertenece a Ventas/Postventa. Para F3, Postventa (M2) es el invocador directo del reintegro; la aprobación comercial permanece separada de la recepción física.
 
 Estados comerciales como:
 
@@ -1907,24 +1916,17 @@ APROBADA
 
 no modifican por sí solos Inventario.
 
-El reintegro se habilita únicamente cuando Ventas/Postventa confirma:
+El reintegro F3 se habilita únicamente para las unidades físicamente recibidas y aptas que Postventa confirma, nunca por la aprobación comercial sola. M2 obtiene `items[].sku` de la línea original del pedido de Ventas y no lo infiere desde `productoId`. Cada operación usa el payload canónico `operation_id`, `order_id`, `source_ref`, `reason: DEVOLUCION_ACEPTADA` y `lines[]` (`sku`, `quantity`, `location_id`). `location_id` continúa pendiente: no se inventa UUID, código ni estrategia de resolución. Reintentos idénticos reutilizan `operation_id` y payload; cada recepción parcial nueva tiene otro `operation_id`, sin duplicar Kardex. La respuesta exitosa es `200` con `status: COMPLETED`.
 
-```text
-devolución/retorno aceptado
-+
-producto físicamente recibido
-+
-producto reintegrable
-```
-
-Entonces invoca:
+Entonces M2 invoca:
 
 ```http
 POST /api/v1/inventario/reintegros
 scope: inventario:reintegrar
+client_id: modulo-postventa
 ```
 
-Inventario registra Kardex e idempotencia.
+La autenticación usa `client_credentials`, audiencia `api-productos` y el scope correcto; los grants efectivos de G7 siguen pendientes. Para CAMBIO, M2 puede usar el GET detallado como lectura informativa, sin reserva ni garantía futura. Reservar, consumir y liberar reemplazos requieren acuerdo separado. G5 no comprometió una integración funcional o E2E para el 14/10/2026. Inventario registra Kardex e idempotencia.
 
 Un producto devuelto que no sea vendible no se reintegra como `available`. Puede originar una incidencia física/cuarentena según el proceso operativo correspondiente.
 
@@ -1961,7 +1963,7 @@ NO liberar reserva
 
 Una anulación comercial post-consumo puede provocar reembolso/extorno, pero **no incrementa stock automáticamente**.
 
-Solo si las unidades retornan físicamente y Ventas/Postventa confirma que son reintegrables:
+Solo si las unidades retornan físicamente y Postventa (M2) confirma su recepción y aptitud:
 
 ```text
 -> inventario:reintegrar
@@ -2392,7 +2394,7 @@ Cambios rompientes requieren nueva versión del schema o del canal contractual.
 | Contraparte | Estado en `0.4.0` | Definición vigente |
 |---|---|---|
 | Seguridad y Usuarios | Matriz cerrada; registro externo pendiente | 16 scopes definidos bajo `api-productos`; no se afirma concesión hasta que G7 lo registre |
-| Ventas/Postventa | Flujo cerrado bajo supuesto de aceptación | Reserva, consumo, liberación, reintegro y conciliación offline |
+| Ventas/Postventa | P-01–P-09 homologados documentalmente el 13/10/2026; grants G7 e implementación pendientes | M1 orquesta reserva/consumo/liberación; M2 invoca reintegro F3; otros motivos de reintegro conservan M1 |
 | Chatbot | Alineado | Lectura/evaluación; no muta inventario |
 | Retail | Ownership corregido | Ventas orquesta la venta; Retail solo consulta y reporta/resuelve incidencias físicas |
 | Marketplace | Alineado | Canal de lectura/evaluación; mutaciones mediante Ventas |

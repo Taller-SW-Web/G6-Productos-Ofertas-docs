@@ -179,11 +179,11 @@ La línea base conserva **16 scopes** de `api-productos`; la candidata `0.6.0-rc
 | `cupones:validar` | Cupón | Marketplace, Chatbot, Retail |
 | `recomendaciones:leer` | Recomendaciones | Chatbot |
 | `combos:leer` | Combos | Sin grant externo inicial |
-| `inventario:disponibilidad:leer` | Disponibilidad | Marketplace, Chatbot, Retail, Ventas |
+| `inventario:disponibilidad:leer` | Disponibilidad detallada y comercial según allowlist | Marketplace, Chatbot, Retail, Ventas, Postventa |
 | `inventario:reservar` | Reserva | Ventas |
 | `inventario:consumir` | Consumo | Ventas |
 | `inventario:liberar` | Liberación | Ventas |
-| `inventario:reintegrar` | Reintegro físico | Ventas |
+| `inventario:reintegrar` | Reintegro físico | Ventas, Postventa |
 | `inventario:conciliar-offline` | Venta Retail offline | Ventas |
 | `inventario:incidencias:reportar` | Cuarentena física | Retail |
 | `inventario:incidencias:resolver` | Resolver incidencia/acta | Retail |
@@ -191,7 +191,7 @@ La línea base conserva **16 scopes** de `api-productos`; la candidata `0.6.0-rc
 
 **Scope adicional candidato:** `inventario:operaciones:leer` — consulta durable `GET /api/v1/inventario/operaciones/{operationId}`, exclusiva para el cliente de servicio `modulo-ventas`. OpenAPI `0.6.0-rc.1` registra `x-scope-registration-status: pending-security-registration`; su utilización efectiva requiere concesión explícita de G7.
 
-**El scope compartido de disponibilidad no concede acceso indistinto a todas las representaciones.** `GET /api/v1/inventario/disponibilidad` devuelve saldo detallado y su allowlist de clientes de servicio contiene únicamente `modulo-ventas`. En cambio, `GET /api/v1/inventario/disponibilidad/comercial` y `POST /api/v1/inventario/disponibilidad/comercial/verificar` tienen allowlist de servicio para `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`. Comparten el scope `inventario:disponibilidad:leer`, pero no el acceso a cantidades ni ubicaciones internas. La lectura detallada administrativa mediante JWT de usuario conserva su autorización humana correspondiente. El proveedor debe comprobar audiencia, scope y cliente admitido en la operación; un token de canal con el scope correcto no autoriza el endpoint detallado.
+**El scope compartido de disponibilidad no concede acceso indistinto a todas las representaciones.** `GET /api/v1/inventario/disponibilidad` devuelve saldo detallado y su allowlist de clientes de servicio contiene `modulo-ventas` y `modulo-postventa`. M2 lo usa de forma informativa para CAMBIO; la consulta no reserva ni garantiza stock futuro. En cambio, `GET /api/v1/inventario/disponibilidad/comercial` y `POST /api/v1/inventario/disponibilidad/comercial/verificar` tienen allowlist de servicio para `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`. Comparten el scope `inventario:disponibilidad:leer`, pero no el acceso a cantidades ni ubicaciones internas. La lectura detallada administrativa mediante JWT de usuario conserva su autorización humana correspondiente. El proveedor debe comprobar audiencia, scope y cliente admitido en la operación; un token de canal con el scope correcto no autoriza el endpoint detallado.
 
 Todo endpoint técnico valida:
 
@@ -233,11 +233,16 @@ modulo-ventas:
   inventario:disponibilidad:leer inventario:reservar inventario:consumir
   inventario:liberar inventario:reintegrar inventario:conciliar-offline
 
+modulo-postventa:
+  inventario:disponibilidad:leer inventario:reintegrar
+
 modulo-despacho:
   productos:fisicos:leer
 ```
 
 **Extensión candidata de la matriz (sin concesión efectiva):** `modulo-ventas` podrá utilizar `inventario:operaciones:leer` solo cuando G7 registre y otorgue el permiso para `api-productos`. No corresponde a Marketplace, Chatbot ni Retail, y su documentación no prueba que la API ya esté activa.
+
+Los scopes enumerados para `modulo-postventa` (`inventario:disponibilidad:leer` e `inventario:reintegrar`) están sujetos a registro y concesión de G7 (`pending-security-registration`); la matriz no afirma grants efectivos.
 
 # 6. Integración de canales — Marketplace, Chatbot y Retail
 
@@ -604,11 +609,12 @@ Nunca se libera una reserva `CONSUMIDA`.
 ```http
 POST /api/v1/inventario/reintegros
 scope: inventario:reintegrar
+client_id: modulo-postventa (F3)
 ```
 
-Usar solo cuando Postventa haya confirmado recepción física y aptitud de reintegro.
+M2/Postventa invoca directamente F3 solo después de confirmar recepción física y aptitud de las unidades. Usa `items[].sku` del pedido original de Ventas y el payload canónico; `location_id` sigue pendiente de definición. Reintentos idénticos reutilizan identidad y payload; cada nueva recepción parcial lleva otro `operation_id`. La allowlist conserva `modulo-ventas` para otros motivos contractuales.
 
-Respuesta autoritativa: `200`.
+Respuesta contractual exitosa: `200` con `status: COMPLETED`. El grant efectivo de G7 está pendiente.
 
 ## 7.5. Venta Retail offline
 
@@ -1006,7 +1012,7 @@ Equivalentes/contratos correctos:
 
 ```text
 consumo de venta -> Ventas usa /inventario/reservas/{id}/confirmar
-devolución apta -> Ventas usa /inventario/reintegros
+devolución física F3 apta -> Postventa usa /inventario/reintegros
 incidencia/merma -> Retail usa /inventario/incidencias y /resolver
 venta offline -> Ventas usa /inventario/conciliaciones-offline
 ```
@@ -1120,15 +1126,26 @@ Despacho continúa siendo responsable de transformar esos datos físicos en info
 
 # 18. Regla especial para Ventas/Postventa
 
-Inventario:
+M1/Ventas conserva la orquestación de reserva, consumo y liberación del pedido. M2/Postventa invoca directamente el reintegro físico F3 después de recepción apta.
+
+Scopes de M1/Ventas:
 
 ```text
 inventario:reservar
 inventario:consumir
 inventario:liberar
-inventario:reintegrar
+inventario:reintegrar (otros motivos contractuales)
 inventario:conciliar-offline
 ```
+
+Scopes documentados para M2/Postventa (sin concesión efectiva de G7):
+
+```text
+inventario:disponibilidad:leer
+inventario:reintegrar
+```
+
+M2 no está autorizado por este acuerdo a reservar, consumir o liberar reemplazos.
 
 Cupones P1:
 
