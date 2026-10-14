@@ -234,4 +234,146 @@ class ContractChecks(unittest.TestCase):
         self.assertNotIn('modulo-chatbot',detailed)
         self.assertNotIn('modulo-retail',detailed)
 
+
+class MarketplaceCatalogContract(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.o=yaml.safe_load((ROOT/'contratos/http/openapi.yaml').read_text(encoding='utf-8'))
+        cls.paths=cls.o['paths']
+        cls.schemas=cls.o['components']['schemas']
+
+    def test_marketplace_operation_security_allowlists_and_audience(self):
+        # CT-MKT-14: service identity, audience, scope, pending registration and clients.
+        allowed={'modulo-marketplace','modulo-chatbot','modulo-retail'}
+        operations=(
+            ('/categorias','listarCategorias'),
+            ('/productos','listarProductos'),
+            ('/productos/por-slug/{slug}','obtenerProductoPorSlug'),
+        )
+        self.assertEqual(self.o['servers'][0]['url'],'/api/v1')
+        for path,operation_id in operations:
+            op=self.paths[path]['get']
+            self.assertEqual(op['operationId'],operation_id,path)
+            self.assertEqual(op['x-required-scope'],'catalogo:leer',path)
+            self.assertEqual(op['x-service-audience'],'api-productos',path)
+            self.assertEqual(op['x-scope-registration-status'],'pending-security-registration',path)
+            self.assertEqual(set(op['x-allowed-client-ids']),allowed,path)
+        self.assertEqual(set(self.o['x-security-contract']['service_scopes_pending_registration']['catalogo:leer']['clients']),allowed)
+
+        schemes=self.o['components']['securitySchemes']
+        self.assertEqual(schemes['serviceBearer']['type'],'http')
+        self.assertEqual(schemes['serviceBearer']['scheme'],'bearer')
+        self.assertEqual(schemes['serviceBearer']['bearerFormat'],'JWT')
+        self.assertEqual(schemes['userBearer']['type'],'http')
+        self.assertEqual(schemes['userBearer']['scheme'],'bearer')
+        self.assertEqual(self.paths['/categorias']['get']['security'],[{'serviceBearer':[]}])
+        self.assertEqual({next(iter(choice)) for choice in self.paths['/productos']['get']['security']},{'serviceBearer','userBearer'})
+        self.assertEqual({next(iter(choice)) for choice in self.paths['/productos/por-slug/{slug}']['get']['security']},{'serviceBearer','userBearer'})
+
+    def test_marketplace_product_query_and_pagination_parameters(self):
+        # CT-MKT-18: G6 parameters are distinct from G1's BFF validation limits.
+        op=self.paths['/productos']['get']
+        params={(p.get('name'),p.get('in')):p for p in op['parameters'] if '$ref' not in p}
+        self.assertEqual(params[('q','query')]['schema']['type'],'string')
+        self.assertFalse(params[('q','query')].get('required',False))
+        canal=params[('canal','query')]
+        self.assertEqual(canal['schema']['$ref'],'#/components/schemas/Canal')
+        self.assertIn('Obligatorio semánticamente',canal['description'])
+        pagina=params[('pagina','query')]['schema']
+        self.assertEqual((pagina['type'],pagina['minimum'],pagina['default']),('integer',1,1))
+        tamanio=params[('tamanio','query')]['schema']
+        self.assertEqual((tamanio['type'],tamanio['minimum'],tamanio['maximum'],tamanio['default']),('integer',1,100,20))
+        self.assertIn('comercialmente activos',op['summary'])
+        estado=params[('estado','query')]
+        self.assertIn('no pueden usarlo para ampliar visibilidad',estado['description'])
+        # OpenAPI G6 does not inherit F-007's q length/pageSize bounds.
+        self.assertNotIn('minLength',params[('q','query')]['schema'])
+        self.assertNotIn('maxLength',params[('q','query')]['schema'])
+
+    def test_marketplace_detail_requires_slug_and_channel(self):
+        # CT-MKT-21: conditional path and mandatory channel context.
+        op=self.paths['/productos/por-slug/{slug}']['get']
+        params={(p.get('name'),p.get('in')):p for p in op['parameters'] if '$ref' not in p}
+        self.assertTrue(params[('slug','path')]['required'])
+        self.assertTrue(params[('canal','query')]['required'])
+        self.assertEqual(params[('canal','query')]['schema']['$ref'],'#/components/schemas/Canal')
+
+    def test_marketplace_success_response_shapes_and_category_status(self):
+        # CT-MKT-15, CT-MKT-18, CT-MKT-21: verify declared response schemas only.
+        categories=self.paths['/categorias']['get']['responses']['200']['content']['application/json']['schema']
+        self.assertEqual(categories['type'],'object')
+        self.assertEqual(categories['required'],['categories'])
+        category_array=categories['properties']['categories']
+        self.assertEqual(category_array['type'],'array')
+        self.assertNotIn('minItems',category_array)
+        self.assertEqual(category_array['items']['$ref'],'#/components/schemas/Categoria')
+
+        category=self.schemas['Categoria']
+        self.assertEqual(set(category['required']),{'categoria_id','name','status'})
+        self.assertEqual(category['properties']['status']['enum'],['ACTIVA','INACTIVA'])
+        self.assertIn('activas',self.paths['/categorias']['get']['summary'].lower())
+
+        product_response=self.paths['/productos']['get']['responses']['200']['content']['application/json']['schema']
+        self.assertEqual(product_response['$ref'],'#/components/schemas/PaginaProductosComercial')
+        page=self.schemas['PaginaProductosComercial']
+        self.assertEqual(set(page['properties']),{'items','pagina','tamanio','total'})
+        self.assertEqual(set(page['required']),{'items','pagina','tamanio','total'})
+        self.assertEqual(page['properties']['items']['type'],'array')
+        self.assertNotIn('minItems',page['properties']['items'])
+        self.assertEqual(page['properties']['items']['items']['$ref'],'#/components/schemas/ProductoResumenComercial')
+
+        detail_response=self.paths['/productos/por-slug/{slug}']['get']['responses']['200']['content']['application/json']['schema']
+        self.assertEqual(detail_response['$ref'],'#/components/schemas/ProductoDetalleComercial')
+        detail=self.schemas['ProductoDetalleComercial']
+        self.assertEqual(detail['allOf'][0]['$ref'],'#/components/schemas/ProductoResumenComercial')
+        self.assertEqual(set(detail['allOf'][1]['required']),{'marca','variants'})
+        self.assertEqual(detail['allOf'][1]['properties']['variants']['items']['$ref'],'#/components/schemas/VarianteComercial')
+
+    def test_marketplace_product_and_variant_identity_semantics(self):
+        # CT-MKT-22/23: SKU base is nullable/optional; variants have no BFF status field.
+        product=self.schemas['ProductoResumenComercial']
+        self.assertEqual(product['properties']['sku_base']['type'],['string','null'])
+        self.assertNotIn('sku_base',product['required'])
+        variant=self.schemas['VarianteComercial']
+        self.assertIn('variant_id',variant['properties'])
+        self.assertIn('sku',variant['properties'])
+        self.assertEqual(set(variant['required']),{'variant_id','sku'})
+        self.assertNotIn('status',variant['properties'])
+
+    def test_marketplace_errors_correlation_and_commercial_field_surface(self):
+        # CT-MKT-17/20/24: status codes, optional correlation and declared properties.
+        for path in ('/categorias','/productos','/productos/por-slug/{slug}'):
+            op=self.paths[path]['get']
+            for status in ('401','403','503','429'):
+                self.assertIn(status,op['responses'],(path,status))
+            self.assertEqual(op['responses']['429']['$ref'],'#/components/responses/RateLimitExceeded',path)
+            expected_codes={'401':'TOKEN_INVALIDO','403':'SCOPE_INSUFICIENTE','503':'SERVICIO_NO_DISPONIBLE'}
+            for status,code in expected_codes.items():
+                error_schema=op['responses'][status]['content']['application/problem+json']['schema']['allOf'][1]
+                self.assertEqual(error_schema['properties']['code']['enum'],[code],(path,status))
+            correlation_refs=[p['$ref'] for p in op['parameters'] if '$ref' in p]
+            self.assertIn('#/components/parameters/CorrelationId',correlation_refs,path)
+        correlation=self.o['components']['parameters']['CorrelationId']
+        self.assertEqual(correlation['name'],'X-Correlation-Id')
+        self.assertEqual(correlation['in'],'header')
+        self.assertFalse(correlation['required'])
+        self.assertEqual(correlation['schema']['format'],'uuid')
+        rate_limit=self.o['components']['responses']['RateLimitExceeded']
+        self.assertIn('Retry-After',rate_limit['headers'])
+        self.assertEqual(rate_limit['headers']['Retry-After']['$ref'],'#/components/headers/RetryAfter')
+        rate_code=rate_limit['content']['application/problem+json']['schema']['allOf'][1]['properties']['code']['enum']
+        self.assertEqual(rate_code,['RATE_LIMIT_EXCEDIDO'])
+
+        detail_404=self.paths['/productos/por-slug/{slug}']['get']['responses']['404']['content']['application/problem+json']['schema']['allOf'][1]
+        self.assertEqual(detail_404['properties']['code']['enum'],['PRODUCTO_NO_ENCONTRADO'])
+        self.assertNotIn('404',self.paths['/productos']['get']['responses'])
+
+        excluded={'catalog_version','pricing_preparado','inventario_inicializado','perfil_fisico','physical_profile',
+                  'on_hand','reserved','blocked','available','location_id','stock_version','threshold'}
+        commercial=(self.schemas['Categoria'],self.schemas['ProductoResumenComercial'],self.schemas['PaginaProductosComercial'],self.schemas['VarianteComercial'],self.schemas['MarcaComercial'])
+        for schema in commercial:
+            self.assertTrue(excluded.isdisjoint(schema.get('properties',{})))
+        detail_props=self.schemas['ProductoDetalleComercial']['allOf'][1].get('properties',{})
+        self.assertTrue(excluded.isdisjoint(detail_props))
+
 if __name__=='__main__':unittest.main()

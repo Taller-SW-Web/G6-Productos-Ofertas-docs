@@ -51,7 +51,7 @@ Conteo de la respuesta: **3 `ACEPTAMOS` (M-01, M-02, M-06)** y **6 `PROPONEMOS C
 
 ## 5. Primer corte del 14/10
 
-Las dos rutas obligatorias y la ruta condicional constan en OpenAPI G6 `0.6.0-rc.1`. F-007 usa `page=0`/`pageSize`; G1 traduce a G6 `pagina=1`/`tamanio` mediante `pagina = page + 1` y `tamanio = pageSize`. `catalogo:leer` aplica a las tres rutas, incluida la ruta condicional por slug. El scope figura pendiente de registro; la operación por slug actualmente no declara `x-required-scope` en OpenAPI y requiere corregir/alinear el contrato antes de dar el permiso como ejecutable. URL base y credenciales por entorno siguen pendientes. G1 propone como primera evidencia contrato, fixture y prueba reproducible; la llamada HTTP real del BFF, grants y despliegue requieren evidencia distinta.
+Las dos rutas obligatorias y la ruta condicional constan en OpenAPI G6 `0.6.0-rc.1`. F-007 usa `page=0`/`pageSize`; G1 traduce a G6 `pagina=1`/`tamanio` mediante `pagina = page + 1` y `tamanio = pageSize`. La respuesta del lote anterior señaló una posible omisión de scope en la operación por slug; la comprobación directa del OpenAPI en la revisión de base auditada confirma que las tres operaciones declaran `x-required-scope: catalogo:leer`, `x-service-audience: api-productos`, allowlist con `modulo-marketplace` y `x-scope-registration-status: pending-security-registration`. La declaración no acredita registro/concesión efectiva de G7. URL base y credenciales por entorno siguen pendientes. G1 propone como primera evidencia contrato, fixture y prueba reproducible; la llamada HTTP real del BFF, grants y despliegue requieren evidencia distinta.
 
 Los casos mínimos documentales incluyen categorías activas; búsqueda con producto elegible y no elegible; resultado vacío; detalle de producto simple y de dos variantes cuando corresponda; errores de autenticación 401, autorización 403 e indisponibilidad técnica 503. Son condiciones de validación; este registro no afirma que se hayan probado.
 
@@ -89,7 +89,7 @@ Estos nombres son responsables técnicos declarados, no constancia de aprobació
 ## 9. Implementación, permisos y pruebas reales
 
 - OpenAPI `0.6.0-rc.1` es candidato; por sí solo no acredita `IMPLEMENTADA`.
-- G1 prevé `catalogo:leer` en las tres rutas del corte; `pending-security-registration` significa que el grant no está acreditado. La ruta por slug no declara hoy `x-required-scope` en OpenAPI y su contrato debe alinearse. G7 conserva ownership de concesión.
+- G1 prevé `catalogo:leer` en las tres rutas del corte. El OpenAPI `0.6.0-rc.1` auditado declara scope, audiencia, allowlist y `pending-security-registration` también para la ruta por slug; queda rectificada la observación anterior de posible ausencia. El grant efectivo continúa pendiente de registro/concesión por G7.
 - No se acreditan URL base, credenciales de entorno, llamada HTTP real BFF→G6, despliegue ni prueba E2E en este registro.
 - `IMPLEMENTADA` exige implementación identificable; `PROBADA` exige resultado reproducible asociado a versión/commit y alcance; ninguna se deduce de documentación.
 
