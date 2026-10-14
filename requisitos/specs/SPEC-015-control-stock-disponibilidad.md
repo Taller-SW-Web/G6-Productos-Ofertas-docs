@@ -28,7 +28,7 @@ El módulo es responsable de:
 
 Marketplace y Chatbot consumen disponibilidad sin mutar Inventario. Retail tampoco reserva ni consume por una venta, pero puede reportar/resolver incidencias físicas mediante contratos dedicados.
 
-El ciclo de reserva y consumo es orquestado por **Ventas y Postventa**:
+El ciclo de pedido, pago y mutaciones comerciales de inventario es responsabilidad y orquestación de **M1/Ventas (`modulo-ventas`)**. M1 crea reservas, confirma consumo y libera reservas; esa responsabilidad no se transfiere a M2/Postventa. M2 es responsable de devoluciones y cambios; para F3 invoca directamente el reintegro después de recepción física y evaluación apta para reventa. M2 puede consultar disponibilidad detallada de forma informativa para CAMBIO, pero no tiene autorización acordada para reservar, consumir o liberar reemplazos.
 
 ```text
 Pedido CREADO
@@ -251,7 +251,7 @@ stock_version, cuando el consumidor autorizado lo requiera
 - La consulta no garantiza disponibilidad futura.
 - `location_id` puede omitirse únicamente cuando exista una única ubicación inequívoca o el contrato permita una agregación explícita.
 - Un agregado no reemplaza los saldos autoritativos por ubicación.
-- La lectura detallada/autoritativa de `/inventario/disponibilidad` es para Ventas/Postventa y usuarios autorizados; **Marketplace, Chatbot y Retail solo acceden a la proyección** `/inventario/disponibilidad/comercial` o a la verificación comercial por cantidades, conforme a sus allowlists.
+- La lectura detallada/autoritativa de `/inventario/disponibilidad` admite M1/Ventas y M2/Postventa con sus scopes/allowlists y usuarios humanos autorizados; M2 la usa informativamente para CAMBIO; **Marketplace, Chatbot y Retail solo acceden a la proyección** `/inventario/disponibilidad/comercial` o a la verificación comercial por cantidades, conforme a sus allowlists.
 - Las consultas comerciales no exponen saldos ni `location_id` y no reservan stock.
 
 ## 7.3. Escenario — SKU disponible
@@ -291,7 +291,7 @@ Contrato técnico:
 POST /api/v1/inventario/reservas
 ```
 
-La operación es exclusiva para consumidores autorizados del módulo Ventas/Postventa.
+La reserva comercial la solicita M1/Ventas (`modulo-ventas`) como parte de su responsabilidad sobre pedido y pago. M2/Postventa no está autorizado para crear reservas de reemplazo.
 
 ## 8.1. Datos conceptuales mínimos
 
@@ -839,14 +839,15 @@ Un reporte de incidencia no significa que Retail sea owner del saldo. Inventario
 
 # 22. Integración con Ventas/Postventa
 
-Ventas/Postventa es el orquestador comercial externo.
+M1/Ventas (`modulo-ventas`) es responsable del pedido y pago y orquesta exclusivamente el ciclo comercial de reserva, consumo y liberación. M2/Postventa es responsable de devoluciones y cambios; invoca directamente el reintegro F3. M1 conserva la capacidad contractual de reintegro para otros motivos, como `ANULACION_POST_CONSUMO` y `RETORNO_LOGISTICO`.
 
 ```text
-CREADO -> inventario:reservar
-PAGADO -> inventario:consumir
-PAGO_NO_COMPLETADO/anulación pre-consumo -> inventario:liberar
-retorno físico aceptado -> inventario:reintegrar
-venta Retail offline ya registrada -> inventario:conciliar-offline
+M1/Ventas: CREADO -> inventario:reservar
+M1/Ventas: PAGADO -> inventario:consumir
+M1/Ventas: PAGO_NO_COMPLETADO/anulación pre-consumo -> inventario:liberar
+M2/Postventa: devolución física recibida y apta -> inventario:reintegrar (F3)
+M1/Ventas: otros motivos contractuales de reintegro
+M1/Ventas: venta Retail offline ya registrada -> inventario:conciliar-offline
 ```
 
 En la conciliación offline, Ventas/Postventa es el consumidor contractual vigente en la documentación G6. La eventual llamada directa Retail→G6 permanece pendiente de homologación; esta secuencia no fija un orden nuevo entre venta, pedido, pago y conciliación.
@@ -871,12 +872,9 @@ Solo se acepta:
 POST /api/v1/inventario/reintegros
 ```
 
-cuando Ventas/Postventa confirma:
+cuando M2/Postventa confirma recepción física y evalúa aptitud para reventa. La aprobación comercial por sí sola no acredita stock. M2 obtiene el SKU exacto de `items[].sku` en el pedido original consultado a Ventas, nunca lo deduce de `productoId`. M2 arma el payload canónico `operation_id` (UUID), `order_id` (referencia textual opaca), `source_ref` (referencia de devolución `devolucionId`), `reason: DEVOLUCION_ACEPTADA` y `lines[]` (`sku`, `quantity`, `location_id`), y llama directamente al endpoint con cliente `modulo-postventa`, scope `inventario:reintegrar`, audiencia `api-productos` y autenticación de servicio `client_credentials` (`serviceBearer`). El grant efectivo de G7 sigue pendiente.
 
-1. expediente/retorno aceptado;
-2. recepción física confirmada;
-3. unidades reintegrables;
-4. SKU, cantidad y `location_id` de reintegro.
+`location_id` es obligatorio en el OpenAPI vigente, pero la ubicación receptora real y su mecanismo de resolución siguen pendientes; no se inventa un UUID, código ni mapeo. La cantidad reintegrada no puede exceder la efectivamente recibida y apta; deben distinguirse cantidades solicitada, recibida, apta y reintegrada.
 
 Efecto:
 
@@ -887,7 +885,7 @@ available se recalcula
 stock_version += 1
 ```
 
-La operación es idempotente y registra Kardex.
+La operación exitosa responde HTTP `200` con `status: COMPLETED`. Un reintento idéntico conserva el mismo `operation_id` y payload y no duplica stock ni Kardex. Una recepción parcial efectiva posterior es una operación lógica nueva y requiere otro `operation_id`. Inventario valida la precondición, aplica el incremento y registra un único movimiento Kardex asociado a la operación lógica; un retry idéntico no crea efectos nuevos.
 
 ## 24.2. Reporte de incidencia física
 
@@ -1349,7 +1347,7 @@ modulo-chatbot
 modulo-retail
 ```
 
-La consulta **detallada** (`GET /inventario/disponibilidad`) corresponde a Ventas/Postventa y usuarios autorizados, bajo el esquema de seguridad y scopes definidos por OpenAPI; tener el mismo scope nominal no elimina las restricciones por consumidor.
+La consulta **detallada** (`GET /inventario/disponibilidad`) admite los clientes técnicos M1/Ventas (`modulo-ventas`) y M2/Postventa (`modulo-postventa`) con scope `inventario:disponibilidad:leer` y allowlist propia de la operación; M2 la consulta de forma informativa para CAMBIO, sin crear reservas ni garantizar stock futuro. El acceso humano autorizado mediante `userBearer` permanece separado. Marketplace, Chatbot y Retail quedan fuera de la allowlist del detalle y conservan sus endpoints comerciales.
 
 El token de servicio debe validar `iss`, `exp`, `tipo=servicio`, `aud` y el scope requerido. El scope permanece pendiente de registro con Seguridad.
 
@@ -1360,9 +1358,11 @@ El token de servicio debe validar `iss`, `exp`, `tipo=servicio`, `aud` y el scop
 
 según el contrato adoptado de Seguridad.
 
-## 32.2. Mutaciones comerciales de Ventas/Postventa
+## 32.2. Mutaciones de Ventas y reintegro de Postventa
 
-Consumidor autorizado:
+M1/Ventas (`modulo-ventas`) conserva la responsabilidad del pedido y pago y orquesta reservas, consumo y liberación. Su matriz previa de permisos comerciales no cambia: `inventario:reservar`, `inventario:consumir`, `inventario:liberar`, `inventario:reintegrar` para motivos distintos de F3, y `inventario:conciliar-offline`. No transfiere a M2 su responsabilidad de reservas.
+
+Consumidor autorizado de las mutaciones comerciales de M1:
 
 ```text
 sub = modulo-ventas
@@ -1379,7 +1379,7 @@ inventario:reintegrar
 inventario:conciliar-offline
 ```
 
-Este consumidor refleja la secuencia contractual actualmente documentada por G6. La eventual invocación directa Retail→G6 y sus permisos requieren homologación; no se consideran concedidos por este texto. La consulta comercial de Retail no autoriza mutaciones de inventario. Para toda mutación, la autorización debe cubrir la operación y la ubicación resuelta internamente.
+M2/Postventa (`modulo-postventa`) solo recibe los scopes previstos `inventario:disponibilidad:leer` y `inventario:reintegrar`, con allowlist por operación. Para F3 invoca directamente `/inventario/reintegros` tras recepción física y evaluación apta; M1 permanece admitido para motivos de reintegro distintos de F3. El registro y grant efectivo de ambos scopes de M2 por G7 siguen pendientes. M2 no está autorizado para `inventario:reservar`, `inventario:consumir`, `inventario:liberar`, `inventario:conciliar-offline` ni `inventario:operaciones:leer`. La consulta informativa de M2 no reserva stock. La eventual invocación directa Retail→G6 y sus permisos requieren homologación; la consulta comercial de Retail no autoriza mutaciones. Para toda mutación, la autorización debe cubrir la operación y la ubicación resuelta internamente.
 
 ## 32.3. Incidencias físicas de Retail
 
@@ -1542,9 +1542,9 @@ Al completarse esta funcionalidad:
 - cada SKU vendible tiene disponibilidad autoritativa por ubicación;
 - Marketplace, Chatbot y Retail pueden consultar exclusivamente la **disponibilidad comercial**, sin saldos ni ubicaciones internas;
 - Marketplace y Chatbot no mutan Inventario; Retail solo reporta/resuelve incidencias físicas mediante contratos autorizados;
-- Ventas reserva al crear el pedido;
-- Ventas confirma consumo al quedar pagado;
-- Ventas libera ante pago fallido/anulación aplicable;
+- M1/Ventas reserva al crear el pedido;
+- M1/Ventas confirma consumo al quedar pagado;
+- M1/Ventas libera ante pago fallido/anulación aplicable;
 - las reservas pueden expirar;
 - ninguna operación válida deja stock negativo;
 - un retry legítimo no duplica efectos;
@@ -1575,8 +1575,8 @@ SPEC-015 se considera implementada cuando:
 - los eventos están versionados;
 - las rutas coinciden con `contratos/http/openapi.yaml`;
 - los contratos asíncronos coinciden con `contratos/eventos/asyncapi.yaml`;
-- Ventas/Postventa tiene pruebas de contrato sobre reserva/consumo/liberación;
-- Marketplace y Chatbot no poseen permisos de mutación; Retail solo posee capacidades de incidencias físicas; Ventas/Postventa concentra las mutaciones comerciales.
+- M1/Ventas tiene pruebas de contrato sobre reserva/consumo/liberación;
+- Marketplace y Chatbot no poseen permisos de mutación; Retail solo posee capacidades de incidencias físicas; M1 conserva las mutaciones comerciales de pedido (reserva/consumo/liberación) y M2 ejecuta el reintegro F3; no se autorizan a M2 mutaciones de reemplazo.
 
 ---
 
@@ -1588,7 +1588,7 @@ Esta sección sustituye cualquier referencia anterior que presente el saldo deta
 ```text
 GET /api/v1/inventario/disponibilidad
 → saldo detallado/autoritativo
-→ Ventas/Postventa + usuarios humanos autorizados
+→ M1/Ventas + M2/Postventa + usuarios humanos autorizados
 
 GET /api/v1/inventario/disponibilidad/comercial
 → proyección para Marketplace / Chatbot / Retail

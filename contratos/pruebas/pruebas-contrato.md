@@ -52,7 +52,7 @@ ARCHITECTURE_INVARIANT
 | CT-STATIC-14 | STATIC_CONTRACT | `ConsultaOperacionInventario` con `status=REJECTED` requiere `result_code` no vacío; sus estados `ACCEPTED`, `PROCESSING`, `COMPLETED`, `REJECTED` y `REQUIRES_REVIEW` conservan la semántica declarada | PENDIENTE_EJECUCION |
 | CT-STATIC-15 | STATIC_CONTRACT | Respuestas `404` de consulta de operación y `422` por contexto comercial inválido usan los códigos del catálogo; `429` y `500` están declarados en las rutas nuevas | PENDIENTE_EJECUCION |
 | CT-STATIC-16 | STATIC_CONTRACT | OpenAPI y AsyncAPI mantienen la misma versión candidata y no reemplazan la versión publicada sin adaptadores y pruebas de transición | PENDIENTE_EJECUCION |
-| CT-STATIC-17 | STATIC_CONTRACT | GET detallado de Inventario solo admite `modulo-ventas` mediante `serviceBearer`, aparte de la autorización administrativa `userBearer`; los canales solo están autorizados en las operaciones comerciales | PENDIENTE_EJECUCION |
+| CT-STATIC-17 | STATIC_CONTRACT | GET detallado admite exactamente `modulo-ventas` y `modulo-postventa` con `inventario:disponibilidad:leer` y `serviceBearer`, además de `userBearer` para acceso humano autorizado; Marketplace, Chatbot y Retail quedan excluidos del detalle y usan solo rutas comerciales | PENDIENTE_EJECUCION |
 | CT-STATIC-18 | STATIC_CONTRACT | GET y POST comerciales incluyen allowlist `modulo-marketplace`, `modulo-chatbot`, `modulo-retail`, con el scope común `inventario:disponibilidad:leer`; `GET /inventario/operaciones/{operationId}` usa `inventario:operaciones:leer` y `modulo-ventas` | PENDIENTE_EJECUCION |
 
 **Control de conteos:** el contrato AsyncAPI candidato del commit `c1769607` contiene 40 canales y 40 mensajes (el baseline histórico `0.5.0` tenía 39 mensajes). Este recuento de estructuras **no equivale a pasar CT-STATIC-08**: los `$ref`, formatos UUID, schemas y obligatoriedad de campos siguen pendientes de un validador reproducible. Un cambio intencional exige actualizar conteos y justificarlo.
@@ -97,10 +97,11 @@ ARCHITECTURE_INVARIANT
 | CT-AVL-02 | Chatbot | Accede a `/disponibilidad/comercial` con scope y client_id válidos | PENDIENTE_EJECUCION |
 | CT-AVL-03 | Retail | Accede a `/disponibilidad/comercial` con scope y client_id válidos | PENDIENTE_EJECUCION |
 | CT-AVL-04 | Canal intenta disponibilidad detallada | Rechazado por allowlist | PENDIENTE_EJECUCION |
-| CT-AVL-05 | Ventas intenta disponibilidad detallada | Permitido únicamente con concesión efectiva | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-AVL-05 | M1/Ventas intenta disponibilidad detallada | Permitido contractualmente con scope y concesión efectiva; grant G7 por confirmar | BLOQUEADA_DEPENDENCIA_EXTERNA |
 | CT-AVL-06 | Shape comercial | `sku` y `status`; sin on_hand/reserved/blocked/available ni `location_id` | PENDIENTE_EJECUCION |
 | CT-AVL-07 | Vocabulario | `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`, `INDETERMINADO` | PENDIENTE_EJECUCION |
 | CT-AVL-08 | Lectura | No muta saldos, reservas ni Kardex | PENDIENTE_EJECUCION |
+| CT-AVL-09 | M2/Postventa intenta disponibilidad detallada para CAMBIO | Permitido contractualmente con `inventario:disponibilidad:leer`; grant efectivo de G7 pendiente | BLOQUEADA_DEPENDENCIA_EXTERNA |
 | CT-AVL-B01 | Política D-INV-01 | No sumar ubicaciones independientes; un origen de cumplimiento único determinable o `INDETERMINADO` | PENDIENTE_IMPLEMENTACION |
 | CT-AVL-B02 | Verificación comercial por cantidad | `SUFICIENTE` solo si una fuente ejecutable abastece toda la cantidad; `INSUFICIENTE` si está determinada pero no alcanza | PENDIENTE_IMPLEMENTACION |
 | CT-AVL-B03 | Fuente no mapeada o ambigua | HTTP 200 + `INDETERMINADO`, sin revelar ubicación ni saldos | PENDIENTE_IMPLEMENTACION |
@@ -341,6 +342,31 @@ La allowlist y el scope documentados no acreditan permisos efectivos. No atribui
 - Los conteos de canales, mensajes, rutas y códigos deben recalcularse tras cada modificación; no adaptar expectativas para ocultar una pérdida accidental de contratos.
 - Cambiar una restricción de payload puede afectar consumidores aun sin cambiar el nombre del mensaje. Revisar compatibilidad, versionado de `schema_version` y adaptadores antes del despliegue.
 - Mantener los casos funcionales `PENDIENTE_IMPLEMENTACION` o `PENDIENTE_EJECUCION` hasta contar con evidencias del proveedor real. `PASS` requiere resultado reproducible asociado a un commit y un entorno. La inspección documental de esta tarea **no cambia estados** ni satisface los grants de Seguridad/G7.
+
+## 13.2. Homologación G5 F3 — reintegro Postventa
+
+Los estados separan inspección estática, requisito de proveedor, seguridad real e integración entre módulos. Ningún estado `PASS` se infiere de esta documentación. Los casos funcionales nuevos permanecen sin ejecutar mientras no exista backend verificable.
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-G5-F3-STATIC-01 | STATIC_CONTRACT | `POST /inventario/reintegros` conserva allowlist exacta `modulo-ventas`, `modulo-postventa` | PENDIENTE_EJECUCION |
+| CT-G5-F3-STATIC-02 | STATIC_CONTRACT | `modulo-postventa` requiere `inventario:reintegrar`, audiencia `api-productos`, `serviceBearer` y scope con registro pendiente | PENDIENTE_EJECUCION |
+| CT-G5-F3-STATIC-03 | STATIC_CONTRACT | Request mantiene campos/tipos canónicos: `operation_id` UUID, `order_id` string opaco, `source_ref`, `reason`, `lines[]` con SKU, cantidad y ubicación | PENDIENTE_EJECUCION |
+| CT-G5-F3-STATIC-04 | STATIC_CONTRACT | El enum admite `DEVOLUCION_ACEPTADA` para F3 | PENDIENTE_EJECUCION |
+| CT-G5-F3-PROVIDER-01 | PROVIDER_CONTRACT | Aprobación comercial sin recepción física confirmada no habilita reintegro ni aumenta stock | PENDIENTE_IMPLEMENTACION |
+| CT-G5-F3-PROVIDER-02 | PROVIDER_CONTRACT | Solo se reintegra cantidad recibida físicamente y apta para reventa; cantidades solicitada, recibida, apta y reintegrada se distinguen | PENDIENTE_IMPLEMENTACION |
+| CT-G5-F3-PROVIDER-03 | PROVIDER_CONTRACT | Replay idéntico conserva `operation_id` y payload y no duplica saldo ni Kardex | PENDIENTE_IMPLEMENTACION |
+| CT-G5-F3-PROVIDER-04 | PROVIDER_CONTRACT | Una nueva recepción parcial efectiva utiliza otra identidad lógica (`operation_id`) | PENDIENTE_IMPLEMENTACION |
+| CT-G5-F3-STATIC-05 | STATIC_CONTRACT | Éxito de reintegro documentado como HTTP `200` con `status: COMPLETED` | PENDIENTE_EJECUCION |
+| CT-G5-F3-STATIC-06 | STATIC_CONTRACT | M2 no aparece en scopes/allowlists de reserva, consumo, liberación, conciliación offline ni consulta de operaciones | PENDIENTE_EJECUCION |
+| CT-G5-F3-SEC-01 | SECURITY_INTEGRATION | M2 usa scope de reintegro y disponibilidad solo tras credenciales de servicio y grants efectivos de G7; no hay concesión confirmada | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-G5-F3-STATIC-07 | STATIC_CONTRACT | GET detallado incluye M2 contractualmente bajo scope/allowlist, pero el grant de G7 no está confirmado | PENDIENTE_EJECUCION |
+| CT-G5-F3-SEC-02 | SECURITY_INTEGRATION | Probar tokens reales `client_credentials`, audiencia `api-productos` y permisos concedidos de M2 | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-G5-F3-CP-01 | CONSUMER_PROVIDER | G5 consume el payload acordado, recupera `items[].sku` del pedido original y ejecuta F3 tras recepción física apta | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-G5-F3-CP-02 | CONSUMER_PROVIDER | Integración controlada G5↔G6 verifica `200 COMPLETED`, idempotencia y ausencia de duplicados | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-G5-F3-DEP-01 | PROVIDER_CONTRACT | Ubicación receptora real y mecanismo de resolución de `location_id` se definen sin asumir un valor; el campo sigue obligatorio en el OpenAPI | BLOQUEADA_DEPENDENCIA_EXTERNA |
+
+La homologación contractual documentada en G5 issue #51 no acredita implementación, grant de G7 ni integración E2E.
 
 ## Addendum contractual `0.6.0-rc.1` — Cuatro bloqueantes G6
 

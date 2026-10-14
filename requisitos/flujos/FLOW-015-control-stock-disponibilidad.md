@@ -38,10 +38,16 @@ Representar el ciclo de inventario por `(sku, location_id)`: consulta detallada 
 
 ```mermaid
 flowchart LR
-    subgraph GESTOR["Gestor comercial"]
+    subgraph GESTOR["Gestor humano autorizado (userBearer)"]
         direction TB
         INICIO((Inicio de consulta))
         A1["Consultar saldo por SKU y ubicación"]
+    end
+
+    subgraph SERV["Servicios técnicos autorizados"]
+        direction TB
+        M1["M1/Ventas: consulta detallada"]
+        M2["M2/Postventa: consulta informativa para CAMBIO"]
     end
 
     subgraph INV["Sistema de Inventario"]
@@ -66,6 +72,8 @@ flowchart LR
 
     INICIO --> A1
     A1 --> E1
+    M1 --> E1
+    M2 --> E1
     E1 --> A2
     A2 --> A3
     A3 --> A4
@@ -81,13 +89,13 @@ flowchart LR
     F1 --> FIN
 ```
 
-> Este subflujo 4.1 representa la **consulta detallada** y su saldo por `(sku, location_id)`: la usan gestores humanos autorizados o `modulo-ventas` con JWT de servicio. Marketplace, Chatbot y Retail usan **solamente las consultas comerciales** de 4.11/4.12; compartir `inventario:disponibilidad:leer` no concede acceso al detalle. Ninguna lectura modifica saldos (HU-015 CA-06/CA-49).
+> Este subflujo 4.1 representa la **consulta detallada** por `(sku, location_id)`: la consumen los servicios M1/Ventas (`modulo-ventas`) y M2/Postventa (`modulo-postventa`) con `inventario:disponibilidad:leer` y allowlist por operación, además de usuarios humanos autorizados separados con `userBearer`. M2 consulta de forma informativa para CAMBIO; la lectura no crea reservas ni garantiza disponibilidad futura. Marketplace, Chatbot y Retail mantienen solo sus endpoints comerciales (4.11/4.12) y no acceden al detalle. Ninguna lectura modifica saldos (HU-015 CA-06/CA-49).
 
 ### 4.2 Reserva de unidades
 
 ```mermaid
 flowchart LR
-    subgraph VENT["Ventas / Postventa"]
+    subgraph VENT["M1 / Ventas"]
         direction TB
         INICIO((Pedido en estado CREADO))
         A1["Solicitar reserva con identidad idempotente"]
@@ -144,7 +152,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    subgraph VENT["Ventas / Postventa"]
+    subgraph VENT["M1 / Ventas"]
         direction TB
         D0{"¿Pedido pagado o anulado?"}
         A1["PAGADO: confirmar consumo de la reserva"]
@@ -364,56 +372,55 @@ flowchart LR
     B2 --> FIN
 ```
 
-### 4.7 Reintegro por devolución física aceptada
+### 4.7 Reintegro F3 por devolución física aceptada
 
 ```mermaid
 flowchart LR
-    subgraph PV["Postventa"]
+    subgraph PV["M2 / Postventa"]
         direction TB
-        INICIO((Devolución física recibida))
-        A1["Confirmar recepción física y aptitud de reintegro"]
+        INICIO((Devolución aprobada))
+        A1["Confirmar recepción física"]
+        A2["Evaluar aptitud para reventa"]
+        A3["Obtener SKU de items[].sku del pedido original de Ventas"]
+        A4["Preparar payload F3 e identidad operation_id UUID"]
+        A5["Invocar POST /api/v1/inventario/reintegros con modulo-postventa"]
     end
 
-    subgraph VENT["Ventas / Postventa"]
+    subgraph INV["G6 / Inventario"]
         direction TB
-        A2["Solicitar reintegro con scope inventario:reintegrar"]
+        E1(("Solicitud F3 recibida"))
+        D1{"¿Recepción física y cantidad apta verificadas?"}
+        R1["Rechazar sin acreditar stock"]
+        D2{"¿Mismo operation_id y mismo payload?"}
+        R2["Devolver resultado previo sin nuevo Kardex ni incremento"]
+        D3{"¿Identidad reutilizada con payload distinto?"}
+        R3["Responder conflicto de idempotencia"]
+        A6["Validar precondiciones y resolver ubicación según regla vigente; location_id sigue pendiente"]
+        A7["Incrementar saldo y registrar un único Kardex para la operación lógica"]
+        A8["Responder HTTP 200 status COMPLETED"]
     end
 
-    subgraph INV["Sistema de Inventario"]
+    subgraph RES["Identidad y resultado"]
         direction TB
-        E1(("Solicitud de reintegro recibida"))
-        D2{"¿Unidad recibida físicamente y apta?"}
-        A3["Rechazar con REINTEGRO_NO_APLICABLE"]
-        D1{"¿Misma identidad ya procesada?"}
-        A4["Responder resultado previo sin duplicar"]
-        A5["Incrementar on_hand y recalcular available"]
-        A6["Incrementar stock_version"]
-        A7["Persistir Kardex y Outbox en la misma transacción"]
-        A8["Publicar inventory.stock.changed tras el commit"]
+        B1["Retry idéntico: mismo operation_id y payload"]
+        B2["Operación efectiva sobre la cantidad recibida y apta"]
+        FIN(((Fin de F3)))
     end
 
-    subgraph RES["Resultado"]
-        direction TB
-        B1["Saldo reintegrado"]
-        FIN(((Fin del reintegro)))
-    end
-
-    INICIO --> A1
-    A1 --> A2
-    A2 --> E1
-    E1 --> D2
-    D2 -->|"No"| A3
-    D2 -->|"Sí"| D1
-    A3 --> FIN
-    D1 -->|"Sí"| A4
-    D1 -->|"No"| A5
-    A4 --> B1
-    A5 --> A6
-    A6 --> A7
-    A7 --> A8
-    A8 --> B1
-    B1 --> FIN
+    INICIO --> A1 --> A2 --> A3 --> A4 --> A5 --> E1
+    E1 --> D1
+    D1 -->|"No"| R1 --> FIN
+    D1 -->|"Sí"| D2
+    D2 -->|"Sí"| R2 --> B1 --> FIN
+    D2 -->|"No"| D3
+    D3 -->|"Sí"| R3 --> FIN
+    D3 -->|"No"| A6 --> A7 --> A8 --> B2 --> FIN
 ```
+
+- El payload canónico contiene `operation_id` UUID, `order_id` como referencia textual opaca, `source_ref` (`devolucionId`), `reason: DEVOLUCION_ACEPTADA` y `lines[]` (`sku`, `quantity`, `location_id`). El SKU procede de `items[].sku` del pedido de Ventas, no se infiere desde `productoId`.
+- Solo se reintegra cantidad físicamente recibida y apta; cantidades solicitada, recibida, apta y reintegrada se conservan diferenciadas. Un retry idéntico reutiliza identidad y payload. Cada recepción parcial efectiva posterior es una nueva operación con otro `operation_id`.
+- M2/Postventa usa `client_credentials`, audiencia `api-productos`, scope `inventario:reintegrar` y `serviceBearer`; su grant efectivo de G7 continúa pendiente. `location_id` es obligatorio en el esquema OpenAPI, pero la ubicación receptora real y la resolución de su valor siguen pendientes; no se inventa un UUID, código ni mapeo.
+- M1/Ventas sigue admitido en reintegros por otros motivos contractuales (`ANULACION_POST_CONSUMO`, `RETORNO_LOGISTICO`); no es el invocador de F3.
 
 ### 4.8 Venta Retail offline y conciliación
 
@@ -623,7 +630,7 @@ flowchart LR
 ```
 
 - `GET /api/v1/inventario/disponibilidad/comercial` admite `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`, `INDETERMINADO`; `AGOTADO` corresponde a SKU existente cuya fuente se conoce y no tiene disponibilidad. Un SKU inexistente no se convierte en `AGOTADO`: se trata conforme al contrato de identidad/errores de la operación.
-- La ruta comercial usa el scope `inventario:disponibilidad:leer` **más** la allowlist de clientes técnicos `modulo-marketplace`, `modulo-chatbot`, `modulo-retail`. La disponibilidad detallada tiene otra allowlist (solo `modulo-ventas` con service JWT; acceso humano autorizado independiente). No existe consulta de saldos detallados para canales.
+- La ruta comercial usa el scope `inventario:disponibilidad:leer` **más** la allowlist de clientes técnicos `modulo-marketplace`, `modulo-chatbot`, `modulo-retail`. La disponibilidad detallada admite exactamente M1/Ventas (`modulo-ventas`) y M2/Postventa (`modulo-postventa`) con service JWT, además del acceso humano autorizado independiente. M2 usa el detalle informativamente para CAMBIO; no reserva. No existe consulta de saldos detallados para canales.
 - Este GET no recibe necesariamente un contexto `fulfillment` completo. La evaluación depende de una fuente inequívoca resoluble internamente para el canal; si no se puede determinar, se responde `INDETERMINADO`, nunca se inventa un almacén por defecto.
 
 ### 4.12 Verificación de cantidad comercial (POST, no vinculante)
@@ -695,7 +702,7 @@ flowchart LR
 - **Invariantes:** en toda operación se cumple `on_hand >= 0`, `reserved >= 0`, `blocked >= 0`, `reserved + blocked <= on_hand` y `available = max(on_hand - reserved - blocked, 0)` con `available >= 0` (HU-015 CA-04, SPEC-015 §13).
 - **Concurrencia:** confirmar, liberar y expirar la misma reserva produce una única transición terminal; dos operaciones concurrentes nunca comprometen las mismas unidades disponibles (HU-015 CA-13/CA-15).
 - **Consultas:** 4.1 es el saldo detallado autorizado; 4.11 y 4.12 son consultas comerciales limitadas y sin efectos. Todas son solo lectura. La política D-INV-01 está **adoptada**, pero no se considera implementada/validada; el contrato comercial continúa `provisional` por pruebas runtime pendientes (HU-015 CA-43 a CA-49).
-- **Seguridad por operación:** `inventario:disponibilidad:leer` por sí solo no habilita rutas. JWT de servicio de `modulo-ventas` puede leer el detalle; los JWT de `modulo-marketplace`, `modulo-chatbot` y `modulo-retail` solo las rutas comerciales, y sujetos a su scope/allowlist. La consulta de resultado de operación requiere el nuevo permiso `inventario:operaciones:leer` aún pendiente de registro y grant por G7.
+- **Seguridad por operación:** `inventario:disponibilidad:leer` por sí solo no habilita rutas. JWT de servicio de `modulo-ventas` y `modulo-postventa` pueden leer el detalle sujeto a scope y allowlist; la lectura de M2 es informativa para CAMBIO. Los JWT de `modulo-marketplace`, `modulo-chatbot` y `modulo-retail` solo acceden a sus rutas comerciales. M2 no tiene autorización acordada para reservar, consumir, liberar, conciliar offline ni consultar operaciones. La consulta de resultado de operación sigue exclusiva de M1 y requiere el nuevo permiso `inventario:operaciones:leer` aún pendiente de registro y grant por G7.
 - **No confundir estados:** `GET.status` es `DISPONIBLE/STOCK_BAJO/AGOTADO/INDETERMINADO`; `POST.items[].result` es `SUFICIENTE/INSUFICIENTE/INDETERMINADO`. La ambigüedad de mapeo no equivale a agotamiento ni a contexto semánticamente inválido.
 
 ### Contratos de referencia
@@ -735,7 +742,7 @@ GESTOR_COMERCIAL autorizado o modulo-ventas con JWT de servicio + allowlist
 → devolver on_hand/reserved/blocked/available/status/stock_version
 ```
 
-`modulo-marketplace`, `modulo-chatbot` y `modulo-retail` no tienen acceso a esa lectura detallada. Para el JWT técnico de Ventas, además del cliente autorizado, se verifica `inventario:disponibilidad:leer`; la ruta permite también acceso humano debidamente autorizado con `userBearer`.
+`modulo-marketplace`, `modulo-chatbot` y `modulo-retail` no tienen acceso a esa lectura detallada. Para los JWT técnicos de M1/Ventas y M2/Postventa, además del cliente autorizado, se verifica `inventario:disponibilidad:leer`; la ruta permite también acceso humano debidamente autorizado con `userBearer`. El acceso de M2 es informativo para CAMBIO y no garantiza stock futuro ni reserva unidades.
 
 ### Proyección comercial GET
 

@@ -39,11 +39,11 @@ available = max(on_hand - reserved - blocked, 0)
 | **CA-05** | El estado del saldo autoritativo `AGOTADO/STOCK_BAJO/DISPONIBLE` se calcula sobre `available` por `(sku, location_id)`; la proyección comercial aplica adicionalmente D-INV-01 y puede ser `INDETERMINADO`. |
 | **CA-06** | Marketplace y Chatbot solo consultan Inventario. |
 | **CA-07** | En la secuencia actualmente documentada por G6, Ventas/Postventa invoca las mutaciones comerciales, incluida la conciliación offline; una eventual invocación directa Retail→G6 permanece pendiente de homologación y este criterio no concede acceso a Retail. |
-| **CA-08** | Cuando un pedido entra en `CREADO`, Ventas/Postventa puede solicitar idempotentemente una reserva. |
+| **CA-08** | Cuando un pedido entra en `CREADO`, M1/Ventas (`modulo-ventas`), responsable del pedido y pago, solicita idempotentemente la reserva y orquesta las reservas comerciales; M2 no reserva reemplazos. |
 | **CA-09** | Reservar aumenta `reserved` y reduce `available` sin modificar `on_hand` ni `blocked`. |
 | **CA-10** | Una reserva tiene estados `ACTIVA`, `CONSUMIDA`, `LIBERADA` o `EXPIRADA`; un estado terminal no vuelve a `ACTIVA`. |
-| **CA-11** | Cuando el pedido pasa a `PAGADO`, Ventas confirma consumo: disminuyen `on_hand` y `reserved`; `blocked` no cambia. |
-| **CA-12** | Ante `PAGO_NO_COMPLETADO` o anulación pre-consumo, Ventas libera la reserva: disminuye `reserved` y `on_hand` no aumenta. |
+| **CA-11** | Cuando el pedido pasa a `PAGADO`, M1/Ventas confirma consumo: disminuyen `on_hand` y `reserved`; `blocked` no cambia. |
+| **CA-12** | Ante `PAGO_NO_COMPLETADO` o anulación pre-consumo, M1/Ventas libera la reserva: disminuye `reserved` y `on_hand` no aumenta. |
 | **CA-13** | Confirmar, liberar y expirar concurrentemente una misma reserva solo puede producir una transición terminal. |
 | **CA-14** | Reserva/consumo/liberación son idempotentes; reutilizar una identidad para otra intención produce `IDEMPOTENCY_CONFLICT`. |
 | **CA-15** | Dos operaciones concurrentes nunca comprometen las mismas unidades disponibles. |
@@ -51,9 +51,9 @@ available = max(on_hand - reserved - blocked, 0)
 | **CA-17** | Un ajuste absoluto de Bulk requiere `stock_version`; una versión obsoleta se rechaza con `VERSION_CONFLICT`. |
 | **CA-18** | Un SKU nuevo se inicializa idempotentemente con `on_hand=0`, `reserved=0`, `blocked=0`, `available=0`. |
 | **CA-19** | Después de una mutación confirmada se publica `inventory.stock.changed` cuando corresponda; el evento nunca sustituye al comando. |
-| **CA-20** | Una devolución comercial aprobada no repone stock automáticamente. |
-| **CA-21** | Ventas/Postventa puede reintegrar solo unidades físicamente recibidas y declaradas reintegrables. |
-| **CA-22** | Un reintegro exitoso incrementa `on_hand`, recalcula `available`, incrementa versión y registra Kardex exactamente una vez. |
+| **CA-20** | Una aprobación comercial no acredita recepción ni incrementa stock; el reintegro exige recepción física confirmada y evaluación apta para reventa. |
+| **CA-21** | M2/Postventa invoca directamente `POST /api/v1/inventario/reintegros` para F3 únicamente tras recepción física y evaluación apta, con `reason: DEVOLUCION_ACEPTADA`; M1 conserva el acceso para otros motivos contractuales como `ANULACION_POST_CONSUMO` y `RETORNO_LOGISTICO`. El SKU procede de `items[].sku` del pedido original de Ventas, no se infiere de `productoId`. |
+| **CA-22** | El reintegro responde HTTP `200` con `status: COMPLETED`; el mismo `operation_id` y payload en un retry idéntico producen un único incremento y un único Kardex. Cada nueva recepción parcial efectiva usa un nuevo `operation_id`; la cantidad reintegrada no excede lo recibido y apto. |
 | **CA-23** | Retail puede reportar una incidencia física mediante `inventario:incidencias:reportar`; Inventario solo bloquea cantidad actualmente disponible. |
 | **CA-24** | Reportar una incidencia incrementa `blocked` sin reducir `on_hand`. |
 | **CA-25** | `REHABILITADO` disminuye `blocked` sin modificar `on_hand`. |
@@ -64,7 +64,7 @@ available = max(on_hand - reserved - blocked, 0)
 | **CA-30** | La conciliación offline aplica como máximo la cantidad disponible y nunca consume `reserved` ni `blocked`. |
 | **CA-31** | Si no puede aplicarse toda la venta offline, el resultado es `REQUIRES_REVIEW` con `unresolved_quantity > 0`; nunca se permite saldo negativo. |
 | **CA-32** | Repetir la misma conciliación offline con la misma identidad no duplica efectos. |
-| **CA-33** | `modulo-ventas` usa `inventario:reservar`, `inventario:consumir`, `inventario:liberar`, `inventario:reintegrar` e `inventario:conciliar-offline`. |
+| **CA-33** | M1/Ventas conserva su matriz de permisos: `inventario:reservar`, `inventario:consumir`, `inventario:liberar`, `inventario:reintegrar` para los otros motivos y `inventario:conciliar-offline`. M2/Postventa solo tiene previstos `inventario:disponibilidad:leer` y `inventario:reintegrar`; no se le autoriza para reservar, consumir, liberar, conciliar offline ni consultar operaciones. El registro/grant de los scopes de M2 por G7 está pendiente. |
 | **CA-34** | `modulo-retail` usa `inventario:incidencias:reportar` e `inventario:incidencias:resolver`, además de la **consulta de disponibilidad comercial**, no del saldo detallado. |
 | **CA-35** | Una operación técnica sin token utilizable responde `401 TOKEN_INVALIDO`; una identidad sin scope responde `403 SCOPE_INSUFICIENTE`. |
 | **CA-36** | Resolver una incidencia como `TRASLADO_ALMACEN_CENTRAL` descuenta origen y crea un traslado `EN_TRANSITO`, sin acreditar destino. |
@@ -80,7 +80,7 @@ available = max(on_hand - reserved - blocked, 0)
 | **CA-46** | `GET /api/v1/inventario/disponibilidad/comercial` devuelve la proyección `sku + status`, con `status` en `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO` o `INDETERMINADO`, sin ubicación ni saldos internos; su `AGOTADO` presupone un SKU existente con abastecimiento evaluable, no un SKU inexistente. |
 | **CA-47** | `POST /api/v1/inventario/disponibilidad/comercial/verificar` evalúa `{sku, quantity}` para un `channel_id` y contexto `fulfillment`, devolviendo por línea `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO`, con `binding=false`; es una consulta sin efectos, no reserva y no garantiza disponibilidad futura. `SUFICIENTE` exige que una fuente elegible pueda atender la cantidad completa. |
 | **CA-48** | La ausencia/ambigüedad de mapeo interno produce `200` con resultado `INDETERMINADO`; un contexto de cumplimiento semánticamente inválido se rechaza con `422 CONTEXTO_ABASTECIMIENTO_INVALIDO`, y una petición malformada con `400 VALIDACION`. |
-| **CA-49** | Para JWT de servicio, `GET /api/v1/inventario/disponibilidad` detallado solo admite `modulo-ventas`; las consultas comerciales `GET` y `POST /verificar` admiten `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`. El scope compartido `inventario:disponibilidad:leer` no anula las allowlists por operación ni la autorización humana de la ruta detallada. |
+| **CA-49** | Para JWT de servicio, `GET /api/v1/inventario/disponibilidad` detallado admite exactamente `modulo-ventas` y `modulo-postventa`, ambos sujetos al scope `inventario:disponibilidad:leer` y a su allowlist. M2 lo consulta informativamente para CAMBIO; no reserva ni garantiza stock futuro. Las consultas comerciales `GET` y `POST /verificar` mantienen `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`; el scope no elimina las allowlists y el acceso humano detallado con `userBearer` permanece separado. |
 | **CA-50** | Un `202 Accepted` en reserva, consumo o liberación acredita únicamente la aceptación del comando. Ventas determina el éxito/rechazo por resultado persistido y evento tipado; `GET /api/v1/inventario/operaciones/{operationId}` es recuperación sin reejecución, exclusiva de `modulo-ventas`. |
 | **CA-51** | `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. La consulta de operaciones requiere `inventario:operaciones:leer`, scope candidato aún pendiente de registro/grant por Seguridad (G7); no se presupone su habilitación real. |
 | **CA-52** | Repetir una venta física offline ya conciliada no vuelve a descontar stock, aunque cambie la identidad técnica del reintento. El resultado es un requisito adoptado; la identidad estable de la venta, su unicidad y el mecanismo técnico siguen pendientes de definición/homologación y no se consideran implementados. |
@@ -88,6 +88,8 @@ available = max(on_hand - reserved - blocked, 0)
 | **CA-54** | Una correspondencia tienda→ubicación interna inexistente o ambigua no autoriza la mutación. La resolución corresponde internamente a Inventario; la entrada contractual compatible con esta regla está pendiente de homologación porque OpenAPI aún exige `location_id`. |
 | **CA-55** | Un actor sin autorización para la operación y la ubicación resuelta no puede modificar el saldo. La autorización efectiva, el consumidor técnico y su homologación con G4/G7 permanecen pendientes; la consulta comercial no concede permisos de escritura. |
 | **CA-56** | La futura representación destinada a Retail comunica el resultado y solo las cantidades funcionales necesarias; no expone saldos ni ubicaciones internas innecesarias. El DTO compatible, el consumidor autorizado y la homologación G4/G7 están pendientes; este criterio no afirma que Retail disponga hoy de un endpoint de conciliación. |
+| **CA-57** | F3 diferencia cantidad solicitada, recibida físicamente, apta para reventa y efectivamente reintegrada; el payload canónico usa `operation_id` UUID, `order_id` textual opaco, `source_ref` (referencia `devolucionId`), `reason: DEVOLUCION_ACEPTADA` y `lines[]` con `sku`, `quantity` y `location_id`. Responde `200 COMPLETED`; los retries idénticos reusan identidad y payload, mientras cada recepción parcial nueva usa otra identidad lógica. |
+| **CA-58** | La consulta detallada por M2 es solo informativa para CAMBIO. El OpenAPI aún exige `location_id`, cuya ubicación receptora real y mecanismo de resolución están pendientes; no se presume valor ni mapeo. Los scopes de M2 usan `api-productos`/`client_credentials` y su concesión efectiva de G7 no está confirmada. |
 
 ---
 
@@ -96,7 +98,7 @@ available = max(on_hand - reserved - blocked, 0)
 ## Escenario 1 — Reserva normal
 
 - **DADO** `on_hand=10`, `reserved=0`, `blocked=2`,
-- **CUANDO** Ventas reserva 3,
+- **CUANDO** M1/Ventas reserva 3,
 - **ENTONCES** queda `reserved=3` y `available=5`.
 
 ## Escenario 2 — Daño reportado por Retail
@@ -120,8 +122,8 @@ available = max(on_hand - reserved - blocked, 0)
 ## Escenario 5 — Reintegro físico
 
 - **DADO** Postventa confirma una unidad físicamente reintegrable,
-- **CUANDO** `modulo-ventas` solicita el reintegro,
-- **ENTONCES** `on_hand` aumenta en 1, se registra Kardex y el retry no duplica el incremento.
+- **CUANDO** `modulo-postventa` invoca directamente el reintegro F3 después de recibir y evaluar apta la unidad,
+- **ENTONCES** el `200 COMPLETED` corresponde a un único incremento y un solo Kardex; el retry idéntico reutiliza `operation_id` y payload. Una recepción parcial posterior usa nueva identidad.
 
 ## Escenario 6 — Venta offline completamente conciliable
 
@@ -195,7 +197,8 @@ available = max(on_hand - reserved - blocked, 0)
 
 | Módulo | Responsabilidad |
 |---|---|
-| Ventas/Postventa | Pedido, pago, devolución comercial, disparo de reserva/consumo/liberación/reintegro/conciliación |
+| M1/Ventas (`modulo-ventas`) | Pedido y pago; orquesta reserva, consumo y liberación; conserva reintegros para motivos no F3; conciliación offline según el contrato vigente. |
+| M2/Postventa (`modulo-postventa`) | Devoluciones y cambios; confirma recepción física y aptitud, obtiene `items[].sku` del pedido original y ejecuta directamente F3; consulta detalle informativo para CAMBIO. No reserva, consume ni libera reemplazos. |
 | Retail | Hechos físicos de tienda y acta de resolución |
 | Marketplace / Chatbot | Consulta |
 | Catálogo | Identidad SKU |

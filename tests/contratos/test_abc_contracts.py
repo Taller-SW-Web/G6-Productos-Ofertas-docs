@@ -170,4 +170,68 @@ class ContractChecks(unittest.TestCase):
         self.assertEqual(conflict_schema['properties']['status']['const'],409)
         self.assertIn('status',conflict_schema['required'])
         self.assertIn('code',conflict_schema['required'])
+    def test_postventa_detailed_availability_contract(self):
+        op=self.o['paths']['/inventario/disponibilidad']['get']
+        self.assertEqual(set(op['x-allowed-client-ids']),{'modulo-ventas','modulo-postventa'})
+        self.assertEqual(op['x-required-scope'],'inventario:disponibilidad:leer')
+        self.assertEqual(op['x-scope-registration-status'],'pending-security-registration')
+        self.assertEqual(op['x-service-audience'],'api-productos')
+        self.assertEqual(op['security'],[{'userBearer':[]},{'serviceBearer':[]}])
+
+    def test_postventa_f3_reintegration_contract(self):
+        op=self.o['paths']['/inventario/reintegros']['post']
+        self.assertEqual(set(op['x-allowed-client-ids']),{'modulo-ventas','modulo-postventa'})
+        self.assertEqual(op['x-required-scope'],'inventario:reintegrar')
+        self.assertEqual(op['x-service-audience'],'api-productos')
+        self.assertEqual(op['x-scope-registration-status'],'pending-security-registration')
+        self.assertEqual(op['security'],[{'serviceBearer':[]}])
+        self.assertIn('G7',op['description'])
+        self.assertIn('location_id',op['description'])
+        self.assertEqual(op['requestBody']['content']['application/json']['schema']['$ref'],'#/components/schemas/ReintegroInventarioRequest')
+        response=op['responses']['200']['content']['application/json']['schema']['$ref']
+        self.assertEqual(response,'#/components/schemas/ReintegroInventarioResponse')
+        response_schema=self.o['components']['schemas']['ReintegroInventarioResponse']
+        self.assertEqual(response_schema['properties']['status']['enum'],['COMPLETED'])
+        self.assertEqual(set(response_schema['required']),{'operation_id','order_id','source_ref','status','lines','completed_at'})
+
+    def test_reintegration_request_canonical_schema(self):
+        schema=self.o['components']['schemas']['ReintegroInventarioRequest']
+        self.assertEqual(set(schema['required']),{'operation_id','order_id','source_ref','reason','lines'})
+        props=schema['properties']
+        self.assertEqual(props['operation_id']['type'],'string')
+        self.assertEqual(props['operation_id']['format'],'uuid')
+        self.assertEqual(props['order_id']['type'],'string')
+        self.assertNotIn('format',props['order_id'])
+        self.assertEqual(props['source_ref']['type'],'string')
+        self.assertEqual(props['source_ref']['minLength'],1)
+        self.assertEqual(props['reason']['$ref'],'#/components/schemas/MotivoReintegroInventario')
+        self.assertIn('DEVOLUCION_ACEPTADA',self.o['components']['schemas']['MotivoReintegroInventario']['enum'])
+        self.assertEqual(props['lines']['type'],'array')
+        self.assertEqual(props['lines']['items']['$ref'],'#/components/schemas/LineaInventarioUbicada')
+        line=self.o['components']['schemas']['LineaInventarioUbicada']
+        self.assertEqual(set(line['required']),{'sku','quantity','location_id'})
+        self.assertEqual(line['properties']['sku']['type'],'string')
+        self.assertEqual(line['properties']['quantity']['type'],'integer')
+        self.assertEqual(line['properties']['location_id']['type'],'string')
+
+    def test_postventa_cannot_mutate_reservations_or_read_operations(self):
+        paths=self.o['paths']
+        forbidden=(('/inventario/reservas','post'),('/inventario/reservas/{reservaId}/confirmar','post'),('/inventario/reservas/{reservaId}/liberar','post'),('/inventario/conciliaciones-offline','post'),('/inventario/operaciones/{operationId}','get'))
+        for path,method in forbidden:
+            self.assertNotIn('modulo-postventa',paths[path][method]['x-allowed-client-ids'],path)
+        self.assertEqual(paths['/inventario/operaciones/{operationId}']['get']['x-allowed-client-ids'],['modulo-ventas'])
+
+    def test_postventa_does_not_inherit_channel_endpoints(self):
+        paths=self.o['paths']
+        commercial=(('/inventario/disponibilidad/comercial','get'),('/inventario/disponibilidad/comercial/verificar','post'))
+        expected={'modulo-marketplace','modulo-chatbot','modulo-retail'}
+        for path,method in commercial:
+            clients=paths[path][method]['x-allowed-client-ids']
+            self.assertEqual(set(clients),expected,path)
+            self.assertNotIn('modulo-postventa',clients,path)
+        detailed=set(paths['/inventario/disponibilidad']['get']['x-allowed-client-ids'])
+        self.assertNotIn('modulo-marketplace',detailed)
+        self.assertNotIn('modulo-chatbot',detailed)
+        self.assertNotIn('modulo-retail',detailed)
+
 if __name__=='__main__':unittest.main()
