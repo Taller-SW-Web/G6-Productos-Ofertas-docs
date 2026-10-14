@@ -183,7 +183,7 @@ La línea base conserva **16 scopes** de `api-productos`; la candidata `0.6.0-rc
 | `inventario:reservar` | Reserva | Ventas |
 | `inventario:consumir` | Consumo | Ventas |
 | `inventario:liberar` | Liberación | Ventas |
-| `inventario:reintegrar` | Reintegro físico | Ventas, Postventa |
+| `inventario:reintegrar` | Reintegro físico | M2/Postventa (F3), M1/Ventas (otros motivos contractuales) |
 | `inventario:conciliar-offline` | Venta Retail offline | Ventas |
 | `inventario:incidencias:reportar` | Cuarentena física | Retail |
 | `inventario:incidencias:resolver` | Resolver incidencia/acta | Retail |
@@ -609,7 +609,7 @@ Nunca se libera una reserva `CONSUMIDA`.
 ```http
 POST /api/v1/inventario/reintegros
 scope: inventario:reintegrar
-client_id: modulo-postventa (F3)
+client_id: modulo-postventa
 ```
 
 M2/Postventa invoca directamente F3 solo después de confirmar recepción física y aptitud de las unidades. Usa `items[].sku` del pedido original de Ventas y el payload canónico; `location_id` sigue pendiente de definición. Reintentos idénticos reutilizan identidad y payload; cada nueva recepción parcial lleva otro `operation_id`. La allowlist conserva `modulo-ventas` para otros motivos contractuales.
@@ -1134,9 +1134,11 @@ Scopes de M1/Ventas:
 inventario:reservar
 inventario:consumir
 inventario:liberar
-inventario:reintegrar (otros motivos contractuales)
+inventario:reintegrar
 inventario:conciliar-offline
 ```
+
+Para M1/Ventas, `inventario:reintegrar` se conserva para otros motivos contractuales.
 
 Scopes documentados para M2/Postventa (sin concesión efectiva de G7):
 

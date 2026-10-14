@@ -29,7 +29,7 @@
   - reserva al entrar el pedido en `CREADO`;
   - consumo definitivo al pasar a `PAGADO`;
   - liberación ante `PAGO_NO_COMPLETADO` o anulación aplicable;
-  - Ventas/Postventa orquesta todo el ciclo de inventario;
+  - M1/Ventas orquesta pedido, pago, reserva, consumo y liberación; M2/Postventa es owner de devoluciones y cambios e invoca directamente el reintegro físico F3 tras recepción y aptitud;
   - Marketplace y Chatbot únicamente consultan disponibilidad; Retail además puede reportar/resolver incidencias físicas, sin ejecutar mutaciones comerciales de venta.
 - Acuerdo directo con Despacho:
   - Despacho es responsable del empaque.
@@ -237,9 +237,9 @@ La definición exacta de parámetros y schemas está en `contratos/http/openapi.
 | `GET` | `/api/v1/recomendaciones` | provisional | Marketplace / Chatbot / Retail |
 | `GET` | `/api/v1/combos/{comboId}` | stable | Sin concesión externa inicial |
 | `GET` | `/api/v1/inventario/disponibilidad` | stable | M1/Ventas y M2/Postventa; usuarios administrativos autorizados |
-| `POST` | `/api/v1/inventario/reservas` | provisional | Solo Ventas/Postventa |
-| `POST` | `/api/v1/inventario/reservas/{reservaId}/confirmar` | provisional | Solo Ventas/Postventa |
-| `POST` | `/api/v1/inventario/reservas/{reservaId}/liberar` | provisional | Solo Ventas/Postventa |
+| `POST` | `/api/v1/inventario/reservas` | provisional | Solo M1/Ventas |
+| `POST` | `/api/v1/inventario/reservas/{reservaId}/confirmar` | provisional | Solo M1/Ventas |
+| `POST` | `/api/v1/inventario/reservas/{reservaId}/liberar` | provisional | Solo M1/Ventas |
 | `POST` | `/api/v1/inventario/reintegros` | provisional | M2/Postventa para F3; M1/Ventas conserva otros motivos contractuales |
 | `POST` | `/api/v1/inventario/conciliaciones-offline` | provisional | Solo Ventas/Postventa |
 | `POST` | `/api/v1/inventario/incidencias` | provisional | Solo Retail |
@@ -848,16 +848,17 @@ Retail:
 - puede reportar y resolver una incidencia física con scopes dedicados;
 - no ejecuta reserva, consumo, liberación, reintegro ni conciliación comercial directamente.
 
-## 12.2. Responsabilidad de Ventas/Postventa
+## 12.2. Responsabilidad de Ventas (M1) y Postventa (M2)
 
-Ventas (M1):
+M1/Ventas es responsable del pedido y el pago, y orquesta las operaciones de inventario asociadas al ciclo comercial del pedido:
 
 - reserva al crear pedido `CREADO`;
 - confirma consumo al pasar a `PAGADO`;
 - libera reservas pre-consumo;
-- conserva la allowlist de reintegros para motivos contractuales distintos de F3;
-- registra primero la venta offline y luego solicita conciliación;
-- conserva ownership del pedido, pago y devolución comercial.
+- conserva acceso al reintegro para los otros motivos contractuales, incluidos `ANULACION_POST_CONSUMO` y `RETORNO_LOGISTICO`;
+- registra primero la venta offline y luego solicita conciliación.
+
+M2/Postventa es responsable de las devoluciones y los cambios. Para F3, invoca directamente el reintegro únicamente después de confirmar recepción física y aptitud de las unidades. Esto no concede a M2 acceso a reserva, consumo ni liberación.
 
 ## 12.3. Responsabilidad de Productos y Ofertas
 
@@ -920,7 +921,7 @@ Para F3, M2/Postventa invoca directamente el reintegro físico tras recepción y
 ```http
 POST /api/v1/inventario/reintegros
 scope: inventario:reintegrar
-client_id: modulo-postventa (F3)
+client_id: modulo-postventa
 ```
 
 Condición contractual:
@@ -1963,7 +1964,7 @@ NO liberar reserva
 
 Una anulación comercial post-consumo puede provocar reembolso/extorno, pero **no incrementa stock automáticamente**.
 
-Solo si las unidades retornan físicamente y Postventa (M2) confirma su recepción y aptitud:
+Solo si las unidades retornan físicamente y Postventa (M2) confirma su recepción y aptitud; M1 conserva acceso al endpoint para los otros motivos contractuales:
 
 ```text
 -> inventario:reintegrar
@@ -2569,13 +2570,15 @@ Los canales:
 - consultan disponibilidad;
 - no mutan directamente el inventario.
 
-Ventas/Postventa:
+M1/Ventas:
 
-- es owner del pedido;
-- orquesta el ciclo de reserva y consumo de stock;
+- es owner del pedido y el pago;
+- orquesta las reservas, el consumo y la liberación del pedido;
 - reserva al entrar en `CREADO`;
 - confirma consumo en `PAGADO`;
 - libera ante pago no completado o anulación aplicable.
+
+M2/Postventa es owner de las devoluciones y los cambios, e invoca el reintegro físico F3 cuando las unidades se recibieron y son aptas.
 
 Despacho:
 
