@@ -1,6 +1,6 @@
 # Modelos conceptuales de datos — Módulo de Productos y Ofertas
 
-**Fecha de actualización:** 2026-10-12  
+**Fecha de actualización:** 2026-10-13
 **Repositorio:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
 **Archivo:** `arquitectura/Modelo_Conceptual.md`  
 **Arquitectura de referencia:** `arquitectura/Arquitectura.md` (versión corregida en revisión)  
@@ -46,12 +46,13 @@ Esta versión incorpora las decisiones de diseño del modelo de datos:
 
 1. **Inventario pertenece a Productos y Ofertas**.
 2. Marketplace y Chatbot solo consultan disponibilidad; Retail además reporta/resuelve incidencias físicas sin convertirse en owner del saldo.
-3. **Ventas/Postventa orquesta inventario comercial** en los flujos documentados:
+3. **M1/Ventas orquesta las mutaciones comerciales del pedido**:
    - pedido `CREADO` → reserva;
    - pedido `PAGADO` → consumo definitivo;
-   - `PAGO_NO_COMPLETADO` o anulación pre-consumo → liberación;
-   - retorno físicamente reintegrable → reintegro;
-   - venta Retail offline sincronizada con Ventas/Postventa → conciliación invocada por Ventas en la secuencia G6 vigente. La alternativa Retail→G6 directa está pendiente de homologación, sin imponer orden entre pedido, pago y conciliación.
+   - `PAGO_NO_COMPLETADO` o anulación pre-consumo → liberación.
+   - **M2/Postventa**, owner de devoluciones y cambios, invoca directamente el reintegro físico F3 tras recepción y aptitud.
+   - **G6/Inventario** conserva el saldo autoritativo.
+   - **Retail offline** mantiene su situación contractual separada: la venta sincronizada con Ventas/Postventa se concilia por Ventas en la secuencia G6 vigente; la alternativa Retail→G6 directa está pendiente de homologación. No se impone orden entre pedido, pago y conciliación.
 4. La reserva tiene expiración configurable.
 5. Los datos físicos propios de una unidad vendible se modelan por **SKU**.
 6. Productos y Ofertas es owner de:
@@ -95,7 +96,7 @@ flowchart LR
   AUDIT["REGISTRO DE AUDITORÍA<br/>(Price Audit)"]
   BATCH["LOTE MASIVO<br/>(Bulk)"]
 
-  ORDER["PEDIDO<br/>(externo: Ventas/Postventa)"]
+  ORDER["PEDIDO<br/>(externo: M1/Ventas)"]
   DISPATCH["DESPACHO / EMPAQUE<br/>(externo: Despacho)"]
 
   R1{"SE CLASIFICA EN"}
@@ -590,7 +591,7 @@ flowchart LR
 
   PRODUCT["PRODUCTO<br/>(externo: Catálogo)"]
   SKU["SKU VENDIBLE<br/>(externo: Catálogo)"]
-  ORDER["PEDIDO<br/>(externo: Ventas/Postventa)"]
+  ORDER["PEDIDO<br/>(externo: M1/Ventas)"]
 
   R_PRODUCT{"APLICA A"}
   R_SKU{"APLICA A"}
@@ -709,7 +710,7 @@ Inventario es autoridad de:
 
 No es autoridad del pedido.
 
-`order_id` es una referencia externa cuyo owner es Ventas/Postventa.
+`order_id` es una referencia externa cuyo owner es M1/Ventas; M2/Postventa mantiene el ownership de devoluciones y cambios.
 
 ---
 
@@ -718,7 +719,7 @@ No es autoridad del pedido.
 ```mermaid
 flowchart TB
   SKU["SKU VENDIBLE<br/>(externo: Catálogo)"]
-  ORDER["PEDIDO<br/>(externo: Ventas/Postventa)"]
+  ORDER["PEDIDO<br/>(externo: M1/Ventas)"]
 
   LOCATION["UBICACIÓN"]
   BALANCE["SALDO DE INVENTARIO"]
@@ -832,7 +833,7 @@ available = max(on_hand - reserved - blocked, 0)
 
 ## 9.4. Reserva de Inventario
 
-`RESERVA DE INVENTARIO` representa la retención temporal de unidades solicitada por Ventas/Postventa.
+`RESERVA DE INVENTARIO` representa la retención temporal de unidades solicitada por M1/Ventas. El acuerdo vigente no atribuye a M2/Postventa reservas de unidades de reemplazo.
 
 Estados conceptuales:
 
@@ -1027,7 +1028,9 @@ y cierra como `COMPLETADO_CON_DISCREPANCIA`.
 
 ## 9.10. Reintegro y conciliación offline
 
-Un reintegro es una `OPERACIÓN DE INVENTARIO` originada por Ventas/Postventa después de una recepción física aceptada.
+La devolución comercial o su aprobación no implica automáticamente un reingreso al inventario. F3 requiere recepción física confirmada y aptitud para reventa; M2/Postventa invoca directamente a G6 una vez cumplidas esas condiciones. M1/Ventas conserva la posibilidad de invocar reintegros por otros motivos contractuales.
+
+Conceptualmente, `operation_id` identifica el intento lógico de reintegro: un retry con la misma identidad y contenido no crea un segundo movimiento. Una nueva recepción parcial constituye una operación propia y usa otra identidad. La ubicación pertenece a Inventario; la ubicación receptora y su resolución operativa siguen pendientes, sin asignar aquí un almacén o identificador.
 
 Una conciliación offline es una operación autoritativa de Inventario sobre una venta física de Retail ya ocurrida y sincronizada con Ventas/Postventa. No genera reserva retroactiva. Inventario aplica solo cantidades admisibles del saldo central, sin consumir reservas/bloqueos ni permitir saldos negativos. Los resultados `COMPLETED` y `REQUIRES_REVIEW` son distintos; el resultado parcial conserva las cantidades solicitadas, aplicadas y no resueltas. La conciliación puede quedar registrada con cero cantidad aplicada y cero movimientos Kardex.
 
@@ -1063,7 +1066,7 @@ pero no persiste ni gestiona:
 - comprobante;
 - reembolso.
 
-Ventas/Postventa continúa siendo el único owner del Pedido.
+M1/Ventas es el owner específico del Pedido, el pago y sus estados. M2/Postventa mantiene el ownership de las devoluciones y cambios dentro de G5.
 
 Los resultados asíncronos se correlacionan con el pedido/operación mediante los identificadores del contrato; esto no crea una entidad Pedido dentro de Inventario.
 
@@ -1326,7 +1329,7 @@ price_audit.price_id
 | `channel_id` | enumeración contractual |
 | `user_id` | Seguridad |
 | `customer_ref` | Seguridad |
-| `order_id` | Ventas/Postventa |
+| `order_id` | M1/Ventas |
 | `reservation_id` | Inventario |
 | `operation_id` | productor de la operación |
 | `location_id` | Inventario |
@@ -1462,8 +1465,10 @@ Los contratos Catálogo → Pricing, Catálogo → Inventario y el reintegro fí
 Pendientes que sí pueden afectar el modelo lógico o la implementación futura:
 
 1. decisión final sobre tabla/abstracción física para representar SKU vendible dentro de Catálogo;
-2. registro y concesión efectivos de scopes/grants técnicos de `api-productos` en Seguridad, incluido el nuevo scope **propuesto** `inventario:operaciones:leer` para `modulo-ventas` (`pending-security-registration`), sin grants implícitos a canales;
+2. registro y concesión efectivos de scopes/grants técnicos de `api-productos` en Seguridad, incluidos para M2 los scopes ya catalogados `inventario:disponibilidad:leer` e `inventario:reintegrar`; M2 no tiene autorización acordada para reservar, consumir, liberar, conciliar offline ni consultar operaciones. `inventario:operaciones:leer` sigue siendo candidato exclusivo de M1/Ventas. La ubicación receptora y su resolución operativa siguen pendientes;
 3. implementación y pruebas de conformidad de la política ya aprobada D-INV-01, sin convertir el carácter provisional de la proyección comercial en una decisión abierta.
+4. acuerdo para reservar/consumir reemplazos por M2 aún no homologado;
+5. backend e integración E2E entre G5 y G6 no acreditados.
 
 Estos pendientes no crean un nuevo bounded context ni modifican la autoridad de Inventario. La ruta detallada `GET /api/v1/inventario/disponibilidad` conserva su acceso restringido por consumidor; las rutas comerciales `GET /api/v1/inventario/disponibilidad/comercial` y `POST /api/v1/inventario/disponibilidad/comercial/verificar` evitan revelar saldos o ubicaciones y no generan reservas.
 
@@ -1478,7 +1483,7 @@ La actualización confirma que:
 3. Catálogo es owner de los datos físicos intrínsecos del SKU.
 4. Despacho es owner del empaque y de la logística final.
 5. Inventario es owner de saldo y reserva.
-6. Ventas es owner del Pedido y orquesta el ciclo de reserva/consumo.
+6. M1/Ventas es owner del Pedido y orquesta el ciclo de reserva/consumo/liberación; M2/Postventa es owner de devoluciones/cambios e invoca directamente el reintegro físico F3.
 7. Marketplace y Chatbot no mutan Inventario; Retail tampoco ejecuta mutaciones comerciales de venta, aunque puede reportar/resolver incidencias físicas mediante contratos dedicados.
 8. Una Reserva pertenece conceptualmente a un Pedido externo, pero no existe FK cross-module.
 9. La reserva tiene ciclo propio y debe modelarse explícitamente.
