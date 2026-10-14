@@ -1,6 +1,6 @@
 # Arquitectura del Módulo de Productos y Ofertas
 
-**Fecha de actualización:** 2026-10-12  
+**Fecha de actualización:** 2026-10-13
 **Repositorio de documentación:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
 **Archivo:** `arquitectura/Arquitectura.md`  
 **Contrato HTTP canónico:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.1`; referencia histórica `0.5.0`)
@@ -82,9 +82,12 @@ como contenedor de acceso/BFF, **no como bounded context de negocio**.
 | Dato / proceso | Owner |
 |---|---|
 | Usuario, roles y autenticación | Seguridad y Usuarios |
-| Pedido y estado comercial | Ventas y Postventa |
+| Pedido, pago y estado comercial | M1/Ventas (G5) |
+| Devoluciones y cambios | M2/Postventa (G5) |
 | Producto, SKU, precio, promociones y stock | Productos y Ofertas |
 | Despacho, empaque y entrega | Despacho y Entrega |
+
+G5 es el owner externo general de Ventas/Postventa; M1/Ventas posee pedido y pago, y M2/Postventa posee devoluciones y cambios.
 
 ### 1.2.1. Actor humano canónico
 
@@ -112,7 +115,8 @@ Compensaciones:
 
 ```text
 anulación pre-consumo -> LIBERACIÓN
-retorno físico aceptado -> REINTEGRO
+recepción física apta aceptada -> M2/Postventa invoca reintegro F3
+otros motivos contractuales -> M1/Ventas puede invocar reintegro
 venta Retail offline registrada -> CONCILIACIÓN
 ```
 
@@ -128,7 +132,8 @@ Consecuencias:
 
 - Marketplace y Chatbot solo consultan.
 - Retail no muta stock por una venta; solo reporta/resuelve hechos físicos mediante scopes dedicados.
-- Ventas/Postventa orquesta las mutaciones comerciales.
+- M1/Ventas solicita, confirma y libera las reservas del pedido.
+- M2/Postventa invoca el reintegro F3 después de recepción física y verificación de aptitud.
 - Inventario mantiene el saldo autoritativo.
 - Despacho no produce un segundo consumo.
 - La reserva conserva TTL configurable.
@@ -1132,16 +1137,30 @@ available >= 0
 GET /api/v1/inventario/disponibilidad
 ```
 
-Consumidores:
+Consulta detallada por servicio (saldos y ubicación):
 
 ```text
-Marketplace
-Chatbot
-Retail
-Ventas/Postventa
+modulo-ventas
+modulo-postventa
 ```
 
-Para llamadas módulo-a-módulo, la consulta utiliza la audiencia `api-productos` y propone el scope `inventario:disponibilidad:leer`.
+```text
+Scope: inventario:disponibilidad:leer
+Audiencia: api-productos
+Autenticación de servicio: client_credentials
+Acceso humano autorizado: userBearer
+```
+
+M2 usa esta respuesta solo como consulta informativa para CAMBIO; no reserva ni consume el reemplazo.
+
+Consulta comercial, sin exponer saldos ni `location_id`:
+
+```http
+GET /api/v1/inventario/disponibilidad/comercial
+POST /api/v1/inventario/disponibilidad/comercial/verificar
+```
+
+Consumidores técnicos: `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`.
 
 La consulta:
 
@@ -1313,22 +1332,23 @@ Una rehabilitación reduce `blocked`. Una merma/faltante confirmado reduce `bloc
 
 ## 14.7. Reintegro postventa
 
-Solo `modulo-ventas` puede invocar:
+`modulo-postventa` invoca directamente F3 después de la recepción física y la verificación de aptitud para reventa. `modulo-ventas` conserva autorización para otros motivos contractuales de reintegro. La ruta es:
 
 ```http
 POST /api/v1/inventario/reintegros
 ```
-Precondición de integración:
+
+La autenticación de servicio usa `client_credentials`, audiencia `api-productos` y scope `inventario:reintegrar`; el registro y grant real de M2 por G7 siguen pendientes. La aprobación comercial de la devolución es distinta de la recepción física: F3 requiere unidades recibidas y aptas para reventa. El SKU se obtiene de `items[].sku` del pedido original. El payload canónico contiene:
 
 ```text
-retorno comercial aceptado
-+
-recepción física confirmada
-+
-unidad reintegrable
+operation_id
+order_id
+source_ref
+reason = DEVOLUCION_ACEPTADA (F3)
+lines[]: sku, quantity, location_id
 ```
 
-El reintegro incrementa `on_hand`, recalcula `available`, registra Kardex y es idempotente.
+`location_id` y la ubicación receptora/resolución operativa siguen pendientes; no se debe inventar un identificador. Un retry idéntico conserva `operation_id` y no genera un segundo movimiento; una recepción parcial posterior usa un `operation_id` nuevo. La respuesta contractual es HTTP `200` con `status: COMPLETED`. G6 valida la idempotencia y disponibilidad de ubicación autorizada, actualiza saldo y Kardex transaccionalmente y registra Outbox en la misma transacción. La publicación del evento correspondiente ocurre después del commit, cuando corresponda, y no condiciona la respuesta HTTP.
 
 ## 14.8. Conciliación Retail offline
 
@@ -1762,7 +1782,7 @@ catalog physical projection:
   productos:fisicos:leer
 ```
 
-**Separación obligatoria de representaciones:** `GET /api/v1/inventario/disponibilidad` expone saldos autoritativos por SKU/ubicación. La allowlist de servicio para esta ruta admite únicamente `modulo-ventas`, además de los usuarios humanos específicamente autorizados por las reglas administrativas aplicables. `GET /api/v1/inventario/disponibilidad/comercial` y `POST /api/v1/inventario/disponibilidad/comercial/verificar` sirven a `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`; comparten el scope `inventario:disponibilidad:leer`, pero **no** exponen cantidades ni `location_id`. El backend debe aplicar tanto scope como identidad cliente, sin extrapolar los permisos entre rutas.
+**Separación obligatoria de representaciones:** `GET /api/v1/inventario/disponibilidad` expone saldos autoritativos por SKU/ubicación. La allowlist de servicio para esta ruta admite `modulo-ventas` y `modulo-postventa`, además de los usuarios humanos específicamente autorizados mediante `userBearer`. `GET /api/v1/inventario/disponibilidad/comercial` y `POST /api/v1/inventario/disponibilidad/comercial/verificar` sirven a `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`; usan el scope `inventario:disponibilidad:leer`, pero **no** exponen cantidades ni `location_id`. El backend debe aplicar tanto scope como identidad cliente, sin extrapolar los permisos entre rutas. La documentación de consumidores y scopes no acredita grants efectivos.
 
 Mínimo privilegio:
 
@@ -1771,10 +1791,13 @@ Marketplace -> lectura/evaluación + disponibilidad
 Chatbot     -> lectura/evaluación + recomendaciones + disponibilidad
 Retail      -> lectura/evaluación + disponibilidad + incidencias físicas
 Ventas      -> disponibilidad + ciclo comercial completo de Inventario
+Postventa   -> disponibilidad detallada + reintegro F3
 Despacho    -> datos físicos
 ```
 
 `combos:leer` permanece sin concesión externa inicial.
+
+Para M2/Postventa, este acuerdo prevé únicamente `inventario:disponibilidad:leer` e `inventario:reintegrar`, ambos sujetos a registro/grant G7 y a la allowlist de la ruta. M2 no está autorizado a reservar, consumir, liberar, conciliar offline ni consultar operaciones. `inventario:operaciones:leer` continúa como candidato exclusivo de M1/Ventas; su presencia en OpenAPI no representa un permiso concedido.
 
 Hasta que Seguridad registre el catálogo y grants:
 
@@ -2084,7 +2107,8 @@ flowchart LR
   market["Sistema externo: Marketplace"]
   chatbot["Sistema externo: Chatbot"]
   retail["Sistema externo: Retail"]
-  ventas["Sistema externo: Ventas y Postventa"]
+  ventas["Sistema externo: M1 / Ventas (G5)"]
+  postventa["Sistema externo: M2 / Postventa (G5)"]
   despacho["Sistema externo: Despacho y Entrega"]
   seguridad["Sistema externo: Seguridad y Usuarios"]
 
@@ -2096,8 +2120,10 @@ flowchart LR
   chatbot -->|"Consulta catálogo, precios, promociones, recomendaciones y disponibilidad"| po
   retail -->|"Consulta oferta y disponibilidad; reporta incidencias físicas autorizadas"| po
 
-  ventas -->|"Reserva, confirma consumo, libera, reintegra y concilia inventario"| po
+  ventas -->|"Reserva, confirma consumo, libera, concilia y otros reintegros contractuales"| po
+  postventa -->|"Consulta disponibilidad detallada; invoca reintegro físico F3"| po
   po -->|"Resultados de inventario y cupones"| ventas
+  po -->|"Resultados de disponibilidad y reintegro"| postventa
 
   despacho -->|"Consulta datos físicos por SKU"| po
 
@@ -2114,7 +2140,8 @@ flowchart TB
   market["Marketplace"]
   chatbot["Chatbot"]
   retail["Retail"]
-  sales["Ventas/Postventa"]
+  sales["M1 / Ventas (G5)"]
+  postventa["M2 / Postventa (G5)"]
   dispatch["Despacho"]
   security["Seguridad y Usuarios"]
 
@@ -2143,7 +2170,8 @@ flowchart TB
   market -->|HTTPS lectura/evaluación| ingress
   chatbot -->|HTTPS lectura/evaluación| ingress
   retail -->|HTTPS lectura + incidencias físicas| ingress
-  sales -->|HTTPS comandos y consultas| ingress
+  sales -->|HTTPS comandos y consultas de pedido| ingress
+  postventa -->|HTTPS consulta detallada y reintegro F3| ingress
   dispatch -->|HTTPS datos físicos| ingress
 
   ingress --> gateway
@@ -2660,12 +2688,13 @@ Despacho
 ## 39.8. Devolución físicamente reintegrable
 
 ```text
-Postventa confirma recepción física
-  -> modulo-ventas
-  -> POST /inventario/reintegros
-  -> inventory-svc
-  -> on_hand aumenta
-  -> Kardex + stock.changed
+1. M2/Postventa confirma recepción física y aptitud para reventa.
+2. M2 obtiene el SKU original desde `items[].sku` del pedido.
+3. M2 construye y envía el reintegro F3 con `DEVOLUCION_ACEPTADA`.
+4. G6 valida idempotencia y disponibilidad de una ubicación autorizada.
+5. G6 confirma la actualización transaccional del saldo y Kardex.
+6. G6 responde HTTP `200` con `status: COMPLETED`.
+7. Después del commit, Outbox publica el evento correspondiente cuando aplique; la publicación no condiciona la respuesta HTTP.
 ```
 
 ## 39.9. Incidencia de tienda
@@ -3178,12 +3207,12 @@ La arquitectura resultante mantiene ocho bounded contexts con ownership explíci
 
 Los principios arquitectónicos principales son:
 
-1. **Ventas/Postventa orquesta Inventario**.
+1. **M1/Ventas orquesta pedido, pago y las mutaciones comerciales de reserva, consumo y liberación**; M2/Postventa administra devoluciones/cambios e invoca directamente el reintegro físico F3.
 2. `CREADO` produce reserva.
 3. `PAGADO` produce consumo.
 4. pago fallido/anulación pre-consumo libera; una reserva consumida nunca se libera.
 5. reservas expiran por TTL configurable.
-6. devoluciones físicas reintegrables y ventas offline se procesan por contratos explícitos de Ventas/Postventa.
+6. el reintegro físico F3 lo invoca M2/Postventa después de recepción apta; M1/Ventas conserva acceso para otros motivos contractuales. La conciliación Retail offline mantiene su secuencia contractual separada.
 7. Marketplace/Chatbot solo consultan; Retail además reporta/resuelve incidencias físicas sin orquestar ventas.
 8. Catálogo mantiene perfil físico por SKU.
 9. Despacho mantiene ownership del empaque.

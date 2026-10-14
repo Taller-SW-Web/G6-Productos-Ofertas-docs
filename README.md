@@ -173,8 +173,8 @@ El sistema evita compartir directamente bases de datos o entidades entre módulo
 | Combo | Productos y Ofertas |
 | Stock y reservas | Productos y Ofertas |
 | Usuario, identidad, roles y autenticación | Seguridad y Usuarios |
-| Pedido, pago y estado comercial | Ventas y Postventa |
-| Devolución comercial y reembolso | Ventas y Postventa |
+| Pedido, pago y estado comercial | M1/Ventas (G5) |
+| Devoluciones, cambios y resolución de reembolsos | M2/Postventa (G5) |
 | Despacho, empaque y entrega | Despacho y Entrega |
 
 No se permiten foreign keys ni consultas SQL directas entre bases de datos pertenecientes a módulos diferentes.
@@ -189,21 +189,23 @@ El flujo documentado para los canales web es:
 
 ```mermaid
 flowchart TD
-    C["Canal"] -->|Consulta disponibilidad| PO["Productos y Ofertas"]
-    C -->|Crea pedido| VP["Ventas/Postventa"]
+    C["Canal"] -->|Consulta comercial| G6["G6 / Inventario"]
+    C -->|Crea pedido| M1["M1 / Ventas (G5)"]
+    M1 -->|CREADO: solicita reserva| G6
+    M1 -->|PAGADO: confirma consumo| G6
+    M1 -->|Anulación aplicable: libera reserva| G6
 
-    VP -->|Pedido = CREADO| R["Solicita reserva"]
-    VP -->|Pedido = PAGADO| CO["Confirma consumo"]
-    VP -->|Cancelación o PAGO_NO_COMPLETADO| L["Solicita liberación"]
-
-    R --> INV["Inventario<br/>Productos y Ofertas"]
-    CO --> INV
-    L --> INV
+    M2["M2 / Postventa (G5)"] -->|Consulta detallada informativa para CAMBIO| G6
+    M2 -->|Tras recepción física y aptitud: POST F3 reintegro| G6
 ```
 
-Marketplace y Chatbot consultan disponibilidad. Para pedidos de esos canales, Ventas/Postventa orquesta las mutaciones comerciales de reserva, consumo y liberación; la secuencia consta en documentación G6 y no acredita por sí sola homologación, implementación o prueba runtime. La conciliación de ventas offline de Retail sigue pendiente de homologación: G4/G5/G6 documentan invocadores, rutas e identidades incompatibles, y OpenAPI G6 solo permite actualmente `modulo-ventas`. La lógica interna de conciliación ya definida (stock autoritativo, aplicación parcial sin saldo negativo, Kardex e idempotencia) puede implementarse en G6; el invocador, mapeo, request/response compatible, grant G7 y secuencia intermodular requieren acuerdo. Retail puede reportar y resolver incidencias físicas mediante sus capacidades autorizadas.
+G6 mantiene el saldo autoritativo y valida y registra los reintegros con Kardex, idempotencia y Outbox.
 
-Ventas/Postventa coordina el ciclo asociado al pedido y Productos y Ofertas mantiene el estado autoritativo del inventario.
+M1/Ventas es owner del pedido y el pago; solicita la reserva cuando corresponde, confirma el consumo tras el pago y libera reservas en los estados aplicables. M2/Postventa es owner de las devoluciones y cambios; tras recepción física y verificación de aptitud invoca directamente F3 en G6. Para un CAMBIO, M2 consulta disponibilidad detallada solo con fin informativo: el acuerdo vigente no le permite reservar, consumir ni liberar unidades de reemplazo. G6 conserva la autoridad del stock y valida y registra cada reintegro. Estos acuerdos documentales no acreditan por sí solos implementación, permisos efectivos o pruebas runtime.
+
+Marketplace y Chatbot consultan disponibilidad comercial. La conciliación de ventas offline de Retail sigue pendiente de homologación: G4/G5/G6 documentan invocadores, rutas e identidades incompatibles, y OpenAPI G6 solo permite actualmente `modulo-ventas`. La lógica interna de conciliación ya definida (stock autoritativo, aplicación parcial sin saldo negativo, Kardex e idempotencia) puede implementarse en G6; el invocador, mapeo, request/response compatible, grant G7 y secuencia intermodular requieren acuerdo. Retail puede reportar y resolver incidencias físicas mediante sus capacidades autorizadas.
+
+G5 es el owner externo general de los procesos de Ventas y Postventa; M1/Ventas conserva el pedido/pago y M2/Postventa las devoluciones/cambios. Productos y Ofertas mantiene el estado autoritativo del inventario.
 
 Las reservas pueden expirar mediante un TTL configurable.
 
@@ -457,7 +459,7 @@ integraciones/ALINEACION_MARKETPLACE.md
 integraciones/ALINEACION_RETAIL.md
 ```
 
-Chatbot, Marketplace y Retail consumen las proyecciones comerciales de Inventario (GET estados o POST verificación de cantidades); la lectura detallada por servicio queda permitida únicamente a Ventas, sin perjuicio de usuarios administrativos autorizados. El scope nominal `inventario:disponibilidad:leer` **no suprime** las allowlists por operación. `inventario:operaciones:leer` es nuevo permiso candidato exclusivo de Ventas, pendiente de concesión por G7. La matriz de pruebas inter-módulo se encuentra en `contratos/pruebas/pruebas-contrato.md`.
+`modulo-ventas` y `modulo-postventa` pueden consultar `GET /api/v1/inventario/disponibilidad`, sujetos al scope `inventario:disponibilidad:leer` y a su allowlist. M2 usa esa información para CAMBIO de forma informativa y no reserva stock. Marketplace, Chatbot y Retail solo consultan endpoints comerciales, que no exponen saldos ni ubicaciones internas. Los usuarios humanos autorizados conservan una vía de seguridad distinta mediante `userBearer`. `inventario:operaciones:leer` sigue siendo exclusivo de M1/Ventas y pendiente de concesión por G7; la documentación no acredita grants reales. La matriz de pruebas inter-módulo se encuentra en `contratos/pruebas/pruebas-contrato.md`.
 
 **D-INV-01 está adoptada**: una sola ubicación elegible por referencia de cumplimiento; no sumar saldos independientes. Mapeo ausente/ambiguo o cumplimiento no demostrable: `INDETERMINADO`. El GET comercial y el POST de verificación por cantidad son consultas sin efectos; el POST devuelve `binding=false` y no reserva. Las rutas siguen `provisional` por implementación/pruebas pendientes. **D-REC-01/02** continúan abiertas y son decisiones distintas.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
