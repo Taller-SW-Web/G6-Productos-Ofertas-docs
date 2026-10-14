@@ -1,6 +1,6 @@
 # Kit de integración — Productos y Ofertas
 
-**Fecha de actualización:** 2026-10-12
+**Fecha de actualización:** 2026-10-14
 
 **Repositorio:** `Taller-SW-Web/G6-Productos-Ofertas-docs`
 **API propietaria:** `api-productos`  
@@ -184,7 +184,7 @@ La línea base conserva **16 scopes** de `api-productos`; la candidata `0.6.0-rc
 | `inventario:consumir` | Consumo | Ventas |
 | `inventario:liberar` | Liberación | Ventas |
 | `inventario:reintegrar` | Reintegro físico | M2/Postventa (F3), M1/Ventas (otros motivos contractuales) |
-| `inventario:conciliar-offline` | Venta Retail offline | Ventas |
+| `inventario:conciliar-offline` | Conciliación de venta Retail offline; OpenAPI vigente solo permite `modulo-ventas` | Ventas (contrato actual); Retail propuesto por homologar |
 | `inventario:incidencias:reportar` | Cuarentena física | Retail |
 | `inventario:incidencias:resolver` | Resolver incidencia/acta | Retail |
 | `productos:fisicos:leer` | Peso/dimensiones | Despacho |
@@ -213,7 +213,28 @@ pending-security-registration
 
 hasta que Seguridad registre formalmente los scopes/grants. Esto no bloquea mocks, CI ni implementación interna.
 
-## 5.1. Matriz congelada por consumidor
+## 5.1. Contrato mínimo de inventario para G5
+
+El alcance documentado con M1/Ventas para pedidos web es:
+
+1. Al crear un pedido, M1 solicita `POST /api/v1/inventario/reservas`. HTTP `202 Accepted` confirma admisión del comando; no confirma stock reservado.
+2. Al pasar el pedido a `PAGADO`, M1 solicita la confirmación de consumo sobre la reserva. Ante `PAGO_NO_COMPLETADO` o una anulación que aplique antes del consumo, solicita liberación.
+3. M1 consume los resultados tipados de reserva (`inventory.reservation.created` o `inventory.reservation.rejected`), consumo y liberación publicados por RabbitMQ conforme a AsyncAPI. La topología documenta exchanges durables, colas quorum, ACK manual, publisher confirms y entrega at-least-once; son requisitos de diseño y no acreditan que el broker de un entorno esté disponible.
+4. El contrato candidato G6 ofrece `GET /api/v1/inventario/operaciones/{operationId}` para recuperar el resultado persistido de una operación aceptada. Su consumo por M1 es parte de la preparación técnica, pero la documentación G5 consultada no registra aceptación explícita de esta consulta. La ruta es exclusiva de `modulo-ventas`; `inventario:operaciones:leer` está pendiente de registro/concesión de G7. `operation_id` es UUID y no sustituye `order_id` opaco.
+5. Postventa solicita el reintegro físico por `POST /api/v1/inventario/reintegros` tras recepción física confirmada y aptitud; es una mutación HTTP síncrona con respuesta `200 COMPLETED`, distinta de liberar una reserva. Requiere `location_id` resuelto y autorización efectiva. Para restaurar cupón ante anulación aplicable después del consumo, el flujo de Promociones usa el comando/evento de restauración definido en AsyncAPI, correlacionado con el consumo original. El acuerdo F3 no autoriza reserva/consumo de reemplazo por M2.
+
+### Estado de disponibilidad por capa
+
+| Capa | Evidencia actual | Estado / comprobación requerida |
+|---|---|---|
+| Protocolo/broker | AsyncAPI y topología `0.6.0-rc.1` especifican conexión RabbitMQ directa de M1 y garantías esperadas | Candidato documental; no hay prueba de disponibilidad técnica de un broker ni credenciales de entorno |
+| Implementación G6 | HTTP, eventos y consulta durable están especificados | Handlers NestJS, Outbox/Inbox, persistencia de resultado y consumidores no quedan acreditados por YAML ni docs; requieren evidencia de implementación y prueba |
+| Permisos G7 | Scopes y allowlists declarados por operación | Grants/provisión de `inventario:reservar`, `inventario:consumir`, `inventario:liberar`, `inventario:operaciones:leer` y `inventario:reintegrar` requieren evidencia G7 por consumidor; no se deducen de nombres contractuales |
+| Despliegue | OpenAPI/AsyncAPI identifican `0.6.0-rc.1` como candidata | Despliegue operativo y transición de consumidores requieren evidencia de versión/entorno, compatibilidad y pruebas reproducibles; la candidata no es runtime |
+
+Para Retail offline, G5 confirmó el 2026-10-14 que Retail invoca directamente `POST /api/v1/inventario/conciliaciones-offline` y que M1 no reserva, confirma ni concilia inventario Retail. La ruta del OpenAPI vigente solo permite `modulo-ventas`, exige `location_id` en cada línea y devuelve ubicación/saldos internos. G4 v0.4 aún prohíbe esa llamada directa. Se conserva como `ACUERDO_EXTERNO_DOCUMENTADO` de G5, no como homologación bilateral ni permiso. La propuesta y los responsables de homologación constan en [ALINEACION_RETAIL](../../integraciones/ALINEACION_RETAIL.md). No cambies la llamada al contrato hasta que G4/G5/G6 acuerden actor, identidad, referencia pública de tienda, secuencia, DTO minimizado y transición; G7 debe aprobar/registrar el scope existente para Retail y confirmar grant/provisión.
+
+## 5.2. Matriz congelada por consumidor
 
 ```text
 modulo-marketplace:

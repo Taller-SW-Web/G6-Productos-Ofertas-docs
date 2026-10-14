@@ -325,6 +325,9 @@ La allowlist y el scope documentados no acreditan permisos efectivos. No atribui
 | CT-OFF-HOM-04 | CONSUMER_PROVIDER | Una vez acordada la representación, la respuesta observada por Retail contiene solo los datos minimizados convenidos y la respuesta contractual actual de Ventas conserva su forma aprobada | BLOQUEADA_DECISION |
 | CT-OFF-HOM-05 | CONSUMER_PROVIDER | Cualquier flujo alternativo de cupón offline sin reserva confirmada requiere contrato y acuerdo explícitos antes de probarse | BLOQUEADA_DECISION |
 | CT-OFF-HOM-06 | CONSUMER_PROVIDER | La prueba consumer-provider valida la compatibilidad y transición de los consumidores desde la línea base `0.5.0` antes de publicar cambios incompatibles | BLOQUEADA_DECISION |
+| CT-OFF-HOM-07 | GOVERNANCE | G4 actualiza/ratifica formalmente que Retail invoca G6 directamente y alinea F10/§5.10 con el actor, flujo e identidad offline acordados; la confirmación G5 del 2026-10-14 por sí sola no supera este gate | BLOQUEADA_DECISION |
+| CT-OFF-HOM-08 | SECURITY_INTEGRATION | G7 aprueba/registra `inventario:conciliar-offline` para audiencia `api-productos` y `modulo-retail`, y evidencia grant y credencial provisionada antes de la llamada real | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-OFF-HOM-09 | CONSUMER_PROVIDER | Tras homologar y versionar el contrato, Retail envía la referencia pública acordada sin `location_id`; G6 resuelve la ubicación internamente y la respuesta observable cumple DEC-F-015 | BLOQUEADA_DECISION |
 
 ### Puertas de integración pendientes
 
