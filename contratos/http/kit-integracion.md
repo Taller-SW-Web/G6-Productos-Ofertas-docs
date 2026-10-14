@@ -651,7 +651,7 @@ Para estas operaciones OpenAPI `0.6.0-rc.1` declara `client_id=modulo-marketplac
 - `listarCategorias` admite `serviceBearer`.
 - `listarProductos` declara `serviceBearer` y `userBearer` como alternativas del security requirement. Un llamado BFF usa el token de servicio; no se le exigen claims humanos del esquema de usuario.
 - `obtenerProductoPorSlug` conserva ambas alternativas publicadas (`serviceBearer` y `userBearer`). El BFF usa el JWT técnico para su llamada módulo-a-módulo; no se infieren claims humanos para ese token.
-- `X-Correlation-Id` es header UUID opcional en OpenAPI; si el BFF lo recibe o genera internamente como `X-Request-Id`, su propagación/mapeo debe preservar la correlación acordada.
+- `X-Correlation-Id` es header UUID opcional en OpenAPI G6. Si el BFF entrega un `X-Request-Id` con UUID válido, el adaptador puede copiar ese valor sin cambios a `X-Correlation-Id` en la llamada a G6 para conservar la correlación; si no hay UUID disponible, puede omitir el header, pues G6 no lo exige. La transformación no cambia el contrato público del BFF ni vuelve obligatorio el header de G6.
 - Las respuestas G6 incluyen `401 TOKEN_INVALIDO`, `403 SCOPE_INSUFICIENTE` y `503 SERVICIO_NO_DISPONIBLE`. El detalle puede además responder `404 PRODUCTO_NO_ENCONTRADO`. Las operaciones declaran `429 RATE_LIMIT_EXCEDIDO` con header `Retry-After`.
 - F-007/F-010 documentan códigos públicos BFF como `INVALID_SEARCH_QUERY`, `INVALID_PAGE` y `CATALOG_UNAVAILABLE`. No son automáticamente equivalentes a los códigos G6; la traducción pertenece al contrato/implementación G1 y requiere su propia validación.
 
