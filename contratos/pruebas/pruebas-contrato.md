@@ -172,6 +172,21 @@ Las pruebas con grants reales permanecen `BLOQUEADA_DEPENDENCIA_EXTERNA` mientra
 | CT-SALES-07 | G5 no responde al canal `201 Created` declarando stock reservado/cupón consumido hasta tener confirmación definitiva, salvo nuevo acuerdo formal sobre semántica externa | BLOQUEADA_DEPENDENCIA_EXTERNA |
 | CT-SALES-08 | Correlación `order_id` opaco, `operation_id` UUID y resultado posterior recuperable por GET sin reejecutar comando | PENDIENTE_IMPLEMENTACION |
 
+### Desglose de dependencias técnicas G5↔Inventario
+
+La línea base revisada no contiene los identificadores `CT-G5-INV-04` ni `CT-G5-INV-05`. Para responder a la auditoría sin mezclar trabajo interno con gates externos, se desglosan a continuación. Los sufijos son casos distintos; sus estados no representan pruebas ejecutadas.
+
+| ID | Tipo | Resultado esperado / dependencia | Estado |
+|---|---|---|---|
+| CT-G5-INV-04A | PROVIDER_CONTRACT | G6 persiste resultado definitivo de reserva/consumo/liberación y lo publica mediante Outbox tras commit; replay idempotente no duplica efectos | PENDIENTE_IMPLEMENTACION |
+| CT-G5-INV-04B | INFRASTRUCTURE | Infraestructura confirma acceso al broker real, vhost coincidente con contrato, credenciales, exchanges, colas y bindings; el vhost candidato contractual es `/marketplace`, mientras `g6` solo está reportado como valor OCI no verificado | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-G5-INV-04C | CONSUMER_PROVIDER | G5 consume el evento/result esperado de la operación G6 y correlaciona `operation_id`, `causation_id` y `correlation_id`; requiere proveedor/consumidor y broker identificados | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-G5-INV-05A | PROVIDER_CONTRACT | `GET /inventario/operaciones/{operationId}` devuelve el resultado persistido de la operación admitida sin reejecutar efectos | PENDIENTE_IMPLEMENTACION |
+| CT-G5-INV-05B | SECURITY_INTEGRATION | G7 acredita registro, aprobación, grant y credencial para `modulo-ventas` con `inventario:operaciones:leer` y audiencia `api-productos` | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-G5-INV-05C | INTEGRATION | Tras respuesta `202`, M1 recupera por GET el resultado durable con token autorizado, sin reenviar el comando; registrar commit/versiones, entorno y resultado | BLOQUEADA_DEPENDENCIA_EXTERNA |
+
+CT-G5-INV-04A y CT-G5-INV-05A son trabajo interno implementable en G6 sin esperar configuración OCI ni concesión de G7. Los casos 04B/04C y 05B/05C identifican dependencias externas concretas; cuando estas se resuelvan, la ejecución reproducible aún deberá documentarse antes de cambiar un estado a `PASS`.
+
 **Acuerdo externo pendiente:** el contrato de G5 documenta `201 Created` con reserva/cupón confirmados. G6 documenta `202 Accepted` como admisión, no finalización. No alterar unilateralmente la API pública de G5: acordar espera interna de resultado o evolución versionada de su API.
 
 ## 10. OPEN-09 — Despacho ↔ Productos
@@ -325,6 +340,9 @@ La allowlist y el scope documentados no acreditan permisos efectivos. No atribui
 | CT-OFF-HOM-04 | CONSUMER_PROVIDER | Una vez acordada la representación, la respuesta observada por Retail contiene solo los datos minimizados convenidos y la respuesta contractual actual de Ventas conserva su forma aprobada | BLOQUEADA_DECISION |
 | CT-OFF-HOM-05 | CONSUMER_PROVIDER | Cualquier flujo alternativo de cupón offline sin reserva confirmada requiere contrato y acuerdo explícitos antes de probarse | BLOQUEADA_DECISION |
 | CT-OFF-HOM-06 | CONSUMER_PROVIDER | La prueba consumer-provider valida la compatibilidad y transición de los consumidores desde la línea base `0.5.0` antes de publicar cambios incompatibles | BLOQUEADA_DECISION |
+| CT-OFF-HOM-07 | GOVERNANCE | G4 actualiza/ratifica formalmente que Retail invoca G6 directamente y alinea F10/§5.10 con el actor, flujo e identidad offline acordados; la confirmación G5 del 2026-10-14 por sí sola no supera este gate | BLOQUEADA_DECISION |
+| CT-OFF-HOM-08 | SECURITY_INTEGRATION | G7 aprueba/registra `inventario:conciliar-offline` para audiencia `api-productos` y `modulo-retail`, y evidencia grant y credencial provisionada antes de la llamada real | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-OFF-HOM-09 | CONSUMER_PROVIDER | Tras homologar y versionar el contrato, Retail envía la referencia pública acordada sin `location_id`; G6 resuelve la ubicación internamente y la respuesta observable cumple DEC-F-015 | BLOQUEADA_DECISION |
 
 ### Puertas de integración pendientes
 
