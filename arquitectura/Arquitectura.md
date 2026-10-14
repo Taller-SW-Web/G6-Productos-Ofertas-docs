@@ -1348,7 +1348,7 @@ reason = DEVOLUCION_ACEPTADA (F3)
 lines[]: sku, quantity, location_id
 ```
 
-`location_id` y la ubicación receptora/resolución operativa siguen pendientes; no se debe inventar un identificador. Un retry idéntico conserva `operation_id` y no genera un segundo movimiento; una recepción parcial posterior usa un `operation_id` nuevo. La respuesta contractual es HTTP `200` con `status: COMPLETED`. G6 valida la idempotencia y disponibilidad de ubicación autorizada, actualiza saldo y Kardex transaccionalmente y registra Outbox en la misma transacción. La publicación del evento correspondiente ocurre después del commit, cuando corresponda, y no condiciona la respuesta HTTP.
+`location_id` y su resolución contractual y técnica siguen pendientes; no se debe inventar un identificador. Antes de mutar, G6 debe comprobar que existe una ubicación receptora real y que el actor está autorizado para ejecutar esta operación sobre ella. Si la ubicación es inválida, ambigua o no autorizada, G6 rechaza el reintegro sin mutar saldo ni Kardex. No se exige disponibilidad de stock comercial para admitir unidades reintegradas. Un retry idéntico conserva `operation_id` y no genera un segundo movimiento; una recepción parcial posterior usa un `operation_id` nuevo. La respuesta contractual es HTTP `200` con `status: COMPLETED`. G6 valida la idempotencia, actualiza saldo y Kardex transaccionalmente y registra Outbox en la misma transacción. La publicación del evento correspondiente ocurre después del commit, cuando corresponda, y no condiciona la respuesta HTTP.
 
 ## 14.8. Conciliación Retail offline
 
@@ -2691,7 +2691,7 @@ Despacho
 1. M2/Postventa confirma recepción física y aptitud para reventa.
 2. M2 obtiene el SKU original desde `items[].sku` del pedido.
 3. M2 construye y envía el reintegro F3 con `DEVOLUCION_ACEPTADA`.
-4. G6 valida idempotencia y disponibilidad de una ubicación autorizada.
+4. G6 valida idempotencia, existencia de una ubicación receptora real, resolución contractual y técnica de `location_id` (aún pendiente) y autorización del actor para esta operación sobre esa ubicación; si falta, es inválida, ambigua o no autorizada, rechaza sin mutar saldo ni Kardex. No requiere stock comercial disponible para reintegrar.
 5. G6 confirma la actualización transaccional del saldo y Kardex.
 6. G6 responde HTTP `200` con `status: COMPLETED`.
 7. Después del commit, Outbox publica el evento correspondiente cuando aplique; la publicación no condiciona la respuesta HTTP.

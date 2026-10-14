@@ -50,8 +50,9 @@ Esta versión incorpora las decisiones de diseño del modelo de datos:
    - pedido `CREADO` → reserva;
    - pedido `PAGADO` → consumo definitivo;
    - `PAGO_NO_COMPLETADO` o anulación pre-consumo → liberación.
-   **M2/Postventa**, owner de devoluciones y cambios, invoca directamente el reintegro físico F3 tras recepción y aptitud; G6 conserva el saldo autoritativo. La conciliación Retail offline mantiene su situación contractual separada:
-   - venta Retail offline sincronizada con Ventas/Postventa → conciliación invocada por Ventas en la secuencia G6 vigente. La alternativa Retail→G6 directa está pendiente de homologación, sin imponer orden entre pedido, pago y conciliación.
+   - **M2/Postventa**, owner de devoluciones y cambios, invoca directamente el reintegro físico F3 tras recepción y aptitud.
+   - **G6/Inventario** conserva el saldo autoritativo.
+   - **Retail offline** mantiene su situación contractual separada: la venta sincronizada con Ventas/Postventa se concilia por Ventas en la secuencia G6 vigente; la alternativa Retail→G6 directa está pendiente de homologación. No se impone orden entre pedido, pago y conciliación.
 4. La reserva tiene expiración configurable.
 5. Los datos físicos propios de una unidad vendible se modelan por **SKU**.
 6. Productos y Ofertas es owner de:
