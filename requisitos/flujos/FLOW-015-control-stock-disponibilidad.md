@@ -234,7 +234,7 @@ flowchart LR
         A6["Publicar inventory.stock.changed por el cambio de saldo"]
     end
 
-    subgraph VENT["Ventas / Postventa"]
+    subgraph VENT["M1 / Ventas"]
         direction TB
         P1{"¿Confirmar o liberar?"}
         A7["Confirmar consumo"]
@@ -395,9 +395,12 @@ flowchart LR
         R2["Devolver resultado previo sin nuevo Kardex ni incremento"]
         D3{"¿Identidad reutilizada con payload distinto?"}
         R3["Responder conflicto de idempotencia"]
-        A6["Validar precondiciones y resolver ubicación según regla vigente; location_id sigue pendiente"]
-        A7["Incrementar saldo y registrar un único Kardex para la operación lógica"]
-        A8["Responder HTTP 200 status COMPLETED"]
+        A6["Validar recepción física, aptitud e idempotencia"]
+        A7["Aplicar incremento de saldo y actualizar stock_version"]
+        A8["Persistir saldo, Kardex y Outbox atómicamente en una transacción local"]
+        A9["Confirmar commit local"]
+        A10["Responder HTTP 200 con status: COMPLETED"]
+        A11["Publicar inventory.stock.changed desde Outbox después del commit, cuando corresponda"]
     end
 
     subgraph RES["Identidad y resultado"]
@@ -414,7 +417,10 @@ flowchart LR
     D2 -->|"Sí"| R2 --> B1 --> FIN
     D2 -->|"No"| D3
     D3 -->|"Sí"| R3 --> FIN
-    D3 -->|"No"| A6 --> A7 --> A8 --> B2 --> FIN
+    D3 -->|"No"| A6 --> A7 --> A8 --> A9
+    A9 --> A10 --> B2 --> FIN
+    A9 --> A11
+    A11 -. entrega del evento independiente de la respuesta .-> FIN
 ```
 
 - El payload canónico contiene `operation_id` UUID, `order_id` como referencia textual opaca, `source_ref` (`devolucionId`), `reason: DEVOLUCION_ACEPTADA` y `lines[]` (`sku`, `quantity`, `location_id`). El SKU procede de `items[].sku` del pedido de Ventas, no se infiere desde `productoId`.
@@ -670,7 +676,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    subgraph VENT["Ventas / Postventa"]
+    subgraph VENT["M1 / Ventas"]
         A1["Enviar comando con operation_id UUID, correlación y orden opaca"]
         A2["Recibir 202: operación admitida, no confirmada"]
         D1{"¿Recibió evento tipado final?"}
@@ -735,7 +741,7 @@ La línea base `0.5.0` se conserva como referencia histórica. Los contratos HTT
 ### Consulta detallada
 
 ```text
-GESTOR_COMERCIAL autorizado o modulo-ventas con JWT de servicio + allowlist
+Gestor humano autorizado con userBearer, o modulo-ventas y modulo-postventa con JWT de servicio (serviceBearer), cada uno sujeto a su scope y allowlist; la lectura de M2 es informativa para CAMBIO y no reserva inventario
 → GET /api/v1/inventario/disponibilidad
 → leer saldo autoritativo (sku, location_id) sin agregar ubicaciones
 → calcular available, validar invariantes y determinar status

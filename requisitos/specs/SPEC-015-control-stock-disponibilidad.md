@@ -159,7 +159,7 @@ Unidades físicamente contabilizadas en la ubicación.
 
 ### `reserved`
 
-Unidades comprometidas por reservas activas de Ventas/Postventa.
+Unidades comprometidas por reservas activas solicitadas por M1/Ventas.
 
 ### `blocked`
 
@@ -277,13 +277,13 @@ y el estado se determina con el umbral resuelto.
 
 # 8. Requisito 2 — Crear reserva
 
-Cuando Ventas/Postventa crea un pedido y este entra en estado:
+Cuando M1/Ventas crea el pedido y este entra en estado:
 
 ```text
 CREADO
 ```
 
-Ventas DEBE solicitar una reserva de inventario.
+M1/Ventas DEBE solicitar una reserva de inventario.
 
 Contrato técnico:
 
@@ -397,13 +397,13 @@ No se permiten transiciones de retorno hacia `ACTIVA`.
 
 # 11. Requisito 5 — Confirmar consumo definitivo
 
-Cuando Ventas/Postventa cambia el pedido a:
+Cuando M1/Ventas cambia el pedido a:
 
 ```text
 PAGADO
 ```
 
-DEBE confirmar el consumo de la reserva.
+M1/Ventas DEBE solicitar la confirmación del consumo de la reserva.
 
 Contrato técnico:
 
@@ -465,7 +465,7 @@ Cuando el pedido:
 - no completa el pago; o
 - es anulado antes del consumo definitivo cuando corresponda;
 
-Ventas/Postventa DEBE solicitar la liberación.
+M1/Ventas DEBE solicitar la liberación.
 
 Contrato técnico:
 

@@ -38,7 +38,7 @@ available = max(on_hand - reserved - blocked, 0)
 | **CA-04** | Siempre se cumple `on_hand >= 0`, `reserved >= 0`, `blocked >= 0`, `reserved + blocked <= on_hand` y `available >= 0`. |
 | **CA-05** | El estado del saldo autoritativo `AGOTADO/STOCK_BAJO/DISPONIBLE` se calcula sobre `available` por `(sku, location_id)`; la proyección comercial aplica adicionalmente D-INV-01 y puede ser `INDETERMINADO`. |
 | **CA-06** | Marketplace y Chatbot solo consultan Inventario. |
-| **CA-07** | En la secuencia actualmente documentada por G6, Ventas/Postventa invoca las mutaciones comerciales, incluida la conciliación offline; una eventual invocación directa Retail→G6 permanece pendiente de homologación y este criterio no concede acceso a Retail. |
+| **CA-07** | M1/Ventas solicita la reserva, el consumo y la liberación del pedido. M2/Postventa invoca directamente el reintegro F3 solo tras la recepción física apta. Para la conciliación Retail offline se conserva la situación contractual pendiente documentada: la eventual invocación directa Retail→G6 sigue pendiente de homologación y este criterio no aprueba unilateralmente llamadas directas de Retail. |
 | **CA-08** | Cuando un pedido entra en `CREADO`, M1/Ventas (`modulo-ventas`), responsable del pedido y pago, solicita idempotentemente la reserva y orquesta las reservas comerciales; M2 no reserva reemplazos. |
 | **CA-09** | Reservar aumenta `reserved` y reduce `available` sin modificar `on_hand` ni `blocked`. |
 | **CA-10** | Una reserva tiene estados `ACTIVA`, `CONSUMIDA`, `LIBERADA` o `EXPIRADA`; un estado terminal no vuelve a `ACTIVA`. |
