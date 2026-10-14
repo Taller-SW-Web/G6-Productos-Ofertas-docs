@@ -1,6 +1,6 @@
 # Kit de integración — Productos y Ofertas
 
-**Fecha de actualización:** 2026-10-12
+**Fecha de actualización:** 2026-10-14
 
 **Repositorio:** `Taller-SW-Web/G6-Productos-Ofertas-docs`
 **API propietaria:** `api-productos`  
@@ -184,10 +184,12 @@ La línea base conserva **16 scopes** de `api-productos`; la candidata `0.6.0-rc
 | `inventario:consumir` | Consumo | Ventas |
 | `inventario:liberar` | Liberación | Ventas |
 | `inventario:reintegrar` | Reintegro físico | M2/Postventa (F3), M1/Ventas (otros motivos contractuales) |
-| `inventario:conciliar-offline` | Venta Retail offline | Ventas |
+| `inventario:conciliar-offline` | Conciliación de venta Retail offline; OpenAPI vigente solo permite `modulo-ventas` | Ventas (contrato actual); Retail propuesto por homologar |
 | `inventario:incidencias:reportar` | Cuarentena física | Retail |
 | `inventario:incidencias:resolver` | Resolver incidencia/acta | Retail |
 | `productos:fisicos:leer` | Peso/dimensiones | Despacho |
+
+**Límite de autorización de Retail:** `modulo-retail` no está autorizado por el contrato vigente para reservar, consumir, liberar ni reintegrar stock; esas operaciones no incluyen Retail en sus allowlists. Solo está pendiente de homologación su posible invocación directa de `POST /api/v1/inventario/conciliaciones-offline`. El acuerdo G5–G4 que registra esa llamada no concede permiso ni modifica el OpenAPI. `inventario:disponibilidad:leer` permite consultas de disponibilidad según allowlist y no autoriza conciliación. G7 debe confirmar registro, aprobación, grant y credenciales de servicio para la operación/consumidor que se acuerden.
 
 **Scope adicional candidato:** `inventario:operaciones:leer` — consulta durable `GET /api/v1/inventario/operaciones/{operationId}`, exclusiva para el cliente de servicio `modulo-ventas`. OpenAPI `0.6.0-rc.1` registra `x-scope-registration-status: pending-security-registration`; su utilización efectiva requiere concesión explícita de G7.
 
@@ -213,7 +215,31 @@ pending-security-registration
 
 hasta que Seguridad registre formalmente los scopes/grants. Esto no bloquea mocks, CI ni implementación interna.
 
-## 5.1. Matriz congelada por consumidor
+## 5.1. Contrato mínimo de inventario para G5
+
+El alcance documentado con M1/Ventas para pedidos web es:
+
+1. Al crear un pedido, M1 solicita `POST /api/v1/inventario/reservas`. HTTP `202 Accepted` confirma admisión del comando; no confirma stock reservado.
+2. Al pasar el pedido a `PAGADO`, M1 solicita la confirmación de consumo sobre la reserva. Ante `PAGO_NO_COMPLETADO` o una anulación que aplique antes del consumo, solicita liberación.
+3. M1 consume los resultados tipados de reserva (`inventory.reservation.created` o `inventory.reservation.rejected`), consumo y liberación publicados por RabbitMQ conforme a AsyncAPI. La topología documenta exchanges durables, colas quorum, ACK manual, publisher confirms y entrega at-least-once; son requisitos de diseño y no acreditan que el broker de un entorno esté disponible.
+4. El contrato candidato G6 ofrece `GET /api/v1/inventario/operaciones/{operationId}` para recuperar el resultado persistido de una operación aceptada. Su consumo por M1 es parte de la preparación técnica, pero la documentación G5 consultada no registra aceptación explícita de esta consulta. La ruta es exclusiva de `modulo-ventas`; `inventario:operaciones:leer` está pendiente de registro/concesión de G7. `operation_id` es UUID y no sustituye `order_id` opaco.
+5. Postventa solicita el reintegro físico por `POST /api/v1/inventario/reintegros` tras recepción física confirmada y aptitud; es una mutación HTTP síncrona con respuesta `200 COMPLETED`, distinta de liberar una reserva. Requiere `location_id` resuelto y autorización efectiva. Para restaurar cupón ante anulación aplicable después del consumo, el flujo de Promociones usa el comando/evento de restauración definido en AsyncAPI, correlacionado con el consumo original. El acuerdo F3 no autoriza reserva/consumo de reemplazo por M2.
+
+### Estado de disponibilidad por capa
+
+| Capa | Evidencia actual | Estado / comprobación requerida |
+|---|---|---|
+| Protocolo/broker | AsyncAPI `0.6.0-rc.1` y [topología](../eventos/rabbitmq-topologia.md) exigen el vhost `/marketplace`; AsyncAPI también declara `x-vhost: /marketplace` | Se comunicó previamente que OCI usa `g6`; no se verificó contra infraestructura y no hay acceso autorizado a esa configuración en esta revisión. Infraestructura debe confirmar cuál vhost existe y autorizar conexión. No cambiar automáticamente el contrato |
+| Broker disponible | La documentación especifica protocolo y topología deseada | Disponibilidad, DNS/red, autenticación y acceso al broker real: sin verificar; requiere evidencia operativa de Infraestructura |
+| Exchanges, colas y bindings | Topología documenta exchanges y bindings objetivo | Configuración real/provisionada del vhost: sin verificar; Infraestructura debe aportar evidencia de exchanges, colas y bindings |
+| Implementación G6 | HTTP, eventos y consulta durable están especificados | Productores/consumidores NestJS, Outbox/Inbox y persistencia de resultado no quedan acreditados por YAML ni docs; requieren evidencia de código y prueba |
+| Permisos G7 | Scopes y allowlists declarados por operación | Grants/provisión de `inventario:reservar`, `inventario:consumir`, `inventario:liberar`, `inventario:operaciones:leer` y `inventario:reintegrar` requieren evidencia G7 por consumidor; no se deducen de nombres contractuales |
+| Prueba integrada G5↔G6 | G5 documenta consumo directo del broker; AsyncAPI define eventos y resultados | Prueba reproducible con commits/versions de productor G6, consumidor G5 y entorno broker aún no disponible |
+| Despliegue | OpenAPI/AsyncAPI identifican `0.6.0-rc.1` como candidata | Despliegue operativo y transición de consumidores requieren evidencia de versión/entorno, compatibilidad y pruebas reproducibles; la candidata no es runtime |
+
+Para Retail offline, G5 confirmó el 2026-10-14 que Retail invoca directamente `POST /api/v1/inventario/conciliaciones-offline` y que M1 no reserva, confirma ni concilia inventario Retail. Retail no está autorizado para reservar, consumir, liberar ni reintegrar. El permiso de disponibilidad comercial no autoriza conciliaciones. La ruta del OpenAPI vigente solo permite `modulo-ventas`, exige `location_id` en cada línea y devuelve ubicación/saldos internos. G4 v0.4 aún prohíbe esa llamada directa. Se conserva como `ACUERDO_EXTERNO_DOCUMENTADO` de G5, no como homologación bilateral ni permiso. G7 debe confirmar registro, aprobación, grant y credenciales de servicio; su estado no se infiere del acuerdo G5–G4. La propuesta y los responsables de homologación constan en [ALINEACION_RETAIL](../../integraciones/ALINEACION_RETAIL.md). No cambies la llamada al contrato hasta que G4/G5/G6 acuerden actor, identidad, referencia pública de tienda, secuencia, DTO minimizado y transición.
+
+## 5.2. Matriz congelada por consumidor
 
 ```text
 modulo-marketplace:
