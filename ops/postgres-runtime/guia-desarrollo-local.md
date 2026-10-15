@@ -80,17 +80,50 @@ SELECT current_user,
        has_schema_privilege(current_user, 'taxonomy', 'CREATE') AS can_create_objects;
 ```
 
-El resultado esperado es tu rol (`<servicio>_dev_login`), la base `postgres`, `can_use_schema = true` y `can_create_objects = false`. Sal con `\q`. No ejecutes DML para validar la conexión.
+El resultado esperado es tu rol (`<servicio>_dev_login`), la base `postgres`, `can_use_schema = true` y `can_create_objects = false`. Sal con `\q`.
 
-## 4. Límites de permisos y uso desde las aplicaciones
+Para comprobar los permisos de tablas sin modificar datos, ejecuta esta consulta en `psql`. Cambia `taxonomy` por tu schema:
 
-- Los siete servicios distintos de Inventory tienen conexión al schema propio, pero **no tienen permisos de tablas**. No intentes CRUD desde ellos hasta que se apruebe y configure su matriz de permisos.
-- Inventory tiene la matriz aprobada: `SELECT` en 8 tablas, `INSERT` en 5, `UPDATE` en 3 y `DELETE` en 0. Esto no autoriza probar operaciones de negocio con datos compartidos.
-- No uses `inventory_app`, `po_inventory_runtime`, cuentas `seed_*`, owners ni credenciales administrativas. Este acceso de desarrollo no cambia Oracle ni RabbitMQ.
-- En el estado actual, NestJS no carga automáticamente estos `.env.local`. Guardar el archivo no conecta el backend. La verificación de este manual es con `psql`; activar una aplicación requiere que su configuración de proceso admita estas variables y la integración correspondiente.
+```sql
+SELECT n.nspname AS schema_name,
+       count(*) AS relations,
+       count(*) FILTER (WHERE has_table_privilege(current_user, c.oid, 'SELECT')) AS can_select,
+       count(*) FILTER (WHERE has_table_privilege(current_user, c.oid, 'INSERT')) AS can_insert,
+       count(*) FILTER (WHERE has_table_privilege(current_user, c.oid, 'UPDATE')) AS can_update,
+       count(*) FILTER (WHERE has_table_privilege(current_user, c.oid, 'DELETE')) AS can_delete
+FROM pg_class AS c
+JOIN pg_namespace AS n ON n.oid = c.relnamespace
+WHERE n.nspname = 'taxonomy'
+  AND c.relkind IN ('r', 'p', 'v', 'm', 'f')
+GROUP BY n.nspname;
+```
+
+El resultado esperado es que las cuatro columnas `can_*` coincidan con `relations`. Esta comprobación consulta los permisos; no ejecuta operaciones CRUD.
+
+## 4. Carga automática desde NestJS
+
+NestJS no busca automáticamente archivos `.env.local` dentro de cada aplicación. Para cargarlos al iniciar, añade `--env-file` al script de desarrollo de cada servicio en `backend/package.json`. Por ejemplo:
+
+```json
+"start:dev:taxonomy-svc": "nest start taxonomy-svc --watch --env-file apps/taxonomy-svc/.env.local"
+```
+
+Repite el patrón para cada servicio, cambiando el nombre del proyecto y la ruta al archivo correspondiente. Ejecuta `npm run start:dev:taxonomy-svc` desde la raíz de `backend`; la ruta de `--env-file` es relativa al directorio actual. El Nest CLI carga esas variables en `process.env` antes de iniciar la aplicación.
+
+Cargar variables no crea por sí solo un pool ni conecta la aplicación. El servicio debe tener un cliente PostgreSQL configurado para usar `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `PGSSLMODE` y `PGSSLROOTCERT`.
+
+Mantén la configuración Oracle de Inventory separada; no la reemplaces al añadir la conexión PostgreSQL.
+
+## 5. Alcance de permisos y uso de datos
+
+- Cada login tiene `SELECT`, `INSERT`, `UPDATE` y `DELETE` sobre las relaciones de su propio schema y no sobre los otros schemas G6. También tiene permisos de uso de secuencias para inserciones. No tiene permiso `CREATE` en el schema.
+- Los permisos aplican a las relaciones actuales y a futuras tablas y secuencias creadas por el owner correspondiente.
+- Inventory ahora tiene CRUD completo sobre las 16 relaciones actuales de `inventory`; esto reemplaza la matriz anterior de permisos parciales.
+- CRUD permite modificar y borrar datos existentes. La guía solo propone comprobaciones de permisos de lectura; coordina antes de operar sobre datos compartidos.
+- No uses `inventory_app`, `po_inventory_runtime`, cuentas `seed_*`, owners ni credenciales administrativas. Esto no cambia Oracle ni RabbitMQ.
 - No cambies `PGSSLMODE` a `disable` para resolver errores de certificado. Corrige `PGSSLROOTCERT` para que señale al CA correcto y existente en tu equipo.
 
-## 5. Errores comunes
+## 6. Errores comunes
 
 | Mensaje o síntoma | Revisión |
 |---|---|
