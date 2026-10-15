@@ -1,6 +1,6 @@
 # Alineación Marketplace ↔ Productos y Ofertas
 
-**Estado documental:** propuesta de homologación bilateral basada en la respuesta de G1 del 2026-10-13; la conformidad de G6 no consta en las fuentes consultadas. La línea base histórica es `0.5.0`; `0.6.0-rc.1` es el contrato candidato de G6, no evidencia de despliegue.
+**Estado documental:** preparación de homologación; G1 respondió M-01–M-09 el 2026-10-13 y la posición G6 del lote 3 sigue **pendiente de aprobación**. No consta homologación bilateral. Ver [propuesta G6-G1-03](PROPUESTA_CIERRE_G1_MARKETPLACE_2026-10-14.md). La línea base histórica es `0.5.0`; `0.6.0-rc.1` es el contrato candidato de G6, no evidencia de despliegue.
 **Fuente HTTP autoritativa:** [`../contratos/http/openapi.yaml`](../contratos/http/openapi.yaml)
 **Respuesta externa:** [`ACUERDOS_G1_MARKETPLACE_2026-10-13.md`](ACUERDOS_G1_MARKETPLACE_2026-10-13.md)
 

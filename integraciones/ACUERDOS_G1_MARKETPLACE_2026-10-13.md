@@ -14,6 +14,10 @@
 | Fuente HTTP G6 | [`../contratos/http/openapi.yaml`](../contratos/http/openapi.yaml) |
 | Otras fuentes G6 | [Alineación Marketplace](ALINEACION_MARKETPLACE.md), [matriz intermodular](MATRIZ_INTERMODULAR_BACKEND.md), DEC-F, matriz de trazabilidad y SPEC-003/004/015. |
 
+## Propuesta de posición G6 — lote 3
+
+La respuesta de G1 se conserva literalmente y con sus estados originales en este registro. La propuesta de posición de G6 sobre M-01–M-09, incluidas discrepancias y dependencias abiertas, está en [G6-G1-03 — Propuesta de cierre](PROPUESTA_CIERRE_G1_MARKETPLACE_2026-10-14.md). **Pendiente de aprobación de G6; no enviada y no constituye homologación bilateral.**
+
 ## 2. Versiones y commits contrastados
 
 - G1 `main`: `a8c3a7e21482063d71a083fd950dd8fa418b615c` (confirmado como `HEAD` remoto durante este lote).
