@@ -86,6 +86,7 @@ No se atribuirá a G5 conformidad hasta contar con evidencia de aprobación. La 
 - Inspeccionar acceso de red Docker y la necesidad real de conectividad externa para G5; acordar red privada o AMQPS/TLS.
 - Crear el nuevo vhost, topología y usuarios mediante definiciones/scripts idempotentes.
 - Aplicar matriz de permisos mínimos, con pruebas negativas y positivas.
+- No aprovisionar credenciales runtime con escritura en `po.retry.x`/`po.dlx.x` hasta que la prueba aislada del [bloqueo retry/DLX](../arquitectura/decisiones/rabbitmq.md) pase en RabbitMQ 4.2.9. La alternativa A es únicamente candidata; no cambiar exchanges existentes ni afirmar que los permisos están aislados antes de verificar patrón topic exacto, dead-lettering quorum y ausencia de rutas laterales.
 - Configurar Inventory sin compartir contraseñas; comprobar conexión, confirmaciones y comportamiento de los consumidores.
 - Probar entrega y consumo de resultados con G5 en un ambiente/ventana coordinados. Los contratos de reservas HTTP con resultado asíncrono requieren correlación e idempotencia; un `202` no implica éxito de negocio.
 - Comprobar mensajes sin ruta, reintentos, DLQ, observabilidad y recuperación.

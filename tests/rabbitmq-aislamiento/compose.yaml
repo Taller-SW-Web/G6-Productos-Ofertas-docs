@@ -1,0 +1,44 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.2.9-management@sha256:7f79e00af50ce38297eb63a90bfee895d060b57520a22b30620085482a816318
+    hostname: rabbitmq-test
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./definitions.json:/etc/rabbitmq/definitions.json:ro
+    command: ["rabbitmq-server"]
+    networks: [isolated]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+    restart: "no"
+
+  contract-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      AMQP_HOST: rabbitmq
+      AMQP_PORT: "5672"
+      AMQP_VHOST: g6-test
+      BOOTSTRAP_USER: bootstrap
+      BOOTSTRAP_PASSWORD: g6-bootstrap-test-only
+      INVENTORY_USER: inventory_test
+      INVENTORY_PASSWORD: inventory-test-only
+      CATALOG_USER: catalog_test
+      CATALOG_PASSWORD: catalog-test-only
+    networks: [isolated]
+    restart: "no"
+
+networks:
+  isolated:
+    internal: true
+
+volumes:
+  rabbitmq_data:
