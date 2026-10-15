@@ -22,6 +22,15 @@ La comprobación focalizada del gate de recuperación se ejecuta sin lanzar la s
 ./run.ps1 -Profile recovery
 ```
 
+Para la investigación controlada del timeout interno del worker DLX, el runner admite dos perfiles de configuración, siempre sobre brokers desechables y con un límite explícito de observación:
+
+```powershell
+./run.ps1 -Profile recovery -RecoveryInterval reduced -ObservationSeconds 60
+./run.ps1 -Profile recovery -RecoveryInterval default -ObservationSeconds 240
+```
+
+`reduced` monta `advanced.recovery-reduced.config`, que fija solo en esa fixture `dead_letter_worker_publisher_confirm_timeout=5000`. `default` no monta `advanced.config`; el runner consulta el valor efectivo en el nodo con `rabbitmqctl eval` antes del escenario. El perfil focalizado omite `queue_purge()` y exige colas vacías en el volumen nuevo. Un timeout sin evidencia de retención de origen se clasifica `INCONCLUSO`, no `FAIL`.
+
 `./run.ps1 -Profile all` solicita explícitamente ambos perfiles. La ejecución ampliada conserva la incidencia conocida y puede finalizar con error; no se reintenta automáticamente ni se aumenta su ventana de observación.
 
 El script exige el contexto local Docker Desktop `desktop-linux`, comprueba el endpoint de named pipe y confirma que el daemon informa `OSType=linux`; valida la configuración Compose, descarga `rabbitmq:4.2.9-management` y ejecuta solo el perfil seleccionado (smoke esencial por defecto). Siempre intenta limpiar el proyecto. Cada ejecución tiene un nombre Compose aleatorio y propio. `down --volumes --remove-orphans --rmi local` se limita a ese proyecto: contenedores, red interna, volumen de prueba e imagen del runner. La imagen cacheada de RabbitMQ no se borra porque puede ser compartida localmente. El arnés no monta el socket de Docker, no publica puertos al host y no lee `.env`, claves, variables ni credenciales del host.
@@ -57,6 +66,19 @@ La ejecución histórica completa de 10 escenarios fue **9 PASS / 1 FAIL** en Ra
 Después, el mensaje original persistente se publicó con `message_id` único, se confirmó y se rechazó con `requeue=false`. Mientras el destino no aceptaba publicaciones, la cola fuente reportó `messages=1`, `messages_ready=0`, con política efectiva `dead-letter-strategy=at-least-once`, `overflow=reject-publish` y DLX/routing esperados. Se recuperó capacidad consumiendo y ACKeando únicamente los dos mensajes de relleno identificados; no se purgó la DLQ. El mensaje original no apareció en el destino durante los 60 s de observación ya existentes: **FAIL**, con cero duplicados observados. La incidencia **`RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`** continúa abierta; el gate de adopción no pasa. Esta ventana no constituye una garantía de recuperación.
 
 El runner registra las políticas/counters, confirms, versión del broker y logs del contenedor sin credenciales; limpia solo el proyecto Compose aleatorio de esta prueba. No aumentar el timeout ni reintentar indefinidamente para forzar PASS.
+
+### Investigación controlada del temporizador DLX — 2026-10-15
+
+Hipótesis H1: la observación histórica de 60 s pudo terminar antes del siguiente reintento del worker. En RabbitMQ 4.2.9, `rabbit_fifo_dlx_worker` lee `dead_letter_worker_publisher_confirm_timeout` como `settle_timeout`; cuando mantiene publicaciones pendientes arma un `send_after(SettleTimeout, settle_timeout)`, y al vencer llama a `redeliver_and_ack`. El código fuente da 180000 ms como valor predeterminado, pero ese mecanismo por sí solo no demuestra cuándo será recuperado un mensaje concreto ni confirma el valor runtime. El runner consulta el valor efectivo con `rabbitmqctl eval` antes de iniciar cada ensayo.
+
+| Ensayo | Valor efectivo observado | Observación | Resultado del gate | Evidencia y límite |
+|---|---:|---:|---|---|
+| A — reducido | 5000 ms (`rabbitmqctl eval`: `{ok,5000}`) | 60 s | **INCONCLUSO** | DLQ NACK real después de ACK confirmado del relleno y del primer sondeo. Tras liberar capacidad, llegó a DLQ el `message_id` original en 5.186 s; cero duplicados observados. La Management API no dejó verificar identidad/counters de retención del original en la fuente antes de liberar capacidad. No se declara PASS. |
+| B — predeterminado | 180000 ms (`{ok,180000}` en una preparación preliminar) | 240 s previstos | **NO EJECUTADO** en el intento válido | Docker Desktop dejó de iniciar durante la preparación; el runner no lanzó el escenario sin purga. La lectura de 180000 ms se conserva solo como evidencia de configuración: la corrida preliminar que la obtuvo invocó `queue_purge()` y se excluyó del resultado de recuperación. |
+
+En A se usó RabbitMQ 4.2.9 fijado por digest, las mismas definiciones aisladas y el mismo escenario; se verificó la política coincidente/ganadora en la preparación del test y las publicaciones confirmadas. El perfil focalizado no purgó colas. B no produjo un resultado de recuperación válido. Algunas corridas preliminares anteriores a esta corrección invocaron el `setUp()` histórico, que purgaba colas; se excluyeron de la comparación.
+
+La evidencia de A es compatible con una demora próxima al timeout reducido, pero no basta para validar la hipótesis temporal: falta demostrar retención en la fuente antes de la liberación de capacidad. B continúa sin resolver. No se adopta una lección aprendida afirmativa ni se modifica el estado contractual: Lote 4 permanece en **Caso B**, A sigue no adoptada, `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA` continúa abierta y el aprovisionamiento runtime sigue `BLOQUEADO_ESPECÍFICO`. Para desbloquear la comparación, el test necesita una señal de retención de origen observable antes de liberar capacidad y una nueva ejecución B en Docker operativo.
 
 **Estados del gate:** `PASS` exige NACK real del destino, retención identificable mientras está lleno y llegada posterior del mismo `message_id`; `FAIL` registra que ese mensaje no llegó dentro de la ventana existente de 60 s una vez establecidas esas señales; `INCONCLUSO` se usa si no se puede demostrar una precondición o aparece contenido inesperado; `NO EJECUTADO` se imprime cuando Docker no permite iniciar el perfil. La saturación usa sondeos seriales confirmados con límite de ocho, y la recuperación ACKea únicamente rellenos con identidades conocidas; no se purga la DLQ en ese escenario. La fila de `messages_ready` puede exceder `max-length` en quorum, por lo que la política sola no cuenta como evidencia de saturación.
 

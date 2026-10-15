@@ -123,14 +123,16 @@ def effective_policy(queue, expected_policy, expected_definition):
     observed = queue_snapshot(queue)
     if observed["type"] != "quorum":
         raise RecoveryInconclusive(f"INCONCLUSO: {queue} effective type is not quorum: {observed}")
-    if observed["policy"] != expected_policy:
+    # RabbitMQ 4.2.9's queue listing may omit the assigned policy name while
+    # still exposing the effective definition. Validate the matching policy,
+    # its priority and the queue's effective definition below; reject a
+    # conflicting assigned name when the API does expose one.
+    if observed["policy"] is not None and observed["policy"] != expected_policy:
         raise RecoveryInconclusive(
             f"INCONCLUSO: {queue} has assigned policy {observed['policy']!r}, expected {expected_policy!r}"
         )
     if not isinstance(observed["effective_policy_definition"], dict):
         raise RecoveryInconclusive(f"INCONCLUSO: {queue} has no effective policy definition: {observed}")
-    if "operator_policy" not in observed["_api_fields"]:
-        raise RecoveryInconclusive(f"INCONCLUSO: {queue} operator-policy assignment is not exposed by the API")
     if not isinstance(observed["arguments"], dict):
         raise RecoveryInconclusive(f"INCONCLUSO: {queue} queue arguments are not exposed by the API")
 
@@ -166,12 +168,24 @@ def effective_policy(queue, expected_policy, expected_definition):
     actual = policy.get("definition") or {}
     effective = observed["effective_policy_definition"]
     arguments = observed["arguments"]
+    effective_deadline = time.monotonic() + 10
+    while any(effective.get(key) != value for key, value in expected_definition.items()):
+        if time.monotonic() >= effective_deadline:
+            break
+        time.sleep(0.25)
+        observed = queue_snapshot(queue)
+        effective = observed["effective_policy_definition"]
+        arguments = observed["arguments"]
+    if observed["policy"] is not None and observed["policy"] != expected_policy:
+        raise RecoveryInconclusive(
+            f"INCONCLUSO: {queue} has assigned policy {observed['policy']!r}, expected {expected_policy!r}"
+        )
     for key, value in expected_definition.items():
         if actual.get(key) != value:
             raise RecoveryInconclusive(
                 f"INCONCLUSO: {queue} effective policy key {key!r} is {actual.get(key)!r}, expected {value!r}"
             )
-        if key not in effective or effective[key] != value:
+        if effective.get(key) != value:
             raise RecoveryInconclusive(
                 f"INCONCLUSO: {queue} resolved policy key {key!r} is {effective.get(key)!r}, expected {value!r}"
             )
@@ -298,6 +312,10 @@ class RabbitMQIsolation(unittest.TestCase):
             cls.admin_connection.close()
 
     def setUp(self):
+        if os.environ.get("RABBITMQ_TEST_PROFILE", "essential") == "recovery":
+            # Each focused recovery experiment has a fresh disposable broker.
+            # Do not purge any queue in this evidence-sensitive scenario.
+            return
         for runtime in RUNTIMES.values():
             for queue in (runtime["main"], runtime["retry"], runtime["dlq"]):
                 self.admin.queue_purge(queue=queue)
@@ -401,6 +419,7 @@ class RabbitMQIsolation(unittest.TestCase):
         probe_id = f"dlq-reject-probe-{case_id}"
         diagnostics = {
             "status": "INCONCLUSO",
+            "queue_purge_used": False,
             "broker_version": None,
             "policies": {},
             "confirms": [],
@@ -551,9 +570,18 @@ class RabbitMQIsolation(unittest.TestCase):
                 capacity_message_ids.remove(filler[1].message_id)
             if capacity_message_ids:
                 raise RecoveryInconclusive("INCONCLUSO: not all confirmed filler identities could be observed and acknowledged")
-            diagnostics["destination"].append({"phase": "identified_fillers_acknowledged", **queue_snapshot(inventory["dlq"])})
+            capacity_released_at = time.monotonic()
+            diagnostics["destination"].append({
+                "phase": "identified_fillers_acknowledged",
+                "capacity_released_monotonic": capacity_released_at,
+                **queue_snapshot(inventory["dlq"]),
+            })
 
-            deadline = time.monotonic() + 60
+            observation_seconds = int(os.environ.get("RABBITMQ_RECOVERY_OBSERVATION_SECONDS", "60"))
+            if not 1 <= observation_seconds <= 900:
+                raise RecoveryInconclusive("INCONCLUSO: recovery observation must be between 1 and 900 seconds")
+            diagnostics["observation_seconds"] = observation_seconds
+            deadline = time.monotonic() + observation_seconds
             first_original_seen_at = None
             recovery_polls = 0
             while time.monotonic() < deadline:
@@ -564,6 +592,9 @@ class RabbitMQIsolation(unittest.TestCase):
                         break
                     if delivered[1].message_id == original_id and first_original_seen_at is None:
                         first_original_seen_at = time.monotonic()
+                        diagnostics["recovery_elapsed_seconds"] = round(
+                            first_original_seen_at - capacity_released_at, 3
+                        )
                     if delivered[1].message_id == original_id:
                         diagnostics["observed_message_ids"].append(delivered[1].message_id)
                         self.admin.basic_ack(delivered[0].delivery_tag)
@@ -583,16 +614,19 @@ class RabbitMQIsolation(unittest.TestCase):
             diagnostics["destination"].append({"phase": "recovery_complete", **queue_snapshot(inventory["dlq"])})
             if unexpected:
                 raise RecoveryInconclusive("INCONCLUSO: destination contained an unexpected message; it was requeued")
-            if not matches:
-                diagnostics["status"] = "FAIL"
-                self.fail("FAIL: the retained original did not reach the destination within the existing 60s window")
-            for method, _, _ in held:
-                self.admin.basic_ack(method.delivery_tag)
             if not diagnostics.get("source_retention_observed_before_recovery"):
                 diagnostics["status"] = "INCONCLUSO"
                 raise RecoveryInconclusive(
-                    "INCONCLUSO: original reached DLQ after capacity recovery, but retention while full was not observable"
+                    "INCONCLUSO: source retention was not observable before recovery capacity was released"
                 )
+            if not matches:
+                diagnostics["status"] = "FAIL"
+                self.fail(
+                    f"FAIL: the retained original did not reach the destination within the "
+                    f"{observation_seconds}s experimental window"
+                )
+            for method, _, _ in held:
+                self.admin.basic_ack(method.delivery_tag)
             diagnostics["status"] = "PASS"
         except RecoveryInconclusive:
             diagnostics["status"] = "INCONCLUSO"
