@@ -22,7 +22,7 @@ class ContractChecks(unittest.TestCase):
             walk(d)
     def test_versions(self):
         self.assertEqual(self.o['info']['version'],'0.6.0-rc.1')
-        self.assertEqual(self.a['info']['version'],'0.6.0-rc.1')
+        self.assertEqual(self.a['info']['version'],'0.6.0-rc.2')
     def test_reservation_result_mapping(self):
         op=self.o['paths']['/inventario/reservas']['post']
         self.assertIn('inventory.reservation.rejected',op['x-async-result-events'])

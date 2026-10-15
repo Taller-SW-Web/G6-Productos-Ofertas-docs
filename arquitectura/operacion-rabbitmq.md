@@ -56,23 +56,43 @@ Una cuenta runtime no debería poder cambiar topología. Antes de retirar el per
 
 **Los nombres de esta tabla son objetivo, no credenciales existentes.** Hasta homologación contractual no se reemplazarán las colas inglesas por estas. La necesidad de publicar de cada servicio se derivará del contrato y no de su nombre de usuario.
 
-## 3. Matriz de privilegios: criterio de construcción
+## 3. Matriz RabbitMQ por aplicación
 
-Para cada aplicación se generará una matriz verificable con cinco columnas: `configure`, `write`, `read`, permisos de tópico y operaciones de prueba. No se aprobarán expresiones `.*` generales para las identidades runtime.
+Matriz propuesta para la candidata AsyncAPI `0.6.0-rc.2`, derivada de `operations`, `x-producer`, bindings y colas de reintento de [AsyncAPI](../contratos/eventos/asyncapi.yaml) y [topología](../contratos/eventos/rabbitmq-topologia.md). Es un diseño documental: no acredita usuarios, ACL ni consumidores implementados.
 
-- **Inventario:** consumir solo su cola principal (y recursos complementarios si el flujo lo requiere); publicar únicamente eventos y resultados de inventario previstos en AsyncAPI.
-- **Auditoría de precios y Combos:** consumo de sus respectivas colas; sin publicación salvo decisión contractual posterior.
-- **Pasarela:** consumo de proyecciones de `po.gateway.q` en el contrato actual; sin administración.
-- **Ventas G5:** consumo exclusivo de la cola de Ventas y publicación exclusivamente de comandos acordados; no acceso a colas ajenas.
-- **Aprovisionador:** permisos para declarar vhost/topología/políticas según el proceso; no se comparte con aplicaciones.
+Convenciones: `configure=∅` en runtime; `read` permite consumir únicamente la cola principal asignada. La aplicación no consume su cola `.retry`: RabbitMQ la mantiene durante el TTL y el dead-lettering la devuelve automáticamente a la cola principal. `write` permite las exchanges indicadas para los eventos/comandos listados, más `po.retry.x` y `po.dlx.x` para el flujo retry/DLQ. El flujo previsto publica con routing key igual al nombre de la cola propia, pero las ACL de recursos no pueden imponer esa restricción por clave en exchanges compartidas `direct`. No se concede `read` en colas `.retry`, DLQ ni `po.unrouted.q`, ni permisos adicionales de recursos operativos a identidades runtime. Los nombres de usuario de la columna anterior son sugeridos, no identidades creadas.
 
-**Detalles técnicos a validar:**
+**BLOQUEADO_ESPECÍFICO — aprovisionamiento de credenciales runtime:** no crear/conceder credenciales con `write` en las exchanges compartidas `po.retry.x` y `po.dlx.x` hasta validar un aislamiento que impida publicar hacia la retry/DLQ de otra aplicación. Responsables: coordinación técnica e Infraestructura G6; desbloqueo: elegir una alternativa y demostrarla con prueba negativa reproducible en la versión/configuración objetivo del broker.
 
-1. RabbitMQ distingue `configure`, `write` y `read` por recurso. Publicar en un exchange compartido requiere permisos sobre ese exchange, y restringir la routing key requiere permisos de tópico adicionales en exchanges de tipo `topic`.
-2. Bindings, declaraciones de recursos, exchanges alternativos y dead lettering pueden requerir permisos adicionales. La matriz exacta debe derivarse de las operaciones AMQP **reales** de la biblioteca y del método de aprovisionamiento.
-3. No conceder permisos de lectura sobre la cola de otro microservicio para facilitar pruebas: usar cuentas de prueba acotadas y sin datos reales.
-4. Ejecutar pruebas **positivas** (un flujo permitido funciona) y **negativas** (publicar otro dominio, consumir otra cola y modificar topología son rechazados).
-5. La revocación/rotación debe incluir reconexión cuando corresponda; los permisos pueden estar almacenados en caché durante la sesión.
+Alternativas para evaluación, sin adopción en este lote ni cambio de topología:
+
+1. **Exchanges retry/DLX separadas por aplicación:** ACL por nombre de recurso permite aislar `write`. Aumenta recursos y configuración operativa; requiere cambiar exchanges/bindings en AsyncAPI/topología y plan de migración compatible.
+2. **Autorización de exchange/routing key mediante plugin o backend de autorización del broker:** podría conservar el contrato de recursos si se demuestra que el mecanismo instalado autoriza routing keys de exchanges `direct`; añade dependencia, configuración y mantenimiento de infraestructura. No se presume que esté disponible ni se basa en topic permissions.
+3. **Relay de retry/DLX con identidad privilegiada única:** las aplicaciones solicitan reintento/descarto al relay y solo éste publica en las exchanges compartidas. Reduce las credenciales de publicación distribuidas, a costa de un componente, su disponibilidad/operación y un nuevo límite de integración; requiere decidir y documentar el contrato entre aplicaciones y relay.
+4. **Cambiar a exchanges `topic` con autorización de claves:** permitiría evaluar topic permissions con patrones separados, pero cambia tipos/recursos y configuración del broker; requiere exchanges nuevas y migración, además de validar que el filtrado cumple el aislamiento. Las topic permissions no protegen las exchanges actuales `direct`.
+
+| Aplicación / identidad objetivo | Configure | Write (recursos) | Read (colas) | Permiso de tópico para publicación de negocio | Declaraciones AMQP al arranque |
+|---|---|---|---|---|---|
+| `taxonomy-svc` / `g6_taxonomia` | ∅ | `po.commands.x`, `po.events.x`, `po.results.x`, `po.retry.x`, `po.dlx.x` | `po.taxonomy.q` | `po.commands.x`: `taxonomy.master.deactivation.check.requested`; `po.events.x`: `taxonomy.category.updated`, `taxonomy.characteristic-value.updated`, `taxonomy.master.deactivated`, `taxonomy.product-type-schema.changed`; `po.results.x`: `taxonomy.master.deactivation.rejected` | Ninguna activa; recursos preaprovisionados |
+| `catalog-svc` / `g6_catalogo` | ∅ | `po.commands.x`, `po.events.x`, `po.results.x`, `po.retry.x`, `po.dlx.x` | `po.catalog.q` | `po.commands.x`: `inventory.sku.initialization.requested`, `pricing.product.initialization.requested`; `po.events.x`: `catalog.product.deactivated`, `catalog.sku.deactivated`; `po.results.x`: `catalog.bulk.upsert.completed`, `catalog.bulk.upsert.rejected`, `catalog.master.deactivation.checked` | Ninguna activa; recursos preaprovisionados |
+| `pricing-svc` / `g6_precios` | ∅ | `po.events.x`, `po.results.x`, `po.retry.x`, `po.dlx.x` | `po.pricing.q` | `po.events.x`: `pricing.price.changed`; `po.results.x`: `pricing.bulk.price.apply.completed`, `pricing.bulk.price.apply.rejected`, `pricing.product.initialization.completed`, `pricing.product.initialization.rejected` | Ninguna activa; recursos preaprovisionados |
+| `price-audit-svc` / `g6_auditoria_precios` | ∅ | `po.retry.x`, `po.dlx.x` | `po.price-audit.q` | Ninguno | Ninguna activa; recursos preaprovisionados |
+| `promotions-svc` / `g6_promociones` | ∅ | `po.results.x`, `po.retry.x`, `po.dlx.x` | `po.promotions.q` | `po.results.x`: `promotions.coupon.consumption.completed`, `promotions.coupon.consumption.rejected`, `promotions.coupon.restoration.completed`, `promotions.coupon.restoration.rejected` | Ninguna activa; recursos preaprovisionados |
+| `combos-svc` / `g6_combos` | ∅ | `po.retry.x`, `po.dlx.x` | `po.combos.q` | Ninguno | Ninguna activa; recursos preaprovisionados |
+| `inventory-svc` / `g6_inventario` | ∅ | `po.events.x`, `po.results.x`, `po.retry.x`, `po.dlx.x` | `po.inventory.q` | `po.events.x`: `inventory.reservation.consumed`, `inventory.reservation.created`, `inventory.reservation.expired`, `inventory.reservation.released`, `inventory.stock.adjusted`, `inventory.stock.changed`; `po.results.x`: `inventory.bulk.stock.adjust.completed`, `inventory.bulk.stock.adjust.rejected`, `inventory.consumption.completed`, `inventory.consumption.rejected`, `inventory.reservation.rejected`, `inventory.sku.initialization.completed`, `inventory.sku.initialization.rejected` | Ninguna activa; recursos preaprovisionados |
+| `bulk-svc` / `g6_masivos` | ∅ | `po.commands.x`, `po.retry.x`, `po.dlx.x` | `po.bulk.q` | `po.commands.x`: `catalog.bulk.upsert.requested`, `inventory.bulk.stock.adjust.requested`, `pricing.bulk.price.apply.requested` | Ninguna activa; recursos preaprovisionados |
+| `api-gateway/bff` / `g6_pasarela` | ∅ | `po.retry.x`, `po.dlx.x` | `po.gateway.q` | Ninguno | Ninguna activa; recursos preaprovisionados |
+| `modulo-ventas` (G5) / `g5_ventas` | ∅ | `po.commands.x`, `po.retry.x`, `po.dlx.x` | `po.sales.q` | `po.commands.x`: `promotions.coupon.consumption.requested`, `promotions.coupon.restoration.requested` | Ninguna activa; recursos preaprovisionados; concesión y homologación del vhost pendientes |
+
+Las routing keys de negocio indicadas se configuran como patrones exactos anclados (`^(?:clave1|clave2)$`) por exchange `topic`; un intento de publicar otra clave debe denegarse. Los exchanges retry/DLX son `direct`: su ACL `write` autoriza el recurso entero, no solo la routing key indicada por el flujo. No se otorga permiso de publicación en `po.unrouted.x`: es destino de alternate exchange configurado por el aprovisionador. En AMQP, los bindings del topology los crea el aprovisionador: el runtime no declara exchanges, queues, argumentos, alternate exchanges, DLX ni bindings y no necesita `configure`. Si una biblioteca intenta declaración activa al iniciar, el arranque queda bloqueado hasta configurarla para consumir recursos existentes o aprobar explícitamente otro modelo; no se ampliarán ACL silenciosamente.
+
+El aprovisionador tiene identidad separada y permisos operativos para crear vhost, exchanges, colas, bindings y políticas. Para declarar exchanges con alternate exchange y bindings puede necesitar permisos `configure`/`read`/`write` en recursos origen/destino; estos permisos no se trasladan a cuentas runtime.
+
+**Alcance sin evidencia de ejecución:** `x-producer` y bindings fijan el permiso contractual esperado. La biblioteca y el código real de arranque no se validaron en este lote; por eso la matriz prohíbe declaraciones runtime como objetivo y requiere verificación de implementación antes de conceder credenciales.
+
+Validaciones operativas futuras deberán incluir positivas (publicación permitida, consumo de cola propia, retry propio) y negativas (otra routing key de negocio, otra cola, declaración/cambio de topología). Una prueba de publicación retry/DLX dirigida a la cola ajena documentará que la ACL nativa la permite mientras las exchanges sigan compartidas `direct`; no se marcará como PASS de aislamiento. No conceder permisos de lectura sobre colas ajenas para facilitar pruebas. La revocación/rotación debe incluir reconexión cuando corresponda, pues las decisiones de autorización pueden quedar en caché durante la sesión.
+
+Referencia técnica: [RabbitMQ Access Control](https://www.rabbitmq.com/docs/access-control) describe permisos `configure`/`write`/`read`, topic authorisation y su aplicación en exchanges `topic`; [Alternate Exchanges](https://www.rabbitmq.com/docs/ae) documenta permisos al declararlos y que un mensaje enrutado mediante el alternate exchange cuenta como enrutado para `mandatory`.
 
 ## 4. Aprovisionamiento reproducible
 

@@ -2,11 +2,11 @@
 
 **Proyecto:** G6 — Productos y Ofertas  
 **Fecha:** 15 de octubre de 2026  
-**Estado:** acuerdo interno de diseño propuesto para formalización; **no homologado externamente ni implementado**  
+**Estado:** decisión interna G6 adoptada para el contrato candidato `0.6.0-rc.2`; **homologación externa del vhost pendiente y no implementado**
 **Responsable:** coordinación técnica de G6  
 **Alcance:** ocho microservicios de negocio, la pasarela de API y consumidores externos expresamente autorizados.
 
-> Este documento establece el diseño objetivo. No modifica por sí mismo [AsyncAPI](../../contratos/eventos/asyncapi.yaml) ni la [topología contractual](../../contratos/eventos/rabbitmq-topologia.md). Los contratos compartidos continúan siendo las fuentes ejecutables hasta que se apruebe una versión actualizada. Tampoco se incorpora una nueva decisión DEC-F.
+> G6 adopta internamente `g6-productos-ofertas` como vhost contractual de la candidata AsyncAPI `0.6.0-rc.2`. Esto no acredita homologación de G5, aprovisionamiento, implementación ni pruebas de broker. No se incorpora una nueva decisión DEC-F.
 
 ## 1. Motivo
 
@@ -16,7 +16,7 @@ La auditoría de infraestructura realizada el 14 de octubre de 2026 observó Rab
 
 ## 2. Identidad y separación de entornos
 
-**Nombre elegido para el vhost objetivo:** `g6-productos-ofertas` (sin barra inicial). Es un nombre lógico exacto, distinto tanto de `g6` como de `/marketplace`.
+**Vhost adoptado internamente para la candidata contractual:** `g6-productos-ofertas` (sin barra inicial). Es un nombre lógico exacto, distinto de `g6` y del vhost de la línea candidata anterior `0.6.0-rc.1` (`/marketplace`).
 
 - Se utilizará un vhost común para las comunicaciones asíncronas autorizadas de G6. Los usuarios se separan por aplicación, no por canal comercial.
 - G5 Ventas, cuando la integración sea homologada y la red esté preparada, podrá acceder mediante una identidad exclusiva con permisos limitados. No tendrá privilegios de administración.
@@ -39,7 +39,7 @@ La auditoría de infraestructura realizada el 14 de octubre de 2026 observó Rab
 
 | Recurso | Nombre contractual actual | Nombre propuesto |
 |---|---|---|
-| Vhost | `/marketplace` | `g6-productos-ofertas` |
+| Vhost | `/marketplace` (`0.6.0-rc.1`) | `g6-productos-ofertas` (`0.6.0-rc.2`, candidato) |
 | Exchange de comandos | `po.commands.x` | `po.comandos.x` |
 | Exchange de eventos | `po.events.x` | `po.eventos.x` |
 | Exchange de resultados | `po.results.x` | `po.resultados.x` |
@@ -109,7 +109,7 @@ Se vigilarán como mínimo: disponibilidad del broker, alarmas de memoria/disco,
 
 1. La topología será **declarativa, versionada e idempotente** y se aplicará por un proceso autorizado, no por cuentas runtime con permisos de administración.
 2. Los cambios con impacto contractual requieren una versión candidata de AsyncAPI, consistencia con la topología física y pruebas de productores/consumidores.
-3. Para G5, la homologación debe identificar vhost, redes, credencial, permisos, nombre y comportamiento de la cola de Ventas, routing keys, correlación y compatibilidad de despliegue.
+3. Para G5, la homologación del cambio debe identificar vhost, redes, credencial, permisos, nombre y comportamiento de la cola de Ventas, routing keys, correlación y compatibilidad de despliegue. La homologación previa del flujo funcional de eventos no cubre este cambio de endpoint ni concede acceso al broker.
 4. Se habilitará primero la integración de Inventario, luego las demás aplicaciones, sin anunciar que la integración es funcional antes de pruebas de extremo a extremo.
 5. No se eliminarán los vhosts existentes `g6` ni `/marketplace` si aparecen durante la migración sin verificar previamente dependencias, mensajes y plan de reversión.
 

@@ -16,7 +16,7 @@ routing key = nombre lógico del mensaje
 
 ## Mensajes
 
-**Alcance editorial:** esta tabla refleja **40 mensajes lógicos** del AsyncAPI candidato `0.6.0-rc.1`, junto con **40 canales**. El antecedente `0.5.0` contenía 39 mensajes. Los estados `stable`, `closed` y `provisional` describen contratos, **no** prueban publicación efectiva ni conformidad E2E.
+**Alcance editorial:** esta tabla refleja **40 mensajes lógicos** del AsyncAPI candidato actual `0.6.0-rc.2`, junto con **40 canales**. Respecto de `0.6.0-rc.1`, esta revisión cambia la identificación del vhost y precisa la topología/publicación sin ruta; conserva el conjunto y semántica de mensajes. El antecedente `0.5.0` contenía 39 mensajes. Los estados `stable`, `closed` y `provisional` describen contratos, **no** prueban publicación efectiva ni conformidad E2E.
 
 | Nombre | Tipo | Productor | Consumidores | Estado |
 |---|---|---|---|---|
