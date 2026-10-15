@@ -1,13 +1,13 @@
 # Topología RabbitMQ — Productos y Ofertas
 
-**Fuente ejecutable:** [`asyncapi.yaml`](asyncapi.yaml)
+**Fuente ejecutable:** [`asyncapi.yaml`](asyncapi.yaml), candidata `0.6.0-rc.2`; no homologada externamente ni desplegada.
 
 ## 1. Decisión
 
-VHost:
+VHost contractual candidato (decisión interna G6 adoptada; homologación externa pendiente):
 
 ```text
-/marketplace
+g6-productos-ofertas
 ```
 
 Exchanges durables:
@@ -98,7 +98,9 @@ Van a retry/DLQ:
 
 Los exchanges de negocio usan `po.unrouted.x` como alternate exchange. Además, los publishers deben usar `mandatory=true`.
 
-`po.unrouted.q` es operativa: detecta un mensaje que no tenía consumidor físico configurado.
+Si el exchange principal no encuentra binding, RabbitMQ intenta enrutar el mensaje al alternate exchange. Como `po.unrouted.x` enruta a `po.unrouted.q`, el mensaje se considera enrutado: con `mandatory=true` no se genera `basic.return` en ese caso. La cola operativa es la señal esperada para alerta y diagnóstico.
+
+Si tampoco existe ruta por el alternate exchange (por ejemplo, en una prueba aislada sin el binding de captura), `mandatory=true` exige el retorno `basic.return`; el publisher debe observarlo además de usar publisher confirms. `basic.return` y publisher confirm informan condiciones distintas. Una prueba de aceptación estática debe contrastar los bindings esperados; una prueba runtime aislada debe cubrir (a) publicación sin ruta principal capturada en `po.unrouted.q` sin `basic.return`, y (b) publicación sin ruta ni siquiera en el alternate exchange que produce `basic.return`. La segunda prueba no debe alterar la topología productiva.
 
 ## 6. Colas y bindings
 
@@ -246,6 +248,10 @@ No forma parte del contrato de negocio:
 - TLS/certificados del entorno.
 
 Esos valores se resuelven en infraestructura sin cambiar exchanges, queues ni routing keys.
+
+## 9. Permisos runtime y declaraciones
+
+La matriz operativa de `configure`, `write`, `read`, permisos de tópico y declaraciones al arranque está en [Operación de RabbitMQ](../../arquitectura/operacion-rabbitmq.md#matriz-rabbitmq-por-aplicacion). Se deriva de estos bindings/operaciones y no concede acceso de lectura a `po.unrouted.q` ni a las DLQ a las identidades de aplicación.
 
 ## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
 

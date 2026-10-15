@@ -2,8 +2,8 @@ asyncapi: 3.0.0
 id: urn:taller-sw-web:productos-y-ofertas:asyncapi
 info:
   title: Productos y Ofertas — Contrato asíncrono
-  version: 0.6.0-rc.1
-  description: 'Contrato asíncrono consolidado P0/P1/P2. Formaliza la obligatoriedad de operation_id y causation_id en los mensajes de inicialización y preparación para correlación estricta y descarte de resultados stale. Fija la topología física RabbitMQ para los mensajes lógicos existentes, incluido el rechazo tipado de reserva:
+  version: 0.6.0-rc.2
+  description: 'Contrato asíncrono candidato. Respecto de 0.6.0-rc.1, cambia el vhost RabbitMQ a g6-productos-ofertas y explicita la detección de publicaciones sin ruta; conserva mensajes, payloads, exchanges, queues, bindings y routing keys. Formaliza la obligatoriedad de operation_id y causation_id en los mensajes de inicialización y preparación para correlación estricta y descarte de resultados stale. Fija la topología física RabbitMQ para los mensajes lógicos existentes, incluido el rechazo tipado de reserva:
     exchanges, queues, bindings, retry y DLQ. Los nombres lógicos y routing keys se conservan.'
 defaultContentType: application/json
 x-delivery-semantics: at-least-once
@@ -2784,13 +2784,13 @@ servers:
     host: '{host}:{port}'
     protocol: amqp
     protocolVersion: 0.9.1
-    description: Broker RabbitMQ del Marketplace Multicanal.
+    description: Broker RabbitMQ de G6 Productos y Ofertas.
     variables:
       host:
         default: rabbitmq
       port:
         default: '5672'
-    x-vhost: /marketplace
+    x-vhost: g6-productos-ofertas
 x-rabbitmq-policy:
   main_queue_type: quorum
   retry_queue_type: quorum
@@ -2801,9 +2801,14 @@ x-rabbitmq-policy:
   application_retry_attempts: 3
   retry_delay_ms: 30000
   unroutable_publish: mandatory=true + alternate exchange po.unrouted.x
+  unroutable_publish_behavior: >-
+    If the primary exchange cannot route a message but po.unrouted.x routes it to
+    po.unrouted.q, RabbitMQ considers it routed and does not send basic.return;
+    if the alternate exchange also cannot route it, mandatory=true causes
+    basic.return. Publisher confirms are an independent signal.
   business_rejection_rule: Business rejections are acknowledged and translated to contract results/events; they are not sent to retry/DLQ.
 x-rabbitmq-topology:
-  vhost: /marketplace
+  vhost: g6-productos-ofertas
   exchanges:
     po.commands.x:
       type: topic

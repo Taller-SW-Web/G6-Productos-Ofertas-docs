@@ -12,8 +12,8 @@ Existen **tres nombres y estados diferentes**:
 | Estado | Nombre | Significado |
 |---|---|---|
 | Infraestructura observada (14-10-2026) | `g6` | Vhost realmente existente en Oracle, sin topología de negocio observada |
-| Contrato vigente candidato `0.6.0-rc.1` | `/marketplace` | Vhost declarado por [AsyncAPI](../contratos/eventos/asyncapi.yaml) y la [topología](../contratos/eventos/rabbitmq-topologia.md) |
-| Diseño objetivo elegido por G6 | `g6-productos-ofertas` | Nombre nuevo que deberá incorporarse a una versión de contrato y desplegarse tras aprobar el cambio |
+| Candidata anterior `0.6.0-rc.1` | `/marketplace` | Vhost que declaraba la revisión anterior de AsyncAPI/topología |
+| Candidata actual `0.6.0-rc.2` | `g6-productos-ofertas` | Decisión interna G6 incorporada al contrato candidato; aún no homologada con G5 ni desplegada |
 
 Un vhost es un espacio lógico aislado. Crear `g6-productos-ofertas` no traslada automáticamente usuarios, colas, bindings, mensajes ni consumidores desde `g6` o `/marketplace`.
 
@@ -35,7 +35,7 @@ Los documentos de esta entrega son:
 - [Operación de RabbitMQ](../arquitectura/operacion-rabbitmq.md): inventario, permisos, aprovisionamiento, recuperación y monitoreo.
 - **Este plan:** secuencia de homologación y despliegue.
 
-**No se modifica en este lote** el archivo `contratos/eventos/asyncapi.yaml`, la topología `rabbitmq-topologia.md`, los handlers de microservicios, CI/CD ni ningún recurso de la VM. Tampoco se presume que el PR de Inventory esté desplegado por existir código o pruebas locales.
+El primer lote está incorporado en master en `0a2c50b6f606a9956765e1be757db122b559d932`. Aquel lote no modificó AsyncAPI/topología. Este segundo lote prepara la candidata `0.6.0-rc.2` con el cambio de vhost y precisión documental de la señalización unroutable ya definida; conserva todos los nombres y bindings. No modifica handlers, CI/CD ni recursos de la VM. Tampoco se presume que el PR de Inventory esté desplegado por existir código o pruebas locales.
 
 ## 4. Impactos y coordinación
 
@@ -57,24 +57,26 @@ No se atribuirá a G5 conformidad hasta contar con evidencia de aprobación. La 
 
 ### Lote A — Acuerdo interno y documentación
 
-**Objetivo:** fijar nombre de vhost, política de identidades, aprovisionamiento y operación. **Este ZIP constituye la propuesta documental de ese lote.**
+**Objetivo:** fijar nombre de vhost, política de identidades, aprovisionamiento y operación. DECISIÓN INTERNA G6 adoptada; esto no equivale a homologación externa ni implementación.
 
-**Pendientes:** revisión de coordinación de G6, corrección de posibles incompatibilidades, adopción documentada y definición del alcance exacto del cambio contractual.
+**Estado:** adoptado internamente por G6 en el primer lote; las decisiones de este documento no acreditan homologación externa ni implementación.
 
 **Criterio de salida:** documentos revisados, estado correcto y decisión explícita de si se cambia **solo el vhost** o también nombres físicos/keys en esta etapa.
 
-### Lote B — Contrato de vhost y homologación
+### Lote B — Contrato de vhost y homologación (candidata preparada; homologación pendiente)
 
 **Objetivo mínimo recomendado:** cambiar **solo** el vhost a `g6-productos-ofertas`, conservando temporalmente los nombres actuales de exchanges, colas y routing keys. Así se reduce el alcance de ruptura.
 
-- Preparar una versión candidata de [AsyncAPI](../contratos/eventos/asyncapi.yaml), editando sus declaraciones de servidor y topología para un único nombre consistente.
+- [AsyncAPI](../contratos/eventos/asyncapi.yaml) `0.6.0-rc.2` ya declara el vhost nuevo de forma consistente en servidor y topología y precisa la diferencia entre alternate exchange, `mandatory=true` y `basic.return`; no cambia mensajes, payloads, exchanges, colas, bindings ni routing keys.
 - Actualizar [topología RabbitMQ](../contratos/eventos/rabbitmq-topologia.md) y sección RabbitMQ de [Arquitectura](../arquitectura/Arquitectura.md).
 - Buscar referencias literales a `/marketplace` y corregir las que describan el vhost de mensajería; no tocar usos legítimos del término Marketplace como canal G1.
 - Revisar las matrices de integración y el kit afectado, sin modificar otras decisiones funcionales.
 - Comunicar a G5 la configuración acordada, red, cuenta, permisos y si cambian exchanges/colas/keys; recopilar su respuesta antes de declarar homologación.
 - Validar esquemas AsyncAPI y consistencia exacta de colas, exchanges, bindings, retry y DLQ.
 
-**Criterio de salida:** PR contractual revisado, consumidores advertidos y compatibilidad demostrable. El merge de documentos no acredita un broker en funcionamiento.
+**Pendiente:** comunicar la candidata a G5, registrar su respuesta/acuerdo de migración y resolver red, credencial y matriz de permisos antes de conectar el consumidor. No se atribuye aprobación por silencio.
+
+**Criterio de salida documental:** revisión del PR y referencias consistentes. La compatibilidad documental del contenido de mensajes no prueba operación ni que el consumidor G5 acepte el cambio de vhost.
 
 ### Lote C — Infraestructura y piloto Inventory ↔ G5
 

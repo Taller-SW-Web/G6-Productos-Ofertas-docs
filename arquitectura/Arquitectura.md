@@ -4,12 +4,12 @@
 **Repositorio de documentación:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
 **Archivo:** `arquitectura/Arquitectura.md`  
 **Contrato HTTP canónico:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.1`; referencia histórica `0.5.0`)
-**Contrato asíncrono canónico:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.1`; referencia histórica `0.5.0`)
+**Contrato asíncrono canónico:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.2`; referencia histórica `0.5.0`)
 **Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (referencia humana; base histórica `0.5.0`)
 **Catálogo canónico de errores:** `contratos/http/catalogo-errores.md` (códigos autoritativos para el contrato candidato)
 **Contrato humano de integración:** `contratos/http/Contrato_Api.md`  
 **Modelo conceptual:** `Modelo_Conceptual.md`  
-**Estado contractual:** línea base `0.5.0` conservada para compatibilidad; OpenAPI/AsyncAPI `0.6.0-rc.1` son contratos **candidatos** para B1–B4. Las decisiones internas están adoptadas, pero su implementación, despliegue y conformidad E2E no se acreditan mediante este documento. La topología RabbitMQ física se conserva.
+**Estado contractual:** línea base `0.5.0` conservada para compatibilidad; OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.2` son contratos **candidatos** para B1–B4. AsyncAPI avanzó a `rc.2` por el cambio del vhost RabbitMQ y la precisión documental de detección unroutable; no se modificaron mensajes, recursos ni routing. Las decisiones internas están adoptadas, pero su implementación, despliegue y conformidad E2E no se acreditan mediante este documento.
 
 > Esta arquitectura es la guía de implementación del backend y de sus integraciones.  
 > Las SPEC son la fuente de verdad para reglas funcionales; `contratos/http/openapi.yaml` gobierna HTTP; `contratos/eventos/asyncapi.yaml` gobierna mensajería; `contratos/http/catalogo-errores.md` gobierna la semántica estable de `code`.
@@ -726,10 +726,10 @@ La coordinación se implementa con:
 
 ## 10.1. RabbitMQ
 
-P2 fija una topología física estable en el vhost:
+P2 fija una topología física estable. La candidata contractual `0.6.0-rc.2` adopta internamente el vhost `g6-productos-ofertas`; su homologación con G5 y su provisión en infraestructura siguen pendientes:
 
 ```text
-/marketplace
+g6-productos-ofertas
 ```
 
 Exchanges:
@@ -797,7 +797,7 @@ po.dlx.x -> <main>.dlq
 
 Rechazos de negocio (`STOCK_INSUFICIENTE`, cupón sin cupo, etc.) se ACKean y producen resultado `...rejected`; no van a DLQ.
 
-Publicaciones sin binding terminan en `po.unrouted.x` / `po.unrouted.q` y el publisher usa `mandatory=true`.
+Las publicaciones sin binding en el exchange principal se envían por alternate exchange a `po.unrouted.x` / `po.unrouted.q`; con esa ruta alternativa efectiva no hay `basic.return`, aunque se use `mandatory=true`. Si tampoco hay ruta por el alternate exchange, `mandatory=true` produce `basic.return`. Ambos casos deben verificarse por separado en pruebas aisladas. La cola de mensajes sin ruta y las confirmaciones del publisher cubren señales diferentes.
 
 La matriz completa de bindings está en `contratos/eventos/rabbitmq-topologia.md` y en `contratos/eventos/asyncapi.yaml`.
 
@@ -981,7 +981,7 @@ El catálogo de eventos correspondiente es:
 contratos/eventos/catalogo-eventos.md
 ```
 
-La línea base histórica AsyncAPI `0.5.0` documentaba **39 mensajes lógicos**. El contrato candidato AsyncAPI `0.6.0-rc.1` documenta **40 canales y 40 mensajes**, incluido `inventory.reservation.rejected`, con datos tipados para resultados críticos. La existencia del contrato no prueba publicaciones efectivas ni despliegue. Los mensajes se distribuyen entre:
+La línea base histórica AsyncAPI `0.5.0` documentaba **39 mensajes lógicos**. El contrato candidato AsyncAPI `0.6.0-rc.2` documenta **40 canales y 40 mensajes**, incluido `inventory.reservation.rejected`, con datos tipados para resultados críticos. `rc.2` cambia el vhost y explicita la señalización de publicaciones unroutable de `rc.1`, sin cambiar recursos de mensajería; la existencia del contrato no prueba publicaciones efectivas ni despliegue. Los mensajes se distribuyen entre:
 
 - Taxonomía;
 - Catálogo;
@@ -3217,7 +3217,7 @@ Los principios arquitectónicos principales son:
 8. Catálogo mantiene perfil físico por SKU.
 9. Despacho mantiene ownership del empaque.
 10. OpenAPI `0.5.0` es la línea base histórica; `contratos/http/openapi.yaml` `0.6.0-rc.1` es la fuente HTTP candidata para B1–B4, aún no acreditada como desplegada.
-11. AsyncAPI `0.5.0` documentó 39 mensajes históricos; `contratos/eventos/asyncapi.yaml` `0.6.0-rc.1` documenta 40 canales y 40 mensajes candidatos, sin afirmar su ejecución real.
+11. AsyncAPI `0.5.0` documentó 39 mensajes históricos; `contratos/eventos/asyncapi.yaml` `0.6.0-rc.2` documenta 40 canales y 40 mensajes candidatos, sin afirmar su ejecución real.
 12. `contratos/http/catalogo-errores.md` gobierna los códigos estables y `contratos/eventos/catalogo-eventos.md` la lectura humana de mensajería.
 13. cada servicio aplica arquitectura por capas/puertos.
 14. no se comparten entidades ORM, repositorios ni schemas.
