@@ -87,6 +87,7 @@ No se atribuirá a G5 conformidad hasta contar con evidencia de aprobación. La 
 - Crear el nuevo vhost, topología y usuarios mediante definiciones/scripts idempotentes.
 - Aplicar matriz de permisos mínimos, con pruebas negativas y positivas.
 - No aprovisionar credenciales runtime con escritura en `po.retry.x`/`po.dlx.x` hasta que la prueba aislada del [bloqueo retry/DLX](../arquitectura/decisiones/rabbitmq.md) pase en RabbitMQ 4.2.9. La alternativa A es únicamente candidata; no cambiar exchanges existentes ni afirmar que los permisos están aislados antes de verificar patrón topic exacto, dead-lettering quorum y ausencia de rutas laterales.
+- **Reevaluación del gate (2026-10-15):** el perfil focalizado observó NACK efectivo del destino quorum y retención del mensaje original en la fuente (`messages=1`, `messages_ready=0`), pero no observó su llegada a la DLQ dentro de 60 s tras liberar capacidad mediante ACK de rellenos identificados. Resultado **FAIL**; A no se adopta, AsyncAPI sigue en `0.6.0-rc.2` y el bloqueo de aprovisionamiento runtime permanece.
 - Configurar Inventory sin compartir contraseñas; comprobar conexión, confirmaciones y comportamiento de los consumidores.
 - Probar entrega y consumo de resultados con G5 en un ambiente/ventana coordinados. Los contratos de reservas HTTP con resultado asíncrono requieren correlación e idempotencia; un `202` no implica éxito de negocio.
 - Comprobar mensajes sin ruta, reintentos, DLQ, observabilidad y recuperación.

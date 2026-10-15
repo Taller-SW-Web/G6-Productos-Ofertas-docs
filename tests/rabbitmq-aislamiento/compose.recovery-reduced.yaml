@@ -1,0 +1,4 @@
+services:
+  rabbitmq:
+    volumes:
+      - ./advanced.recovery-reduced.config:/etc/rabbitmq/advanced.config:ro
