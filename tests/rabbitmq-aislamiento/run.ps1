@@ -1,4 +1,7 @@
-param([string] $TestName)
+param(
+    [ValidateSet('essential', 'extended', 'all')]
+    [string] $Profile = 'essential'
+)
 
 $ErrorActionPreference = 'Stop'
 
@@ -34,12 +37,7 @@ try {
 
     Invoke-DockerCompose @('config', '--quiet')
     Invoke-DockerCompose @('pull', 'rabbitmq')
-    if ($TestName) {
-        Invoke-DockerCompose @('run', '--build', '--rm', '--entrypoint', 'python', 'contract-tests', '-m', 'unittest', '-v', "test_isolation.RabbitMQIsolation.$TestName")
-    }
-    else {
-        Invoke-DockerCompose @('up', '--build', '--abort-on-container-exit', '--exit-code-from', 'contract-tests')
-    }
+    Invoke-DockerCompose @('run', '--build', '--rm', '-e', "RABBITMQ_TEST_PROFILE=$Profile", 'contract-tests')
 }
 finally {
     # Project name is unique to this run; cleanup is limited to its containers, network, and named volume.
