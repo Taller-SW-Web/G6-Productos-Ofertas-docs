@@ -1,0 +1,18 @@
+# Aplicar como /etc/ssh/sshd_config.d/99-g6-rabbitmq-tunnel.conf.
+# Limita el forwarding a un único destino; no cambia reglas OCI ni el acceso admin.
+Match Group g6-rabbitmq-tunnel
+    AuthenticationMethods publickey
+    PasswordAuthentication no
+    KbdInteractiveAuthentication no
+    AllowTcpForwarding local
+    AllowStreamLocalForwarding no
+    PermitOpen 127.0.0.1:5672
+    AllowAgentForwarding no
+    X11Forwarding no
+    PermitTunnel no
+    PermitTTY no
+    PermitUserRC no
+    GatewayPorts no
+    MaxSessions 0
+    ForceCommand /usr/sbin/nologin
+Match all

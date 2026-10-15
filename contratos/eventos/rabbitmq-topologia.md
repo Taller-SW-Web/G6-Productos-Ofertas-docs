@@ -2,6 +2,8 @@
 
 **Fuente ejecutable:** [`asyncapi.yaml`](asyncapi.yaml), candidata `0.6.0-rc.2`; no homologada externamente ni desplegada.
 
+**Estado de corte 2026-10-15:** `asyncapi.yaml` de `master` permanece en `0.6.0-rc.2`. La candidata rc.3 se adjunta en [candidata G5](asyncapi-0.6.0-rc.3-g5-candidate.yaml) y fue usada únicamente para las ACL y el acceso G5 detallados en [evidencia G5](../../ops/rabbitmq/frente-c/g5/evidencia-aprovisionamiento-2026-10-15.md). El acceso está implementado y probado desde la PC administrativa; esto no equivale a homologación formal ni a consumidor G5 integrado. Retry/DLX permanece sin implementar y sin probar.
+
 ## 1. Decisión
 
 VHost contractual candidato (decisión interna G6 adoptada; homologación externa pendiente):

@@ -2,3 +2,13 @@
 especificaciones/
 __pycache__/
 *.py[cod]
+# Secretos locales y paquetes de onboarding G5 (nunca versionar)
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.g5pkg
+*.dpapi.xml
+admin-vault.dpapi.json
+ops/rabbitmq/frente-c/g5/keys/
+ops/rabbitmq/frente-c/g5/packages/

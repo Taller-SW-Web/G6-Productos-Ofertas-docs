@@ -1,0 +1,19 @@
+{
+  "contract": "AsyncAPI 0.6.0-rc.3",
+  "status": "provisioned-and-smoke-tested-from-G6-admin-PC; G5 technical acceptance reported by owner; formal external homologation pending",
+  "contract_file": "../../../../contratos/eventos/asyncapi-0.6.0-rc.3-g5-candidate.yaml",
+  "provisioned_at": "2026-10-15",
+  "vhost": "g6-productos-ofertas",
+  "username": "g5_ventas",
+  "configure_pattern": "^$",
+  "read_pattern": "^po\\.ventas\\.q$",
+  "resource_write_pattern": "^po\\.comandos\\.x$",
+  "topic_permissions": [
+    {
+      "exchange": "po.comandos.x",
+      "write_pattern": "^(?:promotions\\.coupon\\.consumption\\.requested|promotions\\.coupon\\.restoration\\.requested)$",
+      "read_pattern": "^$"
+    }
+  ],
+  "forbidden": ["other queues", "default exchange", "other exchanges", "retry/DLX", "management tags"]
+}

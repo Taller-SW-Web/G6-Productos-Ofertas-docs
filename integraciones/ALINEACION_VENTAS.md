@@ -117,3 +117,8 @@ El estado Retail `PAGADO`/`ENTREGADO` sin reserva no habilita por sí mismo cons
 - La transición pago/consumo/liberación/expiración respeta la serialización y `expires_at`. Promociones no decide el estado del pedido ni del pago.
 
 **Autorización e interoperabilidad pendientes:** G7 debe confirmar y registrar `inventario:operaciones:leer` para `modulo-ventas`; la disponibilidad efectiva del endpoint exige backend y credenciales adecuadas. No anunciar esta API como viva ni el scope como concedido antes de la evidencia. G5 debe coordinar la adaptación v1/v2 de los mensajes y el momento de la respuesta `201` al canal.
+
+
+## Acceso RabbitMQ G5 (corte 2026-10-15)
+
+G6 aprovisionó el acceso técnico `g5_ventas` sobre la candidata AsyncAPI `0.6.0-rc.3`, con cola propia `po.ventas.q` y dos comandos de cupones. El túnel usa la cuenta SSH grupal `g5_tunnel`; el microservicio G5 continúa ejecutándose en las PCs del equipo y aún no se ha probado desde ellas. La aceptación técnica fue reportada por Marco, pero no existe evidencia documental formal registrada; por tanto, no se declara homologación. Véanse la [matriz de acceso](../ops/rabbitmq/frente-c/g5/matriz-acceso-g5.md) y el [informe de pruebas](../ops/rabbitmq/frente-c/g5/evidencia-aprovisionamiento-2026-10-15.md). Retry/DLX no forma parte del acceso ni se declara implementado.

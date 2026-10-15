@@ -1,9 +1,15 @@
 # Transición de RabbitMQ
 
 **Proyecto:** G6 — Productos y Ofertas  
-**Estado:** plan de transición para revisión; **no ejecutado, no homologado**  
+**Estado al 15-10-2026:** vhost y topología base existen; `g5_ventas`/`g5_tunnel` se aprovisionaron y probaron desde la PC administrativa; homologación G5 formal y consumidor funcional pendientes
 **Objetivo inmediato:** vhost `g6-productos-ofertas`, seguridad y operación reproducible  
 **Alcance diferido:** traducción contractual de exchanges, colas y routing keys.
+
+## Estado G5 al 15-10-2026
+
+La identidad técnica `g5_ventas` quedó con `read` exclusivo de `po.ventas.q`, `write` de `po.comandos.x` y los dos topic permissions de rc.3. La cuenta SSH compartida `g5_tunnel` permite solo forwarding local al listener Oracle `127.0.0.1:5672`; el equipo ejecutará sus servicios en sus PCs y usará `127.0.0.1:5673`. El smoke sintético pasó desde la PC administrativa. No se desplegó servicio G5 en Oracle ni se cambió Compose. El paquete cifrado está preparado, pero no se entregó por faltar representante y canal privado.
+
+Marco comunicó aceptación técnica de rc.3; no se encontró un acuerdo externo verificable, así que el estado formal permanece **no homologado**. El contrato de `master` sigue en rc.2. El detalle de recursos y pruebas está en [compatibilidad G5](../ops/rabbitmq/frente-c/g5/compatibilidad-rc3.md) y [evidencia](../ops/rabbitmq/frente-c/g5/evidencia-aprovisionamiento-2026-10-15.md).
 
 ## 1. Por qué se necesita una transición
 
@@ -13,7 +19,8 @@ Existen **tres nombres y estados diferentes**:
 |---|---|---|
 | Infraestructura observada (14-10-2026) | `g6` | Vhost realmente existente en Oracle, sin topología de negocio observada |
 | Candidata anterior `0.6.0-rc.1` | `/marketplace` | Vhost que declaraba la revisión anterior de AsyncAPI/topología |
-| Candidata actual `0.6.0-rc.2` | `g6-productos-ofertas` | Decisión interna G6 incorporada al contrato candidato; aún no homologada con G5 ni desplegada |
+| Contrato vigente en `master` `0.6.0-rc.2` | `g6-productos-ofertas` | Candidato G6; no homologación G5. La topología base existe en Oracle. |
+| Candidata G6 `0.6.0-rc.3` | `g6-productos-ofertas` | Nombres físicos en español; acceso G5 provisionado por autorización de Marco; homologación externa formal pendiente |
 
 Un vhost es un espacio lógico aislado. Crear `g6-productos-ofertas` no traslada automáticamente usuarios, colas, bindings, mensajes ni consumidores desde `g6` o `/marketplace`.
 
