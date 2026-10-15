@@ -474,14 +474,22 @@ class RabbitMQIsolation(unittest.TestCase):
                 {"max-length": 1, "overflow": "reject-publish"},
             )
             diagnostics["policies"] = {"source": source_policy, "destination": target_policy}
-            if ready_count(self.admin, inventory["main"]) != 0 or ready_count(self.admin, inventory["dlq"]) != 0:
+            source_start = queue_snapshot(inventory["main"])
+            destination_start = queue_snapshot(inventory["dlq"])
+            diagnostics["source"].append({"phase": "fixture_start", **source_start})
+            diagnostics["destination"].append({"phase": "fixture_start", **destination_start})
+            if any(source_start.get(key) != 0 for key in ("messages", "messages_ready", "messages_unacknowledged")):
+                raise RecoveryInconclusive(
+                    f"INCONCLUSO: source queue counters were not all zero at scenario start: {source_start}"
+                )
+            if any(destination_start.get(key) != 0 for key in ("messages", "messages_ready", "messages_unacknowledged")):
                 raise RecoveryInconclusive("INCONCLUSO: recovery queues were not empty at scenario start")
 
             publisher_connection = connection(*BOOTSTRAP)
             publisher_channel = publisher_connection.channel()
             publisher_channel.confirm_delivery()
 
-            def publish_confirmed(queue, message_id, body):
+            def publish_confirmed(queue, message_id, body, purpose):
                 try:
                     publisher_channel.basic_publish(
                         "", queue, body,
@@ -493,15 +501,19 @@ class RabbitMQIsolation(unittest.TestCase):
                         mandatory=True,
                     )
                 except pika.exceptions.NackError:
-                    diagnostics["confirms"].append({"message_id": message_id, "result": "NACK"})
+                    diagnostics["confirms"].append(
+                        {"queue": queue, "message_id": message_id, "purpose": purpose, "result": "NACK"}
+                    )
                     return False
                 # BlockingChannel.basic_publish returns None on a successful
                 # publisher confirm in the pinned Pika API; only NackError
                 # denotes a broker NACK here.
-                diagnostics["confirms"].append({"message_id": message_id, "result": "ACK"})
+                diagnostics["confirms"].append(
+                    {"queue": queue, "message_id": message_id, "purpose": purpose, "result": "ACK"}
+                )
                 return True
 
-            self.assertTrue(publish_confirmed(inventory["dlq"], filler_id, b"capacity-filler"))
+            self.assertTrue(publish_confirmed(inventory["dlq"], filler_id, b"capacity-filler", "normal_filler"))
             full = queue_snapshot(inventory["dlq"])
             diagnostics["destination"].append({"phase": "after_filler", **full})
             if ready_count(self.admin, inventory["dlq"]) != 1:
@@ -514,7 +526,9 @@ class RabbitMQIsolation(unittest.TestCase):
             rejection_observed = False
             for probe_index in range(8):
                 current_probe_id = f"{probe_id}-{probe_index}"
-                if not publish_confirmed(inventory["dlq"], current_probe_id, b"capacity-rejection-probe"):
+                if not publish_confirmed(
+                    inventory["dlq"], current_probe_id, b"capacity-rejection-probe", "normal_capacity_probe"
+                ):
                     rejection_observed = True
                     break
                 capacity_message_ids.add(current_probe_id)
@@ -526,37 +540,81 @@ class RabbitMQIsolation(unittest.TestCase):
                 raise RecoveryInconclusive("INCONCLUSO: destination accepted all bounded probes; capacity rejection was not proven")
             diagnostics["destination"].append({"phase": "probe_nack", **queue_snapshot(inventory["dlq"])})
 
-            self.assertTrue(publish_confirmed(inventory["main"], original_id, original_id.encode("ascii")))
+            self.assertTrue(
+                publish_confirmed(
+                    inventory["main"], original_id, original_id.encode("ascii"), "original_source_publish"
+                )
+            )
             with connection(inventory["user"], inventory["password"]) as conn:
                 channel = conn.channel()
                 message = get_one(channel, inventory["main"], timeout=5)
                 self.assertIsNotNone(message, "FAIL: confirmed original message was not available on source")
                 self.assertEqual(message[1].message_id, original_id)
+                diagnostics["source"].append(
+                    {
+                        "phase": "original_rejected_requeue_false",
+                        "message_id": message[1].message_id,
+                        "body_matches_id": message[2] == original_id.encode("ascii"),
+                        "delivery_tag": message[0].delivery_tag,
+                        "requeue": False,
+                    }
+                )
                 channel.basic_reject(message[0].delivery_tag, requeue=False)
 
-            # First try an identity-checked, non-destructive source observation.
-            # The management API may omit message counters in this RabbitMQ build.
-            source_held = None
-            with connection(*BOOTSTRAP) as conn:
-                observer = conn.channel()
-                candidate = get_one(observer, inventory["main"])
-                if candidate:
-                    method, properties, body = candidate
-                    if properties.message_id == original_id:
-                        source_held = {"message_id": properties.message_id, "body_matches_id": body == original_id.encode("ascii")}
-                    observer.basic_nack(method.delivery_tag, requeue=True)
-            source_snapshot = queue_snapshot(inventory["main"])
-            source_evidence_deadline = time.monotonic() + 5
-            while source_snapshot["messages"] is None and time.monotonic() < source_evidence_deadline:
-                time.sleep(0.25)
+            # Do not basic.get the source here: at-least-once quorum DLX uses
+            # an internal consumer that checks out discarded messages directly
+            # from the quorum queue, outside the AMQP consumer interface.
+            # Management counters can lag the reject, so sample both zero and
+            # non-zero values on a bounded schedule before releasing the DLQ.
+            source_evidence_window_seconds = 20
+            source_metric_poll_seconds = 5
+            source_evidence_deadline = time.monotonic() + source_evidence_window_seconds
+            source_samples = []
+            source_held = False
+            while time.monotonic() < source_evidence_deadline:
                 source_snapshot = queue_snapshot(inventory["main"])
+                source_sample = {
+                    "elapsed_seconds": round(
+                        source_evidence_window_seconds
+                        - max(0, source_evidence_deadline - time.monotonic()),
+                        3,
+                    ),
+                    **source_snapshot,
+                }
+                source_samples.append(source_sample)
+                # The isolated fixture starts empty, publishes only this unique
+                # original to the source, confirms it, receives that exact id,
+                # and rejects it. No later source publishes/consumers run.
+                # Therefore a total count of one with zero ready and zero
+                # ordinary unacknowledged messages is the same message retained
+                # in the quorum dead-letter worker, not an identity guess from
+                # a shared queue's aggregate counter.
+                if (
+                    source_snapshot["messages"] == 1
+                    and source_snapshot["messages_ready"] == 0
+                    and source_snapshot["messages_unacknowledged"] == 0
+                ):
+                    source_held = True
+                    break
+                time.sleep(min(source_metric_poll_seconds, max(0, source_evidence_deadline - time.monotonic())))
             diagnostics["source"].append(
-                {"phase": "destination_rejected", "ready_count": ready_count(self.admin, inventory["main"]),
-                 "identity_observation": source_held, **source_snapshot}
+                {
+                    "phase": "destination_rejected_before_capacity_release",
+                    "identity_basis": {
+                        "source_counters_all_zero_at_start": True,
+                        "unique_original_message_id_published_confirmed": original_id,
+                        "only_source_publish_in_scenario": True,
+                        "exact_id_received_and_rejected_requeue_false": original_id,
+                        "source_basic_get_after_reject_used": False,
+                    },
+                    "retained_pending_observed": source_held,
+                    "metric_poll_interval_seconds": source_metric_poll_seconds,
+                    "metric_observation_window_seconds": source_evidence_window_seconds,
+                    "samples": source_samples,
+                    "poll_count": len(source_samples),
+                }
             )
-            diagnostics["source_retention_observed_before_recovery"] = bool(
-                source_held or (source_snapshot["messages"] is not None and source_snapshot["messages"] >= 1)
-            )
+            diagnostics["source_retention_observed_before_recovery"] = source_held
 
             # Release capacity by acknowledging only identified filler/probe
             # messages. Never purge the destination or touch the original ID.
@@ -576,6 +634,9 @@ class RabbitMQIsolation(unittest.TestCase):
                 "capacity_released_monotonic": capacity_released_at,
                 **queue_snapshot(inventory["dlq"]),
             })
+            diagnostics["source"].append(
+                {"phase": "immediately_after_capacity_release", **queue_snapshot(inventory["main"])}
+            )
 
             observation_seconds = int(os.environ.get("RABBITMQ_RECOVERY_OBSERVATION_SECONDS", "60"))
             if not 1 <= observation_seconds <= 900:
