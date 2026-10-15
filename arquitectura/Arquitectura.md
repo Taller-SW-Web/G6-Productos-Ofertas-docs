@@ -801,6 +801,8 @@ Las publicaciones sin binding en el exchange principal se envían por alternate 
 
 La matriz completa de bindings está en `contratos/eventos/rabbitmq-topologia.md` y en `contratos/eventos/asyncapi.yaml`.
 
+El aislamiento de publicación de retry/DLX sigue `BLOQUEADO_ESPECÍFICO`. Se estudia la alternativa de usar topic permissions solo en `po.retry.x` y dead-lettering de DLQ gestionado por RabbitMQ, pero no está adoptada ni se ha probado en un RabbitMQ 4.2.9 aislado; AsyncAPI `0.6.0-rc.2` y los tipos actuales de exchange siguen vigentes. Ver [Decisiones de RabbitMQ](decisiones/rabbitmq.md), [Operación](operacion-rabbitmq.md) y [topología](../contratos/eventos/rabbitmq-topologia.md).
+
 ## 10.2. Envelope estándar
 
 ```json

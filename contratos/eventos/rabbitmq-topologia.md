@@ -253,6 +253,14 @@ Esos valores se resuelven en infraestructura sin cambiar exchanges, queues ni ro
 
 La matriz operativa de `configure`, `write`, `read`, permisos de tópico y declaraciones al arranque está en [Operación de RabbitMQ](../../arquitectura/operacion-rabbitmq.md#matriz-rabbitmq-por-aplicacion). Se deriva de estos bindings/operaciones y no concede acceso de lectura a `po.unrouted.q` ni a las DLQ a las identidades de aplicación.
 
+## 10. Evaluación de aislamiento retry/DLX (sin cambio contractual)
+
+El AsyncAPI `0.6.0-rc.2` anterior continúa describiendo `po.retry.x` y `po.dlx.x` como exchanges `direct` y el flujo actual de retry/DLQ. La alternativa A está documentada como candidata para validación, **no como topología adoptada**: convertir `po.retry.x` a `topic` y limitar su routing key mediante topic permissions exactos; mantener `po.dlx.x` `direct` sin permiso runtime `write`; configurar la DLX de cada cola principal para que un rechazo final con `requeue=false` llegue a su `<main>.dlq`. Los consumidores de negocio deben ACKear rechazos válidos.
+
+Para evitar ciclos en esa futura configuración, la única salida DLX de cada cola `.retry` seguiría apuntando al exchange por defecto con routing key de su cola principal; la única salida de cada cola principal sería `po.dlx.x` con la routing key de su DLQ; una DLQ no tendría DLX de retorno. Reintentos publicados por aplicación deben conservar el envelope, `message_id`, `correlation_id`, `causation_id`, `operation_id` y contador verificable, con publisher confirm antes de ACK del original. Dead lettering at-least-once de fuentes quorum exige validar en 4.2.9 `dead-letter-strategy=at-least-once`, `overflow=reject-publish`, políticas/argumentos correctos y `stream_queue`; puede retener mensajes si el destino no acepta y puede duplicar, por lo que Outbox/Inbox/idempotencia no se omiten.
+
+**Estado de prueba:** no se ejecutó en RabbitMQ. Docker Desktop está instalado pero el engine no quedó accesible y no hay un RabbitMQ 4.2.9 local. A/B/C permanecen no adoptadas, el bloqueo de credenciales runtime continúa y AsyncAPI conserva `0.6.0-rc.2`. No se deben cambiar los tipos de exchange en un broker que ya los tenga declarados: un tipo distinto en el mismo nombre es incompatible. Cualquier eventual migración requiere inventario, destino aislado, corte/drenaje y reversión no destructivos; no purgar ni recrear colas con mensajes. Si la alternativa A se adopta luego de sus pruebas, requiere AsyncAPI `0.6.0-rc.3` para versionar el cambio físico de `po.retry.x` y la ruta de rechazo final; esta evaluación sin adopción no altera la versión.
+
 ## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
 
 **Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
