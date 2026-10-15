@@ -9,6 +9,8 @@ $suiteDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $composeFile = Join-Path $suiteDir 'compose.yaml'
 $project = 'g6rabbitiso' + [guid]::NewGuid().ToString('N').Substring(0, 12)
 $recoveryInvoked = $false
+$recoveryRunnerFailed = $false
+$recoveryGateStatus = $null
 
 function Invoke-DockerCompose([string[]] $Arguments) {
     & docker compose --project-name $project --file $composeFile @Arguments
@@ -38,15 +40,52 @@ try {
 
     Invoke-DockerCompose @('config', '--quiet')
     Invoke-DockerCompose @('pull', 'rabbitmq')
-    if ($Profile -eq 'recovery') { $recoveryInvoked = $true }
-    Invoke-DockerCompose @('run', '--build', '--rm', '-e', "RABBITMQ_TEST_PROFILE=$Profile", 'contract-tests')
+    if ($Profile -eq 'recovery') {
+        $recoveryInvoked = $true
+        $testOutput = & docker compose --project-name $project --file $composeFile run --build --rm -e "RABBITMQ_TEST_PROFILE=$Profile" contract-tests 2>&1
+        $testExitCode = $LASTEXITCODE
+        foreach ($line in $testOutput) {
+            $renderedLine = $line.ToString()
+            Write-Output $renderedLine
+            if ($renderedLine -match '^RECOVERY_STATUS=(PASS|FAIL|INCONCLUSO)$') {
+                $recoveryGateStatus = $Matches[1]
+            }
+        }
+        if (-not $recoveryGateStatus) {
+            throw "Recovery profile produced no gate classification (docker compose exit code $testExitCode)."
+        }
+        if ($recoveryGateStatus -eq 'PASS' -and $testExitCode -ne 0) {
+            throw "Recovery reported PASS but docker compose exited with code $testExitCode."
+        }
+        if ($recoveryGateStatus -ne 'PASS' -and $testExitCode -eq 0) {
+            throw "Recovery reported $recoveryGateStatus but docker compose exited with code 0."
+        }
+        if ($testExitCode -ne 0) {
+            throw "docker compose recovery profile failed with exit code $testExitCode."
+        }
+    }
+    else {
+        Invoke-DockerCompose @('run', '--build', '--rm', '-e', "RABBITMQ_TEST_PROFILE=$Profile", 'contract-tests')
+    }
 }
 catch {
-    if ($Profile -eq 'recovery' -and -not $recoveryInvoked) {
-        Write-Output 'RECOVERY_STATUS=NO EJECUTADO'
-        Write-Output "RECOVERY_REASON=$($_.Exception.Message)"
+    if ($Profile -eq 'recovery') {
+        $recoveryRunnerFailed = $true
+        if (-not $recoveryInvoked) {
+            Write-Output 'RECOVERY_STATUS=NO EJECUTADO'
+            Write-Output "RECOVERY_REASON=$($_.Exception.Message)"
+        }
+        elseif (-not $recoveryGateStatus) {
+            Write-Output 'RECOVERY_STATUS=NO EJECUTADO'
+            Write-Output "RECOVERY_REASON=$($_.Exception.Message)"
+        }
+        else {
+            Write-Output "RECOVERY_RUNNER_ERROR=$($_.Exception.Message)"
+        }
     }
-    throw
+    else {
+        throw
+    }
 }
 finally {
     if ($Profile -eq 'recovery' -and $recoveryInvoked) {
@@ -63,4 +102,8 @@ finally {
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "Isolated Compose cleanup failed for project $project; inspect only resources prefixed with that project name."
     }
+}
+
+if ($Profile -eq 'recovery' -and $recoveryRunnerFailed) {
+    exit 1
 }

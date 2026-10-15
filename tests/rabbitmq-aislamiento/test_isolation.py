@@ -34,6 +34,10 @@ RETRY_EXCHANGE = "po.retry.x"
 DLX = "po.dlx.x"
 
 
+class RecoveryInconclusive(AssertionError):
+    """A recovery gate precondition or observation could not be established."""
+
+
 def confirmed_publish(channel, exchange, routing_key, body):
     channel.confirm_delivery()
     return channel.basic_publish(
@@ -83,7 +87,10 @@ def queue_snapshot(queue):
     if response.status_code != 200:
         raise AssertionError(f"queue diagnostics unavailable for {queue}: {response.status_code}")
     data = response.json()
-    if data.get("policy") is None or data.get("messages") is None:
+    required_fields = {
+        "type", "policy", "operator_policy", "effective_policy_definition", "arguments", "messages"
+    }
+    if not required_fields.issubset(data) or data.get("policy") is None or data.get("messages") is None:
         # RabbitMQ 4.2 can return reduced per-queue metrics. The vhost listing
         # exposes the detailed queue view without changing queue state.
         listing = requests.get(
@@ -94,12 +101,13 @@ def queue_snapshot(queue):
         )
         if listing.status_code == 200:
             data = next((item for item in listing.json() if item.get("name") == queue), data)
-    return {
+    snapshot = {
         key: data.get(key)
         for key in (
             "name",
             "type",
             "policy",
+            "operator_policy",
             "effective_policy_definition",
             "arguments",
             "messages",
@@ -107,29 +115,120 @@ def queue_snapshot(queue):
             "messages_unacknowledged",
         )
     }
+    snapshot["_api_fields"] = sorted(required_fields.intersection(data))
+    return snapshot
 
 
 def effective_policy(queue, expected_policy, expected_definition):
     observed = queue_snapshot(queue)
     if observed["type"] != "quorum":
-        raise unittest.SkipTest(f"INCONCLUSO: {queue} effective type is not quorum: {observed}")
+        raise RecoveryInconclusive(f"INCONCLUSO: {queue} effective type is not quorum: {observed}")
+    if observed["policy"] != expected_policy:
+        raise RecoveryInconclusive(
+            f"INCONCLUSO: {queue} has assigned policy {observed['policy']!r}, expected {expected_policy!r}"
+        )
+    if not isinstance(observed["effective_policy_definition"], dict):
+        raise RecoveryInconclusive(f"INCONCLUSO: {queue} has no effective policy definition: {observed}")
+    if "operator_policy" not in observed["_api_fields"]:
+        raise RecoveryInconclusive(f"INCONCLUSO: {queue} operator-policy assignment is not exposed by the API")
+    if not isinstance(observed["arguments"], dict):
+        raise RecoveryInconclusive(f"INCONCLUSO: {queue} queue arguments are not exposed by the API")
+
     response = requests.get(f"http://{HOST}:15672/api/policies/{VHOST}", auth=BOOTSTRAP, timeout=5)
     if response.status_code != 200:
-        raise unittest.SkipTest(f"INCONCLUSO: policies could not be read ({response.status_code})")
+        raise RecoveryInconclusive(f"INCONCLUSO: policies could not be read ({response.status_code})")
     matching = [item for item in response.json() if item.get("name") == expected_policy]
     if len(matching) != 1:
-        raise unittest.SkipTest(f"INCONCLUSO: expected exactly one {expected_policy} policy")
+        raise RecoveryInconclusive(f"INCONCLUSO: expected exactly one {expected_policy} policy")
     policy = matching[0]
-    if policy.get("apply-to") != "quorum_queues" or not re.fullmatch(policy.get("pattern", "(?!)"), queue):
-        raise unittest.SkipTest(f"INCONCLUSO: {expected_policy} does not target {queue} as a quorum queue")
+    try:
+        expected_matches = re.fullmatch(policy.get("pattern", "(?!)"), queue)
+    except re.error as error:
+        raise RecoveryInconclusive(f"INCONCLUSO: invalid {expected_policy} pattern returned by broker: {error}") from error
+    if policy.get("apply-to") != "quorum_queues" or not expected_matches:
+        raise RecoveryInconclusive(f"INCONCLUSO: {expected_policy} does not target {queue} as a quorum queue")
+
+    try:
+        matching_policies = [
+            item for item in response.json()
+            if item.get("apply-to") in ("all", "queues", "quorum_queues")
+            and re.fullmatch(item.get("pattern", "(?!)"), queue)
+        ]
+    except re.error as error:
+        raise RecoveryInconclusive(f"INCONCLUSO: invalid policy pattern returned by broker: {error}") from error
+    highest_priority = max((item.get("priority", 0) for item in matching_policies), default=None)
+    highest_policies = [item for item in matching_policies if item.get("priority", 0) == highest_priority]
+    if len(highest_policies) != 1 or highest_policies[0].get("name") != expected_policy:
+        raise RecoveryInconclusive(
+            f"INCONCLUSO: matching queue policies have an ambiguous or different highest priority: {matching_policies}"
+        )
+
     actual = policy.get("definition") or {}
+    effective = observed["effective_policy_definition"]
+    arguments = observed["arguments"]
     for key, value in expected_definition.items():
         if actual.get(key) != value:
-            raise unittest.SkipTest(
+            raise RecoveryInconclusive(
                 f"INCONCLUSO: {queue} effective policy key {key!r} is {actual.get(key)!r}, expected {value!r}"
             )
+        if key not in effective or effective[key] != value:
+            raise RecoveryInconclusive(
+                f"INCONCLUSO: {queue} resolved policy key {key!r} is {effective.get(key)!r}, expected {value!r}"
+            )
+        argument_key = f"x-{key}"
+        if argument_key in arguments and arguments[argument_key] != value:
+            raise RecoveryInconclusive(
+                f"INCONCLUSO: {queue} queue argument {argument_key!r}={arguments[argument_key]!r} "
+                f"can alter the expected policy value {value!r}"
+            )
+
+    operator_policy_name = observed["operator_policy"]
+    if operator_policy_name is not None:
+        operator_response = requests.get(
+            f"http://{HOST}:15672/api/operator-policies/{VHOST}", auth=BOOTSTRAP, timeout=5
+        )
+        if operator_response.status_code != 200:
+            raise RecoveryInconclusive(
+                f"INCONCLUSO: operator policies could not be read ({operator_response.status_code})"
+            )
+        operator_policies = [item for item in operator_response.json() if item.get("name") == operator_policy_name]
+        if len(operator_policies) != 1:
+            raise RecoveryInconclusive(
+                f"INCONCLUSO: assigned operator policy {operator_policy_name!r} has no unique definition"
+            )
+        operator = operator_policies[0]
+        try:
+            matching_operator_policies = [
+                item for item in operator_response.json()
+                if item.get("apply-to") in ("all", "queues", "quorum_queues")
+                and re.fullmatch(item.get("pattern", "(?!)"), queue)
+            ]
+        except re.error as error:
+            raise RecoveryInconclusive(f"INCONCLUSO: invalid operator-policy pattern returned by broker: {error}") from error
+        highest_operator_priority = max(
+            (item.get("priority", 0) for item in matching_operator_policies), default=None
+        )
+        highest_operator_policies = [
+            item for item in matching_operator_policies if item.get("priority", 0) == highest_operator_priority
+        ]
+        if (
+            operator.get("apply-to") not in ("all", "queues", "quorum_queues")
+            or not re.fullmatch(operator.get("pattern", "(?!)"), queue)
+            or len(highest_operator_policies) != 1
+            or highest_operator_policies[0].get("name") != operator_policy_name
+        ):
+            raise RecoveryInconclusive(
+                f"INCONCLUSO: assigned operator policy {operator_policy_name!r} does not match {queue}"
+            )
+        operator_definition = operator.get("definition") or {}
+        for key, value in expected_definition.items():
+            if key in operator_definition and effective.get(key) != value:
+                raise RecoveryInconclusive(
+                    f"INCONCLUSO: operator policy {operator_policy_name!r} changes effective {key!r} "
+                    f"to {effective.get(key)!r}, expected {value!r}"
+                )
+
     observed["matched_policy_definition"] = actual
-    observed["effective_policy_field"] = observed["effective_policy_definition"]
     return observed
 
 
@@ -326,7 +425,7 @@ class RabbitMQIsolation(unittest.TestCase):
                 timeout=5,
             )
             if policy_response.status_code not in (201, 204):
-                raise unittest.SkipTest(
+                raise RecoveryInconclusive(
                     f"INCONCLUSO: capacity policy could not be prepared ({policy_response.status_code})"
                 )
             policy_listing = requests.get(
@@ -357,7 +456,7 @@ class RabbitMQIsolation(unittest.TestCase):
             )
             diagnostics["policies"] = {"source": source_policy, "destination": target_policy}
             if ready_count(self.admin, inventory["main"]) != 0 or ready_count(self.admin, inventory["dlq"]) != 0:
-                raise unittest.SkipTest("INCONCLUSO: recovery queues were not empty at scenario start")
+                raise RecoveryInconclusive("INCONCLUSO: recovery queues were not empty at scenario start")
 
             publisher_connection = connection(*BOOTSTRAP)
             publisher_channel = publisher_connection.channel()
@@ -387,7 +486,7 @@ class RabbitMQIsolation(unittest.TestCase):
             full = queue_snapshot(inventory["dlq"])
             diagnostics["destination"].append({"phase": "after_filler", **full})
             if ready_count(self.admin, inventory["dlq"]) != 1:
-                raise unittest.SkipTest("INCONCLUSO: the one-message filler did not establish a full destination")
+                raise RecoveryInconclusive("INCONCLUSO: the one-message filler did not establish a full destination")
 
             # Quorum queues can accept a bounded number of in-flight/overshoot
             # publications. Probe serially on one confirmed channel; stop at the
@@ -405,7 +504,7 @@ class RabbitMQIsolation(unittest.TestCase):
                  "confirmed_fillers": sorted(capacity_message_ids), "rejection_observed": rejection_observed}
             )
             if not rejection_observed:
-                raise unittest.SkipTest("INCONCLUSO: destination accepted all bounded probes; capacity rejection was not proven")
+                raise RecoveryInconclusive("INCONCLUSO: destination accepted all bounded probes; capacity rejection was not proven")
             diagnostics["destination"].append({"phase": "probe_nack", **queue_snapshot(inventory["dlq"])})
 
             self.assertTrue(publish_confirmed(inventory["main"], original_id, original_id.encode("ascii")))
@@ -447,11 +546,11 @@ class RabbitMQIsolation(unittest.TestCase):
                 if not filler or filler[1].message_id not in capacity_message_ids:
                     if filler:
                         self.admin.basic_nack(filler[0].delivery_tag, requeue=True)
-                    raise unittest.SkipTest("INCONCLUSO: destination contained an unexpected message; capacity was preserved")
+                    raise RecoveryInconclusive("INCONCLUSO: destination contained an unexpected message; capacity was preserved")
                 self.admin.basic_ack(filler[0].delivery_tag)
                 capacity_message_ids.remove(filler[1].message_id)
             if capacity_message_ids:
-                raise unittest.SkipTest("INCONCLUSO: not all confirmed filler identities could be observed and acknowledged")
+                raise RecoveryInconclusive("INCONCLUSO: not all confirmed filler identities could be observed and acknowledged")
             diagnostics["destination"].append({"phase": "identified_fillers_acknowledged", **queue_snapshot(inventory["dlq"])})
 
             deadline = time.monotonic() + 60
@@ -483,7 +582,7 @@ class RabbitMQIsolation(unittest.TestCase):
             )
             diagnostics["destination"].append({"phase": "recovery_complete", **queue_snapshot(inventory["dlq"])})
             if unexpected:
-                raise unittest.SkipTest("INCONCLUSO: destination contained an unexpected message; it was requeued")
+                raise RecoveryInconclusive("INCONCLUSO: destination contained an unexpected message; it was requeued")
             if not matches:
                 diagnostics["status"] = "FAIL"
                 self.fail("FAIL: the retained original did not reach the destination within the existing 60s window")
@@ -491,11 +590,11 @@ class RabbitMQIsolation(unittest.TestCase):
                 self.admin.basic_ack(method.delivery_tag)
             if not diagnostics.get("source_retention_observed_before_recovery"):
                 diagnostics["status"] = "INCONCLUSO"
-                raise unittest.SkipTest(
+                raise RecoveryInconclusive(
                     "INCONCLUSO: original reached DLQ after capacity recovery, but retention while full was not observable"
                 )
             diagnostics["status"] = "PASS"
-        except unittest.SkipTest:
+        except RecoveryInconclusive:
             diagnostics["status"] = "INCONCLUSO"
             raise
         except AssertionError:
