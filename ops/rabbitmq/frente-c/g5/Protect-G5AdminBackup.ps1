@@ -1,0 +1,13 @@
+param([string]$Root=(Join-Path $env:LOCALAPPDATA 'G6\RabbitMQ\g5-onboarding'))
+$ErrorActionPreference='Stop'
+$vaultPath=Join-Path $Root 'admin-vault.dpapi.json'
+$vault=Get-Content -Raw -LiteralPath $vaultPath|ConvertFrom-Json
+$packagePath=Join-Path $Root 'packages\g5_equipo.g5pkg'
+$backupPath=Join-Path $Root 'packages\g5_equipo.admin-backup.g5enc'
+if(-not(Test-Path -LiteralPath $packagePath -PathType Leaf)){throw 'The encrypted G5 team package is missing.'}
+if(Test-Path -LiteralPath $backupPath){throw 'An administrative backup already exists; refusing overwrite.'}
+if($vault.format-cne'G5-onboarding-DPAPI-v2'-or-not$vault.sshIdentity-or@($vault.members|Where-Object Login -CEQ 'g5_equipo').Count-ne 1){throw 'The local DPAPI vault is incomplete for the shared team package.'}
+$bytes=[Security.Cryptography.RandomNumberGenerator]::GetBytes(32);$password=[Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+','-').Replace('/','_');[Security.Cryptography.CryptographicOperations]::ZeroMemory($bytes)
+$plain=[IO.File]::ReadAllBytes($packagePath);$salt=[Security.Cryptography.RandomNumberGenerator]::GetBytes(16);$nonce=[Security.Cryptography.RandomNumberGenerator]::GetBytes(12);$iterations=600000;$key=[Security.Cryptography.Rfc2898DeriveBytes]::Pbkdf2($password,$salt,$iterations,[Security.Cryptography.HashAlgorithmName]::SHA256,32);$header=[byte[]]::new(37);[Array]::Copy([Text.Encoding]::ASCII.GetBytes('G5BK1'),0,$header,0,5);[Array]::Copy($salt,0,$header,5,16);[Array]::Copy([BitConverter]::GetBytes([int]$iterations),0,$header,21,4);[Array]::Copy($nonce,0,$header,25,12);$cipher=[byte[]]::new($plain.Length);$tag=[byte[]]::new(16);$aes=[Security.Cryptography.AesGcm]::new($key,16)
+try{$aes.Encrypt($nonce,$plain,$cipher,$tag,$header);$out=[IO.MemoryStream]::new();$out.Write($header);$out.Write($cipher);$out.Write($tag);[IO.File]::WriteAllBytes($backupPath,$out.ToArray());$out.Dispose();$secure=ConvertTo-SecureString $password -AsPlainText -Force;$vault|Add-Member -NotePropertyName ProtectedAdminBackupPassword -NotePropertyValue (ConvertFrom-SecureString $secure) -Force;$secure.Dispose();$vault|ConvertTo-Json -Depth 6|Set-Content -LiteralPath $vaultPath -Encoding utf8;$owner=[Security.Principal.WindowsIdentity]::GetCurrent().Name;icacls $backupPath /inheritance:r /grant:r "$owner`:(F)" 'NT AUTHORITY\SYSTEM:(F)'|Out-Null;Write-Output 'Created an independent AES-256-GCM administrative recovery backup; its passphrase is protected in the local DPAPI vault.'}
+finally{$password=$null;foreach($buffer in @($plain,$key,$cipher,$tag)){if($buffer -is [byte[]]){[Security.Cryptography.CryptographicOperations]::ZeroMemory($buffer)}};$aes.Dispose()}

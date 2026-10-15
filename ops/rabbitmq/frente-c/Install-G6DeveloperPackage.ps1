@@ -1,0 +1,79 @@
+#requires -Version 7.0
+param([Parameter(Mandatory=$true)][string]$PackagePath)
+$ErrorActionPreference='Stop'
+if (-not (Test-Path -LiteralPath $PackagePath -PathType Leaf)) { throw 'Encrypted package not found.' }
+$magic=[Text.Encoding]::ASCII.GetBytes('G6PK1')
+$package=[IO.File]::ReadAllBytes([IO.Path]::GetFullPath($PackagePath))
+if ($package.Length -lt 53 -or [Text.Encoding]::ASCII.GetString($package,0,5) -ne 'G6PK1') { throw 'Invalid G6 encrypted package.' }
+$salt=[byte[]]$package[5..20]; $iterations=[BitConverter]::ToInt32($package,21); $nonce=[byte[]]$package[25..36]
+if ($iterations -lt 300000 -or $iterations -gt 2000000) { throw 'Package KDF parameters are outside the supported safe range.' }
+$tagOffset=$package.Length-16
+$cipher=[byte[]]$package[37..($tagOffset-1)]; $tag=[byte[]]$package[$tagOffset..($package.Length-1)]; $aad=[byte[]]$package[0..36]
+$securePassword=Read-Host 'Contraseña individual del paquete' -AsSecureString
+$password=[Net.NetworkCredential]::new('', $securePassword).Password
+$zipBytes=[byte[]]::new($cipher.Length)
+$derived=[Security.Cryptography.Rfc2898DeriveBytes]::Pbkdf2($password,$salt,$iterations,[Security.Cryptography.HashAlgorithmName]::SHA256,32)
+$aes=[Security.Cryptography.AesGcm]::new($derived,16)
+try { $aes.Decrypt($nonce,$cipher,$tag,$zipBytes,$aad) } catch {
+  [Security.Cryptography.CryptographicOperations]::ZeroMemory($zipBytes)
+  [Security.Cryptography.CryptographicOperations]::ZeroMemory($derived)
+  throw 'No se pudo autenticar el paquete; contraseña incorrecta o archivo dañado.'
+} finally { $aes.Dispose() }
+$memory=[IO.MemoryStream]::new($zipBytes,$false)
+$archive=[IO.Compression.ZipArchive]::new($memory,[IO.Compression.ZipArchiveMode]::Read,$false)
+$files=@{}
+$credentials=$null
+try {
+  foreach ($entry in $archive.Entries) {
+    if ([string]::IsNullOrWhiteSpace($entry.FullName) -or $entry.FullName.StartsWith('/') -or $entry.FullName -match '(^|/)\.\.(/|$)' -or $entry.FullName.Contains('\\')) { throw 'Unsafe path in encrypted package.' }
+    $stream=$entry.Open(); $out=[IO.MemoryStream]::new(); $stream.CopyTo($out); $stream.Dispose(); $bytes=$out.ToArray(); $out.Dispose()
+    if ($entry.FullName -eq 'secrets/credentials.json') { $credentials=[Text.UTF8Encoding]::new($false,$true).GetString($bytes); [Security.Cryptography.CryptographicOperations]::ZeroMemory($bytes) }
+    else { $files[$entry.FullName]=$bytes }
+  }
+  if (-not $files.ContainsKey('developer.json') -or -not $files.ContainsKey('ssh-config') -or -not $credentials) { throw 'Package is missing required installation files.' }
+  $meta=[Text.UTF8Encoding]::new($false,$true).GetString($files['developer.json']) | ConvertFrom-Json
+  if ($meta.Login -notmatch '^g6_(castilla|poma|taco|vera|cueva|lopez)$' -or $meta.KeyName -notmatch '^g6_[a-z0-9_]+$') { throw 'Package identity is not in the approved G6 list.' }
+  $sshDir=Join-Path $env:USERPROFILE '.ssh'; $configPath=Join-Path $sshDir 'config'
+  if (Test-Path -LiteralPath $configPath) { if (Select-String -LiteralPath $configPath -Pattern '(?im)^\s*Host\s+[^\r\n]*\bg6-dev\b') { throw 'SSH alias g6-dev already exists; review the existing config before installing.' } }
+  $localRoot=Join-Path $env:LOCALAPPDATA "G6\RabbitMQ\$($meta.Login)"
+  $null=New-Item -ItemType Directory -Force -Path $sshDir,$localRoot,(Join-Path $localRoot 'templates'),(Join-Path $localRoot 'secrets')
+  foreach ($name in $files.Keys) {
+    if ($name -eq 'developer.json' -or $name -eq 'ssh-config') { continue }
+    if ($name -notmatch '^(ssh|scripts|templates|install)/[A-Za-z0-9._/-]+$') { throw "Unexpected package member: $name" }
+    if ($name -match '^ssh/(.+)$') { $dest=Join-Path $sshDir $Matches[1] }
+    elseif ($name -match '^templates/(.+)$') { $dest=Join-Path (Join-Path $localRoot 'templates') $Matches[1] }
+    else { $dest=Join-Path $localRoot ($name -replace '^(scripts|install)/','') }
+    $parent=Split-Path -Parent $dest; $null=New-Item -ItemType Directory -Force -Path $parent
+    [IO.File]::WriteAllBytes($dest,[byte[]]$files[$name])
+  }
+  $credentialsObject=$credentials | ConvertFrom-Json
+  foreach ($credential in $credentialsObject) {
+    if ($credential.username -notmatch '^g6_[a-z_]+$' -or $credential.vhost -ne 'g6-productos-ofertas' -or -not $credential.password) { throw 'Invalid credential data in package.' }
+    $secret=ConvertTo-SecureString -String $credential.password -AsPlainText -Force
+    Export-Clixml -InputObject $secret -LiteralPath (Join-Path (Join-Path $localRoot 'secrets') "$($credential.username).clixml")
+    $secret.Dispose(); $credential.password=$null
+  }
+  $keyPass=ConvertTo-SecureString -String $password -AsPlainText -Force
+  Export-Clixml -InputObject $keyPass -LiteralPath (Join-Path $localRoot 'secrets\key-passphrase.clixml')
+  $keyPass.Dispose()
+  [IO.File]::WriteAllText((Join-Path $localRoot 'developer.json'),[Text.UTF8Encoding]::new($false,$true).GetString($files['developer.json']),[Text.UTF8Encoding]::new($false))
+  $sshConfigText=[Text.UTF8Encoding]::new($false,$true).GetString($files['ssh-config'])
+  $sshKeyPrefix=[IO.Path]::GetFullPath($sshDir).Replace('\','/')
+  $sshConfigText=$sshConfigText.Replace('~/.ssh/',"$sshKeyPrefix/")
+  if (-not (Test-Path -LiteralPath $configPath)) { [IO.File]::WriteAllText($configPath,$sshConfigText,[Text.UTF8Encoding]::new($false)) }
+  else { [IO.File]::AppendAllText($configPath,[Environment]::NewLine+$sshConfigText,[Text.UTF8Encoding]::new($false)) }
+  $current="$env:USERDOMAIN\$env:USERNAME"
+  icacls $localRoot /inheritance:r /grant:r "$current`:(OI)(CI)F" 'NT AUTHORITY\SYSTEM:(OI)(CI)F' | Out-Null
+  $privateKey=Join-Path $sshDir $meta.KeyName
+  icacls $privateKey /inheritance:r /grant:r "$current`:(F)" 'NT AUTHORITY\SYSTEM:(F)' | Out-Null
+  Write-Output "Instalación lista para $($meta.Developer). Alias: g6-dev; puerto local: $($meta.Port). Archivos y secretos guardados bajo DPAPI en el perfil local."
+  Write-Output "Ejecuta: powershell.exe -ExecutionPolicy Bypass -File `"$(Join-Path $localRoot 'Test-G6DeveloperAccess.ps1')`""
+} finally {
+  $archive.Dispose(); $memory.Dispose()
+  [Security.Cryptography.CryptographicOperations]::ZeroMemory($zipBytes)
+  [Security.Cryptography.CryptographicOperations]::ZeroMemory($derived)
+  $password=$null; $credentials=$null; $securePassword.Dispose()
+  if ($credentialsObject) { foreach ($credential in $credentialsObject) { $credential.password=$null }; $credentialsObject=$null }
+  foreach ($value in $files.Values) { if ($value -is [byte[]]) { [Security.Cryptography.CryptographicOperations]::ZeroMemory($value) } }
+  [Security.Cryptography.CryptographicOperations]::ZeroMemory($cipher)
+}

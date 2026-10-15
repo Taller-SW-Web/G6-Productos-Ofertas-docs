@@ -1,0 +1,9 @@
+--- a/compose.yaml
++++ b/compose.yaml
+@@ -14,5 +14,6 @@
+     ports:
+       - "127.0.0.1:15672:15672"
++      - "127.0.0.1:5672:5672"
+
+     volumes:
+       - rabbitmq_data:/var/lib/rabbitmq

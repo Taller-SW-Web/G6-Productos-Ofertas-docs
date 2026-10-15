@@ -1,11 +1,11 @@
 # Operación de RabbitMQ
 
 **G6 — Productos y Ofertas**  
-**Estado:** guía objetivo de operación, aún no ejecutada  
+**Estado:** topología base y acceso técnico G5 implementados; consumidor de negocio G5 no desplegado; retry/DLX bloqueado
 **Vhost objetivo:** `g6-productos-ofertas`  
-**Vigencia contractual:** hasta una actualización homologada rigen los nombres de [AsyncAPI](../contratos/eventos/asyncapi.yaml) y de [la topología actual](../contratos/eventos/rabbitmq-topologia.md).
+**Vigencia contractual en `master`:** AsyncAPI `0.6.0-rc.2` y [topología](../contratos/eventos/rabbitmq-topologia.md); la candidata G6 `0.6.0-rc.3` está en revisión documental y fue usada para provisionar G5 bajo autorización operativa. Homologación formal G5 pendiente.
 
-Esta guía concreta las [decisiones de RabbitMQ](./decisiones/rabbitmq.md). Es un procedimiento operativo: **no es evidencia de que las tareas estén realizadas**.
+Esta guía concreta las [decisiones de RabbitMQ](./decisiones/rabbitmq.md). Los estados reales al 15-10-2026 y la evidencia G5 están en [el informe de aprovisionamiento](../ops/rabbitmq/frente-c/g5/evidencia-aprovisionamiento-2026-10-15.md); las secciones de matriz general y retry/DLX conservan el estado indicado en cada caso.
 
 ## 1. Inventario de partida y límites
 
@@ -54,13 +54,13 @@ Una cuenta runtime no debería poder cambiar topología. Antes de retirar el per
 | Pasarela de API | `g6_pasarela` | `po.pasarela.q` |
 | Ventas G5 (externo) | `g5_ventas` | `po.ventas.q` |
 
-**Los nombres de esta tabla son objetivo, no credenciales existentes.** Hasta homologación contractual no se reemplazarán las colas inglesas por estas. La necesidad de publicar de cada servicio se derivará del contrato y no de su nombre de usuario.
+Los nombres de G6 de esta tabla siguen siendo objetivo. La excepción G5 `g5_ventas` fue aprovisionada para la candidata rc.3 con lectura de `po.ventas.q` y publicación limitada a dos routing keys. Esto no convierte la candidata en el contrato de `master` ni en homologación formal G5. La necesidad de publicar de cada servicio se deriva del contrato, no del nombre de usuario. Véase la [matriz G5](../ops/rabbitmq/frente-c/g5/matriz-acceso-g5.md).
 
 <a id="matriz-rabbitmq-por-aplicacion"></a>
 
 ## 3. Matrices RabbitMQ por aplicación
 
-La matriz contractual actual `0.6.0-rc.2` está **BLOQUEADA para aprovisionamiento seguro**. La matriz candidata A es **NO aprobada, NO desplegada** y su validación reproducible es parcial: un caso de recuperación de DLQ falló. Ninguna describe una configuración actualmente operativa.
+La matriz contractual de `master` `0.6.0-rc.2` y la matriz candidata A siguen **BLOQUEADAS** para provisión general por el fallo de recuperación DLQ. La candidata `0.6.0-rc.3` documenta el nombre físico de G5 y la ACL dedicada que se aprovisionó como excepción autorizada; no incluye permisos retry/DLX ni demuestra integración del consumidor.
 
 ### 3.1 Estado de la matriz contractual actual `0.6.0-rc.2` — BLOQUEADA
 
@@ -85,7 +85,7 @@ ACL runtime propuesta para verificar A (no adoptada/no aprovisionable todavía):
 | `g6_inventario` | ∅ | Sí | `^po\.inventory\.q$` | ∅ | `po.inventory.q` | No activas |
 | `g6_masivos` | ∅ | Sí | `^po\.bulk\.q$` | ∅ | `po.bulk.q` | No activas |
 | `g6_pasarela` | ∅ | Sí | `^po\.gateway\.q$` | ∅ | `po.gateway.q` | No activas |
-| `g5_ventas` (externo; pendiente) | ∅ | Sí | `^po\.sales\.q$` | ∅ | `po.sales.q` | No activas |
+| `g5_ventas` (rc.3; sin retry/DLX) | ∅ | ∅ | ∅ | ∅ | `po.ventas.q` | No activas |
 
 Además se negará `write` del exchange por defecto y de cualquier recurso de cola a las identidades runtime: la única ruta de publish retry permitida debe ser `po.retry.x` y su topic permission. `po.dlx.x` solo se alcanza por dead-lettering del broker. Los permisos de publicación de negocio ya existentes y sus topic permissions exactos no se amplían por esta propuesta. Las topic permissions son opt-in: en el authorization backend por defecto, si falta la regla para un usuario/exchange, la publicación topic queda autorizada; el aprovisionamiento debe verificar backend, presencia y unicidad de cada patrón estrecho y denegar patrones amplios. RabbitMQ 4.2 comprueba `read` en cola y `write` en DLX durante la declaración; el aprovisionador separado hará las declaraciones/políticas. Para declarar las colas `.retry` con DLX `''`, también debe satisfacer la autorización del exchange por defecto (`amq.default`). El runtime consumirá recursos preaprovisionados (`basic.consume` requiere `read` en su cola); si intenta declaración activa, necesita `configure` y debe fallar. Las declaraciones pasivas en 4.2.9 requieren algún permiso sobre el recurso desde 4.2.7; el `read` de su cola/`write` del exchange satisface ese mínimo según tipo.
 

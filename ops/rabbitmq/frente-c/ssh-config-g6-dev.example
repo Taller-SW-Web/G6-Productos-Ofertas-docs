@@ -1,0 +1,13 @@
+# Ejemplo para el piloto Castilla. Cada desarrollador usa su propia cuenta y clave.
+Host g6-dev
+    HostName 157.137.205.218
+    User g6_castilla
+    Port 22
+    IdentityFile ~/.ssh/g6_piloto
+    IdentitiesOnly yes
+    ForwardAgent no
+    RequestTTY no
+    AddKeysToAgent yes
+    ServerAliveInterval 15
+    ServerAliveCountMax 3
+    ExitOnForwardFailure yes
