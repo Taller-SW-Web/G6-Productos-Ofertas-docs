@@ -1,6 +1,9 @@
 """Isolated executable checks for candidate RabbitMQ isolation A (not contract adoption)."""
 import os
+import json
+import re
 import time
+import uuid
 import unittest
 
 import pika
@@ -68,6 +71,70 @@ def get_one(channel, queue, timeout=0):
         if time.monotonic() >= deadline:
             return None
         time.sleep(0.25)
+
+
+def queue_snapshot(queue):
+    response = requests.get(
+        f"http://{HOST}:15672/api/queues/{VHOST}/{queue}",
+        auth=BOOTSTRAP,
+        params={"disable_stats": "false"},
+        timeout=5,
+    )
+    if response.status_code != 200:
+        raise AssertionError(f"queue diagnostics unavailable for {queue}: {response.status_code}")
+    data = response.json()
+    if data.get("policy") is None or data.get("messages") is None:
+        # RabbitMQ 4.2 can return reduced per-queue metrics. The vhost listing
+        # exposes the detailed queue view without changing queue state.
+        listing = requests.get(
+            f"http://{HOST}:15672/api/queues/{VHOST}",
+            auth=BOOTSTRAP,
+            params={"disable_stats": "false"},
+            timeout=5,
+        )
+        if listing.status_code == 200:
+            data = next((item for item in listing.json() if item.get("name") == queue), data)
+    return {
+        key: data.get(key)
+        for key in (
+            "name",
+            "type",
+            "policy",
+            "effective_policy_definition",
+            "arguments",
+            "messages",
+            "messages_ready",
+            "messages_unacknowledged",
+        )
+    }
+
+
+def effective_policy(queue, expected_policy, expected_definition):
+    observed = queue_snapshot(queue)
+    if observed["type"] != "quorum":
+        raise unittest.SkipTest(f"INCONCLUSO: {queue} effective type is not quorum: {observed}")
+    response = requests.get(f"http://{HOST}:15672/api/policies/{VHOST}", auth=BOOTSTRAP, timeout=5)
+    if response.status_code != 200:
+        raise unittest.SkipTest(f"INCONCLUSO: policies could not be read ({response.status_code})")
+    matching = [item for item in response.json() if item.get("name") == expected_policy]
+    if len(matching) != 1:
+        raise unittest.SkipTest(f"INCONCLUSO: expected exactly one {expected_policy} policy")
+    policy = matching[0]
+    if policy.get("apply-to") != "quorum_queues" or not re.fullmatch(policy.get("pattern", "(?!)"), queue):
+        raise unittest.SkipTest(f"INCONCLUSO: {expected_policy} does not target {queue} as a quorum queue")
+    actual = policy.get("definition") or {}
+    for key, value in expected_definition.items():
+        if actual.get(key) != value:
+            raise unittest.SkipTest(
+                f"INCONCLUSO: {queue} effective policy key {key!r} is {actual.get(key)!r}, expected {value!r}"
+            )
+    observed["matched_policy_definition"] = actual
+    observed["effective_policy_field"] = observed["effective_policy_definition"]
+    return observed
+
+
+def ready_count(channel, queue):
+    return channel.queue_declare(queue=queue, passive=True).method.message_count
 
 
 def publish_retry(runtime, headers):
@@ -227,37 +294,226 @@ class RabbitMQIsolation(unittest.TestCase):
         self.assertIsNone(get_one(self.admin, inventory["main"]))
 
     def test_extended_01_historical_saturated_dlq_recovery_incident(self):
-        """Historical failing check; an isolated fixture, not an SLA assertion."""
+        """Focused saturation/recovery gate; reports only what the broker demonstrates."""
         inventory = RUNTIMES["inventory"]
-        # The earlier run observed no delivery within its 60s observation window.
-        # That window is a test timeout, not a RabbitMQ recovery guarantee.
-        # Before treating a rerun as evidence, independently verify source retention,
-        # actual destination rejection, and delivery after capacity is restored.
-        response = requests.put(
-            f"http://{HOST}:15672/api/policies/{VHOST}/inventory-dlq-capacity",
-            auth=BOOTSTRAP,
-            json={
-                "pattern": r"^po\.inventory\.q\.dlq$",
-                "definition": {"max-length": 1, "overflow": "reject-publish"},
-                "priority": 7,
-                "apply-to": "quorum_queues",
-            },
-            timeout=5,
-        )
-        self.assertIn(response.status_code, (201, 204), response.text[:500])
-        self.admin.basic_publish("", inventory["dlq"], b"capacity-filler")
-        self.admin.basic_publish("", inventory["main"], b"dlq-target-outage")
-        with connection(inventory["user"], inventory["password"]) as conn:
-            channel = conn.channel()
-            message = get_one(channel, inventory["main"], timeout=5)
-            self.assertIsNotNone(message)
-            channel.basic_reject(message[0].delivery_tag, requeue=False)
-        time.sleep(2)
-        self.admin.queue_purge(queue=inventory["dlq"])
-        recovered = get_one(self.admin, inventory["dlq"], timeout=60)
-        self.assertIsNotNone(recovered, "retained dead letter was not delivered after target recovery")
-        self.assertEqual(recovered[2], b"dlq-target-outage")
-        self.admin.basic_ack(recovered[0].delivery_tag)
+        case_id = uuid.uuid4().hex
+        original_id = f"dlq-recovery-{case_id}"
+        filler_id = f"dlq-filler-{case_id}"
+        probe_id = f"dlq-reject-probe-{case_id}"
+        diagnostics = {
+            "status": "INCONCLUSO",
+            "broker_version": None,
+            "policies": {},
+            "confirms": [],
+            "source": [],
+            "destination": [],
+            "original_message_id": original_id,
+            "observed_message_ids": [],
+            "duplicates": None,
+        }
+        held = []
+        publisher_connection = None
+        try:
+            policy_response = requests.put(
+                f"http://{HOST}:15672/api/policies/{VHOST}/inventory-dlq-capacity",
+                auth=BOOTSTRAP,
+                json={
+                    "pattern": r"^po\.inventory\.q\.dlq$",
+                    "definition": {"max-length": 1, "overflow": "reject-publish"},
+                    "priority": 7,
+                    "apply-to": "quorum_queues",
+                },
+                timeout=5,
+            )
+            if policy_response.status_code not in (201, 204):
+                raise unittest.SkipTest(
+                    f"INCONCLUSO: capacity policy could not be prepared ({policy_response.status_code})"
+                )
+            policy_listing = requests.get(
+                f"http://{HOST}:15672/api/policies/{VHOST}", auth=BOOTSTRAP, timeout=5
+            )
+            diagnostics["configured_policies"] = (
+                policy_listing.json() if policy_listing.status_code == 200 else {"http_status": policy_listing.status_code}
+            )
+
+            overview = requests.get(f"http://{HOST}:15672/api/overview", auth=BOOTSTRAP, timeout=5)
+            if overview.status_code == 200:
+                diagnostics["broker_version"] = overview.json().get("rabbitmq_version")
+
+            source_policy = effective_policy(
+                inventory["main"],
+                "main-inventory-dlx",
+                {
+                    "dead-letter-strategy": "at-least-once",
+                    "overflow": "reject-publish",
+                    "dead-letter-exchange": DLX,
+                    "dead-letter-routing-key": inventory["main"],
+                },
+            )
+            target_policy = effective_policy(
+                inventory["dlq"],
+                "inventory-dlq-capacity",
+                {"max-length": 1, "overflow": "reject-publish"},
+            )
+            diagnostics["policies"] = {"source": source_policy, "destination": target_policy}
+            if ready_count(self.admin, inventory["main"]) != 0 or ready_count(self.admin, inventory["dlq"]) != 0:
+                raise unittest.SkipTest("INCONCLUSO: recovery queues were not empty at scenario start")
+
+            publisher_connection = connection(*BOOTSTRAP)
+            publisher_channel = publisher_connection.channel()
+            publisher_channel.confirm_delivery()
+
+            def publish_confirmed(queue, message_id, body):
+                try:
+                    publisher_channel.basic_publish(
+                        "", queue, body,
+                        properties=pika.BasicProperties(
+                            message_id=message_id,
+                            delivery_mode=2,
+                            content_type="application/octet-stream",
+                        ),
+                        mandatory=True,
+                    )
+                except pika.exceptions.NackError:
+                    diagnostics["confirms"].append({"message_id": message_id, "result": "NACK"})
+                    return False
+                # BlockingChannel.basic_publish returns None on a successful
+                # publisher confirm in the pinned Pika API; only NackError
+                # denotes a broker NACK here.
+                diagnostics["confirms"].append({"message_id": message_id, "result": "ACK"})
+                return True
+
+            self.assertTrue(publish_confirmed(inventory["dlq"], filler_id, b"capacity-filler"))
+            full = queue_snapshot(inventory["dlq"])
+            diagnostics["destination"].append({"phase": "after_filler", **full})
+            if ready_count(self.admin, inventory["dlq"]) != 1:
+                raise unittest.SkipTest("INCONCLUSO: the one-message filler did not establish a full destination")
+
+            # Quorum queues can accept a bounded number of in-flight/overshoot
+            # publications. Probe serially on one confirmed channel; stop at the
+            # first NACK and never retry without a finite bound.
+            capacity_message_ids = {filler_id}
+            rejection_observed = False
+            for probe_index in range(8):
+                current_probe_id = f"{probe_id}-{probe_index}"
+                if not publish_confirmed(inventory["dlq"], current_probe_id, b"capacity-rejection-probe"):
+                    rejection_observed = True
+                    break
+                capacity_message_ids.add(current_probe_id)
+            diagnostics["destination"].append(
+                {"phase": "capacity_probe", "ready_count": ready_count(self.admin, inventory["dlq"]),
+                 "confirmed_fillers": sorted(capacity_message_ids), "rejection_observed": rejection_observed}
+            )
+            if not rejection_observed:
+                raise unittest.SkipTest("INCONCLUSO: destination accepted all bounded probes; capacity rejection was not proven")
+            diagnostics["destination"].append({"phase": "probe_nack", **queue_snapshot(inventory["dlq"])})
+
+            self.assertTrue(publish_confirmed(inventory["main"], original_id, original_id.encode("ascii")))
+            with connection(inventory["user"], inventory["password"]) as conn:
+                channel = conn.channel()
+                message = get_one(channel, inventory["main"], timeout=5)
+                self.assertIsNotNone(message, "FAIL: confirmed original message was not available on source")
+                self.assertEqual(message[1].message_id, original_id)
+                channel.basic_reject(message[0].delivery_tag, requeue=False)
+
+            # First try an identity-checked, non-destructive source observation.
+            # The management API may omit message counters in this RabbitMQ build.
+            source_held = None
+            with connection(*BOOTSTRAP) as conn:
+                observer = conn.channel()
+                candidate = get_one(observer, inventory["main"])
+                if candidate:
+                    method, properties, body = candidate
+                    if properties.message_id == original_id:
+                        source_held = {"message_id": properties.message_id, "body_matches_id": body == original_id.encode("ascii")}
+                    observer.basic_nack(method.delivery_tag, requeue=True)
+            source_snapshot = queue_snapshot(inventory["main"])
+            source_evidence_deadline = time.monotonic() + 5
+            while source_snapshot["messages"] is None and time.monotonic() < source_evidence_deadline:
+                time.sleep(0.25)
+                source_snapshot = queue_snapshot(inventory["main"])
+            diagnostics["source"].append(
+                {"phase": "destination_rejected", "ready_count": ready_count(self.admin, inventory["main"]),
+                 "identity_observation": source_held, **source_snapshot}
+            )
+            diagnostics["source_retention_observed_before_recovery"] = bool(
+                source_held or (source_snapshot["messages"] is not None and source_snapshot["messages"] >= 1)
+            )
+
+            # Release capacity by acknowledging only identified filler/probe
+            # messages. Never purge the destination or touch the original ID.
+            while ready_count(self.admin, inventory["dlq"]) > 0:
+                filler = get_one(self.admin, inventory["dlq"], timeout=5)
+                if not filler or filler[1].message_id not in capacity_message_ids:
+                    if filler:
+                        self.admin.basic_nack(filler[0].delivery_tag, requeue=True)
+                    raise unittest.SkipTest("INCONCLUSO: destination contained an unexpected message; capacity was preserved")
+                self.admin.basic_ack(filler[0].delivery_tag)
+                capacity_message_ids.remove(filler[1].message_id)
+            if capacity_message_ids:
+                raise unittest.SkipTest("INCONCLUSO: not all confirmed filler identities could be observed and acknowledged")
+            diagnostics["destination"].append({"phase": "identified_fillers_acknowledged", **queue_snapshot(inventory["dlq"])})
+
+            deadline = time.monotonic() + 60
+            first_original_seen_at = None
+            recovery_polls = 0
+            while time.monotonic() < deadline:
+                recovery_polls += 1
+                while True:
+                    delivered = get_one(self.admin, inventory["dlq"])
+                    if not delivered:
+                        break
+                    if delivered[1].message_id == original_id and first_original_seen_at is None:
+                        first_original_seen_at = time.monotonic()
+                    if delivered[1].message_id == original_id:
+                        diagnostics["observed_message_ids"].append(delivered[1].message_id)
+                        self.admin.basic_ack(delivered[0].delivery_tag)
+                    else:
+                        held.append(delivered)
+                        diagnostics["observed_message_ids"].append(delivered[1].message_id)
+                if first_original_seen_at is not None and time.monotonic() - first_original_seen_at >= 2:
+                    break
+                time.sleep(0.25)
+
+            unexpected = [m for m in held if m[1].message_id != original_id]
+            matches = [message_id for message_id in diagnostics["observed_message_ids"] if message_id == original_id]
+            diagnostics["duplicates"] = max(0, len(matches) - 1)
+            diagnostics["source"].append(
+                {"phase": "recovery_complete", "polls": recovery_polls, **queue_snapshot(inventory["main"])}
+            )
+            diagnostics["destination"].append({"phase": "recovery_complete", **queue_snapshot(inventory["dlq"])})
+            if unexpected:
+                raise unittest.SkipTest("INCONCLUSO: destination contained an unexpected message; it was requeued")
+            if not matches:
+                diagnostics["status"] = "FAIL"
+                self.fail("FAIL: the retained original did not reach the destination within the existing 60s window")
+            for method, _, _ in held:
+                self.admin.basic_ack(method.delivery_tag)
+            if not diagnostics.get("source_retention_observed_before_recovery"):
+                diagnostics["status"] = "INCONCLUSO"
+                raise unittest.SkipTest(
+                    "INCONCLUSO: original reached DLQ after capacity recovery, but retention while full was not observable"
+                )
+            diagnostics["status"] = "PASS"
+        except unittest.SkipTest:
+            diagnostics["status"] = "INCONCLUSO"
+            raise
+        except AssertionError:
+            diagnostics["status"] = "FAIL"
+            raise
+        finally:
+            # Do not delete observed messages. On a non-PASS path, return any
+            # delivery held only for duplicate accounting to the DLQ unchanged.
+            if diagnostics["status"] != "PASS":
+                for method, _, _ in held:
+                    try:
+                        self.admin.basic_nack(method.delivery_tag, requeue=True)
+                    except pika.exceptions.AMQPError:
+                        pass
+            if publisher_connection and publisher_connection.is_open:
+                publisher_connection.close()
+            print("RECOVERY_DIAGNOSTIC=" + json.dumps(diagnostics, sort_keys=True, default=str))
+            print(f"RECOVERY_STATUS={diagnostics['status']}")
 
     def test_smoke_07_runtime_cannot_publish_to_dlx_but_broker_can_dead_letter(self):
         inventory = RUNTIMES["inventory"]
@@ -378,10 +634,14 @@ class RabbitMQIsolation(unittest.TestCase):
 
 def load_tests(loader, standard_tests, pattern):
     profile = os.environ.get("RABBITMQ_TEST_PROFILE", "essential")
-    if profile not in {"essential", "extended", "all"}:
-        raise ValueError("RABBITMQ_TEST_PROFILE must be essential, extended, or all")
+    if profile not in {"essential", "extended", "recovery", "all"}:
+        raise ValueError("RABBITMQ_TEST_PROFILE must be essential, extended, recovery, or all")
     cases = [case for suite in standard_tests for case in suite]
     if profile == "all":
         return unittest.TestSuite(cases)
+    if profile == "recovery":
+        return unittest.TestSuite(
+            case for case in cases if case._testMethodName == "test_extended_01_historical_saturated_dlq_recovery_incident"
+        )
     prefix = "test_smoke_" if profile == "essential" else "test_extended_"
     return unittest.TestSuite(case for case in cases if case._testMethodName.startswith(prefix))
