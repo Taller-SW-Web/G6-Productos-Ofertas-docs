@@ -131,8 +131,6 @@ def effective_policy(queue, expected_policy, expected_definition):
         raise RecoveryInconclusive(
             f"INCONCLUSO: {queue} has assigned policy {observed['policy']!r}, expected {expected_policy!r}"
         )
-    if not isinstance(observed["effective_policy_definition"], dict):
-        raise RecoveryInconclusive(f"INCONCLUSO: {queue} has no effective policy definition: {observed}")
     if not isinstance(observed["arguments"], dict):
         raise RecoveryInconclusive(f"INCONCLUSO: {queue} queue arguments are not exposed by the API")
 
@@ -168,11 +166,16 @@ def effective_policy(queue, expected_policy, expected_definition):
     actual = policy.get("definition") or {}
     effective = observed["effective_policy_definition"]
     arguments = observed["arguments"]
-    effective_deadline = time.monotonic() + 10
-    while any(effective.get(key) != value for key, value in expected_definition.items()):
+    effective_deadline = time.monotonic() + 20
+    while not isinstance(effective, dict) or any(
+        effective.get(key) != value for key, value in expected_definition.items()
+    ):
         if time.monotonic() >= effective_deadline:
             break
-        time.sleep(0.25)
+        # Management statistics and resolved queue policy fields can appear
+        # after the initial API response. Poll at the documented development
+        # monitoring interval and keep missing/zero values as observations.
+        time.sleep(min(5, max(0, effective_deadline - time.monotonic())))
         observed = queue_snapshot(queue)
         effective = observed["effective_policy_definition"]
         arguments = observed["arguments"]
@@ -180,6 +183,8 @@ def effective_policy(queue, expected_policy, expected_definition):
         raise RecoveryInconclusive(
             f"INCONCLUSO: {queue} has assigned policy {observed['policy']!r}, expected {expected_policy!r}"
         )
+    if not isinstance(effective, dict):
+        raise RecoveryInconclusive(f"INCONCLUSO: {queue} has no effective policy definition after bounded polling: {observed}")
     for key, value in expected_definition.items():
         if actual.get(key) != value:
             raise RecoveryInconclusive(
@@ -662,8 +667,6 @@ class RabbitMQIsolation(unittest.TestCase):
                     else:
                         held.append(delivered)
                         diagnostics["observed_message_ids"].append(delivered[1].message_id)
-                if first_original_seen_at is not None and time.monotonic() - first_original_seen_at >= 2:
-                    break
                 time.sleep(0.25)
 
             unexpected = [m for m in held if m[1].message_id != original_id]
