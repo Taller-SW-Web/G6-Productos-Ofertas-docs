@@ -1,0 +1,41 @@
+{
+  "vhosts": [{"name": "g6-test"}],
+  "users": [
+    {"name": "bootstrap", "password_hash": "HYtYU++zgIZi71BkvyFNRnCXBzZnXT1E9Wz+bUwnj0RT/VFa", "hashing_algorithm": "rabbit_password_hashing_sha256", "tags": ["administrator"]},
+    {"name": "inventory_test", "password_hash": "vT8DznZhKUcB8NpCbYGeIfYVsgWJ9HgwON/bsIdWksBWilfW", "hashing_algorithm": "rabbit_password_hashing_sha256", "tags": []},
+    {"name": "catalog_test", "password_hash": "C9BcP0U/Y7Iqan8NKhmD+MocQhwWNGJ5CuKtUEf9exM2yE9R", "hashing_algorithm": "rabbit_password_hashing_sha256", "tags": []}
+  ],
+  "permissions": [
+    {"user": "bootstrap", "vhost": "g6-test", "configure": ".*", "write": ".*", "read": ".*"},
+    {"user": "inventory_test", "vhost": "g6-test", "configure": "^$", "write": "^po\\.retry\\.x$", "read": "^po\\.inventory\\.q$"},
+    {"user": "catalog_test", "vhost": "g6-test", "configure": "^$", "write": "^po\\.retry\\.x$", "read": "^po\\.catalog\\.q$"}
+  ],
+  "topic_permissions": [
+    {"user": "inventory_test", "vhost": "g6-test", "exchange": "po.retry.x", "write": "^po\\.inventory\\.q$", "read": "^$"},
+    {"user": "catalog_test", "vhost": "g6-test", "exchange": "po.retry.x", "write": "^po\\.catalog\\.q$", "read": "^$"}
+  ],
+  "exchanges": [
+    {"name": "po.retry.x", "vhost": "g6-test", "type": "topic", "durable": true, "auto_delete": false, "internal": false, "arguments": {}},
+    {"name": "po.dlx.x", "vhost": "g6-test", "type": "direct", "durable": true, "auto_delete": false, "internal": false, "arguments": {}},
+    {"name": "po.unrouted.x", "vhost": "g6-test", "type": "fanout", "durable": true, "auto_delete": false, "internal": false, "arguments": {}},
+    {"name": "po.events.x", "vhost": "g6-test", "type": "topic", "durable": true, "auto_delete": false, "internal": false, "arguments": {"alternate-exchange": "po.unrouted.x"}},
+    {"name": "po.no-route.x", "vhost": "g6-test", "type": "topic", "durable": true, "auto_delete": false, "internal": false, "arguments": {"alternate-exchange": "po.empty-alternate.x"}},
+    {"name": "po.empty-alternate.x", "vhost": "g6-test", "type": "fanout", "durable": true, "auto_delete": false, "internal": false, "arguments": {}}
+  ],
+  "queues": [
+    {"name": "po.inventory.q", "vhost": "g6-test", "durable": true, "auto_delete": false, "exclusive": false, "arguments": {"x-queue-type": "quorum"}},
+    {"name": "po.inventory.q.retry", "vhost": "g6-test", "durable": true, "auto_delete": false, "exclusive": false, "arguments": {"x-queue-type": "quorum"}},
+    {"name": "po.inventory.q.dlq", "vhost": "g6-test", "durable": true, "auto_delete": false, "exclusive": false, "arguments": {"x-queue-type": "quorum"}},
+    {"name": "po.catalog.q", "vhost": "g6-test", "durable": true, "auto_delete": false, "exclusive": false, "arguments": {"x-queue-type": "quorum"}},
+    {"name": "po.catalog.q.retry", "vhost": "g6-test", "durable": true, "auto_delete": false, "exclusive": false, "arguments": {"x-queue-type": "quorum"}},
+    {"name": "po.catalog.q.dlq", "vhost": "g6-test", "durable": true, "auto_delete": false, "exclusive": false, "arguments": {"x-queue-type": "quorum"}},
+    {"name": "po.unrouted.q", "vhost": "g6-test", "durable": true, "auto_delete": false, "exclusive": false, "arguments": {"x-queue-type": "quorum"}}
+  ],
+  "bindings": [
+    {"source": "po.retry.x", "vhost": "g6-test", "destination": "po.inventory.q.retry", "destination_type": "queue", "routing_key": "po.inventory.q", "arguments": {}},
+    {"source": "po.retry.x", "vhost": "g6-test", "destination": "po.catalog.q.retry", "destination_type": "queue", "routing_key": "po.catalog.q", "arguments": {}},
+    {"source": "po.dlx.x", "vhost": "g6-test", "destination": "po.inventory.q.dlq", "destination_type": "queue", "routing_key": "po.inventory.q", "arguments": {}},
+    {"source": "po.dlx.x", "vhost": "g6-test", "destination": "po.catalog.q.dlq", "destination_type": "queue", "routing_key": "po.catalog.q", "arguments": {}},
+    {"source": "po.unrouted.x", "vhost": "g6-test", "destination": "po.unrouted.q", "destination_type": "queue", "routing_key": "", "arguments": {}}
+  ]
+}

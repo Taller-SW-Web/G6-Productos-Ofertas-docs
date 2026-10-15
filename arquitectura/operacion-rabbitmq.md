@@ -56,15 +56,21 @@ Una cuenta runtime no debería poder cambiar topología. Antes de retirar el per
 
 **Los nombres de esta tabla son objetivo, no credenciales existentes.** Hasta homologación contractual no se reemplazarán las colas inglesas por estas. La necesidad de publicar de cada servicio se derivará del contrato y no de su nombre de usuario.
 
-## 3. Matriz RabbitMQ por aplicación
+<a id="matriz-rabbitmq-por-aplicacion"></a>
 
-Matriz propuesta para la candidata AsyncAPI `0.6.0-rc.2`, derivada de `operations`, `x-producer`, bindings y colas de reintento de [AsyncAPI](../contratos/eventos/asyncapi.yaml) y [topología](../contratos/eventos/rabbitmq-topologia.md). Es un diseño documental: no acredita usuarios, ACL ni consumidores implementados.
+## 3. Matrices RabbitMQ por aplicación
 
-Convenciones: `configure=∅` en runtime; `read` permite consumir únicamente la cola principal asignada. La aplicación no consume su cola `.retry`: RabbitMQ la mantiene durante el TTL y el dead-lettering la devuelve automáticamente a la cola principal. `write` permite las exchanges indicadas para los eventos/comandos listados, más `po.retry.x` y `po.dlx.x` para el flujo retry/DLQ. El flujo previsto publica con routing key igual al nombre de la cola propia, pero las ACL de recursos no pueden imponer esa restricción por clave en exchanges compartidas `direct`. No se concede `read` en colas `.retry`, DLQ ni `po.unrouted.q`, ni permisos adicionales de recursos operativos a identidades runtime. Los nombres de usuario de la columna anterior son sugeridos, no identidades creadas.
+La matriz contractual actual `0.6.0-rc.2` está **BLOQUEADA para aprovisionamiento seguro**. La matriz candidata A es **NO aprobada, NO desplegada** y su validación reproducible es parcial: un caso de recuperación de DLQ falló. Ninguna describe una configuración actualmente operativa.
 
-**BLOQUEADO_ESPECÍFICO — aprovisionamiento de credenciales runtime:** no crear/conceder credenciales con `write` en las exchanges compartidas `po.retry.x` y `po.dlx.x` hasta validar un aislamiento que impida publicar hacia la retry/DLQ de otra aplicación. Responsables: coordinación técnica e Infraestructura G6; desbloqueo: elegir una alternativa y demostrarla con prueba negativa reproducible en la versión/configuración objetivo del broker.
+### 3.1 Estado de la matriz contractual actual `0.6.0-rc.2` — BLOQUEADA
 
-La matriz inmediatamente siguiente refleja los recursos de la candidata vigente `0.6.0-rc.2`; sus `write` en exchanges retry/DLX **no son una ACL autorizada para provisionar** mientras rija el bloqueo. La mejor candidata pendiente de prueba es A: convertir `po.retry.x` a `topic`, limitar el topic permission de cada runtime al nombre exacto de su propia cola `.retry`, retirar `write` runtime de `po.dlx.x` y hacer que el broker dead-letteree el rechazo final desde cada cola principal a su DLQ. Esta propuesta no modifica AsyncAPI ni topología vigentes.
+**BLOQUEADO_ESPECÍFICO — aprovisionamiento de credenciales runtime:** el contrato vigente concede `write` en `po.retry.x` y `po.dlx.x` compartidos `direct` a los productores de la matriz. Las ACL de recurso no limitan routing keys en esos exchanges; no aprovisionar estas credenciales mientras no se demuestre el aislamiento. Responsables: coordinación técnica e Infraestructura G6. Desbloqueo: elegir una alternativa y demostrarla con prueba negativa reproducible en el broker objetivo.
+
+La tabla contractual completa aparece en 3.3. Sus permisos describen el contrato, no ACL instaladas ni usuarios activos.
+
+### 3.2 Matriz candidata A — NO aprobada, NO desplegada; validación parcial
+
+A convertiría `po.retry.x` a `topic`, limitaría el topic permission de cada runtime al nombre exacto de su propia cola y retiraría `write` runtime de `po.dlx.x`, delegando el rechazo final al dead-lettering del broker. Esta propuesta no modifica AsyncAPI ni topología vigentes.
 
 ACL runtime propuesta para verificar A (no adoptada/no aprovisionable todavía):
 
@@ -83,7 +89,7 @@ ACL runtime propuesta para verificar A (no adoptada/no aprovisionable todavía):
 
 Además se negará `write` del exchange por defecto y de cualquier recurso de cola a las identidades runtime: la única ruta de publish retry permitida debe ser `po.retry.x` y su topic permission. `po.dlx.x` solo se alcanza por dead-lettering del broker. Los permisos de publicación de negocio ya existentes y sus topic permissions exactos no se amplían por esta propuesta. Las topic permissions son opt-in: en el authorization backend por defecto, si falta la regla para un usuario/exchange, la publicación topic queda autorizada; el aprovisionamiento debe verificar backend, presencia y unicidad de cada patrón estrecho y denegar patrones amplios. RabbitMQ 4.2 comprueba `read` en cola y `write` en DLX durante la declaración; el aprovisionador separado hará las declaraciones/políticas. Para declarar las colas `.retry` con DLX `''`, también debe satisfacer la autorización del exchange por defecto (`amq.default`). El runtime consumirá recursos preaprovisionados (`basic.consume` requiere `read` en su cola); si intenta declaración activa, necesita `configure` y debe fallar. Las declaraciones pasivas en 4.2.9 requieren algún permiso sobre el recurso desde 4.2.7; el `read` de su cola/`write` del exchange satisface ese mínimo según tipo.
 
-**Prueba bloqueante:** en este entorno Docker Desktop no pudo iniciar el engine; `docker version` devolvió error de conexión al named pipe local. No se inició ningún RabbitMQ 4.2.9, no se crearon contenedores/usuarios/recursos y no hay resultados runtime. Por tanto esta matriz es un plan explícito de validación, no una ACL verificada ni una autorización de provisión.
+**Resultado del arnés aislado RabbitMQ 4.2.9:** pasan publicación retry propia y topic permission exacto/anclado, denegación de rutas cruzadas, aislamiento de lectura, prohibición de declaraciones runtime, TTL de 30 s, rechazo final normal a DLQ, ACK de rechazo de negocio, tres reintentos con contador/cabeceras y restricciones sobre DLX/default exchange/colas ajenas, además de alternate exchange + `mandatory=true`. Falla la recuperación tras liberar capacidad en la DLQ: el mensaje dead-lettered no se observó en destino en 60 s. Este resultado se conserva como fallo real, no como PASS. A sigue **BLOQUEADO_ESPECÍFICO** para aprobación/provisión hasta explicar y repetir satisfactoriamente ese caso y verificarlo en la configuración objetivo. El arnés y los límites de evidencia están en [pruebas aisladas](../tests/rabbitmq-aislamiento/README.md).
 
 **Compatibilidad de consumidor sin `configure` no acreditada:** se inspeccionó solo para lectura el backend hermano en HEAD `2c4a18105c5e379edc8476b9d315aa6be1134b80`; no se encontró código consumidor RabbitMQ de producción bajo `apps`. Inventario contiene el publisher Outbox y su prueba de integración declara exchanges/colas para el fixture. No es evidencia de cómo arrancan los consumidores runtime ni de las otras aplicaciones. Antes de otorgar permisos debe verificarse su arranque real; una declaración AMQP activa fallará con `configure=∅`, mientras que consumir una cola ya creada usa `read`. Esta inspección no modificó el backend.
 
@@ -91,7 +97,7 @@ Comparación para la siguiente prueba: A es la candidata de menor privilegio: so
 
 Para A, la prueba negativa de permisos debe demostrar que `g6_inventario` publica con éxito en `po.retry.x` usando `po.inventory.q`, pero recibe `ACCESS_REFUSED` al usar `po.catalog.q`; los patrones literales serán anclados y escaparán los puntos (`^po\.inventory\.q$`, no `.*inventory.*`). Debe verificar además que Inventario no publica en `po.dlx.x`, default exchange ni colas ajenas; Catálogo no consume `po.inventory.q`; y ninguno puede declarar, alterar o borrar recursos. La matriz no se aprobará hasta pasar esta suite en broker aislado RabbitMQ 4.2.9.
 
-Casos de aceptación runtime pendientes (todos **NO EJECUTADOS** en este entorno):
+Casos de aceptación runtime del arnés (RabbitMQ 4.2.9 aislado; resultados del commit de validación):
 
 | Caso | Escenario y resultado requerido |
 |---|---|
@@ -106,9 +112,15 @@ Casos de aceptación runtime pendientes (todos **NO EJECUTADOS** en este entorno
 | 9 | Reentrega/duplicado conserva y verifica `message_id`, `correlation_id`, `causation_id`, `operation_id` y `x-retry-count`; pruebas de consumidores deben comprobar Inbox/idempotencia sin segundo efecto. |
 | 10 | Intentos por default exchange (`amq.default`), nombre de cola, DLX, alternate exchange u otra ruta no autorizada son denegados/no alcanzan colas ajenas; revisar bindings completos y ACL efectiva. Los destinos de publicaciones de negocio con routing keys expresamente contratadas son excepción intencional y deben coincidir exactamente con sus bindings autorizados. |
 
+Resultados: 1 PASS, 2 PASS, 3 PASS, 4 PASS, 5 PASS, 6 **FAIL** (entrega tras recuperar la DLQ no observada en 60 s; el rechazo normal de 6 sí llegó), 7 PASS, 8 PASS, 9 PASS, 10 PASS. La prueba acredita solo la fixture aislada fijada a RabbitMQ 4.2.9; no acredita compatibilidad de los consumidores de las diez identidades reales, homologación G5, configuración productiva ni despliegue. Caso 9 acredita transporte/cabeceras, no idempotencia funcional del backend.
+
 El caso 9 requiere además una prueba de consumidor para acreditar idempotencia; un ensayo del broker por sí solo solo acredita el transporte/cabeceras. Los casos de TTL deben medir tiempo y número de entregas, no asumir el resultado por YAML.
 
 La comparación prioritaria A/B/C y la evaluación de seguridad, complejidad, impacto y compatibilidad constan en [Decisiones de RabbitMQ](./decisiones/rabbitmq.md). No se adoptan otras soluciones (plugin, relay o exchanges por aplicación) en esta evaluación.
+
+### 3.3 Matriz contractual vigente `0.6.0-rc.2` — BLOQUEADA para aprovisionamiento seguro
+
+Derivada de `operations`, `x-producer`, bindings y colas de [AsyncAPI](../contratos/eventos/asyncapi.yaml) y [topología](../contratos/eventos/rabbitmq-topologia.md). `configure=∅` en runtime; cada identidad lee únicamente su cola principal. `.retry`, DLQ, `po.unrouted.q` y otros recursos operativos no reciben permisos de lectura. Las columnas `write` de retry/DLX describen el contrato rc.2 y no se deben provisionar.
 
 | Aplicación / identidad objetivo | Configure | Write (recursos) | Read (colas) | Permiso de tópico para publicación de negocio | Declaraciones AMQP al arranque |
 |---|---|---|---|---|---|
@@ -123,6 +135,8 @@ La comparación prioritaria A/B/C y la evaluación de seguridad, complejidad, im
 | `api-gateway/bff` / `g6_pasarela` | ∅ | `po.retry.x`, `po.dlx.x` | `po.gateway.q` | Ninguno | Ninguna activa; recursos preaprovisionados |
 | `modulo-ventas` (G5) / `g5_ventas` | ∅ | `po.commands.x`, `po.retry.x`, `po.dlx.x` | `po.sales.q` | `po.commands.x`: `promotions.coupon.consumption.requested`, `promotions.coupon.restoration.requested` | Ninguna activa; recursos preaprovisionados; concesión y homologación del vhost pendientes |
 
+Esta matriz está bloqueada: sus permisos `write` completos en exchanges compartidas `direct` no aíslan routing keys ni DLQ. No es una configuración desplegada ni una autorización para provisionar.
+
 Las routing keys de negocio indicadas se configuran como patrones exactos anclados (`^(?:clave1|clave2)$`) por exchange `topic`; un intento de publicar otra clave debe denegarse. Los exchanges retry/DLX son `direct`: su ACL `write` autoriza el recurso entero, no solo la routing key indicada por el flujo. No se otorga permiso de publicación en `po.unrouted.x`: es destino de alternate exchange configurado por el aprovisionador. En AMQP, los bindings del topology los crea el aprovisionador: el runtime no declara exchanges, queues, argumentos, alternate exchanges, DLX ni bindings y no necesita `configure`. Si una biblioteca intenta declaración activa al iniciar, el arranque queda bloqueado hasta configurarla para consumir recursos existentes o aprobar explícitamente otro modelo; no se ampliarán ACL silenciosamente.
 
 El aprovisionador tiene identidad separada y permisos operativos para crear vhost, exchanges, colas, bindings y políticas. Para declarar exchanges con alternate exchange y bindings puede necesitar permisos `configure`/`read`/`write` en recursos origen/destino; estos permisos no se trasladan a cuentas runtime.
@@ -131,7 +145,9 @@ El aprovisionador tiene identidad separada y permisos operativos para crear vhos
 
 Validaciones operativas futuras deberán incluir positivas (publicación permitida, consumo de cola propia, retry propio) y negativas (otra routing key de negocio, otra cola, declaración/cambio de topología). Una prueba de publicación retry/DLX dirigida a la cola ajena documentará que la ACL nativa la permite mientras las exchanges sigan compartidas `direct`; no se marcará como PASS de aislamiento. No conceder permisos de lectura sobre colas ajenas para facilitar pruebas. La revocación/rotación debe incluir reconexión cuando corresponda, pues las decisiones de autorización pueden quedar en caché durante la sesión.
 
-Referencia técnica RabbitMQ 4.2: [Access Control](https://www.rabbitmq.com/docs/4.2/access-control) describe topic authorisation para exchanges `topic`, permisos AMQP y declaraciones pasivas desde 4.2.7; [Dead Letter Exchanges](https://www.rabbitmq.com/docs/4.2/dlx) especifica los permisos DLX comprobados al declarar la cola; [TTL](https://www.rabbitmq.com/docs/4.2/ttl); [Quorum Queues](https://www.rabbitmq.com/docs/4.2/quorum-queues) documenta las condiciones/costes del dead-lettering `at-least-once`. [Alternate Exchanges](https://www.rabbitmq.com/docs/ae) documenta permisos al declararlos y que un mensaje enrutado mediante alternate exchange cuenta como enrutado para `mandatory`.
+En publicación con `mandatory=true`, RabbitMQ devuelve `basic.return` si no hay ruta ni en el alternate exchange; si el alternate captura el mensaje, se considera enrutado y no hay `basic.return` (los publisher confirms son una señal separada). El arnés aislado verificó ambos comportamientos. La alternativa A también verificó `ACCESS_REFUSED` al publicar runtime en DLX, exchange por defecto y alternate, además de lectura/declaración sobre colas fuera de ACL. El traslado normal por DLX pasó; recuperación tras destino DLQ lleno falló en 60 s y no acredita `at-least-once` operativo en esa condición.
+
+Referencia técnica RabbitMQ 4.2: [Access Control](https://www.rabbitmq.com/docs/4.2/access-control) describe topic authorisation para exchanges `topic`, permisos AMQP y declaraciones pasivas desde 4.2.7; [Dead Letter Exchanges](https://www.rabbitmq.com/docs/4.2/dlx) especifica los permisos DLX comprobados al declarar la cola; [TTL](https://www.rabbitmq.com/docs/4.2/ttl); [Quorum Queues](https://www.rabbitmq.com/docs/4.2/quorum-queues) documenta las condiciones/costes del dead-lettering `at-least-once`; [Alternate Exchanges](https://www.rabbitmq.com/docs/4.2/ae) documenta permisos al declararlos y que un mensaje enrutado mediante alternate exchange cuenta como enrutado para `mandatory`.
 
 ## 4. Aprovisionamiento reproducible
 
