@@ -103,6 +103,7 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 | Matriz de pruebas de contrato | [`api/pruebas-contrato.md`](contratos\pruebas\pruebas-contrato.md) | Casos estáticos, provider, consumer/provider, seguridad e integración |
 | Acuerdos de integración | [`integraciones/`](integraciones/) | Acuerdos homologados con Marketplace, Retail, Chatbot y Ventas; las integraciones restantes se documentan en sus artefactos canónicos |
 | Equipo y responsabilidades | [`EQUIPO_Y_RESPONSABILIDADES.md`](EQUIPO_Y_RESPONSABILIDADES.md) | Roles transversales, ownership funcional y mecanismos de revisión del equipo |
+| Uso de IA y trazabilidad del código | [`docs/uso-ia/README.md`](docs/uso-ia/README.md) | Registro retrospectivo de intervenciones, evidencia de backend/frontend, matriz por funcionalidad y plantilla de documentación |
 | Persistencia por bounded context | [`bd/`](datos) | Modelo físico, migraciones y scripts de validación SQL por servicio |
 
 ---
