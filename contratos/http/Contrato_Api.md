@@ -1507,7 +1507,7 @@ La línea base conserva **16 scopes** técnicos. El candidato `0.6.0-rc.1` añad
 | `promociones:leer` | Consultar promociones | Marketplace, Chatbot, Retail |
 | `promociones:evaluar` | Evaluar promociones | Marketplace, Chatbot, Retail |
 | `cupones:validar` | Validar cupón | Marketplace, Chatbot, Retail |
-| `recomendaciones:leer` | `GET /recomendaciones` | Chatbot |
+| `recomendaciones:leer` | `GET /recomendaciones` (`obtenerRecomendaciones`) | Allowlist de operación: Marketplace, Chatbot, Retail; registro pending-security: solo Chatbot |
 | `combos:leer` | Detalle/disponibilidad informativa de combos | Sin concesión externa inicial |
 | `inventario:disponibilidad:leer` | Consultar disponibilidad | Marketplace, Chatbot, Retail, M1/Ventas, M2/Postventa |
 | `inventario:reservar` | Crear reserva | Ventas |
@@ -2648,7 +2648,7 @@ La proyección comercial no expone cantidades, ubicaciones internas ni versiones
 
 ### Recomendaciones
 
-Marketplace, Chatbot y Retail pueden consumir `/recomendaciones` con `recomendaciones:leer`. La recomendación sigue a nivel `product_id`; `availability` reutiliza `EstadoStock`. El enriquecimiento `availability/current_price` permanece provisional mientras `D-REC-01/D-REC-02` sigan abiertas.
+La allowlist de operación OpenAPI para `obtenerRecomendaciones` incluye Marketplace, Chatbot y Retail; la operación no declara directamente `x-allowed-client-ids`. El registro `x-security-contract.service_scopes_pending_registration.recomendaciones:leer.clients` enumera solo Chatbot, por lo que queda una discrepancia del contrato pendiente de resolución. Ninguna allowlist prueba grant G7. La recomendación sigue a nivel `product_id`; `availability` reutiliza `EstadoStock`. El enriquecimiento `availability/current_price` permanece provisional mientras `D-REC-01/D-REC-02` sigan abiertas.
 
 ### Correlación y rate limiting
 

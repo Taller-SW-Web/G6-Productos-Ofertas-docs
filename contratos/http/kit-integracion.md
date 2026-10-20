@@ -1,6 +1,6 @@
 # Kit de integración — Productos y Ofertas
 
-**Fecha de actualización:** 2026-10-14
+**Fecha de actualización:** 2026-10-20
 
 **Repositorio:** `Taller-SW-Web/G6-Productos-Ofertas-docs`
 **API propietaria:** `api-productos`  
@@ -177,7 +177,7 @@ La línea base conserva **16 scopes** de `api-productos`; la candidata `0.6.0-rc
 | `promociones:leer` | Promociones | Marketplace, Chatbot, Retail |
 | `promociones:evaluar` | Evaluación | Marketplace, Chatbot, Retail |
 | `cupones:validar` | Cupón | Marketplace, Chatbot, Retail |
-| `recomendaciones:leer` | Recomendaciones | Chatbot |
+| `recomendaciones:leer` | `GET /recomendaciones` (`obtenerRecomendaciones`) | Marketplace, Chatbot, Retail (allowlist de operación) |
 | `combos:leer` | Combos | Sin grant externo inicial |
 | `inventario:disponibilidad:leer` | Disponibilidad detallada y comercial según allowlist | Marketplace, Chatbot, Retail, Ventas, Postventa |
 | `inventario:reservar` | Reserva | Ventas |
@@ -611,12 +611,16 @@ G6 aceptó y comunicó los nueve acuerdos M-01–M-09 el 2026-10-20 (`ACEPTADO_G
 
 La matriz exhaustiva por F, owner, operación, scope, identidad, rama/PR/SHA, implementación, CI, despliegue, grant, Provider/Consumer, E2E, dependencia y condición de cierre está en el [paquete operativo Backend](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/tree/castilla/integraciones/g1-marketplace). La semántica de compatibilidad vive en [ALINEACION_MARKETPLACE.md](../../integraciones/ALINEACION_MARKETPLACE.md), y la fuente normativa en el [Acuerdo H4](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md).
 
+La matriz separa una fila para cada una de las 25 funciones G1 auditadas. F-019 visualizar carrito, F-020 fusionar carrito anónimo, F-021 mover ítem a favoritos, F-023 cotizar checkout, F-024 validar/aplicar cupón, F-025 preparar checkout/revalidar stock y F-026 crear pedido son funciones distintas con ownership y dependencias propias. Las rutas de carrito/checkout/pedido del BFF son de G1; `POST /api/v1/pedidos` pertenece a G5. G6 aporta únicamente las operaciones comerciales identificadas por operación; la verificación de cantidad es no vinculante y no autoriza por sí sola a mutar carrito.
+
 ### Ejemplos por dominio
 
 - **Catalog:** `listarProductos` y `obtenerProductoPorSlug`; mapear paginación base cero de G1 a base uno G6. `product_id`, `slug`, `variant_id`, `sku` y `sku_base` son identidades diferentes. Solo filtros del OpenAPI; sin filtrado global ficticio sobre páginas parciales.
 - **Pricing:** `consultarPrecios` y `obtenerPrecioSku`; resolver SKU vendible, canal y vigencia. No fabricar precio de producto padre ni snapshot único.
 - **Inventory:** `consultarDisponibilidadComercial` y `verificarCantidadComercial`; cuatro estados incluido `INDETERMINADO` (200), D-INV-01 fuente única; el POST es `binding=false`, no reserva.
 - **Promotions:** `listarPromociones`, `evaluarPromociones`, `validarCupon`, `obtenerRecomendaciones`; evaluación/validación sin consumo. Handler HTTP y pruebas deben distinguirse de AMQP/Outbox.
+
+**Allowlist y grant de recomendaciones:** `obtenerRecomendaciones` no declara `x-allowed-client-ids` dentro de la operación. La allowlist de operación publicada en OpenAPI incluye `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`; el registro `x-security-contract.service_scopes_pending_registration.recomendaciones:leer.clients` enumera solo `modulo-chatbot`. Esta discrepancia del contrato ejecutable queda pendiente de resolución; la fila de consumidores refleja la allowlist de operación y no prueba grant ni autorización efectiva. G7 debe confirmar registro y grants antes de invocación real.
 
 El BFF G1 conserva presentación, filtros que no estén en contrato G6, carrito, favoritos, checkout y cliente técnico. G2 define lo propio de envío/cumplimiento; G5 mantiene snapshot durable, pedido, pago, confirmación de reserva y consumo/restauración; G7 registra grants y emite token. No crear pedidos, carrito, `fulfillment_ref`, DTO snapshot o scopes dentro de G6 por inferencia.
 

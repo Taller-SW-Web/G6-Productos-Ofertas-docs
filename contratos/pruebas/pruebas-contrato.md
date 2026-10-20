@@ -72,7 +72,7 @@ ARCHITECTURE_INVARIANT
 | CT-MKT-08 | Precio con oferta | Regular/oferta diferenciados | PENDIENTE_EJECUCION |
 | CT-MKT-09 | SKU sin existencias en fuente de cumplimiento determinada | HTTP 200 + `AGOTADO`, no 404; si la fuente no puede determinarse, `INDETERMINADO` | PENDIENTE_EJECUCION |
 | CT-MKT-10 | Cupón no aplicable | Resultado de negocio conforme OpenAPI | PENDIENTE_EJECUCION |
-| CT-MKT-11 | Recomendaciones | Marketplace autorizado | PENDIENTE_EJECUCION |
+| CT-MKT-11 | Recomendaciones | La operación allowlist enumera Marketplace/Chatbot/Retail; scope registry pending enumera solo Chatbot. Registrar discrepancia; no inferir grant G7. | PENDIENTE_ALINEACION_CONTRACTUAL_G7 |
 | CT-MKT-12 | No fuga administrativa | Allowlist de campos comerciales; sin flags internos | PENDIENTE_EJECUCION |
 | CT-MKT-13 | Correlación | `X-Correlation-Id` propagado | PENDIENTE_EJECUCION |
 
@@ -443,6 +443,25 @@ Casos ampliados CT-MKT:
 | CT-MKT-37 | CONSUMER_PROVIDER | timeout, error upstream y respuesta/schema inválido no se traducen a INDETERMINADO/AGOTADO; correlación conservada | PENDIENTE |
 | CT-MKT-38 | PROVIDER_CONTRACT | Búsqueda sin coincidencias → 200 vacío; producto no elegible no se filtra fuera de elegibilidad | PENDIENTE_PROVIDER |
 | CT-MKT-39 | E2E | Recorrido BFF G1→Gateway→owner con JWT real, dataset identificado y error/reintento | PENDIENTE_E2E |
-| CT-MKT-40 | E2E | Concurrencia carrito/deshacer y checkout/recompra; idempotencia G1/G5; estado PAGADO solo tras confirmación G5 | PENDIENTE_G1_G5 |
+| CT-MKT-40 | E2E | Journey Marketplace completo con BFF/Gateway/owners, identidad real y dataset identificado; confirmar que el resultado corresponde a la función ejecutada | PENDIENTE_E2E |
+
+## Funciones de carrito, checkout y favoritos — evidencia separada
+
+Cada caso corresponde a una función G1 distinta; las llamadas G6 son dependencias de datos y no trasladan el ownership del BFF.
+
+| ID | Función | Verificación | Estado |
+|---|---|---|---|
+| CT-MKT-41 | F-019 visualizar carrito | La lectura del carrito G1 no modifica cantidades; errores de enriquecimiento conservan representación coherente o atención por línea. | PENDIENTE_G1_E2E |
+| CT-MKT-42 | F-020 fusionar carrito anónimo | Fusión, propiedad, concurrencia, transacción e idempotencia son G1; verificación Inventory `binding=false` no autoriza por sí sola cantidad ajustada para mutación. | PENDIENTE_G1_E2E |
+| CT-MKT-43 | F-021 mover ítem del carrito a favoritos | G1 valida identidad/elegibilidad, upsert Wishlist y borra línea transaccionalmente; no evalúa promociones ni muta stock. | PENDIENTE_G1_E2E |
+| CT-MKT-44 | F-023 cotización de checkout | G1 compone datos Catalog/Pricing/Inventory/Promotions según uso y consulta cotización de envío G2; la ruta BFF no se atribuye a G6 y quote vencida no se prepara. | PENDIENTE_G1_G2_G5 |
+| CT-MKT-45 | F-024 validar/aplicar cupón | Promotions `evaluarPromociones` y `validarCupon`; evaluación/validación repetida no consume ni reserva. Consumo/restauración corresponde a secuencia G5. | PENDIENTE_HTTP_HANDLER |
+| CT-MKT-46 | F-025 preparar checkout/revalidar stock | `verificarCantidadComercial` usa N y contexto aplicable; `SUFICIENTE` no reserva; `STOCK_NOT_AVAILABLE` solo se justifica con respuesta autoritativa para esa cantidad. | PENDIENTE_G1_G6_G2_G5 |
+| CT-MKT-47 | F-026 crear pedido | G5 `POST /api/v1/pedidos`; retry conserva `Idempotency-Key` y payload; recuperación según G5; `CREADO` no es `PAGADO`; no inventar `pago.metodoPago`. | PENDIENTE_G1_G5 |
+| CT-MKT-48 | F-036 agregar favorito | G1 persiste por identidad de producto definida; Catalog valida identidad/elegibilidad; no hay API Wishlist G6. | PENDIENTE_G1_E2E |
+| CT-MKT-49 | F-037 visualizar favoritos | G1 devuelve solo titular; Catalog valida identidad/elegibilidad y Pricing/Inventory aportan datos actuales solo si la vista los presenta. | PENDIENTE_G1_E2E |
+| CT-MKT-50 | F-038 quitar favorito/Deshacer | Delete es local G1; al restaurar se revalida el recurso y no se accede a Wishlist G6. | PENDIENTE_G1_E2E |
+| CT-MKT-51 | F-039 mover favorito al carrito | G1 no elimina favorito hasta éxito; verifica selección de variante y consulta disponibilidad según cantidad; POST Inventory sigue no vinculante. | PENDIENTE_G1_E2E |
+| CT-MKT-52 | F-006 inicio/categorías/destacados | Taxonomy `listarCategorias` y Catalog `listarProductos` se prueban como operaciones separadas; `featuredProducts[]` lo compone G1 y G6 no ofrece curaduría editorial. | PENDIENTE_PROVIDER_Y_BFF |
 
 `STATIC_CONTRACT` solo verifica el YAML. Provider, Consumer/Provider, Seguridad y E2E son estados independientes. No marcar PASS sin ejecución vinculada a SHA exacto; ver [matriz de evidencia H4](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/castilla/integraciones/g1-marketplace/MATRIZ_OPERACIONES_H4.md).

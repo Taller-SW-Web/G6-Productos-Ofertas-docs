@@ -12,11 +12,11 @@ G1 conserva presentación, DTO BFF, filtros de experiencia, carrito, favoritos, 
 
 ## Alcance G1 dependiente de datos G6
 
-La fuente G1 SPECS `main@d87ebb4` declara 23 funciones con datos actuales de G6 (F-006–F-017, F-019–F-021, F-023–F-026, F-031, F-036–F-037, F-039) y dos dependencias indirectas/condicionales (F-018/F-038), universo de 25 F; no son 25 llamadas externas. Se revisaron además `plan/ALCANCE-H4-PRODUCTOS-SEGURIDAD.md` v0.7.0 y `plan/DECISIONES-Y-BLOQUEOS.md` v0.7.0. Las funciones principales de G1 no son responsabilidad exclusiva de G6.
+La fuente G1 SPECS `main@d87ebb4587dd2476411f3b53ba91a0898159cdc0` declara 23 funciones con datos actuales de G6 y dos dependencias indirectas/condicionales, universo auditado de 25 funciones; no son 25 llamadas externas. Las fichas del 19/10 consultadas fueron `plan/ALCANCE-H4-PRODUCTOS-SEGURIDAD.md` blob `43a5702b75fcf443de43bc5055e58a13c0b358d2` y `plan/DECISIONES-Y-BLOQUEOS.md` blob `0952a61187a064dd5f4c21676ce92e2307bc0b3d`. La matriz Backend contiene exactamente una fila por función; las funciones principales y sus flujos BFF siguen bajo ownership de G1/G5/G2.
 
 | F G1 | Dependencia/owner | Correspondencia contractual G6 / adaptación |
 |---|---|---|
-| F-006 destacados | G1 compone `featuredProducts[]`; Catalog entrega candidatos elegibles | `listarProductos`; no existe endpoint G6 de curaduría |
+| F-006 inicio, categorías y destacados | G1 compone `featuredProducts[]`; Taxonomy entrega categorías y Catalog candidatos elegibles | `listarCategorias` (López) + `listarProductos` (Poma); no existe endpoint G6 de curaduría editorial. Las pruebas distinguen ambas operaciones y composición BFF G1. |
 | F-007 búsqueda, F-008 filtros, F-009 orden, F-010 paginación | G1 define UX/BFF; Catalog dueño de catálogo, Pricing de precio | `listarProductos`; `pagina` es base 1 en G6 (traducir `page + 1` de G1); sort G1 `NAME_ASC/DESC` a G6 `NOMBRE_ASC/DESC`. OpenAPI actual solo publica categoriaId/marcaId individuales; filtros múltiples/precio son brecha sin paridad. No filtrar una página parcial como si fuera global. |
 | F-011 detalle/galería | G1 DTO; Catalog owner | `obtenerProductoPorSlug`; detalle comercial del OpenAPI. Revisar capacidades reales de imágenes en schema; no inventar campos. |
 | F-012 precio | Pricing | `consultarPrecios` / `obtenerPrecioSku`; contexto SKU, canal y vigencia según schema. |
@@ -24,11 +24,19 @@ La fuente G1 SPECS `main@d87ebb4` declara 23 funciones con datos actuales de G6 
 | F-014 disponibilidad | Inventory | `consultarDisponibilidadComercial`; cuatro estados, incluido `INDETERMINADO` = HTTP 200 comercial. D-INV-01: una fuente ejecutable, sin suma de ubicaciones. G1 PR SPECS #8 abierto; su texto no prueba merge/homologación. |
 | F-015 recomendaciones | Promotions/Cross-sell; composición G1 | `obtenerRecomendaciones`, permitido a `modulo-marketplace` en OpenAPI; enriquecimiento de precio/disponibilidad sigue condicionado por D-REC-01/02 y schema. |
 | F-016/F-017 carrito, cantidades, concurrencia | Carrito G1; validación de cantidad Inventory G6 | `verificarCantidadComercial` para validación no vinculante; `binding=false`, sin reserva. Errores/concurrencia del carrito los resuelve G1. |
-| F-018/F-038 borrar/deshacer | Persistencia/Deshacer G1; elegibilidad G6 indirecta al restaurar | `NO_APLICA_G6_DIRECTO`; revalidar por operaciones comerciales de origen. |
-| F-019–F-021 carrito | G1 persiste carrito, beneficios seleccionados y estado | G6 provee consultas/evaluación; no crea carrito ni consume beneficio con evaluación. |
-| F-023–F-026 checkout | G1 experiencia; G5 pedido/pago/snapshot; G2 envío | `NO_APLICA_G6_DIRECTO` para pedido/pago. Consume indirectamente catálogo, precio, inventario y promociones. `PAGADO` solo por confirmación G5. |
+| F-018 borrar/deshacer ítem de carrito | Persistencia/Deshacer G1; elegibilidad G6 indirecta al restaurar | `NO_APLICA_G6_DIRECTO`; revalidar por operaciones comerciales de origen. |
+| F-019 visualizar carrito | G1 owner de lectura/carrito y cantidades; Pricing e Inventory enriquecen la línea | Dependencias indirectas `obtenerProductoPorSlug`/`listarProductos`, `consultarPrecios`/`obtenerPrecioSku`, `consultarDisponibilidadComercial`. Lectura no altera cantidades. |
+| F-020 fusionar carrito anónimo | G1 owner de fusión, propiedad, unicidad, concurrencia, transacción e idempotencia | Catalog valida identidad/elegibilidad, Pricing precio vigente, Inventory puede verificar cantidades. Verificador `binding=false`: no devuelve por sí solo máximo autorizado para mutar. |
+| F-021 mover ítem de carrito a favoritos | G1 owner de carrito, wishlist y transacción local | Catalog solo valida identidad/elegibilidad. No evaluar promociones, mover stock ni crear Wishlist en G6. |
+| F-023 cotización de checkout | G1 owner BFF checkout; G2 cotiza envío; G5 snapshot durable | Catalog/Pricing/Inventory y Promotions si aplica mediante operaciones específicas; G2 `POST /api/v1/cotizaciones`. La ruta `/api/v1/checkout/quotes` pertenece a G1. |
+| F-024 validar/aplicar cupón | G1 selecciona/presenta; G6 Promotions evalúa; G5 coordina consumo/restauración | `evaluarPromociones` + `validarCupon`, scopes `promociones:evaluar` + `cupones:validar`. Validar/evaluar no consume ni reserva. Los handlers HTTP deben acreditarse aparte. |
+| F-025 preparar checkout/revalidar stock | G1 owner de preparación e idempotencia | Inventory `verificarCantidadComercial`; Pricing `consultarPrecios`/`obtenerPrecioSku`; Catalog `obtenerProductoPorSlug`; Promotions `evaluarPromociones` si aplica. `SUFICIENTE` no crea reserva; `STOCK_NOT_AVAILABLE` requiere determinación autoritativa para N unidades. |
+| F-026 crear pedido | G1/G5 owner de pedido; G5 ejecuta la creación y G6 no expone crear pedido | G5 `POST /api/v1/pedidos`; orquestación G5 usa dependencias indirectas de Inventory, Pricing y Promotions. `CREADO` no es `PAGADO`; retry conserva `Idempotency-Key` y payload; respuesta incierta se recupera conforme G5. |
 | F-031 recompra | G1 flujo; G5 historial/pedido; G6 revalida catálogo comercial actual | `NO_APLICA_G6_DIRECTO` para pedido; usar operaciones actuales de catálogo/precio/disponibilidad/promoción cuando corresponda. |
-| F-036/F-037/F-039 favoritos y recomendaciones | Persistencia y UX G1; G6 ofrece catálogo actual/elegibilidad | `listarProductos`, detalle/recomendaciones según contrato. No crear favoritos en G6. |
+| F-036 agregar favorito | G1 owner de Wishlist/upsert por identidad definida en G1 | Catalog `obtenerProductoPorSlug`/`listarProductos` valida identidad/elegibilidad. No hay API Wishlist G6. |
+| F-037 visualizar favoritos | G1 owner de persistencia/aislamiento del titular | G6 Catalog valida identidad/elegibilidad; Pricing/Inventory aportan precio/disponibilidad actuales cuando la vista los muestra. No hay API Wishlist G6. |
+| F-038 quitar favorito/Deshacer | G1 owner del delete y comportamiento Deshacer | No API G6 para borrar; revalidar identidad/elegibilidad/precio/disponibilidad con operaciones de consulta si se restaura. No crear Wishlist G6. |
+| F-039 mover favorito al carrito | G1 owner de movimiento/transacción y líneas de carrito | Catalog identidad/elegibilidad; Pricing precio vigente; Inventory verificación no vinculante cuando aplique. No hay API Wishlist G6 ni borrar favorito antes de agregar correctamente. |
 
 ## Operaciones G6, identidad y semántica
 
