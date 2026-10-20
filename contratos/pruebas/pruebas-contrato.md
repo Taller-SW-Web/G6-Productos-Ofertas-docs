@@ -422,3 +422,27 @@ La homologación contractual documentada en G5 issue #51 no acredita implementac
 - Misma identidad/operación/payload semántico produce replay sin efectos nuevos; identidad reutilizada con payload diferente produce conflicto. `message_id` identifica cada entrega RabbitMQ.
 - Las transiciones pagar/expirar/liberar se serializan por reserva y respetan el `expires_at` real de Inventario.
 - Estos contratos siguen **provisionales** hasta que backend, seguridad y pruebas integradas demuestren conformidad. No comunicar disponibilidad real por el solo hecho de que el esquema SQL fue validado.
+
+## Marketplace H4: cobertura adicional y evidencias
+
+Casos ampliados CT-MKT:
+
+| ID | Tipo | Caso / aserción | Estado |
+|---|---|---|---|
+| CT-MKT-26 | PROVIDER_CONTRACT | Producto simple elegible usa `sku_base` cuando corresponda; no deduce SKU de IDs | PENDIENTE_PROVIDER |
+| CT-MKT-27 | PROVIDER_CONTRACT | Producto con variantes conserva `variant_id != sku`; variantes no elegibles se excluyen | PENDIENTE_PROVIDER |
+| CT-MKT-28 | CONSUMER_PROVIDER | G1 page 0/1 se traduce a G6 pagina 1/2; pageSize y metadatos se preservan | PENDIENTE |
+| CT-MKT-29 | PROVIDER_CONTRACT | Filtros publicados aplican globalmente; múltiples/precio no se simulan sobre página parcial | PENDIENTE; brecha explícita |
+| CT-MKT-30 | PROVIDER_CONTRACT | Disponibilidad mapea los cuatro estados; `INDETERMINADO` es 200 distinto de 404/5xx | PENDIENTE_PROVIDER |
+| CT-MKT-31 | PROVIDER_CONTRACT | POST verificación con N líneas devuelve SUFICIENTE/INSUFICIENTE/INDETERMINADO y `binding=false`; no reserva | PENDIENTE_PROVIDER |
+| CT-MKT-32 | PROVIDER_CONTRACT | Contexto fulfillment válido, ausente/ambiguo y semánticamente inválido: fuente no resoluble → indeterminado; inválido → 422 conforme al contrato | PENDIENTE; contexto G2/G5/G6 |
+| CT-MKT-33 | PROVIDER_CONTRACT | Promoción aplicable/no aplicable y cupón válido/inválido no consumen beneficio | PENDIENTE_HTTP_HANDLER |
+| CT-MKT-34 | STATIC_CONTRACT | OperationIds y schemas de catálogo, precio, inventario, promoción, cupón/recomendación concuerdan con OpenAPI | Validar en suite estática existente |
+| CT-MKT-35 | SECURITY_INTEGRATION | JWT firmado, audience/cliente/scope/allowlist válidos permite operación | PENDIENTE_GRANT_G7 |
+| CT-MKT-36 | SECURITY_INTEGRATION | Sin scope o cliente no autorizado → 403; token expirado/firma inválida → 401 | PENDIENTE_SEGURIDAD |
+| CT-MKT-37 | CONSUMER_PROVIDER | timeout, error upstream y respuesta/schema inválido no se traducen a INDETERMINADO/AGOTADO; correlación conservada | PENDIENTE |
+| CT-MKT-38 | PROVIDER_CONTRACT | Búsqueda sin coincidencias → 200 vacío; producto no elegible no se filtra fuera de elegibilidad | PENDIENTE_PROVIDER |
+| CT-MKT-39 | E2E | Recorrido BFF G1→Gateway→owner con JWT real, dataset identificado y error/reintento | PENDIENTE_E2E |
+| CT-MKT-40 | E2E | Concurrencia carrito/deshacer y checkout/recompra; idempotencia G1/G5; estado PAGADO solo tras confirmación G5 | PENDIENTE_G1_G5 |
+
+`STATIC_CONTRACT` solo verifica el YAML. Provider, Consumer/Provider, Seguridad y E2E son estados independientes. No marcar PASS sin ejecución vinculada a SHA exacto; ver [matriz de evidencia H4](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/integraciones/g1-marketplace/MATRIZ_OPERACIONES_H4.md).

@@ -197,3 +197,7 @@ PR #86 está fusionado en el `master` contrastado. OpenAPI y AsyncAPI `0.6.0-rc.
 2. No inventar consumo/restauración de cupón para venta offline sin reserva; elevar a owners de negocio si se requiere.
 3. Mantener `0.6.0-rc.1` como candidato mientras falte evidencia de implementación y conformidad E2E.
 4. Resolver referencias contradichas o incompletas según [MATRIZ_TRAZABILIDAD_DEC_F.md](MATRIZ_TRAZABILIDAD_DEC_F.md); ninguna decisión se declara completa.
+
+## Referencia de estado G1 Marketplace H4 — 2026-10-20
+
+G6 comunicó aceptación de M-01–M-09 (`ACEPTADO_G6_COMUNICADO_G1`). Esto no altera las invariantes DEC-F ni atribuye decisiones a G1/G2/G5/G7. Para correspondencia y estado de cada operación consultar el [Acuerdo H4](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md) y la [alineación](../../integraciones/ALINEACION_MARKETPLACE.md). Las declaraciones internas de decisiones adoptadas no equivalen a contrato implementado, grant, despliegue o E2E.

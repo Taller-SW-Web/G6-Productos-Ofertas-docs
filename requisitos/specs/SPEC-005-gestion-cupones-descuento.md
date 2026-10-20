@@ -161,3 +161,5 @@ Este microservicio no procesa pagos, reembolsos ni decide el estado del pedido. 
 - Los cambios incompatibles respecto a v1/`0.5.0` requieren adaptadores, pruebas de conformidad y acuerdo con los módulos consumidores antes de publicar v2.
 
 **Precondición de cupón:** `reservation_id` debe referir una reserva realmente confirmada del pedido. `commercial_snapshot_ref` es una referencia durable producida por Ventas; no sustituye la revalidación de reglas propias de Promociones. Una evaluación no consume usos, y una restauración no precede a un consumo exitoso.
+
+> **Integración G1 Marketplace H4 (2026-10-20):** G6 aceptó y comunicó M-01–M-09 (`ACEPTADO_G6_COMUNICADO_G1`). Esta SPEC gobierna reglas funcionales de su dominio; operaciones HTTP se verifican en [OpenAPI](../../contratos/http/openapi.yaml), el reparto/estado operativo en [Acuerdo G1–G6 H4](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md) y [alineación](../../integraciones/ALINEACION_MARKETPLACE.md). No declarar runtime, grants G7, despliegue o E2E por esta referencia. Las dependencias de otros owners se limitan a la operación que les corresponde.

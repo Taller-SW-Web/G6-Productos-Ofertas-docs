@@ -1231,7 +1231,7 @@ Marketplace sigue el mismo patrón contractual de canal:
 - crea el pedido mediante Ventas/Postventa;
 - no muta Inventario directamente.
 
-La documentación pública de Marketplace todavía no define todos sus detalles técnicos, pero esto no bloquea P0 porque el ownership y el flujo del pedido ya están definidos por los lineamientos y por el acuerdo con Ventas.
+La alineación operativa H4 de G1 se documenta en el [Acuerdo G1–G6](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md) y [ALINEACION_MARKETPLACE](../../integraciones/ALINEACION_MARKETPLACE.md). G6 acepta M-01–M-09 y puede implementar capacidades de su ownership; el BFF/carrito/checkout/pedido/pago siguen bajo ownership G1/G5 según corresponda. Contrato ejecutable: OpenAPI; la documentación no acredita runtime, grant, despliegue ni E2E.
 
 ---
 
