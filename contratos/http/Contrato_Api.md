@@ -2648,7 +2648,7 @@ La proyección comercial no expone cantidades, ubicaciones internas ni versiones
 
 ### Recomendaciones
 
-La allowlist de operación OpenAPI para `obtenerRecomendaciones` incluye Marketplace, Chatbot y Retail; la operación no declara directamente `x-allowed-client-ids`. El registro `x-security-contract.service_scopes_pending_registration.recomendaciones:leer.clients` enumera solo Chatbot, por lo que queda una discrepancia del contrato pendiente de resolución. Ninguna allowlist prueba grant G7. La recomendación sigue a nivel `product_id`; `availability` reutiliza `EstadoStock`. El enriquecimiento `availability/current_price` permanece provisional mientras `D-REC-01/D-REC-02` sigan abiertas.
+La allowlist de operación OpenAPI para `obtenerRecomendaciones` declara `x-allowed-client-ids` con Marketplace, Chatbot y Retail. El registro `x-security-contract.service_scopes_pending_registration.recomendaciones:leer.clients` enumera solo Chatbot, por lo que existe una discrepancia entre la allowlist de operación y el registro de scopes pendientes que requiere resolución. Ninguna allowlist prueba grant G7. La recomendación sigue a nivel `product_id`; `availability` reutiliza `EstadoStock`. El enriquecimiento `availability/current_price` permanece provisional mientras `D-REC-01/D-REC-02` sigan abiertas.
 
 ### Correlación y rate limiting
 
