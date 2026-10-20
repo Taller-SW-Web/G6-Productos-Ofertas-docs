@@ -445,4 +445,4 @@ Casos ampliados CT-MKT:
 | CT-MKT-39 | E2E | Recorrido BFF G1→Gateway→owner con JWT real, dataset identificado y error/reintento | PENDIENTE_E2E |
 | CT-MKT-40 | E2E | Concurrencia carrito/deshacer y checkout/recompra; idempotencia G1/G5; estado PAGADO solo tras confirmación G5 | PENDIENTE_G1_G5 |
 
-`STATIC_CONTRACT` solo verifica el YAML. Provider, Consumer/Provider, Seguridad y E2E son estados independientes. No marcar PASS sin ejecución vinculada a SHA exacto; ver [matriz de evidencia H4](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/integraciones/g1-marketplace/MATRIZ_OPERACIONES_H4.md).
+`STATIC_CONTRACT` solo verifica el YAML. Provider, Consumer/Provider, Seguridad y E2E son estados independientes. No marcar PASS sin ejecución vinculada a SHA exacto; ver [matriz de evidencia H4](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/castilla/integraciones/g1-marketplace/MATRIZ_OPERACIONES_H4.md).

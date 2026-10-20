@@ -609,7 +609,7 @@ La disponibilidad de un combo es informativa y no crea una reserva de sus compon
 
 G6 aceptó y comunicó los nueve acuerdos M-01–M-09 el 2026-10-20 (`ACEPTADO_G6_COMUNICADO_G1`). La aceptación habilita trabajo interno G6 y no equivale a ratificación documental de G1, grant de G7 ni prueba de runtime. El alcance no queda limitado al primer corte de categorías/búsqueda: G1 SPECS `main@d87ebb4`, v0.7.0 (19/10), enumera 23 F con datos actuales de G6 y dos dependencias indirectas/condicionales (25 F); las responsabilidades permanecen distribuidas.
 
-La matriz exhaustiva por F, owner, operación, scope, identidad, rama/PR/SHA, implementación, CI, despliegue, grant, Provider/Consumer, E2E, dependencia y condición de cierre está en el [paquete operativo Backend](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/tree/master/integraciones/g1-marketplace). La semántica de compatibilidad vive en [ALINEACION_MARKETPLACE.md](../../integraciones/ALINEACION_MARKETPLACE.md), y la fuente normativa en el [Acuerdo H4](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md).
+La matriz exhaustiva por F, owner, operación, scope, identidad, rama/PR/SHA, implementación, CI, despliegue, grant, Provider/Consumer, E2E, dependencia y condición de cierre está en el [paquete operativo Backend](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/tree/castilla/integraciones/g1-marketplace). La semántica de compatibilidad vive en [ALINEACION_MARKETPLACE.md](../../integraciones/ALINEACION_MARKETPLACE.md), y la fuente normativa en el [Acuerdo H4](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md).
 
 ### Ejemplos por dominio
 
