@@ -4,10 +4,10 @@
 **Módulo propietario:** Productos y Ofertas  
 **Documento de integración:** `Contrato_Api.md`  
 **Contrato HTTP canónico:** `openapi.yaml` (`0.6.0-rc.1`, provisional)
-**Contrato asíncrono canónico:** `../eventos/asyncapi.yaml` (`0.6.0-rc.1`, provisional)
+**Contrato asíncrono canónico:** `../eventos/asyncapi.yaml` (`0.6.0-rc.2`, candidato)
 **Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (referencia humana; base histórica `0.5.0`, candidato de 40 mensajes)
 **Catálogo de errores canónico:** `contratos/http/catalogo-errores.md` (vocabulario estable de códigos)
-**Estado:** `0.5.0` como línea base histórica/de compatibilidad; OpenAPI/AsyncAPI `0.6.0-rc.1` como contrato candidato B1–B4. Su presencia en la rama no acredita despliegue, permisos de G7 ni pruebas de integración.
+**Estado:** `0.5.0` como línea base histórica/de compatibilidad; OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.2` como contratos candidatos B1–B4. La revisión AsyncAPI `rc.2` cambia el vhost y precisa la detección unroutable; no acredita despliegue, permisos de G7 ni pruebas de integración.
 
 ## Fuentes utilizadas
 
@@ -1811,7 +1811,7 @@ Referencia humana:
 contratos/eventos/catalogo-eventos.md
 ```
 
-La línea base histórica AsyncAPI `0.5.0` documentó **39 mensajes lógicos**. En la rama `nueva`, el contrato ejecutable candidato AsyncAPI `0.6.0-rc.1` contiene **40 canales y 40 mensajes**, incluido `inventory.reservation.rejected`, sin que esa cifra demuestre publicación real de eventos.
+La línea base histórica AsyncAPI `0.5.0` documentó **39 mensajes lógicos**. El contrato ejecutable candidato AsyncAPI `0.6.0-rc.2` contiene **40 canales y 40 mensajes**, incluido `inventory.reservation.rejected`, sin que esa cifra demuestre publicación real de eventos.
 
 Entre los mensajes externos/integradores más relevantes están:
 
@@ -2409,7 +2409,7 @@ Cambios rompientes requieren nueva versión del schema o del canal contractual.
 VHost:
 
 ```text
-/marketplace
+g6-productos-ofertas
 ```
 
 Exchanges:
@@ -2594,7 +2594,7 @@ Seguridad:
 - emite tokens de servicio con `aud` y `scope` para APIs propietarias;
 - permite introspección para cambios de precio según el contrato vigente.
 
-La línea base histórica consolidada es OpenAPI/AsyncAPI `0.5.0`; los archivos ejecutables de la rama `nueva` contienen el candidato `0.6.0-rc.1`. El catálogo humano de eventos corresponde a 40 mensajes de ese candidato y su estado editorial no acredita despliegue.
+La línea base histórica consolidada es OpenAPI/AsyncAPI `0.5.0`; los archivos ejecutables contienen OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.2` como candidatos. El catálogo humano de eventos corresponde a los 40 mensajes y su estado editorial no acredita despliegue.
 
 A partir de esta versión, cualquier cambio de rutas HTTP debe realizarse primero en `contratos/http/openapi.yaml`; los cambios de mensajería deben realizarse primero en `contratos/eventos/asyncapi.yaml`; después se actualizan los documentos humanos derivados.
 

@@ -99,6 +99,10 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 | Catálogo de errores | [`contratos/http/catalogo-errores.md`](contratos/http/catalogo-errores.md) | Semántica estable de errores del módulo |
 | Catálogo de eventos | [`contratos/eventos/catalogo-eventos.md`](contratos/eventos/catalogo-eventos.md) | Eventos publicados y consumidos |
 | Topología RabbitMQ | [`contratos/eventos/rabbitmq-topologia.md`](contratos/eventos/rabbitmq-topologia.md) | Definición física de exchanges, colas y retries |
+| Decisiones RabbitMQ | [`arquitectura/decisiones/rabbitmq.md`](arquitectura/decisiones/rabbitmq.md) | Decisión interna G6 y estados de homologación/implementación |
+| Operación RabbitMQ | [`arquitectura/operacion-rabbitmq.md`](arquitectura/operacion-rabbitmq.md) | Aprovisionamiento, permisos por aplicación y operación |
+| Pruebas aisladas de RabbitMQ | [`tests/rabbitmq-aislamiento/README.md`](tests/rabbitmq-aislamiento/README.md) | Smoke esencial predeterminado y pruebas ampliadas explícitas para la candidata A en RabbitMQ 4.2.9 aislado |
+| Transición RabbitMQ | [`integraciones/transicion-rabbitmq.md`](integraciones/transicion-rabbitmq.md) | Cambio de vhost, impacto intermodular y pendientes de homologación |
 | Kit de integración | [`contratos/http/kit-integracion.md`](contratos/http/kit-integracion.md) | Guía práctica de integración para otros módulos |
 | Matriz de pruebas de contrato | [`contratos/pruebas/pruebas-contrato.md`](contratos/pruebas/pruebas-contrato.md) | Casos estáticos, provider, consumer/provider, seguridad e integración |
 | Acuerdos de integración | [`integraciones/`](integraciones/) | Documentación de alineaciones, acuerdos publicados y pendientes de homologación con otros módulos; consultar cada artefacto para conocer su estado. |
@@ -267,14 +271,14 @@ La explicación humana de responsabilidades e integración se mantiene en:
 | Artefacto | Versión |
 |---|---|
 | OpenAPI 3.1.0 | `0.6.0-rc.1`, contrato candidato de la rama `nueva` |
-| AsyncAPI 3.0.0 | `0.6.0-rc.1`, contrato candidato; 40 canales / 40 mensajes |
+| AsyncAPI 3.0.0 | `0.6.0-rc.2`, contrato candidato; 40 canales / 40 mensajes; adopta internamente `g6-productos-ofertas` y mantiene los recursos/mensajes existentes |
 | Línea base histórica OpenAPI/AsyncAPI | `0.5.0` (compatibilidad; no sustituida automáticamente en runtime) |
 | Catálogo de errores | Vocabulario humano de códigos, alineado con el contrato candidato |
 | Catálogo de eventos | 40 mensajes documentados; publicación real pendiente de comprobación |
 | Topología RabbitMQ | Contrato físico documentado, sin inferir aprovisionamiento del entorno |
 | Kit de integración | Guía documental derivada del contrato candidato |
 
-**Estado de publicación:** la presencia de `0.6.0-rc.1` en GitHub **no acredita** handlers desplegados, grants de G7, pruebas E2E ni compatibilidad de consumidores. No anunciar estos contratos como APIs vivas por el mero contenido YAML.
+**Estado de publicación:** OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.2` son candidatas. Su presencia en GitHub **no acredita** handlers desplegados, grants de G7, homologación del vhost, pruebas E2E ni compatibilidad de consumidores. No anunciar estos contratos como APIs vivas por el mero contenido YAML.
 
 ---
 
