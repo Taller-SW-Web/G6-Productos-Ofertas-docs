@@ -1,0 +1,17 @@
+{
+  "source": "Immutable canonical hashes captured from AsyncAPI 0.6.0-rc.2 in the origin/master baseline. Physical names and binding status metadata are excluded; tests do not query Git or the network.",
+  "counts": {
+    "channels": 40,
+    "messages": 40,
+    "operations": 80
+  },
+  "sha256": {
+    "channels": "14b292ebd5bd306be0b1c46ecc31e07ab60a1d0ffbc5a9146cea8a54cc536947",
+    "messages": "227166e50eaececf5bf3f3f8f4a60805daba3e43d0719893b9a504a70925699a",
+    "payloads_and_message_metadata": "227166e50eaececf5bf3f3f8f4a60805daba3e43d0719893b9a504a70925699a",
+    "schemas": "d5db8cdf40d0fce8662ccc200f0bdacd26dbe11116216b3cbb40ced6d2e6fa69",
+    "operations": "fac86680a7d08462e1f0cb8c0e5983792cd9becc502a2b7af70c586bd0c2d2ff",
+    "producers_and_consumers": "52a02bf206b0cf1f6ecc03e4dd7828d4c0960fc626db2dc9c56e7261696a0c55",
+    "commercial_routing_keys": "b98c16fd92e5f87b88d3583e065b0f4f7844d5d969c8caf24897fa9f1df0909f"
+  }
+}
