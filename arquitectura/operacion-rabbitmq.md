@@ -45,7 +45,7 @@ Una cuenta runtime no debería poder cambiar topología. Antes de retirar el per
 
 ### Cuentas propuestas
 
-| Aplicación | Identidad objetivo | Cola principal objetivo |
+| Aplicación | Identidad observada históricamente (runtime actual no verificado) | Cola principal objetivo |
 |---|---|---|
 | Taxonomía | `g6_taxonomia` | `po.taxonomia.q` |
 | Catálogo | `g6_catalogo` | `po.catalogo.q` |
@@ -58,7 +58,7 @@ Una cuenta runtime no debería poder cambiar topología. Antes de retirar el per
 | Pasarela de API | `g6_pasarela` | `po.pasarela.q` |
 | Ventas G5 (externo) | `g5_ventas` | `po.ventas.q` |
 
-**Las identidades G6 de esta tabla son previstas, no observadas ni credenciales existentes.** AsyncAPI `0.6.0-rc.3` refleja nombres base de la observación histórica, pero no acredita adaptación del código, provisión actual ni homologación G5. La necesidad contractual de publicar se deriva de operaciones AsyncAPI y no del nombre de identidad.
+Las identidades figuran en la auditoría Oracle del 19/10, pero esta evidencia histórica no acredita que su ACL actual, sus credenciales vigentes o la conexión runtime hayan sido verificadas nuevamente. AsyncAPI `0.6.0-rc.3` refleja nombres base observados, pero no acredita adaptación del código, provisión actual ni homologación G5.
 
 <a id="matriz-rabbitmq-por-aplicacion"></a>
 
