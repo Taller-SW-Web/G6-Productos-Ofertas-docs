@@ -28,6 +28,8 @@ La auditoría de infraestructura realizada el 14 de octubre de 2026 observó Rab
 
 La candidata AsyncAPI `0.6.0-rc.3` usa los nombres observados en la auditoría histórica Oracle del 2026-10-19 (RabbitMQ 4.2.9, vhost `g6-productos-ofertas`). Los nombres y tipos de la infraestructura base son referencia documental; no se renombrarán ni recrearán recursos en el broker por este cambio. La incompatibilidad afecta identidades físicas, no claves lógicas.
 
+Los identificadores nuevos usan minúsculas, sin tildes, `ñ`, espacios ni datos personales; puntos separan segmentos y guiones separan palabras compuestas. `po` identifica Productos y Ofertas; `.x` y `.q` distinguen exchanges y colas. La cola representa a su consumidor. Esta convención no autoriza traducir routing keys comerciales publicadas: solo cambian referencias de recursos físicos expresamente versionadas.
+
 | Recurso | Candidato anterior | Nombre físico observado y candidato rc.3 | Tipo/estado |
 |---|---|---|---|
 | Exchange comandos | `po.commands.x` | `po.comandos.x` | topic, durable; base observada |
@@ -54,7 +56,7 @@ El reporte de auditoría registra 57 bindings, pero las definiciones físicas in
 
 ## 4. Identidades y permisos
 
-**Observación histórica de auditoría (2026-10-19):** para `g5_ventas` en `g6-productos-ofertas` se registró `write` sobre `po.comandos.x`, `read` sobre `po.ventas.q` y `configure` denegado. Esto no prueba conexión, publicación, entrega, consumo ni aceptación de mensajes. Para las demás identidades no se dispone aquí de evidencia ACL física individual. Los permisos observados no amplían permisos contractuales deseados ni constituyen una autorización nueva.
+**Observación histórica de auditoría (2026-10-19):** la matriz [RabbitMQ Oracle](../../contratos/eventos/compatibilidad-rabbitmq-oracle.md) transcribe `configure`/`write`/`read` para las diez identidades consultadas. Esto no prueba conexión, publicación, entrega, consumo ni aceptación de mensajes y no representa ACL runtime actual. La auditoría no registra topic permissions. Los permisos observados no amplían permisos contractuales ni constituyen una autorización nueva.
 
 
 - Se asignará **una identidad técnica por aplicación**, más identidades externas autorizadas. Convención: `g6_<dominio>` y, para G5, `g5_ventas` (sujeto a aceptación de G5).

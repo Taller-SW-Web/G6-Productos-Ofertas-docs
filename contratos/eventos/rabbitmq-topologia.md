@@ -1,53 +1,57 @@
 # Topología RabbitMQ — Productos y Ofertas
 
-**Contrato ejecutable:** [AsyncAPI](asyncapi.yaml), candidata `0.6.0-rc.3`. **Estado:** infraestructura base observada históricamente en Oracle el 2026-10-19; homologación externa pendiente; despliegue y conectividad no acreditados.
+**Fuente ejecutable:** [AsyncAPI](asyncapi.yaml), candidata `0.6.0-rc.3`. La topología base fue observada históricamente en Oracle el 2026-10-19; homologación, correspondencia de bindings, implementación y estado runtime actual no se acreditan.
 
-## 1. Alcance de la reconciliación
+## 1. Alcance y recursos base
 
-La auditoría reportó RabbitMQ 4.2.9, vhost `g6-productos-ofertas`, cuatro exchanges base, diez colas de aplicación y una cola operativa, todas quorum y durables, y 57 bindings observados. Se conservan exactamente el vhost, el conjunto de 40 mensajes/canales, operaciones, productores, consumidores, payloads, esquemas y routing keys comerciales de `0.6.0-rc.2`. `0.6.0-rc.3` modifica referencias físicas de topología base y los metadatos documentales correspondientes.
+El vhost candidato es `g6-productos-ofertas`. La observación reportó cuatro exchanges base y once colas, todas durable; las colas son quorum. AsyncAPI declara 56 bindings para las diez colas principales y uno operativo de `po.sin-ruta.x` a `po.sin-ruta.q` con `#`, total 57. La auditoría también enumeró 57 bindings físicos, pero no hay definiciones individuales para comparar cada par exchange/cola/clave: **`PENDIENTE_VERIFICACION`**. Véase la [matriz de compatibilidad](compatibilidad-rabbitmq-oracle.md), que centraliza nombres, operaciones, bindings contractuales, ACL observadas y límites.
 
-La observación es histórica y no acredita estado actual del servidor, homologación bilateral, permisos completos, conexión AMQP, entrega, ACK, despliegue ni E2E. Las definiciones individuales de los 57 bindings no están disponibles; por ello la correspondencia binding a binding permanece `PENDIENTE_VERIFICACION`, aunque el conteo del candidato coincida. Véase la [matriz de compatibilidad](compatibilidad-rabbitmq-oracle.md).
+Los exchanges base candidatos son `po.comandos.x` (topic), `po.eventos.x` (topic), `po.resultados.x` (topic) y `po.sin-ruta.x` (fanout). Las colas de servicio son `po.catalogo.q`, `po.pasarela.q`, `po.promociones.q`, `po.combos.q`, `po.inventario.q`, `po.precios.q`, `po.auditoria-precios.q`, `po.ventas.q`, `po.taxonomia.q` y `po.masivos.q`; la cola operativa es `po.sin-ruta.q`.
 
-## 2. Exchanges base
+El estado `base-observed-not-homologated` expresa una observación histórica y un contrato candidato. No significa que el recurso siga en el broker, esté provisionado desde esta definición, sea accesible, esté homologado ni que una publicación se haya entregado. Las routing keys siguen siendo los nombres lógicos de mensajes; esta reconciliación no las traduce.
 
-| Nombre físico | Tipo | Durabilidad | Observación |
-|---|---|---|---|
-| `po.comandos.x` | topic | durable | Observado |
-| `po.eventos.x` | topic | durable | Observado |
-| `po.resultados.x` | topic | durable | Observado |
-| `po.sin-ruta.x` | fanout | durable | Observado |
+## 2. Publicación, entrega y confiabilidad
 
-Las tres exchanges de mensajes de negocio declaran `po.sin-ruta.x` como alternate exchange. `mandatory=true`, `basic.return` y publisher confirms son señales separadas: una ruta al alternate exchange cuenta como enrutada; si tampoco hay ruta alternativa, se genera `basic.return`. Un publisher confirm acredita la confirmación del broker respecto de la publicación, no la recepción ni el ACK del consumidor.
+- Entrega at-least-once; los duplicados son posibles.
+- Usar mensajes persistentes cuando aplique y publisher confirms. Un confirm informa aceptación por el broker, no entrega ni ACK del consumidor.
+- Consumidores con ACK manual; confirmar el mensaje solo después de persistir el resultado o completar el efecto idempotente.
+- Outbox transaccional vincula cambios de base de datos con publicación eventual. Inbox/deduplicación se aplica antes de efectos secundarios; `message_id` identifica transporte y `operation_id` la idempotencia funcional cuando corresponde.
+- Prefetch inicial documentado: `20` por consumidor; cualquier ajuste requiere medición y prueba.
+- Con `mandatory=true`, `basic.return` indica que no hubo ruta ni en el alternate exchange. Si el alternate captura el mensaje, se considera enrutado y no hay `basic.return`. Observar retornos y publisher confirms como señales distintas.
 
-## 3. Colas base observadas
+La matriz de operaciones por productor/consumidor está en [compatibilidad RabbitMQ Oracle](compatibilidad-rabbitmq-oracle.md); no se replica aquí.
 
-Las diez colas principales y la cola operativa observada son quorum y durables. `po.sin-ruta.q` se reserva para operación/diagnóstico y no pertenece a un contexto comercial. La lista de servicios, routing keys contractuales y permisos observados se mantiene en la [matriz de compatibilidad](compatibilidad-rabbitmq-oracle.md).
+## 3. Rechazos de negocio y flujo Retry/DLX candidato
 
-| Cola física | Uso contractual | Estado |
-|---|---|---|
-| `po.catalogo.q` | Catálogo | Observada |
-| `po.pasarela.q` | Pasarela/BFF | Observada |
-| `po.promociones.q` | Promociones | Observada |
-| `po.combos.q` | Combos | Observada |
-| `po.inventario.q` | Inventario | Observada |
-| `po.precios.q` | Precios | Observada |
-| `po.auditoria-precios.q` | Auditoría de precios | Observada |
-| `po.ventas.q` | Consumidor externo Ventas G5 | Observada |
-| `po.taxonomia.q` | Taxonomía | Observada |
-| `po.masivos.q` | Operaciones masivas | Observada |
-| `po.sin-ruta.q` | Captura operativa sin ruta | Observada; no comercial |
+Un rechazo de negocio válido se ACKea y, si el contrato define resultado, se publica ese resultado. No se convierte en error técnico ni DLQ por sí solo. Ejemplos de rechazo funcional son stock insuficiente, cupón sin cupo o reserva no activa.
 
-## 4. Retry/DLX: diseño candidato bloqueado
+El diseño previo describe para fallos técnicos transitorios hasta tres reintentos de aplicación con intervalo candidato de `30 s`, una cola `.retry` por principal y DLQ al agotar intentos. Los detalles de identificadores técnicos deben referenciar el nombre reconciliado de la cola principal. Esto es **diseño histórico/candidato**, no flujo actualmente aprobado ni configurado.
 
-**NO APROBADO, NO APROVISIONADO, NO HOMOLOGADO.** `po.retry.x` y `po.dlx.x` conservan los nombres y tipos del diseño candidato; no se traducen ni se agregan recursos físicos. Las colas `<cola>.retry`, `<cola>.dlq` y sus claves técnicas acompañan el nombre reconciliado de la cola principal cuando la referencian, pero siguen sin aprobar ni desplegar. No activar políticas ni permisos runtime.
+**Estado actual del diseño Retry/DLX: NO APROBADO, NO APROVISIONADO, NO HOMOLOGADO; gate BLOQUEADO.** `po.retry.x` y `po.dlx.x` conservan nombres y tipos candidatos `direct`; no se traducen, no se crean recursos, no se activan políticas ni se conceden permisos runtime. A/B/C no se adoptan. Se conserva `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`: el ensayo focalizado histórico observó retención/NACK bajo saturación, pero no la recuperación posterior dentro de la ventana y terminó **FAIL**. No afirmar que las pruebas Retry/DLX pasaron.
 
-El gate de recuperación está bloqueado y se conserva el hallazgo `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`. La evaluación aislada que no verificó recuperación no constituye aprobación. Cualquier futura adopción requiere resolver ese gate y utilizar una versión candidata posterior a `0.6.0-rc.3`.
+El gate exige explicar y repetir la recuperación bajo capacidad llena/indisponibilidad, validar TTL, límite de intentos, ausencia de ciclos y duplicados, permisos efectivos, persistencia, Outbox/Inbox e idempotencia. Las pruebas aisladas no demostrarían por sí solas comportamiento de handlers reales ni E2E. Toda futura adopción requiere una versión candidata posterior a `0.6.0-rc.3`.
 
-## 5. Estado G5 y permisos
+## 4. Mensajes sin ruta y aceptación
 
-La auditoría reportó históricamente para `g5_ventas`, en `g6-productos-ofertas`: `write` en `po.comandos.x`, `read` en `po.ventas.q` y `configure` denegado. La existencia de la identidad y esos permisos observados no prueba conexión, publicación, entrega, consumo ni aceptación de mensajes. La homologación de nombres, red privada/túnel, identidad y ACL, publisher confirms, ACK, idempotencia y pruebas bilaterales permanece pendiente. No se agregan credenciales ni permisos por esta documentación.
+Los exchanges base usan `po.sin-ruta.x` como alternate exchange. El binding operativo `po.sin-ruta.x` → `po.sin-ruta.q` usa fanout y clave `#`; la cola no es un consumidor comercial. Una publicación sin binding principal que llega a esa cola no produce `basic.return`; una prueba aislada sin binding alternate debe producir `basic.return` con `mandatory=true`. Deben observarse también los publisher confirms, por separado.
 
-## 6. Referencias
+La aceptación contractual estática comprueba referencias y bindings declarados. Las pruebas runtime futuras, en entorno aislado, cubren ambos caminos (alternate captura / alternate sin ruta), permisos autorizados/denegados, publicación confirmada, consumo/ACK, duplicación/idempotencia y alertas. No alterar topología productiva para simular el caso sin alternate.
+
+## 5. Seguridad, permisos y declaraciones
+
+Las ACL observadas en octubre por identidad, el alcance de recurso requerido por operaciones y diferencias pendientes están en la [matriz de compatibilidad](compatibilidad-rabbitmq-oracle.md). Las ACL de recurso `configure`/`write`/`read` no sustituyen topic permissions: la auditoría no reporta topic permissions y no deben inferirse desde `write`.
+
+La identidad de aprovisionamiento declara vhost, exchanges, colas, bindings, argumentos y políticas autorizados. La identidad runtime no obtiene `configure`; usa recursos preaprovisionados y solo consume su cola contractual. El flujo de arranque debe probarse antes de conceder credenciales: una declaración activa requiere `configure`; una declaración pasiva en RabbitMQ 4.2.7+ requiere algún permiso aplicable al recurso. `basic.consume` requiere `read` sobre la cola. En una cola declarada con DLX, RabbitMQ verifica `read` de la cola y `write` del DLX durante la declaración; el aprovisionador, no el runtime, satisface las autorizaciones de creación.
+
+Las pruebas de autorización positivas y negativas, incluyendo topic permissions exactos, lectura cruzada, `configure`, exchanges compartidos, exchange por defecto y rutas laterales, son gates de operación descritos en [Operación de RabbitMQ](../../arquitectura/operacion-rabbitmq.md). No son permisos concedidos ni resultados de runtime de este candidato.
+
+## 6. Cambios de infraestructura, respaldo y reversión
+
+No se deriva una orden de modificar recursos del broker desde esta topología. Una operación futura requiere diff declarativo revisado, inventario reciente de recursos y bindings, identificación de mensajes pendientes, aprobación de owners, backup protegido y restauración ensayada en aislamiento. JSON de definiciones no contiene mensajes; restaurar definiciones no mueve mensajes entre vhosts.
+
+No cambiar tipos in-place, purgar ni recrear colas con mensajes. Ante fallo, detener nuevos publishers del lote, estabilizar consumidores y reconciliar mensajes confirmados/no confirmados, pendientes y duplicados. Revertir solo con compatibilidad demostrada y ensayo de consistencia que evite perder o repetir efectos funcionales. Cualquier recuperación se documenta con versión del broker, SHA, entorno, tiempo y limitaciones.
+
+## 7. Referencias
 
 - [Matriz de compatibilidad RabbitMQ Oracle](compatibilidad-rabbitmq-oracle.md)
 - [Decisiones de RabbitMQ](../../arquitectura/decisiones/rabbitmq.md)
@@ -56,7 +60,7 @@ La auditoría reportó históricamente para `g5_ventas`, en `g6-productos-oferta
 
 ## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
 
-**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+**Histórico: decisión interna aprobada; objetivo `0.6.0-rc.1` (no desplegado).**
 
 - `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
 - `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.

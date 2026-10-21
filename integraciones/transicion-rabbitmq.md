@@ -10,7 +10,7 @@ La auditoría reportó RabbitMQ 4.2.9, vhost `g6-productos-ofertas`, cuatro exch
 
 Esta candidata conserva 40 canales y mensajes, operaciones, productores, consumidores, payloads, esquemas, routing keys comerciales y vhost respecto de `0.6.0-rc.2`. No cambia broker, ACL, red, credenciales ni código. La observación histórica no demuestra estado actual, binding individual, homologación, conectividad, entrega, ACK, despliegue ni E2E.
 
-La auditoría registra 57 bindings físicos y el candidato contiene 56 entradas de binding en las diez colas principales; no están disponibles definiciones físicas para comparar cada exchange/cola/clave. La correspondencia exacta se mantiene `PENDIENTE_VERIFICACION`. La cantidad diferente refuerza que no se debe afirmar equivalencia. Véase la [matriz de compatibilidad](../contratos/eventos/compatibilidad-rabbitmq-oracle.md).
+El contrato contiene 56 bindings en las diez colas principales y un binding operativo de `po.sin-ruta.x` a `po.sin-ruta.q` (`#`): 57 en total. La auditoría reporta 57 físicos; las definiciones individuales no están disponibles para contrastar exchange/cola/clave, así que la correspondencia exacta continúa `PENDIENTE_VERIFICACION`. Véase la [matriz de compatibilidad](../contratos/eventos/compatibilidad-rabbitmq-oracle.md).
 
 ## 2. Correspondencia de nombres físicos
 
@@ -55,9 +55,60 @@ Retry/DLX permanece **BLOQUEADO**, **NO APROBADO**, **NO APROVISIONADO** y **NO 
 
 `0.6.0-rc.3` corresponde exclusivamente a la reconciliación base. Una adopción futura de retry/DLX requiere superar sus gates y tramitarse mediante una versión candidata posterior, cuyo número no se fija aquí.
 
-## 5. Validación y publicación
+## 5. Lotes de ejecución previstos y gates
 
-La verificación local de la candidata debe comprobar YAML/AsyncAPI, referencias, nombres base, bindings contractuales, invariantes lógicas frente a `0.6.0-rc.2`, enlaces y diff. Estas comprobaciones documentales no acreditan broker Oracle, conectividad, homologación, recepción, ACK ni E2E.
+Los siguientes son gates para una transición de infraestructura futura, no tareas autorizadas por este PR ni evidencia de ejecución.
+
+### Lote A — Contrato y coordinación
+
+- Identificar AsyncAPI `0.6.0-rc.3` como candidata incompatible de nombres físicos; inventariar productores, consumidores, configuración, bindings y pruebas que aún usen identificadores anteriores.
+- Comunicar a cada owner la versión, el mapeo, las operaciones afectadas y el plan de adaptación. No mezclar publishers con nombres de versiones distintas.
+- Registrar aprobación por responsable/alcance; el silencio no constituye homologación. Para G5: aceptar nombres, red privada o túnel, identidad/ACL, confirms, ACK, idempotencia, estrategia de despliegue y prueba bilateral reproducible.
+- Cerrar divergencias de contrato y permisos; distinguir observación física, contrato, implementación y pruebas.
+
+### Lote B — Preparación de infraestructura
+
+- Repetir inventario de solo lectura justo antes de cualquier cambio: vhost, recursos, bindings exactos, conexiones, consumidores, `ready`, `unacked`, políticas y dependencias de clientes. No asumir que el corte Oracle histórico sigue vigente.
+- Exportar definiciones actuales en ubicación protegida; comprobar respaldos JSON/GPG existentes, preservar originales y ensayar restauración en ambiente aislado. Una exportación de definiciones no respalda mensajes.
+- Aprobar un diff declarativo e idempotente, matriz ACL y prueba positiva/negativa. Las identidades de aplicación no administran; no habilitar `configure` runtime sin evidencia del arranque del cliente.
+- Confirmar red desde ubicaciones reales, controles de firewall/OCI y TLS o transporte privado para G5. No exponer AMQP públicamente por conveniencia.
+- No cambiar tipo de exchange, recrear colas con mensajes ni retirar recursos previos sin plan de drenaje, compatibilidad y reversión aprobados.
+
+### Lote C — Piloto y homologación G5
+
+- Solo después de aprobaciones externas e internas correspondientes, aplicar el cambio autorizado en entorno/piloto aislado mediante proceso de infraestructura con SHA, operador y ventana registrados.
+- Validar publicación y routing de mensajes sintéticos, publisher confirms, `mandatory`/`basic.return`, consumo de cola propia, ACK tras persistencia/efecto idempotente y observabilidad; luego probar con G5 en ventana coordinada.
+- El gate de G5 solo cierra con recepción/tratamiento confirmados por ambas partes y evidencia reproducible ligada a versión/commit/entorno. Sin participación bilateral, el estado permanece parcial, no E2E.
+- Mantener Retry/DLX fuera del piloto mientras `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA` siga abierta.
+
+### Lote D — Adopción gradual restante
+
+- Migrar productores y consumidores por owner y versión contractual; verificar mensajes pendientes, duplicados, orden, consistencia de Outbox/Inbox y efectos funcionales por servicio.
+- Definir explícitamente convivencia temporal o corte coordinado; ninguna doble publicación o alias se presume segura.
+- Retirar nombres anteriores únicamente cuando el inventario demuestre ausencia de dependencias, conexiones y mensajes pendientes, exista respaldo y el plan de reversión esté probado.
+
+## 6. Criterios de aprobación de infraestructura
+
+- [ ] Estado de broker y bindings exportado en la ventana; mapeo exacto contrastado, no inferido por conteo.
+- [ ] Homologación de cada externo afectado, en particular G5, documentada por owner.
+- [ ] ACL de recurso y topic permissions revisados por separado; permisos efectivos probados con casos permitidos y denegados.
+- [ ] Declaraciones de recursos realizadas por identidad de aprovisionamiento; runtime consume recursos preaprovisionados sin privilegios de administración.
+- [ ] Red/TLS y permisos probados desde el origen real de cada aplicación.
+- [ ] Flujo de prueba confirma publicación, ruta, persistencia/efecto, ACK e idempotencia; `basic.return` y publisher confirm se interpretan por separado.
+- [ ] Métricas, alertas, responsables de ventana e incidentes verificados.
+- [ ] Evidencia reproducible asociada a SHA, versión, fecha, entorno y alcance; separada de homologación y despliegue.
+
+## 7. Respaldo, reversión y recuperación
+
+Antes de un corte, exportar definiciones/topología de forma protegida y verificar la restauración en aislamiento. Para datos de mensajes, utilizar un procedimiento consistente con la versión e identidad del nodo y ensayarlo; importar definiciones no mueve ni reconstituye mensajes. Retención, RTO/RPO, propietario y almacenamiento externo requieren acuerdo, no se inventan aquí.
+
+Si falla una etapa, detener nuevos publishers del lote para evitar escrituras cruzadas, estabilizar consumidores e inventariar mensajes confirmados, no confirmados, pendientes y técnicos en retry. Revertir conexiones solo si los recursos siguen siendo compatibles y el ensayo demuestra que no se pierden ni duplican efectos. No purgar, recrear colas con mensajes ni eliminar vhosts automáticamente. Recuperación funcional exige prueba aislada de topología, permisos, mensajes sintéticos, reconexión e idempotencia y evidencia con duración y limitaciones.
+
+Retry/DLX conserva el resultado histórico **FAIL** de recuperación bajo saturación y permanece bloqueado. No es criterio cumplido ni parte de un procedimiento operativo aprobable hasta resolver `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`; las alternativas A/B/C siguen no aprobadas y no aprovisionadas.
+
+## 8. Validación documental
+
+La verificación de esta candidata comprueba YAML/AsyncAPI, referencias, nombres base, bindings contractuales, invariantes lógicas contra `0.6.0-rc.2`, enlaces y diff. No acredita broker Oracle, conectividad, homologación, recepción, ACK, respaldo restaurable, despliegue ni E2E.
 
 No cambiar recursos de broker, colas con mensajes, bindings, políticas, usuarios, credenciales o redes como parte de esta transición documental. Cualquier cambio físico requiere autorización y un procedimiento propio coordinado con sus owners.
 

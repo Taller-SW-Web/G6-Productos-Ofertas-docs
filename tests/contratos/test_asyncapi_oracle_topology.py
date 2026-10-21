@@ -1,12 +1,13 @@
-from copy import deepcopy
+import hashlib
+import json
 from pathlib import Path
-import subprocess
 import unittest
+
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-BASE_SHA = "c36bd9a18f4fdb188df0d7e5158a431cf4b4ea7b"
-BASE_FILE = "contratos/eventos/asyncapi.yaml"
+CONTRACT_FILE = ROOT / "contratos/eventos/asyncapi.yaml"
+FIXTURE_FILE = ROOT / "tests/contratos/fixtures/asyncapi-0.6.0-rc.2-invariants.json"
 EXPECTED_EXCHANGES = {
     "po.comandos.x": "topic",
     "po.eventos.x": "topic",
@@ -46,14 +47,47 @@ def without_keys(value, keys):
     return value
 
 
+def canonical_hash(value):
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def logical_snapshot(document):
+    channels = without_keys(document["channels"], {"x-exchange", "x-binding-status"})
+    messages = without_keys(document["components"]["messages"], {"x-exchange"})
+    schemas = document["components"]["schemas"]
+    operations = document["operations"]
+    producers_consumers = {
+        name: {"producer": msg.get("x-producer"), "consumers": msg.get("x-consumers", [])}
+        for name, msg in sorted(document["components"]["messages"].items())
+    }
+    routing_keys = {
+        name: channel["x-routing-key"]
+        for name, channel in sorted(document["channels"].items())
+    }
+    return {
+        "counts": {
+            "channels": len(channels),
+            "messages": len(messages),
+            "operations": len(operations),
+        },
+        "sha256": {
+            "channels": canonical_hash(channels),
+            "messages": canonical_hash(messages),
+            "payloads_and_message_metadata": canonical_hash(messages),
+            "schemas": canonical_hash(schemas),
+            "operations": canonical_hash(operations),
+            "producers_and_consumers": canonical_hash(producers_consumers),
+            "commercial_routing_keys": canonical_hash(routing_keys),
+        },
+    }
+
+
 class AsyncApiOracleTopologyRegression(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.current = yaml.safe_load((ROOT / BASE_FILE).read_text(encoding="utf-8"))
-        raw = subprocess.check_output(
-            ["git", "show", f"{BASE_SHA}:{BASE_FILE}"], cwd=ROOT, text=True, encoding="utf-8"
-        )
-        cls.baseline = yaml.safe_load(raw)
+        cls.current = yaml.safe_load(CONTRACT_FILE.read_text(encoding="utf-8"))
+        cls.fixture = json.loads(FIXTURE_FILE.read_text(encoding="utf-8"))
 
     def test_asyncapi_version_and_local_references(self):
         self.assertEqual(self.current["asyncapi"], "3.0.0")
@@ -87,8 +121,9 @@ class AsyncApiOracleTopologyRegression(unittest.TestCase):
         for name in observed_queues:
             self.assertEqual(topology["queues"][name]["type"], "quorum", name)
             self.assertIs(topology["queues"][name]["durable"], True, name)
-        self.assertEqual(topology["queues"]["po.sin-ruta.q"]["consumer"], "platform/operations")
-        self.assertIn("no es una cola de negocio", topology["queues"]["po.sin-ruta.q"]["purpose"])
+        unrouted = topology["queues"]["po.sin-ruta.q"]
+        self.assertEqual(unrouted["consumer"], "platform/operations")
+        self.assertIn("no es una cola de negocio", unrouted["purpose"])
 
     def test_channel_message_exchange_and_binding_references(self):
         topology = self.current["x-rabbitmq-topology"]
@@ -100,14 +135,32 @@ class AsyncApiOracleTopologyRegression(unittest.TestCase):
         for message in self.current["components"]["messages"].values():
             self.assertIn(message["x-exchange"], base_exchanges)
         for queue_name, queue in topology["queues"].items():
-            for binding in queue.get("bindings", []):
+            bindings = list(queue.get("bindings", []))
+            if queue.get("binding"):
+                bindings.append(queue["binding"])
+            for binding in bindings:
                 self.assertIn(binding["exchange"], exchanges, queue_name)
         for name, kind in (("po.retry.x", "direct"), ("po.dlx.x", "direct")):
             self.assertEqual(exchanges[name]["type"], kind)
             self.assertEqual(exchanges[name]["status"], "candidate-not-approved")
             self.assertIs(exchanges[name]["provisioned"], False)
-        self.assertEqual(topology["observation"]["observed_binding_count"], 57)
-        self.assertEqual(topology["observation"]["exact_binding_mapping_status"], "PENDIENTE_VERIFICACION")
+        observation = topology["observation"]
+        self.assertEqual(observation["observed_binding_count"], 57)
+        self.assertEqual(observation["exact_binding_mapping_status"], "PENDIENTE_VERIFICACION")
+
+    def test_contractual_bindings_total_56_main_plus_one_operational(self):
+        topology = self.current["x-rabbitmq-topology"]
+        queues = topology["queues"]
+        main_bindings = sum(
+            len(queues[name].get("bindings", [])) for name in EXPECTED_QUEUES
+        )
+        operational_binding = queues["po.sin-ruta.q"]["binding"]
+        self.assertEqual(
+            operational_binding,
+            {"exchange": "po.sin-ruta.x", "routing_key": "#"},
+        )
+        self.assertEqual(main_bindings, 56)
+        self.assertEqual(main_bindings + 1, 57)
 
     def test_old_english_names_are_absent_from_active_base_topology(self):
         topology = self.current["x-rabbitmq-topology"]
@@ -134,30 +187,11 @@ class AsyncApiOracleTopologyRegression(unittest.TestCase):
         self.assertEqual(policy["retry_dlx_status"], "blocked-not-provisioned")
         self.assertEqual(policy["retry_dlx_approval"], "not-approved")
 
-    def test_logical_contract_messages_routes_payloads_and_operations_are_unchanged(self):
-        baseline, current = self.baseline, self.current
-        self.assertEqual(set(current["channels"]), set(baseline["channels"]))
-        self.assertEqual(len(current["channels"]), 40)
-        for name in baseline["channels"]:
-            before, after = baseline["channels"][name], current["channels"][name]
-            self.assertEqual(after["address"], before["address"], name)
-            self.assertEqual(after["messages"], before["messages"], name)
-            self.assertEqual(after["x-routing-key"], before["x-routing-key"], name)
-        self.assertEqual(
-            without_keys(current["channels"], {"x-exchange", "x-binding-status"}),
-            without_keys(baseline["channels"], {"x-exchange", "x-binding-status"}),
-        )
-        self.assertEqual(set(current["components"]["messages"]), set(baseline["components"]["messages"]))
-        self.assertEqual(len(current["components"]["messages"]), 40)
-        for name, before in baseline["components"]["messages"].items():
-            after = current["components"]["messages"][name]
-            self.assertEqual(after["payload"], before["payload"], name)
-            self.assertEqual(after["x-routing-key"], before["x-routing-key"], name)
-            self.assertEqual(
-                without_keys(after, {"x-exchange"}), without_keys(before, {"x-exchange"}), name
-            )
-        self.assertEqual(current["components"]["schemas"], baseline["components"]["schemas"])
-        self.assertEqual(current["operations"], baseline["operations"])
+    def test_logical_invariants_match_immutable_rc2_fixture(self):
+        snapshot = logical_snapshot(self.current)
+        self.assertEqual(snapshot["counts"], self.fixture["counts"])
+        self.assertEqual(snapshot["counts"], {"channels": 40, "messages": 40, "operations": 80})
+        self.assertEqual(snapshot["sha256"], self.fixture["sha256"])
 
     def test_nomenclature_mappings_are_unique(self):
         self.assertEqual(len(EXPECTED_EXCHANGES), 4)

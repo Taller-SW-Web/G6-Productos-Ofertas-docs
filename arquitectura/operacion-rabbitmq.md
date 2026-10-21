@@ -27,9 +27,9 @@ El diagnóstico de solo lectura del 14 de octubre de 2026 registró:
 
 Los datos anteriores **no** prueban estado actual, conectividad desde OCI, preparación de usuarios externos, copias completas ni recuperación.
 
-La auditoría histórica del 2026-10-19 reportó después RabbitMQ 4.2.9, vhost `g6-productos-ofertas`, cuatro exchanges base, diez colas de aplicación y una operativa, todas las colas quorum/durables, y 57 bindings observados. Es otro corte temporal; no sustituye la lectura de solo lectura del 14-10 ni demuestra estado actual. No hay definiciones exactas de esos bindings en la evidencia aquí disponible, por lo que la correspondencia queda `PENDIENTE_VERIFICACION`.
+La auditoría histórica del 2026-10-19 reportó después RabbitMQ 4.2.9, vhost `g6-productos-ofertas`, cuatro exchanges base, diez colas de aplicación y una operativa, todas las colas quorum/durables, y 57 bindings observados. El candidato declara 56 bindings en colas principales más uno operativo (57 total). Es otro corte temporal; no sustituye la lectura de solo lectura del 14-10 ni demuestra estado actual. Las definiciones individuales no se pueden comparar, por lo que la correspondencia por exchange/cola/clave sigue `PENDIENTE_VERIFICACION`.
 
-ACL observada históricamente para `g5_ventas`: en ese vhost, `write` sobre `po.comandos.x`, `read` sobre `po.ventas.q`, `configure` denegado. Esto no demuestra conexión ni entrega/consumo. La matriz completa de contrato y límites está en [compatibilidad RabbitMQ Oracle](../contratos/eventos/compatibilidad-rabbitmq-oracle.md).
+Las ACL completas por identidad están transcritas desde la auditoría en la [matriz de compatibilidad RabbitMQ Oracle](../contratos/eventos/compatibilidad-rabbitmq-oracle.md). Son observaciones de octubre, no ACL runtime verificadas hoy.
 
 ## 2. Responsabilidades de operación
 
@@ -66,17 +66,40 @@ Una cuenta runtime no debería poder cambiar topología. Antes de retirar el per
 
 La candidata AsyncAPI `0.6.0-rc.3` reconcilia nombres físicos base. Separa cuatro estados: topología observada históricamente; contrato documental candidato; adaptación de código pendiente; ejecución real no comprobada. La [matriz de compatibilidad](../contratos/eventos/compatibilidad-rabbitmq-oracle.md) relaciona servicios, identidades, colas, operaciones, routing keys, ACL observadas y homologación.
 
-### 3.1 Permisos observados
+### 3.1 ACL observada, ACL contractual y permisos de tópico
 
-La única ACL individual reportada en la auditoría de 2026-10-19 en las fuentes disponibles es `g5_ventas`: `write` en `po.comandos.x`, `read` en `po.ventas.q` y `configure` denegado. Para el resto de identidades no se documentan aquí permisos físicos exactos. Una ACL observada no implica conexión ni aceptación de eventos; un permiso contractual deseado tampoco equivale a una ACL instalada.
+La [matriz de compatibilidad](../contratos/eventos/compatibilidad-rabbitmq-oracle.md) contiene `configure`/`write`/`read` observados para las diez identidades, el alcance de recurso derivado de `send`/`receive` de AsyncAPI y las diferencias. Los permisos de recurso y los topic permissions son controles distintos. La auditoría no lista topic permissions; no se infieren de `write`. Estado actual de ACL runtime: no verificado.
 
-No se amplían permisos runtime. En particular, no se autoriza `write` de aplicación en `po.retry.x` o `po.dlx.x`, permisos de declaración, ni `read` de colas retry/DLQ o de la cola operativa. La decisión de permisos base debe coordinarse con owners y Seguridad y no se infiere de esta documentación.
+Las cuentas runtime no reciben `configure`, `write` sobre `po.retry.x`/`po.dlx.x` ni `read` de colas retry/DLQ o `po.sin-ruta.q`. La identidad separada de aprovisionamiento declara exchanges, colas, bindings y políticas. No se despliega ni concede ACL por esta guía.
 
-### 3.2 Retry/DLX — BLOQUEADO, NO APROBADO Y NO APROVISIONADO
+### 3.2 Declaraciones y pruebas positivas/negativas de autorización
+
+La topología objetivo se aprovisiona antes del arranque de consumidores. El arranque esperado consume recursos existentes y no declara o modifica recursos con identidad runtime.
+
+| Operación | Declaración pasiva | Declaración activa | Criterio para runtime |
+|---|---|---|---|
+| Exchange/cola/binding/policy | En RabbitMQ 4.2.7+ requiere al menos algún permiso aplicable al recurso; no equivale a consumo | Requiere `configure`; puede crear recursos o fallar por atributos incompatibles | Runtime no la ejecuta. Verificar el comportamiento real de cada cliente antes de credenciarlo. |
+| Consumir cola propia | `basic.consume` requiere `read` sobre la cola | N/A | Positiva solo sobre la cola asignada y preaprovisionada. |
+| Publicar mensaje de negocio | N/A | `write` de recurso permite publicar al exchange; en exchanges `topic`, topic authorisation puede limitar routing keys | Positiva para operaciones permitidas; negativa para routing key no autorizada según política topic aprobada. La auditoría no aporta esas ACL topic. |
+
+Pruebas de aceptación futuras, aisladas y con versión de broker/commit registrados:
+
+| Tipo | Intento | Resultado requerido |
+|---|---|---|
+| Positiva | Publicar por `po.comandos.x`, `po.eventos.x` o `po.resultados.x` solo cuando una operación del productor lo contempla | Permiso de recurso y, si está configurado, topic permission exacto; confirm y routing verificados separadamente. |
+| Positiva | Consumir la propia cola preaprovisionada | `basic.consume` permitido con `read`; sin declaración activa runtime. |
+| Negativa | Publicar una routing key comercial no autorizada en exchange `topic` | `ACCESS_REFUSED` cuando la topic permission correspondiente esté configurada; comprobar la regla instalada, no inferirla de `write`. |
+| Negativa | Consumir cola de otro servicio, `po.sin-ruta.q`, retry o DLQ | Denegado; sin otorgar `read` cruzado para facilitar la prueba. |
+| Negativa | Declarar/modificar/borrar exchange, cola, binding o policy desde runtime | Denegado por ausencia de `configure`. |
+| Negativa | Publicar directamente a `po.retry.x`, `po.dlx.x`, alternate o exchange por defecto | Mantener bloqueado/no autorizado mientras Retry/DLX no se apruebe. |
+
+Las decisiones de autorización pueden permanecer en caché durante la sesión; revocación/rotación debe probarse con reconexión cuando corresponda. La prueba negativa no se da por aprobada si no se registra la ACL efectiva y el resultado observable.
+
+### 3.3 Retry/DLX — BLOQUEADO, NO APROBADO Y NO APROVISIONADO
 
 `po.retry.x` y `po.dlx.x` se conservan como nombres y tipos candidatos. Las colas derivadas y claves técnicas son diseño no aprobado. A/B/C no se adoptan ni se implementan en esta revisión. No se activan políticas ni permisos runtime.
 
-Se conserva el hallazgo `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`: la evidencia aislada disponible registró un caso de recuperación con resultado **FAIL**. No se declara que la recuperación retry/DLX haya pasado. Cualquier futura adopción requiere resolver el gate y usar una versión candidata posterior a `0.6.0-rc.3`.
+Se conserva el hallazgo `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`: en el perfil aislado RabbitMQ 4.2.9 del 2026-10-15, una DLQ con `max-length=1` rechazó publicación adicional y la cola fuente retuvo el mensaje original (`messages=1`, `messages_ready=0`). Tras liberar la capacidad ACKeando dos mensajes de relleno identificados, el original no llegó a DLQ dentro de 60 s; ese caso terminó **FAIL**. Esto no prueba la recuperación posterior ni la integración de consumidores reales. No se declara que pruebas retry/DLX hayan pasado. Cualquier futura adopción requiere resolver el gate, repetir la recuperación y tramitar una versión candidata posterior a `0.6.0-rc.3`.
 
 ## 4. Aprovisionamiento reproducible
 
@@ -95,7 +118,7 @@ Se conserva el hallazgo `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`: la evidencia 
 
 1. Crear el vhost `g6-productos-ofertas` **sin eliminar `g6`**.
 2. Revisar y aprobar por separado el diff de la versión contractual elegida. La candidata `0.6.0-rc.3` usa los nombres base observados en Oracle; su inclusión documental no autoriza aplicar cambios ni acredita homologación. No renombrar ni recrear recursos físicos existentes.
-3. Solo tras autorización específica, verificar la topología observada y la correspondencia exacta de cada binding; el reporte de 57 no aporta definiciones individuales en estas fuentes. No aprovisionar retry/DLX mientras siga bloqueado.
+3. Solo tras autorización específica, verificar la topología observada y la correspondencia exacta de cada binding; el conteo contractual es 56 + 1 operativo = 57, pero el reporte Oracle no aporta aquí definiciones individuales. No aprovisionar retry/DLX mientras siga bloqueado.
 4. Cargar o generar identidades técnicas mediante un mecanismo protegido de secretos, sin versionar contraseñas ni archivos con hashes reutilizables.
 5. Aplicar ACL y permisos de tópico; comprobar accesos autorizados y denegados.
 6. Conectar solo una aplicación piloto (`inventory-svc`) y validar observabilidad antes de incorporar consumidores restantes.

@@ -1,6 +1,6 @@
 # Matriz de compatibilidad RabbitMQ Oracle — AsyncAPI `0.6.0-rc.3`
 
-**Alcance:** correlacionar la auditoría Oracle del 2026-10-19, el contrato candidato y los pendientes de código/runtime. La auditoría es evidencia histórica y no describe necesariamente el estado actual del servidor. La documentación de esta matriz no modifica recursos ni permisos.
+**Alcance:** correlacionar la auditoría Oracle del 2026-10-19, el contrato candidato y los pendientes de código/runtime. La fuente de ACL es `backend/ops/oracle/auditorias/2026-10-19_22-32-52_UTC/RABBITMQ.md`, HEAD leído `b3558d742eb010e06eae1b484371c0a97cdea641`. La auditoría es evidencia histórica y no describe necesariamente el estado actual del servidor. La documentación de esta matriz no modifica recursos ni permisos.
 
 ## Estados de evidencia
 
@@ -11,6 +11,25 @@
 | Código de consumidores/productores | Pendiente | No se acredita adaptación del código a los nombres físicos observados |
 | Ejecución real AMQP | No comprobada | No se afirma conexión, publicación, entrega, ACK ni E2E |
 | Homologación bilateral | Pendiente | No se atribuye aceptación G5 de nombres, red, ACL o semántica |
+
+## ACL observada y alcance contractual
+
+Los valores observados abajo transcriben los permisos de recurso que la auditoría listó en octubre (configure / write / read); `ninguno` significa que no se mostró permiso y `^$` es la expresión configure reportada explícitamente para G5. `∅` en la columna contractual significa alcance requerido vacío. La auditoría no informa topic permissions por usuario/exchange. No deben inferirse ni considerarse habilitados a partir de permisos `write` de recurso. La ACL runtime actual no se ha verificado.
+
+| Identidad | ACL observada: configure | ACL observada: write | ACL observada: read | Requerimiento contractual de recurso (configure / write / read) | Diferencia por resolver |
+|---|---|---|---|---|---|
+| `g5_ventas` | `ninguno` (`^$`) | `po.comandos.x` | `po.ventas.q` | `∅` / `po.comandos.x` / `po.ventas.q` | Coincide el alcance de recursos; topic permissions, ACL runtime actual y homologación bilateral no constan. |
+| `g6_auditoria_precios` | `ninguno` | `ninguno` | `po.auditoria-precios.q` | `∅` / `∅` / `po.auditoria-precios.q` | Alcance de recursos coincide; topic permissions/runtime sin evidencia. |
+| `g6_catalogo` | `ninguno` | `po.comandos.x`, `po.eventos.x`, `po.resultados.x` | `po.catalogo.q` | `∅` / `po.comandos.x`, `po.eventos.x`, `po.resultados.x` / `po.catalogo.q` | Alcance de recursos coincide; topic permissions/runtime sin evidencia. |
+| `g6_combos` | `ninguno` | `ninguno` | `po.combos.q` | `∅` / `∅` / `po.combos.q` | Alcance de recursos coincide; topic permissions/runtime sin evidencia. |
+| `g6_inventario` | `ninguno` | `po.eventos.x`, `po.resultados.x` | `po.inventario.q` | `∅` / `po.eventos.x`, `po.resultados.x` / `po.inventario.q` | Alcance de recursos coincide; topic permissions/runtime sin evidencia. |
+| `g6_masivos` | `ninguno` | `po.comandos.x` | `po.masivos.q` | `∅` / `po.comandos.x` / `po.masivos.q` | Alcance de recursos coincide; topic permissions/runtime sin evidencia. |
+| `g6_pasarela` | `ninguno` | `ninguno` | `po.pasarela.q` | `∅` / `∅` / `po.pasarela.q` | Alcance de recursos coincide; topic permissions/runtime sin evidencia. |
+| `g6_precios` | `ninguno` | `po.eventos.x`, `po.resultados.x` | `po.precios.q` | `∅` / `po.eventos.x`, `po.resultados.x` / `po.precios.q` | Alcance de recursos coincide; topic permissions/runtime sin evidencia. |
+| `g6_promociones` | `ninguno` | `po.resultados.x` | `po.promociones.q` | `∅` / `po.resultados.x` / `po.promociones.q` | Alcance de recursos coincide; topic permissions/runtime sin evidencia. |
+| `g6_taxonomia` | `ninguno` | `po.comandos.x`, `po.eventos.x`, `po.resultados.x` | `po.taxonomia.q` | `∅` / `po.comandos.x`, `po.eventos.x`, `po.resultados.x` / `po.taxonomia.q` | Alcance de recursos coincide; topic permissions/runtime sin evidencia. |
+
+El alcance contractual de recursos se deriva de las operaciones `send` y colas asignadas en AsyncAPI; no implica que la ACL esté actualmente instalada. Los patrones de autorización por routing key deben derivarse y verificarse separadamente contra operaciones y mensajes autorizados. La auditoría no observó topic permissions, por lo que su estado es **no informado / pendiente de verificación**, no “coincidente”. `g6_admin` y `g6_backend` fueron listados como usuarios, pero no aparecieron en `list_permissions` para este vhost; su permiso efectivo no se infiere. No hay credenciales ni secretos en esta matriz.
 
 ## Exchanges físicos base
 
@@ -39,9 +58,9 @@ Las once colas reportadas son quorum y durables: diez colas de aplicaciones y un
 | G6 — Bulk / `bulk-svc` | `g6_masivos` (prevista en guía; no observada) | `po.masivos.q` | `sendCatalogBulkUpsertRequested` → `po.comandos.x` / `catalog.bulk.upsert.requested`<br>`sendPricingBulkPriceApplyRequested` → `po.comandos.x` / `pricing.bulk.price.apply.requested`<br>`sendInventoryBulkStockAdjustRequested` → `po.comandos.x` / `inventory.bulk.stock.adjust.requested` | `receiveInventoryStockAdjusted` → `po.eventos.x` / `inventory.stock.adjusted`<br>`receiveCatalogBulkUpsertCompleted` → `po.resultados.x` / `catalog.bulk.upsert.completed`<br>`receiveCatalogBulkUpsertRejected` → `po.resultados.x` / `catalog.bulk.upsert.rejected`<br>`receivePricingBulkPriceApplyCompleted` → `po.resultados.x` / `pricing.bulk.price.apply.completed`<br>`receivePricingBulkPriceApplyRejected` → `po.resultados.x` / `pricing.bulk.price.apply.rejected`<br>`receiveInventoryBulkStockAdjustCompleted` → `po.resultados.x` / `inventory.bulk.stock.adjust.completed`<br>`receiveInventoryBulkStockAdjustRejected` → `po.resultados.x` / `inventory.bulk.stock.adjust.rejected`<br>Bindings AsyncAPI: `po.eventos.x` → `inventory.stock.adjusted`<br>`po.resultados.x` → `catalog.bulk.upsert.completed`<br>`po.resultados.x` → `catalog.bulk.upsert.rejected`<br>`po.resultados.x` → `inventory.bulk.stock.adjust.completed`<br>`po.resultados.x` → `inventory.bulk.stock.adjust.rejected`<br>`po.resultados.x` → `pricing.bulk.price.apply.completed`<br>`po.resultados.x` → `pricing.bulk.price.apply.rejected` | Auditoría disponible no aporta ACL exacta por identidad; no presumir permiso. | Mapeo físico individual `PENDIENTE_VERIFICACION`; código/runtime del consumidor no acreditado | Interno G6; adaptación de código/runtime pendiente; no se afirma ejecución. |
 | Operación / plataforma | Identidad no determinada por evidencia | `po.sin-ruta.q` | — | Cola operativa fanout desde `po.sin-ruta.x`; no es consumidor comercial | Auditoría reporta cola observada; ACL no detallada | Binding individual requiere contraste exacto; no corresponde a un bounded context comercial | No homologación comercial atribuida |
 
-## Verificación de los 57 bindings reportados
+## Conteo contractual y correspondencia física pendiente
 
-La auditoría Oracle reporta **57 bindings físicos**. El candidato AsyncAPI contiene 56 entradas de binding en las colas principales. No hay definiciones físicas individuales exportadas en las fuentes revisadas que permitan probar equivalencia por exchange, cola y clave. Por tanto el estado obligatorio es **`PENDIENTE_VERIFICACION`**; no se infiere correspondencia a partir de que los conteos coincidan.
+El contrato AsyncAPI contiene **56 bindings de las diez colas principales más 1 binding operativo**, `po.sin-ruta.x` → `po.sin-ruta.q` con routing key `#`: **57 bindings contractuales en total (56 + 1 = 57)**. La auditoría también reportó 57 bindings físicos. No hay definiciones físicas individuales exportadas que permitan probar equivalencia por exchange, cola y clave; por tanto el estado obligatorio sigue **`PENDIENTE_VERIFICACION`**. La igualdad de conteos no demuestra correspondencia física individual.
 
 ## Observación histórica específica de G5
 
