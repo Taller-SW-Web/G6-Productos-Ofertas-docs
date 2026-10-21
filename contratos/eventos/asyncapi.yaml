@@ -2,12 +2,25 @@ asyncapi: 3.0.0
 id: urn:taller-sw-web:productos-y-ofertas:asyncapi
 info:
   title: Productos y Ofertas — Contrato asíncrono
-  version: 0.6.0-rc.2
-  description: 'Contrato asíncrono candidato. Respecto de 0.6.0-rc.1, cambia el vhost RabbitMQ a g6-productos-ofertas y explicita la detección de publicaciones sin ruta; conserva mensajes, payloads, exchanges, queues, bindings y routing keys. Formaliza la obligatoriedad de operation_id y causation_id en los mensajes de inicialización y preparación para correlación estricta y descarte de resultados stale. Fija la topología física RabbitMQ para los mensajes lógicos existentes, incluido el rechazo tipado de reserva:
-    exchanges, queues, bindings, retry y DLQ. Los nombres lógicos y routing keys se conservan.'
+  version: 0.6.0-rc.3
+  description: >-
+    Candidata documental incompatible por reconciliar los nombres de exchanges y colas
+    de infraestructura base con la observación histórica de RabbitMQ Oracle del
+    2026-10-19. Conserva los 40 mensajes/canales, payloads, esquemas, operaciones,
+    productores, consumidores, routing keys lógicas y vhost de 0.6.0-rc.2. Solo
+    cambian referencias físicas base y metadatos documentales. La observación no
+    acredita homologación bilateral, despliegue, conectividad AMQP ni integración E2E.
+    Retry/DLX permanece como diseño candidato no aprobado, no aprovisionado y bloqueado.
 defaultContentType: application/json
 x-delivery-semantics: at-least-once
-x-physical-topology-status: confirmed
+x-physical-topology-status: base-observed-not-homologated
+x-physical-topology-status-description: >-
+  Los nombres y tipos de la infraestructura base fueron observados en una auditoría
+  Oracle del 2026-10-19. Este estado no certifica el estado actual del servidor, la
+  correspondencia individual de bindings, conectividad, entrega, ACK, homologación,
+  despliegue ni pruebas E2E.
+x-external-homologation-status: pending
+x-retry-dlx-status: blocked-not-provisioned
 channels:
   taxonomyCategoryUpdated:
     address: taxonomy.category.updated
@@ -15,320 +28,320 @@ channels:
       TaxonomyCategoryUpdated:
         $ref: '#/components/messages/TaxonomyCategoryUpdated'
     x-routing-key: taxonomy.category.updated
-    x-binding-status: physical
-    x-exchange: po.events.x
+    x-binding-status: pending-verification
+    x-exchange: po.eventos.x
   taxonomyProductTypeSchemaChanged:
     address: taxonomy.product-type-schema.changed
     messages:
       TaxonomyProductTypeSchemaChanged:
         $ref: '#/components/messages/TaxonomyProductTypeSchemaChanged'
     x-routing-key: taxonomy.product-type-schema.changed
-    x-binding-status: physical
-    x-exchange: po.events.x
+    x-binding-status: pending-verification
+    x-exchange: po.eventos.x
   taxonomyCharacteristicValueUpdated:
     address: taxonomy.characteristic-value.updated
     messages:
       TaxonomyCharacteristicValueUpdated:
         $ref: '#/components/messages/TaxonomyCharacteristicValueUpdated'
     x-routing-key: taxonomy.characteristic-value.updated
-    x-binding-status: physical
-    x-exchange: po.events.x
+    x-binding-status: pending-verification
+    x-exchange: po.eventos.x
   catalogProductDeactivated:
     address: catalog.product.deactivated
     messages:
       CatalogProductDeactivated:
         $ref: '#/components/messages/CatalogProductDeactivated'
     x-routing-key: catalog.product.deactivated
-    x-binding-status: physical
-    x-exchange: po.events.x
+    x-binding-status: pending-verification
+    x-exchange: po.eventos.x
   catalogSkuDeactivated:
     address: catalog.sku.deactivated
     messages:
       CatalogSkuDeactivated:
         $ref: '#/components/messages/CatalogSkuDeactivated'
     x-routing-key: catalog.sku.deactivated
-    x-binding-status: physical
-    x-exchange: po.events.x
+    x-binding-status: pending-verification
+    x-exchange: po.eventos.x
   pricingPriceChanged:
     address: pricing.price.changed
     messages:
       PricingPriceChanged:
         $ref: '#/components/messages/PricingPriceChanged'
     x-routing-key: pricing.price.changed
-    x-binding-status: physical
-    x-exchange: po.events.x
+    x-binding-status: pending-verification
+    x-exchange: po.eventos.x
   inventoryStockChanged:
     address: inventory.stock.changed
     messages:
       InventoryStockChanged:
         $ref: '#/components/messages/InventoryStockChanged'
     x-routing-key: inventory.stock.changed
-    x-binding-status: physical
-    x-exchange: po.events.x
+    x-binding-status: pending-verification
+    x-exchange: po.eventos.x
   inventoryStockAdjusted:
     address: inventory.stock.adjusted
     messages:
       InventoryStockAdjusted:
         $ref: '#/components/messages/InventoryStockAdjusted'
     x-routing-key: inventory.stock.adjusted
-    x-binding-status: physical
-    x-exchange: po.events.x
+    x-binding-status: pending-verification
+    x-exchange: po.eventos.x
   inventoryReservationCreated:
     address: inventory.reservation.created
     messages:
       InventoryReservationCreated:
         $ref: '#/components/messages/InventoryReservationCreated'
     x-routing-key: inventory.reservation.created
-    x-binding-status: physical
-    x-exchange: po.events.x
+    x-binding-status: pending-verification
+    x-exchange: po.eventos.x
   inventoryReservationRejected:
     address: inventory.reservation.rejected
     messages:
       InventoryReservationRejected:
         $ref: '#/components/messages/InventoryReservationRejected'
     x-routing-key: inventory.reservation.rejected
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   inventoryReservationConsumed:
     address: inventory.reservation.consumed
     messages:
       InventoryReservationConsumed:
         $ref: '#/components/messages/InventoryReservationConsumed'
     x-routing-key: inventory.reservation.consumed
-    x-binding-status: physical
-    x-exchange: po.events.x
+    x-binding-status: pending-verification
+    x-exchange: po.eventos.x
   inventoryReservationReleased:
     address: inventory.reservation.released
     messages:
       InventoryReservationReleased:
         $ref: '#/components/messages/InventoryReservationReleased'
     x-routing-key: inventory.reservation.released
-    x-binding-status: physical
-    x-exchange: po.events.x
+    x-binding-status: pending-verification
+    x-exchange: po.eventos.x
   inventoryReservationExpired:
     address: inventory.reservation.expired
     messages:
       InventoryReservationExpired:
         $ref: '#/components/messages/InventoryReservationExpired'
     x-routing-key: inventory.reservation.expired
-    x-binding-status: physical
-    x-exchange: po.events.x
+    x-binding-status: pending-verification
+    x-exchange: po.eventos.x
   inventoryConsumptionCompleted:
     address: inventory.consumption.completed
     messages:
       InventoryConsumptionCompleted:
         $ref: '#/components/messages/InventoryConsumptionCompleted'
     x-routing-key: inventory.consumption.completed
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   inventoryConsumptionRejected:
     address: inventory.consumption.rejected
     messages:
       InventoryConsumptionRejected:
         $ref: '#/components/messages/InventoryConsumptionRejected'
     x-routing-key: inventory.consumption.rejected
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   taxonomyMasterDeactivationCheckRequested:
     address: taxonomy.master.deactivation.check.requested
     messages:
       TaxonomyMasterDeactivationCheckRequested:
         $ref: '#/components/messages/TaxonomyMasterDeactivationCheckRequested'
     x-routing-key: taxonomy.master.deactivation.check.requested
-    x-binding-status: physical
-    x-exchange: po.commands.x
+    x-binding-status: pending-verification
+    x-exchange: po.comandos.x
   catalogMasterDeactivationChecked:
     address: catalog.master.deactivation.checked
     messages:
       CatalogMasterDeactivationChecked:
         $ref: '#/components/messages/CatalogMasterDeactivationChecked'
     x-routing-key: catalog.master.deactivation.checked
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   taxonomyMasterDeactivated:
     address: taxonomy.master.deactivated
     messages:
       TaxonomyMasterDeactivated:
         $ref: '#/components/messages/TaxonomyMasterDeactivated'
     x-routing-key: taxonomy.master.deactivated
-    x-binding-status: physical
-    x-exchange: po.events.x
+    x-binding-status: pending-verification
+    x-exchange: po.eventos.x
   taxonomyMasterDeactivationRejected:
     address: taxonomy.master.deactivation.rejected
     messages:
       TaxonomyMasterDeactivationRejected:
         $ref: '#/components/messages/TaxonomyMasterDeactivationRejected'
     x-routing-key: taxonomy.master.deactivation.rejected
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   catalogBulkUpsertRequested:
     address: catalog.bulk.upsert.requested
     messages:
       CatalogBulkUpsertRequested:
         $ref: '#/components/messages/CatalogBulkUpsertRequested'
     x-routing-key: catalog.bulk.upsert.requested
-    x-binding-status: physical
-    x-exchange: po.commands.x
+    x-binding-status: pending-verification
+    x-exchange: po.comandos.x
   catalogBulkUpsertCompleted:
     address: catalog.bulk.upsert.completed
     messages:
       CatalogBulkUpsertCompleted:
         $ref: '#/components/messages/CatalogBulkUpsertCompleted'
     x-routing-key: catalog.bulk.upsert.completed
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   catalogBulkUpsertRejected:
     address: catalog.bulk.upsert.rejected
     messages:
       CatalogBulkUpsertRejected:
         $ref: '#/components/messages/CatalogBulkUpsertRejected'
     x-routing-key: catalog.bulk.upsert.rejected
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   pricingBulkPriceApplyRequested:
     address: pricing.bulk.price.apply.requested
     messages:
       PricingBulkPriceApplyRequested:
         $ref: '#/components/messages/PricingBulkPriceApplyRequested'
     x-routing-key: pricing.bulk.price.apply.requested
-    x-binding-status: physical
-    x-exchange: po.commands.x
+    x-binding-status: pending-verification
+    x-exchange: po.comandos.x
   pricingBulkPriceApplyCompleted:
     address: pricing.bulk.price.apply.completed
     messages:
       PricingBulkPriceApplyCompleted:
         $ref: '#/components/messages/PricingBulkPriceApplyCompleted'
     x-routing-key: pricing.bulk.price.apply.completed
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   pricingBulkPriceApplyRejected:
     address: pricing.bulk.price.apply.rejected
     messages:
       PricingBulkPriceApplyRejected:
         $ref: '#/components/messages/PricingBulkPriceApplyRejected'
     x-routing-key: pricing.bulk.price.apply.rejected
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   inventoryBulkStockAdjustRequested:
     address: inventory.bulk.stock.adjust.requested
     messages:
       InventoryBulkStockAdjustRequested:
         $ref: '#/components/messages/InventoryBulkStockAdjustRequested'
     x-routing-key: inventory.bulk.stock.adjust.requested
-    x-binding-status: physical
-    x-exchange: po.commands.x
+    x-binding-status: pending-verification
+    x-exchange: po.comandos.x
   inventoryBulkStockAdjustCompleted:
     address: inventory.bulk.stock.adjust.completed
     messages:
       InventoryBulkStockAdjustCompleted:
         $ref: '#/components/messages/InventoryBulkStockAdjustCompleted'
     x-routing-key: inventory.bulk.stock.adjust.completed
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   inventoryBulkStockAdjustRejected:
     address: inventory.bulk.stock.adjust.rejected
     messages:
       InventoryBulkStockAdjustRejected:
         $ref: '#/components/messages/InventoryBulkStockAdjustRejected'
     x-routing-key: inventory.bulk.stock.adjust.rejected
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   promotionsCouponConsumptionCompleted:
     address: promotions.coupon.consumption.completed
     messages:
       PromotionsCouponConsumptionCompleted:
         $ref: '#/components/messages/PromotionsCouponConsumptionCompleted'
     x-routing-key: promotions.coupon.consumption.completed
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   promotionsCouponConsumptionRejected:
     address: promotions.coupon.consumption.rejected
     messages:
       PromotionsCouponConsumptionRejected:
         $ref: '#/components/messages/PromotionsCouponConsumptionRejected'
     x-routing-key: promotions.coupon.consumption.rejected
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   promotionsCouponConsumptionRequested:
     address: promotions.coupon.consumption.requested
     messages:
       PromotionsCouponConsumptionRequested:
         $ref: '#/components/messages/PromotionsCouponConsumptionRequested'
     x-routing-key: promotions.coupon.consumption.requested
-    x-binding-status: physical
-    x-exchange: po.commands.x
+    x-binding-status: pending-verification
+    x-exchange: po.comandos.x
   promotionsCouponRestorationRequested:
     address: promotions.coupon.restoration.requested
     messages:
       PromotionsCouponRestorationRequested:
         $ref: '#/components/messages/PromotionsCouponRestorationRequested'
     x-routing-key: promotions.coupon.restoration.requested
-    x-binding-status: physical
-    x-exchange: po.commands.x
+    x-binding-status: pending-verification
+    x-exchange: po.comandos.x
   promotionsCouponRestorationCompleted:
     address: promotions.coupon.restoration.completed
     messages:
       PromotionsCouponRestorationCompleted:
         $ref: '#/components/messages/PromotionsCouponRestorationCompleted'
     x-routing-key: promotions.coupon.restoration.completed
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   promotionsCouponRestorationRejected:
     address: promotions.coupon.restoration.rejected
     messages:
       PromotionsCouponRestorationRejected:
         $ref: '#/components/messages/PromotionsCouponRestorationRejected'
     x-routing-key: promotions.coupon.restoration.rejected
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   pricingProductInitializationRequested:
     address: pricing.product.initialization.requested
     messages:
       PricingProductInitializationRequested:
         $ref: '#/components/messages/PricingProductInitializationRequested'
     x-routing-key: pricing.product.initialization.requested
-    x-binding-status: physical
-    x-exchange: po.commands.x
+    x-binding-status: pending-verification
+    x-exchange: po.comandos.x
   pricingProductInitializationCompleted:
     address: pricing.product.initialization.completed
     messages:
       PricingProductInitializationCompleted:
         $ref: '#/components/messages/PricingProductInitializationCompleted'
     x-routing-key: pricing.product.initialization.completed
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   pricingProductInitializationRejected:
     address: pricing.product.initialization.rejected
     messages:
       PricingProductInitializationRejected:
         $ref: '#/components/messages/PricingProductInitializationRejected'
     x-routing-key: pricing.product.initialization.rejected
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   inventorySkuInitializationRequested:
     address: inventory.sku.initialization.requested
     messages:
       InventorySkuInitializationRequested:
         $ref: '#/components/messages/InventorySkuInitializationRequested'
     x-routing-key: inventory.sku.initialization.requested
-    x-binding-status: physical
-    x-exchange: po.commands.x
+    x-binding-status: pending-verification
+    x-exchange: po.comandos.x
   inventorySkuInitializationCompleted:
     address: inventory.sku.initialization.completed
     messages:
       InventorySkuInitializationCompleted:
         $ref: '#/components/messages/InventorySkuInitializationCompleted'
     x-routing-key: inventory.sku.initialization.completed
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
   inventorySkuInitializationRejected:
     address: inventory.sku.initialization.rejected
     messages:
       InventorySkuInitializationRejected:
         $ref: '#/components/messages/InventorySkuInitializationRejected'
     x-routing-key: inventory.sku.initialization.rejected
-    x-binding-status: physical
-    x-exchange: po.results.x
+    x-binding-status: pending-verification
+    x-exchange: po.resultados.x
 operations:
   sendTaxonomyCategoryUpdated:
     action: send
@@ -1305,7 +1318,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.events.x
+      x-exchange: po.eventos.x
       x-routing-key: taxonomy.category.updated
     TaxonomyProductTypeSchemaChanged:
       name: taxonomy.product-type-schema.changed
@@ -1338,7 +1351,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.events.x
+      x-exchange: po.eventos.x
       x-routing-key: taxonomy.product-type-schema.changed
     TaxonomyCharacteristicValueUpdated:
       name: taxonomy.characteristic-value.updated
@@ -1371,7 +1384,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.events.x
+      x-exchange: po.eventos.x
       x-routing-key: taxonomy.characteristic-value.updated
     CatalogProductDeactivated:
       name: catalog.product.deactivated
@@ -1406,7 +1419,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.events.x
+      x-exchange: po.eventos.x
       x-routing-key: catalog.product.deactivated
     CatalogSkuDeactivated:
       name: catalog.sku.deactivated
@@ -1442,7 +1455,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.events.x
+      x-exchange: po.eventos.x
       x-routing-key: catalog.sku.deactivated
     PricingPriceChanged:
       name: pricing.price.changed
@@ -1477,7 +1490,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.events.x
+      x-exchange: po.eventos.x
       x-routing-key: pricing.price.changed
     InventoryStockChanged:
       name: inventory.stock.changed
@@ -1512,7 +1525,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.events.x
+      x-exchange: po.eventos.x
       x-routing-key: inventory.stock.changed
     InventoryStockAdjusted:
       name: inventory.stock.adjusted
@@ -1546,7 +1559,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.events.x
+      x-exchange: po.eventos.x
       x-routing-key: inventory.stock.adjusted
     InventoryReservationCreated:
       name: inventory.reservation.created
@@ -1591,7 +1604,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.events.x
+      x-exchange: po.eventos.x
       x-routing-key: inventory.reservation.created
     InventoryReservationRejected:
       name: inventory.reservation.rejected
@@ -1622,7 +1635,7 @@ components:
             data:
               $ref: '#/components/schemas/InventoryReservationRejectedData'
           required: [schema_version, operation_id, causation_id, producer, kind, name, data]
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: inventory.reservation.rejected
     InventoryReservationConsumed:
       name: inventory.reservation.consumed
@@ -1667,7 +1680,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.events.x
+      x-exchange: po.eventos.x
       x-routing-key: inventory.reservation.consumed
     InventoryReservationReleased:
       name: inventory.reservation.released
@@ -1712,7 +1725,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.events.x
+      x-exchange: po.eventos.x
       x-routing-key: inventory.reservation.released
     InventoryReservationExpired:
       name: inventory.reservation.expired
@@ -1757,7 +1770,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.events.x
+      x-exchange: po.eventos.x
       x-routing-key: inventory.reservation.expired
     InventoryConsumptionCompleted:
       name: inventory.consumption.completed
@@ -1801,7 +1814,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: inventory.consumption.completed
     InventoryConsumptionRejected:
       name: inventory.consumption.rejected
@@ -1845,7 +1858,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: inventory.consumption.rejected
     TaxonomyMasterDeactivationCheckRequested:
       name: taxonomy.master.deactivation.check.requested
@@ -1878,7 +1891,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.commands.x
+      x-exchange: po.comandos.x
       x-routing-key: taxonomy.master.deactivation.check.requested
     CatalogMasterDeactivationChecked:
       name: catalog.master.deactivation.checked
@@ -1911,7 +1924,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: catalog.master.deactivation.checked
     TaxonomyMasterDeactivated:
       name: taxonomy.master.deactivated
@@ -1945,7 +1958,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.events.x
+      x-exchange: po.eventos.x
       x-routing-key: taxonomy.master.deactivated
     TaxonomyMasterDeactivationRejected:
       name: taxonomy.master.deactivation.rejected
@@ -1978,7 +1991,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: taxonomy.master.deactivation.rejected
     CatalogBulkUpsertRequested:
       name: catalog.bulk.upsert.requested
@@ -2011,7 +2024,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.commands.x
+      x-exchange: po.comandos.x
       x-routing-key: catalog.bulk.upsert.requested
     CatalogBulkUpsertCompleted:
       name: catalog.bulk.upsert.completed
@@ -2044,7 +2057,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: catalog.bulk.upsert.completed
     CatalogBulkUpsertRejected:
       name: catalog.bulk.upsert.rejected
@@ -2077,7 +2090,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: catalog.bulk.upsert.rejected
     PricingBulkPriceApplyRequested:
       name: pricing.bulk.price.apply.requested
@@ -2110,7 +2123,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.commands.x
+      x-exchange: po.comandos.x
       x-routing-key: pricing.bulk.price.apply.requested
     PricingBulkPriceApplyCompleted:
       name: pricing.bulk.price.apply.completed
@@ -2143,7 +2156,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: pricing.bulk.price.apply.completed
     PricingBulkPriceApplyRejected:
       name: pricing.bulk.price.apply.rejected
@@ -2176,7 +2189,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: pricing.bulk.price.apply.rejected
     InventoryBulkStockAdjustRequested:
       name: inventory.bulk.stock.adjust.requested
@@ -2209,7 +2222,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.commands.x
+      x-exchange: po.comandos.x
       x-routing-key: inventory.bulk.stock.adjust.requested
     InventoryBulkStockAdjustCompleted:
       name: inventory.bulk.stock.adjust.completed
@@ -2242,7 +2255,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: inventory.bulk.stock.adjust.completed
     InventoryBulkStockAdjustRejected:
       name: inventory.bulk.stock.adjust.rejected
@@ -2275,7 +2288,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: inventory.bulk.stock.adjust.rejected
     PromotionsCouponConsumptionCompleted:
       name: promotions.coupon.consumption.completed
@@ -2319,7 +2332,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: promotions.coupon.consumption.completed
     PromotionsCouponConsumptionRejected:
       name: promotions.coupon.consumption.rejected
@@ -2363,7 +2376,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: promotions.coupon.consumption.rejected
     PromotionsCouponConsumptionRequested:
       name: promotions.coupon.consumption.requested
@@ -2407,7 +2420,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.commands.x
+      x-exchange: po.comandos.x
       x-routing-key: promotions.coupon.consumption.requested
     PromotionsCouponRestorationRequested:
       name: promotions.coupon.restoration.requested
@@ -2451,7 +2464,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.commands.x
+      x-exchange: po.comandos.x
       x-routing-key: promotions.coupon.restoration.requested
     PromotionsCouponRestorationCompleted:
       name: promotions.coupon.restoration.completed
@@ -2495,7 +2508,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: promotions.coupon.restoration.completed
     PromotionsCouponRestorationRejected:
       name: promotions.coupon.restoration.rejected
@@ -2539,7 +2552,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: promotions.coupon.restoration.rejected
     PricingProductInitializationRequested:
       name: pricing.product.initialization.requested
@@ -2576,7 +2589,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.commands.x
+      x-exchange: po.comandos.x
       x-routing-key: pricing.product.initialization.requested
     PricingProductInitializationCompleted:
       name: pricing.product.initialization.completed
@@ -2617,7 +2630,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: pricing.product.initialization.completed
     PricingProductInitializationRejected:
       name: pricing.product.initialization.rejected
@@ -2658,7 +2671,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: pricing.product.initialization.rejected
     InventorySkuInitializationRequested:
       name: inventory.sku.initialization.requested
@@ -2695,7 +2708,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.commands.x
+      x-exchange: po.comandos.x
       x-routing-key: inventory.sku.initialization.requested
     InventorySkuInitializationCompleted:
       name: inventory.sku.initialization.completed
@@ -2736,7 +2749,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: inventory.sku.initialization.completed
     InventorySkuInitializationRejected:
       name: inventory.sku.initialization.rejected
@@ -2777,7 +2790,7 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.results.x
+      x-exchange: po.resultados.x
       x-routing-key: inventory.sku.initialization.rejected
 servers:
   rabbitmq:
@@ -2800,181 +2813,209 @@ x-rabbitmq-policy:
   default_prefetch: 20
   application_retry_attempts: 3
   retry_delay_ms: 30000
-  unroutable_publish: mandatory=true + alternate exchange po.unrouted.x
+  unroutable_publish: mandatory=true + alternate exchange po.sin-ruta.x
   unroutable_publish_behavior: >-
-    If the primary exchange cannot route a message but po.unrouted.x routes it to
-    po.unrouted.q, RabbitMQ considers it routed and does not send basic.return;
+    If the primary exchange cannot route a message but po.sin-ruta.x routes it to
+    po.sin-ruta.q, RabbitMQ considers it routed and does not send basic.return;
     if the alternate exchange also cannot route it, mandatory=true causes
     basic.return. Publisher confirms are an independent signal.
   business_rejection_rule: Business rejections are acknowledged and translated to contract results/events; they are not sent to retry/DLQ.
+  retry_dlx_status: blocked-not-provisioned
+  retry_dlx_approval: not-approved
 x-rabbitmq-topology:
   vhost: g6-productos-ofertas
+  observation:
+    source: Oracle RabbitMQ audit dated 2026-10-19; historical, not necessarily current server state
+    rabbitmq_version: 4.2.9
+    observed_binding_count: 57
+    exact_binding_mapping_status: PENDIENTE_VERIFICACION
+    note: The observed count does not establish exact correspondence with AsyncAPI bindings; no binding definition export is available here.
+  external_homologation_status: pending
+  retry_dlx_status: blocked-not-provisioned
   exchanges:
-    po.commands.x:
+    po.comandos.x:
       type: topic
       durable: true
-      alternate_exchange: po.unrouted.x
-    po.events.x:
+      status: base-observed-not-homologated
+      alternate_exchange: po.sin-ruta.x
+    po.eventos.x:
       type: topic
       durable: true
-      alternate_exchange: po.unrouted.x
-    po.results.x:
+      status: base-observed-not-homologated
+      alternate_exchange: po.sin-ruta.x
+    po.resultados.x:
       type: topic
       durable: true
-      alternate_exchange: po.unrouted.x
+      status: base-observed-not-homologated
+      alternate_exchange: po.sin-ruta.x
     po.retry.x:
       type: direct
       durable: true
+      status: candidate-not-approved
+      provisioned: false
     po.dlx.x:
       type: direct
       durable: true
-    po.unrouted.x:
+      status: candidate-not-approved
+      provisioned: false
+    po.sin-ruta.x:
       type: fanout
       durable: true
+      status: base-observed-not-homologated
   queues:
-    po.catalog.q:
+    po.catalogo.q:
       consumer: catalog-svc
       type: quorum
       durable: true
+      status: base-observed-not-homologated
       prefetch: 20
       bindings:
-      - exchange: po.commands.x
+      - exchange: po.comandos.x
         routing_key: catalog.bulk.upsert.requested
-      - exchange: po.commands.x
+      - exchange: po.comandos.x
         routing_key: taxonomy.master.deactivation.check.requested
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: taxonomy.category.updated
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: taxonomy.characteristic-value.updated
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: taxonomy.master.deactivated
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: taxonomy.product-type-schema.changed
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: inventory.sku.initialization.completed
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: inventory.sku.initialization.rejected
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: pricing.product.initialization.completed
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: pricing.product.initialization.rejected
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: taxonomy.master.deactivation.rejected
-      retry_queue: po.catalog.q.retry
-      dlq: po.catalog.q.dlq
-    po.catalog.q.retry:
+      retry_queue: po.catalogo.q.retry
+      dlq: po.catalogo.q.dlq
+    po.catalogo.q.retry:
       consumer: catalog-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.retry.x
-        routing_key: po.catalog.q
+        routing_key: po.catalogo.q
       message_ttl_ms: 30000
       dead_letter_exchange: ''
-      dead_letter_routing_key: po.catalog.q
-    po.catalog.q.dlq:
+      dead_letter_routing_key: po.catalogo.q
+    po.catalogo.q.dlq:
       consumer: catalog-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.dlx.x
-        routing_key: po.catalog.q
+        routing_key: po.catalogo.q
       manual_recovery: true
-    po.gateway.q:
+    po.pasarela.q:
       consumer: api-gateway/bff
       type: quorum
       durable: true
+      status: base-observed-not-homologated
       prefetch: 20
       bindings:
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: catalog.product.deactivated
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: inventory.reservation.consumed
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: inventory.reservation.created
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: inventory.reservation.expired
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: inventory.reservation.released
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: inventory.stock.adjusted
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: inventory.stock.changed
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: pricing.price.changed
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: taxonomy.category.updated
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: taxonomy.master.deactivated
-      retry_queue: po.gateway.q.retry
-      dlq: po.gateway.q.dlq
-    po.gateway.q.retry:
+      retry_queue: po.pasarela.q.retry
+      dlq: po.pasarela.q.dlq
+    po.pasarela.q.retry:
       consumer: api-gateway/bff
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.retry.x
-        routing_key: po.gateway.q
+        routing_key: po.pasarela.q
       message_ttl_ms: 30000
       dead_letter_exchange: ''
-      dead_letter_routing_key: po.gateway.q
-    po.gateway.q.dlq:
+      dead_letter_routing_key: po.pasarela.q
+    po.pasarela.q.dlq:
       consumer: api-gateway/bff
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.dlx.x
-        routing_key: po.gateway.q
+        routing_key: po.pasarela.q
       manual_recovery: true
-    po.promotions.q:
+    po.promociones.q:
       consumer: promotions-svc
       type: quorum
       durable: true
+      status: base-observed-not-homologated
       prefetch: 20
       bindings:
-      - exchange: po.commands.x
+      - exchange: po.comandos.x
         routing_key: promotions.coupon.consumption.requested
-      - exchange: po.commands.x
+      - exchange: po.comandos.x
         routing_key: promotions.coupon.restoration.requested
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: catalog.product.deactivated
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: catalog.sku.deactivated
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: inventory.stock.changed
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: pricing.price.changed
-      retry_queue: po.promotions.q.retry
-      dlq: po.promotions.q.dlq
-    po.promotions.q.retry:
+      retry_queue: po.promociones.q.retry
+      dlq: po.promociones.q.dlq
+    po.promociones.q.retry:
       consumer: promotions-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.retry.x
-        routing_key: po.promotions.q
+        routing_key: po.promociones.q
       message_ttl_ms: 30000
       dead_letter_exchange: ''
-      dead_letter_routing_key: po.promotions.q
-    po.promotions.q.dlq:
+      dead_letter_routing_key: po.promociones.q
+    po.promociones.q.dlq:
       consumer: promotions-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.dlx.x
-        routing_key: po.promotions.q
+        routing_key: po.promociones.q
       manual_recovery: true
     po.combos.q:
       consumer: combos-svc
       type: quorum
       durable: true
+      status: base-observed-not-homologated
       prefetch: 20
       bindings:
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: catalog.product.deactivated
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: catalog.sku.deactivated
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: inventory.stock.changed
       retry_queue: po.combos.q.retry
       dlq: po.combos.q.dlq
@@ -2982,6 +3023,7 @@ x-rabbitmq-topology:
       consumer: combos-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.retry.x
         routing_key: po.combos.q
@@ -2992,224 +3034,244 @@ x-rabbitmq-topology:
       consumer: combos-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.dlx.x
         routing_key: po.combos.q
       manual_recovery: true
-    po.inventory.q:
+    po.inventario.q:
       consumer: inventory-svc
       type: quorum
       durable: true
+      status: base-observed-not-homologated
       prefetch: 20
       bindings:
-      - exchange: po.commands.x
+      - exchange: po.comandos.x
         routing_key: inventory.bulk.stock.adjust.requested
-      - exchange: po.commands.x
+      - exchange: po.comandos.x
         routing_key: inventory.sku.initialization.requested
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: catalog.sku.deactivated
-      retry_queue: po.inventory.q.retry
-      dlq: po.inventory.q.dlq
-    po.inventory.q.retry:
+      retry_queue: po.inventario.q.retry
+      dlq: po.inventario.q.dlq
+    po.inventario.q.retry:
       consumer: inventory-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.retry.x
-        routing_key: po.inventory.q
+        routing_key: po.inventario.q
       message_ttl_ms: 30000
       dead_letter_exchange: ''
-      dead_letter_routing_key: po.inventory.q
-    po.inventory.q.dlq:
+      dead_letter_routing_key: po.inventario.q
+    po.inventario.q.dlq:
       consumer: inventory-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.dlx.x
-        routing_key: po.inventory.q
+        routing_key: po.inventario.q
       manual_recovery: true
-    po.pricing.q:
+    po.precios.q:
       consumer: pricing-svc
       type: quorum
       durable: true
+      status: base-observed-not-homologated
       prefetch: 20
       bindings:
-      - exchange: po.commands.x
+      - exchange: po.comandos.x
         routing_key: pricing.bulk.price.apply.requested
-      - exchange: po.commands.x
+      - exchange: po.comandos.x
         routing_key: pricing.product.initialization.requested
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: catalog.sku.deactivated
-      retry_queue: po.pricing.q.retry
-      dlq: po.pricing.q.dlq
-    po.pricing.q.retry:
+      retry_queue: po.precios.q.retry
+      dlq: po.precios.q.dlq
+    po.precios.q.retry:
       consumer: pricing-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.retry.x
-        routing_key: po.pricing.q
+        routing_key: po.precios.q
       message_ttl_ms: 30000
       dead_letter_exchange: ''
-      dead_letter_routing_key: po.pricing.q
-    po.pricing.q.dlq:
+      dead_letter_routing_key: po.precios.q
+    po.precios.q.dlq:
       consumer: pricing-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.dlx.x
-        routing_key: po.pricing.q
+        routing_key: po.precios.q
       manual_recovery: true
-    po.price-audit.q:
+    po.auditoria-precios.q:
       consumer: price-audit-svc
       type: quorum
       durable: true
+      status: base-observed-not-homologated
       prefetch: 20
       bindings:
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: pricing.price.changed
-      retry_queue: po.price-audit.q.retry
-      dlq: po.price-audit.q.dlq
-    po.price-audit.q.retry:
+      retry_queue: po.auditoria-precios.q.retry
+      dlq: po.auditoria-precios.q.dlq
+    po.auditoria-precios.q.retry:
       consumer: price-audit-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.retry.x
-        routing_key: po.price-audit.q
+        routing_key: po.auditoria-precios.q
       message_ttl_ms: 30000
       dead_letter_exchange: ''
-      dead_letter_routing_key: po.price-audit.q
-    po.price-audit.q.dlq:
+      dead_letter_routing_key: po.auditoria-precios.q
+    po.auditoria-precios.q.dlq:
       consumer: price-audit-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.dlx.x
-        routing_key: po.price-audit.q
+        routing_key: po.auditoria-precios.q
       manual_recovery: true
-    po.sales.q:
+    po.ventas.q:
       consumer: modulo-ventas
       type: quorum
       durable: true
+      status: base-observed-not-homologated
       prefetch: 20
       bindings:
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: inventory.reservation.consumed
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: inventory.reservation.created
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: inventory.reservation.rejected
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: inventory.reservation.expired
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: inventory.reservation.released
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: inventory.consumption.completed
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: inventory.consumption.rejected
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: promotions.coupon.consumption.completed
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: promotions.coupon.consumption.rejected
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: promotions.coupon.restoration.completed
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: promotions.coupon.restoration.rejected
-      retry_queue: po.sales.q.retry
-      dlq: po.sales.q.dlq
-    po.sales.q.retry:
+      retry_queue: po.ventas.q.retry
+      dlq: po.ventas.q.dlq
+    po.ventas.q.retry:
       consumer: modulo-ventas
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.retry.x
-        routing_key: po.sales.q
+        routing_key: po.ventas.q
       message_ttl_ms: 30000
       dead_letter_exchange: ''
-      dead_letter_routing_key: po.sales.q
-    po.sales.q.dlq:
+      dead_letter_routing_key: po.ventas.q
+    po.ventas.q.dlq:
       consumer: modulo-ventas
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.dlx.x
-        routing_key: po.sales.q
+        routing_key: po.ventas.q
       manual_recovery: true
-    po.taxonomy.q:
+    po.taxonomia.q:
       consumer: taxonomy-svc
       type: quorum
       durable: true
+      status: base-observed-not-homologated
       prefetch: 20
       bindings:
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: catalog.master.deactivation.checked
-      retry_queue: po.taxonomy.q.retry
-      dlq: po.taxonomy.q.dlq
-    po.taxonomy.q.retry:
+      retry_queue: po.taxonomia.q.retry
+      dlq: po.taxonomia.q.dlq
+    po.taxonomia.q.retry:
       consumer: taxonomy-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.retry.x
-        routing_key: po.taxonomy.q
+        routing_key: po.taxonomia.q
       message_ttl_ms: 30000
       dead_letter_exchange: ''
-      dead_letter_routing_key: po.taxonomy.q
-    po.taxonomy.q.dlq:
+      dead_letter_routing_key: po.taxonomia.q
+    po.taxonomia.q.dlq:
       consumer: taxonomy-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.dlx.x
-        routing_key: po.taxonomy.q
+        routing_key: po.taxonomia.q
       manual_recovery: true
-    po.bulk.q:
+    po.masivos.q:
       consumer: bulk-svc
       type: quorum
       durable: true
+      status: base-observed-not-homologated
       prefetch: 20
       bindings:
-      - exchange: po.events.x
+      - exchange: po.eventos.x
         routing_key: inventory.stock.adjusted
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: catalog.bulk.upsert.completed
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: catalog.bulk.upsert.rejected
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: inventory.bulk.stock.adjust.completed
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: inventory.bulk.stock.adjust.rejected
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: pricing.bulk.price.apply.completed
-      - exchange: po.results.x
+      - exchange: po.resultados.x
         routing_key: pricing.bulk.price.apply.rejected
-      retry_queue: po.bulk.q.retry
-      dlq: po.bulk.q.dlq
-    po.bulk.q.retry:
+      retry_queue: po.masivos.q.retry
+      dlq: po.masivos.q.dlq
+    po.masivos.q.retry:
       consumer: bulk-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.retry.x
-        routing_key: po.bulk.q
+        routing_key: po.masivos.q
       message_ttl_ms: 30000
       dead_letter_exchange: ''
-      dead_letter_routing_key: po.bulk.q
-    po.bulk.q.dlq:
+      dead_letter_routing_key: po.masivos.q
+    po.masivos.q.dlq:
       consumer: bulk-svc
       type: quorum
       durable: true
+      status: candidate-not-provisioned
       binding:
         exchange: po.dlx.x
-        routing_key: po.bulk.q
+        routing_key: po.masivos.q
       manual_recovery: true
-    po.unrouted.q:
+    po.sin-ruta.q:
       consumer: platform/operations
       type: quorum
       durable: true
+      status: base-observed-not-homologated
       binding:
-        exchange: po.unrouted.x
+        exchange: po.sin-ruta.x
         routing_key: '#'
       purpose: Detectar publicaciones sin binding; no es una cola de negocio.
   retry_flow:

@@ -1,282 +1,58 @@
 # Topología RabbitMQ — Productos y Ofertas
 
-**Fuente ejecutable:** [`asyncapi.yaml`](asyncapi.yaml), candidata `0.6.0-rc.2`; no homologada externamente ni desplegada.
+**Contrato ejecutable:** [AsyncAPI](asyncapi.yaml), candidata `0.6.0-rc.3`. **Estado:** infraestructura base observada históricamente en Oracle el 2026-10-19; homologación externa pendiente; despliegue y conectividad no acreditados.
 
-## 1. Decisión
+## 1. Alcance de la reconciliación
 
-VHost contractual candidato (decisión interna G6 adoptada; homologación externa pendiente):
+La auditoría reportó RabbitMQ 4.2.9, vhost `g6-productos-ofertas`, cuatro exchanges base, diez colas de aplicación y una cola operativa, todas quorum y durables, y 57 bindings observados. Se conservan exactamente el vhost, el conjunto de 40 mensajes/canales, operaciones, productores, consumidores, payloads, esquemas y routing keys comerciales de `0.6.0-rc.2`. `0.6.0-rc.3` modifica referencias físicas de topología base y los metadatos documentales correspondientes.
 
-```text
-g6-productos-ofertas
-```
+La observación es histórica y no acredita estado actual del servidor, homologación bilateral, permisos completos, conexión AMQP, entrega, ACK, despliegue ni E2E. Las definiciones individuales de los 57 bindings no están disponibles; por ello la correspondencia binding a binding permanece `PENDIENTE_VERIFICACION`, aunque el conteo del candidato coincida. Véase la [matriz de compatibilidad](compatibilidad-rabbitmq-oracle.md).
 
-Exchanges durables:
+## 2. Exchanges base
 
-| Exchange | Tipo | Uso |
+| Nombre físico | Tipo | Durabilidad | Observación |
+|---|---|---|---|
+| `po.comandos.x` | topic | durable | Observado |
+| `po.eventos.x` | topic | durable | Observado |
+| `po.resultados.x` | topic | durable | Observado |
+| `po.sin-ruta.x` | fanout | durable | Observado |
+
+Las tres exchanges de mensajes de negocio declaran `po.sin-ruta.x` como alternate exchange. `mandatory=true`, `basic.return` y publisher confirms son señales separadas: una ruta al alternate exchange cuenta como enrutada; si tampoco hay ruta alternativa, se genera `basic.return`. Un publisher confirm acredita la confirmación del broker respecto de la publicación, no la recepción ni el ACK del consumidor.
+
+## 3. Colas base observadas
+
+Las diez colas principales y la cola operativa observada son quorum y durables. `po.sin-ruta.q` se reserva para operación/diagnóstico y no pertenece a un contexto comercial. La lista de servicios, routing keys contractuales y permisos observados se mantiene en la [matriz de compatibilidad](compatibilidad-rabbitmq-oracle.md).
+
+| Cola física | Uso contractual | Estado |
 |---|---|---|
-| `po.commands.x` | topic | Comandos |
-| `po.events.x` | topic | Hechos/eventos |
-| `po.results.x` | topic | Resultados |
-| `po.retry.x` | direct | Retries técnicos retardados |
-| `po.dlx.x` | direct | Dead letters por consumidor |
-| `po.unrouted.x` | fanout | Publicaciones sin binding |
+| `po.catalogo.q` | Catálogo | Observada |
+| `po.pasarela.q` | Pasarela/BFF | Observada |
+| `po.promociones.q` | Promociones | Observada |
+| `po.combos.q` | Combos | Observada |
+| `po.inventario.q` | Inventario | Observada |
+| `po.precios.q` | Precios | Observada |
+| `po.auditoria-precios.q` | Auditoría de precios | Observada |
+| `po.ventas.q` | Consumidor externo Ventas G5 | Observada |
+| `po.taxonomia.q` | Taxonomía | Observada |
+| `po.masivos.q` | Operaciones masivas | Observada |
+| `po.sin-ruta.q` | Captura operativa sin ruta | Observada; no comercial |
 
-La routing key de negocio es siempre el nombre lógico del mensaje, por ejemplo:
+## 4. Retry/DLX: diseño candidato bloqueado
 
-```text
-inventory.stock.changed
-pricing.product.initialization.requested
-```
+**NO APROBADO, NO APROVISIONADO, NO HOMOLOGADO.** `po.retry.x` y `po.dlx.x` conservan los nombres y tipos del diseño candidato; no se traducen ni se agregan recursos físicos. Las colas `<cola>.retry`, `<cola>.dlq` y sus claves técnicas acompañan el nombre reconciliado de la cola principal cuando la referencian, pero siguen sin aprobar ni desplegar. No activar políticas ni permisos runtime.
 
-## 2. Fiabilidad
+El gate de recuperación está bloqueado y se conserva el hallazgo `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`. La evaluación aislada que no verificó recuperación no constituye aprobación. Cualquier futura adopción requiere resolver ese gate y utilizar una versión candidata posterior a `0.6.0-rc.3`.
 
-- Colas principales: quorum, durable.
-- ACK de consumidor: manual.
-- Publisher confirms: obligatorios.
-- Prefetch inicial: `20` por consumidor.
-- Entrega: at-least-once.
-- Dedupe: `message_id`.
-- Idempotencia de negocio: `operation_id` cuando aplique.
-- Outbox transaccional para publicar después del commit.
-- Inbox/dedupe antes de aplicar side effects.
+## 5. Estado G5 y permisos
 
-RabbitMQ recomienda publisher confirms para saber cuándo el broker asumió responsabilidad por una publicación; las quorum queues combinan bien con confirms y acknowledgements manuales cuando se prioriza seguridad de datos.
+La auditoría reportó históricamente para `g5_ventas`, en `g6-productos-ofertas`: `write` en `po.comandos.x`, `read` en `po.ventas.q` y `configure` denegado. La existencia de la identidad y esos permisos observados no prueba conexión, publicación, entrega, consumo ni aceptación de mensajes. La homologación de nombres, red privada/túnel, identidad y ACL, publisher confirms, ACK, idempotencia y pruebas bilaterales permanece pendiente. No se agregan credenciales ni permisos por esta documentación.
 
-## 3. Retry
+## 6. Referencias
 
-Regla de retry:
-
-```text
-máximo 3 retries de aplicación
-delay = 30 s por retry
-```
-
-Flujo:
-
-```text
-main queue
-  -> fallo técnico transitorio
-  -> publicar en po.retry.x con routing key = nombre de main queue
-  -> ACK del original
-  -> <main>.retry espera 30 s
-  -> DLX al default exchange
-  -> vuelve directamente a <main>
-```
-
-Después del tercer retry:
-
-```text
-po.dlx.x
-  -> <main>.dlq
-```
-
-No usar `requeue=true` en bucle.
-
-## 4. Qué NO va a DLQ
-
-Un rechazo de negocio válido no es un poison message.
-
-Ejemplos:
-
-```text
-STOCK_INSUFICIENTE
-CUPON sin cupo
-RESERVA_NO_ACTIVA
-```
-
-El consumidor confirma el mensaje y publica el resultado `...rejected` cuando el contrato lo define.
-
-Van a retry/DLQ:
-
-- timeout de base de datos;
-- broker/dependencia temporalmente no disponible;
-- fallo técnico repetido;
-- mensaje malformado;
-- schema/version no soportado.
-
-## 5. Publicaciones sin ruta
-
-Los exchanges de negocio usan `po.unrouted.x` como alternate exchange. Además, los publishers deben usar `mandatory=true`.
-
-Si el exchange principal no encuentra binding, RabbitMQ intenta enrutar el mensaje al alternate exchange. Como `po.unrouted.x` enruta a `po.unrouted.q`, el mensaje se considera enrutado: con `mandatory=true` no se genera `basic.return` en ese caso. La cola operativa es la señal esperada para alerta y diagnóstico.
-
-Si tampoco existe ruta por el alternate exchange (por ejemplo, en una prueba aislada sin el binding de captura), `mandatory=true` exige el retorno `basic.return`; el publisher debe observarlo además de usar publisher confirms. `basic.return` y publisher confirm informan condiciones distintas. Una prueba de aceptación estática debe contrastar los bindings esperados; una prueba runtime aislada debe cubrir (a) publicación sin ruta principal capturada en `po.unrouted.q` sin `basic.return`, y (b) publicación sin ruta ni siquiera en el alternate exchange que produce `basic.return`. La segunda prueba no debe alterar la topología productiva.
-
-## 6. Colas y bindings
-
-### Routing keys de DLQ (aplican a la alternativa A, no adoptada)
-
-En la alternativa A, cada cola principal configura `dead-letter-exchange: po.dlx.x` y `dead-letter-routing-key` igual al nombre de la **cola principal**. El destino se selecciona por el binding `po.dlx.x` → cola DLQ con esa misma clave. La clave no es el nombre de la cola DLQ. La tabla fija el valor exacto para las diez colas; no cambia los bindings ni la topología ejecutable `0.6.0-rc.2` vigente.
-
-| Cola principal | Exchange DLX | `dead-letter-routing-key` | Cola destino | Binding del destino |
-|---|---|---|---|---|
-| `po.catalog.q` | `po.dlx.x` | `po.catalog.q` | `po.catalog.q.dlq` | `po.catalog.q` |
-| `po.gateway.q` | `po.dlx.x` | `po.gateway.q` | `po.gateway.q.dlq` | `po.gateway.q` |
-| `po.promotions.q` | `po.dlx.x` | `po.promotions.q` | `po.promotions.q.dlq` | `po.promotions.q` |
-| `po.combos.q` | `po.dlx.x` | `po.combos.q` | `po.combos.q.dlq` | `po.combos.q` |
-| `po.inventory.q` | `po.dlx.x` | `po.inventory.q` | `po.inventory.q.dlq` | `po.inventory.q` |
-| `po.pricing.q` | `po.dlx.x` | `po.pricing.q` | `po.pricing.q.dlq` | `po.pricing.q` |
-| `po.price-audit.q` | `po.dlx.x` | `po.price-audit.q` | `po.price-audit.q.dlq` | `po.price-audit.q` |
-| `po.sales.q` | `po.dlx.x` | `po.sales.q` | `po.sales.q.dlq` | `po.sales.q` |
-| `po.taxonomy.q` | `po.dlx.x` | `po.taxonomy.q` | `po.taxonomy.q.dlq` | `po.taxonomy.q` |
-| `po.bulk.q` | `po.dlx.x` | `po.bulk.q` | `po.bulk.q.dlq` | `po.bulk.q` |
-
-### `po.catalog.q` — catalog-svc
-
-Bindings:
-
-- `catalog.bulk.upsert.requested`
-- `inventory.sku.initialization.completed`
-- `inventory.sku.initialization.rejected`
-- `pricing.product.initialization.completed`
-- `pricing.product.initialization.rejected`
-- `taxonomy.category.updated`
-- `taxonomy.characteristic-value.updated`
-- `taxonomy.master.deactivated`
-- `taxonomy.master.deactivation.check.requested`
-- `taxonomy.master.deactivation.rejected`
-- `taxonomy.product-type-schema.changed`
-
-Retry: `po.catalog.q.retry` · DLQ: `po.catalog.q.dlq`
-
-### `po.gateway.q` — api-gateway/bff
-
-Bindings:
-
-- `catalog.product.deactivated`
-- `inventory.reservation.consumed`
-- `inventory.reservation.created`
-- `inventory.reservation.expired`
-- `inventory.reservation.released`
-- `inventory.stock.adjusted`
-- `inventory.stock.changed`
-- `pricing.price.changed`
-- `taxonomy.category.updated`
-- `taxonomy.master.deactivated`
-
-Retry: `po.gateway.q.retry` · DLQ: `po.gateway.q.dlq`
-
-### `po.promotions.q` — promotions-svc
-
-Bindings:
-
-- `catalog.product.deactivated`
-- `catalog.sku.deactivated`
-- `inventory.stock.changed`
-- `pricing.price.changed`
-- `promotions.coupon.consumption.requested`
-- `promotions.coupon.restoration.requested`
-
-Retry: `po.promotions.q.retry` · DLQ: `po.promotions.q.dlq`
-
-### `po.combos.q` — combos-svc
-
-Bindings:
-
-- `catalog.product.deactivated`
-- `catalog.sku.deactivated`
-- `inventory.stock.changed`
-
-Retry: `po.combos.q.retry` · DLQ: `po.combos.q.dlq`
-
-### `po.inventory.q` — inventory-svc
-
-Bindings:
-
-- `catalog.sku.deactivated`
-- `inventory.bulk.stock.adjust.requested`
-- `inventory.sku.initialization.requested`
-
-Retry: `po.inventory.q.retry` · DLQ: `po.inventory.q.dlq`
-
-### `po.pricing.q` — pricing-svc
-
-Bindings:
-
-- `catalog.sku.deactivated`
-- `pricing.bulk.price.apply.requested`
-- `pricing.product.initialization.requested`
-
-Retry: `po.pricing.q.retry` · DLQ: `po.pricing.q.dlq`
-
-### `po.price-audit.q` — price-audit-svc
-
-Bindings:
-
-- `pricing.price.changed`
-
-Retry: `po.price-audit.q.retry` · DLQ: `po.price-audit.q.dlq`
-
-### `po.sales.q` — modulo-ventas
-
-Bindings:
-
-- `inventory.consumption.completed`
-- `inventory.consumption.rejected`
-- `inventory.reservation.consumed`
-- `inventory.reservation.created`
-- `inventory.reservation.rejected`
-- `inventory.reservation.expired`
-- `inventory.reservation.released`
-- `promotions.coupon.consumption.completed`
-- `promotions.coupon.consumption.rejected`
-- `promotions.coupon.restoration.completed`
-- `promotions.coupon.restoration.rejected`
-
-Retry: `po.sales.q.retry` · DLQ: `po.sales.q.dlq`
-
-### `po.taxonomy.q` — taxonomy-svc
-
-Bindings:
-
-- `catalog.master.deactivation.checked`
-
-Retry: `po.taxonomy.q.retry` · DLQ: `po.taxonomy.q.dlq`
-
-### `po.bulk.q` — bulk-svc
-
-Bindings:
-
-- `catalog.bulk.upsert.completed`
-- `catalog.bulk.upsert.rejected`
-- `inventory.bulk.stock.adjust.completed`
-- `inventory.bulk.stock.adjust.rejected`
-- `inventory.stock.adjusted`
-- `pricing.bulk.price.apply.completed`
-- `pricing.bulk.price.apply.rejected`
-
-Retry: `po.bulk.q.retry` · DLQ: `po.bulk.q.dlq`
-
-
-## 7. Canales externos
-
-Marketplace, Chatbot y Retail continúan integrándose principalmente por HTTP. No se provisionan colas directas para ellos en P2.
-
-Cuando un dato debe proyectarse hacia canales, el consumidor físico es `api-gateway/bff`. Chatbot mantiene su decisión explícita de no consumir eventos en esta versión.
-
-## 8. Configuración pendiente de entorno
-
-No forma parte del contrato de negocio:
-
-- hostname del broker;
-- credenciales/secret;
-- número de nodos del cluster;
-- memoria/disco asignado;
-- TLS/certificados del entorno.
-
-Esos valores se resuelven en infraestructura sin cambiar exchanges, queues ni routing keys.
-
-## 9. Permisos runtime y declaraciones
-
-La matriz operativa de `configure`, `write`, `read`, permisos de tópico y declaraciones al arranque está en [Operación de RabbitMQ](../../arquitectura/operacion-rabbitmq.md#matriz-rabbitmq-por-aplicacion). Se deriva de estos bindings/operaciones y no concede acceso de lectura a `po.unrouted.q`, las colas `.retry` ni las DLQ a las identidades de aplicación.
-
-## 10. Evaluación de aislamiento retry/DLX (sin cambio contractual)
-
-El AsyncAPI `0.6.0-rc.2` anterior continúa describiendo `po.retry.x` y `po.dlx.x` como exchanges `direct` y el flujo actual de retry/DLQ. La alternativa A está documentada como candidata para validación, **no como topología adoptada**: convertir `po.retry.x` a `topic` y limitar su routing key mediante topic permissions exactos; mantener `po.dlx.x` `direct` sin permiso runtime `write`; configurar la DLX de cada cola principal para que un rechazo final con `requeue=false` llegue a su `<main>.dlq`. Los consumidores de negocio deben ACKear rechazos válidos.
-
-Para evitar ciclos en esa futura configuración, la única salida DLX de cada cola `.retry` seguiría apuntando al exchange por defecto con routing key de su cola principal. La cola principal configuraría `dead-letter-routing-key` con su propio nombre (`po.inventory.q` para Inventario), que selecciona la DLQ por el binding declarado en la tabla anterior; no se usa como clave el nombre `<main>.dlq`. Una DLQ no tendría DLX de retorno. Reintentos publicados por aplicación deben conservar el envelope, `message_id`, `correlation_id`, `causation_id`, `operation_id` y contador verificable, con publisher confirm antes de ACK del original. Dead lettering at-least-once de fuentes quorum exige validar en 4.2.9 `dead-letter-strategy=at-least-once`, `overflow=reject-publish`, políticas/argumentos correctos y `stream_queue`; puede retener mensajes si el destino no acepta y puede duplicar, por lo que Outbox/Inbox/idempotencia no se omiten.
-
-**Estado de prueba:** el perfil focalizado RabbitMQ 4.2.9 del 2026-10-15 confirmó por publisher confirms el relleno y un segundo mensaje en la DLQ con `max-length=1` (`messages_ready=2`); el siguiente sondeo recibió NACK. `rabbitmqctl list_queues` verificó las políticas efectivas. El mensaje original fue rechazado con `requeue=false`; mientras el destino estaba saturado, la fuente reportó un mensaje retenido (`messages=1`, `messages_ready=0`). Tras ACKear exclusivamente los dos mensajes identificados, el original no apareció en DLQ dentro de 60 s (**FAIL**). A/B/C permanecen no adoptadas, el bloqueo de credenciales runtime continúa y AsyncAPI conserva `0.6.0-rc.2`. No se deben cambiar los tipos de exchange en un broker que ya los tenga declarados: un tipo distinto en el mismo nombre es incompatible. Cualquier eventual migración requiere inventario, destino aislado, corte/drenaje y reversión no destructivos; no purgar ni recrear colas con mensajes. Si la alternativa A se adopta luego de resolver esta recuperación y pasar sus gates, requiere AsyncAPI `0.6.0-rc.3` para versionar el cambio físico de `po.retry.x` y la ruta de rechazo final; esta evaluación sin adopción no altera la versión.
+- [Matriz de compatibilidad RabbitMQ Oracle](compatibilidad-rabbitmq-oracle.md)
+- [Decisiones de RabbitMQ](../../arquitectura/decisiones/rabbitmq.md)
+- [Operación de RabbitMQ](../../arquitectura/operacion-rabbitmq.md)
+- [Transición de RabbitMQ](../../integraciones/transicion-rabbitmq.md)
 
 ## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
 

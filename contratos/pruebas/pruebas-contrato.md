@@ -1,11 +1,11 @@
 # Matriz de pruebas de contrato e integración — Productos y Ofertas
 
 **Contrato HTTP objetivo:** OpenAPI `0.6.0-rc.1` (candidato, no publicado).
-**Contrato asíncrono objetivo:** AsyncAPI `0.6.0-rc.2` (candidato, no publicado).
+**Contrato asíncrono objetivo:** AsyncAPI `0.6.0-rc.3` (candidato, no publicado).
 **Referencia histórica auditada:** PR #86, rama `nueva`, commit `c1769607f30e2cabf1449e33c877fa4ef41defe5`; esta matriz conserva los estados pendientes y actualiza la expectativa del vhost en `CT-STATIC-18`.
 **Estado:** definición documental de casos; no asignar `PASS` a pruebas de API, eventos, seguridad o integración sin ejecución reproducible.
 
-En la revisión actual, `contratos/http/openapi.yaml` conserva `0.6.0-rc.1` y `contratos/eventos/asyncapi.yaml` es `0.6.0-rc.2`. AsyncAPI avanzó por el cambio de vhost y una precisión documental sobre la señalización existente de unroutable; la numeración independiente evita modificar la candidata HTTP sin cambio. Los casos estáticos permanecen `PENDIENTE_EJECUCION` **hasta disponer de ejecución reproducible de validadores y evidencia vinculada al commit**; tampoco se consideran superadas pruebas provider, seguridad o E2E. `0.5.0` es línea base de compatibilidad, no prueba de despliegue de los candidatos.
+En la revisión actual, `contratos/http/openapi.yaml` conserva `0.6.0-rc.1` y `contratos/eventos/asyncapi.yaml` es `0.6.0-rc.3`. AsyncAPI reconcilia nombres de recursos físicos base con una observación histórica Oracle; la numeración independiente evita modificar la candidata HTTP sin cambio. Los casos estáticos permanecen `PENDIENTE_EJECUCION` **hasta disponer de ejecución reproducible de validadores y evidencia vinculada al commit**; tampoco se consideran superadas pruebas provider, seguridad o E2E. `0.5.0` es línea base de compatibilidad, no prueba de despliegue de los candidatos.
 
 ## Estados
 
@@ -43,7 +43,7 @@ ARCHITECTURE_INVARIANT
 | CT-STATIC-05 | STATIC_CONTRACT | Código de barras reutiliza `catalogo:leer`; sin scope nuevo | PENDIENTE_EJECUCION |
 | CT-STATIC-06 | STATIC_CONTRACT | `DisponibilidadComercial` expone `sku` y `status`, sin saldos ni ubicaciones internas | PENDIENTE_EJECUCION |
 | CT-STATIC-07 | STATIC_CONTRACT | Schemas comerciales de Catálogo no contienen flags administrativos ni perfiles físicos internos | PENDIENTE_EJECUCION |
-| CT-STATIC-08 | STATIC_CONTRACT | YAML válido, AsyncAPI 3.0.0, `info.version=0.6.0-rc.2`, **40 canales y 40 mensajes**, `$ref` resolubles; se conservan `operation_id` y `causation_id` obligatorios en resultados v2 críticos y en inicializaciones donde corresponda | PENDIENTE_EJECUCION |
+| CT-STATIC-08 | STATIC_CONTRACT | YAML válido, AsyncAPI 3.0.0, `info.version=0.6.0-rc.3`, **40 canales y 40 mensajes**, `$ref` resolubles; se conservan `operation_id` y `causation_id` obligatorios en resultados v2 críticos y en inicializaciones donde corresponda | PENDIENTE_EJECUCION |
 | CT-STATIC-09 | STATIC_CONTRACT | `reservaId` de `POST /inventario/reservas/{reservaId}/confirmar` y `/liberar` tiene `type: string`, `format: uuid`; `order_id` sigue siendo cadena opaca | PENDIENTE_EJECUCION |
 | CT-STATIC-10 | STATIC_CONTRACT | `GET /inventario/operaciones/{operationId}` exige UUID y restringe consumidor a `modulo-ventas`, scope `inventario:operaciones:leer`, sin publicar stock interno | PENDIENTE_EJECUCION |
 | CT-STATIC-11 | STATIC_CONTRACT | `POST /inventario/disponibilidad/comercial/verificar` devuelve evaluación no vinculante sin `location_id` ni cantidades internas; `INDETERMINADO` es una salida de negocio válida | PENDIENTE_EJECUCION |
@@ -51,9 +51,9 @@ ARCHITECTURE_INVARIANT
 | CT-STATIC-13 | STATIC_CONTRACT | Los esquemas de éxito de consumo/restauración siguen independientes de los de rechazo; las nuevas referencias no alteran nombres de mensajes, exchanges ni routing keys existentes | PENDIENTE_EJECUCION |
 | CT-STATIC-14 | STATIC_CONTRACT | `ConsultaOperacionInventario` con `status=REJECTED` requiere `result_code` no vacío; sus estados `ACCEPTED`, `PROCESSING`, `COMPLETED`, `REJECTED` y `REQUIRES_REVIEW` conservan la semántica declarada | PENDIENTE_EJECUCION |
 | CT-STATIC-15 | STATIC_CONTRACT | Respuestas `404` de consulta de operación y `422` por contexto comercial inválido usan los códigos del catálogo; `429` y `500` están declarados en las rutas nuevas | PENDIENTE_EJECUCION |
-| CT-STATIC-16 | STATIC_CONTRACT | OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.2` identifican candidatas independientes; AsyncAPI cambia el vhost y explicita la señalización unroutable sin reemplazar la línea publicada `0.5.0` en runtime | PENDIENTE_EJECUCION |
+| CT-STATIC-16 | STATIC_CONTRACT | OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.3` identifican candidatas independientes; AsyncAPI reconcilia nombres físicos base, conserva el vhost y no reemplaza la línea publicada `0.5.0` en runtime | PENDIENTE_EJECUCION |
 | CT-STATIC-17 | STATIC_CONTRACT | GET detallado admite exactamente `modulo-ventas` y `modulo-postventa` con `inventario:disponibilidad:leer` y `serviceBearer`, además de `userBearer` para acceso humano autorizado; Marketplace, Chatbot y Retail quedan excluidos del detalle y usan solo rutas comerciales | PENDIENTE_EJECUCION |
-| CT-STATIC-18 | STATIC_CONTRACT | AsyncAPI `servers.rabbitmq.x-vhost` y `x-rabbitmq-topology.vhost` coinciden con `g6-productos-ofertas`; la topología y las operaciones mantienen exchanges, queues, bindings y routing keys respecto de `0.6.0-rc.1` | PENDIENTE_EJECUCION |
+| CT-STATIC-18 | STATIC_CONTRACT | AsyncAPI `servers.rabbitmq.x-vhost` y `x-rabbitmq-topology.vhost` coinciden con `g6-productos-ofertas`; la candidata conserva canales, operaciones, mensajes, payloads, esquemas y routing keys comerciales respecto de `0.6.0-rc.2`; los nombres físicos base se alinean a la observación Oracle | PENDIENTE_EJECUCION |
 | CT-STATIC-19 | STATIC_CONTRACT | GET y POST comerciales incluyen allowlist `modulo-marketplace`, `modulo-chatbot`, `modulo-retail`, con el scope común `inventario:disponibilidad:leer`; `GET /inventario/operaciones/{operationId}` usa `inventario:operaciones:leer` y `modulo-ventas` | PENDIENTE_EJECUCION |
 
 **Control de conteos:** el contrato AsyncAPI candidato del commit `c1769607` contiene 40 canales y 40 mensajes (el baseline histórico `0.5.0` tenía 39 mensajes). Este recuento de estructuras **no equivale a pasar CT-STATIC-08**: los `$ref`, formatos UUID, schemas y obligatoriedad de campos siguen pendientes de un validador reproducible. Un cambio intencional exige actualizar conteos y justificarlo.
@@ -202,7 +202,7 @@ La línea base revisada no contiene los identificadores `CT-G5-INV-04` ni `CT-G5
 | ID | Tipo | Resultado esperado / dependencia | Estado |
 |---|---|---|---|
 | CT-G5-INV-04A | PROVIDER_CONTRACT | G6 persiste resultado definitivo de reserva/consumo/liberación y lo publica mediante Outbox tras commit; replay idempotente no duplica efectos | PENDIENTE_IMPLEMENTACION |
-| CT-G5-INV-04B | INFRASTRUCTURE | Infraestructura confirma acceso al broker real, vhost coincidente con la candidata AsyncAPI `0.6.0-rc.2` (`g6-productos-ofertas`), credenciales, exchanges, colas y bindings; OCI `g6` solo está reportado, no verificado | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-G5-INV-04B | INFRASTRUCTURE | Infraestructura confirma acceso al broker real, vhost coincidente con la candidata AsyncAPI `0.6.0-rc.3` (`g6-productos-ofertas`), credenciales, exchanges, colas y bindings; OCI `g6` solo está reportado, no verificado | BLOQUEADA_DEPENDENCIA_EXTERNA |
 | CT-G5-INV-04C | CONSUMER_PROVIDER | G5 consume el evento/result esperado de la operación G6 y correlaciona `operation_id`, `causation_id` y `correlation_id`; requiere proveedor/consumidor y broker identificados | BLOQUEADA_DEPENDENCIA_EXTERNA |
 | CT-G5-INV-05A | PROVIDER_CONTRACT | `GET /inventario/operaciones/{operationId}` devuelve el resultado persistido de la operación admitida sin reejecutar efectos | PENDIENTE_IMPLEMENTACION |
 | CT-G5-INV-05B | SECURITY_INTEGRATION | G7 acredita registro, aprobación, grant y credencial para `modulo-ventas` con `inventario:operaciones:leer` y audiencia `api-productos` | BLOQUEADA_DEPENDENCIA_EXTERNA |

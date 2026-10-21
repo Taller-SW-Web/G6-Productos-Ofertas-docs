@@ -4,10 +4,10 @@
 **Módulo propietario:** Productos y Ofertas  
 **Documento de integración:** `Contrato_Api.md`  
 **Contrato HTTP canónico:** `openapi.yaml` (`0.6.0-rc.1`, provisional)
-**Contrato asíncrono canónico:** `../eventos/asyncapi.yaml` (`0.6.0-rc.2`, candidato)
+**Contrato asíncrono canónico:** `../eventos/asyncapi.yaml` (`0.6.0-rc.3`, candidato)
 **Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (referencia humana; base histórica `0.5.0`, candidato de 40 mensajes)
 **Catálogo de errores canónico:** `contratos/http/catalogo-errores.md` (vocabulario estable de códigos)
-**Estado:** `0.5.0` como línea base histórica/de compatibilidad; OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.2` como contratos candidatos B1–B4. La revisión AsyncAPI `rc.2` cambia el vhost y precisa la detección unroutable; no acredita despliegue, permisos de G7 ni pruebas de integración.
+**Estado:** `0.5.0` como línea base histórica/de compatibilidad; OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.3` como candidata. La revisión `rc.3` reconcilia nombres físicos base observados en Oracle y conserva mensajes, operaciones y routing keys; no acredita despliegue, permisos de G7 ni pruebas de integración.
 
 ## Fuentes utilizadas
 
@@ -1811,7 +1811,7 @@ Referencia humana:
 contratos/eventos/catalogo-eventos.md
 ```
 
-La línea base histórica AsyncAPI `0.5.0` documentó **39 mensajes lógicos**. El contrato ejecutable candidato AsyncAPI `0.6.0-rc.2` contiene **40 canales y 40 mensajes**, incluido `inventory.reservation.rejected`, sin que esa cifra demuestre publicación real de eventos.
+La línea base histórica AsyncAPI `0.5.0` documentó **39 mensajes lógicos**. El contrato ejecutable candidato AsyncAPI `0.6.0-rc.3` contiene **40 canales y 40 mensajes**, incluido `inventory.reservation.rejected`, sin que esa cifra demuestre publicación real de eventos.
 
 Entre los mensajes externos/integradores más relevantes están:
 
@@ -2406,52 +2406,21 @@ Cambios rompientes requieren nueva versión del schema o del canal contractual.
 
 # 39. Topología RabbitMQ P2
 
-VHost:
+La topología base observada históricamente en Oracle el 2026-10-19 (RabbitMQ 4.2.9, vhost `g6-productos-ofertas`) se documenta en AsyncAPI candidata `0.6.0-rc.3`. Esta observación no acredita estado actual, homologación, adaptación de código ni conexión.
 
-```text
-g6-productos-ofertas
-```
+Exchanges observadas: `po.comandos.x` (topic), `po.eventos.x` (topic), `po.resultados.x` (topic), `po.sin-ruta.x` (fanout); todas durables. Colas observadas, todas quorum/durables: `po.catalogo.q`, `po.pasarela.q`, `po.promociones.q`, `po.combos.q`, `po.inventario.q`, `po.precios.q`, `po.auditoria-precios.q`, `po.ventas.q`, `po.taxonomia.q`, `po.masivos.q` y `po.sin-ruta.q`. Esta última es operativa, no comercial.
 
-Exchanges:
+La auditoría informa 57 bindings; la correspondencia individual con el candidato permanece `PENDIENTE_VERIFICACION`. La [topología](../eventos/rabbitmq-topologia.md) y la [matriz de compatibilidad Oracle](../eventos/compatibilidad-rabbitmq-oracle.md) documentan recursos, operaciones y límites de evidencia.
 
-```text
-po.commands.x
-po.events.x
-po.results.x
-po.retry.x
-po.dlx.x
-po.unrouted.x
-```
+`po.retry.x`, `po.dlx.x`, sus colas derivadas y claves técnicas permanecen diseño candidato **NO APROBADO, NO APROVISIONADO y BLOQUEADO**. Se conserva `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`. No se atribuyen permisos runtime ni éxito de pruebas de recuperación.
 
-Reglas:
-
-- routing key = nombre lógico del mensaje;
-- colas principales, retry y DLQ son durables;
-- colas principales usan quorum queues;
-- publisher confirms obligatorios;
-- ACK manual;
-- `prefetch = 20` inicial;
-- at-least-once;
-- `message_id` para deduplicación;
-- `operation_id` para idempotencia de negocio;
-- Outbox en publisher e Inbox/dedupe en consumer;
-- retry técnico: hasta 3 intentos con 30 s;
-- rechazo de negocio válido no va a DLQ.
-
-La tabla completa de queues/bindings vive en:
-
-```text
-contratos/eventos/rabbitmq-topologia.md
-```
-
-AsyncAPI `0.5.0` contiene la misma topología como `x-rabbitmq-topology`.
-
+Publisher confirms, ACK manual, `mandatory`, `basic.return` y la ruta alternate conservan su semántica contractual. Publisher confirm no acredita recepción ni ACK del consumidor.
 
 # 40. Pendientes de integración externa
 
-Cerrados en P2:
+Documentados en P2 (sin acreditar implementación):
 
-- topología RabbitMQ física;
+- topología RabbitMQ base observada; correspondencia de bindings `PENDIENTE_VERIFICACION`, homologación/implementación pendientes;
 - recepción total/parcial de traslado a almacén central;
 - autorización local del Gestor Comercial con capacidad de recepción de inventario.
 
@@ -2594,7 +2563,7 @@ Seguridad:
 - emite tokens de servicio con `aud` y `scope` para APIs propietarias;
 - permite introspección para cambios de precio según el contrato vigente.
 
-La línea base histórica consolidada es OpenAPI/AsyncAPI `0.5.0`; los archivos ejecutables contienen OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.2` como candidatos. El catálogo humano de eventos corresponde a los 40 mensajes y su estado editorial no acredita despliegue.
+La línea base histórica consolidada es OpenAPI/AsyncAPI `0.5.0`; los archivos ejecutables contienen OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.3` como candidato. El catálogo humano de eventos corresponde a los 40 mensajes y su estado editorial no acredita despliegue.
 
 A partir de esta versión, cualquier cambio de rutas HTTP debe realizarse primero en `contratos/http/openapi.yaml`; los cambios de mensajería deben realizarse primero en `contratos/eventos/asyncapi.yaml`; después se actualizan los documentos humanos derivados.
 

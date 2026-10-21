@@ -271,14 +271,14 @@ La explicación humana de responsabilidades e integración se mantiene en:
 | Artefacto | Versión |
 |---|---|
 | OpenAPI 3.1.0 | `0.6.0-rc.1`, contrato candidato de la rama `nueva` |
-| AsyncAPI 3.0.0 | `0.6.0-rc.2`, contrato candidato; 40 canales / 40 mensajes; adopta internamente `g6-productos-ofertas` y mantiene los recursos/mensajes existentes |
+| AsyncAPI 3.0.0 | `0.6.0-rc.3`, contrato candidato; 40 canales / 40 mensajes; refleja nombres de infraestructura base observados históricamente en Oracle y mantiene contratos lógicos |
 | Línea base histórica OpenAPI/AsyncAPI | `0.5.0` (compatibilidad; no sustituida automáticamente en runtime) |
 | Catálogo de errores | Vocabulario humano de códigos, alineado con el contrato candidato |
 | Catálogo de eventos | 40 mensajes documentados; publicación real pendiente de comprobación |
 | Topología RabbitMQ | Contrato físico documentado, sin inferir aprovisionamiento del entorno |
 | Kit de integración | Guía documental derivada del contrato candidato |
 
-**Estado de publicación:** OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.2` son candidatas. Su presencia en GitHub **no acredita** handlers desplegados, grants de G7, homologación del vhost, pruebas E2E ni compatibilidad de consumidores. No anunciar estos contratos como APIs vivas por el mero contenido YAML.
+**Estado de publicación:** OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.3` son candidatas. La topología base fue observada históricamente, pero la candidata no acredita estado actual del broker, adaptación de código, grants, homologación G5, despliegue ni E2E. No anunciar estos contratos como APIs vivas por el mero contenido YAML.
 
 ---
 
