@@ -52,7 +52,7 @@ modulo-ventas
 
 Promociones aplica `RESTAURAR_EN_CANCELACION` o `NO_RESTAURAR` y devuelve un resultado idempotente. La restauración no precede a un consumo confirmado.
 
-El contrato `0.6.0-rc.1` modela `consumption_operation_id` como opcional y anulable; **no se debe presentarlo todavía como obligatorio**. G5 y el owner de Promociones deben cerrar si será obligatorio en v2 o si habrá una correlación alternativa verificable por `order_id` y operación de consumo persistida. La ausencia de este dato no autoriza restaurar un consumo ambiguo ni omitir comprobaciones de identidad y política.
+Para H4, G5 y G6 acuerdan conservar el UUID determinista de restauración y enviar siempre `consumption_operation_id` del consumo confirmado en las nuevas restauraciones, junto con el `cancelled_at` original. Los reintentos conservan el mismo `operation_id` y contenido semántico. AsyncAPI `0.6.0-rc.3` mantiene el campo opcional/anulable en el esquema general; se conserva esa compatibilidad y no se requiere una nueva versión. La implementación y prueba de replay siguen pendientes.
 
 ## Inventario
 
@@ -63,10 +63,11 @@ Acuerdo ratificado el 13/10/2026 en el issue [G5 #51](https://github.com/Taller-
 - M2/Postventa invoca directamente `POST /api/v1/inventario/reintegros` con audiencia `api-productos`, autenticación `client_credentials` y scope `inventario:reintegrar`. La allowlist conserva `modulo-ventas` para otros motivos contractuales (`ANULACION_POST_CONSUMO`, `RETORNO_LOGISTICO`); no se infieren reglas de autorización por motivo. El grant efectivo de G7 sigue pendiente.
 - La aprobación comercial no equivale a recepción. F3 solo reintegra cantidades recibidas físicamente e inspeccionadas como aptas. G5 ha documentado su propio `PATCH /api/v2/devoluciones/{devolucionId}/recepcion`; el mecanismo y evidencia finales deben quedar definidos en ESP-07/ESP-08 antes de activar el flujo real.
 - M2 obtiene el SKU exacto desde `items[].sku` del pedido original de Ventas; nunca lo infiere desde `productoId`.
-- Payload canónico: `operation_id`, `order_id`, `source_ref`, `reason: DEVOLUCION_ACEPTADA` y `lines[]` con `sku`, `quantity` y `location_id`. La ubicación receptora y la representación/resolución de `location_id` siguen pendientes; no usar UUID ni código supuesto.
+- Payload canónico: `operation_id`, `order_id`, `source_ref`, `reason: DEVOLUCION_ACEPTADA` y `lines[]` con `sku`, `quantity` y `location_id`. Postventa acordó recepción en Lurín, con `location_id` `9129b578-631e-1735-8427-b683fb524380` configurado por entorno. G6 aún debe acreditar que el UUID existe y corresponde a esa ubicación en catálogo/runtime.
 - Reintentos idénticos reutilizan `operation_id` y payload. Una nueva recepción parcial genera otro `operation_id`; no duplica Kardex. La respuesta contractual exitosa es `200` con `status: COMPLETED`.
 - Para CAMBIO, M2 consulta `GET /api/v1/inventario/disponibilidad` con `inventario:disponibilidad:leer`. Es una lectura informativa que no reserva ni garantiza stock futuro y no debe usar un `channel_id` de Marketplace, Chatbot o Retail.
-- M2 no obtiene con este acuerdo scopes para reservar, consumir ni liberar el reemplazo. Su reserva y consumo requieren un acuerdo aparte sobre identidad del pedido, responsable, TTL, eventos y compensaciones.
+- M2 no reserva, consume ni libera unidades de reemplazo. M1 crea una orden propia, nueva y sin cobro, vinculada por G5 al pedido/devolución original; usa su `pedidoId` textual como `order_id` y gestiona reserva, consumo y liberación. Scopes separados: M1 `inventario:reservar`, `inventario:consumir`, `inventario:liberar`; M2 `inventario:reintegrar`, `inventario:disponibilidad:leer`. Los permisos G7 necesarios para crear la orden de reemplazo en G5 están pendientes de identificar; no se atribuye un nombre de scope.
+- La reserva de reemplazo tiene TTL sin renovación. Si vence o se rechaza antes del consumo, M1 anula la orden y, si procede, crea una nueva orden con una nueva reserva. M1 solicita consumo al sellar el paquete y espera confirmación definitiva antes de solicitar despacho; `202` solo admite el comando.
 - El uso real depende de Seguridad G7: `client_credentials`, audiencia `api-productos`, cliente autorizado y scope correcto. La homologación no concede el grant. G5 no comprometió una integración funcional o E2E para el 14/10/2026.
 
 Reglas documentadas para el flujo comercial de inventario correspondiente (no son por sí solas evidencia de implementación ni homologación global):
@@ -80,12 +81,12 @@ retorno físico aceptado -> reintegrar
 
 ### Diferencia entre la admisión interna y la respuesta de Ventas
 
-El contrato de G5 (`specs/api/api-ventas.md`, rama `main`, consultado el 11/10/2026) contempla `201 Created` al canal una vez creados el pedido y la reserva de stock/cupón confirmados. En cambio, el contrato interno de G6 devuelve `202 Accepted` al **admitir** un comando asíncrono de reserva. Estas dos respuestas no son equivalentes:
+El contrato vigente de G5 ([`api-ventas.md` v1.5.0, §1.1](https://github.com/Taller-SW-Web/G5-Ventas-Postventas/blob/main/specs/api/api-ventas.md)) usa `201 Created` para registrar efectivamente un pedido nuevo y `200 OK` para replay idempotente. El contrato indica que si Productos no confirma disponibilidad G5 responde `409 ITEM_SIN_DISPONIBILIDAD` y no registra el pedido. El `201` no acredita consumo de cupón ni el resultado de comandos G6 posteriores, como el consumo del reemplazo. G6 devuelve `202 Accepted` al **admitir** el comando de reserva. Estas respuestas tienen semánticas distintas:
 
 - **G6 Inventario:** devuelve `202` con `operation_id`; el éxito posterior se acredita mediante `inventory.reservation.created` v2 (incluido `reservation_id` y `expires_at`) o resultado final recuperable por `GET /api/v1/inventario/operaciones/{operationId}`. El rechazo se publica como `inventory.reservation.rejected`.
-- **G5 Ventas:** para conservar su `201 Created` externo con la promesa vigente de stock/cupón confirmados, debe orquestar la espera y procesar ambos resultados definitivos antes de responder. Si necesita contestar al canal sin esperar esas confirmaciones, **G5 debe acordar y versionar** una semántica alternativa de su API externa; G6 no la modifica unilateralmente.
+- **G5 Ventas:** `201` acredita la creación efectiva del pedido conforme al contrato vigente, que devuelve `409` y no registra el pedido si Productos no confirma disponibilidad. No acredita consumo de cupón ni el resultado de comandos G6 posteriores.
 
-**Estado del acuerdo externo:** pendiente de ratificación explícita con G5. Esta sección documenta la compatibilidad requerida, no afirma que el backend actual implemente la espera, el sondeo o el consumo de eventos.
+**Estado externo:** G5 define `201` como creación del pedido. D-01, D-03 y D-04 fueron aceptadas documentalmente en G5 #51; D-02 está adoptada internamente por G6, con adaptación y homologación operativa G5 de los nombres españoles pendientes. No se acredita implementación.
 
 Ventas conserva el mismo `operation_id` al reintentar un comando, trata `message_id` como identificador de entrega y no declara stock reservado después del mero `202`. La confirmación de una reserva proporciona `reservation_id` y `expires_at`; se deben respetar al continuar al pago o al liberar. Los rechazos y los tiempos de espera no deben transformarse en confirmaciones implícitas.
 
@@ -105,9 +106,15 @@ La alternativa comunicada Retail→G6 directo continúa **no homologada**. G4 v0
 
 El estado Retail `PAGADO`/`ENTREGADO` sin reserva no habilita por sí mismo consumo de cupón offline. El mecanismo documentado de consumo de Promociones conserva como precondición una reserva de Inventario confirmada; no se crea aquí una excepción ni se altera consumo/restauración.
 
-## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+## Consolidación Hito 4 (2026-10-21)
 
-**Decisión interna aprobada; contrato candidato 0.6.0-rc.1, no implementado ni desplegado de extremo a extremo.** Las migraciones de Inventario `0002` y Promociones `0004` sí fueron aplicadas al Supabase compartido y aprobadas en el postcheck estructural y sus validadores SQL. Esto no acredita un backend funcional ni la activación de mensajería v2.
+G6 adopta internamente D-01 a D-04. G5 aceptó el piloto local SSH (D-01), `commercial_snapshot_ref = order_id` (D-03) y UUID deterministas/restauración (D-04). Para D-02, G5 pidió nombres físicos ingleses y la decisión final de Marco fijó los españoles de rc.3; adaptación y homologación operativa G5 siguen pendientes. Se conserva la topología existente: vhost `g6-productos-ofertas`, exchanges `po.comandos.x`, `po.eventos.x`, `po.resultados.x`; colas `po.ventas.q`, `po.inventario.q`, `po.promociones.q`. G5 usa túnel SSH local `127.0.0.1:5673`; Render queda pendiente e independiente. No se crean aliases ni recursos paralelos. PR #101 está fusionado; PR #98 requiere reconciliación contra `master`.
+
+`commercial_snapshot_ref = order_id`; `order_id` contiene el `pedidoId` textual G5. Aplica la política de confianza interservicio aprobada para H4, pero G6 no acredita verificación independiente de todas las condiciones comerciales: campañas no verificables permanecen deshabilitadas. El productor real de `inventory.reservation.rejected`, `inventory.consumption.rejected` e `inventory.reservation.expired` sigue pendiente de evidencia. Rechazo HTTP inmediato y rechazo terminal de operación admitida con `202` son distintos.
+
+**Antecedente del corte documental `0.6.0-rc.1`; conservar como contexto histórico.** Las migraciones de Inventario `0002` y Promociones `0004` fueron aplicadas al Supabase compartido y aprobadas en el postcheck estructural y sus validadores SQL. Esto no acredita un backend funcional ni la activación de mensajería v2.
+
+## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
 
 - `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
 - `POST /inventario/reservas`, `/confirmar` y `/liberar` devuelven `202` únicamente al admitir el comando; el éxito o rechazo definitivo está en el resultado persistido y el evento de negocio.
@@ -116,4 +123,4 @@ El estado Retail `PAGADO`/`ENTREGADO` sin reserva no habilita por sí mismo cons
 - `D-INV-01` adopta una sola ubicación elegible por referencia de cumplimiento mientras no exista política multi-origen verificable. Sin ruta válida, la respuesta es `INDETERMINADO`, sin divulgar saldos internos.
 - La transición pago/consumo/liberación/expiración respeta la serialización y `expires_at`. Promociones no decide el estado del pedido ni del pago.
 
-**Autorización e interoperabilidad pendientes:** G7 debe confirmar y registrar `inventario:operaciones:leer` para `modulo-ventas`; la disponibilidad efectiva del endpoint exige backend y credenciales adecuadas. No anunciar esta API como viva ni el scope como concedido antes de la evidencia. G5 debe coordinar la adaptación v1/v2 de los mensajes y el momento de la respuesta `201` al canal.
+**Autorización e interoperabilidad pendientes en ese corte:** G7 debía confirmar y registrar `inventario:operaciones:leer` para `modulo-ventas`; la disponibilidad efectiva del endpoint requiere backend y credenciales adecuadas. Para el estado vigente, G5 adapta el envelope de mensajes a v2; `201` sigue la semántica actual de creación de pedido descrita arriba y `202` G6 solo admite comandos. Ninguna de estas referencias acredita despliegue o implementación.

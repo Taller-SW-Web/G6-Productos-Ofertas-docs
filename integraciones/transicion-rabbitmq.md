@@ -34,6 +34,10 @@ El contrato contiene 56 bindings en las diez colas principales y un binding oper
 
 `po.retry.x` y `po.dlx.x` no se traducen; continúan no aprobados y no aprovisionados. Los nombres derivados `<cola>.retry`, `<cola>.dlq` y sus claves técnicas usan la nueva identidad de la cola principal solo en el diseño candidato. Las routing keys comerciales permanecen iguales.
 
+La tabla anterior es una referencia histórica de nombres previos frente al contrato rc.3; no autoriza aliases ni coexistencia. Para el alcance H4, G6 adopta internamente los nombres físicos españoles ya existentes: vhost `g6-productos-ofertas`, exchanges `po.comandos.x`, `po.eventos.x`, `po.resultados.x` y colas G5/G6 `po.ventas.q`, `po.inventario.q`, `po.promociones.q`. No se crean recursos paralelos, no se cambia la VM y no se inventa una coexistencia con nombres ingleses. G5 accede al piloto mediante túnel SSH local `127.0.0.1:5673`; Render queda pendiente e independiente.
+
+**Estado de D-02:** adopción interna G6 de AsyncAPI `0.6.0-rc.3`; G5 aceptó el bloque pero solicitó conservar nombres físicos ingleses. La lista española final de Marco no cuenta con ratificación externa posterior identificable, por lo que adaptación y homologación operativa G5 siguen pendientes. D-01 (piloto local SSH) fue aceptada documentalmente por G5. PR #101 está fusionado en `master`; PR #98 queda pendiente de reconciliación contra esa base y no se modifica aquí.
+
 ## 3. Impacto y coordinación
 
 | Parte | Impacto documental previsto | Estado externo / implementación |
