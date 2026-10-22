@@ -26,6 +26,12 @@ try {
     $fingerprint=((& ssh-keygen.exe -lf $publicPath) -split '\s+')[1]
     $secure=ConvertTo-SecureString -String $keyPassphrase -AsPlainText -Force
     $protected=ConvertFrom-SecureString -SecureString $secure; $secure.Dispose()
+    $unlockedFingerprint=Get-G6UnlockedSshFingerprint -PrivateKeyPath $keyPath -PublicKeyPath $publicPath -Passphrase $keyPassphrase -AskPassPath $askPassPath -ExpectedFingerprint $fingerprint
+    if ($unlockedFingerprint -cne $fingerprint) { throw "Synthetic private-key unlock fixture failed for $($profile.Login)." }
+    $wrongPassphraseRejected=$false
+    try { Get-G6UnlockedSshFingerprint -PrivateKeyPath $keyPath -PublicKeyPath $publicPath -Passphrase 'SYNTHETIC-WRONG-PASSPHRASE-ONLY' -AskPassPath $askPassPath -ExpectedFingerprint $fingerprint | Out-Null }
+    catch { $wrongPassphraseRejected=$_.Exception.Message -match 'passphrase or key is invalid' }
+    if (-not $wrongPassphraseRejected) { throw "Synthetic wrong-passphrase fixture was not rejected for $($profile.Login)." }
     $developers.Add([pscustomobject]@{
       Developer=$profile.Developer; Login=$profile.Login; KeyName=$profile.KeyName; KeyPath=$keyPath; PublicKeyPath=$publicPath
       Fingerprint=$fingerprint; PackagePayloadPath=(Join-Path $packageDirectory "$($profile.Login).g6pkg"); PackagePath=(Join-Path $packageDirectory "$($profile.Login)-installer.ps1")
@@ -35,6 +41,17 @@ try {
       PackageSHA256="old-installer-$index"; PackagePayloadSHA256="old-payload-$index"
     })
   }
+  Write-Output 'PASS synthetic SSH unlock fixtures: six encrypted Ed25519 keys unlocked with their passphrases; six incorrect passphrases rejected without key material output.'
+  $unprotectedKey=Join-Path $keyDirectory 'synthetic-unprotected'
+  & ssh-keygen.exe -q -t ed25519 -N '' -f $unprotectedKey -C 'synthetic unprotected negative fixture'
+  if ($LASTEXITCODE -ne 0) { throw 'Could not create the synthetic unprotected-key negative fixture.' }
+  Set-G6PrivateAclOnNewPath -Path $unprotectedKey | Out-Null; Set-G6PrivateAclOnNewPath -Path "$unprotectedKey.pub" | Out-Null
+  $unprotectedFingerprint=((& ssh-keygen.exe -lf "$unprotectedKey.pub") -split '\s+')[1]
+  $unprotectedRejected=$false
+  try { Get-G6UnlockedSshFingerprint -PrivateKeyPath $unprotectedKey -PublicKeyPath "$unprotectedKey.pub" -Passphrase $keyPassphrase -AskPassPath $askPassPath -ExpectedFingerprint $unprotectedFingerprint | Out-Null }
+  catch { $unprotectedRejected=$_.Exception.Message -match 'does not require its protected passphrase' }
+  if (-not $unprotectedRejected) { throw 'Synthetic unprotected private key was not rejected.' }
+  Write-Output 'PASS synthetic encryption policy: an unencrypted Ed25519 key is rejected even when its fingerprint matches.'
 
   $adminVaultPath=Join-Path $fixtureRoot 'admin-vault.dpapi.json'
   $adminBytes=[Text.UTF8Encoding]::new($false).GetBytes((ConvertTo-Json -InputObject ([pscustomobject]@{format='synthetic';createdUtc='2026-01-01T00:00:00Z';developers=@($developers)}) -Depth 10))

@@ -11,22 +11,6 @@ $ErrorActionPreference='Stop'
 $iterations=600000
 . (Join-Path $PSScriptRoot 'G6DeveloperProfile.ps1')
 
-function Get-SshFingerprint {
-  param([string]$Path,[string]$Passphrase,[string]$AskPassPath)
-  $info=[Diagnostics.ProcessStartInfo]::new(); $info.FileName=(Get-Command ssh-keygen.exe).Source
-  foreach ($arg in @('-lf',$Path)) { [void]$info.ArgumentList.Add($arg) }
-  $info.UseShellExecute=$false; $info.RedirectStandardOutput=$true; $info.RedirectStandardError=$true
-  $info.Environment['SSH_ASKPASS']=$AskPassPath; $info.Environment['SSH_ASKPASS_REQUIRE']='force'; $info.Environment['G6_KEY_PASSPHRASE']=$Passphrase
-  $process=[Diagnostics.Process]::new(); $process.StartInfo=$info; [void]$process.Start()
-  $stdout=$process.StandardOutput.ReadToEndAsync(); $stderr=$process.StandardError.ReadToEndAsync()
-  if (-not $process.WaitForExit(15000)) { $process.Kill(); throw 'SSH key fingerprint verification timed out; no key material was logged.' }
-  $info.Environment.Remove('G6_KEY_PASSPHRASE')
-  if ($process.ExitCode -ne 0) { throw 'SSH private-key fingerprint verification failed; details redacted.' }
-  $match=[regex]::Match($stdout.GetAwaiter().GetResult(),'(?m)^\d+\s+(SHA256:[A-Za-z0-9+/]+)\s+')
-  if (-not $match.Success) { throw 'SSH fingerprint output was not in the expected format.' }
-  return $match.Groups[1].Value
-}
-
 function Write-NewPrivateBytes {
   param([string]$Path,[byte[]]$Bytes)
   $stream=[IO.File]::Open($Path,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
@@ -148,7 +132,7 @@ foreach ($profile in $profiles) {
   $publicFingerprint=((& ssh-keygen.exe -lf $expectedPublic) -split '\s+')[1]
   $keySecure=ConvertTo-SecureString -String $dev.ProtectedPackagePassword
   $keyPass=[Net.NetworkCredential]::new('', $keySecure).Password
-  try { $privateFingerprint=Get-SshFingerprint -Path $expectedKey -Passphrase $keyPass -AskPassPath $askPassPath }
+  try { $privateFingerprint=Get-G6UnlockedSshFingerprint -PrivateKeyPath $expectedKey -PublicKeyPath $expectedPublic -Passphrase $keyPass -AskPassPath $askPassPath -ExpectedFingerprint $dev.Fingerprint }
   finally { $keyPass=$null; $keySecure.Dispose() }
   if ($publicFingerprint -cne $dev.Fingerprint -or $privateFingerprint -cne $dev.Fingerprint) { throw 'SSH key fingerprint does not match the inventory; package generation stopped.' }
   foreach ($identity in $profile.Services) {

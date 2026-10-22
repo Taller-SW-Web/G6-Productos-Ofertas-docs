@@ -5,6 +5,7 @@ $ErrorActionPreference='Stop'
 $vaultPath=Join-Path $Root 'admin-vault.dpapi.json'
 $vault=Get-Content -Raw -LiteralPath (Join-Path $Root 'admin-vault.dpapi.json') | ConvertFrom-Json
 $askpass=Join-Path $Root 'askpass.cmd'
+if (-not (Test-Path -LiteralPath $askpass -PathType Leaf)) { throw 'Protected SSH askpass helper is missing.' }
 $config=Join-Path $Root 'admin-test-ssh-config'
 $lines=[Collections.Generic.List[string]]::new()
 foreach ($d in $vault.developers) {
@@ -25,19 +26,15 @@ $results=[Collections.Generic.List[object]]::new()
 foreach ($d in $vault.developers) {
   $secure=ConvertTo-SecureString -String $d.ProtectedPackagePassword
   $password=[Net.NetworkCredential]::new('', $secure).Password
+  $pt=$null; $pb=$null
   try {
-    $add= [Diagnostics.ProcessStartInfo]::new(); $add.FileName=(Get-Command ssh-add.exe).Source; [void]$add.ArgumentList.Add($d.KeyPath)
-    $add.UseShellExecute=$false; $add.RedirectStandardOutput=$true; $add.RedirectStandardError=$true
-    $add.Environment['SSH_ASKPASS']=$askpass; $add.Environment['SSH_ASKPASS_REQUIRE']='force'; $add.Environment['G6_KEY_PASSPHRASE']=$password
-    $padd=[Diagnostics.Process]::new(); $padd.StartInfo=$add; [void]$padd.Start(); $ao=$padd.StandardOutput.ReadToEndAsync(); $ae=$padd.StandardError.ReadToEndAsync()
-    if (-not $padd.WaitForExit(15000) -or $padd.ExitCode -ne 0) { throw "Could not load $($d.Login)'s key into this user's ssh-agent; details redacted." }
-    $add.Environment.Remove('G6_KEY_PASSPHRASE'); $password=$null; $secure.Dispose()
-  } finally { $password=$null; if ($secure) { $secure.Dispose() } }
   $port=[int]$d.Port
   $tunnel=[Diagnostics.ProcessStartInfo]::new(); $tunnel.FileName=(Get-Command ssh.exe).Source
-  foreach ($a in @('-F',$config,'-N','-T','-o','BatchMode=yes','-o','ExitOnForwardFailure=yes','-o','ConnectTimeout=8','-L',"127.0.0.1:${port}:127.0.0.1:5672",$d.Login)) { [void]$tunnel.ArgumentList.Add($a) }
+  foreach ($a in @('-F',$config,'-i',$d.KeyPath,'-o','IdentitiesOnly=yes','-o','IdentityAgent=none','-N','-T','-o','ExitOnForwardFailure=yes','-o','ConnectTimeout=8','-L',"127.0.0.1:${port}:127.0.0.1:5672",$d.Login)) { [void]$tunnel.ArgumentList.Add($a) }
+  $tunnel.Environment['SSH_ASKPASS']=$askpass; $tunnel.Environment['SSH_ASKPASS_REQUIRE']='force'; $tunnel.Environment['G6_KEY_PASSPHRASE']=$password
   $tunnel.UseShellExecute=$false; $tunnel.RedirectStandardOutput=$true; $tunnel.RedirectStandardError=$true
   $pt=[Diagnostics.Process]::new(); $pt.StartInfo=$tunnel; [void]$pt.Start(); $tout=$pt.StandardOutput.ReadToEndAsync(); $terr=$pt.StandardError.ReadToEndAsync()
+  $null=$tunnel.Environment.Remove('G6_KEY_PASSPHRASE')
   $tcpPassed=$false
   for ($i=0; $i -lt 40; $i++) {
     if ($pt.HasExited) { break }
@@ -52,9 +49,11 @@ foreach ($d in $vault.developers) {
 
   $badPort=$port+100
   $bad=[Diagnostics.ProcessStartInfo]::new(); $bad.FileName=(Get-Command ssh.exe).Source
-  foreach ($a in @('-F',$config,'-N','-T','-o','BatchMode=yes','-o','ExitOnForwardFailure=yes','-L',"127.0.0.1:${badPort}:127.0.0.1:22",$d.Login)) { [void]$bad.ArgumentList.Add($a) }
+  foreach ($a in @('-F',$config,'-i',$d.KeyPath,'-o','IdentitiesOnly=yes','-o','IdentityAgent=none','-N','-T','-o','ExitOnForwardFailure=yes','-L',"127.0.0.1:${badPort}:127.0.0.1:22",$d.Login)) { [void]$bad.ArgumentList.Add($a) }
+  $bad.Environment['SSH_ASKPASS']=$askpass; $bad.Environment['SSH_ASKPASS_REQUIRE']='force'; $bad.Environment['G6_KEY_PASSPHRASE']=$password
   $bad.UseShellExecute=$false; $bad.RedirectStandardOutput=$true; $bad.RedirectStandardError=$true
   $pb=[Diagnostics.Process]::new(); $pb.StartInfo=$bad; [void]$pb.Start(); $bo=$pb.StandardOutput.ReadToEndAsync(); $be=$pb.StandardError.ReadToEndAsync()
+  $null=$bad.Environment.Remove('G6_KEY_PASSPHRASE')
   $negative=$false
   for ($i=0; $i -lt 30 -and -not $pb.HasExited; $i++) {
     $listener=Get-NetTCPConnection -State Listen -LocalPort $badPort -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -66,5 +65,10 @@ foreach ($d in $vault.developers) {
   if (-not $negative) { throw "Unapproved-destination denial was not proven for $($d.Login); details redacted." }
   Set-G6VerifiedOnboardingState -VaultPath $vaultPath -Field TunnelTestedFromAdminPc -Login $d.Login
   $results.Add([pscustomobject]@{ Developer=$d.Developer; Login=$d.Login; Fingerprint=$d.Fingerprint; SSHAuthentication='PASS'; AllowedLocalForward='PASS'; UnapprovedDestination='DENIED'; LocalPort=$port })
+  } finally {
+    $password=$null; if ($secure) { $secure.Dispose() }
+    foreach ($process in @($pt,$pb)) { if ($process -and -not $process.HasExited) { $process.Kill(); $process.WaitForExit() } }
+    if ($pt) { $pt.Dispose() }; if ($pb) { $pb.Dispose() }
+  }
 }
 $results | Format-Table -AutoSize

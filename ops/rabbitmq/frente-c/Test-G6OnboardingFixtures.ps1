@@ -20,6 +20,7 @@ $tcpTestScript = Get-Content -Raw -LiteralPath (Join-Path $KitRoot 'Test-G6Rabbi
 $authVerifier = Get-Content -Raw -LiteralPath (Join-Path $KitRoot 'verify-pilot-amqp.mjs')
 $adminVerifier = Get-Content -Raw -LiteralPath (Join-Path $KitRoot 'verify-admin-amqp-acl.mjs')
 $adminSmoke = Get-Content -Raw -LiteralPath (Join-Path $KitRoot 'Test-G6OnboardingAmqp.ps1')
+$sshAdminTest = Get-Content -Raw -LiteralPath (Join-Path $KitRoot 'Test-G6OnboardingSsh.ps1')
 $profileHelper = Join-Path $KitRoot 'G6DeveloperProfile.ps1'
 $tempRoot = Join-Path $env:TEMP ('g6-onboarding-fixtures-' + [Guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $tempRoot
@@ -59,6 +60,7 @@ try {
   if ($authVerifier -match '(?i)createChannel|\.get\(|\.publish\(|assertQueue|\.consume\(|\.purge\(|\.ack\(|\.nack\(') { throw 'Default AMQP authentication smoke contains an active broker operation.' }
   if ($authVerifier -notmatch 'await amqp\.connect' -or $authVerifier -notmatch 'await connection\.close\(\)' -or $adminVerifier -notmatch "G6_ADMIN_ACTIVE_TEST !== '1'" -or $adminVerifier -notmatch 'G6_ADMIN_ISOLATION_VERIFIED') { throw 'Authentication or explicit administrative smoke gates are missing.' }
   if ($adminSmoke -notmatch '\[switch\]\$AdminActiveTest' -or $adminSmoke -notmatch '\[switch\]\$ConfirmIsolatedQueues' -or $adminSmoke -notmatch 'Post-test queue-safety snapshot') { throw 'Active tests must require explicit authorization and verify post-test queue safety.' }
+  if ($sshAdminTest -match 'ssh-add(?:\.exe)?' -or $sshAdminTest -notmatch 'IdentityAgent=none' -or $sshAdminTest -notmatch "\['SSH_ASKPASS_REQUIRE'\]='force'" -or $sshAdminTest -notmatch '\$password=\$null; if \(\$secure\) \{ \$secure\.Dispose\(\) \}') { throw 'Administrative SSH checks must use the key directly without mutating ssh-agent, and clear passphrase state on success and failure.' }
 
   $fixtureUser = Join-Path $tempRoot 'user'; $fixtureLocal = Join-Path $tempRoot 'local'
   $ssh = Join-Path $fixtureUser '.ssh'; $null = New-Item -ItemType Directory -Force -Path $ssh

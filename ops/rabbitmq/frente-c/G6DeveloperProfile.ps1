@@ -17,6 +17,63 @@ function Get-G6PrivateAclPrincipals {
   return @($current.Value,'S-1-5-18')
 }
 
+function Get-G6UnlockedSshFingerprint {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory=$true)][string]$PrivateKeyPath,
+    [Parameter(Mandatory=$true)][string]$PublicKeyPath,
+    [Parameter(Mandatory=$true)][string]$Passphrase,
+    [Parameter(Mandatory=$true)][string]$AskPassPath,
+    [Parameter(Mandatory=$true)][string]$ExpectedFingerprint
+  )
+  $info=[Diagnostics.ProcessStartInfo]::new(); $info.FileName=(Get-Command ssh-keygen.exe).Source
+  foreach ($arg in @('-y','-f',$PrivateKeyPath)) { [void]$info.ArgumentList.Add($arg) }
+  $info.UseShellExecute=$false; $info.RedirectStandardOutput=$true; $info.RedirectStandardError=$true
+  $info.Environment['SSH_ASKPASS']=$AskPassPath; $info.Environment['SSH_ASKPASS_REQUIRE']='force'; $info.Environment['G6_KEY_PASSPHRASE']=$Passphrase
+  $process=[Diagnostics.Process]::new(); $process.StartInfo=$info
+  $publicBlob=$null; $derivedBlob=$null; $hash=$null; $derivedLine=$null
+  try {
+    [void]$process.Start(); $stdout=$process.StandardOutput.ReadToEndAsync(); $stderr=$process.StandardError.ReadToEndAsync()
+    if (-not $process.WaitForExit(15000)) { $process.Kill(); $process.WaitForExit(); throw 'SSH private-key unlock timed out; details redacted.' }
+    $null=$info.Environment.Remove('G6_KEY_PASSPHRASE')
+    if ($process.ExitCode -ne 0) { throw 'SSH private-key unlock failed; passphrase or key is invalid. Details redacted.' }
+    $derivedLine=$stdout.GetAwaiter().GetResult().Trim()
+    $storedLine=(Get-Content -Raw -LiteralPath $PublicKeyPath).Trim()
+    $derivedMatch=[regex]::Match($derivedLine,'^ssh-ed25519\s+([A-Za-z0-9+/]+={0,2})(?:\s+.*)?$')
+    $storedMatch=[regex]::Match($storedLine,'^ssh-ed25519\s+([A-Za-z0-9+/]+={0,2})(?:\s+.*)?$')
+    if (-not $derivedMatch.Success -or -not $storedMatch.Success) { throw 'Unlocked key did not derive a valid Ed25519 public key.' }
+    $derivedBlob=[Convert]::FromBase64String($derivedMatch.Groups[1].Value); $publicBlob=[Convert]::FromBase64String($storedMatch.Groups[1].Value)
+    if (-not [Security.Cryptography.CryptographicOperations]::FixedTimeEquals($derivedBlob,$publicBlob)) { throw 'Unlocked private key does not match its registered public key.' }
+    $hash=[Security.Cryptography.SHA256]::HashData($derivedBlob)
+    $fingerprint='SHA256:' + [Convert]::ToBase64String($hash).TrimEnd('=')
+    if ($fingerprint -cne $ExpectedFingerprint) { throw 'Unlocked key fingerprint does not match onboarding inventory.' }
+    $probeBytes=[Security.Cryptography.RandomNumberGenerator]::GetBytes(32)
+    $probePassphrase=[Convert]::ToBase64String($probeBytes)
+    $probeInfo=[Diagnostics.ProcessStartInfo]::new(); $probeInfo.FileName=(Get-Command ssh-keygen.exe).Source
+    foreach ($arg in @('-y','-f',$PrivateKeyPath)) { [void]$probeInfo.ArgumentList.Add($arg) }
+    $probeInfo.UseShellExecute=$false; $probeInfo.RedirectStandardOutput=$true; $probeInfo.RedirectStandardError=$true
+    $probeInfo.Environment['SSH_ASKPASS']=$AskPassPath; $probeInfo.Environment['SSH_ASKPASS_REQUIRE']='force'; $probeInfo.Environment['G6_KEY_PASSPHRASE']=$probePassphrase
+    $probeProcess=[Diagnostics.Process]::new(); $probeProcess.StartInfo=$probeInfo
+    try {
+      [void]$probeProcess.Start(); $probeStdout=$probeProcess.StandardOutput.ReadToEndAsync(); $probeStderr=$probeProcess.StandardError.ReadToEndAsync()
+      if (-not $probeProcess.WaitForExit(15000)) { $probeProcess.Kill(); $probeProcess.WaitForExit(); throw 'SSH key passphrase protection check timed out; details redacted.' }
+      $null=$probeInfo.Environment.Remove('G6_KEY_PASSPHRASE')
+      $probeOutput=$probeStdout.GetAwaiter().GetResult()
+      if ($probeProcess.ExitCode -eq 0) { throw 'SSH private key does not require its protected passphrase; refusing package generation.' }
+      $probeOutput=$null
+    } finally {
+      if ($probeInfo) { $null=$probeInfo.Environment.Remove('G6_KEY_PASSPHRASE') }
+      [Security.Cryptography.CryptographicOperations]::ZeroMemory($probeBytes)
+      $probePassphrase=$null; $probeOutput=$null; $probeProcess.Dispose()
+    }
+    return $fingerprint
+  } finally {
+    $null=$info.Environment.Remove('G6_KEY_PASSPHRASE')
+    foreach ($bytes in @($derivedBlob,$publicBlob,$hash)) { if ($bytes -is [byte[]]) { [Security.Cryptography.CryptographicOperations]::ZeroMemory($bytes) } }
+    $derivedLine=$null; $Passphrase=$null; $process.Dispose()
+  }
+}
+
 function Assert-G6PrivateAcl {
   [CmdletBinding()]
   param([Parameter(Mandatory=$true)][string]$Path)
