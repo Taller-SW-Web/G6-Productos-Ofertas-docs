@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Frente C operativo desde esta PC Windows (2026-10-15).** El piloto original de Castilla sigue intacto: `C:\Users\marec\.ssh\g6_piloto`, alias `g6-dev`, local forward `127.0.0.1:5673`. Se prepararon seis cuentas SSH con claves individuales y seis paquetes cifrados para distribución; las seis cuentas y los ocho servicios RabbitMQ asignados se probaron desde esta PC. Esto no valida los equipos personales de los desarrolladores. El piloto `g6_piloto` conserva su huella `SHA256:oXYfHNfDD2Jxdx7IG0lOUaAQsCBwVxqt2ymyDfcmcMY` y no se incluyó en los paquetes.
+**Frente C operativo desde la PC administrativa (2026-10-15).** El piloto original de Castilla sigue intacto bajo `.ssh\g6_piloto` del perfil Windows del operador, con alias `g6-dev` y local forward `127.0.0.1:5673`. Se prepararon seis cuentas SSH con claves individuales y seis paquetes cifrados; las seis cuentas y los ocho servicios RabbitMQ asignados se probaron desde esa PC. Esto no valida los equipos personales de los desarrolladores. Los paquetes preparados entonces son anteriores a las correcciones de este kit y no deben tratarse como la versión corregida para distribuir. El piloto `g6_piloto` conserva su huella `SHA256:oXYfHNfDD2Jxdx7IG0lOUaAQsCBwVxqt2ymyDfcmcMY` y no se incluyó en los paquetes.
 
 Baseline antes de habilitar el túnel, observada por SSH el 2026-10-15:
 
@@ -36,23 +36,27 @@ Una cuenta/clave distinta por persona permite retirar ese acceso sin compartir e
 
 1. El administrador envía un solo archivo autoinstalable `<g6_login>-installer.ps1`, que contiene el payload `.g6pkg` cifrado, y comunica su contraseña individual por un canal separado. No envía los paquetes a terceros automáticamente.
 2. En PowerShell 7, ejecutar `pwsh.exe -ExecutionPolicy Bypass -File .\g6_<login>-installer.ps1` y escribir la contraseña en el prompt seguro. El instalador incluye el bootstrap y el paquete AES-GCM autenticado; instala la clave passphrase-protected, alias `g6-dev`, scripts, plantillas y credenciales locales DPAPI.
-3. Ejecutar `Test-G6DeveloperAccess.ps1` (smoke de un comando) desde la ruta que imprime el instalador. Después usar `Start-G6RabbitMqTunnel.ps1` para NestJS.
-4. Para cada servicio asignado, ejecutar `Set-G6DeveloperRabbitMqUrl.ps1 -Identity <g6_servicio> -Path <ruta-del-servicio>\.env`. Escribe solo `RABBITMQ_URL`, no muestra el valor y exige que el `.env` esté ignorado por Git.
+3. Ejecutar `pwsh.exe -ExecutionPolicy Bypass -File <ruta-impresa-por-el-instalador>` para `Test-G6DeveloperAccess.ps1`. Después usar `pwsh.exe -ExecutionPolicy Bypass -File <ruta-del-paquete>\Start-G6RabbitMqTunnel.ps1` para abrir el túnel.
+4. Para cada servicio asignado, ejecutar `pwsh.exe -ExecutionPolicy Bypass -File <ruta-del-paquete>\Set-G6DeveloperRabbitMqUrl.ps1 -Identity <g6_servicio> -Path <ruta-del-servicio>\.env`. Escribe solo `RABBITMQ_URL`, no muestra el valor y exige que el `.env` esté ignorado por Git.
 5. El integrante confirma al administrador que el smoke pasó desde su PC. Registrar la entrega y confirmación con `Set-G6DeveloperDeliveryStatus.ps1`.
 6. No enviar secretos por Git, chat ni argumentos de comandos. Nunca copiar `g6_oracle`, `ubuntu` ni una clave administrativa.
+
+### Recuperación si la instalación se interrumpe
+
+El instalador no revierte automáticamente una ejecución parcial. Detén el proceso y no vuelvas a ejecutar el mismo paquete todavía: el preflight rechaza cualquier destino existente para proteger claves, credenciales y la configuración SSH. Anota el paso que falló y conserva el mensaje de error, comprobando que no incluya valores de `RABBITMQ_URL` ni contraseñas. Revisa únicamente la presencia y ACL de `%USERPROFILE%\.ssh\<g6_login>` y `%LOCALAPPDATA%\G6\RabbitMQ\<g6_login>`, además del bloque `Host g6-dev`; no abras ni exportes archivos DPAPI o claves privadas. Si había alguno de esos destinos antes de iniciar, no lo muevas ni lo elimines. El operador debe comparar los archivos presentes con el inventario previo y determinar cuáles creó esa ejecución; solo después de respaldar de forma protegida y verificar cada archivo podrá completar manualmente la recuperación. Si no se puede establecer esa procedencia, conserva todo y escala al responsable del kit. No existe limpieza automática ni se deben borrar carpetas completas para repetir la instalación.
 
 Las seis cuentas ya están preparadas usando claves centralizadas por autorización expresa posterior. Las pruebas de esta sección acreditan solamente la PC de Marco. No declarar que las seis PC personales tienen conectividad antes de que cada integrante ejecute y confirme su smoke.
 
 Asignación aprobada por Marco:
 
-| Desarrollador | Login SSH | Identidades RabbitMQ autorizadas |
-|---|---|---|
-| Castilla | `g6_castilla` | `g6_masivos`, `g6_combos` |
-| Poma | `g6_poma` | `g6_catalogo` |
-| Taco | `g6_taco` | `g6_inventario` |
-| Vera | `g6_vera` | `g6_precios`, `g6_auditoria_precios` |
-| Cueva | `g6_cueva` | `g6_promociones` |
-| López | `g6_lopez` | `g6_taxonomia` |
+| Desarrollador | Login SSH | Puerto local | Identidades RabbitMQ autorizadas |
+|---|---|---:|---|
+| Castilla | `g6_castilla` | 5673 | `g6_masivos`, `g6_combos` |
+| Poma | `g6_poma` | 5674 | `g6_catalogo` |
+| Taco | `g6_taco` | 5675 | `g6_inventario` |
+| Vera | `g6_vera` | 5676 | `g6_precios`, `g6_auditoria_precios` |
+| Cueva | `g6_cueva` | 5677 | `g6_promociones` |
+| López | `g6_lopez` | 5678 | `g6_taxonomia` |
 
 `g6_pasarela` permanece bajo custodia administrativa de Marco, sin una séptima cuenta SSH. Una cuenta de desarrollador puede servir para varios microservicios asignados, pero cada proceso usa únicamente su propia identidad RabbitMQ.
 
@@ -66,9 +70,9 @@ Para abrir el túnel directamente, usar el comando requerido:
 ssh -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -L 127.0.0.1:5673:127.0.0.1:5672 g6-dev
 ```
 
-Los paquetes asignan puertos locales `5673` a `5678` respectivamente para no colisionar si se necesitan varios. `Start-G6RabbitMqTunnel.ps1`, incluido en cada paquete, comprueba que el puerto asignado esté libre, mantiene el proceso foreground y reintenta si pierde conexión. `Test-G6RabbitMqTunnel.ps1` verifica TCP local. `Test-G6DeveloperAccess.ps1` abre y cierra el túnel, y valida autenticación AMQP, cola propia, lectura cruzada y escrituras no autorizadas con secretos DPAPI; evita publicaciones autorizadas para no inyectar mensajes durante el smoke del desarrollador. Las pruebas de publicación autorizada se hicieron por separado desde la PC administrativa con TTL de 2 segundos.
+Los paquetes asignan puertos locales `5673` a `5678` respectivamente para no colisionar si se necesitan varios. El `developer.json` de cada paquete es la fuente del puerto; el túnel, el helper de `RABBITMQ_URL` y el smoke de acceso leen ese mismo valor. `Start-G6RabbitMqTunnel.ps1`, incluido en cada paquete, comprueba que el puerto asignado esté libre, mantiene el proceso foreground y reintenta si pierde conexión. `Test-G6RabbitMqTunnel.ps1` verifica TCP local. `Test-G6DeveloperAccess.ps1` abre y cierra el túnel, y valida autenticación AMQP y ACL con secretos DPAPI; evita publicaciones autorizadas para no inyectar mensajes durante el smoke del desarrollador. Estos checks de conectividad/autenticación no prueban que los handlers comerciales ni la integración NestJS estén terminados. Las pruebas de publicación autorizada se hicieron por separado desde la PC administrativa con TTL de 2 segundos.
 
-El servicio NestJS local debe apuntar solo a `127.0.0.1:5673`. La plantilla específica del microservicio está en `templates/`. No guardar el `.env` completado en Git.
+El servicio local debe apuntar solo a `127.0.0.1:<Port de developer.json>`. La plantilla específica del microservicio está en `templates/`. No guardar el `.env` completado en Git.
 
 ## Piloto Windows ejecutado, separado de E2E
 
@@ -88,7 +92,7 @@ El harness Front B `../verify-amqp.js` se ejecutó desde una red Docker autoriza
 
 ## Inventory y estado de integración
 
-AsyncAPI `0.6.0-rc.3` sigue candidata interna y G5 no está homologado. `inventory-svc` usa actualmente `po.events.x`/`po.results.x`, incompatibles con los nombres físicos `po.eventos.x`/`po.resultados.x`; no se ampliarán permisos para compensarlo. Los otros servicios no productivos de RabbitMQ continúan pendientes de integración de código. `g6_auditoria_precios`, `g6_combos` y `g6_pasarela` se mantienen consumer-only; no inventar productores.
+Según D-02 de PR #102, G6 adoptó internamente la topología física española de AsyncAPI `0.6.0-rc.3`; esa adopción no acredita implementación. La adaptación de G5 y la homologación operativa siguen pendientes. `inventory-svc` usa `po.events.x`/`po.results.x`, incompatibles con `po.eventos.x`/`po.resultados.x`; la adaptación queda pendiente del responsable de Inventario. Catálogo y Promociones también tienen pendiente la adaptación a sus nombres físicos españoles, a cargo de sus responsables. No se amplían permisos para compensar desajustes. La conectividad SSH/AMQP y la autenticación se pueden probar independientemente de esos handlers; ninguna prueba de túnel o autenticación acredita la integración NestJS. `g6_auditoria_precios`, `g6_combos` y `g6_pasarela` se mantienen consumer-only; no inventar productores.
 
 Retry/DLX permanece bloqueado por `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`. Este túnel solo habilita conectividad a 5672 y no elimina esa dependencia funcional.
 
@@ -96,7 +100,7 @@ Retry/DLX permanece bloqueado por `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`. Est
 
 - La custodia actual DPAPI local no es un secret manager multiusuario. Se validaron sin revelar sus valores las nueve entradas: todas se descifraron para el usuario Windows y coinciden con el vhost/manifiesto rc.3. `Get-G6RabbitMqCredential.ps1 -Identity <g6_identity>` consulta una credencial y la copia al clipboard local sin mostrarla; pegar únicamente en un secret store local aprobado y limpiar el clipboard. Para automatizar el smoke, `Invoke-G6RabbitMqPilotSmoke.ps1` descifra `g6_masivos` en memoria sin mostrarlo.
 - El nuevo almacén local de onboarding es `%LOCALAPPDATA%\G6\RabbitMQ\onboarding\admin-vault.dpapi.json`, cifrado con DPAPI para la cuenta Windows actual y con DACL NTFS restringida. Guarda solamente las contraseñas de paquetes/passphrases bajo DPAPI, fingerprints, rutas y estados de entrega. Las claves privadas de etapa están en `keys\` como claves OpenSSH cifradas por passphrase; cada archivo tiene ACL NTFS para la cuenta local y SYSTEM. La configuración EFS de carpeta no está disponible en este entorno (`cipher /E` devuelve “Solicitud no compatible”); por eso el cifrado de cada clave OpenSSH y AES-GCM de los paquetes es el cifrado efectivo en reposo. No se verificó BitLocker.
-- `New-G6DeveloperKeys.ps1` es idempotente: conserva los seis pares existentes y no toca `C:\Users\marec\.ssh\g6_piloto`. El secreto de cada clave es aleatorio, único y guardado por DPAPI; no aparece en argumentos ni logs. Para paquetes, la misma cadena aleatoria es la contraseña AES-GCM del paquete y la passphrase de la clave privada que contiene. Cada contenedor `.g6pkg` usa AES-256-GCM autenticado, KDF PBKDF2-HMAC-SHA256 con 600 000 iteraciones, nonce/ salt aleatorios y etiqueta de autenticación. Los ZIP internos se crean y cifran en memoria; no se escriben como archivos sin cifrar.
+- `New-G6DeveloperKeys.ps1` es idempotente: conserva los seis pares existentes y no toca el piloto `.ssh\g6_piloto` del perfil Windows del operador. El secreto de cada clave es aleatorio, único y guardado por DPAPI; no aparece en argumentos ni logs. Para paquetes, la misma cadena aleatoria es la contraseña AES-GCM del paquete y la passphrase de la clave privada que contiene. Cada contenedor `.g6pkg` usa AES-256-GCM autenticado, KDF PBKDF2-HMAC-SHA256 con 600 000 iteraciones, nonce/ salt aleatorios y etiqueta de autenticación. Los ZIP internos se crean y cifran en memoria; no se escriben como archivos sin cifrar.
 - Los seis instaladores `<g6_login>-installer.ps1` y payloads `<g6_login>.g6pkg` están en `%LOCALAPPDATA%\G6\RabbitMQ\onboarding\packages\`. El payload cifrado contiene clave privada y pública, alias `g6-dev`, scripts PowerShell, smoke AMQP, manifiesto rc.3, plantillas `.env` por servicio, instrucciones e identidades RabbitMQ asignadas. Las contraseñas RabbitMQ existen en el contenido interno solo hasta que el instalador las convierte a DPAPI local en la PC destinataria; fuera del proceso permanecen cifradas en el payload. Los paquetes no incluyen `g6_pasarela`.
 - `Get-G6DeveloperPackagePassword.ps1 -Login <g6_login>` copia una sola contraseña al clipboard local sin mostrarla. Pegar solo en el canal privado separado y limpiar el clipboard. El password permanece protegido por DPAPI en el equipo administrativo.
 - No existe un gestor multiusuario conectado y no se enviaron paquetes, contraseñas ni credenciales a terceros. Para entregar, enviar el archivo autoinstalable `<g6_login>-installer.ps1` por un medio privado y transmitir su contraseña por un canal separado. El instalador incluye el payload `.g6pkg` autenticado y el bootstrap. Tras observar la entrega y confirmación del smoke, actualizar el estado con `Set-G6DeveloperDeliveryStatus.ps1`. El inventario local lo imprime `Get-G6OnboardingInventory.ps1`.
@@ -144,3 +148,5 @@ Referencias para las restricciones SSH: [sshd_config(5)](https://man.openbsd.org
 ## Incorporación G5 (acceso implementado; homologación formal pendiente)
 
 El kit separado de Ventas/Postventa se encuentra en [`g5/README.md`](g5/README.md). El 2026-10-15 se aprovisionaron `g5_ventas` y la cuenta SSH grupal `g5_tunnel` usando la candidata rc.3, bajo autorización operativa de Marco. El smoke desde la PC administrativa pasó; la aceptación técnica fue reportada, pero no hay evidencia externa verificable y no se declara homologación formal. El paquete cifrado está preparado y la entrega está pendiente de representante/canal. La prueba de Frente C/Castilla permanece como evidencia distinta y no se atribuye a PCs G5. No se modificó la allowlist G6 ni los nueve usuarios/ACL G6.
+
+**Interpretación de conteos ACL:** la línea base histórica de nueve identidades y sus permisos corresponde a G6. `g5_ventas` fue documentado después por separado en PR #98. Por eso, una suma global de 9→10 identidades o 12→13 entradas de permisos no demuestra por sí misma una modificación no autorizada. La comparación debe hacerse por usuario, vhost y permiso contra la evidencia de cada aprovisionamiento. Esta nota corrige la interpretación documental; no verifica ni modifica ACL actuales de Oracle.

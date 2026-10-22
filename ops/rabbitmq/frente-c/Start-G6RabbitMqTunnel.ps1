@@ -1,11 +1,23 @@
 param(
   [string]$Alias = 'g6-dev',
-  [int]$LocalPort = 5673,
+  [int]$LocalPort = 0,
   [int]$ReconnectDelaySeconds = 5,
-  [string]$ExpectedIdentityFile = 'g6_piloto',
+  [string]$ExpectedIdentityFile = '',
   [string]$SshConfigPath = (Join-Path $env:USERPROFILE '.ssh\config')
 )
 $ErrorActionPreference = 'Stop'
+$profilePath = Join-Path $PSScriptRoot 'developer.json'
+if (Test-Path -LiteralPath $profilePath -PathType Leaf) {
+  . (Join-Path $PSScriptRoot 'G6DeveloperProfile.ps1')
+  $profile = Get-G6DeveloperProfile
+  if ($LocalPort -ne 0 -and $LocalPort -ne $profile.Port) { throw "Requested local port $LocalPort does not match package port $($profile.Port)." }
+  if ($ExpectedIdentityFile -and $ExpectedIdentityFile -ne $profile.KeyName) { throw 'Requested SSH identity does not match this developer package.' }
+  $LocalPort = $profile.Port
+  $ExpectedIdentityFile = $profile.KeyName
+} else {
+  if ($LocalPort -eq 0) { $LocalPort = 5673 }
+  if (-not $ExpectedIdentityFile) { $ExpectedIdentityFile = 'g6_piloto' }
+}
 if (-not (Test-Path -LiteralPath $SshConfigPath)) { throw "SSH config not found: $SshConfigPath" }
 $sshConfig = & ssh -F $SshConfigPath -G $Alias 2>$null
 if ($LASTEXITCODE -ne 0) { throw "Could not resolve SSH alias '$Alias'." }

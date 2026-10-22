@@ -1,0 +1,232 @@
+{
+  "contract": "AsyncAPI 0.6.0-rc.3",
+  "vhost": "g6-productos-ofertas",
+  "resource_write_policy": "^$ for consume-only users; exact exchange names from publish list otherwise",
+  "topic_read_pattern": "^$",
+  "users": [
+    {
+      "username": "g6_catalogo",
+      "service": "catalog-svc",
+      "queue": "po.catalogo.q",
+      "configure_pattern": "^$",
+      "publish": [
+        {
+          "exchange": "po.comandos.x",
+          "routing_keys": [
+            "inventory.sku.initialization.requested",
+            "pricing.product.initialization.requested"
+          ]
+        },
+        {
+          "exchange": "po.eventos.x",
+          "routing_keys": [
+            "catalog.product.deactivated",
+            "catalog.sku.deactivated"
+          ]
+        },
+        {
+          "exchange": "po.resultados.x",
+          "routing_keys": [
+            "catalog.bulk.upsert.completed",
+            "catalog.bulk.upsert.rejected",
+            "catalog.master.deactivation.checked"
+          ]
+        }
+      ],
+      "test_publish": {
+        "exchange": "po.comandos.x",
+        "routing_key": "inventory.sku.initialization.requested",
+        "destinations": [
+          "po.inventario.q"
+        ]
+      },
+      "read_pattern": "^po\\.catalogo\\.q$"
+    },
+    {
+      "username": "g6_inventario",
+      "service": "inventory-svc",
+      "queue": "po.inventario.q",
+      "configure_pattern": "^$",
+      "publish": [
+        {
+          "exchange": "po.eventos.x",
+          "routing_keys": [
+            "inventory.reservation.consumed",
+            "inventory.reservation.created",
+            "inventory.reservation.expired",
+            "inventory.reservation.released",
+            "inventory.stock.adjusted",
+            "inventory.stock.changed"
+          ]
+        },
+        {
+          "exchange": "po.resultados.x",
+          "routing_keys": [
+            "inventory.bulk.stock.adjust.completed",
+            "inventory.bulk.stock.adjust.rejected",
+            "inventory.consumption.completed",
+            "inventory.consumption.rejected",
+            "inventory.reservation.rejected",
+            "inventory.sku.initialization.completed",
+            "inventory.sku.initialization.rejected"
+          ]
+        }
+      ],
+      "test_publish": {
+        "exchange": "po.eventos.x",
+        "routing_key": "inventory.reservation.consumed",
+        "destinations": [
+          "po.pasarela.q",
+          "po.ventas.q"
+        ]
+      },
+      "read_pattern": "^po\\.inventario\\.q$"
+    },
+    {
+      "username": "g6_precios",
+      "service": "pricing-svc",
+      "queue": "po.precios.q",
+      "configure_pattern": "^$",
+      "publish": [
+        {
+          "exchange": "po.eventos.x",
+          "routing_keys": [
+            "pricing.price.changed"
+          ]
+        },
+        {
+          "exchange": "po.resultados.x",
+          "routing_keys": [
+            "pricing.bulk.price.apply.completed",
+            "pricing.bulk.price.apply.rejected",
+            "pricing.product.initialization.completed",
+            "pricing.product.initialization.rejected"
+          ]
+        }
+      ],
+      "test_publish": {
+        "exchange": "po.eventos.x",
+        "routing_key": "pricing.price.changed",
+        "destinations": [
+          "po.auditoria-precios.q",
+          "po.pasarela.q",
+          "po.promociones.q"
+        ]
+      },
+      "read_pattern": "^po\\.precios\\.q$"
+    },
+    {
+      "username": "g6_auditoria_precios",
+      "service": "price-audit-svc",
+      "queue": "po.auditoria-precios.q",
+      "configure_pattern": "^$",
+      "publish": [],
+      "test_publish": null,
+      "read_pattern": "^po\\.auditoria-precios\\.q$"
+    },
+    {
+      "username": "g6_promociones",
+      "service": "promotions-svc",
+      "queue": "po.promociones.q",
+      "configure_pattern": "^$",
+      "publish": [
+        {
+          "exchange": "po.resultados.x",
+          "routing_keys": [
+            "promotions.coupon.consumption.completed",
+            "promotions.coupon.consumption.rejected",
+            "promotions.coupon.restoration.completed",
+            "promotions.coupon.restoration.rejected"
+          ]
+        }
+      ],
+      "test_publish": {
+        "exchange": "po.resultados.x",
+        "routing_key": "promotions.coupon.consumption.completed",
+        "destinations": [
+          "po.ventas.q"
+        ]
+      },
+      "read_pattern": "^po\\.promociones\\.q$"
+    },
+    {
+      "username": "g6_combos",
+      "service": "combos-svc",
+      "queue": "po.combos.q",
+      "configure_pattern": "^$",
+      "publish": [],
+      "test_publish": null,
+      "read_pattern": "^po\\.combos\\.q$"
+    },
+    {
+      "username": "g6_masivos",
+      "service": "bulk-svc",
+      "queue": "po.masivos.q",
+      "configure_pattern": "^$",
+      "publish": [
+        {
+          "exchange": "po.comandos.x",
+          "routing_keys": [
+            "catalog.bulk.upsert.requested",
+            "inventory.bulk.stock.adjust.requested",
+            "pricing.bulk.price.apply.requested"
+          ]
+        }
+      ],
+      "test_publish": {
+        "exchange": "po.comandos.x",
+        "routing_key": "catalog.bulk.upsert.requested",
+        "destinations": [
+          "po.catalogo.q"
+        ]
+      },
+      "read_pattern": "^po\\.masivos\\.q$"
+    },
+    {
+      "username": "g6_taxonomia",
+      "service": "taxonomy-svc",
+      "queue": "po.taxonomia.q",
+      "configure_pattern": "^$",
+      "publish": [
+        {
+          "exchange": "po.comandos.x",
+          "routing_keys": [
+            "taxonomy.master.deactivation.check.requested"
+          ]
+        },
+        {
+          "exchange": "po.eventos.x",
+          "routing_keys": [
+            "taxonomy.category.updated",
+            "taxonomy.characteristic-value.updated",
+            "taxonomy.master.deactivated",
+            "taxonomy.product-type-schema.changed"
+          ]
+        },
+        {
+          "exchange": "po.resultados.x",
+          "routing_keys": [
+            "taxonomy.master.deactivation.rejected"
+          ]
+        }
+      ],
+      "test_publish": {
+        "exchange": "po.comandos.x",
+        "routing_key": "taxonomy.master.deactivation.check.requested",
+        "destinations": [
+          "po.catalogo.q"
+        ]
+      },
+      "read_pattern": "^po\\.taxonomia\\.q$"
+    },
+    {
+      "username": "g6_pasarela",
+      "service": "api-gateway/bff",
+      "queue": "po.pasarela.q",
+      "configure_pattern": "^$",
+      "publish": [],
+      "test_publish": null,
+      "read_pattern": "^po\\.pasarela\\.q$"
+    }
+  ]
+}

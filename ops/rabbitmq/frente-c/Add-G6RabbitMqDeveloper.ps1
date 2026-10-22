@@ -1,3 +1,4 @@
+#requires -Version 7.0
 param(
   [Parameter(Mandatory = $true)]
   [ValidateSet('g6_castilla','g6_poma','g6_taco','g6_vera','g6_cueva','g6_lopez')]

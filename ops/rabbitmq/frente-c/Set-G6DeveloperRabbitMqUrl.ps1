@@ -4,20 +4,16 @@ param(
   [Parameter(Mandatory=$true)][string]$Path
 )
 $ErrorActionPreference='Stop'
-$meta=Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'developer.json') | ConvertFrom-Json
+$profileHelper=Join-Path $PSScriptRoot 'G6DeveloperProfile.ps1'
+if (-not (Test-Path -LiteralPath $profileHelper -PathType Leaf)) { throw 'G6 developer profile helper is missing.' }
+. $profileHelper
+$meta=Get-G6DeveloperProfile
 if ($Identity -notin $meta.Services) { throw "Identity $Identity is not assigned in this package." }
 $fullPath=[IO.Path]::GetFullPath($Path)
 if ([IO.Directory]::Exists($fullPath)) { throw 'The destination must be a file path.' }
 $directory=Split-Path -Parent $fullPath
 if (-not (Test-Path -LiteralPath $directory)) { $null=New-Item -ItemType Directory -Path $directory }
-$gitRoot=& git.exe -C $directory rev-parse --show-toplevel 2>$null
-if ($LASTEXITCODE -eq 0) {
-  $relative=[IO.Path]::GetRelativePath($gitRoot,$fullPath).Replace('\','/')
-  & git.exe -C $gitRoot ls-files --error-unmatch -- $relative *> $null
-  if ($LASTEXITCODE -eq 0) { throw 'Refusing to write a RabbitMQ secret to a tracked file.' }
-  & git.exe -C $gitRoot check-ignore --quiet -- $relative
-  if ($LASTEXITCODE -ne 0) { throw 'Refusing to write a secret in a Git worktree unless the destination is ignored (for example, .env).' }
-}
+if (-not (Test-G6DeveloperEnvIgnored -Path $fullPath)) { throw 'Refusing to write a secret in a Git worktree unless the destination is ignored (for example, .env).' }
 $secretPath=Join-Path (Join-Path $PSScriptRoot 'secrets') "$Identity.clixml"
 if (-not (Test-Path -LiteralPath $secretPath)) { throw "DPAPI credential not installed for $Identity." }
 $secure=Import-Clixml -LiteralPath $secretPath

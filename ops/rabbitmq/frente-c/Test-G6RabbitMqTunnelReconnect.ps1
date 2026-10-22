@@ -1,3 +1,4 @@
+#requires -Version 7.0
 param(
   [int]$LocalPort = 5673,
   [int]$ReconnectDelaySeconds = 3,
@@ -17,7 +18,8 @@ $runner = $null
 try {
   $script = Join-Path $PSScriptRoot 'Start-G6RabbitMqTunnel.ps1'
   $argLine = '-NoLogo -NoProfile -File "' + $script + '" -LocalPort ' + $LocalPort + ' -ReconnectDelaySeconds ' + $ReconnectDelaySeconds
-  $runner = Start-Process -FilePath (Join-Path $PSHOME 'pwsh.exe') -ArgumentList $argLine -PassThru -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+  $pwshPath = (Get-Command -Name pwsh.exe -ErrorAction Stop).Source
+  $runner = Start-Process -FilePath $pwshPath -ArgumentList $argLine -PassThru -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr
 
   $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
   $listener = $null

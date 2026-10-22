@@ -1,6 +1,13 @@
+#requires -Version 7.0
 param([string]$Root = (Join-Path $env:LOCALAPPDATA 'G6\RabbitMQ\onboarding'))
 $ErrorActionPreference='Stop'
 $iterations=600000
+$current=[Security.Principal.WindowsIdentity]::GetCurrent().Name
+if (-not (Test-Path -LiteralPath $Root -PathType Container)) { throw 'Onboarding root does not exist; run the key inventory step first.' }
+icacls $Root /reset /T /C | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Could not reset onboarding package directory ACLs.' }
+icacls $Root /inheritance:r /grant:r "$current`:(OI)(CI)F" 'NT AUTHORITY\SYSTEM:(OI)(CI)F' /T /C | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Could not restrict onboarding package directory ACLs.' }
 $vaultPath=Join-Path $Root 'admin-vault.dpapi.json'
 $vault=Get-Content -Raw -LiteralPath $vaultPath | ConvertFrom-Json
 $credentialVault=Get-Content -Raw -LiteralPath (Join-Path $env:LOCALAPPDATA 'G6\RabbitMQ\frontb-credentials.dpapi.json') | ConvertFrom-Json
@@ -30,11 +37,11 @@ Host g6-dev
     ExitOnForwardFailure yes
 "@
   $fileMap['ssh-config']=[Text.UTF8Encoding]::new($false).GetBytes($sshConfig)
-  $tunnelForDev=$tunnelScript.Replace("ExpectedIdentityFile = 'g6_piloto'", "ExpectedIdentityFile = '$($dev.KeyName)'")
-  $fileMap['scripts/Start-G6RabbitMqTunnel.ps1']=[Text.UTF8Encoding]::new($false).GetBytes($tunnelForDev)
+  $fileMap['scripts/Start-G6RabbitMqTunnel.ps1']=[Text.UTF8Encoding]::new($false).GetBytes($tunnelScript)
   $fileMap['scripts/Test-G6RabbitMqTunnel.ps1']=[Text.UTF8Encoding]::new($false).GetBytes($tcpScript)
   $fileMap['scripts/Test-G6DeveloperAccess.ps1']=[IO.File]::ReadAllBytes((Join-Path $PSScriptRoot 'Test-G6DeveloperAccess.ps1'))
   $fileMap['scripts/Set-G6DeveloperRabbitMqUrl.ps1']=[IO.File]::ReadAllBytes((Join-Path $PSScriptRoot 'Set-G6DeveloperRabbitMqUrl.ps1'))
+  $fileMap['scripts/G6DeveloperProfile.ps1']=[IO.File]::ReadAllBytes((Join-Path $PSScriptRoot 'G6DeveloperProfile.ps1'))
   $fileMap['scripts/verify-pilot-amqp.mjs']=[IO.File]::ReadAllBytes($amqpScript)
   $fileMap['scripts/rbac-rc3.json']=[IO.File]::ReadAllBytes((Join-Path $PSScriptRoot '..\rbac-rc3.json'))
   $fileMap['install/Install-G6DeveloperPackage.ps1']=[IO.File]::ReadAllBytes($bootstrapPath)
@@ -49,7 +56,7 @@ G6 RabbitMQ local developer access — $($dev.Developer)
    pwsh.exe -ExecutionPolicy Bypass -File "`$env:LOCALAPPDATA\G6\RabbitMQ\$($dev.Login)\Set-G6DeveloperRabbitMqUrl.ps1" -Identity <assigned_g6_identity> -Path <service-folder>\.env
    The helper requires the target .env to be ignored by Git and writes only the assigned identity URL.
 5. Start the tunnel when developing:
-   .\Start-G6RabbitMqTunnel.ps1
+   pwsh.exe -ExecutionPolicy Bypass -File "`$env:LOCALAPPDATA\G6\RabbitMQ\$($dev.Login)\Start-G6RabbitMqTunnel.ps1"
    The SSH key passphrase is the same individual password used to open this package.
 
 The package includes only the assigned RabbitMQ identities: $($dev.Services -join ', ').
@@ -62,7 +69,7 @@ The local smoke proves the current PC only; it does not validate another develop
   foreach ($identity in $dev.Services) {
     $template=Join-Path $PSScriptRoot "templates\$identity.env.example"
     if (-not (Test-Path -LiteralPath $template)) { throw "Missing environment template for $identity." }
-    $text=(Get-Content -Raw -LiteralPath $template) -replace '127\.0\.0\.1:\d+/',"127.0.0.1:$($dev.Port)/"
+    $text=(Get-Content -Raw -LiteralPath $template) -replace '127\.0\.0\.1:\d+/',"127.0.0.1:$($meta.Port)/"
     $fileMap["templates/$identity.env.example"]=[Text.UTF8Encoding]::new($false).GetBytes($text)
     $service=$manifest.users | Where-Object username -EQ $identity | Select-Object -First 1
     $source=$credentialVault.credentials | Where-Object username -EQ $identity | Select-Object -First 1
@@ -95,9 +102,7 @@ The local smoke proves the current PC only; it does not validate another develop
   $output=[IO.MemoryStream]::new(); $output.Write($header,0,$header.Length); $output.Write($cipher,0,$cipher.Length); $output.Write($tag,0,$tag.Length)
   $packageBytes=$output.ToArray(); $output.Dispose()
   [IO.File]::WriteAllBytes($dev.PackagePayloadPath,$packageBytes)
-  $current=[Security.Principal.WindowsIdentity]::GetCurrent().Name
-  icacls $dev.PackagePayloadPath /inheritance:r /grant:r "$current`:(F)" 'NT AUTHORITY\SYSTEM:(F)' 'Renato\CodexSandboxUsers:(F)' | Out-Null
-  icacls $dev.PackagePayloadPath /remove:g '*S-1-5-32-544' | Out-Null
+  icacls $dev.PackagePayloadPath /inheritance:r /grant:r "$current`:(F)" 'NT AUTHORITY\SYSTEM:(F)' | Out-Null
   $payloadHash=(Get-FileHash -Algorithm SHA256 -LiteralPath $dev.PackagePayloadPath).Hash
   $payloadB64=[Convert]::ToBase64String($packageBytes)
   $bootstrapB64=[Convert]::ToBase64String([IO.File]::ReadAllBytes($bootstrapPath))
@@ -125,8 +130,7 @@ try {
 '@
   $wrapper=$wrapperTemplate.Replace('__G6_ENCRYPTED_PAYLOAD__',$payloadB64).Replace('__G6_BOOTSTRAP__',$bootstrapB64)
   [IO.File]::WriteAllText($dev.PackagePath,$wrapper,[Text.UTF8Encoding]::new($false))
-  icacls $dev.PackagePath /inheritance:r /grant:r "$current`:(F)" 'NT AUTHORITY\SYSTEM:(F)' 'Renato\CodexSandboxUsers:(F)' | Out-Null
-  icacls $dev.PackagePath /remove:g '*S-1-5-32-544' | Out-Null
+  icacls $dev.PackagePath /inheritance:r /grant:r "$current`:(F)" 'NT AUTHORITY\SYSTEM:(F)' | Out-Null
   $hash=(Get-FileHash -Algorithm SHA256 -LiteralPath $dev.PackagePath).Hash
   $dev | Add-Member -NotePropertyName PackageSHA256 -NotePropertyValue $hash -Force
   $dev | Add-Member -NotePropertyName PackagePayloadSHA256 -NotePropertyValue $payloadHash -Force
@@ -141,4 +145,4 @@ try {
 }
 $vault.createdUtc=[DateTime]::UtcNow.ToString('o')
 $vault | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $vaultPath -Encoding utf8
-icacls $Root /inheritance:r /grant:r 'renato\marec:(OI)(CI)F' 'NT AUTHORITY\SYSTEM:(OI)(CI)F' 'Renato\CodexSandboxUsers:(OI)(CI)F' | Out-Null
+$current=[Security.Principal.WindowsIdentity]::GetCurrent().Name

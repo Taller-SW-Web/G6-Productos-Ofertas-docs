@@ -1,3 +1,4 @@
+#requires -Version 7.0
 param(
   [string]$Root = (Join-Path $env:LOCALAPPDATA 'G6\RabbitMQ\onboarding'),
   [string]$CredentialVaultPath = (Join-Path $env:LOCALAPPDATA 'G6\RabbitMQ\frontb-credentials.dpapi.json')

@@ -33,41 +33,64 @@ try {
   if (-not $files.ContainsKey('developer.json') -or -not $files.ContainsKey('ssh-config') -or -not $credentials) { throw 'Package is missing required installation files.' }
   $meta=[Text.UTF8Encoding]::new($false,$true).GetString($files['developer.json']) | ConvertFrom-Json
   if ($meta.Login -notmatch '^g6_(castilla|poma|taco|vera|cueva|lopez)$' -or $meta.KeyName -notmatch '^g6_[a-z0-9_]+$') { throw 'Package identity is not in the approved G6 list.' }
+  if (-not $files.ContainsKey('scripts/G6DeveloperProfile.ps1')) { throw 'Package is missing its G6 profile helper.' }
+  $profileHelperText=[Text.UTF8Encoding]::new($false,$true).GetString($files['scripts/G6DeveloperProfile.ps1'])
+  . ([ScriptBlock]::Create($profileHelperText))
+  $meta=Assert-G6DeveloperProfile -Profile $meta
+  $credentialsObject=$credentials | ConvertFrom-Json
+  $credentialNames=@($credentialsObject | ForEach-Object { $_.username })
+  if ($credentialNames.Count -ne @($meta.Services).Count -or @(Compare-Object @($meta.Services) $credentialNames).Count -ne 0 -or @($credentialNames | Select-Object -Unique).Count -ne $credentialNames.Count) { throw 'Package credentials do not match the assigned service identities.' }
+  foreach ($credential in $credentialsObject) { if ($credential.vhost -ne $meta.Vhost -or -not $credential.password) { throw 'Invalid credential data in package.' } }
   $sshDir=Join-Path $env:USERPROFILE '.ssh'; $configPath=Join-Path $sshDir 'config'
   if (Test-Path -LiteralPath $configPath) { if (Select-String -LiteralPath $configPath -Pattern '(?im)^\s*Host\s+[^\r\n]*\bg6-dev\b') { throw 'SSH alias g6-dev already exists; review the existing config before installing.' } }
   $localRoot=Join-Path $env:LOCALAPPDATA "G6\RabbitMQ\$($meta.Login)"
-  $null=New-Item -ItemType Directory -Force -Path $sshDir,$localRoot,(Join-Path $localRoot 'templates'),(Join-Path $localRoot 'secrets')
+  $installPlan=Get-G6PackageInstallFilePlan -Files $files -Credentials $credentialsObject -Profile $meta -UserProfile $env:USERPROFILE -LocalAppData $env:LOCALAPPDATA
+  Assert-G6PackageInstallFilePlanAvailable -Destinations $installPlan
+  $null=New-Item -ItemType Directory -Force -Path $sshDir,$localRoot
+  $current=[Security.Principal.WindowsIdentity]::GetCurrent().Name
+  icacls $localRoot /reset | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw 'Could not reset package folder ACLs; installation stopped.' }
+  icacls $localRoot /inheritance:r /grant:r "$current`:(OI)(CI)F" 'NT AUTHORITY\SYSTEM:(OI)(CI)F' | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw 'Could not restrict package folder ACLs; installation stopped.' }
+  $null=New-Item -ItemType Directory -Force -Path (Join-Path $localRoot 'templates'),(Join-Path $localRoot 'secrets')
   foreach ($name in $files.Keys) {
     if ($name -eq 'developer.json' -or $name -eq 'ssh-config') { continue }
-    if ($name -notmatch '^(ssh|scripts|templates|install)/[A-Za-z0-9._/-]+$') { throw "Unexpected package member: $name" }
-    if ($name -match '^ssh/(.+)$') { $dest=Join-Path $sshDir $Matches[1] }
+    if ($name -match '^ssh/(.+)$') {
+      $sshMember=$Matches[1]
+      $dest=Join-Path $sshDir $sshMember
+    }
     elseif ($name -match '^templates/(.+)$') { $dest=Join-Path (Join-Path $localRoot 'templates') $Matches[1] }
     else { $dest=Join-Path $localRoot ($name -replace '^(scripts|install)/','') }
     $parent=Split-Path -Parent $dest; $null=New-Item -ItemType Directory -Force -Path $parent
-    [IO.File]::WriteAllBytes($dest,[byte[]]$files[$name])
+    Write-G6NewFile -Path $dest -Content ([byte[]]$files[$name])
+    if ($name -match '^ssh/(.+)$' -and $Matches[1] -eq $meta.KeyName) {
+      icacls $dest /reset | Out-Null
+      if ($LASTEXITCODE -ne 0) { throw 'Could not reset the installed private key ACL; installation stopped.' }
+      icacls $dest /inheritance:r /grant:r "$current`:(F)" 'NT AUTHORITY\SYSTEM:(F)' | Out-Null
+      if ($LASTEXITCODE -ne 0) { throw 'Could not restrict the installed private key ACL; installation stopped.' }
+    }
   }
-  $credentialsObject=$credentials | ConvertFrom-Json
   foreach ($credential in $credentialsObject) {
     if ($credential.username -notmatch '^g6_[a-z_]+$' -or $credential.vhost -ne 'g6-productos-ofertas' -or -not $credential.password) { throw 'Invalid credential data in package.' }
     $secret=ConvertTo-SecureString -String $credential.password -AsPlainText -Force
-    Export-Clixml -InputObject $secret -LiteralPath (Join-Path (Join-Path $localRoot 'secrets') "$($credential.username).clixml")
+    Export-G6SecureStringNewFile -Value $secret -Path (Join-Path (Join-Path $localRoot 'secrets') "$($credential.username).clixml")
     $secret.Dispose(); $credential.password=$null
   }
   $keyPass=ConvertTo-SecureString -String $password -AsPlainText -Force
-  Export-Clixml -InputObject $keyPass -LiteralPath (Join-Path $localRoot 'secrets\key-passphrase.clixml')
+  Export-G6SecureStringNewFile -Value $keyPass -Path (Join-Path $localRoot 'secrets\key-passphrase.clixml')
   $keyPass.Dispose()
-  [IO.File]::WriteAllText((Join-Path $localRoot 'developer.json'),[Text.UTF8Encoding]::new($false,$true).GetString($files['developer.json']),[Text.UTF8Encoding]::new($false))
+  Write-G6NewFile -Path (Join-Path $localRoot 'developer.json') -Content ([byte[]]$files['developer.json'])
   $sshConfigText=[Text.UTF8Encoding]::new($false,$true).GetString($files['ssh-config'])
   $sshKeyPrefix=[IO.Path]::GetFullPath($sshDir).Replace('\','/')
   $sshConfigText=$sshConfigText.Replace('~/.ssh/',"$sshKeyPrefix/")
-  if (-not (Test-Path -LiteralPath $configPath)) { [IO.File]::WriteAllText($configPath,$sshConfigText,[Text.UTF8Encoding]::new($false)) }
-  else { [IO.File]::AppendAllText($configPath,[Environment]::NewLine+$sshConfigText,[Text.UTF8Encoding]::new($false)) }
-  $current="$env:USERDOMAIN\$env:USERNAME"
-  icacls $localRoot /inheritance:r /grant:r "$current`:(OI)(CI)F" 'NT AUTHORITY\SYSTEM:(OI)(CI)F' | Out-Null
+  if (-not (Test-Path -LiteralPath $configPath)) { Write-G6NewFile -Path $configPath -Content ([Text.UTF8Encoding]::new($false).GetBytes($sshConfigText)) }
+  else {
+    if (Select-String -LiteralPath $configPath -Pattern '(?im)^\s*Host\s+[^\r\n]*\bg6-dev\b') { throw 'SSH alias g6-dev appeared during installation; refusing to modify the config.' }
+    [IO.File]::AppendAllText($configPath,[Environment]::NewLine+$sshConfigText,[Text.UTF8Encoding]::new($false))
+  }
   $privateKey=Join-Path $sshDir $meta.KeyName
-  icacls $privateKey /inheritance:r /grant:r "$current`:(F)" 'NT AUTHORITY\SYSTEM:(F)' | Out-Null
   Write-Output "Instalación lista para $($meta.Developer). Alias: g6-dev; puerto local: $($meta.Port). Archivos y secretos guardados bajo DPAPI en el perfil local."
-  Write-Output "Ejecuta: powershell.exe -ExecutionPolicy Bypass -File `"$(Join-Path $localRoot 'Test-G6DeveloperAccess.ps1')`""
+  Write-Output "Ejecuta: pwsh.exe -ExecutionPolicy Bypass -File `"$(Join-Path $localRoot 'Test-G6DeveloperAccess.ps1')`""
 } finally {
   $archive.Dispose(); $memory.Dispose()
   [Security.Cryptography.CryptographicOperations]::ZeroMemory($zipBytes)

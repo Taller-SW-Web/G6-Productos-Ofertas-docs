@@ -1,3 +1,4 @@
+#requires -Version 7.0
 param(
   [Parameter(Mandatory=$true)][ValidateSet('g6_castilla')][string]$Login,
   [Parameter(Mandatory=$true)][string]$PublicKeyPath,

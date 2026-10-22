@@ -1,3 +1,4 @@
+#requires -Version 7.0
 param([string]$Root = (Join-Path $env:LOCALAPPDATA 'G6\RabbitMQ\onboarding'))
 $ErrorActionPreference = 'Stop'
 $accounts = @(
@@ -11,6 +12,11 @@ $accounts = @(
 $null = New-Item -ItemType Directory -Path $Root -Force
 $null = New-Item -ItemType Directory -Path (Join-Path $Root 'keys') -Force
 $null = New-Item -ItemType Directory -Path (Join-Path $Root 'packages') -Force
+$current=[Security.Principal.WindowsIdentity]::GetCurrent().Name
+icacls $Root /reset /T /C | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Could not reset onboarding directory ACLs.' }
+icacls $Root /inheritance:r /grant:r "$current`:(OI)(CI)F" 'NT AUTHORITY\SYSTEM:(OI)(CI)F' /T /C | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Could not restrict onboarding directory ACLs.' }
 $askpass = Join-Path $Root 'askpass.cmd'
 Set-Content -LiteralPath $askpass -Encoding ascii -Value '@echo off','echo %G6_KEY_PASSPHRASE%'
 $vaultPath = Join-Path $Root 'admin-vault.dpapi.json'
@@ -53,12 +59,5 @@ $vault.developers = @($entries)
 $vault.createdUtc = [DateTime]::UtcNow.ToString('o')
 $json = $vault | ConvertTo-Json -Depth 8
 $json | Set-Content -LiteralPath $vaultPath -Encoding utf8
-$current=[Security.Principal.WindowsIdentity]::GetCurrent().Name
-icacls $Root /inheritance:r /grant:r "$current`:(OI)(CI)F" 'NT AUTHORITY\SYSTEM:(OI)(CI)F' 'Renato\CodexSandboxUsers:(OI)(CI)F' | Out-Null
-foreach($entry in $entries) {
-  icacls $entry.KeyPath /inheritance:r /grant:r "$current`:(F)" 'NT AUTHORITY\SYSTEM:(F)' 'Renato\CodexSandboxUsers:(F)' | Out-Null
-  icacls $entry.KeyPath /remove:g '*S-1-5-32-544' | Out-Null
-  icacls $entry.PublicKeyPath /inheritance:r /grant:r "$current`:(F)" 'NT AUTHORITY\SYSTEM:(F)' 'Renato\CodexSandboxUsers:(F)' | Out-Null
-}
 Write-Output "Generated or verified six passphrase-protected Ed25519 keys. DPAPI admin vault: $vaultPath"
 $entries | Select-Object Developer,Login,KeyName,Fingerprint,PackagePath | Format-Table -AutoSize

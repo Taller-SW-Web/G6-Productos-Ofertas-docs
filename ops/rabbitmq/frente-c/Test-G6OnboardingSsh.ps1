@@ -1,3 +1,4 @@
+#requires -Version 7.0
 param([string]$Root = (Join-Path $env:LOCALAPPDATA 'G6\RabbitMQ\onboarding'))
 $ErrorActionPreference='Stop'
 $vault=Get-Content -Raw -LiteralPath (Join-Path $Root 'admin-vault.dpapi.json') | ConvertFrom-Json
