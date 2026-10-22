@@ -16,7 +16,7 @@ routing key = nombre lógico del mensaje
 
 ## Mensajes
 
-**Alcance editorial:** esta tabla refleja **40 mensajes lógicos** del AsyncAPI candidato actual `0.6.0-rc.2`, junto con **40 canales**. Respecto de `0.6.0-rc.1`, esta revisión cambia la identificación del vhost y precisa la topología/publicación sin ruta; conserva el conjunto y semántica de mensajes. El antecedente `0.5.0` contenía 39 mensajes. Los estados `stable`, `closed` y `provisional` describen contratos, **no** prueban publicación efectiva ni conformidad E2E.
+**Alcance editorial:** esta tabla refleja **40 mensajes lógicos** y **40 canales** de la candidata AsyncAPI `0.6.0-rc.3`. Esta candidata reconcilia únicamente nombres de infraestructura base con la observación Oracle histórica; conserva mensajes, operaciones y claves comerciales de `0.6.0-rc.2`. El antecedente `0.5.0` contenía 39 mensajes. Los estados `stable`, `closed` y `provisional` describen contratos, **no** prueban publicación efectiva ni conformidad E2E.
 
 | Nombre | Tipo | Productor | Consumidores | Estado |
 |---|---|---|---|---|
@@ -63,18 +63,9 @@ routing key = nombre lógico del mensaje
 
 ## Retry y DLQ
 
-Los rechazos de negocio válidos se ACKean y generan su resultado de dominio cuando corresponda.
+**Gate bloqueado — NO APROBADO / NO APROVISIONADO / NO HOMOLOGADO.** `po.retry.x`, `po.dlx.x`, las colas `<cola>.retry` y `<cola>.dlq`, y el flujo de reintentos se conservan únicamente como diseño candidato. No se activan políticas ni permisos runtime. Las alternativas A/B/C no se adoptan.
 
-Retry/DLQ se reserva para fallos técnicos o mensajes no procesables:
-
-```text
-hasta 3 retries
-30 s entre intentos
-<main>.retry
-<main>.dlq
-```
-
-La tabla exacta de exchanges, queues y bindings está en [`rabbitmq-topologia.md`](./rabbitmq-topologia.md). La topología documentada no sustituye la verificación de recursos realmente creados en RabbitMQ.
+La recuperación con DLQ saturada permanece sin verificar: `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`. La existencia de texto contractual no acredita que estas pruebas hayan pasado en el broker real ni que haya recuperación. La asignación de `0.6.0-rc.3` a los nombres base implica que cualquier adopción futura de retry/DLX requerirá una versión candidata posterior.
 
 ## Semántica de operation_id, message_id y causation_id en preparación de Catálogo (FLOW-003 / FLOW-004)
 

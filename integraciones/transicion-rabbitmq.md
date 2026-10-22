@@ -1,158 +1,125 @@
 # Transición de RabbitMQ
 
-**Proyecto:** G6 — Productos y Ofertas  
-**Estado al 15-10-2026:** vhost y topología base existen; `g5_ventas`/`g5_tunnel` se aprovisionaron y probaron desde la PC administrativa; homologación G5 formal y consumidor funcional pendientes
-**Objetivo inmediato:** vhost `g6-productos-ofertas`, seguridad y operación reproducible  
-**Alcance diferido:** traducción contractual de exchanges, colas y routing keys.
+**Proyecto:** G6 — Productos y Ofertas
+**Estado:** reconciliación documental candidata `0.6.0-rc.3`; homologación externa, adaptación de código y ejecución real pendientes
+**Evidencia base:** auditoría histórica Oracle del 2026-10-19; no representa necesariamente el estado actual del servidor
 
-## Estado G5 al 15-10-2026
+## 1. Alcance y estados
 
-La identidad técnica `g5_ventas` quedó con `read` exclusivo de `po.ventas.q`, `write` de `po.comandos.x` y los dos topic permissions de rc.3. La cuenta SSH compartida `g5_tunnel` permite solo forwarding local al listener Oracle `127.0.0.1:5672`; el equipo ejecutará sus servicios en sus PCs y usará `127.0.0.1:5673`. El smoke sintético pasó desde la PC administrativa. No se desplegó servicio G5 en Oracle ni se cambió Compose. El paquete cifrado está preparado, pero no se entregó por faltar representante y canal privado.
+La auditoría reportó RabbitMQ 4.2.9, vhost `g6-productos-ofertas`, cuatro exchanges base, diez colas de aplicación y una operativa, colas quorum/durables y 57 bindings. AsyncAPI `0.6.0-rc.3` alinea nombres de exchanges y colas con esa observación. La modificación es incompatible para productores y consumidores que aún usen nombres ingleses anteriores.
 
-Marco comunicó aceptación técnica de rc.3; no se encontró un acuerdo externo verificable, así que el estado formal permanece **no homologado**. El contrato de `master` sigue en rc.2. El detalle de recursos y pruebas está en [compatibilidad G5](../ops/rabbitmq/frente-c/g5/compatibilidad-rc3.md) y [evidencia](../ops/rabbitmq/frente-c/g5/evidencia-aprovisionamiento-2026-10-15.md).
+Esta candidata conserva 40 canales y mensajes, operaciones, productores, consumidores, payloads, esquemas, routing keys comerciales y vhost respecto de `0.6.0-rc.2`. No cambia broker, ACL, red, credenciales ni código. La observación histórica no demuestra estado actual, binding individual, homologación, conectividad, entrega, ACK, despliegue ni E2E.
 
-## 1. Por qué se necesita una transición
+El contrato contiene 56 bindings en las diez colas principales y un binding operativo de `po.sin-ruta.x` a `po.sin-ruta.q` (`#`): 57 en total. La auditoría reporta 57 físicos; las definiciones individuales no están disponibles para contrastar exchange/cola/clave, así que la correspondencia exacta continúa `PENDIENTE_VERIFICACION`. Véase la [matriz de compatibilidad](../contratos/eventos/compatibilidad-rabbitmq-oracle.md).
 
-Existen **tres nombres y estados diferentes**:
+## 2. Correspondencia de nombres físicos
 
-| Estado | Nombre | Significado |
+| Candidato anterior | Nombre observado / rc.3 |
+|---|---|
+| `po.commands.x` | `po.comandos.x` |
+| `po.events.x` | `po.eventos.x` |
+| `po.results.x` | `po.resultados.x` |
+| `po.unrouted.x` | `po.sin-ruta.x` |
+| `po.catalog.q` | `po.catalogo.q` |
+| `po.gateway.q` | `po.pasarela.q` |
+| `po.promotions.q` | `po.promociones.q` |
+| `po.combos.q` | `po.combos.q` |
+| `po.inventory.q` | `po.inventario.q` |
+| `po.pricing.q` | `po.precios.q` |
+| `po.price-audit.q` | `po.auditoria-precios.q` |
+| `po.sales.q` | `po.ventas.q` |
+| `po.taxonomy.q` | `po.taxonomia.q` |
+| `po.bulk.q` | `po.masivos.q` |
+| `po.unrouted.q` | `po.sin-ruta.q` |
+
+`po.retry.x` y `po.dlx.x` no se traducen; continúan no aprobados y no aprovisionados. Los nombres derivados `<cola>.retry`, `<cola>.dlq` y sus claves técnicas usan la nueva identidad de la cola principal solo en el diseño candidato. Las routing keys comerciales permanecen iguales.
+
+La tabla anterior es una referencia histórica de nombres previos frente al contrato rc.3; no autoriza aliases ni coexistencia. Para el alcance H4, G6 adopta internamente los nombres físicos españoles ya existentes: vhost `g6-productos-ofertas`, exchanges `po.comandos.x`, `po.eventos.x`, `po.resultados.x` y colas G5/G6 `po.ventas.q`, `po.inventario.q`, `po.promociones.q`. No se crean recursos paralelos, no se cambia la VM y no se inventa una coexistencia con nombres ingleses. G5 accede al piloto mediante túnel SSH local `127.0.0.1:5673`; Render queda pendiente e independiente.
+
+**Estado de D-02:** adopción interna G6 de AsyncAPI `0.6.0-rc.3`; G5 aceptó el bloque pero solicitó conservar nombres físicos ingleses. La lista española final de Marco no cuenta con ratificación externa posterior identificable, por lo que adaptación y homologación operativa G5 siguen pendientes. D-01 (piloto local SSH) fue aceptada documentalmente por G5. PR #101 está fusionado en `master`; PR #98 queda pendiente de reconciliación contra esa base y no se modifica aquí.
+
+## 3. Impacto y coordinación
+
+| Parte | Impacto documental previsto | Estado externo / implementación |
 |---|---|---|
-| Infraestructura observada (14-10-2026) | `g6` | Vhost realmente existente en Oracle, sin topología de negocio observada |
-| Candidata anterior `0.6.0-rc.1` | `/marketplace` | Vhost que declaraba la revisión anterior de AsyncAPI/topología |
-| Contrato vigente en `master` `0.6.0-rc.2` | `g6-productos-ofertas` | Candidato G6; no homologación G5. La topología base existe en Oracle. |
-| Candidata G6 `0.6.0-rc.3` | `g6-productos-ofertas` | Nombres físicos en español; acceso G5 provisionado por autorización de Marco; homologación externa formal pendiente |
+| Ocho servicios G6 | Actualizar configuración/adaptadores al nombre físico asociado a su operación y cola | Código y runtime no acreditados; propietarios G6 deben revisar/adaptar |
+| Pasarela/BFF G6 | Referencia a `po.pasarela.q` | Implementación no acreditada |
+| G5 Ventas | Exchange de comandos y cola `po.ventas.q`; incompatibilidad de identidad física | Homologación específica de los nombres pendientes |
+| G1 Marketplace, G3 Chatbot y G4 Retail | Sin cola directa definida por esta reconciliación | No se infiere cambio de ownership ni nueva integración |
+| G2 Despacho | Sin cambio RabbitMQ inferido | Integración HTTP conserva su alcance |
+| G7 Seguridad / Infraestructura | ACL, identidad y red deben validarse antes de conectar | No se amplían permisos ni se autoriza acceso por este documento |
 
-Un vhost es un espacio lógico aislado. Crear `g6-productos-ofertas` no traslada automáticamente usuarios, colas, bindings, mensajes ni consumidores desde `g6` o `/marketplace`.
+La auditoría reportó para `g5_ventas` en `g6-productos-ofertas`: `write` sobre `po.comandos.x`, `read` sobre `po.ventas.q` y `configure` denegado. Es evidencia histórica de identidad/permisos, no prueba de conexión, entrega, consumo ni aceptación.
 
-La auditoría observó **cero colas y cero conexiones** en el vhost `g6`, pero no permite afirmar que nadie preparará dependencias antes de la migración. Debe repetirse la verificación antes de modificar o eliminar recursos.
+La homologación G5 sigue pendiente para aceptación de nombres físicos, red privada o túnel autorizado, identidad/ACL, publisher confirms, ACK, idempotencia y pruebas bilaterales reproducibles. No se atribuye aceptación por silencio.
 
-## 2. Principios de cambio
+## 4. Gate retry/DLX separado
 
-1. **No cambiar todo a la vez.** Priorizar cambio de vhost y endurecimiento de seguridad; tratar la traducción de nombres físicos y routing keys como decisión contractual separada.
-2. **Una fuente ejecutable a la vez.** Cada entorno desplegado debe declarar exactamente qué versión de AsyncAPI/topología sigue; no mezclar exchanges en español con productores que solo publican en inglés.
-3. **Contratos externos antes de consumidores externos.** G5 debe conocer y aceptar las propiedades de conexión y los eventos/colas que le afecten antes de una migración incompatible.
-4. **Sin pasos destructivos automáticos.** No eliminar `g6`, no purgar colas, no recrear colas con tipo diferente ni rotar credenciales en uso sin un plan probado.
-5. **Declarar estados por separado.** Propuesto, adoptado internamente, homologado, implementado, probado y desplegado no significan lo mismo.
+Retry/DLX permanece **BLOQUEADO**, **NO APROBADO**, **NO APROVISIONADO** y **NO HOMOLOGADO**. No se adoptan ni implementan alternativas A/B/C, no se activan políticas ni se conceden permisos runtime. Se conserva `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`; la evidencia disponible de recuperación saturada terminó FAIL.
 
-## 3. Alcance del primer lote documental
+`0.6.0-rc.3` corresponde exclusivamente a la reconciliación base. Una adopción futura de retry/DLX requiere superar sus gates y tramitarse mediante una versión candidata posterior, cuyo número no se fija aquí.
 
-Los documentos de esta entrega son:
+## 5. Lotes de ejecución previstos y gates
 
-- [Decisiones de RabbitMQ](../arquitectura/decisiones/rabbitmq.md): estándar objetivo, nomenclatura española, seguridad, fiabilidad, continuidad y observabilidad.
-- [Operación de RabbitMQ](../arquitectura/operacion-rabbitmq.md): inventario, permisos, aprovisionamiento, recuperación y monitoreo.
-- **Este plan:** secuencia de homologación y despliegue.
+Los siguientes son gates para una transición de infraestructura futura, no tareas autorizadas por este PR ni evidencia de ejecución.
 
-El primer lote está incorporado en master en `0a2c50b6f606a9956765e1be757db122b559d932`. Aquel lote no modificó AsyncAPI/topología. Este segundo lote prepara la candidata `0.6.0-rc.2` con el cambio de vhost y precisión documental de la señalización unroutable ya definida; conserva todos los nombres y bindings. No modifica handlers, CI/CD ni recursos de la VM. Tampoco se presume que el PR de Inventory esté desplegado por existir código o pruebas locales.
+### Lote A — Contrato y coordinación
 
-## 4. Impactos y coordinación
+- Identificar AsyncAPI `0.6.0-rc.3` como candidata incompatible de nombres físicos; inventariar productores, consumidores, configuración, bindings y pruebas que aún usen identificadores anteriores.
+- Comunicar a cada owner la versión, el mapeo, las operaciones afectadas y el plan de adaptación. No mezclar publishers con nombres de versiones distintas.
+- Registrar aprobación por responsable/alcance; el silencio no constituye homologación. Para G5: aceptar nombres, red privada o túnel, identidad/ACL, confirms, ACK, idempotencia, estrategia de despliegue y prueba bilateral reproducible.
+- Cerrar divergencias de contrato y permisos; distinguir observación física, contrato, implementación y pruebas.
 
-| Parte | Afectación | Responsable de revisión |
-|---|---|---|
-| `inventory-svc` | Variable `RABBITMQ_URL`, usuario, exchanges/colas, outbox y eventos | G6 Inventario + infraestructura |
-| Los otros siete microservicios de negocio | Publicación/consumo conforme a sus bindings en AsyncAPI | Owners G6 |
-| `api-gateway` | Proyecciones por su cola; acceso sin administrador | Arquitectura G6 |
-| G5 Ventas | Conexión, credencial de servicio, consumo `po.sales.q` y comandos acordados | G6 + G5 |
-| G1 Marketplace | HTTP, sin cola directa en P2 | Informar solo si cambia una integración vigente |
-| G3 Chatbot | HTTP; consumo directo de eventos excluido en P2 | Informar solo si cambia una integración vigente |
-| G4 Retail | HTTP y conciliación offline aún con discrepancias documentales específicas | Resolver su homologación HTTP por su propio alcance |
-| G2 Despacho | Consultas HTTP de datos físicos | Sin cambio RabbitMQ inferido |
-| G7 Seguridad | Identidades/autorizaciones HTTP/JWT y acuerdos de seguridad | No confundir tokens HTTP con cuentas RabbitMQ |
+### Lote B — Preparación de infraestructura
 
-No se atribuirá a G5 conformidad hasta contar con evidencia de aprobación. La topología candidata incluye **diez colas principales** (nueve aplicaciones G6 y G5 Ventas), además de colas de reintentos, fallidos y mensajes sin ruta.
+- Repetir inventario de solo lectura justo antes de cualquier cambio: vhost, recursos, bindings exactos, conexiones, consumidores, `ready`, `unacked`, políticas y dependencias de clientes. No asumir que el corte Oracle histórico sigue vigente.
+- Exportar definiciones actuales en ubicación protegida; comprobar respaldos JSON/GPG existentes, preservar originales y ensayar restauración en ambiente aislado. Una exportación de definiciones no respalda mensajes.
+- Aprobar un diff declarativo e idempotente, matriz ACL y prueba positiva/negativa. Las identidades de aplicación no administran; no habilitar `configure` runtime sin evidencia del arranque del cliente.
+- Confirmar red desde ubicaciones reales, controles de firewall/OCI y TLS o transporte privado para G5. No exponer AMQP públicamente por conveniencia.
+- No cambiar tipo de exchange, recrear colas con mensajes ni retirar recursos previos sin plan de drenaje, compatibilidad y reversión aprobados.
 
-## 5. Lotes de ejecución previstos
+### Lote C — Piloto y homologación G5
 
-### Lote A — Acuerdo interno y documentación
+- Solo después de aprobaciones externas e internas correspondientes, aplicar el cambio autorizado en entorno/piloto aislado mediante proceso de infraestructura con SHA, operador y ventana registrados.
+- Validar publicación y routing de mensajes sintéticos, publisher confirms, `mandatory`/`basic.return`, consumo de cola propia, ACK tras persistencia/efecto idempotente y observabilidad; luego probar con G5 en ventana coordinada.
+- El gate de G5 solo cierra con recepción/tratamiento confirmados por ambas partes y evidencia reproducible ligada a versión/commit/entorno. Sin participación bilateral, el estado permanece parcial, no E2E.
+- Mantener Retry/DLX fuera del piloto mientras `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA` siga abierta.
 
-**Objetivo:** fijar nombre de vhost, política de identidades, aprovisionamiento y operación. DECISIÓN INTERNA G6 adoptada; esto no equivale a homologación externa ni implementación.
+### Lote D — Adopción gradual restante
 
-**Estado:** adoptado internamente por G6 en el primer lote; las decisiones de este documento no acreditan homologación externa ni implementación.
+- Migrar productores y consumidores por owner y versión contractual; verificar mensajes pendientes, duplicados, orden, consistencia de Outbox/Inbox y efectos funcionales por servicio.
+- Definir explícitamente convivencia temporal o corte coordinado; ninguna doble publicación o alias se presume segura.
+- Retirar nombres anteriores únicamente cuando el inventario demuestre ausencia de dependencias, conexiones y mensajes pendientes, exista respaldo y el plan de reversión esté probado.
 
-**Criterio de salida:** documentos revisados, estado correcto y decisión explícita de si se cambia **solo el vhost** o también nombres físicos/keys en esta etapa.
+## 6. Criterios de aprobación de infraestructura
 
-### Lote B — Contrato de vhost y homologación (candidata preparada; homologación pendiente)
+- [ ] Estado de broker y bindings exportado en la ventana; mapeo exacto contrastado, no inferido por conteo.
+- [ ] Homologación de cada externo afectado, en particular G5, documentada por owner.
+- [ ] ACL de recurso y topic permissions revisados por separado; permisos efectivos probados con casos permitidos y denegados.
+- [ ] Declaraciones de recursos realizadas por identidad de aprovisionamiento; runtime consume recursos preaprovisionados sin privilegios de administración.
+- [ ] Red/TLS y permisos probados desde el origen real de cada aplicación.
+- [ ] Flujo de prueba confirma publicación, ruta, persistencia/efecto, ACK e idempotencia; `basic.return` y publisher confirm se interpretan por separado.
+- [ ] Métricas, alertas, responsables de ventana e incidentes verificados.
+- [ ] Evidencia reproducible asociada a SHA, versión, fecha, entorno y alcance; separada de homologación y despliegue.
 
-**Objetivo mínimo recomendado:** cambiar **solo** el vhost a `g6-productos-ofertas`, conservando temporalmente los nombres actuales de exchanges, colas y routing keys. Así se reduce el alcance de ruptura.
+## 7. Respaldo, reversión y recuperación
 
-- [AsyncAPI](../contratos/eventos/asyncapi.yaml) `0.6.0-rc.2` ya declara el vhost nuevo de forma consistente en servidor y topología y precisa la diferencia entre alternate exchange, `mandatory=true` y `basic.return`; no cambia mensajes, payloads, exchanges, colas, bindings ni routing keys.
-- Actualizar [topología RabbitMQ](../contratos/eventos/rabbitmq-topologia.md) y sección RabbitMQ de [Arquitectura](../arquitectura/Arquitectura.md).
-- Buscar referencias literales a `/marketplace` y corregir las que describan el vhost de mensajería; no tocar usos legítimos del término Marketplace como canal G1.
-- Revisar las matrices de integración y el kit afectado, sin modificar otras decisiones funcionales.
-- Comunicar a G5 la configuración acordada, red, cuenta, permisos y si cambian exchanges/colas/keys; recopilar su respuesta antes de declarar homologación.
-- Validar esquemas AsyncAPI y consistencia exacta de colas, exchanges, bindings, retry y DLQ.
+Antes de un corte, exportar definiciones/topología de forma protegida y verificar la restauración en aislamiento. Para datos de mensajes, utilizar un procedimiento consistente con la versión e identidad del nodo y ensayarlo; importar definiciones no mueve ni reconstituye mensajes. Retención, RTO/RPO, propietario y almacenamiento externo requieren acuerdo, no se inventan aquí.
 
-**Pendiente:** comunicar la candidata a G5, registrar su respuesta/acuerdo de migración y resolver red, credencial y matriz de permisos antes de conectar el consumidor. No se atribuye aprobación por silencio.
+Si falla una etapa, detener nuevos publishers del lote para evitar escrituras cruzadas, estabilizar consumidores e inventariar mensajes confirmados, no confirmados, pendientes y técnicos en retry. Revertir conexiones solo si los recursos siguen siendo compatibles y el ensayo demuestra que no se pierden ni duplican efectos. No purgar, recrear colas con mensajes ni eliminar vhosts automáticamente. Recuperación funcional exige prueba aislada de topología, permisos, mensajes sintéticos, reconexión e idempotencia y evidencia con duración y limitaciones.
 
-**Criterio de salida documental:** revisión del PR y referencias consistentes. La compatibilidad documental del contenido de mensajes no prueba operación ni que el consumidor G5 acepte el cambio de vhost.
+Retry/DLX conserva el resultado histórico **FAIL** de recuperación bajo saturación y permanece bloqueado. No es criterio cumplido ni parte de un procedimiento operativo aprobable hasta resolver `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`; las alternativas A/B/C siguen no aprobadas y no aprovisionadas.
 
-### Lote C — Infraestructura y piloto Inventory ↔ G5
+## 8. Validación documental
 
-**Objetivo:** desplegar lo autorizado en Oracle sin destruir la instalación existente.
+La verificación de esta candidata comprueba YAML/AsyncAPI, referencias, nombres base, bindings contractuales, invariantes lógicas contra `0.6.0-rc.2`, enlaces y diff. No acredita broker Oracle, conectividad, homologación, recepción, ACK, respaldo restaurable, despliegue ni E2E.
 
-- Verificar/exportar definiciones, localizar respaldos anteriores JSON/GPG, proteger copias y realizar ensayo de restauración.
-- Inspeccionar acceso de red Docker y la necesidad real de conectividad externa para G5; acordar red privada o AMQPS/TLS.
-- Crear el nuevo vhost, topología y usuarios mediante definiciones/scripts idempotentes.
-- Aplicar matriz de permisos mínimos, con pruebas negativas y positivas.
-- No aprovisionar credenciales runtime con escritura en `po.retry.x`/`po.dlx.x` hasta que la prueba aislada del [bloqueo retry/DLX](../arquitectura/decisiones/rabbitmq.md) pase en RabbitMQ 4.2.9. La alternativa A es únicamente candidata; no cambiar exchanges existentes ni afirmar que los permisos están aislados antes de verificar patrón topic exacto, dead-lettering quorum y ausencia de rutas laterales.
-- **Reevaluación del gate (2026-10-15):** el perfil focalizado observó NACK efectivo del destino quorum y retención del mensaje original en la fuente (`messages=1`, `messages_ready=0`), pero no observó su llegada a la DLQ dentro de 60 s tras liberar capacidad mediante ACK de rellenos identificados. Resultado **FAIL**; A no se adopta, AsyncAPI sigue en `0.6.0-rc.2` y el bloqueo de aprovisionamiento runtime permanece.
-- Configurar Inventory sin compartir contraseñas; comprobar conexión, confirmaciones y comportamiento de los consumidores.
-- Probar entrega y consumo de resultados con G5 en un ambiente/ventana coordinados. Los contratos de reservas HTTP con resultado asíncrono requieren correlación e idempotencia; un `202` no implica éxito de negocio.
-- Comprobar mensajes sin ruta, reintentos, DLQ, observabilidad y recuperación.
+No cambiar recursos de broker, colas con mensajes, bindings, políticas, usuarios, credenciales o redes como parte de esta transición documental. Cualquier cambio físico requiere autorización y un procedimiento propio coordinado con sus owners.
 
-**Criterio de salida:** evidencia reproducible asociada a versión, fecha y entorno; G5 confirma recepción y tratamiento correcto de eventos. Si G5 no puede participar, estado **parcial**, nunca integración E2E aprobada.
+## Referencias
 
-### Lote D — Adopción completa y eventual traducción de nombres
-
-**Objetivo:** incorporar progresivamente los demás productores y consumidores. Traducir exchanges, colas y routing keys **solo si se aprueba una migración adicional**.
-
-- Inventariar todas las claves exactas de AsyncAPI, bindings, clientes y pruebas.
-- Publicar versión de contrato y estrategia de compatibilidad.
-- Definir si procede corte coordinado, convivencia temporal de recursos, adaptadores o doble publicación supervisada; ninguna estrategia es inocua por defecto.
-- Considerar duplicados, orden y riesgos de mensajes pendientes durante coexistencia.
-- Ejecutar pruebas contractuales y funcionales por consumidor.
-- Retirar recursos antiguos únicamente tras demostrar que no tienen dependencias ni mensajes pendientes.
-
-**Criterio de salida:** usuarios y servicios migrados con pruebas; no quedan publicaciones o consumidores apuntando a recursos retirados.
-
-## 6. Verificaciones previas a todo corte
-
-- [ ] Vhost antiguo realmente sin usuarios, conexiones, colas pendientes y publicadores en tránsito, o plan explícito para su drenaje.
-- [ ] Definiciones anteriores respaldadas y restauración verificada.
-- [ ] Matriz de usuarios y permisos validada; no publicar secretos.
-- [ ] Variables de entorno de aplicaciones con procedencia y owner identificados.
-- [ ] G5 informado y aceptación registrada para su integración afectada.
-- [ ] Ruta privada/AMQPS y reglas OCI verificadas desde orígenes reales.
-- [ ] Mensajes de prueba idempotentes, correlacionados y con evidencia.
-- [ ] Plan de observabilidad y persona responsable de la ventana de cambio.
-- [ ] Procedimiento de reversión y criterios de interrupción aprobados.
-
-## 7. Reversión y límites
-
-Si falla una etapa, suspender **productores nuevos** para evitar escrituras cruzadas, estabilizar consumidores y evaluar mensajes confirmados, no confirmados, pendientes y reintentos. Después podrá revertirse la conexión al vhost anterior **solo si** las colas y productores siguen siendo compatibles y existe un procedimiento para no perder ni duplicar efectos funcionales.
-
-Restaurar definiciones no mueve mensajes entre vhosts. Reimportar JSON **no** reconstituye contenidos de colas. Revertir credenciales o borrar el nuevo vhost sin comprobar sesiones y mensajes puede provocar pérdida de eventos. Por tanto, la reversión deberá apoyarse en un ensayo real y en un criterio de consistencia de Inventario/Ventas.
-
-## 8. Registro de decisiones y dependencias pendientes
-
-| ID local de seguimiento | Tema | Estado inicial |
-|---|---|---|
-| NOMBRE | Vhost `g6-productos-ofertas` | Elegido internamente; contrato pendiente |
-| IDIOMA | Traducir nombres de exchanges, colas y routing keys | Propuesta; plan de compatibilidad pendiente |
-| PERMISOS | Usuarios separados, ACL estrictas y permisos de tópico | Diseño; sin despliegue acreditado |
-| CONFIABILIDAD | Tres reintentos, 30 s, DLQ, publisher confirms, Outbox/Inbox | Contrato documentado; pruebas operativas pendientes |
-| SEGURIDAD | Red privada/TLS para consumidores externos | Diseño y acuerdo con G5 pendientes |
-| CONTINUIDAD | Backups y recuperación probada | Sin evidencia suficiente en auditoría |
-| MONITOREO | Métricas y alertas de RabbitMQ | Diseño; instrumentación pendiente |
-| HA | Nodo único sin tolerancia a caída del host | Limitación aceptada para etapa inicial, pendiente de objetivos formales |
-
-Estas claves son **marcadores de seguimiento del documento**, no nuevos códigos oficiales DEC-F.
-
-## 9. Fuentes y responsables de actualización
-
-- [Decisiones de RabbitMQ](../arquitectura/decisiones/rabbitmq.md): coordinación G6.
-- [Operación de RabbitMQ](../arquitectura/operacion-rabbitmq.md): infraestructura G6.
-- [AsyncAPI](../contratos/eventos/asyncapi.yaml) y [topología](../contratos/eventos/rabbitmq-topologia.md): contrato ejecutable y topología física.
-- [Arquitectura](../arquitectura/Arquitectura.md): descripción de decisiones y límites de componentes.
-- [Matriz intermodular backend](./MATRIZ_INTERMODULAR_BACKEND.md): estado de acuerdos con cada grupo.
-
-Las aprobaciones deben dejar constancia del documento/commit, fecha, alcance, owners y diferencias que sigan abiertas. No se deducen de un enlace a GitHub ni de un estado `merged`.
+- [AsyncAPI](../contratos/eventos/asyncapi.yaml)
+- [Topología RabbitMQ](../contratos/eventos/rabbitmq-topologia.md)
+- [Matriz de compatibilidad Oracle](../contratos/eventos/compatibilidad-rabbitmq-oracle.md)
+- [Decisiones de RabbitMQ](../arquitectura/decisiones/rabbitmq.md)
+- [Operación de RabbitMQ](../arquitectura/operacion-rabbitmq.md)

@@ -1,6 +1,6 @@
 # Evidencia de aprovisionamiento G5 — 2026-10-15
 
-**Entorno:** Windows administrativo hacia Oracle Cloud. **Broker:** RabbitMQ `4.2.9`, contenedor `g6-po-rabbitmq-1`. **Contrato usado:** candidata interna AsyncAPI `0.6.0-rc.3`; `master` continúa en `0.6.0-rc.2`. **Homologación:** aceptación técnica reportada por Marco; documento externo verificable pendiente. La provisión se hizo bajo autorización operativa explícita del owner y no se registra como homologación.
+**Entorno:** Windows administrativo hacia Oracle Cloud. **Broker:** RabbitMQ `4.2.9`, contenedor `g6-po-rabbitmq-1`. **Base usada en la provisión:** instantánea histórica AsyncAPI `0.6.0-rc.3` que permanece en el historial de PR #98, commit [`184d0be`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/184d0be54cb28b8178cba920e59c544c198348e4/contratos/eventos/asyncapi-0.6.0-rc.3-g5-candidate.yaml). El contrato canónico de `master` permanece en `0.6.0-rc.2`; la instantánea histórica no es normativa vigente. **Homologación:** aceptación técnica reportada por Marco; documento externo verificable y adaptación D-02 pendientes. La provisión se hizo bajo autorización operativa explícita del owner y no se registra como homologación.
 
 ## Acceso instalado
 

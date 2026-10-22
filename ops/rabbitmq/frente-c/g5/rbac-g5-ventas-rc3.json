@@ -1,7 +1,8 @@
 {
   "contract": "AsyncAPI 0.6.0-rc.3",
   "status": "provisioned-and-smoke-tested-from-G6-admin-PC; G5 technical acceptance reported by owner; formal external homologation pending",
-  "contract_file": "../../../../contratos/eventos/asyncapi-0.6.0-rc.3-g5-candidate.yaml",
+  "contract_reference": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/184d0be54cb28b8178cba920e59c544c198348e4/contratos/eventos/asyncapi-0.6.0-rc.3-g5-candidate.yaml",
+  "contract_reference_status": "historical provision evidence only; not canonical; formal G5 homologation and D-02 adaptation pending",
   "provisioned_at": "2026-10-15",
   "vhost": "g6-productos-ofertas",
   "username": "g5_ventas",

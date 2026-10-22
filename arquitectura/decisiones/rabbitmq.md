@@ -2,11 +2,11 @@
 
 **Proyecto:** G6 — Productos y Ofertas  
 **Fecha:** 15 de octubre de 2026  
-**Estado:** decisión interna G6 adoptada para el contrato candidato `0.6.0-rc.2`; **homologación externa del vhost pendiente y no implementado**
+**Estado:** candidata documental `0.6.0-rc.3`; infraestructura base observada en auditoría Oracle del 2026-10-19; homologación externa pendiente y runtime no acreditado
 **Responsable:** coordinación técnica de G6  
 **Alcance:** ocho microservicios de negocio, la pasarela de API y consumidores externos expresamente autorizados.
 
-> G6 adopta internamente `g6-productos-ofertas` como vhost contractual de la candidata AsyncAPI `0.6.0-rc.2`. Esto no acredita homologación de G5, aprovisionamiento, implementación ni pruebas de broker. No se incorpora una nueva decisión DEC-F.
+> `0.6.0-rc.3` reconcilia el contrato candidato con la topología base observada el 2026-10-19. La observación histórica no demuestra estado actual, bindings individuales, homologación G5, conectividad, despliegue ni pruebas de broker. No se incorpora una nueva decisión DEC-F.
 
 ## 1. Motivo
 
@@ -24,47 +24,40 @@ La auditoría de infraestructura realizada el 14 de octubre de 2026 observó Rab
 - Un vhost separa recursos y permisos **lógicamente**, pero no proporciona aislamiento de CPU, disco ni alta disponibilidad.
 - Ante futuros entornos adicionales, se evaluarán vhosts independientes y, para producción crítica, infraestructura separada. No se crearán nombres de entornos hipotéticos en esta fase.
 
-## 3. Nomenclatura en español
+## 3. Nombres físicos reconciliados con la observación Oracle
 
-### 3.1 Reglas
+La candidata AsyncAPI `0.6.0-rc.3` usa los nombres observados en la auditoría histórica Oracle del 2026-10-19 (RabbitMQ 4.2.9, vhost `g6-productos-ofertas`). Los nombres y tipos de la infraestructura base son referencia documental; no se renombrarán ni recrearán recursos en el broker por este cambio. La incompatibilidad afecta identidades físicas, no claves lógicas.
 
-1. Usar nombres comprensibles en español para **identificadores nuevos de infraestructura**, con minúsculas, sin tildes, sin `ñ`, sin espacios y sin datos personales.
-2. Usar puntos (`.`) para segmentos técnicos o semánticos y guiones (`-`) para palabras compuestas.
-3. Mantener el prefijo estable `po` para recursos de Productos y Ofertas; conservar `.x` como sufijo de exchanges y `.q` como sufijo de colas.
-4. Emplear para colas el nombre del **consumidor responsable**, no el nombre del productor ni del emisor circunstancial.
-5. Para mensajes nuevos de una futura versión contractual, preferir la forma `dominio.entidad.hecho`, por ejemplo `inventario.reserva.creada`. Un comando puede reflejar una solicitud (`inventario.ajuste.solicitado`).
-6. El idioma no justifica por sí mismo romper consumidores: **no traducir routing keys ya publicadas sin versión, inventario de dependencias y homologación**.
+Los identificadores nuevos usan minúsculas, sin tildes, `ñ`, espacios ni datos personales; puntos separan segmentos y guiones separan palabras compuestas. `po` identifica Productos y Ofertas; `.x` y `.q` distinguen exchanges y colas. La cola representa a su consumidor. Esta convención no autoriza traducir routing keys comerciales publicadas: solo cambian referencias de recursos físicos expresamente versionadas.
 
-### 3.2 Tabla de nombres físicos: propuesta, todavía no contractual
+| Recurso | Candidato anterior | Nombre físico observado y candidato rc.3 | Tipo/estado |
+|---|---|---|---|
+| Exchange comandos | `po.commands.x` | `po.comandos.x` | topic, durable; base observada |
+| Exchange eventos | `po.events.x` | `po.eventos.x` | topic, durable; base observada |
+| Exchange resultados | `po.results.x` | `po.resultados.x` | topic, durable; base observada |
+| Exchange sin ruta | `po.unrouted.x` | `po.sin-ruta.x` | fanout, durable; base observada |
+| Catálogo | `po.catalog.q` | `po.catalogo.q` | quorum, durable; base observada |
+| Pasarela | `po.gateway.q` | `po.pasarela.q` | quorum, durable; base observada |
+| Promociones | `po.promotions.q` | `po.promociones.q` | quorum, durable; base observada |
+| Combos | `po.combos.q` | `po.combos.q` | quorum, durable; base observada |
+| Inventario | `po.inventory.q` | `po.inventario.q` | quorum, durable; base observada |
+| Precios | `po.pricing.q` | `po.precios.q` | quorum, durable; base observada |
+| Auditoría de precios | `po.price-audit.q` | `po.auditoria-precios.q` | quorum, durable; base observada |
+| Ventas G5 | `po.sales.q` | `po.ventas.q` | quorum, durable; base observada |
+| Taxonomía | `po.taxonomy.q` | `po.taxonomia.q` | quorum, durable; base observada |
+| Operaciones masivas | `po.bulk.q` | `po.masivos.q` | quorum, durable; base observada |
+| Captura operativa sin ruta | `po.unrouted.q` | `po.sin-ruta.q` | quorum, durable; observada; no es contexto comercial |
 
-| Recurso | Nombre contractual actual | Nombre propuesto |
-|---|---|---|
-| Vhost | `/marketplace` (`0.6.0-rc.1`) | `g6-productos-ofertas` (`0.6.0-rc.2`, candidato) |
-| Exchange de comandos | `po.commands.x` | `po.comandos.x` |
-| Exchange de eventos | `po.events.x` | `po.eventos.x` |
-| Exchange de resultados | `po.results.x` | `po.resultados.x` |
-| Exchange de reintentos | `po.retry.x` | `po.reintentos.x` |
-| Exchange de fallidos | `po.dlx.x` | `po.fallidos.x` |
-| Exchange de mensajes sin ruta | `po.unrouted.x` | `po.sin-ruta.x` |
-| Catálogo | `po.catalog.q` | `po.catalogo.q` |
-| Pasarela de API | `po.gateway.q` | `po.pasarela.q` |
-| Promociones | `po.promotions.q` | `po.promociones.q` |
-| Combos | `po.combos.q` | `po.combos.q` |
-| Inventario | `po.inventory.q` | `po.inventario.q` |
-| Precios | `po.pricing.q` | `po.precios.q` |
-| Auditoría de precios | `po.price-audit.q` | `po.auditoria-precios.q` |
-| Ventas G5 | `po.sales.q` | `po.ventas.q` |
-| Taxonomía | `po.taxonomy.q` | `po.taxonomia.q` |
-| Operaciones masivas | `po.bulk.q` | `po.masivos.q` |
-| Cola de mensajes sin ruta | `po.unrouted.q` | `po.sin-ruta.q` |
+`po.retry.x` y `po.dlx.x` conservan sus nombres y tipos solo como diseño candidato no aprobado. Las colas `.retry` y `.dlq` y sus routing keys técnicas siguen siendo candidatos no aprovisionados; si refieren el nombre de una cola principal, usan el identificador reconciliado. No se traducen exchanges retry/DLX.
 
-Para las diez colas principales, las colas complementarias siguen la pauta `<cola-principal>.reintentos` y `<cola-principal>.fallidos`; por ejemplo `po.inventario.q.reintentos` y `po.inventario.q.fallidos`.
+Se mantienen las routing keys comerciales existentes, por ejemplo `inventory.stock.changed`, `inventory.reservation.created`, `inventory.reservation.rejected`, `pricing.price.changed` y `promotions.coupon.consumption.requested`. La reconciliación no cambia mensajes, canales, operaciones, productores, consumidores, payloads ni esquemas.
 
-**Regla de transición:** esta tabla es un mapa para una futura modificación coordinada. No se deben mezclar nombres nuevos de exchanges con bindings o publicaciones de la versión anterior ni crear un alias ficticio entre vhosts. El cambio del **vhost** puede tramitarse separadamente del cambio de exchanges, colas y routing keys. La traducción de routing keys existentes requiere un mapeo exhaustivo en un lote contractual posterior.
-
-**Ejemplos ilustrativos de futuros nombres de eventos (no vigentes):** `inventario.reserva.creada`, `inventario.reserva.rechazada`, `precios.precio.actualizado`, `taxonomia.categoria.actualizada`. Las claves vigentes siguen siendo, por ejemplo, `inventory.reservation.created` y `pricing.price.changed`.
+El reporte de auditoría registra 57 bindings, pero las definiciones físicas individuales no están disponibles en las fuentes de este repositorio. Por tanto la correspondencia uno-a-uno entre bindings observados y los declarados en AsyncAPI sigue `PENDIENTE_VERIFICACION`; coincidir en cantidad no constituye evidencia de equivalencia. Véase la [matriz de compatibilidad RabbitMQ Oracle](../../contratos/eventos/compatibilidad-rabbitmq-oracle.md).
 
 ## 4. Identidades y permisos
+
+**Observación histórica de auditoría (2026-10-19):** la matriz [RabbitMQ Oracle](../../contratos/eventos/compatibilidad-rabbitmq-oracle.md) transcribe `configure`/`write`/`read` para las diez identidades consultadas. Esto no prueba conexión, publicación, entrega, consumo ni aceptación de mensajes y no representa ACL runtime actual. La auditoría no registra topic permissions. Los permisos observados no amplían permisos contractuales ni constituyen una autorización nueva.
+
 
 - Se asignará **una identidad técnica por aplicación**, más identidades externas autorizadas. Convención: `g6_<dominio>` y, para G5, `g5_ventas` (sujeto a aceptación de G5).
 - Los microservicios solo podrán publicar en exchanges y claves contractualmente permitidos, y consumir de sus propias colas. No se concederán permisos comodín `.*` sin justificación explícita.
@@ -78,7 +71,7 @@ Para las diez colas principales, las colas complementarias siguen la pauta `<col
 
 El bloqueo de publicación runtime en las exchanges compartidas `direct` `po.retry.x` y `po.dlx.x` sigue vigente. El perfil focalizado de RabbitMQ 4.2.9 del 2026-10-15 verificó las políticas efectivas de origen y destino con `rabbitmqctl list_queues`. La DLQ quorum confirmó dos publicaciones con `max-length=1` antes de NACKear una tercera; esa aceptación por encima del límite confirma el exceso posible documentado para quorum. El mensaje original, persistente y confirmado, fue rechazado con `requeue=false`; mientras el destino no aceptaba publicaciones, el origen reportó `messages=1` y `messages_ready=0` con la política efectiva `at-least-once`/`reject-publish`. Al consumir y ACKear solo los dos mensajes de relleno identificados, el original no llegó a la DLQ dentro de los 60 s existentes: el escenario focalizado terminó **FAIL**. A no pasa el gate de recuperación y no se adopta. Se mantiene `BLOQUEADO_ESPECÍFICO` para aprovisionar credenciales runtime. Esta fixture no acredita recuperación ante reinicio, caída de Oracle, consumidores reales, Outbox/Inbox, integración G5 ni operación productiva.
 
-**Mejor candidata para una próxima prueba: A.** Cambiar `po.retry.x` a tipo `topic`, mantener `po.dlx.x` `direct` con escritura solo del aprovisionador y configurar cada cola principal para dead-lettering broker-managed hacia su DLQ al rechazar con `requeue=false`. El runtime publicaría únicamente sus reintentos en `po.retry.x` usando un topic permission con patrón exacto, escapado y anclado (por ejemplo, `^po\.inventory\.q$` para Inventario), y leería solo su cola principal. RabbitMQ no limita publicaciones topic por clave si para ese usuario/exchange no se instala una topic permission; el aprovisionamiento debe verificar explícitamente que cada identidad tiene la regla y que no existen reglas más amplias. El flujo técnico publicaría el retry en la cola `.retry` correspondiente; su TTL existente lo retornaría a la cola principal. Tras tres retries el consumidor rechazaría la entrega final con `requeue=false`; el dead-lettering acabaría en DLQ sin volver a la principal. Los rechazos de negocio deben continuar ACKeándose y no disparar dead-lettering.
+**A/B/C permanecen sin adoptar.** La descripción de alternativas que sigue es antecedente de análisis, no aprobación, provisión ni autorización para ejecutarlas. No se elige una alternativa en esta revisión. Cambiar `po.retry.x` a tipo `topic`, mantener `po.dlx.x` `direct` con escritura solo del aprovisionador y configurar cada cola principal para dead-lettering broker-managed hacia su DLQ al rechazar con `requeue=false`. El runtime publicaría únicamente sus reintentos en `po.retry.x` usando un topic permission con patrón exacto, escapado y anclado (por ejemplo, `^po\.inventario\.q$` para Inventario), y leería solo su cola principal. RabbitMQ no limita publicaciones topic por clave si para ese usuario/exchange no se instala una topic permission; el aprovisionamiento debe verificar explícitamente que cada identidad tiene la regla y que no existen reglas más amplias. El flujo técnico publicaría el retry en la cola `.retry` correspondiente; su TTL existente lo retornaría a la cola principal. Tras tres retries el consumidor rechazaría la entrega final con `requeue=false`; el dead-lettering acabaría en DLQ sin volver a la principal. Los rechazos de negocio deben continuar ACKeándose y no disparar dead-lettering.
 
 La configuración candidata debe demostrar dead-lettering **at-least-once** para las colas quorum fuente que deban garantizar el traslado a la principal o a DLQ: en RabbitMQ 4.2 requiere estrategia `at-least-once`, `overflow=reject-publish`, DLX/routing configuradas y la feature flag `stream_queue` habilitada. Tiene coste adicional de recursos; mensajes retenidos durante indisponibilidad y duplicados son posibles, pueden acumularse en la cola fuente y generar backpressure, por lo que capacidad/alertas deben planificarse sin inventar límites. El destino debe ser durable y el reproceso conservar idempotencia por `message_id`/`operation_id`. En el arnés 4.2.9, la ruta normal funciona pero el ensayo de full-capacity/recuperación no entregó el mensaje al liberar la DLQ; la expectativa documentada por la feature no quedó demostrada y A permanece bloqueada hasta investigar y repetir ese caso.
 
@@ -94,19 +87,15 @@ No se acepta una ACL de recurso sobre exchanges `direct` como restricción de ro
 
 RabbitMQ verifica `read` sobre la cola y `write` sobre el DLX cuando se declara una cola con DLX. La topología candidata debe declararse por la identidad de aprovisionamiento, que conserva esos permisos; al declarar las colas `.retry` con el exchange por defecto como DLX, el aprovisionador también deberá satisfacer la autorización sobre `amq.default` (el nombre interno que RabbitMQ usa para el exchange AMQP por defecto). Runtime sin `configure` debe usar recursos ya aprovisionados y su ACL no incluirá `amq.default`. Una declaración pasiva en RabbitMQ 4.2.9 requiere al menos un permiso en el recurso desde 4.2.7; una declaración activa requiere `configure`. En una inspección solo de lectura del backend hermano (`2c4a18105c5e379edc8476b9d315aa6be1134b80`), no se encontró consumidor RabbitMQ de producción bajo `apps`; Inventario sí tiene un publisher Outbox y el test de integración crea exchanges/colas con `assertExchange`/`assertQueue`. Esa fixture no acredita el arranque runtime ni permite verificar que los nueve servicios y G5 consuman recursos preaprovisionados sin `configure`; la compatibilidad de consumidores sigue pendiente.
 
-**Criterio de desbloqueo:** completar en broker 4.2.9 aislado las pruebas positivas y negativas del plan operativo (clave propia frente a ajena con regex literal `\.` y anclas `^$`, lectura cruzada, declaraciones, retry/TTL, tres reintentos, DLQ broker-managed, rechazo de negocio, correlación/idempotencia, default exchange y rutas laterales), y resolver/repetir satisfactoriamente la recuperación tras indisponibilidad/capacidad llena; conservar logs/comandos y versión del broker ligados al commit. Hasta entonces se mantiene `BLOQUEADO_ESPECÍFICO`. No se crea DEC-F nuevo ni se avanza AsyncAPI de `0.6.0-rc.2`. Si A se adopta después de pasar las pruebas, corresponde preparar `0.6.0-rc.3`: cambian el tipo de exchange y la configuración/flujo de dead-lettering ejecutables, aunque no cambien canales ni payloads.
+**Criterio de desbloqueo:** completar en broker 4.2.9 aislado las pruebas positivas y negativas del plan operativo (clave propia frente a ajena con regex literal `\.` y anclas `^$`, lectura cruzada, declaraciones, retry/TTL, tres reintentos, DLQ broker-managed, rechazo de negocio, correlación/idempotencia, default exchange y rutas laterales), y resolver/repetir satisfactoriamente la recuperación tras indisponibilidad/capacidad llena; conservar logs/comandos y versión del broker ligados al commit. Hasta entonces se mantiene `BLOQUEADO_ESPECÍFICO`. No se crea DEC-F nuevo. La versión `0.6.0-rc.3` se asigna a la reconciliación de nombres físicos base. Cualquier adopción posterior de retry/DLX deberá evaluarse con sus gates y tramitarse en una versión candidata posterior; esta revisión no fija su número.
 
 ## 5. Fiabilidad, reintentos y fallidos
 
-Se mantienen las invariantes contractuales: persistencia según tipo de cola, confirmaciones del publicador (*publisher confirms*), confirmación manual de consumo (*ACK*), entrega al menos una vez (*at-least-once*), eliminación de duplicados por `message_id`, idempotencia funcional por `operation_id` cuando aplique y patrones Outbox/Inbox.
+La semántica contractual de publicación/consumo conserva publisher confirms, ACK manual, entrega at-least-once, deduplicación por `message_id`, idempotencia de negocio por `operation_id` cuando aplique y patrones Outbox/Inbox. Estas reglas documentales no prueban que las aplicaciones estén conectadas o implementen el flujo.
 
-- Política vigente de reintentos **técnicos**: hasta **tres reintentos posteriores al intento inicial**, con **30 segundos** de espera por reintento, mediante cola específica por consumidor.
-- Evitar bucles de `requeue=true`. Mantener un contador verificable de intentos y respetar el límite.
-- Antes de confirmar como procesado un mensaje que se reenvía a una cola de reintentos, asegurar la aceptación del mensaje reenviado (por ejemplo mediante confirmación del publicador). Aun así pueden producirse duplicados: la idempotencia sigue siendo obligatoria.
-- Tras agotar intentos, dirigir a la cola de mensajes fallidos (DLQ), conservar contexto de error y requerir intervención controlada para reprocesarlo.
-- Los rechazos válidos de negocio, como stock insuficiente, no son errores técnicos: se emite el resultado de rechazo previsto y se confirma el mensaje original.
-- La existencia de colas quorum no activa automáticamente dead lettering confiable: si se exige traslado **at-least-once** a DLQ, configurar y validar su estrategia explícitamente, incluidos `overflow=reject-publish`, `dead-letter-exchange` y sus efectos operativos.
-- Los mensajes sin ruta se dirigirán al mecanismo de captura contractual y generarán alerta. Probar conjuntamente el comportamiento del exchange alternativo y `mandatory`, sin suponer que ambos producen la misma señal.
+El flujo retry/DLX, incluidas las cifras candidatas de tres reintentos y 30 segundos, permanece **NO APROBADO, NO APROVISIONADO y BLOQUEADO**. `po.retry.x` y `po.dlx.x` conservan nombres y tipos candidatos; no se activan políticas ni permisos runtime. Se conserva `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`; la evidencia aislada disponible registró fallo de recuperación bajo saturación. No se afirma que las pruebas retry/DLX hayan pasado ni que el diseño candidato opere.
+
+Los rechazos válidos de negocio se representan mediante el resultado previsto y no se convierten en fallos técnicos por esta reconciliación. Los mensajes sin ruta usan el alternate exchange `po.sin-ruta.x`; `mandatory`, `basic.return` y publisher confirms mantienen señales diferentes. Un confirm del publicador no demuestra recepción o ACK del consumidor.
 
 ## 6. Disponibilidad y recuperación
 
