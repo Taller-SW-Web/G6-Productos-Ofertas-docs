@@ -46,14 +46,14 @@ try {
     $secret=[Net.NetworkCredential]::new('', $secure).Password
     $escaped=[uri]::EscapeDataString($secret)
     $env:RABBITMQ_URL="amqp://${identity}:$escaped@127.0.0.1:${port}/g6-productos-ofertas"
-    $env:G6_AMQP_PORT=[string]$port; $env:G6_SKIP_AUTHORIZED_PUBLISH='1'; $env:G6_RABBITMQ_RBAC_FILE=Join-Path $installRoot 'rbac-rc3.json'
+    $env:G6_AMQP_PORT=[string]$port; $env:G6_AMQP_VHOST=[string]$meta.Vhost; $env:G6_RABBITMQ_RBAC_FILE=Join-Path $installRoot 'rbac-rc3.json'
     & node (Join-Path $runtime 'verify.mjs') $identity
     if ($LASTEXITCODE -ne 0) { throw "AMQP smoke failed for $identity; no secret was printed." }
     $secret=$null; $escaped=$null; $secure.Dispose(); $secure=$null
   }
   Write-Output "PASS: $($meta.Developer), SSH and assigned AMQP identities verified from this PC. Publisher operations were not run by the local smoke."
 } finally {
-  $env:RABBITMQ_URL=$null; $env:G6_AMQP_PORT=$null; $env:G6_SKIP_AUTHORIZED_PUBLISH=$null; $env:G6_RABBITMQ_RBAC_FILE=$null
+  $env:RABBITMQ_URL=$null; $env:G6_AMQP_PORT=$null; $env:G6_AMQP_VHOST=$null; $env:G6_RABBITMQ_RBAC_FILE=$null
   $plainPass=$null; $securePass.Dispose()
   if (-not $tunnel.HasExited) { $tunnel.Kill(); $tunnel.WaitForExit() }
   $tempBase=[IO.Path]::GetFullPath($env:TEMP).TrimEnd([IO.Path]::DirectorySeparatorChar)+[IO.Path]::DirectorySeparatorChar

@@ -1,9 +1,13 @@
 #requires -Version 7.0
 param(
   [string]$Root = (Join-Path $env:LOCALAPPDATA 'G6\RabbitMQ\onboarding'),
-  [string]$CredentialVaultPath = (Join-Path $env:LOCALAPPDATA 'G6\RabbitMQ\frontb-credentials.dpapi.json')
+  [string]$CredentialVaultPath = (Join-Path $env:LOCALAPPDATA 'G6\RabbitMQ\frontb-credentials.dpapi.json'),
+  [switch]$AdminActiveTest,
+  [switch]$ConfirmIsolatedQueues
 )
 $ErrorActionPreference='Stop'
+if (-not $AdminActiveTest -or -not $ConfirmIsolatedQueues) { throw 'This script performs active ACL/message tests. Pass -AdminActiveTest -ConfirmIsolatedQueues only for an authorized isolated maintenance test.' }
+. (Join-Path $PSScriptRoot 'G6DeveloperProfile.ps1')
 $manifestPath=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\rbac-rc3.json'))
 $manifest=Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
 $keyVault=Get-Content -Raw -LiteralPath (Join-Path $Root 'admin-vault.dpapi.json') | ConvertFrom-Json
@@ -17,7 +21,7 @@ $pkg | Set-Content -LiteralPath (Join-Path $runtime 'package.json') -Encoding as
 try {
   & npm.cmd install --prefix $runtime --no-audit --no-fund amqplib@2.2.0
   if ($LASTEXITCODE -ne 0) { throw 'Could not install the temporary AMQP test dependency.' }
-  Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'verify-pilot-amqp.mjs') -Destination (Join-Path $runtime 'verify.mjs')
+  Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'verify-admin-amqp-acl.mjs') -Destination (Join-Path $runtime 'verify-admin.mjs')
   $results=[Collections.Generic.List[object]]::new()
   foreach ($d in $keyVault.developers) {
     foreach ($identity in $d.Services) {
@@ -56,23 +60,26 @@ try {
         $escaped=[uri]::EscapeDataString($plain)
         $env:RABBITMQ_URL="amqp://${identity}:$escaped@127.0.0.1:${port}/g6-productos-ofertas"
         $env:G6_AMQP_PORT=[string]$port
+        $env:G6_AMQP_VHOST='g6-productos-ofertas'
         $env:G6_RABBITMQ_RBAC_FILE=$manifestPath
-        & node (Join-Path $runtime 'verify.mjs') $identity
+        $runId=[Guid]::NewGuid().ToString('D')
+        $env:G6_ADMIN_ACTIVE_TEST='1'; $env:G6_ADMIN_ISOLATION_VERIFIED='1'; $env:G6_ADMIN_RUN_ID=$runId
+        & node (Join-Path $runtime 'verify-admin.mjs') '--admin-acl' $identity
         if ($LASTEXITCODE -ne 0) { throw "AMQP identity verification failed for $identity; no secret was logged." }
+        $env:G6_ADMIN_ACTIVE_TEST=$null; $env:G6_ADMIN_ISOLATION_VERIFIED=$null; $env:G6_ADMIN_RUN_ID=$null
         $plain=$null; $escaped=$null; $secure.Dispose(); $secure=$null; $entry=$null
-        if ($account.test_publish) {
-          Start-Sleep -Seconds 4
-          $afterText=& ssh -i $adminKey -o IdentitiesOnly=yes -o BatchMode=yes ubuntu@157.137.205.218 $beforeCmd
-          if ($LASTEXITCODE -ne 0) { throw 'Post-test queue-safety snapshot failed.' }
-          $after=@{}
-          foreach ($line in $afterText) { if ($line -match '^(po\.[^\t]+)\t(\d+)\t(\d+)$') { $after[$Matches[1]]=@{Messages=[int]$Matches[2];Consumers=[int]$Matches[3]} } }
-          foreach ($queue in ($snapshotQueues | Select-Object -Unique)) { if ($after[$queue].Messages -ne 0 -or $after[$queue].Consumers -ne 0) { throw "Post-test safety found messages/consumers on $queue; no purge was attempted." } }
-        }
+        Start-Sleep -Seconds 4
+        $afterText=& ssh -i $adminKey -o IdentitiesOnly=yes -o BatchMode=yes ubuntu@157.137.205.218 $beforeCmd
+        if ($LASTEXITCODE -ne 0) { throw 'Post-test queue-safety snapshot failed.' }
+        $after=@{}
+        foreach ($line in $afterText) { if ($line -match '^(po\.[^\t]+)\t(\d+)\t(\d+)$') { $after[$Matches[1]]=@{Messages=[int]$Matches[2];Consumers=[int]$Matches[3]} } }
+        foreach ($queue in ($snapshotQueues | Select-Object -Unique)) { if (-not $after.ContainsKey($queue) -or $after[$queue].Messages -ne 0 -or $after[$queue].Consumers -ne 0) { throw "Post-test safety found missing queue, messages, or consumers on $queue; no purge was attempted." } }
         $authPub=if($account.test_publish){'PASS'}else{'NO_APLICA'}
         $confirm=if($account.test_publish){'PASS'}else{'NO_APLICA'}
-        $results.Add([pscustomobject]@{ Developer=$d.Developer; SSHLogin=$d.Login; RabbitIdentity=$identity; Authentication='PASS'; OwnQueueRead='PASS'; CrossReadDenied='PASS'; ConfigureDenied='PASS'; UnauthorizedPublishDenied='PASS'; AuthorizedPublish=$authPub; PublisherConfirm=$confirm; QueueSafety='PASS'; LocalPort=$port })
+        $results.Add([pscustomobject]@{ Developer=$d.Developer; SSHLogin=$d.Login; RabbitIdentity=$identity; AdminRunId=$runId; Authentication='PASS'; OwnQueueRead='PASS'; CrossReadDenied='PASS'; ConfigureDenied='PASS'; UnauthorizedPublishDenied='PASS'; AuthorizedPublish=$authPub; PublisherConfirm=$confirm; QueueSafety='PASS'; LocalPort=$port })
       } finally {
-        $env:RABBITMQ_URL=$null; $env:G6_AMQP_PORT=$null; $env:G6_RABBITMQ_RBAC_FILE=$null
+        $env:RABBITMQ_URL=$null; $env:G6_AMQP_PORT=$null; $env:G6_AMQP_VHOST=$null; $env:G6_RABBITMQ_RBAC_FILE=$null
+        $env:G6_ADMIN_ACTIVE_TEST=$null; $env:G6_ADMIN_ISOLATION_VERIFIED=$null; $env:G6_ADMIN_RUN_ID=$null
         $plain=$null; $escaped=$null; if ($secure) { $secure.Dispose() }; $entry=$null
         if (-not $tunnel.HasExited) { $tunnel.Kill(); $tunnel.WaitForExit() }
       }
@@ -80,7 +87,8 @@ try {
   }
   $results | Format-Table -AutoSize
 } finally {
-  $env:RABBITMQ_URL=$null; $env:G6_AMQP_PORT=$null; $env:G6_RABBITMQ_RBAC_FILE=$null
+  $env:RABBITMQ_URL=$null; $env:G6_AMQP_PORT=$null; $env:G6_AMQP_VHOST=$null; $env:G6_RABBITMQ_RBAC_FILE=$null
+  $env:G6_ADMIN_ACTIVE_TEST=$null; $env:G6_ADMIN_ISOLATION_VERIFIED=$null; $env:G6_ADMIN_RUN_ID=$null
   $tempBase=[IO.Path]::GetFullPath($env:TEMP).TrimEnd([IO.Path]::DirectorySeparatorChar)+[IO.Path]::DirectorySeparatorChar
   $resolved=[IO.Path]::GetFullPath($runtime)
   if (-not $resolved.StartsWith($tempBase,[StringComparison]::OrdinalIgnoreCase)) { throw 'Refusing to remove a temp path outside Windows TEMP.' }

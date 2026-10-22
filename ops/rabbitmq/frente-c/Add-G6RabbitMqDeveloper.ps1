@@ -5,9 +5,11 @@ param(
   [string]$Login,
   [Parameter(Mandatory = $true)]
   [string]$PublicKeyPath,
-  [string]$AdminKeyPath = (Join-Path $env:USERPROFILE '.ssh\g6_oracle')
+  [string]$AdminKeyPath = (Join-Path $env:USERPROFILE '.ssh\g6_oracle'),
+  [string]$Root = (Join-Path $env:LOCALAPPDATA 'G6\RabbitMQ\onboarding')
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'G6DeveloperProfile.ps1')
 foreach ($path in @($PublicKeyPath, $AdminKeyPath)) {
   if (-not (Test-Path -LiteralPath $path)) { throw "Required file not found: $path" }
 }
@@ -15,6 +17,7 @@ $publicKey = (Get-Content -Raw -LiteralPath $PublicKeyPath).Trim()
 if ($publicKey -notmatch '^ssh-ed25519 [A-Za-z0-9+/]+={0,2}( .*)?$') { throw 'Provide exactly one ssh-ed25519 public key line; private keys are not accepted.' }
 $null = & ssh-keygen -lf $PublicKeyPath
 if ($LASTEXITCODE -ne 0) { throw 'The supplied public key failed local OpenSSH validation.' }
+$fingerprint = ((& ssh-keygen.exe -lf $PublicKeyPath) -split '\s+')[1]
 
 $remote = 'ubuntu@157.137.205.218'
 $remoteDir = '/home/ubuntu/.g6-rabbitmq-onboard'
@@ -52,3 +55,7 @@ Write-Output $stdout
 $verify = "sudo -n sshd -t && sudo -n sshd -T -C user=$Login,host=localhost,addr=127.0.0.1 | grep -F 'permitopen 127.0.0.1:5672' && id -nG $Login && sudo -n stat -c '%U:%G %a %n' /home/$Login/.ssh/authorized_keys"
 & ssh -i $AdminKeyPath -o IdentitiesOnly=yes -o BatchMode=yes $remote $verify
 if ($LASTEXITCODE -ne 0) { throw 'Post-provisioning effective-policy/account verification failed.' }
+if ($stdout -notmatch [regex]::Escape($fingerprint)) { throw 'Remote provisioning evidence did not match the submitted public-key fingerprint.' }
+$vaultPath = Join-Path $Root 'admin-vault.dpapi.json'
+Set-G6VerifiedOnboardingState -VaultPath $vaultPath -Field AccountCreated -Login $Login
+Set-G6VerifiedOnboardingState -VaultPath $vaultPath -Field PublicKeyRegistered -Login $Login

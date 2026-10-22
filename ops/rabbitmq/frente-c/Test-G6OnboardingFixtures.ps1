@@ -17,17 +17,18 @@ $urlScript = Get-Content -Raw -LiteralPath (Join-Path $KitRoot 'Set-G6DeveloperR
 $installerScript = Get-Content -Raw -LiteralPath (Join-Path $KitRoot 'Install-G6DeveloperPackage.ps1')
 $accessScript = Get-Content -Raw -LiteralPath (Join-Path $KitRoot 'Test-G6DeveloperAccess.ps1')
 $tcpTestScript = Get-Content -Raw -LiteralPath (Join-Path $KitRoot 'Test-G6RabbitMqTunnel.ps1')
+$authVerifier = Get-Content -Raw -LiteralPath (Join-Path $KitRoot 'verify-pilot-amqp.mjs')
+$adminVerifier = Get-Content -Raw -LiteralPath (Join-Path $KitRoot 'verify-admin-amqp-acl.mjs')
+$adminSmoke = Get-Content -Raw -LiteralPath (Join-Path $KitRoot 'Test-G6OnboardingAmqp.ps1')
 $profileHelper = Join-Path $KitRoot 'G6DeveloperProfile.ps1'
 $tempRoot = Join-Path $env:TEMP ('g6-onboarding-fixtures-' + [Guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $tempRoot
 try {
   . $profileHelper
+  $catalog = @(Get-G6DeveloperProfileCatalog)
   foreach ($person in $expected) {
-    $sourcePattern = "Developer='[^']+'; Login='$($person.Login)'; KeyName='$([regex]::Escape($person.KeyName))'; Services=@\(([^)]*)\); Port=$($person.Port)"
-    $accountMatch = [regex]::Match($keysScript,$sourcePattern)
-    if (-not $accountMatch.Success) { throw "Source account mapping mismatch for $($person.Login)." }
-    $sourceServices = @([regex]::Matches($accountMatch.Groups[1].Value,"'(g6_[a-z_]+)'") | ForEach-Object { $_.Groups[1].Value })
-    if (@(Compare-Object $person.Services $sourceServices).Count -ne 0) { throw "RabbitMQ identity assignment mismatch for $($person.Login)." }
+    $profile = @($catalog | Where-Object Login -CEQ $person.Login)
+    if ($profile.Count -ne 1 -or $profile[0].KeyName -cne $person.KeyName -or [int]$profile[0].Port -ne $person.Port -or @(Compare-Object $person.Services @($profile[0].Services)).Count -ne 0) { throw "Canonical developer profile mismatch for $($person.Login)." }
     if ($packagesScript -notmatch [regex]::Escape('IdentityFile ~/.ssh/$($dev.KeyName)')) { throw "SSH key mapping expression missing for $($person.Login)." }
     if ($packagesScript -notmatch 'User \$\(\$dev\.Login\)' -or $packagesScript -notmatch 'Port=\[int\]\$dev\.Port' -or $packagesScript -notmatch '127\.0\.0\.1:\$\(\$meta\.Port\)') { throw "SSH login and package metadata mapping mismatch for $($person.Login)." }
     $root = Join-Path $tempRoot $person.Login
@@ -42,6 +43,7 @@ try {
 
   if ($installerScript -notmatch 'pwsh\.exe' -or $installerScript -match 'powershell\.exe') { throw 'Installer guidance must invoke PowerShell 7 as pwsh.exe.' }
   if ($packagesScript -notmatch 'pwsh\.exe' -or $packagesScript -match 'powershell\.exe') { throw 'Generated package instructions must invoke pwsh.exe.' }
+  if ($installerScript -match 'icacls[^\r\n]*/reset' -or $installerScript -notmatch 'A G6 installation directory already exists') { throw 'Installer must avoid ACL resets and require manual recovery for an existing or interrupted installation.' }
   foreach ($scriptName in @('New-G6DeveloperKeys.ps1','New-G6DeveloperPackages.ps1','Install-G6DeveloperPackage.ps1','Set-G6DeveloperRabbitMqUrl.ps1','Test-G6DeveloperAccess.ps1','Test-G6DeveloperPackages.ps1','Test-G6OnboardingSsh.ps1','Test-G6OnboardingAmqp.ps1','Test-G6RabbitMqTunnelReconnect.ps1','Add-G6RabbitMqDeveloper.ps1','Add-G6RabbitMqDeveloperKey.ps1')) {
     $firstLine=Get-Content -LiteralPath (Join-Path $KitRoot $scriptName) -TotalCount 1
     if ($firstLine -ne '#requires -Version 7.0') { throw "$scriptName must retain an explicit PowerShell 7 version requirement." }
@@ -51,7 +53,12 @@ try {
   foreach ($path in @((Join-Path $KitRoot 'New-G6DeveloperKeys.ps1'),(Join-Path $KitRoot 'New-G6DeveloperPackages.ps1'))) {
     $source = Get-Content -Raw -LiteralPath $path
     if ($source -match 'icacls.*CodexSandboxUsers|icacls.*renato\\marec') { throw 'An onboarding ACL grants a fixed additional Windows identity.' }
+    if ($source -match 'icacls[^\r\n]*/reset[^\r\n]*/T|icacls[^\r\n]/reset') { throw 'A generator resets permissions on existing onboarding material.' }
   }
+  if ($packagesScript -match '\.AccountCreated\s*=\s*\$true|\.PublicKeyRegistered\s*=\s*\$true|\.TunnelTestedFromAdminPc\s*=\s*\$true') { throw 'Package generation must not claim account, key-registration, or tunnel-test evidence.' }
+  if ($authVerifier -match '(?i)createChannel|\.get\(|\.publish\(|assertQueue|\.consume\(|\.purge\(|\.ack\(|\.nack\(') { throw 'Default AMQP authentication smoke contains an active broker operation.' }
+  if ($authVerifier -notmatch 'await amqp\.connect' -or $authVerifier -notmatch 'await connection\.close\(\)' -or $adminVerifier -notmatch "G6_ADMIN_ACTIVE_TEST !== '1'" -or $adminVerifier -notmatch 'G6_ADMIN_ISOLATION_VERIFIED') { throw 'Authentication or explicit administrative smoke gates are missing.' }
+  if ($adminSmoke -notmatch '\[switch\]\$AdminActiveTest' -or $adminSmoke -notmatch '\[switch\]\$ConfirmIsolatedQueues' -or $adminSmoke -notmatch 'Post-test queue-safety snapshot') { throw 'Active tests must require explicit authorization and verify post-test queue safety.' }
 
   $fixtureUser = Join-Path $tempRoot 'user'; $fixtureLocal = Join-Path $tempRoot 'local'
   $ssh = Join-Path $fixtureUser '.ssh'; $null = New-Item -ItemType Directory -Force -Path $ssh
@@ -88,6 +95,14 @@ try {
   if ($LASTEXITCODE -ne 0) { throw 'Could not stage tracked .env fixture.' }
   if (Test-G6DeveloperEnvIgnored -Path (Join-Path $gitRoot '.env')) { throw 'Tracked .env fixture was accepted.' }
   Write-Output 'PASS fixtures: installer collision guard, unrelated SSH config preservation, and Git ignore checks.'
+
+  $aclFixture = Join-Path $tempRoot 'acl-fixture'; $null = New-Item -ItemType Directory -Path $aclFixture
+  Set-G6PrivateAclOnNewPath -Path $aclFixture -Directory
+  Assert-G6PrivateAcl -Path $aclFixture | Out-Null
+  $beforeAclCheck = (Get-Acl -LiteralPath $aclFixture).Sddl
+  Assert-G6PrivateAcl -Path $aclFixture | Out-Null
+  if ((Get-Acl -LiteralPath $aclFixture).Sddl -cne $beforeAclCheck) { throw 'ACL verification modified an existing path.' }
+  Write-Output 'PASS ACL fixture: newly created paths grant only the effective identity and SYSTEM; verification leaves existing ACL unchanged.'
 } finally {
   $tempBase = [IO.Path]::GetFullPath($env:TEMP).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
   $resolved = [IO.Path]::GetFullPath($tempRoot)

@@ -1,6 +1,8 @@
 #requires -Version 7.0
 param([string]$Root = (Join-Path $env:LOCALAPPDATA 'G6\RabbitMQ\onboarding'))
 $ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'G6DeveloperProfile.ps1')
+$vaultPath=Join-Path $Root 'admin-vault.dpapi.json'
 $vault=Get-Content -Raw -LiteralPath (Join-Path $Root 'admin-vault.dpapi.json') | ConvertFrom-Json
 $askpass=Join-Path $Root 'askpass.cmd'
 $config=Join-Path $Root 'admin-test-ssh-config'
@@ -62,6 +64,7 @@ foreach ($d in $vault.developers) {
   if (-not $pb.HasExited) { $pb.Kill(); $pb.WaitForExit() }
   if (-not $negative) { $text=$be.GetAwaiter().GetResult(); if ($text -match 'administratively prohibited|open failed') { $negative=$true } }
   if (-not $negative) { throw "Unapproved-destination denial was not proven for $($d.Login); details redacted." }
+  Set-G6VerifiedOnboardingState -VaultPath $vaultPath -Field TunnelTestedFromAdminPc -Login $d.Login
   $results.Add([pscustomobject]@{ Developer=$d.Developer; Login=$d.Login; Fingerprint=$d.Fingerprint; SSHAuthentication='PASS'; AllowedLocalForward='PASS'; UnapprovedDestination='DENIED'; LocalPort=$port })
 }
 $results | Format-Table -AutoSize

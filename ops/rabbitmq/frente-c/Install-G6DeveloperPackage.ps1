@@ -44,15 +44,13 @@ try {
   $sshDir=Join-Path $env:USERPROFILE '.ssh'; $configPath=Join-Path $sshDir 'config'
   if (Test-Path -LiteralPath $configPath) { if (Select-String -LiteralPath $configPath -Pattern '(?im)^\s*Host\s+[^\r\n]*\bg6-dev\b') { throw 'SSH alias g6-dev already exists; review the existing config before installing.' } }
   $localRoot=Join-Path $env:LOCALAPPDATA "G6\RabbitMQ\$($meta.Login)"
+  if (Test-Path -LiteralPath $localRoot) { throw 'A G6 installation directory already exists; inspect and recover it manually before retrying.' }
   $installPlan=Get-G6PackageInstallFilePlan -Files $files -Credentials $credentialsObject -Profile $meta -UserProfile $env:USERPROFILE -LocalAppData $env:LOCALAPPDATA
   Assert-G6PackageInstallFilePlanAvailable -Destinations $installPlan
-  $null=New-Item -ItemType Directory -Force -Path $sshDir,$localRoot
-  $current=[Security.Principal.WindowsIdentity]::GetCurrent().Name
-  icacls $localRoot /reset | Out-Null
-  if ($LASTEXITCODE -ne 0) { throw 'Could not reset package folder ACLs; installation stopped.' }
-  icacls $localRoot /inheritance:r /grant:r "$current`:(OI)(CI)F" 'NT AUTHORITY\SYSTEM:(OI)(CI)F' | Out-Null
-  if ($LASTEXITCODE -ne 0) { throw 'Could not restrict package folder ACLs; installation stopped.' }
-  $null=New-Item -ItemType Directory -Force -Path (Join-Path $localRoot 'templates'),(Join-Path $localRoot 'secrets')
+  $null=New-Item -ItemType Directory -Force -Path $sshDir
+  $null=New-Item -ItemType Directory -Path $localRoot
+  Set-G6PrivateAclOnNewPath -Path $localRoot -Directory | Out-Null
+  foreach ($directory in @((Join-Path $localRoot 'templates'),(Join-Path $localRoot 'secrets'))) { $null=New-Item -ItemType Directory -Path $directory; Set-G6PrivateAclOnNewPath -Path $directory -Directory | Out-Null }
   foreach ($name in $files.Keys) {
     if ($name -eq 'developer.json' -or $name -eq 'ssh-config') { continue }
     if ($name -match '^ssh/(.+)$') {
@@ -64,10 +62,7 @@ try {
     $parent=Split-Path -Parent $dest; $null=New-Item -ItemType Directory -Force -Path $parent
     Write-G6NewFile -Path $dest -Content ([byte[]]$files[$name])
     if ($name -match '^ssh/(.+)$' -and $Matches[1] -eq $meta.KeyName) {
-      icacls $dest /reset | Out-Null
-      if ($LASTEXITCODE -ne 0) { throw 'Could not reset the installed private key ACL; installation stopped.' }
-      icacls $dest /inheritance:r /grant:r "$current`:(F)" 'NT AUTHORITY\SYSTEM:(F)' | Out-Null
-      if ($LASTEXITCODE -ne 0) { throw 'Could not restrict the installed private key ACL; installation stopped.' }
+      Assert-G6PrivateAcl -Path $dest | Out-Null
     }
   }
   foreach ($credential in $credentialsObject) {
