@@ -66,6 +66,12 @@ Las identidades figuran en la auditoría Oracle del 19/10, pero esta evidencia h
 
 La candidata AsyncAPI `0.6.0-rc.3` reconcilia nombres físicos base. Separa cuatro estados: topología observada históricamente; contrato documental candidato; adaptación de código pendiente; ejecución real no comprobada. La [matriz de compatibilidad](../contratos/eventos/compatibilidad-rabbitmq-oracle.md) relaciona servicios, identidades, colas, operaciones, routing keys, ACL observadas y homologación.
 
+### 3.0 Piloto G5–G6 Hito 4
+
+La decisión G6 para el piloto fija la topología física existente: vhost `g6-productos-ofertas`; exchanges `po.comandos.x`, `po.eventos.x`, `po.resultados.x`; colas `po.ventas.q`, `po.inventario.q`, `po.promociones.q`. G5 accede por túnel SSH local `127.0.0.1:5673`. No se crean aliases ni exchanges paralelos, no se cambia la VM y no se modela coexistencia de recursos ingleses. La candidata de AsyncAPI `0.6.0-rc.3` está en `master` por PR #101.
+
+D-01 (piloto local SSH) tiene aceptación documental G5; Render queda pendiente como conexión independiente. D-02 (nombres físicos españoles rc.3) está adoptada internamente por G6; adaptación y homologación operativa G5 siguen pendientes porque la respuesta de G5 pidió conservar nombres ingleses y no consta ratificación posterior de la lista final. Los nombres documentados y las observaciones históricas no prueban conectividad, grants, bindings actuales, productor/consumidor ni ejecución. El PR #98 requiere reconciliación contra `master` y queda fuera de este encargo. Retry/DLX conserva su gate separado, bloqueado y no aprobado.
+
 ### 3.1 ACL observada, ACL contractual y permisos de tópico
 
 La [matriz de compatibilidad](../contratos/eventos/compatibilidad-rabbitmq-oracle.md) contiene `configure`/`write`/`read` observados para las diez identidades, el alcance de recurso derivado de `send`/`receive` de AsyncAPI y las diferencias. Los permisos de recurso y los topic permissions son controles distintos. La auditoría no lista topic permissions; no se infieren de `write`. Estado actual de ACL runtime: no verificado.
