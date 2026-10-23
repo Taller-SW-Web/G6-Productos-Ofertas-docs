@@ -13,8 +13,10 @@ Necesitas Windows, PowerShell 7, OpenSSH Client y Node.js con npm para ejecutar 
 1. Abre PowerShell 7 y ejecuta de forma privada el instalador que recibiste. Escribe la passphrase solo cuando el instalador la solicite:
 
    ```powershell
-   pwsh.exe -NoProfile -File .\<instalador-asignado>.ps1
+   pwsh.exe -NoProfile -File ".\instalador-recibido.ps1"
    ```
+
+   Sustituye `instalador-recibido.ps1` por el nombre exacto del archivo que te entregó individualmente el responsable de infraestructura.
 
 2. Sigue el `README.txt` instalado para iniciar el túnel SSH. Mantén la sesión del túnel abierta mientras uses RabbitMQ.
 3. Usa el helper instalado para configurar `RABBITMQ_URL` en el `.env` local de tu microservicio. No publiques ese valor ni lo agregues a archivos versionados.
