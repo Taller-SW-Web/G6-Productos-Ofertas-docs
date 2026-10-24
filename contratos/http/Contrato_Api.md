@@ -1209,17 +1209,22 @@ Una venta offline se envía primero a Ventas/Postventa y **Ventas** solicita la 
 
 # 16. Chatbot
 
-Chatbot queda alineado con el contrato.
+## Acuerdo y estado
 
-Debe:
+A16 (respuesta de G6 y aceptación de G3) y A17 (aceptación expresa de G3 de D1–D3) están **ACEPTADOS DOCUMENTALMENTE**; véanse [Docs #87](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/issues/87) y la [alineación consolidada](../../integraciones/ALINEACION_CHATBOT.md). Esto registra aceptación bilateral del acuerdo documental, pero no acredita implementación, despliegue, grants G7 ni homologación HTTP real. Docs #87 sigue abierto para auditar la propagación.
 
-- consultar catálogo;
-- consultar precio;
-- consultar promociones/cupones;
-- consultar disponibilidad;
-- crear el pedido mediante Ventas/Postventa.
+El corte incluye diez operaciones: `GET /productos`, `GET /productos/{productoId}`, `GET /categorias`, `GET /marcas`, `GET /precios`, `GET /promociones`, `POST /promociones/evaluar`, `POST /cupones/validar`, `GET /recomendaciones` y `GET /inventario/disponibilidad/comercial`. Se incluyen además `GET /precios/skus/{sku}` para consulta individual y `POST /inventario/disponibilidad/comercial/verificar` para cantidad. Catálogo, Pricing e Inventario se consultan separadamente; las variantes/SKU se resuelven desde el detalle y los batch respetan hasta 100 SKU según OpenAPI. El detalle interno de inventario y Combos quedan fuera del acceso Chatbot de este corte.
 
-No debe reservar ni consumir stock directamente.
+## Responsabilidades y límites comerciales
+
+- **G3 Chatbot:** adapta las llamadas de su BFF, presenta precio y disponibilidad conforme al contrato y crea/continúa el pedido mediante G5. En este corte envía `channel_id=CHATBOT`, `fulfillment.mode=ENVIO_DOMICILIO` y no envía `fulfillment_ref` ficticio. La respuesta del POST usa `items[].result` y `binding=false`; es informativa y no reserva.
+- **G6 Productos y Ofertas:** conserva ownership de catálogo, precios, promociones, cupones e inventario. El GET comercial no revela cantidades ni ubicaciones internas.
+- **G5 Ventas:** conserva pedido, pago, checkout y orquestación de reserva efectiva. Evaluar promociones no crea pedido ni reserva; validar cupón no consume usos.
+- **G7 Seguridad:** administra registro/grant de scopes y provisión de credenciales.
+
+G6 ratificó siete scopes para `modulo-chatbot` con audiencia `api-productos`: `catalogo:leer`, `precios:leer`, `promociones:leer`, `promociones:evaluar`, `cupones:validar`, `recomendaciones:leer` e `inventario:disponibilidad:leer`. Ratificación no significa concesión efectiva. Llamadas reales usan `serviceBearer`, scope de la operación, allowlist y `X-Correlation-Id` con formato UUID.
+
+El GET comercial usa los estados `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO` e `INDETERMINADO`. Un `INDETERMINADO` válido nunca equivale a agotado o «pocas unidades». Una respuesta incompleta/incompatible se trata como disponibilidad no obtenida: no agregar al carrito ni continuar checkout. `401`, `403`, `422`, `429` y `503` conservan semántica contractual; respetar `Retry-After` en `429` cuando exista. La homologación HTTP real requiere `MODULES_MODE=http` separado de `fake` y evidencia reproducible que identifique entorno, servicios, versiones, SHA y autenticación. B3/B4/B6/B7/B8 y política de caché no son vigentes; matrices proveedor B9/B10 siguen pendientes.
 
 ---
 
