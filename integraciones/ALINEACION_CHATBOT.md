@@ -69,9 +69,18 @@ El GET comercial no expone cantidades ni ubicaciones internas. `POST /promocione
 
 ## Pendientes fuera del contrato operativo vigente
 
-Las ampliaciones B3 (filtros de atributos/variantes), B4 (orden por precio), B6 (más campos de promociones), B7 (desglose por línea), B8 (monto faltante estructurado) y la política de caché/concurrencia siguen comprometidas o por especificar, pero no forman parte del contrato vigente. Requieren especificación, revisión de owners, homologación cuando afecten el contrato compartido y publicación versionada. No se deben asumir como implementadas.
+Las ampliaciones siguen fuera del contrato operativo vigente y requieren especificación, revisión de owners, homologación cuando afecten el contrato compartido y publicación versionada; no se deben asumir como implementadas.
 
-Las matrices proveedor de B9 (validaciones, límites y respuestas HTTP/reintentos) y B10 (SKU inexistente/inactivo, resultados de precio/disponibilidad y respuesta batch) están pendientes de completarse. No existe cuota numérica ni política nueva de rate limit ratificada. Para los errores y estructuras ya publicados rige OpenAPI; no se amplían sus códigos mediante esta guía.
+| Pendiente | Owner(s) funcional(es) según A16 | Estado |
+|---|---|---|
+| B3: filtros de atributos/variantes, talla y color | `catalog-svc`, `taxonomy-svc` | No especificado ni vigente |
+| B4: orden por precio y regla asociada | `catalog-svc`, `pricing-svc` | No especificado ni vigente |
+| B6: campos de promoción (beneficio, alcance/modalidad) | `promotions-svc` | No especificado ni vigente |
+| B7: desglose de beneficio por línea | `promotions-svc` | No especificado ni vigente |
+| B8: monto faltante de mínimo de cupón | `promotions-svc` | No especificado ni vigente |
+| Caché y concurrencia | G6, coordinado con G3 como consumidor | Pauta por validar; sin límite ni TTL acordados |
+
+Las matrices proveedor también están pendientes: **B9** corresponde a `promotions-svc`, `catalog-svc`, `pricing-svc` y Gateway para validaciones, límites y respuestas HTTP/reintentos; **B10** corresponde a `catalog-svc`, `pricing-svc` e `inventory-svc` para SKU inexistente/inactivo, resultados de precio/disponibilidad y respuesta batch. No existe cuota numérica ni política nueva de rate limit ratificada. Para errores y estructuras ya publicados rige OpenAPI; no se amplían sus códigos mediante esta guía.
 
 ## Trazabilidad de implementación y desbloqueo
 
