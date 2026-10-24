@@ -1,3 +1,5 @@
+> **REGISTRO HISTÓRICO — NO REPRESENTA EL ESTADO ACTUAL DE ACEPTACIÓN.** El contenido siguiente conserva literalmente la comunicación G1 fechada 2026-10-13. El estado de G6 fue actualizado posteriormente: aceptación de M-01–M-09 comunicada 2026-10-20, `ACEPTADO_G6_COMUNICADO_G1`. La fuente vigente es el [Acuerdo G1–G6 H4](ACUERDO_G1_G6_H4_2026-10-20.md); esta cabecera no reescribe la evidencia original.
+
 # Registro de respuesta externa — G1 Marketplace
 
 ## 1. Metadatos y fuentes
@@ -13,6 +15,10 @@
 | Fuentes G1 consultadas | `plan/DECISIONES-Y-BLOQUEOS.md`; `plan/iteraciones/S01-semanas-07-08.md`; contratos F-006, F-007, F-011, F-013, F-014, F-024, F-025 y F-026 en `SPECS/contrato-api/`; F-014 funcional RN-F014-02. |
 | Fuente HTTP G6 | [`../contratos/http/openapi.yaml`](../contratos/http/openapi.yaml) |
 | Otras fuentes G6 | [Alineación Marketplace](ALINEACION_MARKETPLACE.md), [matriz intermodular](MATRIZ_INTERMODULAR_BACKEND.md), DEC-F, matriz de trazabilidad y SPEC-003/004/015. |
+
+## Propuesta de posición G6 — lote 3
+
+La respuesta de G1 se conserva literalmente y con sus estados originales en este registro. La propuesta de posición de G6 sobre M-01–M-09, incluidas discrepancias y dependencias abiertas, está en [G6-G1-03 — Propuesta de cierre](ACUERDO_G1_G6_H4_2026-10-20.md). **Pendiente de aprobación de G6; no enviada y no constituye homologación bilateral.**
 
 ## 2. Versiones y commits contrastados
 
@@ -98,3 +104,7 @@ Estos nombres son responsables técnicos declarados, no constancia de aprobació
 - G6 [OpenAPI](../contratos/http/openapi.yaml), [DEC-F](../arquitectura/decisiones/REGISTRO_DEC_F.md), [matriz de trazabilidad](../arquitectura/decisiones/MATRIZ_TRAZABILIDAD_DEC_F.md), [SPEC-003](../requisitos/specs/SPEC-003-gestion-productos-crud.md), [SPEC-004](../requisitos/specs/SPEC-004-gestion-variantes-skus.md) y [SPEC-015](../requisitos/specs/SPEC-015-control-stock-disponibilidad.md).
 - G1 `plan/DECISIONES-Y-BLOQUEOS.md`, `plan/iteraciones/S01-semanas-07-08.md` y contratos F-006/F-007/F-011/F-013/F-014/F-024/F-025/F-026, consultados en G1 `main` `a8c3a7e21482063d71a083fd950dd8fa418b615c`.
 - Resumen de las nueve respuestas del 13/10 incluido en el encargo. El DOCX fuente no se encontró localmente ni se afirma haberlo inspeccionado.
+
+## Adenda G6 — 2026-10-20
+
+El registro fechado 2026-10-13 se conserva literalmente como evidencia histórica de lo comunicado por G1 ese día. Esta adenda no reescribe la posición histórica ni inventa una respuesta nueva de G1. El líder técnico de G6 comunicó aceptación completa de M-01–M-09 el 2026-10-20. Estado de los nueve acuerdos: `ACEPTADO_G6_COMUNICADO_G1`. La aceptación habilita trabajo propio de G6; no otorga grants G7, no decide por G2/G5 y no equivale a ratificación documental de G1. Véase el [Acuerdo G1–G6 H4](ACUERDO_G1_G6_H4_2026-10-20.md), fuente normativa vigente.

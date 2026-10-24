@@ -1231,7 +1231,7 @@ Marketplace sigue el mismo patrón contractual de canal:
 - crea el pedido mediante Ventas/Postventa;
 - no muta Inventario directamente.
 
-La documentación pública de Marketplace todavía no define todos sus detalles técnicos, pero esto no bloquea P0 porque el ownership y el flujo del pedido ya están definidos por los lineamientos y por el acuerdo con Ventas.
+La alineación operativa H4 de G1 se documenta en el [Acuerdo G1–G6](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md) y [ALINEACION_MARKETPLACE](../../integraciones/ALINEACION_MARKETPLACE.md). G6 acepta M-01–M-09 y puede implementar capacidades de su ownership; el BFF/carrito/checkout/pedido/pago siguen bajo ownership G1/G5 según corresponda. Contrato ejecutable: OpenAPI; la documentación no acredita runtime, grant, despliegue ni E2E.
 
 ---
 
@@ -1507,7 +1507,7 @@ La línea base conserva **16 scopes** técnicos. El candidato `0.6.0-rc.1` añad
 | `promociones:leer` | Consultar promociones | Marketplace, Chatbot, Retail |
 | `promociones:evaluar` | Evaluar promociones | Marketplace, Chatbot, Retail |
 | `cupones:validar` | Validar cupón | Marketplace, Chatbot, Retail |
-| `recomendaciones:leer` | `GET /recomendaciones` | Chatbot |
+| `recomendaciones:leer` | `GET /recomendaciones` (`obtenerRecomendaciones`) | Allowlist de operación: Marketplace, Chatbot, Retail; registro pending-security: solo Chatbot |
 | `combos:leer` | Detalle/disponibilidad informativa de combos | Sin concesión externa inicial |
 | `inventario:disponibilidad:leer` | Consultar disponibilidad | Marketplace, Chatbot, Retail, M1/Ventas, M2/Postventa |
 | `inventario:reservar` | Crear reserva | Ventas |
@@ -2617,7 +2617,7 @@ La proyección comercial no expone cantidades, ubicaciones internas ni versiones
 
 ### Recomendaciones
 
-Marketplace, Chatbot y Retail pueden consumir `/recomendaciones` con `recomendaciones:leer`. La recomendación sigue a nivel `product_id`; `availability` reutiliza `EstadoStock`. El enriquecimiento `availability/current_price` permanece provisional mientras `D-REC-01/D-REC-02` sigan abiertas.
+La allowlist de operación OpenAPI para `obtenerRecomendaciones` declara `x-allowed-client-ids` con Marketplace, Chatbot y Retail. El registro `x-security-contract.service_scopes_pending_registration.recomendaciones:leer.clients` enumera solo Chatbot, por lo que existe una discrepancia entre la allowlist de operación y el registro de scopes pendientes que requiere resolución. Ninguna allowlist prueba grant G7. La recomendación sigue a nivel `product_id`; `availability` reutiliza `EstadoStock`. El enriquecimiento `availability/current_price` permanece provisional mientras `D-REC-01/D-REC-02` sigan abiertas.
 
 ### Correlación y rate limiting
 

@@ -63,3 +63,9 @@ Una discrepancia externa no bloquea automáticamente un microservicio completo. 
 ## Contradicciones no previstas
 
 Detén el cambio que dependa de la contradicción. Conserva ambas referencias, registra qué afirma cada fuente y su estado, determina a quién corresponde resolverla y solicita aclaración al owner competente. No elijas una regla por intuición ni la presentes como homologada. Puedes continuar tareas independientes que no dependan de ella.
+
+## Integración G1 Marketplace H4 — lectura obligatoria
+
+Antes de implementar una integración G1, leer [`integraciones/ACUERDO_G1_G6_H4_2026-10-20.md`](integraciones/ACUERDO_G1_G6_H4_2026-10-20.md), [`integraciones/ALINEACION_MARKETPLACE.md`](integraciones/ALINEACION_MARKETPLACE.md), `contratos/http/openapi.yaml` y [`kit-integracion.md`](contratos/http/kit-integracion.md). Para ejecución Backend, también leer el [paquete operativo obligatorio](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/tree/castilla/integraciones/g1-marketplace). Acuerdo/guía no reemplazan SPEC, DEC-F/ADR ni contrato ejecutable.
+
+La aceptación G6 del 2026-10-20 está documentada en el [Acuerdo G1–G6 H4](integraciones/ACUERDO_G1_G6_H4_2026-10-20.md); debe leerse antes de editar integración Marketplace, junto con el OpenAPI y la guía Backend. No utilices documentos históricos de preparación para afirmar aceptación pendiente, ni atribuyas ratificación G1 o grant G7 no acreditados.

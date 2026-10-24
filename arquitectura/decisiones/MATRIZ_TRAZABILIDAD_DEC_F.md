@@ -45,3 +45,7 @@ La matriz no declara completa ninguna DEC-F. `0.6.0-rc.1` fusionada como conteni
 2. **Secuencia comercial:** G5 API v1.5.0 Retail y G4 v0.4 describen secuencias distintas. Fuentes oficiales consultadas: [G5 api-ventas.md](https://github.com/Taller-SW-Web/G5-Ventas-Postventas/blob/main/specs/api/api-ventas.md) (`main`, `a846ca4`, §1.1) y [G4 api-contract.md](https://github.com/Taller-SW-Web/G4-Retail-specs/blob/main/specs/api-contracts.md) (`main`, `99fb06d`, §4.3). Requieren homologación; no inferir orden definitivo.
 3. **Cupón offline:** el flujo Retail sin reserva carece de mecanismo aprobado en este registro; `reservation_id` confirmado continúa siendo precondición global de consumo. No inventar reserva, mensaje ni DTO.
 4. **PR #86:** fusionado en el SHA base; `0.6.0-rc.1` sigue candidato y no demuestra implementación ni E2E. El postcheck estructural citado para migraciones no sustituye pruebas de handlers, grants, mensajería y consumidores.
+
+## Referencia de estado G1 Marketplace H4 — 2026-10-20
+
+G6 comunicó aceptación de M-01–M-09 (`ACEPTADO_G6_COMUNICADO_G1`). Esto no altera las invariantes DEC-F ni atribuye decisiones a G1/G2/G5/G7. Para correspondencia y estado de cada operación consultar el [Acuerdo H4](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md) y la [alineación](../../integraciones/ALINEACION_MARKETPLACE.md). Las declaraciones internas de decisiones adoptadas no equivalen a contrato implementado, grant, despliegue o E2E.
