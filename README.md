@@ -105,7 +105,7 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 | Transición RabbitMQ | [`integraciones/transicion-rabbitmq.md`](integraciones/transicion-rabbitmq.md) | Cambio de vhost, impacto intermodular y pendientes de homologación |
 | Kit de integración | [`contratos/http/kit-integracion.md`](contratos/http/kit-integracion.md) | Guía práctica de integración para otros módulos |
 | Matriz de pruebas de contrato | [`contratos/pruebas/pruebas-contrato.md`](contratos/pruebas/pruebas-contrato.md) | Casos estáticos, provider, consumer/provider, seguridad e integración |
-| Acuerdos de integración | [`integraciones/`](integraciones/) | Documentación de alineaciones, acuerdos publicados y pendientes de homologación con otros módulos; consultar cada artefacto para conocer su estado. |
+| Acuerdos de integración | [`integraciones/`](integraciones/) | Documentación de alineaciones, acuerdos publicados y pendientes de homologación con otros módulos; los acuerdos G3–G6 A16/A17 están aceptados documentalmente en [ALINEACION_CHATBOT.md](integraciones/ALINEACION_CHATBOT.md). |
 | Consolidación G5–G6 Hito 4 | [`integraciones/ACUERDO_G5_G6_H4_2026-10-21.md`](integraciones/ACUERDO_G5_G6_H4_2026-10-21.md) | Decisiones D-01 a D-04, Postventa y estados de aceptación/implementación separados |
 | Equipo y responsabilidades | [`EQUIPO_Y_RESPONSABILIDADES.md`](EQUIPO_Y_RESPONSABILIDADES.md) | Roles transversales, ownership funcional y mecanismos de revisión del equipo |
 | Instrucciones para agentes | [`AGENTS.md`](AGENTS.md) | Orden de lectura, límites de cambios y validaciones mínimas |

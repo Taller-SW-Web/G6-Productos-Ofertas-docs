@@ -1153,6 +1153,42 @@ customer_ref = Security access-token sub
 
 Nunca usar `sub=modulo-chatbot`.
 
+## 16.1. Operativa acordada A16/A17 para G3
+
+G3/G6 registran A16 y A17 como **ACEPTADOS DOCUMENTALMENTE** en [ALINEACION_CHATBOT.md](../../integraciones/ALINEACION_CHATBOT.md), con trazabilidad en [Docs #87](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/issues/87). El contrato ejecutable es [OpenAPI](openapi.yaml) `0.6.0-rc.1`; este acuerdo no acredita implementación, grants efectivos ni homologación HTTP.
+
+### Secuencia de consultas
+
+1. Buscar productos con `GET /productos?canal=CHATBOT`; el listado no incorpora precio ni disponibilidad. No enviar `estado=ACTIVO` como filtro administrativo del consumidor.
+2. Obtener el detalle elegido con `GET /productos/{productoId}?canal=CHATBOT` y resolver allí variantes y SKU.
+3. Consultar Pricing separadamente: `GET /precios` para lotes y `GET /precios/skus/{sku}` para el precio individual adicional. Usar `canal=CHATBOT`; el lote de precios admite hasta 100 SKU.
+4. Consultar disponibilidad por separado con `GET /inventario/disponibilidad/comercial`, `canal=CHATBOT`, entre 1 y 100 SKU. No usar el GET de inventario detallado.
+5. Cuando el flujo necesite comprobar una cantidad solicitada, usar `POST /inventario/disponibilidad/comercial/verificar`.
+
+No agrupar por inferencia productos, precios o stock en una respuesta nueva. Promociones y cupones usan sus operaciones independientes ya publicadas; `GET /promociones` envía `canal=CHATBOT` conforme a OpenAPI.
+
+### Verificación comercial por cantidad
+
+Enviar `channel_id=CHATBOT`, `fulfillment: {mode: ENVIO_DOMICILIO}` y `lines[{sku, quantity}]`. En este corte no enviar `fulfillment_ref`; el consumidor no dispone de una referencia pública acordada y no debe inventarla. OpenAPI permite el campo opcional, pero el modo del canal aceptado por A17 es envío a domicilio. `lines` admite de 1 a 100 elementos según el schema.
+
+Es una operación distinta del GET comercial: el GET devuelve un estado por SKU (`DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`, `INDETERMINADO`); el POST evalúa `requested_quantity` y responde `items[].result` (`SUFICIENTE`, `INSUFICIENTE`, `INDETERMINADO`) con `binding=false`. Ninguna de las dos operaciones reserva unidades ni garantiza disponibilidad futura. G3 acepta `INDETERMINADO` contractual válido y muestra «No pudimos confirmar el stock»; nunca lo interpreta como `AGOTADO` ni «pocas unidades».
+
+### Validación de respuesta y errores
+
+Para GET/POST, comprobar que la respuesta respeta el schema vigente y que cada SKU solicitado tiene correspondencia exacta; una fila ausente, duplicada o con SKU distinto, un estado/resultado fuera del enum o estructura incompatible significa **disponibilidad no obtenida**, distinta de un `INDETERMINADO` contractual válido. G3 no agrega la línea al carrito ni permite continuar checkout cuando la disponibilidad no se obtuvo. Esa condición no se reetiqueta como agotada ni como `INDETERMINADO` contractual.
+
+Los HTTP `401`, `403`, `422`, `429` y `503` conservan la semántica del contrato/catálogo aplicable; no se convierten automáticamente en estados comerciales ni se inventan códigos de negocio. Ante `429`, respetar `Retry-After` si está presente. Evaluar promociones no crea pedidos ni reservas; validar un cupón no consume usos.
+
+### Autenticación, canal y correlación
+
+Todas las llamadas reales usan `serviceBearer` de `client_id=modulo-chatbot`, audiencia `api-productos`, scope requerido por operación y su allowlist. G6 ratificó los siete scopes `catalogo:leer`, `precios:leer`, `promociones:leer`, `promociones:evaluar`, `cupones:validar`, `recomendaciones:leer` e `inventario:disponibilidad:leer`. La ratificación no es registro ni grant; la emisión/provisión depende de G7 (Seguridad #33 y #10). En operaciones de disponibilidad, `canal`/`channel_id` corresponde a `CHATBOT` y debe coincidir con la identidad técnica conforme a OpenAPI.
+
+Enviar `X-Correlation-Id` como UUID con guiones y propagar el mismo id a las llamadas de módulos que formen parte de la interacción. Para cupón, `customer_ref` representa el `sub` humano del cliente, nunca el token técnico; puede ser `null` si la política admite anonimato.
+
+### Requisitos verificables de homologación HTTP
+
+Ejecutar backend G3 en `MODULES_MODE=http`, separado de `MODULES_MODE=fake`. El resultado debe identificar entorno (local/staging), servicios reales participantes, versiones, SHA de G3/G6, autenticación y evidencia reproducible de solicitudes/respuestas. Las pruebas con fakes no acreditan integración real. El owner debe registrar por separado fallos y resultados; una respuesta HTTP 2xx no prueba por sí sola homologación bilateral. Véase el seguimiento vigente en [G6 Backend #27](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/issues/27) y [#19](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/issues/19).
+
 # 17. Regla especial para Despacho
 
 Queda confirmado contractualmente:

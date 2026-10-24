@@ -170,7 +170,7 @@ Los métodos `test_marketplace_*` comprueban únicamente aserciones `STATIC_CONT
 | CT-SEC-04 | Scope correcto + cliente no permitido → rechazo | PENDIENTE_EJECUCION |
 | CT-SEC-05 | Scope de disponibilidad no habilita automáticamente lectura detallada | PENDIENTE_EJECUCION |
 | CT-SEC-06 | `modulo-ventas` con `inventario:operaciones:leer` obtiene token con `aud=api-productos`; otros clientes no reciben acceso a consultas de operaciones | BLOQUEADA_DEPENDENCIA_EXTERNA |
-| CT-SEC-07 | Los scopes de Productos para Chatbot definidos por G6 constan como confirmados y otorgados por G7, no solo propuestos | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-SEC-07 | Verificar por evidencia G7, separadamente, la ratificación documental G6 de los siete scopes y su registro/grant/provisión efectiva para `modulo-chatbot` con audiencia `api-productos` | BLOQUEADA_DEPENDENCIA_EXTERNA |
 
 Las pruebas con grants reales permanecen `BLOQUEADA_DEPENDENCIA_EXTERNA` mientras Seguridad no registre y aprovisione las concesiones. La existencia de `x-required-scope` en OpenAPI **no prueba** que G7 emita el scope.
 
@@ -181,6 +181,20 @@ Las pruebas con grants reales permanecen `BLOQUEADA_DEPENDENCIA_EXTERNA` mientra
 | CT-CHAT-01 | Usa `/inventario/disponibilidad/comercial` | PENDIENTE_EJECUCION |
 | CT-CHAT-02 | Sigue consumiendo `/recomendaciones?canal=CHATBOT` | PENDIENTE_EJECUCION |
 | CT-CHAT-03 | No recibe cantidades internas | PENDIENTE_EJECUCION |
+| CT-CHAT-04 | `POST /inventario/disponibilidad/comercial/verificar` envía `channel_id=CHATBOT` y `fulfillment.mode=ENVIO_DOMICILIO` según D1 | PENDIENTE_EJECUCION |
+| CT-CHAT-05 | La solicitud de Chatbot no incluye `fulfillment_ref` inventado | PENDIENTE_EJECUCION |
+| CT-CHAT-06 | La respuesta de verificación se lee desde `items[].result`, valida los tres resultados del schema y exige `binding=false` | PENDIENTE_EJECUCION |
+| CT-CHAT-07 | GET comercial distingue y presenta conforme al contrato `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO` e `INDETERMINADO` | PENDIENTE_EJECUCION |
+| CT-CHAT-08 | `INDETERMINADO` contractual válido se acepta y muestra «No pudimos confirmar el stock», nunca agotado/pocas unidades; respuesta incompleta o inválida es disponibilidad no obtenida y bloquea agregar al carrito y continuar checkout | PENDIENTE_EJECUCION |
+| CT-CHAT-09 | Respuesta batch incompleta, con SKU duplicado o con SKU ausente/no coincidente se trata como disponibilidad no obtenida, sin mapear a estado comercial | PENDIENTE_EJECUCION |
+| CT-CHAT-10 | Respuesta fuera de schema (enum desconocido, propiedades/estructura incompatibles) se rechaza como disponibilidad no obtenida | PENDIENTE_EJECUCION |
+| CT-CHAT-11 | HTTP `401`, `403`, `422`, `429` y `503` conservan su semántica y no se convierten en resultado comercial; `429` respeta `Retry-After` si existe | PENDIENTE_EJECUCION |
+| CT-CHAT-12 | `X-Correlation-Id` tiene formato UUID con guiones y el mismo valor se propaga a las llamadas de una interacción | PENDIENTE_EJECUCION |
+| CT-CHAT-13 | Cliente `modulo-chatbot` usa `serviceBearer`, audiencia `api-productos`, scope por operación y allowlist; se verifica separadamente la ratificación de siete scopes y el grant/provisión G7 | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-CHAT-14 | Precio ausente/null se presenta como «Precio no disponible», nunca como `S/ 0.00` | PENDIENTE_EJECUCION |
+| CT-CHAT-15 | `MODULES_MODE=http` ejecuta contra servicios reales con evidencia por entorno/versión/SHA/autenticación; pruebas `fake` se reportan separadas y no como homologación | BLOQUEADA_DEPENDENCIA_EXTERNA |
+
+Los casos nuevos documentan criterios aún no ejecutados. `CT-CHAT-13` depende de G7 para probar permisos efectivos y `CT-CHAT-15` de que el entorno real y la evidencia de homologación estén disponibles; no se atribuye PASS por la aceptación documental A16/A17.
 
 ## 9. OPEN-08 — Ventas ↔ Inventario
 
