@@ -15,6 +15,8 @@
 
 El detalle de propagación y sus criterios abiertos se mantiene en [G6 Docs #99](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/issues/99); esta alineación evita duplicar su matriz de seguimiento.
 
+El contrato consumidor de G3 consultado en `main` aún conserva texto anterior a A17 y estados `pending-security-registration` para los scopes. Eso representa la falta de registro/grant G7 y la propagación técnica/documental pendiente en G3; no revoca la ratificación de scopes ni la aceptación A17 registrada en #87. El seguimiento del consumidor está en [G3 Backend #52](https://github.com/Taller-SW-Web/G3-Chatbot-backend/issues/52) y [G3 Frontend #30](https://github.com/Taller-SW-Web/G3-Chatbot-frontend/issues/30).
+
 ## Corte operativo y operaciones
 
 G3 consume HTTP desde su backend con el cliente técnico `modulo-chatbot`; no accede a la base de datos G6. El corte inicial incluye las diez operaciones de A16:
