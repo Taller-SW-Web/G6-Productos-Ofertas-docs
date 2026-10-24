@@ -46,7 +46,7 @@ La respuesta usa `items[].result` (`SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO
 
 ## D2 — Resultados inválidos y errores
 
-El GET comercial reconoce `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO` e `INDETERMINADO`. Un `INDETERMINADO` contractual válido es distinto de una disponibilidad no obtenida y nunca significa agotado o pocas unidades. Respuestas incompletas, SKU faltante o no coincidente, estado fuera del enum y payload incompatible cuentan como **disponibilidad no obtenida**. En ese caso G3 no agrega el SKU al carrito ni permite continuar al checkout. Tampoco convierte errores de transporte/autorización en resultados comerciales.
+El GET comercial reconoce `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO` e `INDETERMINADO`. G3 acepta un `INDETERMINADO` contractual válido y muestra el aviso «No pudimos confirmar el stock»; nunca lo presenta como agotado ni como pocas unidades. Es distinto de una disponibilidad no obtenida: respuesta incompleta, SKU faltante o no coincidente, estado fuera del enum o payload incompatible. En ese caso G3 no agrega el SKU al carrito ni permite continuar al checkout. Tampoco convierte errores de transporte/autorización en resultados comerciales.
 
 `401`, `403`, `422`, `429` y `503` conservan la semántica publicada por OpenAPI; no se definen códigos HTTP ni códigos de negocio nuevos por inferencia. Ante `429`, G3 respeta `Retry-After` cuando la respuesta lo incluya.
 

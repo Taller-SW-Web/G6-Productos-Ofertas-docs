@@ -1171,11 +1171,11 @@ No agrupar por inferencia productos, precios o stock en una respuesta nueva. Pro
 
 Enviar `channel_id=CHATBOT`, `fulfillment: {mode: ENVIO_DOMICILIO}` y `lines[{sku, quantity}]`. En este corte no enviar `fulfillment_ref`; el consumidor no dispone de una referencia pública acordada y no debe inventarla. OpenAPI permite el campo opcional, pero el modo del canal aceptado por A17 es envío a domicilio. `lines` admite de 1 a 100 elementos según el schema.
 
-Es una operación distinta del GET comercial: el GET devuelve un estado por SKU (`DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`, `INDETERMINADO`); el POST evalúa `requested_quantity` y responde `items[].result` (`SUFICIENTE`, `INSUFICIENTE`, `INDETERMINADO`) con `binding=false`. Ninguna de las dos operaciones reserva unidades ni garantiza disponibilidad futura. `INDETERMINADO` válido no significa `AGOTADO` ni «pocas unidades».
+Es una operación distinta del GET comercial: el GET devuelve un estado por SKU (`DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`, `INDETERMINADO`); el POST evalúa `requested_quantity` y responde `items[].result` (`SUFICIENTE`, `INSUFICIENTE`, `INDETERMINADO`) con `binding=false`. Ninguna de las dos operaciones reserva unidades ni garantiza disponibilidad futura. G3 acepta `INDETERMINADO` contractual válido y muestra «No pudimos confirmar el stock»; nunca lo interpreta como `AGOTADO` ni «pocas unidades».
 
 ### Validación de respuesta y errores
 
-Para GET/POST, comprobar que la respuesta respeta el schema vigente y que cada SKU solicitado tiene correspondencia exacta; una fila ausente, duplicada o con SKU distinto, un estado/resultado fuera del enum o estructura incompatible significa **disponibilidad no obtenida**. G3 no agrega la línea al carrito ni permite continuar checkout cuando la disponibilidad no se obtuvo. Esa condición no se reetiqueta como agotada ni como `INDETERMINADO` contractual.
+Para GET/POST, comprobar que la respuesta respeta el schema vigente y que cada SKU solicitado tiene correspondencia exacta; una fila ausente, duplicada o con SKU distinto, un estado/resultado fuera del enum o estructura incompatible significa **disponibilidad no obtenida**, distinta de un `INDETERMINADO` contractual válido. G3 no agrega la línea al carrito ni permite continuar checkout cuando la disponibilidad no se obtuvo. Esa condición no se reetiqueta como agotada ni como `INDETERMINADO` contractual.
 
 Los HTTP `401`, `403`, `422`, `429` y `503` conservan la semántica del contrato/catálogo aplicable; no se convierten automáticamente en estados comerciales ni se inventan códigos de negocio. Ante `429`, respetar `Retry-After` si está presente. Evaluar promociones no crea pedidos ni reservas; validar un cupón no consume usos.
 

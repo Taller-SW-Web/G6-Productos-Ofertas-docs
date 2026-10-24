@@ -185,7 +185,7 @@ Las pruebas con grants reales permanecen `BLOQUEADA_DEPENDENCIA_EXTERNA` mientra
 | CT-CHAT-05 | La solicitud de Chatbot no incluye `fulfillment_ref` inventado | PENDIENTE_EJECUCION |
 | CT-CHAT-06 | La respuesta de verificación se lee desde `items[].result`, valida los tres resultados del schema y exige `binding=false` | PENDIENTE_EJECUCION |
 | CT-CHAT-07 | GET comercial distingue y presenta conforme al contrato `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO` e `INDETERMINADO` | PENDIENTE_EJECUCION |
-| CT-CHAT-08 | `INDETERMINADO` válido no se interpreta como agotado/pocas unidades; dato faltante o inválido es disponibilidad no obtenida y bloquea agregar y checkout | PENDIENTE_EJECUCION |
+| CT-CHAT-08 | `INDETERMINADO` contractual válido se acepta y muestra «No pudimos confirmar el stock», nunca agotado/pocas unidades; respuesta incompleta o inválida es disponibilidad no obtenida y bloquea agregar al carrito y continuar checkout | PENDIENTE_EJECUCION |
 | CT-CHAT-09 | Respuesta batch incompleta, con SKU duplicado o con SKU ausente/no coincidente se trata como disponibilidad no obtenida, sin mapear a estado comercial | PENDIENTE_EJECUCION |
 | CT-CHAT-10 | Respuesta fuera de schema (enum desconocido, propiedades/estructura incompatibles) se rechaza como disponibilidad no obtenida | PENDIENTE_EJECUCION |
 | CT-CHAT-11 | HTTP `401`, `403`, `422`, `429` y `503` conservan su semántica y no se convierten en resultado comercial; `429` respeta `Retry-After` si existe | PENDIENTE_EJECUCION |
