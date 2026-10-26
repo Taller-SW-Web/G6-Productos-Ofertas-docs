@@ -283,3 +283,9 @@ La capacidad se considera correctamente documentada cuando:
 - `202` no se interpreta como finalización;
 - los cambios confirmados requieren propagación versionada;
 - los contratos AsyncAPI de baja segura y propagación del esquema están publicados y trazables.
+
+### Protocolo transversal de baja de tipo y asociación
+
+`PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC` usan `source_version` capturada al entrar en `PENDING_DEACTIVATION`; para la asociación, su fuente es una `taxonomy_version` propia. La obligatoriedad o participación en identificadores exige comprobación segura, pero no implica `IN_USE` automáticamente: Catálogo devuelve `IN_USE` solo con dependencia activa e incompatible en el contexto de productos/variantes activos, incluyendo `product_identifying_characteristics`, `variant_attribute_values.es_identificador` y `variants.identifying_key`. Detrás de una barrera, Bulk también debe impedir nuevas referencias/reacciones incompatibles. Taxonomy requiere migración versionada separada para versiones/operación activa y timeout; autorización de Marco pendiente. `CLEAR` no libera por sí solo y un resultado final ausente mantiene bloqueada la barrera. Consultar [alineación de persistencia Taxonomy](../../datos/taxonomy/physical-model.md) y SPEC-008.
+
+La corrección de `tipo_producto_id` en el producto usa la propiedad opcional `tipoProductoId` del PATCH existente, con las precondiciones de SPEC-003 §7. La regla se comunica como definida; trazabilidad, migración de `publicado_alguna_vez`, implementación y pruebas siguen pendientes.

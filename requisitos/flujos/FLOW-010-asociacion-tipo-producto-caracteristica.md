@@ -229,7 +229,7 @@ flowchart LR
     C1 --> C2
     C2 --> DS1{"¿Resultado CLEAR vigente?"}
     DS1 -->|"CLEAR"| T3
-    DS1 -->|"HAS_ACTIVE_PRODUCTS"| T4
+    DS1 -->|"IN_USE"| T4
     T3 --> T5
     T4 --> T5
     T2 --> E1(("Time out o error en la verificación"))
@@ -293,7 +293,7 @@ flowchart LR
 
     subgraph CATALOGO["Catálogo Core"]
         direction TB
-        C1["Verificar estado del producto: borrador, sin variantes y sin identidad publicada"]
+        C1["Verificar BORRADOR, tiene_variantes=false, cero filas variants,<br/>publicado_alguna_vez=false y catalogVersion"]
         D1{"¿El producto cumple las condiciones del CRUD ordinario?"}
         C2["Rechazar la edición ordinaria y derivar a migración controlada"]
     end
@@ -302,7 +302,7 @@ flowchart LR
         direction TB
         T1["Resolver el esquema efectivo y su schema_version del nuevo tipo"]
         D2{"¿El esquema del nuevo tipo es compatible con el producto?"}
-        T2["Exigir completar los campos obligatorios del nuevo esquema"]
+        T2["Rechazar toda la edición si atributos no son compatibles;<br/>no borrar atributos automáticamente"]
     end
 
     subgraph MIGRACION["Migración controlada"]
@@ -328,7 +328,7 @@ flowchart LR
     T2 --> FIN_ORDINARIO
 ```
 
-> El cambio de `tipo_producto_id` solo pertenece al CRUD ordinario mientras el producto permanezca en borrador, sin variantes y sin identidad comercial publicada. En cuanto existen variantes o identidad publicada, el cambio se rechaza en la edición ordinaria y se deriva a una migración de modelo controlada.
+> Q-06: el PATCH existente admite `tipoProductoId` opcional. Solo se permite en `BORRADOR`, `tiene_variantes=false`, cero filas reales en `catalog.variants`, `publicado_alguna_vez=false`, tipo nuevo activo en Taxonomy, atributos compatibles con esquema efectivo/`schemaVersion` y concurrencia `catalogVersion`. Identidad publicada significa primera transición confirmada `BORRADOR → ACTIVO`; preparar, asignar SKU o una activación pendiente no cuenta. `publicado_alguna_vez` requiere una futura migración versionada: nuevos productos `false`, primera activación confirmada `true` atómico e irreversible; históricos `NULL` sin evidencia autoritativa y `NULL` bloquea. Atributos incompatibles rechazan toda la edición, sin borrado automático; faltantes obligatorios no bloquean guardar borrador, solo activar. Se conservan IDs, SKU, modelo de variantes y snapshots. Para error incompatible se reutiliza el código contractual vigente. La regla se comunica como definida; migración, implementación y validación siguen pendientes.
 
 ## 5. Contratos publicados
 

@@ -186,7 +186,7 @@ flowchart LR
     D2 -->|"CLEAR"| T3
     T3 --> C4
     C4 --> FIN_DESACTIVADA
-    D2 -->|"HAS_ACTIVE_PRODUCTS"| T4
+    D2 -->|"IN_USE"| T4
     T4 --> C4
     C4 --> FIN_BLOQUEADA
     T2 --> E1(("Time out o error en la comprobación"))
@@ -224,3 +224,8 @@ flowchart LR
     D1 -->|"No"| T3
     T3 --> FIN_BLOQUEADA
 ```
+
+
+### Alineación de la baja segura
+
+`202` es admisión. Taxonomy captura `source_version` al entrar en `PENDING_DEACTIVATION`; Catálogo instala barrera y emite su comprobación en la misma transacción. Solo `CLEAR` seguido de confirmación `taxonomy.master.deactivated` libera. `IN_USE`, timeout de 60 s, fallo técnico o conflicto de versión terminan en rechazo/restauración; sin evento final, Catálogo conserva bloqueo y alerta. Ver SPEC-008 y estado de persistencia en el modelo Taxonomy. La especialización de AsyncAPI espera homologación.

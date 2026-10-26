@@ -154,7 +154,7 @@ flowchart LR
     D2 -->|"CLEAR"| T2
     T2 --> C4
     C4 --> FIN_DESACTIVADA
-    D2 -->|"HAS_ACTIVE_PRODUCTS"| T3
+    D2 -->|"IN_USE"| T3
     T3 --> C4
     C4 --> FIN_BLOQUEADA
     T1 --> E1(("Time out o error en la comprobación"))
@@ -219,3 +219,8 @@ flowchart LR
     G1 --> T1
     T1 --> FIN_LISTADO
 ```
+
+
+### Alineación de baja de marcas
+
+La baja de `BRAND` requiere `source_version` capturada al admitir y el resultado final correlacionado. `CLEAR` no libera por sí solo; timeout inicial de Taxonomy de 60 s, fallo o versión incompatible mantienen la marca y producen rechazo. Si falta el evento final, Catálogo conserva la barrera y alerta. Ver SPEC-008/011 y estado de migraciones en el modelo Taxonomy; compatibilidad AsyncAPI pendiente de homologación.

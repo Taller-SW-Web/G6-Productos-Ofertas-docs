@@ -479,3 +479,16 @@ Cada caso corresponde a una función G1 distinta; las llamadas G6 son dependenci
 | CT-MKT-52 | F-006 inicio/categorías/destacados | Taxonomy `listarCategorias` y Catalog `listarProductos` se prueban como operaciones separadas; `featuredProducts[]` lo compone G1 y G6 no ofrece curaduría editorial. | PENDIENTE_PROVIDER_Y_BFF |
 
 `STATIC_CONTRACT` solo verifica el YAML. Provider, Consumer/Provider, Seguridad y E2E son estados independientes. No marcar PASS sin ejecución vinculada a SHA exacto; ver [matriz de evidencia H4](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/castilla/integraciones/g1-marketplace/MATRIZ_OPERACIONES_H4.md).
+
+## Casos documentales Catálogo pendientes de ejecución
+
+| ID | Tipo | Criterio | Estado |
+|---|---|---|---|
+| CT-CAT-PRICE-01 | PROVIDER_CONTRACT | `precioMin`/`precioMax` inclusivos usan precio efectivo vigente Pricing en PEN; filtro por todos los SKU elegibles antes de paginar; variante en rango cuenta el padre una vez | PENDIENTE_EJECUCION |
+| CT-CAT-PRICE-02 | INTEGRATION | SKU sin precio vigente no satisface filtro; error/truncamiento técnico detectado responde `503` sin resultados parciales; ausencia legítima no equivale a lote incompleto | PENDIENTE_HOMOLOGACION |
+| CT-CAT-TYPE-01 | PROVIDER_CONTRACT | PATCH `tipoProductoId` requiere borrador, sin variantes ni filas reales, `publicado_alguna_vez=false`, tipo activo, atributos/esquema compatibles y `catalogVersion`; NULL bloquea | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-BARCODE-01 | PROVIDER_CONTRACT | Código exacto, globalmente único, no reutilizable; resolución devuelve SKU solo si asociación vigente y SKU comercialmente elegible | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-RETRY-01 | INTEGRATION | Todo `REJECTED` no reintenta; `PENDING` solo tras 300000 ms desde `published_at` confirmado y con replay idempotente/admisión atómica verificados | PENDIENTE_HOMOLOGACION |
+| CT-CAT-VARIANT-01 | PROVIDER_CONTRACT | Crear variante omitiendo, anulando o enviando vacío `sku` devuelve `422 SKU_INVALIDO`; SKU reservado devuelve `409 SKU_DUPLICADO` | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-MASTER-01 | CONTRACT_COMPATIBILITY | Baja maestra conserva bloqueo hasta resultado final; `CLEAR` aislado no libera; los cuatro mensajes y el mapeo de estado esperan homologación antes de especializar schemas compartidos | PENDIENTE_HOMOLOGACION |
+| CT-CAT-VARIANTS-400 | PROVIDER_CONTRACT | UUID inválido en listado/detalle de variante y query inválida en listado responden `400 VALIDACION`; IDs válidos inexistentes conservan sus 404 | PENDIENTE_EJECUCION |

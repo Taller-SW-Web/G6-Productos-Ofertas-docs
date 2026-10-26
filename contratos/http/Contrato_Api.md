@@ -2656,3 +2656,7 @@ Estos ajustes documentan reglas administrativas y no acreditan implementación o
 - Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
 - Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+## Elegibilidad comercial por canal
+
+La política funcional comunicada aplica de igual forma a `MARKETPLACE`, `CHATBOT`, `RETAIL` y `VENTAS`: producto simple activo expone `sku_base`; producto con variantes requiere padre activo y al menos una variante activa, y solo son visibles variantes activas con padre activo. No existen asignaciones, defaults ni tablas independientes por canal. El parámetro `canal` conserva el contexto de la consulta y no otorga scopes. Elegibilidad se evalúa antes del total y la paginación; visibilidad no garantiza precio, stock ni promociones. D-CAT-05/06: decisión comunicada; pendiente de ratificación de Arquitectura y conformidad de consumidores. Para regla detallada consultar [SPEC-003 §7](../../requisitos/specs/SPEC-003-gestion-productos-crud.md).

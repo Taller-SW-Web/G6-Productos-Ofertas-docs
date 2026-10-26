@@ -59,8 +59,8 @@ Reglas del ciclo de Pricing:
 - Pricing emite resultado asíncrono con `causation_id = message_id` del comando requested correspondiente. Catálogo conserva internamente cuál es la `message_id` del intento activo y solo procesa resultados cuyo `causation_id` coincida con dicho intento, descartando/ignorando idempotentemente resultados tardíos de intentos anteriores como stale:
   - `pricing.product.initialization.completed` → pasa a `COMPLETED`. Acredita la existencia del primer precio del producto. Pricing publica `pricing.price.changed` después de su commit. Una preparación `COMPLETED` es terminal y nunca vuelve a ejecutarse.
   - `pricing.product.initialization.rejected` → pasa a `REJECTED`. Mantiene el producto en `BORRADOR` y registra el código de causa en `code`. No se reintenta automáticamente por infraestructura. El flag `manual_retry_allowed` es calculado y autoritativo en Catálogo. Un `REJECTED` solo puede volverse manualmente reintentable cuando su causa pueda recuperarse mediante capacidades actualmente publicadas. Si la resolución exige modificar un dato para el que no existe operación publicada (por ejemplo `precioBaseInicial`), `manual_retry_allowed` permanece en `false`.
-- Si no existe resultado concluyente tras un umbral operativo configurable, Catálogo mantiene `PENDING` y puede habilitar recuperación manual estableciendo `manual_retry_allowed=true`. Catálogo no inspecciona directamente la DLQ del servicio consumidor ni la topología privada de RabbitMQ.
-- La recuperación manual excepcional (`POST /api/v1/productos/{productoId}/preparacion/reintentar` con `dependencia=PRICING`) solo es admitida cuando `manual_retry_allowed=true`. Revalida autoritativamente precondiciones en backend (anti-TOCTOU), conserva la `operation_id` original de la preparación, genera una nueva `message_id` para la republicación y vuelve la dependencia a `PENDING` (`manual_retry_allowed=false`). Si la causa del rechazo exigiese alterar el precio base inicial, `manual_retry_allowed` permanece `false` pues no existe endpoint publicado para modificar precio base inicial en borrador.
+- Si no existe resultado concluyente, Catálogo mantiene `PENDING` y no habilita retry por tiempo sin `published_at` de publicación confirmada. El umbral inicial y las demás condiciones están en §7. Catálogo no inspecciona directamente la DLQ del consumidor.
+- Todo `REJECTED` de Pricing permanece no reintentable salvo que se acredite para un código específico la causa, la operación correctiva publicada y replay idempotente probado. La ruta HTTP solo admite estados autorizados por esa política. Si corresponde retry, revalida precondiciones anti-TOCTOU, conserva `operation_id`, genera `message_id` nueva y cambia a `PENDING` con `manual_retry_allowed=false`; `202` es solo admisión.
 
 No se genera precio base por variante.
 
@@ -80,7 +80,7 @@ variant_id = null
 - Catálogo correlaciona los resultados asíncronos mediante `causation_id = message_id` del requested activo, ignorando resultados stale de intentos previos:
   - `inventory.sku.initialization.completed` → pasa a `COMPLETED`. Es terminal y nunca se repite.
   - `inventory.sku.initialization.rejected` → pasa a `REJECTED`. Mantiene el producto en `BORRADOR` y registra `code`. No se reintenta automáticamente. La edición del borrador desencadena reevaluación autoritativa de precondiciones en Catálogo para determinar si `manual_retry_allowed` pasa a `true`.
-- Si no hay resultado tras el umbral operativo configurable, Catálogo puede habilitar `manual_retry_allowed=true` manteniendo `PENDING` sin inspeccionar la DLQ de Inventario.
+- Para `PENDING`, el timeout solo habilita evaluación si existe `published_at` de publicación confirmada del intento vigente y transcurrieron 300000 ms; además se exigen replay idempotente verificado, intención idéntica, admisión transaccional y un único ganador concurrente (ver §7). Sin `published_at` no se habilita por timeout.
 - La recuperación manual para producto simple se solicita mediante `POST /api/v1/productos/{productoId}/preparacion/reintentar` con `dependencia=INVENTARIO`, conservando `operation_id`, emitiendo nueva `message_id` y reconstruyendo el payload con los datos actuales validados del SKU base.
 
 ### Producto con variantes
@@ -117,6 +117,34 @@ perfilFisico.dimensionesCm.largo > 0
 perfilFisico.dimensionesCm.ancho > 0
 perfilFisico.dimensionesCm.alto > 0
 ```
+
+## 7. Alineación de Catálogo (puntos 1–6)
+
+Esta sección concreta las reglas funcionales de Catálogo y prevalece sobre cualquier descripción anterior incompatible en esta SPEC. La decisión comunicada sustenta el criterio funcional, pero no acredita ratificación externa, implementación ni despliegue.
+
+### Elegibilidad comercial
+
+La misma regla aplica a `MARKETPLACE`, `CHATBOT`, `RETAIL` y `VENTAS`: un producto simple `ACTIVO` expone `sku_base`; un producto con variantes se expone cuando su padre está `ACTIVO` y al menos una variante está `ACTIVA`, y solo se exponen variantes activas cuyo padre también está activo. Borradores, productos inactivos, variantes inactivas y padres sin variantes activas no son elegibles. No hay defaults ni asignaciones por canal. El parámetro `canal` permanece para el contexto solicitado, incluido Pricing, y no amplía consumidores autorizados. Aplicar elegibilidad antes del conteo y la paginación; el detalle por ID/slug no elegible responde `404 PRODUCTO_NO_ENCONTRADO`; una búsqueda elegible vacía responde `200` con `total=0`. Visibilidad no garantiza precio, stock ni promoción. D-CAT-05/06: decisión comunicada; pendiente de ratificación de Arquitectura y conformidad de consumidores.
+
+### Filtros monetarios
+
+`precioMin` y `precioMax` son extremos opcionales e inclusivos del precio efectivo vigente informado por Pricing: `precio_oferta` vigente, en otro caso `precio_regular`. Pricing resuelve herencia y precedencia SKU/canal/global; Catálogo no las recalcula. Solo se comparan importes `PEN`, verificando `currency` sin convertir ni interpretar otra moneda como PEN. Los valores negativos/no finitos o `precioMin > precioMax` son `400 VALIDACION`. En productos simples se compara `sku_base`; con variantes basta un SKU activo/elegible dentro del rango y el padre se cuenta una vez. Consultar todos los candidatos antes de paginar en lotes de 1–100 SKU a `GET /api/v1/precios`, fijando un único `at` con zona horaria por consulta y usando el `canal` solicitado. SKU ausente sin precio vigente no satisface el filtro. Filtrar, deduplicar, calcular `total`, ordenar por `NOMBRE_ASC`/`NOMBRE_DESC` con desempate por `product_id` y paginar al final. Mantener el orden por defecto del contrato. Error de Pricing, respuesta inválida o procesamiento incompleto detectado responde `503 SERVICIO_NO_DISPONIBLE`, sin resultados parciales; ausencia legítima de precio no equivale por sí sola a lote incompleto. Sin filtro monetario no se consulta Pricing para filtrar. Mapeo SKU→producto, canales y autorización Catálogo↔Pricing siguen como dependencias de integración no homologadas.
+
+### Código de barras
+
+Un SKU vendible tiene cero o más códigos; cada código exacto, opaco y globalmente único pertenece a un solo SKU, incluso después del retiro. Se preservan ceros iniciales sin imponer simbología o longitud. Producto simple usa `sku_base`; con variantes usa el SKU de la variante, nunca el SKU base no vendible del padre. No se exige código para activar. Solo `GESTOR_COMERCIAL` administra altas, consulta por SKU y retiro lógico; código y propietario son inmutables y no se reasignan ni reutilizan. Desactivar conserva la asociación. La resolución entrega SKU solo si el código está vigente y el SKU es comercialmente elegible; si no, `404 CODIGO_BARRAS_NO_ENCONTRADO`, sin consultar precios o stock. Una reactivación vuelve a resolver solo si la asociación sigue vigente. La migración candidata `sku_barcodes` en backend `poma` no acredita aplicación en base de datos ni homologación; la ratificación formal está pendiente de trazabilidad. OpenAPI y su DTO de resolución permanecen sin cambios por esta regla.
+
+### Corrección de tipo (Q-06)
+
+El PATCH existente admite la propiedad opcional `tipoProductoId`. Solo se permite en `BORRADOR`, con `tiene_variantes=false`, cero filas reales en `catalog.variants`, `publicado_alguna_vez=false`, tipo nuevo `ACTIVO` en Taxonomy, atributos compatibles con el esquema y `schemaVersion`, y concurrencia validada por `catalogVersion`. Publicación significa exclusivamente la primera transición confirmada `BORRADOR → ACTIVO`. El campo persistido `catalog.products.publicado_alguna_vez BOOLEAN NULL` requiere una futura migración versionada: nuevos productos empiezan en `false`, la primera activación confirmada lo fija en `true` atómicamente e irreversible; históricos son `NULL` salvo evidencia autoritativa y `NULL` bloquea la corrección. No inferirlo del estado actual.
+
+Se conservan los atributos válidos; cualquier incompatibilidad rechaza toda la edición sin borrado automático, incluyendo atributos persistidos que permanezcan tras PATCH. El gestor envía la colección corregida; atributos obligatorios faltantes no bloquean guardar un borrador, solo activarlo. Se conservan `product_id`, `sku_base`, `tiene_variantes`, UUID y snapshots. Errores: `409 CAMBIO_ESTRUCTURAL_NO_PERMITIDO`, `409 VERSION_CONFLICT`, `422 TIPO_PRODUCTO_INVALIDO`, `400 VALIDACION`, `503 SERVICIO_NO_DISPONIBLE`; para incompatibilidad de atributos se reutiliza el error contractual vigente. Q-06 fue resuelta funcionalmente por Marco y López; columna, migración e implementación no están certificadas.
+
+### Recuperación de preparaciones
+
+Todo `REJECTED` es actualmente no reintentable (`manual_retry_allowed=false`). Solo un código específico podrá habilitarse después de acreditar causa real, operación correctiva publicada y recuperación idempotente probada. En particular, Inventory `UBICACION_NO_ENCONTRADA` e `IDEMPOTENCY_CONFLICT`, y rechazos de inicialización Pricing no acreditados (incluido `PRECIO_INVALIDO`, cuya presencia en ese evento no está acreditada), permanecen en `false`. `COMPLETED` es terminal. Para `PENDING`, el tiempo vencido por sí solo no basta: requiere publicación confirmada, intención idéntica, consumidor con replay idempotente verificado, admisión transaccional y un único reintento concurrente. Un reintento conserva `operation_id`, genera `message_id` nueva y correlaciona el resultado al nuevo intento, sin duplicar efectos; inválido = `409 PREPARACION_NO_REINTENTABLE`, y `202` solo confirma admisión.
+
+Para entornos con mensajería real, el umbral inicial de `PENDING` es `CATALOG_PREPARATION_TIMEOUT_MS=300000` ms desde `published_at` de la publicación confirmada del intento vigente. Sin `published_at`, no habilitar timeout. En producción no homologada, dejar la variable sin configurar y el retry por timeout deshabilitado, sin default habilitante. Esto es distinto del timeout de 60 s de Taxonomy. Vera/Pricing y Taco/Inventory confirmaron compatibilidad de diseño; pruebas integradas y homologación están pendientes.
 
 Unidades contractuales obligatorias: kilogramos (`kg`) y centímetros (`cm`).
 
@@ -157,7 +185,7 @@ product_id != variant_id != sku != codigo_barras
 producto simple → sku_base = SKU vendible
 ```
 
-Catálogo es owner de la capacidad de resolver un código de barras a un SKU vendible. Cada código resoluble identifica exactamente un SKU. La cardinalidad inversa SKU→código(s) y la administración de la asociación siguen abiertas (`D-CAT-01..04`).
+Catálogo es owner de la capacidad de resolver un código de barras a un SKU vendible. Cada código exacto, opaco y globalmente único pertenece a un SKU; un SKU admite cero o más códigos, incluidos retiros lógicos que no liberan el valor para reutilizarse. La administración corresponde a `GESTOR_COMERCIAL`; la definición funcional D-CAT-01..04 está cerrada y el estado de la migración candidata se documenta en §7.
 
 La lectura comercial por slug aplica:
 
@@ -166,13 +194,15 @@ producto.status = ACTIVO
 AND elegible_para_canal(producto, canal)
 ```
 
-`ACTIVO` no implica visibilidad automática en todos los canales. La persistencia y default de elegibilidad continúan abiertos (`D-CAT-05/06`).
+La política comunicada de D-CAT-05/06 aplica la elegibilidad común por estados descrita en §7, sin persistencia, default ni asignación por canal; requiere ratificación de Arquitectura y conformidad de consumidores.
 
-Para producto simple, cuando exista una asociación resoluble:
+Para producto simple, cuando exista una asociación vigente y el SKU sea elegible:
 
 ```text
 codigo_barras → sku_base
 ```
+
+Para productos con variantes, el código se asocia al SKU de la variante vendible, nunca al `sku_base` no vendible del padre. La resolución usa el mismo criterio de elegibilidad que ID/slug y no consulta precio ni stock; véase §7.
 
 Desactivar el producto impide la resolución comercial mientras permanezca inactivo. No se define todavía si la asociación histórica se elimina/reutiliza.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->

@@ -461,3 +461,11 @@ Observaciones: ejecutar migracion desde cero, reejecutar runner para comprobar i
 Revisor: pendiente.
 
 Fecha: 2026-10-03.
+
+## 29. Alineación futura de bajas maestras
+
+La migración `0001_create_taxonomy.sql` ya crea `master_deactivation_operations` y `product_type_characteristics`, pero no contiene `master_deactivation_operations.source_version`, una `taxonomy_version` propia de cada asociación ni el índice UNIQUE parcial que limita una operación activa por `(entity_type, entity_id)`. Requieren una migración versionada futura del owner Taxonomy, con backfill seguro e historia preservada; Marco debe autorizarla. No editar ni ejecutar `0001` desde esta actualización documental.
+
+`taxonomy.runtime_settings` ya existe; la semilla de `0001` solo define `MAX_PRODUCT_TYPE_ATTRIBUTES`. El timeout inicial de 60 segundos de baja maestra requiere una futura entrada/configuración versionada de Taxonomy, sin nueva tabla y sin fijar una clave fuera de las convenciones del owner.
+
+El protocolo de cinco tipos admite `CATEGORY`, `BRAND`, `CHARACTERISTIC_VALUE`, `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC`, excluye `CHARACTERISTIC`, y usa `source_version` inmutable desde la admisión en `PENDING_DEACTIVATION`. `CLEAR` no completa ni libera por sí solo. El estado público se mapea desde el enum físico existente, que conserva `REQUESTED`, `IN_PROGRESS`, `COMPLETED`, `REJECTED` y `FAILED`; un fallo técnico se representa públicamente como `REJECTED` con `TECHNICAL_FAILURE`. La especialización de los schemas AsyncAPI y los campos HTTP compartidos queda pendiente de revisión/homologación; este modelo no acredita cambios ejecutables ni aprobación externa.

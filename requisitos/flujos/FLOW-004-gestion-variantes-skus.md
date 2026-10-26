@@ -30,13 +30,13 @@ flowchart LR
         INICIO(("Producto seleccionado"))
         CONSULTAR["Consultar lista o detalle de variantes"]
         ACCION{"¿Crear variante?"}
-        DATOS["Completar atributos, imagen, SKU opcional y<br/>perfil físico; solicitar creación"]
+        DATOS["Completar atributos, imagen, SKU explícito obligatorio y<br/>perfil físico; solicitar creación"]
         FIN_CONSULTA((("Consulta completada")))
     end
     subgraph S["Sistema · Catálogo"]
         direction TB
         MODELO{"¿Producto tiene tiene_variantes=true?"}
-        SKU["Determinar SKU solicitado o generado por<br/>Catálogo"]
+        SKU["Validar SKU explícito, no vacío y<br/>globalmente único; Catálogo no lo genera"]
         UNICO{"¿SKU globalmente único?"}
         COMBINACION{"¿Combinación identificadora única dentro del<br/>producto?"}
         VALIDAR["Validar atributos, imagen y perfil físico<br/>proporcionado en kg/cm con valores mayores<br/>que 0"]
@@ -79,14 +79,10 @@ flowchart LR
         REJECTED(("inventory.sku.initialization.rejected<br/>recibido"))
         LISTO["Registrar COMPLETED y marcar Inventario preparado"]
         RECHAZO["Registrar REJECTED y causa; mantener variante no publicable"]
-        EVAL_CORREGIBLE{"¿Causa corregible mediante<br/>capacidad publicada?"}
         NO_PUBLICADA["manual_retry_allowed=false;<br/>conservar REJECTED"]
-        REEVAL["Catálogo reevalúa precondiciones locales"]
-        EVAL_RETRY{"¿Precondiciones válidas?"}
-        RETRY_NO["manual_retry_allowed=false;<br/>conservar estado"]
-        HABILITAR_RECH["manual_retry_allowed=true"]
+        PENDING_ELEGIBLE{"¿publicación confirmada, published_at disponible,<br/>replay idempotente probado y lock atómico?"}
         SIN_RESULTADO["Mantener PENDING sin inspeccionar DLQ"]
-        EVAL_UMBRAL{"¿Supera umbral operativo configurable?"}
+        EVAL_UMBRAL{"¿300000 ms desde published_at<br/>del intento vigente?"}
         HABILITAR_UMB["manual_retry_allowed=true"]
         POST_RETRY["Recibir POST variantes/{variantId}/preparacion/reintentar"]
         ATOMICO{"¿Precondiciones válidas y gana transición atómica?"}
@@ -105,7 +101,6 @@ flowchart LR
     end
     subgraph G["Gestor comercial"]
         direction TB
-        CORREGIR["Modificar atributos o perfil físico mediante operación publicada"]
         SOLICITAR["Solicitar recuperación manual excepcional vía HTTP"]
     end
 
@@ -117,21 +112,19 @@ flowchart LR
     DLQ -.->|"Catálogo no inspecciona DLQ"| SIN_RESULTADO
     EMITIR --> RESULTADO
     RESULTADO -->|"completed"| COMPLETED --> LISTO --> FIN_OK
-    RESULTADO -->|"rejected"| REJECTED --> RECHAZO --> EVAL_CORREGIBLE
-    EVAL_CORREGIBLE -->|"No"| NO_PUBLICADA
-    EVAL_CORREGIBLE -->|"Sí"| CORREGIR --> REEVAL --> EVAL_RETRY
-    EVAL_RETRY -->|"No"| RETRY_NO
-    EVAL_RETRY -->|"Sí"| HABILITAR_RECH --> SOLICITAR
+    RESULTADO -->|"rejected"| REJECTED --> RECHAZO --> NO_PUBLICADA
     RESULTADO -->|"Sin resultado"| SIN_RESULTADO --> EVAL_UMBRAL
     EVAL_UMBRAL -->|"No"| SIN_RESULTADO
-    EVAL_UMBRAL -->|"Sí"| HABILITAR_UMB --> SOLICITAR
+    EVAL_UMBRAL -->|"Sí"| PENDING_ELEGIBLE
+    PENDING_ELEGIBLE -->|"No"| SIN_RESULTADO
+    PENDING_ELEGIBLE -->|"Sí"| HABILITAR_UMB --> SOLICITAR
     SOLICITAR --> POST_RETRY --> ATOMICO
     ATOMICO -->|"No (concurrente perdedor o no reintentable)"| RESP_409
     ATOMICO -->|"Sí (solicitud ganadora)"| RESP_202 --> NUEVO_MSG --> REQUEST
     RECHAZO --> FIN_BORRADOR
 ```
 
-El comando contiene `sku`, `product_id`, `variant_id` y `default_location_id` opcional. Catálogo inicia la preparación de inventario de la variante en `PENDING` (`manual_retry_allowed=false`). Los errores técnicos transitorios son recuperados automáticamente por el consumidor de Inventario mediante su política RabbitMQ ordinaria (máximo 3 reintentos con 30 s de espera antes de ser dirigidos a la DLQ técnica de infraestructura). Catálogo no inspecciona la DLQ. Los resultados asíncronos portan `causation_id = message_id` del requested correspondiente al intento activo; Catálogo registra internamente la `message_id` del intento activo y solo procesa resultados con `causation_id` coincidente, ignorando/registrando resultados tardíos de intentos anteriores como stale. `COMPLETED` es terminal, confirma la inicialización del SKU de la variante y nunca se repite. Un rechazo (`REJECTED`) mantiene la variante como no publicable y no se reintenta automáticamente por infraestructura; `manual_retry_allowed` permanece en `false` salvo que la causa sea subsanable mediante una capacidad actualmente publicada en la API, el gestor efectúe dicha corrección en los atributos o perfil físico y Catálogo revalide autoritativamente las precondiciones locales de elegibilidad. De forma independiente, si la operación permanece sin resultado concluyente tras un umbral operativo configurable, Catálogo habilita `manual_retry_allowed=true` manteniendo `PENDING` sin consultar DLQ. La recuperación manual se solicita mediante HTTP (`POST /api/v1/productos/{productoId}/variantes/{variantId}/preparacion/reintentar`), donde la admisión es atómica: la solicitud ganadora devuelve `202 Accepted`, pasa a `PENDING` (`manual_retry_allowed=false`), conserva `operation_id`, construye el nuevo comando con el **estado actual validado de la variante** (atributos y perfil físico actualizados; no el payload antiguo) y emite una nueva `message_id` para transporte RabbitMQ. Las solicitudes concurrentes competidoras reciben `409 PREPARACION_NO_REINTENTABLE`. La consulta de estado (`GET /preparacion`) lee exclusivamente el estado local de Catálogo sin realizar llamadas síncronas a Inventario. Nunca se solicita ni emite inicialización de Pricing para una variante.
+El comando contiene `sku`, `product_id`, `variant_id` y `default_location_id` opcional. Catálogo inicia Inventario de variante en `PENDING` (`manual_retry_allowed=false`). `COMPLETED` es terminal. Todo rechazo `REJECTED` permanece no reintentable (`manual_retry_allowed=false`); editar atributos o perfil no lo habilita. Solo un código específico podría habilitarse con causa real, operación correctiva publicada y replay idempotente probado. Para `PENDING`, 300000 ms se miden desde `published_at` de la publicación confirmada del intento vigente; sin esa marca no hay timeout habilitante. El reintento además exige intención idéntica, replay verificado, admisión transaccional y exclusión concurrente; conserva `operation_id`, genera nueva `message_id` y `202` solo admite la operación. Ver SPEC-003 §7 y SPEC-004 §8.
 
 
 ### 4.3. Edición, activación y reactivación
@@ -233,9 +226,9 @@ Si el padre estaba en `BORRADOR` o `INACTIVO`, conserva su estado al desactivar 
 
 | Estado de preparación | Evidencia | Resultado funcional |
 |---|---|---|
-| `PENDING` | Se publicó `inventory.sku.initialization.requested`, sin resultado concluyente. | Mantener variante no publicable. Operación en curso o bajo recuperación técnica automática; no requiere acción manual mientras `manual_retry_allowed=false`. Si supera el umbral operativo configurable, Catálogo habilita `manual_retry_allowed=true`. |
+| `PENDING` | Se publicó `inventory.sku.initialization.requested`, sin resultado concluyente. | Mantener variante no publicable. Operación en curso o bajo recuperación técnica automática; no requiere acción manual mientras `manual_retry_allowed=false`. El umbral aplicable es 300000 ms desde el `published_at` confirmado del intento vigente y solo habilita evaluación de replay; el tiempo por sí solo no habilita el reintento. |
 | `COMPLETED` | Se recibió `inventory.sku.initialization.completed` de la operación correspondiente. | Confirmar inventario preparado y permitir evaluar activación o reactivación. Una inicialización completada nunca se repite. |
-| `REJECTED` | Se recibió `inventory.sku.initialization.rejected` de la operación correspondiente. | Mantener variante no publicable y registrar causa; `manual_retry_allowed` permanece en `false` salvo que la causa sea subsanable mediante una capacidad actualmente publicada en la API, el gestor efectúe dicha corrección y Catálogo revalide autoritativamente las precondiciones locales de elegibilidad. |
+| `REJECTED` | Se recibió `inventory.sku.initialization.rejected` de la operación correspondiente. | Mantener variante no publicable y registrar causa; `manual_retry_allowed` permanece en `false` sin excepción por corrección genérica; solo un código específico podrá habilitarse tras acreditar causa real, operación correctiva publicada y replay idempotente probado. |
 
 - Estos estados pertenecen a la preparación técnica de inventario; el estado funcional de variante es `BORRADOR`, `ACTIVA` o `INACTIVA`.
 - La consulta administrativa `GET /api/v1/productos/{productoId}/preparacion` lee el estado local de Catálogo sin llamadas síncronas a Inventario.

@@ -1499,12 +1499,15 @@ La actualización confirma que:
 ## Alineación conceptual HTTP 0.5.0
 
 - SKU continúa siendo la identidad comercial compartida.
-- `codigo_barras` es un identificador de captura distinto; cada código resoluble identifica exactamente un SKU vendible.
-- No se fija todavía la cardinalidad inversa ni una tabla física para la asociación.
-- La elegibilidad comercial por canal es una regla de Catálogo; su persistencia/default siguen abiertos (`D-CAT-05/06`).
+- `codigo_barras` es texto de captura distinto; cada código único pertenece a un SKU vendible y un SKU admite cero o más códigos. La migración de asociación es candidata en backend `poma`, sin aplicación acreditada.
+- La política comunicada no usa asignaciones ni defaults por canal; D-CAT-05/06 aún requiere ratificación de Arquitectura y conformidad de consumidores.
 - Inventario conserva el saldo autoritativo por `(sku, location_id)`.
 - La disponibilidad comercial es una **proyección derivada** `sku + status`, no una segunda autoridad. **D-INV-01 está adoptada** en `arquitectura/decisiones/ADR-DEC-F-BLOQUEANTES.md`: una referencia de cumplimiento se resuelve a una sola ubicación elegible mediante mapeo interno; no se suman ubicaciones independientes. La ambigüedad o ausencia de un cumplimiento justificable produce `INDETERMINADO`, no una afirmación de agotamiento o disponibilidad. El contrato comercial continúa **provisional por implementación y conformidad pendientes**, no por decisión abierta.
 - La verificación comercial por líneas `{sku, quantity}` devuelve `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO` sin exponer cantidades internas ni `location_id`, con `binding=false` y sin reservar stock. La agregación real de múltiples fuentes requeriría otra ADR.
 - Recomendaciones siguen siendo producto→producto. `current_price` y `availability` son enriquecimientos derivados; `D-REC-01/02` continúan abiertas.
 - No materializar automáticamente `CODIGO_BARRAS`, `PRODUCTO_CANAL`, `DISPONIBILIDAD_COMERCIAL` o `PRECIO_RECOMENDACION` como entidades maestras.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
+
+## Elegibilidad comercial y código de barras (alineación documental)
+
+No hay entidad conceptual ni habilitación independiente por canal. La política comunicada aplica los estados existentes: producto simple `ACTIVO` expone `sku_base`; producto con variantes expone el padre solo con al menos una variante `ACTIVA`, y cada variante exige padre y variante activos. D-CAT-05/06 continúa pendiente de ratificación de Arquitectura y conformidad de consumidores. Códigos de barras son asociaciones de texto opaco, único y no reutilizable a SKU vendibles, no una nueva identidad comercial; el diseño de persistencia y su estado candidato están en [modelo físico Catálogo](../datos/catalog-svc/physical-model.md). Estas reglas no garantizan precio, stock o promoción.

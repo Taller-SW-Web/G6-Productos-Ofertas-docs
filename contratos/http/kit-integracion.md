@@ -1448,3 +1448,7 @@ GET /api/v1/recomendaciones?productoId={id}&canal={MARKETPLACE|CHATBOT|RETAIL}
 - Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
 - Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+## Filtros de precio en catálogo
+
+`precioMin` y `precioMax` representan extremos inclusivos en PEN del precio efectivo vigente de Pricing: oferta vigente o, en su ausencia, precio regular. Sin conversión de moneda. Para variantes se compara cada SKU activo/elegible y el padre cuenta una vez. Catálogo consulta candidatos en lotes de 1–100 SKU con un mismo `at`; filtra, deduplica, ordena por nombre con `product_id` como desempate y pagina después. SKU sin precio vigente no satisface el filtro; errores o procesamiento incompleto detectado de Pricing producen `503` sin resultados parciales. Canales, mapeo SKU→producto y autorización técnica Catálogo↔Pricing no están homologados; estos parámetros no crean nuevos scopes. Ver [SPEC-003 §7](../../requisitos/specs/SPEC-003-gestion-productos-crud.md) para el detalle.

@@ -73,14 +73,10 @@ flowchart LR
         REJECTED(("pricing.product.initialization.rejected<br/>recibido"))
         LISTO["Registrar COMPLETED y marcar Pricing preparado"]
         RECHAZO["Registrar REJECTED y causa; mantener BORRADOR"]
-        EVAL_CORREGIBLE{"¿Causa corregible mediante<br/>capacidad publicada?"}
         NO_PUBLICADA["manual_retry_allowed=false;<br/>conservar REJECTED"]
-        REEVAL["Catálogo reevalúa precondiciones locales"]
-        EVAL_RETRY{"¿Precondiciones válidas?"}
-        RETRY_NO["manual_retry_allowed=false;<br/>conservar estado"]
-        HABILITAR_RECH["manual_retry_allowed=true"]
+        PENDING_ELEGIBLE{"¿publicación confirmada, published_at disponible,<br/>replay idempotente probado y lock atómico?"}
         SIN_RESULTADO["Mantener PENDING sin inspeccionar DLQ"]
-        EVAL_UMBRAL{"¿Supera umbral operativo configurable?"}
+        EVAL_UMBRAL{"¿300000 ms desde published_at<br/>del intento vigente?"}
         HABILITAR_UMB["manual_retry_allowed=true"]
         POST_RETRY["Recibir POST preparacion/reintentar"]
         ATOMICO{"¿Precondiciones válidas y gana transición atómica?"}
@@ -99,7 +95,6 @@ flowchart LR
     end
     subgraph G["Gestor comercial"]
         direction TB
-        CORREGIR["Modificar borrador mediante operación publicada"]
         SOLICITAR["Solicitar recuperación manual excepcional vía HTTP"]
     end
 
@@ -111,14 +106,12 @@ flowchart LR
     DLQ -.->|"Catálogo no inspecciona DLQ"| SIN_RESULTADO
     EMITIR --> RESULTADO
     RESULTADO -->|"completed"| COMPLETED --> LISTO --> FIN_OK
-    RESULTADO -->|"rejected"| REJECTED --> RECHAZO --> EVAL_CORREGIBLE
-    EVAL_CORREGIBLE -->|"No (ej. precioBaseInicial)"| NO_PUBLICADA
-    EVAL_CORREGIBLE -->|"Sí"| CORREGIR --> REEVAL --> EVAL_RETRY
-    EVAL_RETRY -->|"No"| RETRY_NO
-    EVAL_RETRY -->|"Sí"| HABILITAR_RECH --> SOLICITAR
+    RESULTADO -->|"rejected"| REJECTED --> RECHAZO --> NO_PUBLICADA
     RESULTADO -->|"Sin resultado"| SIN_RESULTADO --> EVAL_UMBRAL
     EVAL_UMBRAL -->|"No"| SIN_RESULTADO
-    EVAL_UMBRAL -->|"Sí"| HABILITAR_UMB --> SOLICITAR
+    EVAL_UMBRAL -->|"Sí"| PENDING_ELEGIBLE
+    PENDING_ELEGIBLE -->|"No"| SIN_RESULTADO
+    PENDING_ELEGIBLE -->|"Sí"| HABILITAR_UMB --> SOLICITAR
     SOLICITAR --> POST_RETRY --> ATOMICO
     ATOMICO -->|"No (concurrente perdedor o no reintentable)"| RESP_409
     ATOMICO -->|"Sí (solicitud ganadora)"| RESP_202 --> NUEVO_MSG --> REQUEST
@@ -127,7 +120,7 @@ flowchart LR
 
 El comando contiene `product_id`, `sku_base`, `precio_regular`, `moneda`, `channel_id=null` y `motivo_cambio=ALTA_PRODUCTO`. Catálogo inicia la preparación en `PENDING` (`manual_retry_allowed=false`). Los errores técnicos transitorios son recuperados automáticamente por el consumidor de Pricing mediante RabbitMQ (máximo 3 reintentos con 30 s de espera antes de ser enrutados a DLQ técnica). Catálogo no inspecciona la DLQ. Los resultados asíncronos portan `causation_id = message_id` del requested activo; Catálogo registra internamente la `message_id` del intento activo y solo procesa resultados con `causation_id` correspondiente, descartando/ignorando resultados tardíos como stale. `COMPLETED` es terminal y acredita el primer precio persistido; Pricing publica `pricing.price.changed` después de su commit. Una dependencia `COMPLETED` nunca vuelve a ejecutarse.
 
-Un rechazo funcional (`REJECTED`) mantiene el producto en `BORRADOR` y no se reintenta automáticamente por infraestructura. El reintento manual ante `REJECTED` solo se admite si la causa funcional es corregible mediante una capacidad actualmente publicada y Catálogo vuelve a validar la elegibilidad; si la resolución exige modificar `precioBaseInicial`, `manual_retry_allowed` permanece en `false` porque `ProductoUpdateRequest` no publica esa mutación (el paso del tiempo no vuelve recuperable un `REJECTED` que exige una mutación inexistente). De forma independiente, si una preparación en curso ordinario permanece en `PENDING` sin resultado concluyente tras un umbral operativo configurable, Catálogo puede habilitar `manual_retry_allowed=true` manteniendo `PENDING` sin inspeccionar la DLQ. La recuperación manual se solicita mediante HTTP (`POST /api/v1/productos/{productoId}/preparacion/reintentar` con `dependencia=PRICING`), donde la admisión es atómica: la solicitud ganadora devuelve `202 Accepted`, pasa a `PENDING` (`manual_retry_allowed=false`), conserva `operation_id`, construye el nuevo comando con el **estado actual validado del borrador** (no el payload antiguo) y emite una nueva `message_id` para transporte RabbitMQ. Las solicitudes concurrentes competidoras reciben `409 PREPARACION_NO_REINTENTABLE`. La consulta de estado (`GET /preparacion`) lee exclusivamente el estado local de Catálogo sin realizar llamadas síncronas a Pricing. No se inicializa precio base por variante.
+La política vigente declara todo rechazo `REJECTED` no reintentable (`manual_retry_allowed=false`). Solo podría habilitarse un código específico tras acreditar causa real, operación correctiva publicada y recuperación idempotente probada; Pricing `PRECIO_INVALIDO` no se atribuye al evento sin evidencia. En `PENDING`, los 300000 ms se cuentan desde `published_at` de la publicación confirmada del intento vigente; el timeout solo habilita la evaluación y requiere además intención idéntica, replay del consumidor verificado, admisión transaccional y un único ganador concurrente. Un reintento conserva `operation_id`, genera una nueva `message_id` y `202` confirma admisión, no finalización. Ver SPEC-003 §7.
 
 ### 4.3. Preparación de Inventario del producto simple y recuperación
 
@@ -143,14 +136,10 @@ flowchart LR
         REJECTED(("inventory.sku.initialization.rejected<br/>recibido"))
         LISTO["Registrar COMPLETED y marcar SKU inicializado"]
         RECHAZO["Registrar REJECTED y causa; mantener BORRADOR"]
-        EVAL_CORREGIBLE{"¿Causa corregible mediante<br/>capacidad publicada?"}
         NO_PUBLICADA["manual_retry_allowed=false;<br/>conservar REJECTED"]
-        REEVAL["Catálogo reevalúa precondiciones locales"]
-        EVAL_RETRY{"¿Precondiciones válidas?"}
-        RETRY_NO["manual_retry_allowed=false;<br/>conservar estado"]
-        HABILITAR_RECH["manual_retry_allowed=true"]
+        PENDING_ELEGIBLE{"¿published_at confirmado, replay idempotente<br/>probado y admisión atómica?"}
         SIN_RESULTADO["Mantener PENDING sin inspeccionar DLQ"]
-        EVAL_UMBRAL{"¿Supera umbral operativo configurable?"}
+        EVAL_UMBRAL{"¿300000 ms desde published_at<br/>del intento vigente?"}
         HABILITAR_UMB["manual_retry_allowed=true"]
         POST_RETRY["Recibir POST preparacion/reintentar"]
         ATOMICO{"¿Precondiciones válidas y gana transición atómica?"}
@@ -169,7 +158,6 @@ flowchart LR
     end
     subgraph G["Gestor comercial"]
         direction TB
-        CORREGIR["Modificar borrador mediante operación publicada"]
         SOLICITAR["Solicitar recuperación manual excepcional vía HTTP"]
     end
 
@@ -181,21 +169,19 @@ flowchart LR
     DLQ -.->|"Catálogo no inspecciona DLQ"| SIN_RESULTADO
     EMITIR --> RESULTADO
     RESULTADO -->|"completed"| COMPLETED --> LISTO --> FIN_OK
-    RESULTADO -->|"rejected"| REJECTED --> RECHAZO --> EVAL_CORREGIBLE
-    EVAL_CORREGIBLE -->|"No"| NO_PUBLICADA
-    EVAL_CORREGIBLE -->|"Sí"| CORREGIR --> REEVAL --> EVAL_RETRY
-    EVAL_RETRY -->|"No"| RETRY_NO
-    EVAL_RETRY -->|"Sí"| HABILITAR_RECH --> SOLICITAR
+    RESULTADO -->|"rejected"| REJECTED --> RECHAZO --> NO_PUBLICADA
     RESULTADO -->|"Sin resultado"| SIN_RESULTADO --> EVAL_UMBRAL
     EVAL_UMBRAL -->|"No"| SIN_RESULTADO
-    EVAL_UMBRAL -->|"Sí"| HABILITAR_UMB --> SOLICITAR
+    EVAL_UMBRAL -->|"Sí"| PENDING_ELEGIBLE
+    PENDING_ELEGIBLE -->|"No"| SIN_RESULTADO
+    PENDING_ELEGIBLE -->|"Sí"| HABILITAR_UMB --> SOLICITAR
     SOLICITAR --> POST_RETRY --> ATOMICO
     ATOMICO -->|"No (concurrente perdedor o no reintentable)"| RESP_409
     ATOMICO -->|"Sí (solicitud ganadora)"| RESP_202 --> NUEVO_MSG --> REQUEST
     RECHAZO --> FIN_BORRADOR
 ```
 
-Para producto simple, `sku=sku_base` y `variant_id=null`. Catálogo registra `PENDING` (`manual_retry_allowed=false`). Los errores técnicos transitorios los gestiona el consumidor de Inventario mediante su política RabbitMQ ordinaria (máximo 3 reintentos con 30 s de espera antes de DLQ). Catálogo no inspecciona la DLQ. Los resultados asíncronos portan `causation_id = message_id` del comando requested activo; Catálogo descarta/ignora resultados tardíos de intentos previos como stale. `COMPLETED` es terminal, confirma el stock inicializado y nunca se repite. `REJECTED` mantiene `BORRADOR` sin reintento automático; `manual_retry_allowed` permanece en `false` salvo que la causa sea subsanable mediante una capacidad actualmente publicada en la API, el gestor efectúe dicha corrección y Catálogo revalide autoritativamente las precondiciones locales de elegibilidad. De forma independiente, la ausencia prolongada de resultado tras el umbral operativo configurable habilita `manual_retry_allowed=true` manteniendo `PENDING` sin consultar DLQ. La recuperación manual se solicita mediante HTTP (`POST /api/v1/productos/{productoId}/preparacion/reintentar` con `dependencia=INVENTARIO`), donde la admisión es atómica (ganadora devuelve `202 Accepted`; concurrentes competidoras devuelven `409 PREPARACION_NO_REINTENTABLE`), conserva `operation_id`, construye el comando con el estado actual validado y genera una nueva `message_id`. El padre con variantes no ejecuta esta inicialización (`inventario=null`): cada SKU vendible se prepara y recupera desde FLOW-004. Un resultado exitoso de una dependencia no completa la otra; solo se reintenta la dependencia permitida, conservando su propia identidad de operación. La consulta de estado (`GET /preparacion`) lee el estado local de Catálogo sin llamadas síncronas a Inventario.
+Para producto simple, `sku=sku_base` y `variant_id=null`. Catálogo inicia Inventario en `PENDING` (`manual_retry_allowed=false`). Los fallos técnicos los gestiona el consumidor y Catálogo no inspecciona la DLQ. Los resultados se correlacionan al intento activo; `COMPLETED` es terminal. Todo `REJECTED` es no reintentable: `UBICACION_NO_ENCONTRADA` e `IDEMPOTENCY_CONFLICT` permanecen en `false`; edición genérica no habilita retry. `PENDING` solo se evalúa a los 300000 ms de `published_at` confirmado del intento vigente y además requiere replay idempotente probado, misma intención y admisión atómica; sin `published_at` no hay timeout habilitante. El reintento conserva `operation_id`, genera nueva `message_id` y no duplica efectos. El padre con variantes no crea inventario; ver SPEC-003 §7 y FLOW-004.
 
 ### 4.4. Edición, activación y reactivación
 
@@ -305,9 +291,9 @@ Reactivar al padre no reactiva hijos inactivos; reactivar una variante tampoco r
 
 | Estado de preparación | Evidencia | Resultado funcional |
 |---|---|---|
-| `PENDING` | Se publicó `requested`, aún sin resultado concluyente. | Mantener borrador y bloquear activación. Operación en curso o bajo recuperación técnica automática; no requiere intervención manual mientras `manual_retry_allowed=false`. Si supera el umbral operativo configurable, Catálogo habilita `manual_retry_allowed=true`. |
+| `PENDING` | Se publicó `requested`, aún sin resultado concluyente. | Mantener borrador y bloquear activación. Operación en curso o bajo recuperación técnica automática; no requiere intervención manual mientras `manual_retry_allowed=false`. El umbral aplicable es 300000 ms desde el `published_at` confirmado del intento vigente y solo habilita evaluación de replay; el tiempo por sí solo no habilita el reintento. |
 | `COMPLETED` | Se recibió `completed` de la operación correspondiente. | Marcar esa dependencia preparada y revalidar las demás condiciones. Una dependencia completada nunca vuelve a ejecutarse. |
-| `REJECTED` | Se recibió `rejected` de la operación correspondiente. | Mantener borrador y registrar causa; `manual_retry_allowed` permanece en `false` salvo que la causa sea subsanable mediante una capacidad actualmente publicada en la API, el gestor efectúe dicha corrección y Catálogo revalide autoritativamente las precondiciones locales de elegibilidad. Si la resolución exige una mutación no publicada (ej. modificar `precioBaseInicial` en Pricing), `manual_retry_allowed` permanece en `false`. |
+| `REJECTED` | Se recibió `rejected` de la operación correspondiente. | Mantener borrador y registrar causa; `manual_retry_allowed` permanece en `false` sin excepción por corrección genérica; solo un código específico podrá habilitarse tras acreditar causa real, operación correctiva publicada y replay idempotente probado. Si la resolución exige una mutación no publicada (ej. modificar `precioBaseInicial` en Pricing), `manual_retry_allowed` permanece en `false`. |
 
 - Estos estados describen cada inicialización técnica, no sustituyen el estado funcional del producto (`BORRADOR`, `ACTIVO`, `INACTIVO`).
 - La consulta administrativa `GET /api/v1/productos/{productoId}/preparacion` lee el estado local de Catálogo sin llamadas síncronas a Pricing ni a Inventario.

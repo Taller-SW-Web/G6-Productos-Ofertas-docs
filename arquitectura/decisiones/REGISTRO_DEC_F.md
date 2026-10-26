@@ -11,6 +11,25 @@
 
 PR #86 está fusionado en el `master` contrastado. OpenAPI y AsyncAPI `0.6.0-rc.1` continúan descritos en el repositorio como candidatos/provisionales; su fusión no acredita integración E2E. Las migraciones Inventario 0002 y Promociones 0004 tienen evidencia de aplicación estructural en [datos/deploy/README.md](../../datos/deploy/README.md), pero eso no acredita handlers, mensajería, grants efectivos ni E2E.
 
+## Adenda documental Catálogo — resoluciones 1–9
+
+Esta adenda conserva las DEC-F existentes y no crea una DEC-F nueva. Las resoluciones funcionales fueron comunicadas por sus responsables conforme al encargo; no se presentan como comentarios o commits que no constan en GitHub. Cuando falta ratificación pública, el estado es «decisión comunicada; pendiente de registrar trazabilidad en repositorio».
+
+| Punto | Estado interno documentado | Estado externo / implementación |
+|---|---|---|
+| D-CAT-05/06, elegibilidad común de canales | Política funcional descrita; ratificación pendiente | Pendiente de Arquitectura y conformidad de consumidores; sin tablas ni implementación inferida |
+| `precioMin` / `precioMax` | Regla inclusiva sobre precio efectivo vigente de Pricing, solo PEN; exclusión de otras monedas es criterio técnico recomendado | Mapeo SKU/producto, canales y autorización Catálogo↔Pricing no homologados; runtime no acreditado |
+| D-CAT-01..04, códigos de barras | Definición funcional cerrada por Catálogo | Candidatos backend `poma` (migración 0002 y componentes de servicio/repositorio); aplicación y homologación no acreditadas; ratificación formal por trazar |
+| Q-06 | Regla comunicada para corrección de tipo mediante PATCH, con precondiciones verificables | Trazabilidad formal, `publicado_alguna_vez`, migración e implementación pendientes |
+| Retry `REJECTED` / `PENDING` | `REJECTED` no reintentable; timeout PENDING requiere condiciones verificadas; diseño de 300000 ms comunicado | Compatibilidad de diseño confirmada por Pricing/Inventory; pruebas integradas y homologación pendientes |
+| SKU de variante | Obligatorio, explícito, global e inmutable | Contrato documental actualizado; implementación no acreditada por esta adenda |
+| Barreras Taxonomy | Semántica y persistencia futura descritas; timeout inicial de 60 s | Migración propia de Taxonomy requiere autorización de Marco; especialización AsyncAPI pendiente de homologación por ser cambio compartido |
+| `400 VALIDACION` variantes | Regla de validación comunicada y reflejada en OpenAPI | Trazabilidad formal, pruebas y runtime pendientes |
+
+Persistencia: `catalog.master_barriers` ya está en la migración inicial; `catalog.sku_barcodes` existe como migración candidata `0002` en backend `poma`, sin despliegue acreditado; `catalog.products.publicado_alguna_vez` y `taxonomy.master_deactivation_operations.source_version`, `product_type_characteristics.taxonomy_version` e índice parcial activo requieren futuras migraciones versionadas de sus owners. No editar migraciones históricas ni inferir aplicación.
+
+Los mensajes de baja de maestros mantienen sus nombres, exchanges y routing keys vigentes en AsyncAPI. La propuesta de tipar `data`, exigir `operation_id` para esas cuatro operaciones y especializar sus razones requiere revisión y homologación del contrato compartido; este documento no acredita aceptación externa ni autoriza sustituir los schemas ejecutables actuales.
+
 ## DEC-F-001 — SKU vendible como identidad comercial compartida
 
 **Enunciado y justificación.** Precio, disponibilidad, reserva, consumo, combos y referencias comerciales convergen en el SKU vendible canónico de Catálogo. Evita que producto, variante y código de barras se traten como la misma identidad.

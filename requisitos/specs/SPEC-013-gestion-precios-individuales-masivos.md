@@ -90,4 +90,6 @@ La carga exclusiva de Pricing es local al dominio. La carga general de SPEC-001 
 
 Toda mutación confirmada conserva motivo, actor, versión y hecho `pricing.price.changed`.
 
+Para filtros de catálogo, Catálogo consume el precio efectivo vigente que entrega esta capacidad: `precio_oferta` vigente; de lo contrario, `precio_regular`. Pricing resuelve herencia y precedencia de overrides SKU/canal/global; Catálogo no recalcula esas reglas. Los límites `precioMin`/`precioMax` se comparan inclusivamente en PEN, tras verificar `currency` y sin conversión de moneda. La decisión de excluir importes no-PEN es criterio técnico recomendado, no una ratificación adicional. Ver secuencia, lotes y errores en [SPEC-003 §7](SPEC-003-gestion-productos-crud.md).
+
 > **Integración G1 Marketplace H4 (2026-10-20):** G6 aceptó y comunicó M-01–M-09 (`ACEPTADO_G6_COMUNICADO_G1`). Esta SPEC gobierna reglas funcionales de su dominio; operaciones HTTP se verifican en [OpenAPI](../../contratos/http/openapi.yaml), el reparto/estado operativo en [Acuerdo G1–G6 H4](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md) y [alineación](../../integraciones/ALINEACION_MARKETPLACE.md). No declarar runtime, grants G7, despliegue o E2E por esta referencia. Las dependencias de otros owners se limitan a la operación que les corresponde.

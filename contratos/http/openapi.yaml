@@ -98,11 +98,13 @@ paths:
         schema:
           type: number
           minimum: 0
+        description: Extremo inclusivo en PEN del precio efectivo vigente de Pricing. Se aplica por SKU elegible antes de paginar; negativos, no finitos o precioMin > precioMax producen 400 VALIDACION.
       - name: precioMax
         in: query
         schema:
           type: number
           minimum: 0
+        description: Extremo inclusivo en PEN del precio efectivo vigente de Pricing. Se aplica por SKU elegible antes de paginar; negativos, no finitos o precioMin > precioMax producen 400 VALIDACION.
       - name: orden
         in: query
         required: false
@@ -6153,6 +6155,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginaVariantes'
+        '400':
+          description: UUID de ruta o parámetros de consulta inválidos.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      enum: [VALIDACION]
+                  required: [status, code]
         '401':
           description: Error
           content:
@@ -6249,6 +6267,7 @@ paths:
                   - status
                   - code
       x-error-codes:
+        '400': [VALIDACION]
         '401': *id180
         '403': *id181
         '500': *id182
@@ -6470,6 +6489,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Variante'
+        '400':
+          description: UUID de ruta inválido.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      enum: [VALIDACION]
+                  required: [status, code]
         '401':
           description: Error
           content:
@@ -6566,6 +6601,7 @@ paths:
                   - status
                   - code
       x-error-codes:
+        '400': [VALIDACION]
         '401': *id193
         '403': *id194
         '500': *id195
@@ -21957,6 +21993,10 @@ components:
         marcaId:
           type: string
           minLength: 1
+        tipoProductoId:
+          type: string
+          minLength: 1
+          description: Corrección opcional del tipo, sujeta a Q-06 y sus precondiciones funcionales.
         atributos:
           type: array
           items:
@@ -22005,11 +22045,9 @@ components:
       type: object
       properties:
         sku:
-          oneOf:
-          - type: string
-            minLength: 1
-          - type: 'null'
-          description: Opcional; Catálogo genera uno si se omite.
+          type: string
+          minLength: 1
+          description: SKU explícito, opaco, globalmente único e inmutable; Catálogo no lo genera.
         atributosIdentificadores:
           type: array
           items:
@@ -22028,6 +22066,7 @@ components:
           - type: 'null'
       additionalProperties: true
       required:
+      - sku
       - atributosIdentificadores
       - imagenUrl
     VarianteUpdateRequest:
@@ -22950,19 +22989,20 @@ components:
         version:
           type: integer
           minimum: 0
+          description: source_version del maestro o asociación capturada al admitir la operación; no es la versión de la operación ni schema_version.
         status:
           type: string
           enum:
           - PENDING_DEACTIVATION
-          - CLEAR
-          - REJECTED
           - COMPLETED
+          - REJECTED
+          description: Estado público. FAILED técnico interno se representa como REJECTED con razón TECHNICAL_FAILURE.
         result:
           oneOf:
           - type: string
             enum:
             - CLEAR
-            - HAS_ACTIVE_PRODUCTS
+            - IN_USE
           - type: 'null'
         code:
           oneOf:
