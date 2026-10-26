@@ -1,0 +1,44 @@
+/* Marca compartida de las dos vistas HTML. El PNG original no se modifica. */
+.inka-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.inka-brand__logo {
+    display: block;
+    width: 96px;
+    height: 40px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.inka-brand__logo img {
+    display: block;
+    width: 96px;
+    height: 72px;
+    max-width: none;
+    margin-top: -16px;
+    object-fit: contain;
+}
+
+.inka-brand__name {
+    font-family: "Oswald", "Segoe UI", sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 28px;
+    color: #F7F5F0;
+    text-transform: uppercase;
+}
+
+.inka-brand__signal {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #F76707;
+    flex-shrink: 0;
+}

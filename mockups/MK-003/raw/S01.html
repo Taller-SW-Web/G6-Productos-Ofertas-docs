@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-surface" lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Inka Athletics - Productos (MK-003-S01)</title>
+    <link href="../../assets/brand-header.css" rel="stylesheet" />
+    <!-- Google Fonts: Oswald & Inter -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Oswald:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Material Symbols Outlined -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Theme Configuration Verbatim -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-tertiary-fixed-variant": "#4a463f",
+                        "primary-fixed": "#ffdbcc",
+                        "tertiary-container": "#99938a",
+                        "on-primary-container": "#511c00",
+                        "on-secondary-fixed-variant": "#832600",
+                        "on-surface-variant": "#594137",
+                        "tertiary-fixed-dim": "#cdc5bc",
+                        "surface": "#fbf9f4",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed": "#390c00",
+                        "primary": "#a14000",
+                        "surface-container": "#f0eee9",
+                        "background": "#fbf9f4",
+                        "outline": "#8d7165",
+                        "secondary-fixed-dim": "#ffb59d",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#351000",
+                        "on-surface": "#1b1c19",
+                        "on-tertiary-fixed": "#1e1b15",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#fd6b36",
+                        "on-background": "#1b1c19",
+                        "surface-bright": "#fbf9f4",
+                        "inverse-primary": "#ffb694",
+                        "inverse-surface": "#30312e",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#dbdad5",
+                        "on-secondary-container": "#5d1900",
+                        "tertiary": "#635e56",
+                        "surface-variant": "#e4e2dd",
+                        "on-primary-fixed-variant": "#7b2f00",
+                        "on-tertiary-container": "#302c25",
+                        "on-error-container": "#93000a",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#e4e2dd",
+                        "primary-fixed-dim": "#ffb694",
+                        "surface-container-low": "#f5f3ee",
+                        "secondary-fixed": "#ffdbd0",
+                        "surface-container-high": "#eae8e3",
+                        "primary-container": "#f76707",
+                        "tertiary-fixed": "#e9e1d7",
+                        "surface-tint": "#a14000",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#e2bfb1",
+                        "secondary": "#ac3400"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "space-xl": "2rem",
+                        "space-sm": "0.5rem",
+                        "gutter-desktop": "1.5rem",
+                        "space-xs": "0.25rem",
+                        "space-md": "0.75rem",
+                        "space-lg": "1.25rem",
+                        "margin": "1rem",
+                        "gutter": "1rem",
+                        "margin-desktop": "2rem"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "label-caps": ["Oswald"],
+                        "label-lg": ["Inter"],
+                        "headline-xl": ["Oswald"],
+                        "headline-sm": ["Oswald"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Oswald"],
+                        "body-md": ["Inter"],
+                        "headline-xl-mobile": ["Oswald"],
+                        "headline-lg": ["Oswald"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+                        "label-caps": ["13px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "600" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "headline-xl-mobile": ["30px", { "lineHeight": "36px", "letterSpacing": "0.03em", "fontWeight": "700" }],
+                        "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "0.03em", "fontWeight": "600" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 20px;
+            line-height: 1;
+            display: inline-block;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex flex-col">
+    <!-- ========================================================================= -->
+    <!-- 1. TOP GLOBAL SHELL / HEADER (64px / h-16)                                -->
+    <!-- ========================================================================= -->
+    <header
+        class="bg-on-surface text-inverse-on-surface h-16 w-full flex items-center justify-between px-space-lg lg:px-space-xl fixed top-0 left-0 right-0 z-50 border-b border-surface-variant/20 shadow-none">
+        <!-- Brand Anchor & Module Context -->
+        <div class="flex items-center gap-space-lg">
+            <div class="inka-brand">
+                <span class="inka-brand__logo" aria-hidden="true">
+                    <img src="../../assets/inka-athletics-logo.png" alt="" width="1214" height="910" />
+                </span>
+                <span class="inka-brand__name">Inka Athletics</span>
+                <span class="inka-brand__signal" aria-hidden="true"></span>
+            </div>
+            <div class="h-5 w-px bg-surface-variant/30 hidden md:block"></div>
+            <span class="hidden md:inline-flex items-center gap-2 text-surface-container font-label-md text-label-md">
+                <span class="text-tertiary-fixed-dim">Gestor Comercial</span>
+                <span class="text-surface-variant/40">•</span>
+                <span class="text-surface-bright font-semibold">Módulo Productos y Ofertas</span>
+            </span>
+        </div>
+        <!-- Search bar & User cluster -->
+        <div class="flex items-center gap-space-md">
+            <!-- Search Input with Keyboard shortcut -->
+            <div class="relative hidden sm:block w-72 lg:w-80">
+                <span class="material-symbols-outlined absolute left-3 top-2.5 text-tertiary-fixed-dim"
+                    style="font-size: 18px;">search</span>
+                <input
+                    class="w-full bg-[#272622] text-surface placeholder:text-tertiary-container text-body-sm font-body-sm pl-9 pr-12 py-1.5 h-9 rounded-lg border border-surface-variant/30 focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all"
+                    placeholder="Buscar por SKU, producto o lote..." type="text" />
+                <kbd
+                    class="absolute right-2.5 top-2 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-tertiary-fixed-dim bg-on-tertiary-container/80 rounded border border-surface-variant/30">⌘K</kbd>
+            </div>
+            <!-- Trailing Action: Notification Bell -->
+            <button aria-label="Notificaciones"
+                class="relative p-2 rounded-lg text-surface-container hover:bg-on-tertiary-container hover:text-surface transition-colors duration-150">
+                <span class="material-symbols-outlined">notifications</span>
+                <span
+                    class="absolute top-1.5 right-1.5 w-2 h-2 bg-primary-container rounded-full ring-2 ring-on-surface"></span>
+            </button>
+            <div class="h-6 w-px bg-surface-variant/20"></div>
+            <!-- Trailing Profile: Gabriel Poma -->
+            <div class="flex items-center gap-2.5 pl-1 cursor-pointer group">
+                <div class="relative">
+                    <div
+                        class="w-9 h-9 rounded-full bg-secondary text-on-secondary font-label-md text-label-md flex items-center justify-center font-bold shadow-sm ring-1 ring-white/20">
+                        GP
+                    </div>
+                    <span
+                        class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#16A34A] rounded-full ring-2 ring-on-surface"></span>
+                </div>
+                <div class="hidden xl:flex flex-col text-left">
+                    <span class="text-surface font-label-md text-label-md font-semibold leading-tight">Gabriel
+                        Poma</span>
+                    <span class="text-tertiary-fixed-dim text-[11px] font-label-sm font-normal">Admin Catálogo</span>
+                </div>
+                <span
+                    class="material-symbols-outlined text-surface-container group-hover:text-surface text-sm transition-colors">expand_more</span>
+            </div>
+        </div>
+    </header>
+    <!-- ========================================================================= -->
+    <!-- 2. MAIN LAYOUT CONTAINER (Sidebar 240px + Workspace Canvas)               -->
+    <!-- ========================================================================= -->
+    <div class="flex pt-16 min-h-screen">
+        <!-- 2A. LEFT SIDEBAR (240px width, sticky under header) -->
+        <aside
+            class="w-60 bg-surface-container-lowest border-r border-[#DEE2E6] flex-shrink-0 flex flex-col justify-between fixed top-16 left-0 bottom-0 z-40 overflow-y-auto">
+            <div class="py-space-md">
+                <!-- Section Header -->
+                <div class="px-space-md mb-2 flex items-center justify-between">
+                    <span class="text-label-sm font-label-sm text-[#6C757D] uppercase tracking-wider">MÓDULO DE
+                        GESTIÓN</span>
+                </div>
+                <div class="px-space-md mb-space-md">
+                    <div
+                        class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#F0FDF4] border border-[#BBF7D0] text-[#15803D] text-[11px] font-semibold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-pulse"></span>
+                        Producción PE-CENTRAL
+                    </div>
+                </div>
+                <!-- Navigation Links Group -->
+                <nav class="space-y-1">
+                    <!-- Expanded Group: Catálogo -->
+                    <div class="mb-1">
+                        <div
+                            class="px-space-md py-1.5 flex items-center justify-between text-body-sm font-semibold text-[#1B1812] cursor-pointer">
+                            <span class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[#F76707] text-[18px]">inventory_2</span>
+                                <span>Catálogo</span>
+                            </span>
+                            <span class="material-symbols-outlined text-[#6C757D] text-[16px]">expand_less</span>
+                        </div>
+                        <!-- Submenu Items -->
+                        <div class="mt-1 space-y-0.5">
+                            <a class="flex items-center gap-2 pl-9 pr-space-md py-1.5 text-body-sm text-[#495057] hover:bg-surface-container hover:text-on-surface transition-colors"
+                                href="#">
+                                <span>Carga masiva</span>
+                            </a>
+                            <!-- ACTIVE PRODUCT ITEM: Inka Athletic tokens (orange left border, tint, bold) -->
+                            <a class="flex items-center justify-between pl-8 pr-space-md py-1.5 bg-[#FCE3D0] text-[#1B1812] border-l-[3px] border-[#C2410C] font-semibold text-body-sm"
+                                href="#">
+                                <span class="flex items-center gap-1.5">
+                                    <span>Productos</span>
+                                </span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#C2410C]"></span>
+                            </a>
+                            <a class="flex items-center gap-2 pl-9 pr-space-md py-1.5 text-body-sm text-[#495057] hover:bg-surface-container hover:text-on-surface transition-colors"
+                                href="#">
+                                <span>Variantes</span>
+                            </a>
+                            <a class="flex items-center gap-2 pl-9 pr-space-md py-1.5 text-body-sm text-[#495057] hover:bg-surface-container hover:text-on-surface transition-colors"
+                                href="#">
+                                <span>Combos</span>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Other Main Modules -->
+                    <a class="flex items-center gap-2 px-space-md py-2 text-body-sm font-medium text-[#495057] hover:bg-surface-container hover:text-[#1B1812] transition-colors"
+                        href="#">
+                        <span class="material-symbols-outlined text-[#6C757D] text-[18px]">sell</span>
+                        <span>Promociones</span>
+                    </a>
+                    <a class="flex items-center gap-2 px-space-md py-2 text-body-sm font-medium text-[#495057] hover:bg-surface-container hover:text-[#1B1812] transition-colors"
+                        href="#">
+                        <span class="material-symbols-outlined text-[#6C757D] text-[18px]">category</span>
+                        <span>Clasificación y SEO</span>
+                    </a>
+                    <a class="flex items-center gap-2 px-space-md py-2 text-body-sm font-medium text-[#495057] hover:bg-surface-container hover:text-[#1B1812] transition-colors"
+                        href="#">
+                        <span class="material-symbols-outlined text-[#6C757D] text-[18px]">payments</span>
+                        <span>Precios</span>
+                    </a>
+                    <a class="flex items-center gap-2 px-space-md py-2 text-body-sm font-medium text-[#495057] hover:bg-surface-container hover:text-[#1B1812] transition-colors"
+                        href="#">
+                        <span class="material-symbols-outlined text-[#6C757D] text-[18px]">warehouse</span>
+                        <span>Inventario</span>
+                    </a>
+                </nav>
+            </div>
+            <!-- Sidebar Status / Sync Footer -->
+            <div class="p-3 border-t border-[#DEE2E6] bg-surface-container-low">
+                <div class="flex items-start gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 mt-1 flex-shrink-0 animate-pulse"></span>
+                    <div class="text-[11px] leading-tight text-[#495057]">
+                        <p class="font-semibold text-on-surface">Motor MK-003 v2.4 Activo</p>
+                        <p class="text-tertiary">Sincronización multi-dominio</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <!-- 2B. WORKSPACE CANVAS -->
+        <main class="ml-60 flex-1 bg-[#F7F5F0] p-8 min-h-[calc(100vh-4rem)]">
+            <div class="max-w-[1136px] mx-auto space-y-6">
+                <!-- BREADCRUMBS -->
+                <nav class="flex items-center gap-2 text-body-sm text-[#495057]">
+                    <a class="hover:text-[#C2410C] transition-colors" href="#">Catálogo</a>
+                    <span class="text-slate-400">/</span>
+                    <span class="text-on-surface font-semibold">Productos</span>
+                </nav>
+                <!-- PAGE HEADER (H1 + CTA) -->
+                <div
+                    class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-[#DEE2E6]">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h1
+                                class="font-headline-xl text-[32px] leading-9 font-bold text-[#1B1812] tracking-wider uppercase">
+                                PRODUCTOS
+                            </h1>
+                            <span
+                                class="bg-[#FFF4E6] text-[#D9480F] text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded border border-[#FFD8A8]">
+                                MK-003-S01
+                            </span>
+                        </div>
+                        <p class="text-body-md text-[#495057] mt-1.5 max-w-2xl">
+                            Consulta y localiza los productos del catálogo. Accede a crear, editar o cambiar el estado
+                            de cada producto.
+                        </p>
+                    </div>
+                    <button
+                        class="h-10 px-6 rounded-lg bg-[#F76707] hover:bg-[#E8590C] text-[#1B1812] font-bold text-body-md shadow-sm flex items-center gap-2 focus:ring-4 focus:ring-[#F76707]/30 transition-all cursor-pointer shrink-0"
+                        type="button">
+                        <span class="material-symbols-outlined text-[20px] font-bold">add</span>
+                        <span>Crear producto</span>
+                    </button>
+                </div>
+                <!-- ========================================================================= -->
+                <!-- FILTER BAR (DS-C12 Search + DS-C13 FilterBar + DS-C06 Selects)            -->
+                <!-- ========================================================================= -->
+                <div class="bg-[#FFFFFF] border border-[#DEE2E6] rounded-xl p-4 shadow-sm">
+                    <div class="flex flex-col md:flex-row items-start md:items-center gap-4">
+                        <!-- Search -->
+                        <div class="relative flex-1 min-w-[240px]">
+                            <span class="material-symbols-outlined absolute left-3 top-2 text-[#6C757D]"
+                                style="font-size: 18px;">search</span>
+                            <input
+                                class="w-full h-9 pl-9 pr-3 bg-[#FFFFFF] border border-[#DEE2E6] rounded-lg text-body-sm text-[#1B1812] placeholder:text-[#868E96] focus:border-[#C2410C] focus:ring-2 focus:ring-[#F76707]/20 outline-none transition-all"
+                                id="search-products" placeholder="Buscar productos" type="text" />
+                        </div>
+                        <!-- Filter: Categoría -->
+                        <div class="relative">
+                            <select
+                                class="h-9 pl-3 pr-8 bg-[#FFFFFF] border border-[#DEE2E6] rounded-lg text-body-sm text-[#1B1812] focus:border-[#C2410C] focus:ring-2 focus:ring-[#F76707]/20 outline-none appearance-none cursor-pointer"
+                                id="filter-category">
+                                <option value="">Categoría: Todas</option>
+                                <option>Calzado deportivo</option>
+                                <option selected>Indumentaria</option>
+                                <option>Accesorios</option>
+                            </select>
+                            <span
+                                class="material-symbols-outlined pointer-events-none absolute right-2 top-2 text-[#6C757D] text-[16px]">expand_more</span>
+                        </div>
+                        <!-- Filter: Marca -->
+                        <div class="relative">
+                            <select
+                                class="h-9 pl-3 pr-8 bg-[#FFFFFF] border border-[#DEE2E6] rounded-lg text-body-sm text-[#1B1812] focus:border-[#C2410C] focus:ring-2 focus:ring-[#F76707]/20 outline-none appearance-none cursor-pointer"
+                                id="filter-brand">
+                                <option value="" selected>Marca: Todas</option>
+                                <option>Inka Athletics</option>
+                                <option>Inka Pro Performance</option>
+                                <option>Andes Trail Series</option>
+                            </select>
+                            <span
+                                class="material-symbols-outlined pointer-events-none absolute right-2 top-2 text-[#6C757D] text-[16px]">expand_more</span>
+                        </div>
+                        <!-- Filter: Estado -->
+                        <div class="relative">
+                            <select
+                                class="h-9 pl-3 pr-8 bg-[#FFFFFF] border border-[#DEE2E6] rounded-lg text-body-sm text-[#1B1812] focus:border-[#C2410C] focus:ring-2 focus:ring-[#F76707]/20 outline-none appearance-none cursor-pointer"
+                                id="filter-status">
+                                <option value="" selected>Estado: Todos</option>
+                                <option>Borrador</option>
+                                <option>Activo</option>
+                                <option>Inactivo</option>
+                            </select>
+                            <span
+                                class="material-symbols-outlined pointer-events-none absolute right-2 top-2 text-[#6C757D] text-[16px]">expand_more</span>
+                        </div>
+                        <!-- Actions -->
+                        <div class="flex items-center gap-2">
+                            <button
+                                class="h-9 px-4 rounded-lg bg-[#F76707] hover:bg-[#E8590C] text-[#1B1812] font-semibold text-body-sm flex items-center gap-1.5 transition-all cursor-pointer"
+                                type="button">
+                                <span class="material-symbols-outlined text-[16px]">filter_list</span>
+                                Aplicar filtros
+                            </button>
+                            <button
+                                class="h-9 px-3 rounded-lg border border-[#DEE2E6] bg-[#FFFFFF] text-[#495057] font-medium text-body-sm hover:bg-[#F8F9FA] transition-all cursor-pointer"
+                                type="button">
+                                Limpiar
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Active filter pills -->
+                    <div class="flex flex-wrap items-center gap-2 mt-3">
+                        <span
+                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FCE3D0] text-[#1B1812] text-body-sm font-medium border border-[#F76707]/30">
+                            Categoría: Indumentaria
+                            <button class="text-[#C2410C] hover:text-[#1B1812] transition-colors cursor-pointer"
+                                aria-label="Quitar filtro Categoría">
+                                <span class="material-symbols-outlined text-[14px]">close</span>
+                            </button>
+                        </span>
+                        <span class="text-body-sm text-[#6C757D]">1 filtro aplicado</span>
+                    </div>
+                </div>
+                <!-- ========================================================================= -->
+                <!-- PRODUCT TABLE (DS-C17 PO/Table)                                            -->
+                <!-- ========================================================================= -->
+                <div class="bg-[#FFFFFF] border border-[#DEE2E6] rounded-xl overflow-hidden shadow-sm">
+                    <!-- Table toolbar -->
+                    <div class="p-4 flex items-center justify-between border-b border-[#F1F3F5]">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#C2410C] text-[20px]">inventory_2</span>
+                            <span class="text-body-md font-semibold text-[#1B1812]">Catálogo de productos</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-body-sm text-[#6C757D]">
+                                Mostrando <span class="font-bold text-[#1B1812]">6</span> de 24 productos
+                            </span>
+                            <!-- Order toggle -->
+                            <button
+                                class="h-8 px-3 rounded-lg border border-[#DEE2E6] bg-[#FFFFFF] text-[#495057] font-medium text-body-sm hover:bg-[#F8F9FA] flex items-center gap-1.5 transition-all cursor-pointer">
+                                <span class="material-symbols-outlined text-[16px]">swap_vert</span>
+                                Nombre A–Z
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Data Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-[#EDEAE2] border-b border-[#DEE2E6] text-label-sm font-label-sm text-[#495057] uppercase tracking-wider h-10">
+                                    <th class="py-2.5 px-4 font-semibold" scope="col">Producto</th>
+                                    <th class="py-2.5 px-4 font-semibold" scope="col">SKU base</th>
+                                    <th class="py-2.5 px-4 font-semibold" scope="col">Modelo de venta</th>
+                                    <th class="py-2.5 px-4 font-semibold" scope="col">Estado</th>
+                                    <th class="py-2.5 px-4 text-right font-semibold" scope="col">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#F1F3F5] text-body-md">
+                                <!-- ROW 1: Active simple product -->
+                                <tr class="hover:bg-[#F8F9FA] transition-colors duration-150 h-[52px]">
+                                    <td class="py-3 px-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 rounded-lg bg-[#F8F9FA] border border-[#DEE2E6] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                <span
+                                                    class="material-symbols-outlined text-[#C2410C] text-[20px]">sprint</span>
+                                            </div>
+                                            <div>
+                                                <span class="font-semibold text-[#1B1812] block">Zapatilla Trail Inka
+                                                    Explorer 40</span>
+                                                <span class="text-body-sm text-[#6C757D]">Calzado / Trail Running ·
+                                                    Inka Athletics</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="font-mono text-xs text-[#495057] bg-[#F8F9FA] px-2 py-0.5 rounded border border-[#DEE2E6]">ZAP-TRL-EXP-40</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="text-body-sm text-[#495057]">Con variantes</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-semibold bg-[#EBFBEE] text-[#1C6B30] border border-[#B2F2BB]">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-[#2F9E44]"></span>
+                                            Activo
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                        <a class="text-label-md font-label-md text-[#495057] hover:text-[#1B1812] hover:underline"
+                                            href="#">Ver detalle</a>
+                                        <span class="text-[#DEE2E6] mx-1.5">·</span>
+                                        <a class="text-label-md font-label-md text-[#C2410C] font-bold hover:underline"
+                                            href="#">Editar</a>
+                                        <span class="text-[#DEE2E6] mx-1.5">·</span>
+                                        <a class="text-label-md font-label-md text-[#B42318] font-medium hover:underline"
+                                            href="#">Desactivar</a>
+                                    </td>
+                                </tr>
+                                <!-- ROW 2: Active simple product -->
+                                <tr class="hover:bg-[#F8F9FA] transition-colors duration-150 h-[52px]">
+                                    <td class="py-3 px-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 rounded-lg bg-[#F8F9FA] border border-[#DEE2E6] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                <span
+                                                    class="material-symbols-outlined text-[#C2410C] text-[20px]">backpack</span>
+                                            </div>
+                                            <div>
+                                                <span class="font-semibold text-[#1B1812] block">Mochila de
+                                                    Entrenamiento Pro</span>
+                                                <span class="text-body-sm text-[#6C757D]">Accesorios / Mochilas ·
+                                                    Inka Athletics</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="font-mono text-xs text-[#495057] bg-[#F8F9FA] px-2 py-0.5 rounded border border-[#DEE2E6]">MOCH-ENT-001</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="text-body-sm text-[#495057]">Simple</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-semibold bg-[#EBFBEE] text-[#1C6B30] border border-[#B2F2BB]">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-[#2F9E44]"></span>
+                                            Activo
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                        <a class="text-label-md font-label-md text-[#495057] hover:text-[#1B1812] hover:underline"
+                                            href="#">Ver detalle</a>
+                                        <span class="text-[#DEE2E6] mx-1.5">·</span>
+                                        <a class="text-label-md font-label-md text-[#C2410C] font-bold hover:underline"
+                                            href="#">Editar</a>
+                                        <span class="text-[#DEE2E6] mx-1.5">·</span>
+                                        <a class="text-label-md font-label-md text-[#B42318] font-medium hover:underline"
+                                            href="#">Desactivar</a>
+                                    </td>
+                                </tr>
+                                <!-- ROW 3: Draft product (simple) -->
+                                <tr class="hover:bg-[#F8F9FA] transition-colors duration-150 h-[52px]">
+                                    <td class="py-3 px-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 rounded-lg bg-[#F8F9FA] border border-[#DEE2E6] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                <span
+                                                    class="material-symbols-outlined text-[#868E96] text-[20px]">styler</span>
+                                            </div>
+                                            <div>
+                                                <span class="font-semibold text-[#1B1812] block">Camiseta Técnica
+                                                    Running Mujer</span>
+                                                <span class="text-body-sm text-[#6C757D]">Indumentaria / Camisetas ·
+                                                    Inka Athletics</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="font-mono text-xs text-[#495057] bg-[#F8F9FA] px-2 py-0.5 rounded border border-[#DEE2E6]">CAM-TEC-RUN-M</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="text-body-sm text-[#495057]">Con variantes</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-medium bg-[#F8F9FA] text-[#495057] border border-[#DEE2E6]">
+                                            Borrador
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                        <a class="text-label-md font-label-md text-[#495057] hover:text-[#1B1812] hover:underline"
+                                            href="#">Ver detalle</a>
+                                        <span class="text-[#DEE2E6] mx-1.5">·</span>
+                                        <a class="text-label-md font-label-md text-[#C2410C] font-bold hover:underline"
+                                            href="#">Editar</a>
+                                    </td>
+                                </tr>
+                                <!-- ROW 4: Draft parent product -->
+                                <tr class="hover:bg-[#F8F9FA] transition-colors duration-150 h-[52px]">
+                                    <td class="py-3 px-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 rounded-lg bg-[#F8F9FA] border border-[#DEE2E6] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                <span
+                                                    class="material-symbols-outlined text-[#868E96] text-[20px]">checkroom</span>
+                                            </div>
+                                            <div>
+                                                <span class="font-semibold text-[#1B1812] block">Camiseta de
+                                                    Entrenamiento</span>
+                                                <span class="text-body-sm text-[#6C757D]">Indumentaria / Camisetas ·
+                                                    Inka Athletics</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="font-mono text-xs text-[#495057] bg-[#F8F9FA] px-2 py-0.5 rounded border border-[#DEE2E6]">CAM-ENT</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="text-body-sm text-[#495057]">Con variantes</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-medium bg-[#F8F9FA] text-[#495057] border border-[#DEE2E6]">
+                                            Borrador
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                        <a class="text-label-md font-label-md text-[#495057] hover:text-[#1B1812] hover:underline"
+                                            href="#">Ver detalle</a>
+                                        <span class="text-[#DEE2E6] mx-1.5">·</span>
+                                        <a class="text-label-md font-label-md text-[#C2410C] font-bold hover:underline"
+                                            href="#">Editar</a>
+                                    </td>
+                                </tr>
+                                <!-- ROW 5: Inactive product -->
+                                <tr class="hover:bg-[#F8F9FA] transition-colors duration-150 h-[52px]">
+                                    <td class="py-3 px-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 rounded-lg bg-[#F8F9FA] border border-[#DEE2E6] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                <span
+                                                    class="material-symbols-outlined text-[#868E96] text-[20px]">directions_run</span>
+                                            </div>
+                                            <div>
+                                                <span class="font-semibold text-[#1B1812] block">Short de Compresión
+                                                    Trail</span>
+                                                <span class="text-body-sm text-[#6C757D]">Indumentaria / Shorts · Inka
+                                                    Athletics</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="font-mono text-xs text-[#495057] bg-[#F8F9FA] px-2 py-0.5 rounded border border-[#DEE2E6]">SHR-CMP-TRL</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="text-body-sm text-[#495057]">Con variantes</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-medium bg-[#FFF5F5] text-[#B42318] border border-[#FFC9C9]">
+                                            Inactivo
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                        <a class="text-label-md font-label-md text-[#495057] hover:text-[#1B1812] hover:underline"
+                                            href="#">Ver detalle</a>
+                                        <span class="text-[#DEE2E6] mx-1.5">·</span>
+                                        <button
+                                            class="h-7 px-3 text-xs font-label-md text-label-md text-[#C2410C] border border-[#C2410C] hover:bg-[#FCE3D0] rounded transition-colors inline-flex items-center cursor-pointer">
+                                            Reactivar
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- ROW 6: Active simple -->
+                                <tr class="hover:bg-[#F8F9FA] transition-colors duration-150 h-[52px]">
+                                    <td class="py-3 px-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 rounded-lg bg-[#F8F9FA] border border-[#DEE2E6] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                <span
+                                                    class="material-symbols-outlined text-[#C2410C] text-[20px]">fitness_center</span>
+                                            </div>
+                                            <div>
+                                                <span class="font-semibold text-[#1B1812] block">Banda de Resistencia
+                                                    Pro Pack</span>
+                                                <span class="text-body-sm text-[#6C757D]">Accesorios / Entrenamiento ·
+                                                    Inka Pro Performance</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="font-mono text-xs text-[#495057] bg-[#F8F9FA] px-2 py-0.5 rounded border border-[#DEE2E6]">BND-RES-PRO</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="text-body-sm text-[#495057]">Simple</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-semibold bg-[#EBFBEE] text-[#1C6B30] border border-[#B2F2BB]">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-[#2F9E44]"></span>
+                                            Activo
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                        <a class="text-label-md font-label-md text-[#495057] hover:text-[#1B1812] hover:underline"
+                                            href="#">Ver detalle</a>
+                                        <span class="text-[#DEE2E6] mx-1.5">·</span>
+                                        <a class="text-label-md font-label-md text-[#C2410C] font-bold hover:underline"
+                                            href="#">Editar</a>
+                                        <span class="text-[#DEE2E6] mx-1.5">·</span>
+                                        <a class="text-label-md font-label-md text-[#B42318] font-medium hover:underline"
+                                            href="#">Desactivar</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- ========================================================================= -->
+                    <!-- PAGINATION (DS-C18)                                                        -->
+                    <!-- ========================================================================= -->
+                    <div class="p-4 border-t border-[#F1F3F5] flex items-center justify-between">
+                        <span class="text-body-sm text-[#6C757D]">Página <span
+                                class="font-semibold text-[#1B1812]">1</span> de 4 · 24 productos</span>
+                        <div class="flex items-center gap-1">
+                            <button disabled
+                                class="w-8 h-8 rounded-lg border border-[#DEE2E6] bg-[#FFFFFF] text-[#868E96] flex items-center justify-center cursor-not-allowed opacity-50">
+                                <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+                            </button>
+                            <button
+                                class="w-8 h-8 rounded-lg bg-[#FCE3D0] text-[#1B1812] font-bold text-body-sm border border-[#F76707]/30 flex items-center justify-center">1</button>
+                            <button
+                                class="w-8 h-8 rounded-lg border border-[#DEE2E6] bg-[#FFFFFF] text-[#495057] font-medium text-body-sm hover:bg-[#F8F9FA] flex items-center justify-center cursor-pointer transition-colors">2</button>
+                            <button
+                                class="w-8 h-8 rounded-lg border border-[#DEE2E6] bg-[#FFFFFF] text-[#495057] font-medium text-body-sm hover:bg-[#F8F9FA] flex items-center justify-center cursor-pointer transition-colors">3</button>
+                            <button
+                                class="w-8 h-8 rounded-lg border border-[#DEE2E6] bg-[#FFFFFF] text-[#495057] font-medium text-body-sm hover:bg-[#F8F9FA] flex items-center justify-center cursor-pointer transition-colors">4</button>
+                            <button
+                                class="w-8 h-8 rounded-lg border border-[#DEE2E6] bg-[#FFFFFF] text-[#495057] flex items-center justify-center cursor-pointer hover:bg-[#F8F9FA] transition-colors">
+                                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- FOOTER INFO CALLOUT -->
+                <div
+                    class="bg-surface-container-low border border-[#DEE2E6] rounded-xl p-4 flex items-start gap-3 text-body-sm text-[#495057]">
+                    <span class="material-symbols-outlined text-[#F76707] text-xl mt-0.5"
+                        style="font-variation-settings: 'FILL' 1;">info</span>
+                    <p class="leading-relaxed">
+                        La activación de un producto requiere que cumpla todos los requisitos: datos mínimos, imagen,
+                        características obligatorias, medidas completas (para simples) y preparación de Pricing e
+                        Inventario confirmada. Los productos con variantes deben tener al menos una variante activa.
+                    </p>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

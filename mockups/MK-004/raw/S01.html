@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Inka Athletics - Gestión de Variantes y SKU</title>
+    <link href="../../assets/brand-header.css" rel="stylesheet" />
+    <!-- Material Symbols Outlined -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Google Fonts: Inter & Oswald -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Oswald:wght@500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Tailwind CSS with forms container-queries -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e9e1d7",
+                        "on-secondary-fixed-variant": "#832600",
+                        "outline": "#8d7165",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#e2bfb1",
+                        "on-primary-container": "#511c00",
+                        "inverse-primary": "#ffb694",
+                        "surface-container-highest": "#e4e2dd",
+                        "secondary-fixed-dim": "#ffb59d",
+                        "secondary": "#ac3400",
+                        "on-tertiary-fixed-variant": "#4a463f",
+                        "primary-fixed": "#ffdbcc",
+                        "secondary-fixed": "#ffdbd0",
+                        "inverse-surface": "#30312e",
+                        "surface-variant": "#e4e2dd",
+                        "on-secondary": "#ffffff",
+                        "background": "#fbf9f4",
+                        "on-surface-variant": "#594137",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#f2f1ec",
+                        "surface-dim": "#dbdad5",
+                        "surface-container": "#f0eee9",
+                        "primary-fixed-dim": "#ffb694",
+                        "surface-container-high": "#eae8e3",
+                        "tertiary": "#635e56",
+                        "surface": "#fbf9f4",
+                        "on-tertiary-fixed": "#1e1b15",
+                        "on-primary-fixed-variant": "#7b2f00",
+                        "on-secondary-fixed": "#390c00",
+                        "secondary-container": "#fd6b36",
+                        "primary-container": "#f76707",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#302c25",
+                        "on-secondary-container": "#5d1900",
+                        "on-primary-fixed": "#351000",
+                        "on-background": "#1b1c19",
+                        "tertiary-container": "#99938a",
+                        "surface-bright": "#fbf9f4",
+                        "surface-tint": "#a14000",
+                        "primary": "#a14000",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f5f3ee",
+                        "on-surface": "#1b1c19",
+                        "tertiary-fixed-dim": "#cdc5bc"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter-desktop": "1.5rem",
+                        "space-xs": "0.25rem",
+                        "space-sm": "0.5rem",
+                        "margin": "1rem",
+                        "space-lg": "1.25rem",
+                        "margin-desktop": "2rem",
+                        "space-xl": "2rem",
+                        "gutter": "1rem",
+                        "space-md": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "label-lg": ["Inter", "sans-serif"],
+                        "label-caps": ["Oswald", "sans-serif"],
+                        "label-sm": ["Inter", "sans-serif"],
+                        "headline-xl": ["Oswald", "sans-serif"],
+                        "label-md": ["Inter", "sans-serif"],
+                        "headline-lg": ["Oswald", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "body-sm": ["Inter", "sans-serif"],
+                        "headline-sm": ["Oswald", "sans-serif"],
+                        "headline-md": ["Oswald", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "headline-xl-mobile": ["Oswald", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "label-caps": ["13px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "600" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+                        "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "0.03em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "headline-xl-mobile": ["30px", { "lineHeight": "36px", "letterSpacing": "0.03em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body
+    class="bg-background text-on-surface antialiased font-body-md text-body-md min-h-screen flex flex-col selection:bg-primary-fixed selection:text-on-primary-fixed">
+    <!-- 1. TOP APP BAR (Shared Component: TopNavBar) -->
+    <header
+        class="bg-on-surface text-surface h-16 fixed top-0 left-0 right-0 z-50 px-space-lg lg:px-space-xl flex items-center justify-between border-b border-surface-variant/20 shadow-none">
+        <!-- Brand Anchor & Subtitle -->
+        <div class="flex items-center gap-space-lg">
+            <div class="inka-brand">
+                <span class="inka-brand__logo" aria-hidden="true">
+                    <img src="../../assets/inka-athletics-logo.png" alt="" width="1214" height="910" />
+                </span>
+                <span class="inka-brand__name">Inka Athletics</span>
+                <span class="inka-brand__signal" aria-hidden="true"></span>
+            </div>
+            <div class="h-5 w-px bg-tertiary/40 hidden md:block"></div>
+            <span
+                class="hidden md:inline-block font-body-sm text-body-sm text-surface-container-high tracking-tight">Gestor
+                Comercial • Módulo Productos y Ofertas</span>
+        </div>
+        <!-- Center/Right Search and User Cluster -->
+        <div class="flex items-center gap-space-md">
+            <!-- Search Input -->
+            <div class="relative hidden sm:block w-64 lg:w-72">
+                <span
+                    class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-tertiary-fixed-dim text-lg select-none"
+                    data-icon="search">search</span>
+                <input
+                    class="w-full h-9 pl-9 pr-8 bg-surface/10 border border-surface-variant/30 rounded-lg text-surface placeholder:text-surface-container font-body-sm text-body-sm focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container"
+                    placeholder="Buscar en el catálogo (⌘K)" type="text" />
+                <span
+                    class="absolute right-2.5 top-1/2 -translate-y-1/2 font-label-sm text-label-sm text-surface-container bg-surface/20 px-1 rounded select-none">⌘K</span>
+            </div>
+            <!-- Trailing Action: Notifications -->
+            <button aria-label="Notificaciones"
+                class="relative p-2 text-surface-container hover:text-surface hover:bg-on-tertiary-container rounded-lg transition-colors duration-150 cursor-pointer">
+                <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                <span
+                    class="absolute top-2 right-2 w-2 h-2 bg-primary-container rounded-full ring-2 ring-on-surface"></span>
+            </button>
+            <div class="h-6 w-px bg-surface-variant/20 mx-1"></div>
+            <!-- User Profile (Gabriel Poma) -->
+            <div
+                class="flex items-center gap-space-sm pl-1 cursor-pointer hover:bg-on-tertiary-container p-1.5 rounded-lg transition-colors duration-150">
+                <div
+                    class="w-8 h-8 rounded-full bg-secondary text-on-secondary font-label-md text-label-md flex items-center justify-center font-bold shadow-sm ring-1 ring-white/20">
+                    GP
+                </div>
+                <div class="hidden lg:flex flex-col text-left">
+                    <span class="font-label-md text-label-md text-surface leading-tight">Gabriel Poma</span>
+                    <span class="font-body-sm text-body-sm text-surface-container leading-none text-[11px]">Admin
+                        Catálogo</span>
+                </div>
+                <span class="material-symbols-outlined text-surface-container text-base select-none"
+                    data-icon="expand_more">expand_more</span>
+            </div>
+        </div>
+    </header>
+    <!-- MAIN WRAPPER: SideNav + Workspace -->
+    <div class="flex pt-16 min-h-screen">
+        <!-- 2. DESKTOP DRAWER / SIDEBAR (Shared Component: SideNavBar) -->
+        <aside
+            class="w-60 bg-surface-container-lowest border-r border-surface-variant/80 fixed top-16 left-0 h-[calc(100vh-4rem)] z-40 flex flex-col justify-between p-space-md select-none">
+            <!-- Top Section -->
+            <div class="space-y-space-md">
+                <!-- Environment Badge -->
+                <div
+                    class="px-2 py-1.5 bg-surface-container-low rounded-lg border border-surface-variant/40 flex flex-col gap-1">
+                    <span
+                        class="font-label-caps text-label-caps uppercase text-tertiary text-[10px] tracking-wider">Módulo
+                        de Gestión</span>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="font-label-md text-label-md text-on-surface text-[11px] font-semibold">Producción
+                            PE-CENTRAL</span>
+                    </div>
+                </div>
+                <!-- Navigation Group: Catálogo -->
+                <div class="space-y-1">
+                    <div
+                        class="px-space-md py-1 flex items-center justify-between text-tertiary font-label-caps text-label-caps uppercase text-[11px] tracking-wider">
+                        <span>Catálogo</span>
+                        <span class="material-symbols-outlined text-sm" data-icon="expand_less">expand_less</span>
+                    </div>
+                    <nav class="space-y-0.5">
+                        <!-- Carga Masiva -->
+                        <a class="flex items-center gap-space-sm px-space-md py-2 font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface rounded-lg transition-colors duration-150"
+                            href="#">
+                            <span class="material-symbols-outlined text-lg" data-icon="upload_file">upload_file</span>
+                            <span>Carga masiva</span>
+                        </a>
+                        <!-- Productos -->
+                        <a class="flex items-center gap-space-sm px-space-md py-2 font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface rounded-lg transition-colors duration-150"
+                            href="#">
+                            <span class="material-symbols-outlined text-lg" data-icon="inventory_2">inventory_2</span>
+                            <span>Productos</span>
+                        </a>
+                        <!-- Variantes (ACTIVE TAB) -->
+                        <a class="flex items-center gap-space-sm bg-primary-fixed text-on-primary-fixed border-l-4 border-primary px-space-md py-2 font-label-lg text-label-lg rounded-r-lg font-bold shadow-sm transition-all duration-150"
+                            href="#">
+                            <span class="material-symbols-outlined text-lg text-primary" data-icon="style"
+                                style="font-variation-settings: 'FILL' 1;">style</span>
+                            <span class="text-on-surface font-semibold">Variantes</span>
+                        </a>
+                        <!-- Combos -->
+                        <a class="flex items-center gap-space-sm px-space-md py-2 font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface rounded-lg transition-colors duration-150"
+                            href="#">
+                            <span class="material-symbols-outlined text-lg" data-icon="layers">layers</span>
+                            <span>Combos</span>
+                        </a>
+                    </nav>
+                </div>
+                <!-- Additional Operational Modules -->
+                <div class="space-y-0.5 pt-2 border-t border-surface-variant/40">
+                    <a class="flex items-center gap-space-sm px-space-md py-2 font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface rounded-lg transition-colors duration-150"
+                        href="#">
+                        <span class="material-symbols-outlined text-lg" data-icon="sell">sell</span>
+                        <span>Promociones</span>
+                    </a>
+                    <a class="flex items-center gap-space-sm px-space-md py-2 font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface rounded-lg transition-colors duration-150"
+                        href="#">
+                        <span class="material-symbols-outlined text-lg" data-icon="category">category</span>
+                        <span>Clasificación y SEO</span>
+                    </a>
+                    <a class="flex items-center gap-space-sm px-space-md py-2 font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface rounded-lg transition-colors duration-150"
+                        href="#">
+                        <span class="material-symbols-outlined text-lg" data-icon="payments">payments</span>
+                        <span>Precios</span>
+                    </a>
+                    <a class="flex items-center gap-space-sm px-space-md py-2 font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface rounded-lg transition-colors duration-150"
+                        href="#">
+                        <span class="material-symbols-outlined text-lg" data-icon="warehouse">warehouse</span>
+                        <span>Inventario</span>
+                    </a>
+                </div>
+            </div>
+            <!-- Bottom Engine Status Indicator -->
+            <div class="pt-3 border-t border-surface-variant/40">
+                <div
+                    class="p-2.5 bg-surface-container-low rounded-lg border border-surface-variant/40 flex items-start gap-2.5">
+                    <div class="w-2.5 h-2.5 mt-0.5 rounded-full bg-emerald-500 animate-ping"></div>
+                    <div>
+                        <p class="font-label-sm text-label-sm text-on-surface font-semibold text-[11px] leading-tight">
+                            Motor MK-004 v2.4 Activo</p>
+                        <p class="font-body-sm text-body-sm text-tertiary text-[10px] leading-snug">Sincronización
+                            multi-dominio</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <!-- 3. WORKSPACE CANVAS (1440px Viewport / 1136px Content Area) -->
+        <main class="ml-60 flex-1 bg-surface min-h-[calc(100vh-4rem)] p-8">
+            <div class="max-w-[1136px] mx-auto space-y-6">
+                <!-- BREADCRUMBS & TOP NAV BACK LINK -->
+                <section class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <nav aria-label="Breadcrumb"
+                        class="flex items-center gap-2 font-body-sm text-body-sm text-tertiary">
+                        <a class="hover:text-primary transition-colors" href="#">Catálogo</a>
+                        <span class="text-tertiary-fixed-dim">/</span>
+                        <a class="hover:text-primary transition-colors" href="#">Productos</a>
+                        <span class="text-tertiary-fixed-dim">/</span>
+                        <span class="text-on-surface font-medium truncate max-w-xs md:max-w-md">Zapatilla Trail Inka
+                            Explorer 40</span>
+                        <span class="text-tertiary-fixed-dim">/</span>
+                        <span class="text-primary font-semibold">Variantes</span>
+                    </nav>
+                    <a class="inline-flex items-center gap-1 font-label-md text-label-md text-tertiary hover:text-primary transition-colors font-medium"
+                        href="#">
+                        <span class="material-symbols-outlined text-base select-none"
+                            data-icon="arrow_back">arrow_back</span>
+                        <span>Volver a productos</span>
+                    </a>
+                </section>
+                <!-- PAGE HEADER WITH TITLE & PRIMARY CTA -->
+                <header
+                    class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-surface-variant/40">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-3">
+                            <h1 class="font-headline-lg text-headline-lg uppercase text-on-surface tracking-wide">
+                                Gestión de Variantes y SKU</h1>
+                            <span
+                                class="px-2 py-0.5 rounded-full bg-primary-fixed text-primary font-label-caps text-label-caps border border-primary-fixed-dim text-xs font-semibold">
+                                MK-004-S01
+                            </span>
+                        </div>
+                        <p class="font-body-md text-body-md text-tertiary max-w-3xl">
+                            Administra las unidades vendibles del producto. Las variantes heredan el precio base del
+                            producto padre salvo que se configure un precio específico en Pricing.
+                        </p>
+                    </div>
+                    <button
+                        class="inline-flex items-center justify-center gap-2 h-10 px-5 bg-primary-container text-on-primary font-label-lg text-label-lg rounded-lg shadow-sm hover:bg-secondary transition-all shrink-0 cursor-pointer">
+                        <span class="material-symbols-outlined text-lg" data-icon="add">add</span>
+                        <span>Nueva variante</span>
+                    </button>
+                </header>
+                <!-- BANNER DE CONTEXTO DEL PRODUCTO PADRE (LUX-02, Card) -->
+                <div
+                    class="bg-surface-container-lowest border border-surface-variant/80 rounded-xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-body-md text-body-md text-tertiary">Producto padre:</span>
+                            <span class="font-label-lg text-label-lg text-on-surface font-bold text-base">Zapatilla
+                                Trail Inka Explorer 40</span>
+                        </div>
+                        <!-- Metadata Badges Row -->
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <div
+                                class="inline-flex items-center gap-1 font-mono text-xs px-2.5 py-1 bg-surface-container text-on-surface-variant rounded-md border border-surface-variant">
+                                <span class="font-semibold text-tertiary">SKU raíz:</span>
+                                <span>ZAP-TRL-EXP</span>
+                            </div>
+                            <div
+                                class="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-surface-container text-on-surface-variant rounded-md border border-surface-variant">
+                                <span class="font-semibold text-tertiary">Categoría:</span>
+                                <span>Calzado / Trail Running</span>
+                            </div>
+                            <div
+                                class="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-emerald-50 text-emerald-800 font-semibold rounded-md border border-emerald-200">
+                                <span>Precio base: S/ 249.90</span>
+                            </div>
+                            <div
+                                class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 bg-emerald-50 text-emerald-800 rounded-md border border-emerald-200 font-medium">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                <span>Estado del padre: Activo</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        class="h-9 px-3.5 bg-surface-container-lowest border border-surface-variant text-on-surface font-label-md text-label-md rounded-md hover:bg-surface-container transition-colors inline-flex items-center gap-1.5 self-start md:self-center cursor-pointer shrink-0">
+                        <span class="material-symbols-outlined text-base select-none"
+                            data-icon="visibility">visibility</span>
+                        <span>Ver ficha del padre</span>
+                    </button>
+                </div>
+                <!-- KPI SUMMARY CARDS (3-column Bento grid) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <!-- Card 1 -->
+                    <div
+                        class="bg-surface-container-lowest border border-surface-variant/80 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                        <span
+                            class="font-label-caps text-label-caps uppercase text-tertiary text-xs tracking-wider">Total
+                            variantes registradas</span>
+                        <div class="mt-3">
+                            <p class="font-headline-lg text-headline-lg font-bold text-on-surface">5 variantes</p>
+                            <p class="font-body-sm text-body-sm text-tertiary mt-1">SKUs creados en este modelo</p>
+                        </div>
+                    </div>
+                    <!-- Card 2 -->
+                    <div
+                        class="bg-surface-container-lowest border border-surface-variant/80 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <span
+                                class="font-label-caps text-label-caps uppercase text-tertiary text-xs tracking-wider">Variantes
+                                activas (en venta)</span>
+                            <span class="material-symbols-outlined text-emerald-600 text-xl" data-icon="check_circle"
+                                style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        </div>
+                        <div class="mt-3">
+                            <p class="font-headline-lg text-headline-lg font-bold text-emerald-800">3 activas</p>
+                            <p class="font-body-sm text-body-sm text-tertiary mt-1">60% del catálogo del modelo
+                                disponible</p>
+                        </div>
+                    </div>
+                    <!-- Card 3 -->
+                    <div
+                        class="bg-surface-container-lowest border border-surface-variant/80 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <span
+                                class="font-label-caps text-label-caps uppercase text-tertiary text-xs tracking-wider">En
+                                preparación / Observadas</span>
+                            <span class="material-symbols-outlined text-secondary text-xl" data-icon="schedule"
+                                style="font-variation-settings: 'FILL' 1;">schedule</span>
+                        </div>
+                        <div class="mt-3">
+                            <p class="font-headline-lg text-headline-lg font-bold text-secondary">2 variantes</p>
+                            <p class="font-body-sm text-body-sm text-tertiary mt-1">1 en preparación, 1 con datos
+                                faltantes</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- TABLA DE VARIANTES (Card container with internal toolbar) -->
+                <div
+                    class="bg-surface-container-lowest border border-surface-variant/80 rounded-xl overflow-hidden shadow-sm">
+                    <!-- Card Toolbar -->
+                    <div
+                        class="p-4 bg-surface-container-lowest border-b border-surface-variant flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                            <!-- Search in Variants -->
+                            <div class="relative w-full sm:w-80">
+                                <span
+                                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary text-lg"
+                                    data-icon="search">search</span>
+                                <input
+                                    class="w-full h-10 pl-9 pr-3 bg-surface-container-lowest border border-surface-variant rounded-lg text-on-surface placeholder:text-tertiary font-body-sm text-body-sm focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container"
+                                    placeholder="Buscar por SKU, talla o color..." type="text" />
+                            </div>
+                            <!-- Filter select dropdown -->
+                            <div class="relative">
+                                <select
+                                    class="h-10 pl-3 pr-8 bg-surface-container-lowest border border-surface-variant rounded-lg text-on-surface font-body-sm text-body-sm focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container">
+                                    <option value="todas">Estado: Todas</option>
+                                    <option value="activas">Estado: Activas</option>
+                                    <option value="borrador">Estado: Borrador</option>
+                                    <option value="inactivas">Estado: Inactivas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Total counter status badge -->
+                        <div class="font-label-md text-label-md text-tertiary shrink-0">
+                            Mostrando <span class="font-bold text-on-surface">5</span> de 5 variantes
+                        </div>
+                    </div>
+                    <!-- Data Table View -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-surface-container-high border-b border-surface-variant font-label-caps text-label-caps text-on-surface uppercase tracking-wider text-xs h-11">
+                                    <th class="py-3 px-4" scope="col">Variante (Atributos)</th>
+                                    <th class="py-3 px-4" scope="col">SKU comercial</th>
+                                    <th class="py-3 px-4" scope="col">Precio de venta</th>
+                                    <th class="py-3 px-4" scope="col">Datos físicos (despacho)</th>
+                                    <th class="py-3 px-4" scope="col">Preparación de inventario</th>
+                                    <th class="py-3 px-4" scope="col">Estado comercial</th>
+                                    <th class="py-3 px-4 text-right" scope="col">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-surface-variant/60 font-body-md text-body-md">
+                                <!-- ROW 1 -->
+                                <tr class="hover:bg-surface-container-low transition-colors duration-150 h-14">
+                                    <td class="py-3 px-4">
+                                        <span class="font-semibold text-on-surface">Talla 40 · Negro / Naranja</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="font-mono text-xs text-on-surface-variant bg-surface-container px-2 py-0.5 rounded border border-surface-variant">ZAP-TRL-40-BLK</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="text-xs text-tertiary bg-surface-container-low px-2 py-1 rounded">Hereda
+                                            S/ 249.90</span>
+                                    </td>
+                                    <td class="py-3 px-4 text-xs text-tertiary">
+                                        0.85 kg (32×22×12 cm)
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                            Lista
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                            Activa
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                        <a class="font-label-md text-label-md text-tertiary hover:text-on-surface hover:underline"
+                                            href="#">Ver detalle</a>
+                                        <span class="text-tertiary-fixed-dim mx-1.5">·</span>
+                                        <a class="font-label-md text-label-md text-primary font-bold hover:underline"
+                                            href="#">Editar</a>
+                                    </td>
+                                </tr>
+                                <!-- ROW 2 -->
+                                <tr class="hover:bg-surface-container-low transition-colors duration-150 h-14">
+                                    <td class="py-3 px-4">
+                                        <span class="font-semibold text-on-surface">Talla 41 · Negro / Naranja</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="font-mono text-xs text-on-surface-variant bg-surface-container px-2 py-0.5 rounded border border-surface-variant">ZAP-TRL-41-BLK</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="text-xs text-tertiary bg-surface-container-low px-2 py-1 rounded">Hereda
+                                            S/ 249.90</span>
+                                    </td>
+                                    <td class="py-3 px-4 text-xs text-tertiary">
+                                        0.85 kg (32×22×12 cm)
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                            Lista
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                            Activa
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                        <a class="font-label-md text-label-md text-tertiary hover:text-on-surface hover:underline"
+                                            href="#">Ver detalle</a>
+                                        <span class="text-tertiary-fixed-dim mx-1.5">·</span>
+                                        <a class="font-label-md text-label-md text-primary font-bold hover:underline"
+                                            href="#">Editar</a>
+                                    </td>
+                                </tr>
+                                <!-- ROW 3 -->
+                                <tr class="hover:bg-surface-container-low transition-colors duration-150 h-14">
+                                    <td class="py-3 px-4">
+                                        <span class="font-semibold text-on-surface">Talla 42 · Negro / Naranja</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="font-mono text-xs text-on-surface-variant bg-surface-container px-2 py-0.5 rounded border border-surface-variant">ZAP-TRL-42-BLK</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="text-xs text-tertiary bg-surface-container-low px-2 py-1 rounded">Hereda
+                                            S/ 249.90</span>
+                                    </td>
+                                    <td class="py-3 px-4 text-xs text-tertiary">
+                                        0.85 kg (32×22×12 cm)
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+                                            <span class="material-symbols-outlined text-xs"
+                                                data-icon="pending">pending</span>
+                                            Preparando inventario
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center text-xs px-2.5 py-0.5 rounded-full font-medium bg-surface-container text-tertiary border border-surface-variant">
+                                            Borrador
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                        <a class="font-label-md text-label-md text-secondary font-medium hover:underline"
+                                            href="#">Consultar estado</a>
+                                        <span class="text-tertiary-fixed-dim mx-1.5">·</span>
+                                        <a class="font-label-md text-label-md text-primary font-bold hover:underline"
+                                            href="#">Editar</a>
+                                    </td>
+                                </tr>
+                                <!-- ROW 4 -->
+                                <tr class="hover:bg-surface-container-low transition-colors duration-150 h-14">
+                                    <td class="py-3 px-4">
+                                        <span class="font-semibold text-on-surface">Talla 43 · Negro / Naranja</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="font-mono text-xs text-on-surface-variant bg-surface-container px-2 py-0.5 rounded border border-surface-variant">ZAP-TRL-43-BLK</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="text-xs text-tertiary bg-surface-container-low px-2 py-1 rounded">Hereda
+                                            S/ 249.90</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center gap-1 text-xs font-semibold text-error bg-error-container/40 px-2 py-0.5 rounded border border-error-container">
+                                            <span class="material-symbols-outlined text-xs"
+                                                data-icon="warning">warning</span>
+                                            Incompleto (Falta peso)
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center text-xs px-2.5 py-0.5 rounded-full font-medium bg-surface-container text-tertiary border border-surface-variant">
+                                            Pendiente
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center text-xs px-2.5 py-0.5 rounded-full font-medium bg-surface-container text-tertiary border border-surface-variant">
+                                            Borrador
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                        <a class="font-label-md text-label-md text-error font-bold hover:underline"
+                                            href="#">Completar medidas</a>
+                                        <span class="text-tertiary-fixed-dim mx-1.5">·</span>
+                                        <a class="font-label-md text-label-md text-primary font-bold hover:underline"
+                                            href="#">Editar</a>
+                                    </td>
+                                </tr>
+                                <!-- ROW 5 -->
+                                <tr class="hover:bg-surface-container-low transition-colors duration-150 h-14">
+                                    <td class="py-3 px-4">
+                                        <span class="font-semibold text-on-surface">Talla 39 · Azul / Gris (Ed.
+                                            2025)</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="font-mono text-xs text-on-surface-variant bg-surface-container px-2 py-0.5 rounded border border-surface-variant">ZAP-TRL-39-BLU</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="text-xs text-tertiary bg-surface-container-low px-2 py-1 rounded">Hereda
+                                            S/ 249.90</span>
+                                    </td>
+                                    <td class="py-3 px-4 text-xs text-tertiary">
+                                        0.82 kg (31×21×12 cm)
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                            Lista
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span
+                                            class="inline-flex items-center text-xs px-2.5 py-0.5 rounded-full font-medium bg-rose-50 text-rose-800 border border-rose-200">
+                                            Inactiva
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                        <button
+                                            class="h-7 px-3 text-xs font-label-md text-label-md text-primary border border-primary hover:bg-primary-fixed rounded transition-colors inline-flex items-center cursor-pointer">
+                                            Reactivar
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- FOOTER INFORMATIVO & CALLOUT -->
+                <div
+                    class="bg-surface-container-low border border-surface-variant/70 rounded-xl p-4 flex items-start gap-3 text-body-sm text-body-sm text-tertiary shadow-none">
+                    <span class="material-symbols-outlined text-primary-container text-xl mt-0.5 select-none"
+                        data-icon="info" style="font-variation-settings: 'FILL' 1;">info</span>
+                    <p class="leading-relaxed">
+                        «Cada variante constituye un SKU vendible independiente para inventario. El precio base se
+                        hereda del producto padre salvo configuración expresa de precio en <a
+                            class="font-semibold text-primary underline" href="#">Gestión de precios (MK-013)</a>.»
+                    </p>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>
