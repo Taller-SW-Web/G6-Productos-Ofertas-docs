@@ -279,3 +279,5 @@ flowchart LR
 4. **Reporte por fila y dominio:** El reporte descargable (`/reporte`) incluye el estado particular de cada fila y detalla `failed_domain`, `code` canónico y `detail` para facilitar la corrección manual o automática.
 5. **Idempotencia de reintento:** La reanudación de un lote (`/reanudar`) utiliza el mismo `batch_id` y `correlation_id` para continuar exclusivamente con las operaciones no consolidadas, evitando duplicar registros de producto o saldos en inventario.
 6. **Exportación no bloqueante:** La exportación general de productos se ejecuta en segundo plano bajo un trabajo identificable (`export_id`), consolidando la totalidad del catálogo en formato CSV o XLSX sin comprometer la disponibilidad transaccional.
+
+Bulk coordina y reutiliza los eventos existentes; Catálogo conserva validaciones, identidad SKU, barreras, versiones y transacciones locales. No se agregan rutas paralelas ni escritura directa a persistencia de Catálogo. Los detalles de payload no expresados por los contratos vigentes son dependencia contractual específica y no se infieren en este FLOW.

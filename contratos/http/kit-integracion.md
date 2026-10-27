@@ -123,6 +123,8 @@ scope
 
 separados por espacios.
 
+Para las llamadas internas aprobadas entre bounded contexts G6 se reutiliza la identidad compartida `client_id=modulo-productos`, `tipo=servicio`, `aud=api-productos` y el scope existente propio de la operación. Ese JWT identifica a G6, no a un microservicio específico; el aislamiento de servicio se apoya en HTTP privado, red restringida y autorización por operación. G7 aún debe confirmar grants y provisionar credenciales. No reutilizar el JWT del consumidor comercial ni aceptar cabeceras arbitrarias como prueba criptográfica.
+
 Productos y Ofertas responde:
 
 ```text
@@ -172,8 +174,8 @@ La línea base conserva **16 scopes** de `api-productos`; la candidata `0.6.0-rc
 
 | Scope | Operación principal | `client_id` previsto |
 |---|---|---|
-| `catalogo:leer` | Catálogo/categorías/marcas; contexto SKU privado con allowlist separada | Marketplace, Chatbot, Retail para comerciales; Pricing propuesto solo para `obtenerContextoSku`, pendiente de G7 |
-| `precios:leer` | Precio | Marketplace, Chatbot, Retail |
+| `catalogo:leer` | Catálogo/categorías/marcas; contexto SKU privado con autorización por operación | Marketplace, Chatbot, Retail para comerciales; `modulo-productos` para `obtenerContextoSku`, grant G7 pendiente |
+| `precios:leer` | Solo consultas de precios (`GET`); no autoriza actualización ni programación | Marketplace, Chatbot, Retail; lectura interna de Catálogo con `modulo-productos`, grant G7 pendiente |
 | `promociones:leer` | Promociones | Marketplace, Chatbot, Retail |
 | `promociones:evaluar` | Evaluación | Marketplace, Chatbot, Retail |
 | `cupones:validar` | Cupón | Marketplace, Chatbot, Retail |
@@ -1451,4 +1453,4 @@ GET /api/v1/recomendaciones?productoId={id}&canal={MARKETPLACE|CHATBOT|RETAIL}
 
 ## Filtros de precio en catálogo
 
-`precioMin` y `precioMax` representan extremos inclusivos en PEN del precio efectivo vigente de Pricing: oferta vigente o, en su ausencia, precio regular. Sin conversión de moneda. Para variantes se compara cada SKU activo/elegible y el padre cuenta una vez. Catálogo consulta candidatos en lotes de 1–100 SKU con un mismo `at`; filtra, deduplica, ordena por nombre con `product_id` como desempate y pagina después. SKU sin precio vigente no satisface el filtro; errores o procesamiento incompleto detectado de Pricing producen `503` sin resultados parciales. Canales, mapeo SKU→producto y autorización técnica Catálogo↔Pricing no están homologados; estos parámetros no crean nuevos scopes. Ver [SPEC-003 §7](../../requisitos/specs/SPEC-003-gestion-productos-crud.md) para el detalle.
+`precioMin` y `precioMax` representan extremos inclusivos en PEN del precio efectivo vigente de Pricing: oferta vigente o, en su ausencia, precio regular. Sin conversión. Para variantes se compara cada SKU activo/elegible y el padre cuenta una vez. Catálogo consulta todos los candidatos en lotes de 1–100 SKU con un mismo `at`, filtra antes de contar/paginar y no devuelve páginas parciales ante fallo. La identidad G6 compartida es `modulo-productos` con `precios:leer`; no se reutiliza token entrante ni se amplían allowlists comerciales. Canales canónicos: `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS`; global `null`. Para SKU con coma en CSV, usar GET individual existente con path codificado. Presupuesto inicial máximo 5 s incluye adquisición token y lotes, pendiente de E2E y no SLA. Ver [SPEC-003 §7](../../requisitos/specs/SPEC-003-gestion-productos-crud.md).

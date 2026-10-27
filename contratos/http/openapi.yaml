@@ -50,8 +50,12 @@ paths:
         con los flags correspondientes en false; solo la inexistencia devuelve 404.
         Pricing traduce exclusivamente 404 SKU_NO_ENCONTRADO a null en su adaptador;
         fallos de red, 503 y errores de autorización no se convierten en ausencia.
-        Identidad propuesta modulo-pricing aprobada en diseño por G6: G7 debe confirmar su
-        identificador técnico, grant, emisión y provisión de token. No acredita credenciales,
+        Identidad técnica compartida de G6 aprobada internamente por Marco: client_id=modulo-productos,
+        tipo=servicio, aud=api-productos y scope existente catalogo:leer. G7 debe confirmar
+        grant, emisión y provisión de credenciales. No identifica individualmente a catalog-svc
+        ni a pricing-svc. El aislamiento se aplica mediante HTTP privado, restricción de red,
+        autorización por operación y validación JWT; no se publica vía Gateway externo ni se
+        aceptan cabeceras arbitrarias como prueba de identidad. No acredita credenciales,
         implementación, compatibilidad runtime ni pruebas integradas.
       x-status: provisional-internal
       x-internal: true
@@ -66,7 +70,7 @@ paths:
       x-required-scope: catalogo:leer
       x-scope-registration-status: pending-security-registration
       x-allowed-client-ids:
-      - modulo-pricing
+      - modulo-productos
       security:
       - serviceBearer: []
       parameters:
@@ -1751,7 +1755,7 @@ paths:
       x-status: stable
       x-source-spec:
       - SPEC-013
-      description: 'Resuelve el precio efectivo de varios SKU para el instante solicitado. El canal es opcional: si se omite, se utiliza
+      description: 'Resuelve el precio efectivo de varios SKU para el instante solicitado. Los códigos canónicos son MARKETPLACE, CHATBOT, RETAIL y VENTAS; el alcance global se representa omitiendo canal (channel_id=null). El canal es opcional: si se omite, se utiliza
         el alcance global; si se informa, se aplica el alcance específico con fallback al global cuando corresponda.'
       x-service-audience: api-productos
       x-required-scope: precios:leer
@@ -1771,13 +1775,13 @@ paths:
             type: string
           minItems: 1
           maxItems: 100
-        description: Lista separada por comas.
+        description: Lista separada por comas. Si un SKU opaco contiene una coma y no puede representarse inequívocamente, usar GET /precios/skus/{sku} para esa identidad; codificar el SKU correctamente en el path.
       - name: canal
         in: query
         required: false
         schema:
           $ref: '#/components/schemas/Canal'
-        description: Canal opcional. Si se omite, Pricing resuelve el precio global (channel_id efectivo = null). Si se informa, se
+        description: Códigos canónicos MARKETPLACE, CHATBOT, RETAIL o VENTAS. Si se omite, Pricing resuelve el alcance global (channel_id = null). Si se informa, se
           intenta el alcance específico y, si no existe una vigencia aplicable, se usa el precio global.
       - name: at
         in: query
@@ -20958,6 +20962,7 @@ components:
         - 403 + SCOPE_INSUFICIENTE: el canal solicitado es válido, pero no corresponde al client_id autenticado, o la identidad carece de autorización para la operación.
     Canal:
       type: string
+      description: Identificador comercial canónico de Pricing. El alcance global se expresa omitiendo canal y persiste como channel_id null; no es client_id de Seguridad.
       enum:
       - MARKETPLACE
       - CHATBOT
@@ -23107,7 +23112,7 @@ components:
         version:
           type: integer
           minimum: 0
-          description: source_version del maestro o asociación capturada al admitir la operación; no es la versión de la operación ni schema_version.
+          description: Versión autoritativa correlacionada. En PRODUCT_TYPE_CHARACTERISTIC es el schema_version del tipo capturado al admitir, no una versión de fila; schema_version del envelope y schema_version_resultante son valores distintos.
         status:
           type: string
           enum:
@@ -24915,10 +24920,13 @@ x-security-contract:
       - modulo-marketplace
       - modulo-chatbot
       - modulo-retail
-      - modulo-pricing
-      note: modulo-pricing se propone únicamente para obtenerContextoSku; identidad final, grant y token pendientes de G7. No amplía allowlists comerciales.
+      note: modulo-productos es identidad técnica compartida G6 aprobada internamente para obtenerContextoSku, pero no se añade a la allowlist comercial. G7 debe confirmar grant y provisión de credenciales; la identidad no individualiza microservicios.
     precios:leer:
-      clients: *id066
+      clients:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
+      note: modulo-productos es identidad técnica compartida G6 aprobada para lecturas internas, pero no se añade a allowlists comerciales. G7 debe confirmar grant efectivo.
     promociones:leer:
       clients: *id715
     promociones:evaluar:

@@ -194,14 +194,14 @@ El mensaje debe transportar como mínimo:
 
 ### Requisito 9: Baja segura de tipo/asociación — contrato asíncrono
 
-La baja segura de `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC` requiere extender el contrato transversal de verificación de entidades maestras para cubrir estas entidades o formalizar un contrato equivalente.
+La baja segura de `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC` reutiliza el protocolo transversal y los cuatro mensajes existentes tipados en el AsyncAPI canónico; no agrega canales ni eventos.
 
-**Contrato publicado:** AsyncAPI 0.4.0 amplía el flujo transversal de baja segura para `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC`. Por tanto:
+**Contrato candidato documentado:** AsyncAPI especializa los payloads del flujo transversal existente para estos tipos. La versión de mensaje (`schema_version` del envelope) es distinta de la versión autoritativa `version`; la asociación incluye `tipo_producto_id` y `caracteristica_id`. Por tanto:
 
 - la regla funcional de fallo cerrado es obligatoria;
 - el endpoint HTTP puede admitir la solicitud con `202`;
 - no debe afirmarse que la operación concluyó hasta recibir `catalog.master.deactivation.checked` y el resultado final correspondiente;
-- `taxonomy.master.deactivated` confirma la baja y `taxonomy.master.deactivation.rejected` conserva el estado previo ante uso incompatible.
+- `taxonomy.master.deactivated` confirma la baja y `taxonomy.master.deactivation.rejected` conserva el estado previo ante uso incompatible; la asociación exitosa incluye `schema_version_resultante` posterior y válido.
 
 ### Requisito 10: Cambio de `tipo_producto_id` de un producto
 
@@ -286,6 +286,6 @@ La capacidad se considera correctamente documentada cuando:
 
 ### Protocolo transversal de baja de tipo y asociación
 
-`PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC` usan `source_version` capturada al entrar en `PENDING_DEACTIVATION`; para la asociación, su fuente es una `taxonomy_version` propia. La obligatoriedad o participación en identificadores exige comprobación segura, pero no implica `IN_USE` automáticamente: Catálogo devuelve `IN_USE` solo con dependencia activa e incompatible en el contexto de productos/variantes activos, incluyendo `product_identifying_characteristics`, `variant_attribute_values.es_identificador` y `variants.identifying_key`. Detrás de una barrera, Bulk también debe impedir nuevas referencias/reacciones incompatibles. Taxonomy requiere migración versionada separada para versiones/operación activa y timeout; autorización de Marco pendiente. `CLEAR` no libera por sí solo y un resultado final ausente mantiene bloqueada la barrera. Consultar [alineación de persistencia Taxonomy](../../datos/taxonomy/physical-model.md) y SPEC-008.
+Para `PRODUCT_TYPE`, `version` es la versión autoritativa capturada al admitir la baja. Para `PRODUCT_TYPE_CHARACTERISTIC`, el código candidato de Catálogo captura el `schema_version` del tipo al admitirla; no se equipara con una versión de fila ni con `taxonomy_version` independiente de la asociación. Taxonomy produce la correspondencia autoritativa entre `tipo_producto_id` y `caracteristica_id`. La obligatoriedad o participación en identificadores exige comprobación segura, pero no implica `IN_USE` automáticamente: Catálogo responde `IN_USE` solo con dependencia activa e incompatible en contexto de productos/variantes activos, incluyendo `product_identifying_characteristics`, `variant_attribute_values.es_identificador` y `variants.identifying_key`. Detrás de una barrera, Bulk impide nuevas referencias/reacciones incompatibles. El final exitoso informa `schema_version_resultante` que representa evolución confirmada posterior. Taxonomy tiene migraciones aditivas de diseño aprobadas por Marco, sujetas al proceso de BD compartida; homologación AsyncAPI sigue pendiente. `CLEAR` no libera por sí solo y un final ausente/incoherente mantiene la barrera. Consultar [modelo físico Taxonomy](../../datos/taxonomy/physical-model.md) y SPEC-008.
 
 La corrección de `tipo_producto_id` en el producto usa la propiedad opcional `tipoProductoId` del PATCH existente, con las precondiciones de SPEC-003 §7. La regla se comunica como definida; trazabilidad, migración de `publicado_alguna_vez`, implementación y pruebas siguen pendientes.

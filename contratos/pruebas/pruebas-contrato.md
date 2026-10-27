@@ -492,7 +492,7 @@ Contrato aprobado en diseño por G6: [acuerdo Pricing → Catálogo](../../integ
 | CT-CAT-SKUCONTEXT-04 | PROVIDER_CONTRACT + ADAPTER | SKU existente inactivo: `200`, `active=false` y elegibilidad correspondiente; conservar el DTO, no convertir a `404`/`null` | PENDIENTE_IMPLEMENTACION |
 | CT-CAT-SKUCONTEXT-05 | PROVIDER_CONTRACT + ADAPTER | SKU existente inelegible: `200`, `eligible=false`; no ocultar su existencia ni calcular precio/stock | PENDIENTE_IMPLEMENTACION |
 | CT-CAT-SKUCONTEXT-06 | PROVIDER_CONTRACT + ADAPTER | Error técnico/indisponibilidad: `503 SERVICIO_NO_DISPONIBLE` como Problem; fallos de red no producen ausencia ni `null` | PENDIENTE_IMPLEMENTACION |
-| CT-CAT-SKUCONTEXT-07 | SECURITY | `serviceBearer`, `aud=api-productos`, `catalogo:leer`, identidad de Pricing confirmada por G7; token ausente/inválido `401`, scope insuficiente o cliente fuera de allowlist `403`; no acceso anónimo/humano | PENDIENTE_G7_Y_EJECUCION |
+| CT-CAT-SKUCONTEXT-07 | SECURITY | Identidad compartida G6 `modulo-productos`, tipo `servicio`, `aud=api-productos`, `catalogo:leer`; JWT valida firma JWKS/issuer/audiencia/exp/tipo/scope/operación; token ausente/inválido `401`, scope/allowlist inválidos `403`; sin acceso anónimo/humano | PENDIENTE_GRANT_G7_Y_EJECUCION |
 | CT-CAT-SKUCONTEXT-08 | CONTRACT_COMPATIBILITY | SKU codificado en path conserva valor exacto y ceros iniciales; interfaz del puerto sin cambios; allowlists comerciales sin ampliación | PENDIENTE_IMPLEMENTACION |
 | CT-CAT-SKUCONTEXT-09 | SECURITY + ADAPTER | `401/403` nunca se traducen a SKU inexistente o `null` | PENDIENTE_IMPLEMENTACION |
 
@@ -502,9 +502,14 @@ Contrato aprobado en diseño por G6: [acuerdo Pricing → Catálogo](../../integ
 |---|---|---|---|
 | CT-CAT-PRICE-01 | PROVIDER_CONTRACT | `precioMin`/`precioMax` inclusivos usan precio efectivo vigente Pricing en PEN; filtro por todos los SKU elegibles antes de paginar; variante en rango cuenta el padre una vez | PENDIENTE_EJECUCION |
 | CT-CAT-PRICE-02 | INTEGRATION | SKU sin precio vigente no satisface filtro; error/truncamiento técnico detectado responde `503` sin resultados parciales; ausencia legítima no equivale a lote incompleto | PENDIENTE_HOMOLOGACION |
+| CT-CAT-PRICE-03 | CONTRACT_COMPATIBILITY | Canales canónicos `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS`; global `channel_id=null`; `client_id` no se confunde con canal; `channel_id` textual y sin mapping UUID nuevo | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-PRICE-04 | INTEGRATION | Un SKU con coma usa GET individual existente y path codificado; presupuesto total máximo 5 s incluye adquisición token y todos los lotes con un `at` común | PENDIENTE_E2E |
 | CT-CAT-TYPE-01 | PROVIDER_CONTRACT | PATCH `tipoProductoId` requiere borrador, sin variantes ni filas reales, `publicado_alguna_vez=false`, tipo activo, atributos/esquema compatibles y `catalogVersion`; NULL bloquea | PENDIENTE_IMPLEMENTACION |
 | CT-CAT-BARCODE-01 | PROVIDER_CONTRACT | Código exacto, globalmente único, no reutilizable; resolución devuelve SKU solo si asociación vigente y SKU comercialmente elegible | PENDIENTE_IMPLEMENTACION |
 | CT-CAT-RETRY-01 | INTEGRATION | Todo `REJECTED` no reintenta; `PENDING` solo tras 300000 ms desde `published_at` confirmado y con replay idempotente/admisión atómica verificados | PENDIENTE_HOMOLOGACION |
 | CT-CAT-VARIANT-01 | PROVIDER_CONTRACT | Crear variante omitiendo, anulando o enviando vacío `sku` devuelve `422 SKU_INVALIDO`; SKU reservado devuelve `409 SKU_DUPLICADO` | PENDIENTE_IMPLEMENTACION |
-| CT-CAT-MASTER-01 | CONTRACT_COMPATIBILITY | Baja maestra conserva bloqueo hasta resultado final; `CLEAR` aislado no libera; los cuatro mensajes y el mapeo de estado esperan homologación antes de especializar schemas compartidos | PENDIENTE_HOMOLOGACION |
+| CT-CAT-MASTER-01 | CONTRACT_COMPATIBILITY | Baja maestra de cinco tipos; cuatro mensajes existentes tipados y correlacionados; resultado solo `CLEAR | IN_USE`; `CLEAR` aislado no libera; final debe coincidir en entidad, IDs, operation_id y version | PENDIENTE_HOMOLOGACION |
+| CT-CAT-MASTER-02 | CONSUMER_PROVIDER | Asociación porta `tipo_producto_id`, `caracteristica_id`; versión capturada es schema_version del tipo; final exitoso trae schema_version_resultante posterior y válido | PENDIENTE_HOMOLOGACION |
+| CT-CAT-MASTER-03 | INTEGRATION | Timeout Taxonomy 60 s cierra durablemente con final; no libera barrera por timeout/ausencia; separar de preparaciones de 300000 ms | PENDIENTE_E2E |
+| CT-CAT-GATEWAY-01 | STATIC_CONTRACT | El generador de rutas excluye operaciones OpenAPI `x-internal: true`; `obtenerContextoSku` no se publica en Gateway | PENDIENTE_BACKEND |
 | CT-CAT-VARIANTS-400 | PROVIDER_CONTRACT | UUID inválido en listado/detalle de variante y query inválida en listado responden `400 VALIDACION`; IDs válidos inexistentes conservan sus 404 | PENDIENTE_EJECUCION |

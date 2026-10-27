@@ -504,6 +504,8 @@ GET /api/v1/precios/skus/{sku}
 
 `GET /api/v1/precios` resuelve precios de varios SKU y admite contexto de canal y fecha (`at`) según OpenAPI.
 
+Catálogo usa esta lectura con identidad G6 compartida `modulo-productos` y `precios:leer`; no reutiliza el token del consumidor. Canales canónicos: `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS`; global `channel_id=null`. Los consumidores comerciales conservan sus allowlists actuales. El parámetro `skus` sigue CSV; si un SKU opaco contiene coma se usa el GET individual existente con path codificado. En el filtro de catálogo, todos los lotes comparten `at` y el presupuesto operativo inicial total es 5 s incluyendo adquisición de token; pendiente de verificación E2E, no SLA.
+
 `GET /api/v1/precios/skus/{sku}` resuelve el precio vigente o histórico de un SKU. Puede recibir `canal` y `at`; cuando existe un alcance específico de canal se aplica el fallback global definido por Pricing.
 
 Estas rutas usan el contrato técnico `precios:leer` cuando son invocadas módulo-a-módulo por consumidores autorizados.
@@ -1497,7 +1499,7 @@ Las operaciones públicas SEO no requieren autenticación.
 
 # 21. Scopes propios de `api-productos`
 
-La consulta privada de contexto SKU para Pricing es `GET /api/v1/productos/skus/{sku}/contexto`, operación `obtenerContextoSku` de [OpenAPI](openapi.yaml). Reutiliza el DTO de `PricingCatalogContext`, distingue SKU inexistente (`404 SKU_NO_ENCONTRADO`) de existente inactivo/inelegible (`200` con flags), y conserva `503` técnico y `401/403` de Seguridad. Ver [acuerdo aprobado por G6](../../integraciones/ACUERDO_PRICING_CATALOGO_SKU_CONTEXT.md): `serviceBearer`, audiencia `api-productos`, scope existente `catalogo:leer` y allowlist exclusiva propuesta `modulo-pricing`. La identidad final y el grant/provisión dependen de G7. Esta lectura privada no amplía las allowlists de las consultas comerciales ni acredita implementación.
+La consulta privada de contexto SKU para Pricing es `GET /api/v1/productos/skus/{sku}/contexto`, operación `obtenerContextoSku` de [OpenAPI](openapi.yaml). Reutiliza el DTO `PricingCatalogContext`, distingue SKU inexistente (`404 SKU_NO_ENCONTRADO`) de existente inactivo/inelegible (`200` con flags), y conserva `503` técnico y `401/403`. Identidad aprobada internamente por Marco: `modulo-productos`, tipo `servicio`, `aud=api-productos`, scope `catalogo:leer`; G7 debe confirmar grant y credenciales. La identidad es compartida por G6, no individualiza Catálogo ni Pricing. Transporte HTTP privado, red restringida, autorización por operación y JWT validado; no exponer mediante Gateway ni confiar en cabeceras arbitrarias. Las allowlists comerciales permanecen intactas y no se acredita implementación por esta documentación.
 
 La audiencia técnica es:
 
@@ -1509,8 +1511,8 @@ La línea base conserva **16 scopes** técnicos. El candidato `0.6.0-rc.1` añad
 
 | Scope | Operaciones | Clientes previstos |
 |---|---|---|
-| `catalogo:leer` | Consultas comerciales y consulta privada `obtenerContextoSku`, con allowlists independientes | Marketplace, Chatbot, Retail en las comerciales; solo Pricing propuesto para `obtenerContextoSku`, pendiente de G7 |
-| `precios:leer` | Consultas de precios | Marketplace, Chatbot, Retail |
+| `catalogo:leer` | Consultas comerciales y consulta privada `obtenerContextoSku`, con autorización por operación | Marketplace, Chatbot, Retail en comerciales; `modulo-productos` para `obtenerContextoSku`, pendiente de grant G7 |
+| `precios:leer` | Solo consultas `GET`; no autoriza actualizar ni programar precios | Marketplace, Chatbot, Retail; lectura interna Catálogo (`modulo-productos`) aprobada, grant G7 pendiente |
 | `promociones:leer` | Consultar promociones | Marketplace, Chatbot, Retail |
 | `promociones:evaluar` | Evaluar promociones | Marketplace, Chatbot, Retail |
 | `cupones:validar` | Validar cupón | Marketplace, Chatbot, Retail |

@@ -223,4 +223,4 @@ flowchart LR
 
 ### Alineación de baja de marcas
 
-La baja de `BRAND` requiere `source_version` capturada al admitir y el resultado final correlacionado. `CLEAR` no libera por sí solo; timeout inicial de Taxonomy de 60 s, fallo o versión incompatible mantienen la marca y producen rechazo. Si falta el evento final, Catálogo conserva la barrera y alerta. Ver SPEC-008/011 y estado de migraciones en el modelo Taxonomy; compatibilidad AsyncAPI pendiente de homologación.
+La baja de `BRAND` requiere versión autoritativa capturada al admitir y resultado final correlacionado. `CLEAR` no libera por sí solo; timeout inicial de Taxonomy de 60 s, fallo o versión incompatible mantienen activa la marca y producen rechazo durable. Si falta el final verificable, Catálogo conserva la barrera hasta entrega o reconciliación segura y alerta. Ver SPEC-008/011 y el modelo Taxonomy; AsyncAPI tipada sigue candidata pendiente de homologación.

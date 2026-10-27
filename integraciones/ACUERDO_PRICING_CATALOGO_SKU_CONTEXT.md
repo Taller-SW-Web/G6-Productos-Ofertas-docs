@@ -27,17 +27,17 @@ Los errores HTTP usan `application/problem+json` y el schema `Problem` existente
 
 ## Seguridad y límite de autorización
 
-Se reutiliza `serviceBearer`, con audiencia `api-productos` y scope existente `catalogo:leer`. G6 aprueba en diseño la identidad técnica propuesta `client_id=modulo-pricing`; la allowlist de esta operación contiene únicamente esa identidad. No se autoriza acceso anónimo ni `userBearer` para esta ruta. Tener el scope compartido no habilita a otros clientes a consultarla.
+Se reutiliza el contrato G7 `client_credentials` con identidad técnica compartida por G6: `client_id=modulo-productos`, tipo `servicio`, `aud=api-productos` y scope existente `catalogo:leer`. La allowlist de esta operación contiene únicamente `modulo-productos`; no identifica individualmente a `catalog-svc` ni `pricing-svc`. No se autoriza acceso anónimo ni `userBearer`. El token debe validar firma JWT mediante JWKS, issuer, audiencia, expiración, tipo, scope y autorización por operación. La llamada usa HTTP privado con restricción de red y la ruta no se expone en Gateway externo; cabeceras arbitrarias no prueban identidad.
 
-G7 debe confirmar el identificador compatible con su registro y gestionar el grant, la emisión y la provisión del token. La definición documental no demuestra que esas credenciales existan. Las allowlists de las operaciones comerciales existentes permanecen con sus propios consumidores; este acuerdo no concede a Pricing acceso a ellas. El registro global de scopes pendientes distingue esta propuesta de una concesión efectiva.
+La decisión está aprobada internamente por Marco. G7 debe confirmar y conceder `catalogo:leer` a `modulo-productos` y provisionar credenciales `client_credentials`; hasta entonces la integración autenticada está `BLOQUEADO_ESPECÍFICO`. La definición documental no demuestra grant ni credenciales. Las allowlists comerciales permanecen intactas y el scope de lectura no concede escritura.
 
 ## Responsabilidades y estado operativo
 
 | Responsable | Trabajo y estado |
 |---|---|
-| Poma / Catálogo | Documentar la operación y el DTO en Docs/OpenAPI: alcance de esta actualización. Implementar el endpoint privado y sus pruebas de proveedor: pendiente de evidencia Backend, fuera de este cambio documental. |
-| Vera / Pricing | Implementar el adaptador HTTP del puerto existente, preservando el mapeo `404 SKU_NO_ENCONTRADO → null` y la distinción de fallos: pendiente de evidencia. |
-| G7 / Seguridad | Confirmar identidad técnica, grant, emisión y provisión del token: pendiente; no se atribuye aceptación ni credenciales concedidas. |
+| Poma / Catálogo | PR Backend #125, HEAD `e2a5ac3a665d1cb127c98b30e65cca1e3e61e462`: reporta endpoint implementado y pruebas CI de proveedor en ese SHA. Debe adecuar allowlist de `modulo-pricing` a `modulo-productos`, confirmar exclusión del Gateway y aportar SHA/CI actualizados. |
+| Vera / Pricing | Implementar el adaptador HTTP del puerto existente, preservando el mapeo `404 SKU_NO_ENCONTRADO → null` y la distinción de fallos: pendiente de evidencia; PR/issue #24 mantiene esta dependencia específica. |
+| G7 / Seguridad | Confirmar y conceder `catalogo:leer` para `modulo-productos`, `aud=api-productos`, y provisionar token `client_credentials`: pendiente; no se atribuye aceptación ni credenciales concedidas. |
 | Poma y Vera | Aportar pruebas de SKU existente, inexistente, variante, inactivo, inelegible, errores técnicos y autorización con SHA y alcance; registrar evidencias en issue #24. |
 
 La documentación aprobada es `IMPLEMENTAR_AHORA`. La implementación interna de cada owner puede avanzar con su contrato; la llamada real autenticada queda `BLOQUEADO_ESPECÍFICO` hasta confirmar identidad y token con G7. No se bloquea todo Catálogo/Pricing ni se declara integración completada. Los [casos de contrato](../contratos/pruebas/pruebas-contrato.md) distinguen validación estática de proveedor, adaptador y E2E.

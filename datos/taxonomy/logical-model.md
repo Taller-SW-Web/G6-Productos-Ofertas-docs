@@ -217,3 +217,7 @@ erDiagram
 8. **Unicidad estricta de marcas:** El nombre de una marca es único en todo el catálogo (incluso entre marcas dadas de baja lógica).
 9. **Unicidad de slug SEO:** El slug de una categoría es globalmente único y normalizado (minúsculas, números y guiones).
 10. **Baja lógica segura:** La desactivación de categorías, marcas, valores o desasociación de atributos no elimina físicamente registros; cambia el estado y tramita validaciones asíncronas con Catálogo.
+
+### Baja segura de maestros — versión lógica aprobada por Marco
+
+Se reutilizan los cuatro mensajes AsyncAPI existentes, tipados para `CATEGORY`, `BRAND`, `PRODUCT_TYPE`, `CHARACTERISTIC_VALUE` y `PRODUCT_TYPE_CHARACTERISTIC`. Para asociación, Taxonomy produce `tipo_producto_id` y `caracteristica_id` como correspondencia autoritativa. `operation_id` y `correlation_id` se conservan en el envelope. `schema_version` del mensaje es la versión del contrato; `version` correlaciona la versión autoritativa capturada (en asociación, el `schema_version` del tipo al admitir, no una versión de fila); `schema_version_resultante` identifica la evolución posterior confirmada al completar exitosamente una baja de asociación. La respuesta del check se limita a `CLEAR | IN_USE`. La operación usa `master_deactivation_operations` y almacenamiento existente; Timeout inicial 60 s. La migración aditiva de diseño está aprobada, pero no se afirma implementada, homologada ni aplicada a BD.

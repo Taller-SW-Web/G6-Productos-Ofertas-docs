@@ -1326,7 +1326,7 @@ price_audit.price_id
 | `categoria_id` | Taxonomía |
 | `marca_id` | Taxonomía |
 | `tipo_producto_id` | Taxonomía |
-| `channel_id` | enumeración contractual |
+| `channel_id` | texto nullable en Pricing: `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS`; `NULL` = global; no es `client_id` de Seguridad |
 | `user_id` | Seguridad |
 | `customer_ref` | Seguridad |
 | `order_id` | M1/Ventas |

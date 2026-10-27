@@ -54,6 +54,8 @@ La arquitectura debe permitir que estas capacidades evolucionen de forma indepen
 
 ## 1.1. Bounded contexts
 
+Los ocho bounded contexts son capacidades internas del mismo módulo G6 Productos y Ofertas; no son módulos separados frente a G7. `modulo-productos` es la identidad técnica de servicio compartida por G6 (`aud=api-productos`); no se presenta como identidad individual de cada microservicio.
+
 Se mantienen **ocho bounded contexts de negocio**:
 
 | Aplicación | Bounded context | Responsabilidad |
@@ -486,6 +488,10 @@ No debe:
 - decidir activación;
 - escribir tablas de servicios;
 - convertirse en orquestador de cada proceso interno.
+
+## 6.2.1. Rutas internas
+
+Las operaciones OpenAPI con `x-internal: true` no forman parte de las rutas publicadas por el Gateway externo. La frontera interna se protege con HTTP privado, restricciones de red, validación JWT (firma JWKS, issuer, audiencia, expiración y tipo), scope y autorización de operación; cabeceras arbitrarias no prueban identidad. La inspección del generador Backend `apps/api-gateway/test/generate-routes.mjs` en la rama Poma muestra que hoy extrae `security`, `x-required-scope`, `x-service-audience` y `x-allowed-client-ids`, pero no filtra `x-internal`. Por ello, aunque el listado `CONTRACT_ROUTES` actualmente no contiene `obtenerContextoSku`, al regenerarlo desde OpenAPI el generador puede publicarlo. La exclusión explícita de `x-internal` es pendiente de Backend/Gateway; no se modifica ni regenera en este cambio documental.
 
 ---
 
