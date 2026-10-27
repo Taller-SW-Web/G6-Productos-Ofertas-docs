@@ -1948,6 +1948,7 @@ paths:
       - modulo-marketplace
       - modulo-chatbot
       - modulo-retail
+      - modulo-productos
   /precios/skus/{sku}:
     get:
       tags:
@@ -2172,7 +2173,11 @@ paths:
         '429':
         - RATE_LIMIT_EXCEDIDO
       x-route-basis: existing-contract
-      x-allowed-client-ids: *id066
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
+      - modulo-productos
     patch:
       tags:
       - Precios
@@ -23257,7 +23262,7 @@ components:
           maxLength: 3
         channelId:
           oneOf:
-          - type: string
+          - $ref: '#/components/schemas/Canal'
           - type: 'null'
         motivoCambio:
           type: string
@@ -23288,7 +23293,7 @@ components:
           maxLength: 3
         channelId:
           oneOf:
-          - type: string
+          - $ref: '#/components/schemas/Canal'
           - type: 'null'
         validFrom:
           type: string
@@ -23327,7 +23332,7 @@ components:
           type: string
         channelId:
           oneOf:
-          - type: string
+          - $ref: '#/components/schemas/Canal'
           - type: 'null'
         validFrom:
           type: string
@@ -24128,7 +24133,7 @@ components:
           type: string
         channelId:
           oneOf:
-          - type: string
+          - $ref: '#/components/schemas/Canal'
           - type: 'null'
         validFrom:
           type: string
@@ -24926,7 +24931,8 @@ x-security-contract:
       - modulo-marketplace
       - modulo-chatbot
       - modulo-retail
-      note: modulo-productos es identidad técnica compartida G6 aprobada para lecturas internas, pero no se añade a allowlists comerciales. G7 debe confirmar grant efectivo.
+      - modulo-productos
+      note: "modulo-productos se permite solo en consultarPrecios y obtenerPrecioSku (GET) para la lectura interna Catálogo→Pricing; conserva precios:leer. La allowlist no acredita grant. G7 debe confirmar concesión y provisionar credenciales."
     promociones:leer:
       clients: *id715
     promociones:evaluar:

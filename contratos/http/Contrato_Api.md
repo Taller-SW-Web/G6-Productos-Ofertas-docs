@@ -502,9 +502,9 @@ GET /api/v1/precios
 GET /api/v1/precios/skus/{sku}
 ```
 
-`GET /api/v1/precios` resuelve precios de varios SKU y admite contexto de canal y fecha (`at`) según OpenAPI.
+`GET /api/v1/precios` resuelve precios de varios SKU y admite contexto de canal y fecha (`at`) según OpenAPI. La allowlist de esta operación y de `GET /api/v1/precios/skus/{sku}` incluye `modulo-productos` exclusivamente para lectura interna Catálogo→Pricing; ambas conservan `precios:leer`. No se amplían escrituras, programación ni endpoints de otros dominios.
 
-Catálogo usa esta lectura con identidad G6 compartida `modulo-productos` y `precios:leer`; no reutiliza el token del consumidor. Canales canónicos: `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS`; global `channel_id=null`. Los consumidores comerciales conservan sus allowlists actuales. El parámetro `skus` sigue CSV; si un SKU opaco contiene coma se usa el GET individual existente con path codificado. En el filtro de catálogo, todos los lotes comparten `at` y el presupuesto operativo inicial total es 5 s incluyendo adquisición de token; pendiente de verificación E2E, no SLA.
+Catálogo usa esta lectura con identidad G6 compartida `modulo-productos` y `precios:leer`; no reutiliza el token del consumidor. La allowlist interna solo aplica a estos dos GET de consulta. El grant y las credenciales de `modulo-productos` siguen pendientes de G7. Canales canónicos: `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS`; global `channel_id=null`. Los consumidores comerciales conservan sus allowlists actuales. El parámetro `skus` sigue CSV; si un SKU opaco contiene coma se usa el GET individual existente con path codificado. En el filtro de catálogo, todos los lotes comparten `at` y el presupuesto operativo inicial total es 5 s incluyendo adquisición de token; pendiente de verificación E2E, no SLA.
 
 `GET /api/v1/precios/skus/{sku}` resuelve el precio vigente o histórico de un SKU. Puede recibir `canal` y `at`; cuando existe un alcance específico de canal se aplica el fallback global definido por Pricing.
 

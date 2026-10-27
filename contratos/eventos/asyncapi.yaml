@@ -1048,7 +1048,7 @@ components:
         version:
           type: integer
           minimum: 0
-          description: schema_version del tipo capturada por Catalog al admitir la operación; no se equipara a una versión de fila de asociación.
+          description: schema_version autoritativa del tipo capturada y proporcionada por Taxonomy al admitir la operación; Catalog la conserva y verifica. No es schema_version del envelope ni una versión de fila de asociación.
       required: [entity_type, entity_id, tipo_producto_id, caracteristica_id, version]
       additionalProperties: true
     MasterDeactivationData:
