@@ -123,6 +123,8 @@ scope
 
 separados por espacios.
 
+Para las llamadas internas aprobadas entre bounded contexts G6 se reutiliza la identidad compartida `client_id=modulo-productos`, `tipo=servicio`, `aud=api-productos` y el scope existente propio de la operación. Ese JWT identifica a G6, no a un microservicio específico; el aislamiento de servicio se apoya en HTTP privado, red restringida y autorización por operación. G7 aún debe confirmar grants y provisionar credenciales. No reutilizar el JWT del consumidor comercial ni aceptar cabeceras arbitrarias como prueba criptográfica.
+
 Productos y Ofertas responde:
 
 ```text
@@ -172,8 +174,8 @@ La línea base conserva **16 scopes** de `api-productos`; la candidata `0.6.0-rc
 
 | Scope | Operación principal | `client_id` previsto |
 |---|---|---|
-| `catalogo:leer` | Catálogo/categorías/marcas | Marketplace, Chatbot, Retail |
-| `precios:leer` | Precio | Marketplace, Chatbot, Retail |
+| `catalogo:leer` | Catálogo/categorías/marcas; contexto SKU privado con autorización por operación | Marketplace, Chatbot, Retail para comerciales; `modulo-productos` para `obtenerContextoSku`, grant G7 pendiente |
+| `precios:leer` | Solo consultas de precios (`GET`); no autoriza actualización ni programación | Marketplace, Chatbot, Retail; `modulo-productos` solo en `consultarPrecios` y `obtenerPrecioSku` para Catálogo→Pricing; grant y credenciales G7 pendientes |
 | `promociones:leer` | Promociones | Marketplace, Chatbot, Retail |
 | `promociones:evaluar` | Evaluación | Marketplace, Chatbot, Retail |
 | `cupones:validar` | Cupón | Marketplace, Chatbot, Retail |
@@ -1448,3 +1450,7 @@ GET /api/v1/recomendaciones?productoId={id}&canal={MARKETPLACE|CHATBOT|RETAIL}
 - Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
 - Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+## Filtros de precio en catálogo
+
+`precioMin` y `precioMax` representan extremos inclusivos en PEN del precio efectivo vigente de Pricing: oferta vigente o, en su ausencia, precio regular. Sin conversión. Para variantes se compara cada SKU activo/elegible y el padre cuenta una vez. Catálogo consulta todos los candidatos en lotes de 1–100 SKU con un mismo `at`, filtra antes de contar/paginar y no devuelve páginas parciales ante fallo. La identidad G6 compartida es `modulo-productos` con `precios:leer`; el OpenAPI la permite únicamente en los GET `consultarPrecios` y `obtenerPrecioSku`, sin reutilizar token entrante ni ampliar escrituras, programación u otros dominios. El grant y las credenciales siguen pendientes de G7. Canales canónicos: `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS`; global `null`. Para SKU con coma en CSV, usar GET individual existente con path codificado. Presupuesto inicial máximo 5 s incluye adquisición token y lotes, pendiente de E2E y no SLA. Ver [SPEC-003 §7](../../requisitos/specs/SPEC-003-gestion-productos-crud.md).

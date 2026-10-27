@@ -43,7 +43,7 @@ Todas las rutas HTTP incluyen el prefijo relativo `/api/v1`. Las mutaciones de p
 | `GET /productos` | `q`, `categoriaId`, `marcaId`, `estado`, `pagina`, `tamanio`, `orden`; respuesta `PaginaProductosComercial` | Consulta y filtros; `NOMBRE_ASC`/`NOMBRE_DESC`. La respuesta comercial no acredita el estado administrativo |
 | `GET /productos/{productoId}` | `ProductoDetalleComercial` | Lectura comercial; no sustituye una lectura administrativa completa |
 | `POST /productos` | `ProductoCreateRequest` → `201 ProductoDetalle` | Confirma borrador persistido; no confirma todas las preparaciones |
-| `PATCH /productos/{productoId}` | `ProductoUpdateRequest` → `200 ProductoDetalle` | Edición; conservar `catalogVersion` cuando se dispone de la versión leída; corrección del tipo pendiente de alineación Q-06 |
+| `PATCH /productos/{productoId}` | `ProductoUpdateRequest` → `200 ProductoDetalle` | Edición; conservar `catalogVersion` cuando se dispone de la versión leída; corrección del tipo disponible por PATCH, sujeta a las precondiciones Q-06 |
 | `POST /productos/{productoId}/activar` | `EstadoMutationRequest` → `200 ProductoDetalle` | Activación tras validación del servidor |
 | `POST /productos/{productoId}/desactivar` | `EstadoMutationRequest` → `200 ProductoDetalle` | Baja lógica confirmada |
 | `POST /productos/{productoId}/reactivar` | `EstadoMutationRequest` → `200 ProductoDetalle` | Revalidación del mismo producto, sin reactivar hijos |
@@ -57,10 +57,10 @@ Todas las rutas HTTP incluyen el prefijo relativo `/api/v1`. Las mutaciones de p
 
 1. Los `GET` de producto declaran `ProductoResumenComercial`/`ProductoDetalleComercial`, sin `status`, `catalog_version`, preparación ni físico. `estado` se documenta como filtro de backoffice, pero no publica una respuesta administrativa alternativa. S01/S03/S04 requieren alinear esa lectura, no asumirla por el token. **Q-01**.
 2. `ProductoDetalle` de las mutaciones sí incluye estado y booleanos opcionales de preparación. `true` acredita únicamente el indicador informado; `false` significa preparación no confirmada y no distingue pendiente de rechazada. Ausente significa información no disponible. No se sintetiza una causa. El esquema `Variante` tampoco publica preparación por hijo. **Q-02**.
-3. SPEC/FLOW/WF requieren reintento idempotente, pero no existe ruta administrativa publicada para reintentar una inicialización. AsyncAPI publica mensajes internos, no un endpoint ni una suscripción del navegador. **Q-03**.
+3. La recuperación administrativa se solicita por las rutas HTTP de SPEC-003/004; el navegador no interactúa directamente con RabbitMQ. Los estados `REJECTED`/`PENDING` y condiciones de admisión se rigen por SPEC-003 §7 y SPEC-004 §8, sin asumir que el timeout por sí solo autoriza retry. **Q-03**.
 4. El comando de Pricing exige `moneda`, mientras `ProductoCreateRequest` solo publica `precioBaseInicial`. No se añade un campo de moneda al request mediante `additionalProperties`; se debe confirmar la fuente de moneda del entorno. **Q-04**.
 5. `PerfilFisicoInput` permite datos parciales en borrador; las lecturas físicas usan `DatosFisicosSku`, que requiere perfil completo y fecha. Un input parcial no se presenta como respuesta de ese esquema. Su lectura administrativa debe aclararse junto a Q-01. **Q-05**.
-6. SPEC-010 §4, Requisito 10 permite corregir `tipo_producto_id` mediante CRUD ordinario solo si el producto permanece en BORRADOR, no tiene variantes y no tiene identidad comercial publicada. `ProductoUpdateRequest` de OpenAPI 0.5.0 no expone `tipoProductoId`. La ausencia del campo no se convierte en una prohibición funcional absoluta ni `additionalProperties` en una autorización de envío. La corrección en S03 queda bloqueada hasta alinear ambas fuentes. **Q-06**.
+6. La regla comunicada para Q-06 añade `tipoProductoId` opcional a `ProductoUpdateRequest` mediante PATCH. La corrección solo aplica a `BORRADOR`, `tiene_variantes=false`, cero filas reales en `catalog.variants`, `publicado_alguna_vez=false`, tipo nuevo activo, atributos compatibles con el esquema y concurrencia `catalogVersion`. `publicado_alguna_vez` requiere futura migración; histórico `NULL` bloquea y no se deriva del estado actual. Atributos incompatibles rechazan toda la edición. La UI solo ofrece la acción si el backend demuestra las precondiciones. La decisión está comunicada; la trazabilidad y la implementación siguen pendientes. **Q-06**.
 
 Estas diferencias no impiden redactar la especificación. Los estados funcionales exigidos quedan definidos con su fuente y condición de habilitación; no se acredita su implementación ni aprobación mediante fixtures ilustrativos.
 
@@ -95,7 +95,7 @@ Para Despacho existe `POST /api/v1/productos/datos-fisicos/consulta`, con `sub=m
 - Crear borrador con nombre, descripción, categoría, tipo, marca, SKU base, modelo de venta y precio base inicial.
 - Imagen y características opcionales al guardar el alta en borrador; obligatorias cuando lo requiera la activación.
 - Perfil físico simple opcional/incompleto en borrador, con valores informados positivos.
-- Edición de campos de `ProductoUpdateRequest`; SKU base y modelo de venta en lectura. SPEC-010 admite corregir el tipo en BORRADOR, sin variantes y sin identidad comercial publicada; la implementación de esa excepción depende de Q-06.
+- Edición de campos de `ProductoUpdateRequest`; SKU base y modelo de venta en lectura. SPEC-010 admite corregir el tipo en BORRADOR, sin variantes y sin identidad comercial publicada; la implementación depende de verificar las precondiciones descritas en SPEC-003 §7; su migración no está acreditada.
 - Detalle y revisión de preparación de precio y, para simples, inventario; para padres, preparación de unidades vendibles desde MK-004.
 - Activación/reactivación, rechazo con conservación del estado anterior y desactivación lógica confirmada.
 - Error corregible, conflicto de versión, resultado desconocido y éxito parcial de preparación.
@@ -103,10 +103,10 @@ Para Despacho existe `POST /api/v1/productos/datos-fisicos/consulta`, con `sub=m
 
 ### Fuera de alcance
 
-- Cambio ordinario de `sku_base` o `tiene_variantes`; sustitución comercial del producto y migración de tipo fuera de las condiciones de SPEC-010 §4, Requisito 10. La excepción de corrección del tipo queda pendiente de alineación contractual Q-06.
+- Cambio ordinario de `sku_base` o `tiene_variantes`; sustitución comercial del producto y migración de tipo fuera de las condiciones de SPEC-010 §4, Requisito 10. El PATCH incluye la corrección; la persistencia de publicado_alguna_vez y su implementación siguen pendientes.
 - Alta/edición de variantes dentro del formulario del padre; se navega a MK-004.
 - Edición de precio vigente/override, saldo, stock inicial, reservas, empaque, pedido o checkout.
-- Administración de códigos de barras y elegibilidad por canal: sus decisiones `D-CAT-01..06` siguen abiertas.
+- Administración de códigos: definición D-CAT-01..04 comunicada, con migración candidata aún no aplicada; elegibilidad por canal D-CAT-05/06 pendiente de ratificación externa.
 - Edición de SEO/slug desde esta capacidad; gestión de maestros o importación masiva.
 - Eliminación física, selección/acciones masivas no publicadas, notificaciones externas o rollback distribuido.
 - Reintento HTTP inventado, polling con duración fija, avance porcentual ficticio y variantes mobile/tablet.
@@ -209,7 +209,7 @@ No hay switch Activo/Inactivo: activar requiere validaciones y solicitud explíc
 |---|---|---:|---|
 | nombre / descripcion | Texto | Sí en alta | No vacíos; sin longitud máxima inventada |
 | categoriaId / marcaId | Referencia | Sí en alta | Entidades válidas |
-| tipoProductoId | Referencia | Sí en alta | Define atributos; corrección ordinaria solo en BORRADOR, sin variantes y sin identidad comercial publicada según SPEC-010; request de edición pendiente Q-06 |
+| tipoProductoId | Referencia | Sí en alta | Define atributos; corrección ordinaria solo en BORRADOR, sin variantes y sin identidad comercial publicada según SPEC-010; PATCH opcional, condicionado por SPEC-003 §7 |
 | skuBase | Texto | Sí en alta | Único; read-only en edición |
 | tieneVariantes | Booleano | Sí en alta | Elección explícita; identidad publicada no cambia |
 | precioBaseInicial | Número | Sí en alta | `>0`; moneda debe provenir de fuente confirmada, Q-04 |
@@ -224,7 +224,7 @@ No hay switch Activo/Inactivo: activar requiere validaciones y solicitud explíc
 
 **Interacciones:** elegir modelo revela físico solo en simple (FLOW-003 §4.1); cambiar categoría conserva tipo y atributos (SPEC-010); guardar ejecuta alta o edición según contexto (FLOW-003 §§4.1/4.4). Salir con cambios ofrece continuar editando o descartar explícitamente.
 
-La corrección explícita del tipo es distinta del cambio de categoría. Su control y envío en edición dependen de resolver Q-06 y disponer de evidencia de las tres precondiciones. BORRADOR por sí solo no demuestra ausencia de variantes ni de identidad comercial publicada. Si existen variantes o identidad publicada, el cambio requiere migración controlada fuera de este CRUD, sin reescribir identidades SKU ni snapshots históricos (SPEC-010 §4, Requisito 10).
+La corrección explícita del tipo es distinta del cambio de categoría y usa `tipoProductoId` opcional en PATCH. Requiere BORRADOR, `tiene_variantes=false`, cero filas reales en `catalog.variants`, `publicado_alguna_vez=false`, tipo activo y atributos compatibles; la concurrencia usa `catalogVersion`. NULL, variantes o identidad publicada no habilitan el cambio. No se borran atributos incompatibles ni se reescriben identidades SKU/snapshots. La migración de `publicado_alguna_vez` está pendiente (SPEC-003 §7).
 
 **Accesibilidad:** labels visibles; leyenda para modelo; SKU de lectura copiable; foco al primer error y mensajes asociados al control. Tab/Shift+Tab recorren el orden del formulario; Enter no confirma una baja.
 
@@ -371,7 +371,7 @@ El precio inicial `>0` se conserva al corregir. Se muestra moneda solo si el ent
 
 **Propósito y objetivo:** modificar los datos permitidos del mismo producto.
 
-**Estructura y layout:** identidad/estado de lectura; grupos reutilizados de S02; nombre, descripción, categoría, marca, atributos, imágenes y perfil simple editables; SKU base y modelo legibles en lectura. El tipo se presenta según elegibilidad para la corrección de SPEC-010; el diseño operativo de esa excepción y su request están pendientes de Q-06. Acciones y error persistente.
+**Estructura y layout:** identidad/estado de lectura; grupos reutilizados de S02; nombre, descripción, categoría, marca, atributos, imágenes y perfil simple editables; SKU base y modelo legibles en lectura. El tipo se presenta según elegibilidad para la corrección de SPEC-010; el PATCH y las precondiciones están descritos en SPEC-003 §7; no simular disponibilidad operativa sin verificación del backend. Acciones y error persistente.
 
 **Componentes presentes:** C01/C02/C03, DS-C01/03/04/05/06/19/21/22/24/28.
 
@@ -383,13 +383,13 @@ El precio inicial `>0` se conserva al corregir. Se muestra moneda solo si el ent
 |---|---|---|
 | H1 / CTA | «Editar producto» / «Guardar cambios» | WF-003 |
 | Identidad | «El SKU base y el modelo de venta se conservan» | SPEC-003 §7; `ProductoUpdateRequest` |
-| Tipo: condiciones de corrección | «El tipo puede corregirse mientras el producto siga en borrador, sin variantes y sin identidad comercial publicada» | SPEC-010 §4, Requisito 10; patrón funcional pendiente de Q-06, sin control operativo hasta alinear contrato |
+| Tipo: condiciones de corrección | «El tipo puede corregirse mientras el producto siga en borrador, sin variantes y sin identidad comercial publicada» | SPEC-010 §4, Requisito 10; regla comunicada y campo PATCH descritos; implementación y verificación del backend pendientes |
 | Activo inválido | «No se guardaron los cambios. El producto conserva sus datos y estado anteriores» + causa disponible | SPEC-003 §7 |
 | Conflicto | «Este producto cambió desde que comenzaste a editarlo. Revisa la versión actual» | OpenAPI `VERSION_CONFLICT`; UXG-013 |
 
 Los valores propuestos permanecen en el formulario, distinguidos del último registro confirmado. Cambiar categoría no cambia tipo ni recalcula atributos por la categoría. Una nueva obligatoriedad del tipo se atiende antes de guardar conforme a SPEC-010, sin desactivar por consulta.
 
-No se define el tipo como read-only universal: SPEC-010 permite la corrección bajo las tres condiciones indicadas. La falta de `tipoProductoId` en el request vigente es el bloqueo Q-06, no una decisión de negocio. Hasta su resolución no se envía ese campo ni se simula un guardado contractual del cambio. Cuando una condición no se cumple, no se ofrece corrección ordinaria; con variantes o identidad publicada, la migración queda fuera de alcance. Si falta evidencia de las condiciones, no se presume elegibilidad ni se inventa un flag de publicación.
+`tipoProductoId` está disponible como propiedad opcional del PATCH. La UI no lo envía ni habilita la acción si el backend no acredita todas las precondiciones Q-06. La regla comunicada define primera transición confirmada BORRADOR→ACTIVO como publicación; `publicado_alguna_vez` requiere migración futura, los históricos NULL bloquean, y no se infiere del estado actual. Si el nuevo esquema es incompatible, se rechaza toda la edición sin borrar atributos. No se ofrece corrección con variantes o publicación confirmada.
 
 ### MK-003-S04 — Detalle del producto
 
@@ -472,7 +472,7 @@ No se define el tipo como read-only universal: SPEC-010 permite la corrección b
 
 ### LUX-01 — Separar alta y edición como pantallas del producto
 
-**Problema:** alta requiere precio inicial, SKU y modelo; edición los conserva. **Alternativas consideradas:** una vista sin distinguir operaciones; dos pantallas con grupos reutilizados. **Decisión adoptada:** S02/S03 separadas conforme a WF-003, compartiendo C01–C03. **Justificación:** evita enviar campos de alta en PATCH y comunica las restricciones de identidad. **Trade-off:** dos rutas con más estados de revisión; no duplican componentes. **Criterio de validación:** edición no ofrece precio inicial, cambio de SKU/modelo ni alta de variantes; la corrección del tipo respeta las condiciones de SPEC-010 §4, Requisito 10 y permanece bloqueada por Q-06 hasta alinear el request o la SPEC. Aplica UXD-001/002; no introduce un patrón transversal nuevo.
+**Problema:** alta requiere precio inicial, SKU y modelo; edición los conserva. **Alternativas consideradas:** una vista sin distinguir operaciones; dos pantallas con grupos reutilizados. **Decisión adoptada:** S02/S03 separadas conforme a WF-003, compartiendo C01–C03. **Justificación:** evita enviar campos de alta en PATCH y comunica las restricciones de identidad. **Trade-off:** dos rutas con más estados de revisión; no duplican componentes. **Criterio de validación:** edición no ofrece precio inicial, cambio de SKU/modelo ni alta de variantes; la corrección del tipo respeta SPEC-003 §7, con el campo PATCH documentado y migración/implementación por verificar. Aplica UXD-001/002; no introduce un patrón transversal nuevo.
 
 ### LUX-02 — Preparación del padre organizada por unidades vendibles
 
@@ -519,9 +519,9 @@ Datos ficticios y deterministas, documentados para revisión. Los siguientes nom
 | `saving` | Una escritura en curso, sin doble envío | S02/S03/S05/S07/loading | UI |
 | `write-unknown` | POST/PATCH/cambio sin respuesta concluyente | S02/S03/S05/S07/desconocido | UI; consultar antes de repetir |
 | `edit-default` | Misma identidad; versión leída 3 | S03/default | FUNCIONAL lectura Q-01; HTTP PATCH |
-| `edit-type-correction-eligible` | BORRADOR, sin variantes y sin identidad comercial publicada; propuesta de corrección del tipo | S03/corrección elegible | FUNCIONAL, SPEC-010 §4, Requisito 10; Q-06 y fuente de precondiciones coordinada con Q-01; no PATCH de tipo publicado |
-| `edit-type-correction-ineligible` | Casos con estado distinto de BORRADOR, variantes existentes o identidad comercial publicada | S03/corrección no elegible | FUNCIONAL, SPEC-010 §4, Requisito 10; no corrección ordinaria; variantes/identidad publicada requieren migración fuera de alcance; Q-06 |
-| `edit-type-correction-unverifiable` | BORRADOR sin evidencia suficiente de ausencia de variantes o de identidad publicada | S03/precondiciones no verificables | FUNCIONAL/UI, Q-06/Q-01; no inferir elegibilidad ni inventar datos para habilitar cambio |
+| `edit-type-correction-eligible` | BORRADOR, sin variantes y sin identidad comercial publicada; propuesta de corrección del tipo | S03/corrección elegible | FUNCIONAL, SPEC-010 §4, Requisito 10; precondiciones de SPEC-003 §7; migración/implementación pendiente; no PATCH si publicado |
+| `edit-type-correction-ineligible` | Casos con estado distinto de BORRADOR, variantes existentes o identidad comercial publicada | S03/corrección no elegible | FUNCIONAL, SPEC-010 §4, Requisito 10; no corrección ordinaria; Q-06 |
+| `edit-type-correction-unverifiable` | BORRADOR sin evidencia suficiente de ausencia de variantes o de identidad publicada | S03/precondiciones no verificables | FUNCIONAL/UI; no inferir elegibilidad; NULL o evidencia faltante bloquea |
 | `edit-active-rejected` | Propuesta quita imagen o medida requerida | S03/error | SPEC-003 §7; estado persistido ACTIVO intacto |
 | `edit-version-conflict` | `409 VERSION_CONFLICT`, propuesta preservada | S03/error | HTTP; relectura administrativa Q-01 |
 | `category-change` | Cambia categoría conservando tipo y atributos | S03/default | SPEC-010; HTTP PATCH |
@@ -557,7 +557,7 @@ PEN y dos decimales se utilizan exclusivamente para la demostración monetaria, 
 | Q-03 | ¿Qué operación administrativa permite reintentar sin cambiar la identidad de operación ni repetir lo completado? | Sí: reintento requerido por WF/FLOW | Gabriel Poma + integración | Abierta; comando/operación formalizado; sin ruta inventada |
 | Q-04 | ¿Qué fuente suministra la moneda de `pricing.product.initialization.requested` al alta con `precioBaseInicial`? | Sí: integración completa del alta de precio; no formulario/demostración | Gabriel Poma + Leonardo Vera / Pricing | Abierta; fuente/configuración contractual confirmada |
 | Q-05 | ¿Cómo se recupera para edición el perfil parcial persistido en borrador sin representarlo como `DatosFisicosSku` completo? | Sí: lectura/edición reproducible del perfil parcial | Gabriel Poma + integración | Abierta; representación administrativa oficial, coordinada con Q-01 |
-| Q-06 | SPEC-010 §4, Requisito 10 permite corregir `tipo_producto_id` mientras el producto siga en BORRADOR, sin variantes y sin identidad comercial publicada, pero `ProductoUpdateRequest` de OpenAPI 0.5.0 no expone `tipoProductoId`. ¿Debe ampliarse el request administrativo o ajustarse SPEC-010? | Sí: corrección del tipo en S03 y aprobación de esa regla de edición | Gabriel Poma + Taxonomía / integración API | Abierta; decisión oficial y fuentes alineadas, con precondiciones verificables coordinadas con Q-01; sin campo inferido por `additionalProperties` |
+| Q-06 | ¿Cómo corregir `tipo_producto_id` mediante CRUD sin modificar identidad ya publicada? | Sí: corrección del tipo en S03 | Gabriel Poma + Taxonomía / integración API | Regla comunicada y reflejada en OpenAPI/SPEC; trazabilidad en repositorio pendiente. Columna/migración, implementación y validación de precondiciones siguen pendientes. |
 
 El gate transversal #59+#60 dispone de UX/DS para redactar. Su disponibilidad no resuelve estos hallazgos ni implica visto bueno de MK-003. Solo las tareas afectadas se detienen; el resto del trabajo documental es revisable.
 
@@ -585,7 +585,7 @@ Checklist de revisión de esta especificación y del resultado que deberá demos
 - [ ] Hijos en borrador/inactivos no bloquean al padre ni se ofrecen comercialmente.
 - [ ] Perfil físico usa kg/cm, valores informados positivos, volumen derivado y sin datos de empaque/pedido.
 - [ ] Edición mantiene identidad/naturaleza comercial, no cambia SKU/modelo ni crea variantes; rechazo de edición activa conserva datos y estado persistidos.
-- [ ] La corrección ordinaria del tipo sigue las tres condiciones de SPEC-010 §4, Requisito 10, sujetas a la resolución oficial de Q-06; no se impone read-only universal ni se envía un campo no publicado. Variantes o identidad publicada derivan el cambio a migración fuera de alcance, sin reescribir SKU/snapshots; condiciones no verificables no habilitan corrección.
+- [ ] La corrección ordinaria del tipo sigue las tres condiciones de SPEC-010 §4, Requisito 10, sujetas a las precondiciones Q-06 descritas en SPEC-003 §7. `tipoProductoId` es campo PATCH; publicado_alguna_vez requiere migración futura y NULL bloquea. No se presume elegibilidad si falta evidencia.
 - [ ] Cambiar categoría conserva tipo/esquema; nueva obligatoriedad se atiende en la siguiente edición conforme a SPEC-010.
 - [ ] Desactivación lógica bloquea comercialmente hijos sin cambiar sus estados; reactivar padre no reactiva hijos ni viceversa.
 - [ ] ACTIVO no se presenta como visibilidad garantizada en todos los canales; stock ausente no cambia identidad.

@@ -235,6 +235,62 @@ class ContractChecks(unittest.TestCase):
         self.assertNotIn('modulo-retail',detailed)
 
 
+class CatalogPricingTaxonomyContract(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.o=yaml.safe_load((ROOT/'contratos/http/openapi.yaml').read_text(encoding='utf-8'))
+        cls.a=yaml.safe_load((ROOT/'contratos/eventos/asyncapi.yaml').read_text(encoding='utf-8'))
+
+    def test_catalog_pricing_identity_is_allowlisted_only_for_two_read_operations(self):
+        expected={'modulo-marketplace','modulo-chatbot','modulo-retail','modulo-productos'}
+        operations=(
+            self.o['paths']['/precios']['get'],
+            self.o['paths']['/precios/skus/{sku}']['get'],
+        )
+        self.assertEqual([op['operationId'] for op in operations],['consultarPrecios','obtenerPrecioSku'])
+        for op in operations:
+            self.assertEqual(op['x-required-scope'],'precios:leer')
+            self.assertEqual(set(op['x-allowed-client-ids']),expected)
+        enabled=[]
+        for path,item in self.o['paths'].items():
+            for method,op in item.items():
+                if isinstance(op,dict) and 'modulo-productos' in op.get('x-allowed-client-ids',[]):
+                    enabled.append((path,method,op.get('operationId')))
+        self.assertEqual(set(enabled),{
+            ('/productos/skus/{sku}/contexto','get','obtenerContextoSku'),
+            ('/precios','get','consultarPrecios'),
+            ('/precios/skus/{sku}','get','obtenerPrecioSku'),
+        })
+        self.assertIn('G7',self.o['x-security-contract']['service_scopes_pending_registration']['precios:leer']['note'])
+
+    def test_price_channel_ids_are_enum_or_null(self):
+        schemas=self.o['components']['schemas']
+        self.assertEqual(schemas['Canal']['enum'],['MARKETPLACE','CHATBOT','RETAIL','VENTAS'])
+        names=('PrecioUpdateRequest','ProgramacionPrecioRequest','ProgramacionPrecio','ProgramacionPrecioProducto')
+        for name in names:
+            channel=schemas[name]['properties']['channelId']
+            self.assertEqual(channel['oneOf'],[
+                {'$ref':'#/components/schemas/Canal'},
+                {'type':'null'},
+            ],name)
+
+    def test_taxonomy_association_versions_remain_distinct_and_authoritative(self):
+        schemas=self.a['components']['schemas']
+        association=schemas['MasterDeactivationAssociationData']
+        self.assertEqual(set(association['properties']),{
+            'entity_type','entity_id','tipo_producto_id','caracteristica_id','version',
+        })
+        version_description=association['properties']['version']['description'].lower()
+        self.assertIn('taxonomy',version_description)
+        self.assertIn('conserva y verifica',version_description)
+        completed=schemas['MasterDeactivationCompletedData']['oneOf'][1]['allOf'][1]
+        self.assertEqual(set(completed['properties']),{'schema_version_resultante'})
+        self.assertIn('schema_version_resultante',completed['required'])
+        message=self.a['components']['messages']['TaxonomyMasterDeactivationCheckRequested']['payload']['allOf'][1]
+        self.assertIn('schema_version',message['properties'])
+        self.assertEqual(message['properties']['data']['$ref'],'#/components/schemas/MasterDeactivationData')
+
+
 class MarketplaceCatalogContract(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

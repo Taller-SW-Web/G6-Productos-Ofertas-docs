@@ -701,14 +701,14 @@ La matriz §6 contiene las trece tablas y §3.1 las relaciones. Entidades concep
 
 | ID | Pregunta | Fuente / impacto | Bloquea migración |
 |---|---|---|---|
-| D-CAT-01..04 | Cardinalidad inversa SKU→código(s), gestión y reutilización | Modelo/SPEC 0.5.0. Sin columna/tabla de barras definitiva | No; pendiente implementar capacidad contractual completa |
-| D-CAT-05/06 | Persistencia/default de elegibilidad por canal | Modelo/OpenAPI. ACTIVO no significa todos los canales; sin producto_canal ni default global | No; pendiente exposición comercial completa |
+| D-CAT-01..04 | Cardinalidad inversa SKU→código(s), gestión exclusiva de Catálogo y no reutilización | Diseño de una tabla `sku_barcodes`; migración candidata backend `poma` 0002 | Definición funcional cerrada por Catálogo; aplicación BD, homologación y ratificación formal por trazar |
+| D-CAT-05/06 | Elegibilidad común por estados; sin asignación/default independiente por canal | Política funcional en SPEC-003 §7; no crear `product_channel` ni habilitaciones | Decisión comunicada; ratificación de Arquitectura y conformidad de consumidores pendientes |
 | P-PHY-01 | Payload/versionado de barreras | AsyncAPI GenericData. Validar con owner antes de cerrar campos/listas | No; completar handler/protocolo |
 | P-PHY-02 | Maestros/obligatorios/coherencia comercial | Dominio/contratos; SQL no certifica Taxonomía ni detecta camisa→zapatilla por texto | No para DDL; sí para publicar backend funcional |
 | P-PHY-03 | Consumidores tras reactivación | No inventar eventos; conservar mecanismos del contrato vigente | No para DDL; coordinar integración |
 | P-PHY-04 | Versión Supabase, deployer/runtime y grants reales | Proyecto objetivo sin validar | Sí para desplegar allí |
 | P-PHY-05 | Múltiples conexiones y locks de maestros | UNIQUE/locks locales presentes; adaptador y servidor deben probar carreras reales | No para DDL; pendiente integración |
-| Q-06 | Alinear corrección del tipo entre SPEC-010 y ProductoUpdateRequest; fuente verificable de BORRADOR, ausencia de variantes y de identidad comercial publicada | SPEC-010 / OpenAPI 0.5.0 / MK-003. No imponer tipo read-only universal ni inventar publicación mediante estado, SKU o preparación | No para DDL; sí para implementar/aprobar la corrección del tipo por CRUD |
+| Q-06 | Corrección PATCH del tipo sujeta a publicación confirmada, filas reales, compatibilidad del esquema y versión | SPEC-003 §7 / OpenAPI ProductoUpdateRequest; `publicado_alguna_vez` requiere migración futura y NULL bloquea | Decisión comunicada y contrato documental reflejado; migración, implementación y trazabilidad formal pendientes |
 
 El diseño resuelve persistencia de 003/004 sin cerrar decisiones comerciales abiertas. No acredita implementación completa de todos los endpoints de catalog-svc.
 
@@ -770,3 +770,15 @@ Para aprobar despliegue real registrar entorno, commit, schema, versión 0001, S
 ## 28. Resultado de revisión
 
 Estado: **BORRADOR PARA REVISIÓN**. Revisor: pendiente. Una plantilla completa no aprueba por sí sola la migración. §23 conserva los límites explícitos sin resolverlos silenciosamente con restricciones de BD.
+
+## 29. Alineación documental Catálogo — estado de persistencia
+
+`catalog.master_barriers` ya está definida en `0001`; el protocolo requiere identidad/operación coincidentes y no libera por timeout local. Marco aprobó como diseño las migraciones aditivas `0002_create_sku_barcodes.sql` y `0003_product_publication_history.sql`. La primera mantiene código de barras global, opaco, inmutable y con retiro lógico; la segunda conserva el historial de publicación y NULL bloqueante cuando no hay evidencia histórica autoritativa. Los archivos están en Backend PR #125, pero aprobación de diseño no equivale a ejecución local, aplicación en BD compartida/Supabase ni despliegue. No modificar la migración histórica `0001`.
+
+El diseño aprobado de `catalog.sku_barcodes` es una tabla con `id`, `codigo_barras`, `sku_identity_id`, `created_at`, `created_by`, `retired_at`, `retired_by`; FK interna a `catalog.sku_identity(id)`, `UNIQUE(codigo_barras)` global incluso para retirados y retiro lógico. El diseño de publicación usa `publicado_alguna_vez` nullable e irreversible; migración aplicada sigue sin evidencia.
+
+`catalog.products.publicado_alguna_vez BOOLEAN NULL` es una futura migración versionada, no columna existente: nuevos productos parten de `false`, la primera transición confirmada a `ACTIVO` la fija a `true` en la misma transacción, irreversible; históricos siguen `NULL` sin evidencia autoritativa y `NULL` bloquea Q-06. La corrección de tipo también requiere comprobar cero filas reales en `catalog.variants`, `tiene_variantes=false`, tipo activo, compatibilidad de atributos/esquema y `catalogVersion`. La regla Q-06 fue comunicada y reflejada en el contrato documental; trazabilidad, implementación y migración no están acreditadas.
+
+La baja de maestros reutiliza Inbox, Outbox, locks por `(master_type, master_id)` y `catalog.master_barriers`; no se crea tabla nueva en Catálogo. Las referencias de borradores/inactivos no bloquean el check de uso actual, pero la barrera impide nuevas referencias o reactivaciones incompatibles, incluido Bulk. El contrato de mensajes compartido sigue pendiente de homologación; no inferir despliegue ni compatibilidad de consumidores.
+
+Catálogo filtra por precio efectivo de Pricing; canales canónicos `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS` y global `null`. Conserva un único instante de evaluación en todos los lotes. Presupuesto operativo inicial Catálogo→Pricing: máximo 5 s contando adquisición de token y lotes; no es SLA acreditado y requiere pruebas E2E. La identidad técnica es `modulo-productos`, compartida por G6, con `precios:leer`; no propaga JWT de Marketplace u otro consumidor. `GET /api/v1/productos/skus/{sku}/contexto` es privado y debe quedar fuera de rutas Gateway externas conforme a `x-internal: true`.

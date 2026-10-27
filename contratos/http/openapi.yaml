@@ -36,6 +36,122 @@ tags:
 - name: SEO
   description: Metadatos, slug e historial/resolución.
 paths:
+  /productos/skus/{sku}/contexto:
+    get:
+      tags:
+      - Productos
+      operationId: obtenerContextoSku
+      summary: Consultar contexto privado de SKU para Pricing
+      description: >-
+        Contrato interno de diseño aprobado por Marco para Pricing hacia Catálogo.
+        No es una consulta comercial pública. El SKU viaja codificado en el path, sin modificar
+        su valor. Reutiliza el resultado del puerto PricingCatalogContext: no calcula precios
+        ni disponibilidad de inventario. Un SKU existente inactivo o inelegible devuelve 200
+        con los flags correspondientes en false; solo la inexistencia devuelve 404.
+        Pricing traduce exclusivamente 404 SKU_NO_ENCONTRADO a null en su adaptador;
+        fallos de red, 503 y errores de autorización no se convierten en ausencia.
+        Identidad técnica compartida de G6 aprobada internamente por Marco: client_id=modulo-productos,
+        tipo=servicio, aud=api-productos y scope existente catalogo:leer. G7 debe confirmar
+        grant, emisión y provisión de credenciales. No identifica individualmente a catalog-svc
+        ni a pricing-svc. El aislamiento se aplica mediante HTTP privado, restricción de red,
+        autorización por operación y validación JWT; no se publica vía Gateway externo ni se
+        aceptan cabeceras arbitrarias como prueba de identidad. No acredita credenciales,
+        implementación, compatibilidad runtime ni pruebas integradas.
+      x-status: provisional-internal
+      x-internal: true
+      x-source-spec:
+      - SPEC-003
+      - SPEC-004
+      - SPEC-013
+      x-route-basis: derived-from-capability
+      x-consumers:
+      - Pricing
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids:
+      - modulo-productos
+      security:
+      - serviceBearer: []
+      parameters:
+      - name: sku
+        in: path
+        required: true
+        description: SKU opaco codificado correctamente en el path; conservar el valor original, incluidos ceros iniciales, sin recortarlo ni recodificarlo como identidad.
+        schema:
+          type: string
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Contexto del SKU existente, también si está inactivo o no es comercialmente elegible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PricingCatalogContext'
+              examples:
+                simple:
+                  value: {sku: '000123', productId: 'producto-ejemplo', isVariant: false, active: true, eligible: true}
+                variante:
+                  value: {sku: 'SKU-V-001', productId: 'producto-padre-ejemplo', isVariant: true, active: true, eligible: true}
+                inactivo:
+                  value: {sku: 'SKU-INACTIVO', productId: 'producto-ejemplo', isVariant: false, active: false, eligible: false}
+                inelegible:
+                  value: {sku: 'SKU-V-002', productId: 'producto-padre-ejemplo', isVariant: true, active: true, eligible: false}
+        '401':
+          description: Autenticación de servicio ausente o inválida, según el contrato de Seguridad existente.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status: {type: integer, const: 401}
+                    code: {type: string, const: TOKEN_INVALIDO}
+                  required: [status, code]
+        '403':
+          description: Scope o identidad no autorizados; poseer catalogo:leer sin pertenecer a la allowlist de esta operación no concede acceso.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status: {type: integer, const: 403}
+                    code: {type: string, const: SCOPE_INSUFICIENTE}
+                  required: [status, code]
+        '404':
+          description: SKU inexistente. El adaptador de Pricing traduce este resultado a null, sin ocultar errores técnicos o de autorización.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status: {type: integer, const: 404}
+                    code: {type: string, const: SKU_NO_ENCONTRADO}
+                  required: [status, code]
+              example: {title: SKU no encontrado, status: 404, code: SKU_NO_ENCONTRADO}
+        '503':
+          description: Error técnico o indisponibilidad; nunca se trata como SKU inexistente.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status: {type: integer, const: 503}
+                    code: {type: string, const: SERVICIO_NO_DISPONIBLE}
+                  required: [status, code]
+              example: {title: Servicio no disponible, status: 503, code: SERVICIO_NO_DISPONIBLE}
+      x-error-codes:
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '404': [SKU_NO_ENCONTRADO]
+        '503': [SERVICIO_NO_DISPONIBLE]
   /productos:
     get:
       tags:
@@ -98,11 +214,13 @@ paths:
         schema:
           type: number
           minimum: 0
+        description: Extremo inclusivo en PEN del precio efectivo vigente de Pricing. Se aplica por SKU elegible antes de paginar; negativos, no finitos o precioMin > precioMax producen 400 VALIDACION.
       - name: precioMax
         in: query
         schema:
           type: number
           minimum: 0
+        description: Extremo inclusivo en PEN del precio efectivo vigente de Pricing. Se aplica por SKU elegible antes de paginar; negativos, no finitos o precioMin > precioMax producen 400 VALIDACION.
       - name: orden
         in: query
         required: false
@@ -1637,7 +1755,7 @@ paths:
       x-status: stable
       x-source-spec:
       - SPEC-013
-      description: 'Resuelve el precio efectivo de varios SKU para el instante solicitado. El canal es opcional: si se omite, se utiliza
+      description: 'Resuelve el precio efectivo de varios SKU para el instante solicitado. Los códigos canónicos son MARKETPLACE, CHATBOT, RETAIL y VENTAS; el alcance global se representa omitiendo canal (channel_id=null). El canal es opcional: si se omite, se utiliza
         el alcance global; si se informa, se aplica el alcance específico con fallback al global cuando corresponda.'
       x-service-audience: api-productos
       x-required-scope: precios:leer
@@ -1657,13 +1775,13 @@ paths:
             type: string
           minItems: 1
           maxItems: 100
-        description: Lista separada por comas.
+        description: Lista separada por comas. Si un SKU opaco contiene una coma y no puede representarse inequívocamente, usar GET /precios/skus/{sku} para esa identidad; codificar el SKU correctamente en el path.
       - name: canal
         in: query
         required: false
         schema:
           $ref: '#/components/schemas/Canal'
-        description: Canal opcional. Si se omite, Pricing resuelve el precio global (channel_id efectivo = null). Si se informa, se
+        description: Códigos canónicos MARKETPLACE, CHATBOT, RETAIL o VENTAS. Si se omite, Pricing resuelve el alcance global (channel_id = null). Si se informa, se
           intenta el alcance específico y, si no existe una vigencia aplicable, se usa el precio global.
       - name: at
         in: query
@@ -1830,6 +1948,7 @@ paths:
       - modulo-marketplace
       - modulo-chatbot
       - modulo-retail
+      - modulo-productos
   /precios/skus/{sku}:
     get:
       tags:
@@ -2054,7 +2173,11 @@ paths:
         '429':
         - RATE_LIMIT_EXCEDIDO
       x-route-basis: existing-contract
-      x-allowed-client-ids: *id066
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
+      - modulo-productos
     patch:
       tags:
       - Precios
@@ -6153,6 +6276,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginaVariantes'
+        '400':
+          description: UUID de ruta o parámetros de consulta inválidos.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      enum: [VALIDACION]
+                  required: [status, code]
         '401':
           description: Error
           content:
@@ -6249,6 +6388,7 @@ paths:
                   - status
                   - code
       x-error-codes:
+        '400': [VALIDACION]
         '401': *id180
         '403': *id181
         '500': *id182
@@ -6470,6 +6610,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Variante'
+        '400':
+          description: UUID de ruta inválido.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      enum: [VALIDACION]
+                  required: [status, code]
         '401':
           description: Error
           content:
@@ -6566,6 +6722,7 @@ paths:
                   - status
                   - code
       x-error-codes:
+        '400': [VALIDACION]
         '401': *id193
         '403': *id194
         '500': *id195
@@ -20810,6 +20967,7 @@ components:
         - 403 + SCOPE_INSUFICIENTE: el canal solicitado es válido, pero no corresponde al client_id autenticado, o la identidad carece de autorización para la operación.
     Canal:
       type: string
+      description: Identificador comercial canónico de Pricing. El alcance global se expresa omitiendo canal y persiste como channel_id null; no es client_id de Seguridad.
       enum:
       - MARKETPLACE
       - CHATBOT
@@ -21957,6 +22115,10 @@ components:
         marcaId:
           type: string
           minLength: 1
+        tipoProductoId:
+          type: string
+          minLength: 1
+          description: Corrección opcional del tipo, sujeta a Q-06 y sus precondiciones funcionales.
         atributos:
           type: array
           items:
@@ -22005,11 +22167,9 @@ components:
       type: object
       properties:
         sku:
-          oneOf:
-          - type: string
-            minLength: 1
-          - type: 'null'
-          description: Opcional; Catálogo genera uno si se omite.
+          type: string
+          minLength: 1
+          description: SKU explícito, opaco, globalmente único e inmutable; Catálogo no lo genera.
         atributosIdentificadores:
           type: array
           items:
@@ -22028,6 +22188,7 @@ components:
           - type: 'null'
       additionalProperties: true
       required:
+      - sku
       - atributosIdentificadores
       - imagenUrl
     VarianteUpdateRequest:
@@ -22933,6 +23094,12 @@ components:
       - nombre
     OperacionMaestra:
       type: object
+      description: >-
+        Representación pública candidata de baja maestra, pendiente de homologación de los cambios
+        compartidos y de comprobación de consumidores; no acredita compatibilidad runtime.
+        status describe el ciclo de la operación y result únicamente el check de Catálogo.
+        Un result CLEAR aislado no completa la baja ni libera la barrera: se requiere la
+        decisión final de Taxonomía y su evento correlacionado en Catálogo.
       properties:
         operation_id:
           type: string
@@ -22950,19 +23117,29 @@ components:
         version:
           type: integer
           minimum: 0
+          description: Versión autoritativa correlacionada. En PRODUCT_TYPE_CHARACTERISTIC es el schema_version del tipo capturado al admitir, no una versión de fila; schema_version del envelope y schema_version_resultante son valores distintos.
         status:
           type: string
           enum:
           - PENDING_DEACTIVATION
-          - CLEAR
-          - REJECTED
           - COMPLETED
+          - REJECTED
+          description: >-
+            PENDING_DEACTIVATION indica espera de resolución; COMPLETED solo corresponde a baja
+            confirmada por Taxonomía; REJECTED conserva el maestro activo. REQUESTED/IN_PROGRESS
+            internos se mapean a PENDING_DEACTIVATION, y FAILED técnico a REJECTED con razón
+            TECHNICAL_FAILURE en el protocolo final. No se modifica el enum físico ni se incorpora
+            esa razón al enum HTTP ErrorCode mediante este mapeo.
         result:
+          description: >-
+            Resultado del check, distinto del estado final: CLEAR permite evaluar la confirmación
+            y no equivale a COMPLETED; IN_USE exige rechazo. null representa ausencia de resultado
+            de check, por ejemplo ante timeout o fallo técnico; no se fabrica IN_USE para esos casos.
           oneOf:
           - type: string
             enum:
             - CLEAR
-            - HAS_ACTIVE_PRODUCTS
+            - IN_USE
           - type: 'null'
         code:
           oneOf:
@@ -23085,7 +23262,7 @@ components:
           maxLength: 3
         channelId:
           oneOf:
-          - type: string
+          - $ref: '#/components/schemas/Canal'
           - type: 'null'
         motivoCambio:
           type: string
@@ -23116,7 +23293,7 @@ components:
           maxLength: 3
         channelId:
           oneOf:
-          - type: string
+          - $ref: '#/components/schemas/Canal'
           - type: 'null'
         validFrom:
           type: string
@@ -23155,7 +23332,7 @@ components:
           type: string
         channelId:
           oneOf:
-          - type: string
+          - $ref: '#/components/schemas/Canal'
           - type: 'null'
         validFrom:
           type: string
@@ -23956,7 +24133,7 @@ components:
           type: string
         channelId:
           oneOf:
-          - type: string
+          - $ref: '#/components/schemas/Canal'
           - type: 'null'
         validFrom:
           type: string
@@ -24638,6 +24815,25 @@ components:
       - NOMBRE_ASC
       - NOMBRE_DESC
       description: Ordenamiento contractual seguro a nivel de producto. El orden por precio permanece fuera mientras no exista una regla product-level.
+    PricingCatalogContext:
+      type: object
+      description: >-
+        DTO de respuesta exacto del puerto PricingCatalogContext.resolve: sku y productId son
+        strings; isVariant indica si corresponde a una variante; active es el estado del SKU
+        y eligible su elegibilidad comercial según Catálogo. No incorpora precios ni stock.
+      properties:
+        sku:
+          type: string
+        productId:
+          type: string
+        isVariant:
+          type: boolean
+        active:
+          type: boolean
+        eligible:
+          type: boolean
+      required: [sku, productId, isVariant, active, eligible]
+      additionalProperties: false
     ResolverCodigoBarrasRequest:
       type: object
       properties:
@@ -24725,9 +24921,18 @@ x-security-contract:
     service_scope: tokens:introspeccion
   service_scopes_pending_registration:
     catalogo:leer:
-      clients: *id020
+      clients:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
+      note: modulo-productos es identidad técnica compartida G6 aprobada internamente para obtenerContextoSku, pero no se añade a la allowlist comercial. G7 debe confirmar grant y provisión de credenciales; la identidad no individualiza microservicios.
     precios:leer:
-      clients: *id066
+      clients:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
+      - modulo-productos
+      note: "modulo-productos se permite solo en consultarPrecios y obtenerPrecioSku (GET) para la lectura interna Catálogo→Pricing; conserva precios:leer. La allowlist no acredita grant. G7 debe confirmar concesión y provisionar credenciales."
     promociones:leer:
       clients: *id715
     promociones:evaluar:

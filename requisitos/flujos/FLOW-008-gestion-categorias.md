@@ -186,7 +186,7 @@ flowchart LR
     D2 -->|"CLEAR"| T3
     T3 --> C4
     C4 --> FIN_DESACTIVADA
-    D2 -->|"HAS_ACTIVE_PRODUCTS"| T4
+    D2 -->|"IN_USE"| T4
     T4 --> C4
     C4 --> FIN_BLOQUEADA
     T2 --> E1(("Time out o error en la comprobación"))
@@ -224,3 +224,8 @@ flowchart LR
     D1 -->|"No"| T3
     T3 --> FIN_BLOQUEADA
 ```
+
+
+### Alineación de la baja segura
+
+`202` es admisión. Taxonomy registra la operación; `version` correlaciona la versión autoritativa capturada. Para `PRODUCT_TYPE_CHARACTERISTIC` se usa `schema_version` del tipo capturado al admitir, junto con `tipo_producto_id` y `caracteristica_id` autoritativos de Taxonomy. Catálogo instala barrera y emite comprobación transaccional. Solo `CLEAR` seguido del final `taxonomy.master.deactivated` coincidente en entidad, IDs, operación y versión libera la barrera. Resultado de check es `CLEAR | IN_USE`; eventos duplicados, tardíos o incoherentes no la liberan. El timeout inicial de Taxonomy es 60 s y no libera por tiempo; ante ausencia de confirmación Taxonomy rechaza/cierra durablemente y emite final. Sin final verificable, Catálogo mantiene bloqueo hasta entrega o reconciliación segura. AsyncAPI tipada es contrato candidato pendiente de homologación; ver SPEC-008 y modelo físico Taxonomy.

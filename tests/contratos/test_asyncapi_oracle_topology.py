@@ -7,7 +7,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_FILE = ROOT / "contratos/eventos/asyncapi.yaml"
-FIXTURE_FILE = ROOT / "tests/contratos/fixtures/asyncapi-0.6.0-rc.2-invariants.json"
+FIXTURE_FILE = ROOT / "tests/contratos/fixtures/asyncapi-0.6.0-rc.3-approved-invariants.json"
 EXPECTED_EXCHANGES = {
     "po.comandos.x": "topic",
     "po.eventos.x": "topic",
@@ -187,7 +187,7 @@ class AsyncApiOracleTopologyRegression(unittest.TestCase):
         self.assertEqual(policy["retry_dlx_status"], "blocked-not-provisioned")
         self.assertEqual(policy["retry_dlx_approval"], "not-approved")
 
-    def test_logical_invariants_match_immutable_rc2_fixture(self):
+    def test_logical_invariants_match_approved_rc3_fixture(self):
         snapshot = logical_snapshot(self.current)
         self.assertEqual(snapshot["counts"], self.fixture["counts"])
         self.assertEqual(snapshot["counts"], {"channels": 40, "messages": 40, "operations": 80})

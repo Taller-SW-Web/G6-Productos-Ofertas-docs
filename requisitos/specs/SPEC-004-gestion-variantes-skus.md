@@ -51,8 +51,8 @@ Reglas del ciclo de Inventario de variante:
 - Errores técnicos transitorios: se recuperan automáticamente mediante la política RabbitMQ existente de Inventario (hasta 3 reintentos con 30 s de espera antes de DLQ).
 - Catálogo correlaciona resultados asíncronos mediante `causation_id = message_id` del comando requested activo, descartando/ignorando idempotentemente resultados tardíos de intentos anteriores como stale:
   - `inventory.sku.initialization.completed` → pasa a `COMPLETED`. La variante queda preparada para activación. Una preparación `COMPLETED` es terminal y nunca vuelve a ejecutarse ni reintentarse.
-  - `inventory.sku.initialization.rejected` → pasa a `REJECTED`. Mantiene la variante como no publicable y registra el código recibido en `code`. No se reintenta automáticamente por infraestructura. El indicador `manual_retry_allowed` es calculado y autoritativo en Catálogo (la UI nunca es la autoridad). Si el rechazo requiere corrección de datos o atributos/perfil, el gestor modifica la variante; Catálogo revalida las precondiciones locales de la preparación; si es nuevamente elegible: `manual_retry_allowed=true`, de lo contrario permanece en `false`.
-- Ausencia prolongada de resultado: tras un umbral operativo configurable sin confirmación, Catálogo puede habilitar `manual_retry_allowed=true` manteniendo `PENDING`. Catálogo no inspecciona directamente la DLQ del servicio consumidor ni la topología privada de RabbitMQ.
+  - `inventory.sku.initialization.rejected` → pasa a `REJECTED`. Mantiene la variante como no publicable y registra el código recibido en `code`. `manual_retry_allowed=false`; editar atributos/perfil no habilita retry. Solo un código específico podrá habilitarse tras acreditar causa real, operación correctiva publicada y replay idempotente probado.
+- Ausencia prolongada de resultado: Catálogo mantiene `PENDING`; timeout solo habilita evaluación si existe `published_at` de la publicación confirmada del intento vigente y transcurrieron 300000 ms. Además se requiere replay idempotente verificado, intención idéntica, admisión transaccional y un único reintento concurrente (ver §8). Sin `published_at` no se habilita por tiempo. Catálogo no inspecciona la DLQ.
 - Recuperación manual: cuando `manual_retry_allowed=true`, el Gestor Comercial puede solicitar `POST /api/v1/productos/{productoId}/variantes/{variantId}/preparacion/reintentar`.
   - La admisión es **atómica por preparación**: exactamente una solicitud concurrente pasa `manual_retry_allowed=true` a `PENDING / manual_retry_allowed=false` y devuelve HTTP `202 Accepted` (`OperationAccepted`) conservando la `operation_id` original.
   - Las solicitudes concurrentes competidoras o las realizadas sobre preparaciones en curso técnico, ya completadas o sin precondiciones validadas devuelven HTTP `409 PREPARACION_NO_REINTENTABLE`. Nunca se producen dos publicaciones RabbitMQ ni dos efectos de negocio.
@@ -97,6 +97,12 @@ Las rutas `POST /productos/{productoId}/variantes/{variantId}/reactivar`, `POST 
 - precio master;
 - empaque;
 - pedido.
+
+## 8. Alineación de SKU y recuperación
+
+Al crear una variante, `sku` es obligatorio, explícito, string no vacío y no nullable. Omitido, `null`, vacío o inválido produce `422 SKU_INVALIDO`; reservado produce `409 SKU_DUPLICADO`. El SKU es opaco, globalmente único e inmutable; conserva ceros iniciales y sigue reservado tras la baja. Catálogo no lo genera ni concatena atributos o identificadores. Esta regla reemplaza cualquier promesa previa de SKU opcional o autogenerado.
+
+Todo rechazo de preparación `REJECTED` conserva `manual_retry_allowed=false`. No se habilita por editar genéricamente atributos o perfil; solo tras acreditar causa, operación correctiva publicada y replay idempotente probado para el código específico. `COMPLETED` es terminal. `PENDING` solo admite recuperación por timeout con las condiciones de publicación confirmada, intención idéntica, replay verificado, admisión transaccional y exclusión concurrente de SPEC-003 §7. El umbral es `CATALOG_PREPARATION_TIMEOUT_MS=300000` desde `published_at` del intento vigente; sin esa marca no se habilita. La integración real continúa pendiente de prueba y homologación.
 
 ---
 

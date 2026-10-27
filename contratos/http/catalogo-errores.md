@@ -125,6 +125,8 @@ Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail
 | `RATE_LIMIT_EXCEDIDO` | La identidad o cliente excedió temporalmente la política de solicitudes permitida; la respuesta HTTP es 429 y puede incluir `Retry-After`. |
 | `PREPARACION_NO_REINTENTABLE` | La preparación existe pero el estado actual no admite recuperación manual. |
 
+Las consultas `GET /api/v1/productos/{productoId}/variantes` y `GET /api/v1/productos/{productoId}/variantes/{variantId}` responden `400 VALIDACION` (Problem JSON) para UUID sintácticamente inválido o query inválida. Un ID válido inexistente conserva `404 PRODUCTO_NO_ENCONTRADO` o `404 VARIANTE_NO_ENCONTRADA`.
+
 ## Recepción de traslados
 
 Códigos específicos:

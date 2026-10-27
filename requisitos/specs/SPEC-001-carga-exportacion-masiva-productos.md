@@ -182,3 +182,5 @@ FAILED_GENERAL
 - No se inventa una ubicación de Inventario cuando el proyecto no tiene `default_location_id` y la fila solicita aplicar stock inicial.
 - El reporte final distingue errores por fila y por dominio sin invocar compensaciones destructivas entre servicios.
 - La exportación de catálogo se procesa de forma asíncrona y no bloquea las consultas transaccionales.
+
+Bulk coordina el procesamiento y reutiliza los eventos contractuales existentes hacia Catálogo; no crea rutas paralelas ni omite validaciones, identidad SKU, versiones, barreras o transacciones locales de Catálogo. La estructura exacta de payload por fila/dominio queda sujeta a los schemas existentes de OpenAPI/AsyncAPI. Si un campo requerido para la adaptación no está definido allí, registrar esa dependencia contractual concreta antes de implementación; no inventar campos ni copiar contratos en parches locales de Backend.

@@ -502,7 +502,9 @@ GET /api/v1/precios
 GET /api/v1/precios/skus/{sku}
 ```
 
-`GET /api/v1/precios` resuelve precios de varios SKU y admite contexto de canal y fecha (`at`) según OpenAPI.
+`GET /api/v1/precios` resuelve precios de varios SKU y admite contexto de canal y fecha (`at`) según OpenAPI. La allowlist de esta operación y de `GET /api/v1/precios/skus/{sku}` incluye `modulo-productos` exclusivamente para lectura interna Catálogo→Pricing; ambas conservan `precios:leer`. No se amplían escrituras, programación ni endpoints de otros dominios.
+
+Catálogo usa esta lectura con identidad G6 compartida `modulo-productos` y `precios:leer`; no reutiliza el token del consumidor. La allowlist interna solo aplica a estos dos GET de consulta. El grant y las credenciales de `modulo-productos` siguen pendientes de G7. Canales canónicos: `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS`; global `channel_id=null`. Los consumidores comerciales conservan sus allowlists actuales. El parámetro `skus` sigue CSV; si un SKU opaco contiene coma se usa el GET individual existente con path codificado. En el filtro de catálogo, todos los lotes comparten `at` y el presupuesto operativo inicial total es 5 s incluyendo adquisición de token; pendiente de verificación E2E, no SLA.
 
 `GET /api/v1/precios/skus/{sku}` resuelve el precio vigente o histórico de un SKU. Puede recibir `canal` y `at`; cuando existe un alcance específico de canal se aplica el fallback global definido por Pricing.
 
@@ -1497,6 +1499,8 @@ Las operaciones públicas SEO no requieren autenticación.
 
 # 21. Scopes propios de `api-productos`
 
+La consulta privada de contexto SKU para Pricing es `GET /api/v1/productos/skus/{sku}/contexto`, operación `obtenerContextoSku` de [OpenAPI](openapi.yaml). Reutiliza el DTO `PricingCatalogContext`, distingue SKU inexistente (`404 SKU_NO_ENCONTRADO`) de existente inactivo/inelegible (`200` con flags), y conserva `503` técnico y `401/403`. Identidad aprobada internamente por Marco: `modulo-productos`, tipo `servicio`, `aud=api-productos`, scope `catalogo:leer`; G7 debe confirmar grant y credenciales. La identidad es compartida por G6, no individualiza Catálogo ni Pricing. Transporte HTTP privado, red restringida, autorización por operación y JWT validado; no exponer mediante Gateway ni confiar en cabeceras arbitrarias. Las allowlists comerciales permanecen intactas y no se acredita implementación por esta documentación.
+
 La audiencia técnica es:
 
 ```text
@@ -1507,8 +1511,8 @@ La línea base conserva **16 scopes** técnicos. El candidato `0.6.0-rc.1` añad
 
 | Scope | Operaciones | Clientes previstos |
 |---|---|---|
-| `catalogo:leer` | `GET /productos`, detalle, categorías, marcas | Marketplace, Chatbot, Retail |
-| `precios:leer` | Consultas de precios | Marketplace, Chatbot, Retail |
+| `catalogo:leer` | Consultas comerciales y consulta privada `obtenerContextoSku`, con autorización por operación | Marketplace, Chatbot, Retail en comerciales; `modulo-productos` para `obtenerContextoSku`, pendiente de grant G7 |
+| `precios:leer` | Solo consultas `GET`; no autoriza actualizar ni programar precios | Marketplace, Chatbot, Retail; lectura interna Catálogo (`modulo-productos`) aprobada, grant G7 pendiente |
 | `promociones:leer` | Consultar promociones | Marketplace, Chatbot, Retail |
 | `promociones:evaluar` | Evaluar promociones | Marketplace, Chatbot, Retail |
 | `cupones:validar` | Validar cupón | Marketplace, Chatbot, Retail |
@@ -2656,3 +2660,7 @@ Estos ajustes documentan reglas administrativas y no acreditan implementación o
 - Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
 - Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+## Elegibilidad comercial por canal
+
+La política funcional comunicada aplica de igual forma a `MARKETPLACE`, `CHATBOT`, `RETAIL` y `VENTAS`: producto simple activo expone `sku_base`; producto con variantes requiere padre activo y al menos una variante activa, y solo son visibles variantes activas con padre activo. No existen asignaciones, defaults ni tablas independientes por canal. El parámetro `canal` conserva el contexto de la consulta y no otorga scopes. Elegibilidad se evalúa antes del total y la paginación; visibilidad no garantiza precio, stock ni promociones. D-CAT-05/06: decisión comunicada; pendiente de ratificación de Arquitectura y conformidad de consumidores. Para regla detallada consultar [SPEC-003 §7](../../requisitos/specs/SPEC-003-gestion-productos-crud.md).

@@ -1012,6 +1012,79 @@ components:
       type: object
       description: Payload específico del mensaje. Para mensajes P1 críticos se especializa mediante schemas dedicados.
       additionalProperties: true
+    MasterDeactivationIdentityData:
+      type: object
+      properties:
+        entity_type:
+          type: string
+          enum: [CATEGORY, BRAND, PRODUCT_TYPE, CHARACTERISTIC_VALUE]
+        entity_id:
+          type: string
+          minLength: 1
+          description: Identidad opaca del maestro, preservada sin transformación.
+        version:
+          type: integer
+          minimum: 0
+          description: Versión autoritativa capturada por Taxonomy al admitir la baja; no es schema_version del envelope.
+      required: [entity_type, entity_id, version]
+      additionalProperties: true
+    MasterDeactivationAssociationData:
+      type: object
+      properties:
+        entity_type:
+          type: string
+          const: PRODUCT_TYPE_CHARACTERISTIC
+        entity_id:
+          type: string
+          minLength: 1
+        tipo_producto_id:
+          type: string
+          minLength: 1
+          description: Identificador del tipo de producto autoritativo de la asociación.
+        caracteristica_id:
+          type: string
+          minLength: 1
+          description: Identificador de la característica autoritativo de la asociación.
+        version:
+          type: integer
+          minimum: 0
+          description: schema_version autoritativa del tipo capturada y proporcionada por Taxonomy al admitir la operación; Catalog la conserva y verifica. No es schema_version del envelope ni una versión de fila de asociación.
+      required: [entity_type, entity_id, tipo_producto_id, caracteristica_id, version]
+      additionalProperties: true
+    MasterDeactivationData:
+      oneOf:
+      - $ref: '#/components/schemas/MasterDeactivationIdentityData'
+      - $ref: '#/components/schemas/MasterDeactivationAssociationData'
+    MasterDeactivationCheckedData:
+      allOf:
+      - $ref: '#/components/schemas/MasterDeactivationData'
+      - type: object
+        properties:
+          result:
+            type: string
+            enum: [CLEAR, IN_USE]
+        required: [result]
+    MasterDeactivationCompletedData:
+      oneOf:
+      - $ref: '#/components/schemas/MasterDeactivationIdentityData'
+      - allOf:
+        - $ref: '#/components/schemas/MasterDeactivationAssociationData'
+        - type: object
+          properties:
+            schema_version_resultante:
+              type: integer
+              minimum: 1
+              description: Evolución confirmada del esquema posterior a la versión capturada; no se equipara a la versión de la fila de asociación.
+          required: [schema_version_resultante]
+    MasterDeactivationRejectedData:
+      allOf:
+      - $ref: '#/components/schemas/MasterDeactivationData'
+      - type: object
+        properties:
+          reason:
+            type: string
+            minLength: 1
+        required: [reason]
     CouponConsumptionRequestedData:
       type: object
       properties:
@@ -1875,6 +1948,12 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version:
+              type: integer
+              minimum: 1
+            operation_id:
+              type: string
+              format: uuid
             producer:
               type: string
               const: taxonomy-svc
@@ -1885,8 +1964,10 @@ components:
               type: string
               const: taxonomy.master.deactivation.check.requested
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/MasterDeactivationData'
           required:
+          - schema_version
+          - operation_id
           - producer
           - kind
           - name
@@ -1908,6 +1989,12 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version:
+              type: integer
+              minimum: 1
+            operation_id:
+              type: string
+              format: uuid
             producer:
               type: string
               const: catalog-svc
@@ -1918,8 +2005,10 @@ components:
               type: string
               const: catalog.master.deactivation.checked
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/MasterDeactivationCheckedData'
           required:
+          - schema_version
+          - operation_id
           - producer
           - kind
           - name
@@ -1942,6 +2031,12 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version:
+              type: integer
+              minimum: 1
+            operation_id:
+              type: string
+              format: uuid
             producer:
               type: string
               const: taxonomy-svc
@@ -1952,8 +2047,10 @@ components:
               type: string
               const: taxonomy.master.deactivated
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/MasterDeactivationCompletedData'
           required:
+          - schema_version
+          - operation_id
           - producer
           - kind
           - name
@@ -1975,6 +2072,12 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version:
+              type: integer
+              minimum: 1
+            operation_id:
+              type: string
+              format: uuid
             producer:
               type: string
               const: taxonomy-svc
@@ -1985,8 +2088,10 @@ components:
               type: string
               const: taxonomy.master.deactivation.rejected
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/MasterDeactivationRejectedData'
           required:
+          - schema_version
+          - operation_id
           - producer
           - kind
           - name
