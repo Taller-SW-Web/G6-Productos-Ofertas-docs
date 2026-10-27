@@ -172,7 +172,7 @@ La línea base conserva **16 scopes** de `api-productos`; la candidata `0.6.0-rc
 
 | Scope | Operación principal | `client_id` previsto |
 |---|---|---|
-| `catalogo:leer` | Catálogo/categorías/marcas | Marketplace, Chatbot, Retail |
+| `catalogo:leer` | Catálogo/categorías/marcas; contexto SKU privado con allowlist separada | Marketplace, Chatbot, Retail para comerciales; Pricing propuesto solo para `obtenerContextoSku`, pendiente de G7 |
 | `precios:leer` | Precio | Marketplace, Chatbot, Retail |
 | `promociones:leer` | Promociones | Marketplace, Chatbot, Retail |
 | `promociones:evaluar` | Evaluación | Marketplace, Chatbot, Retail |

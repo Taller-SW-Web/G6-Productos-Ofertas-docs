@@ -36,6 +36,118 @@ tags:
 - name: SEO
   description: Metadatos, slug e historial/resolución.
 paths:
+  /productos/skus/{sku}/contexto:
+    get:
+      tags:
+      - Productos
+      operationId: obtenerContextoSku
+      summary: Consultar contexto privado de SKU para Pricing
+      description: >-
+        Contrato interno de diseño aprobado por Marco para Pricing hacia Catálogo.
+        No es una consulta comercial pública. El SKU viaja codificado en el path, sin modificar
+        su valor. Reutiliza el resultado del puerto PricingCatalogContext: no calcula precios
+        ni disponibilidad de inventario. Un SKU existente inactivo o inelegible devuelve 200
+        con los flags correspondientes en false; solo la inexistencia devuelve 404.
+        Pricing traduce exclusivamente 404 SKU_NO_ENCONTRADO a null en su adaptador;
+        fallos de red, 503 y errores de autorización no se convierten en ausencia.
+        Identidad propuesta modulo-pricing aprobada en diseño por G6: G7 debe confirmar su
+        identificador técnico, grant, emisión y provisión de token. No acredita credenciales,
+        implementación, compatibilidad runtime ni pruebas integradas.
+      x-status: provisional-internal
+      x-internal: true
+      x-source-spec:
+      - SPEC-003
+      - SPEC-004
+      - SPEC-013
+      x-route-basis: derived-from-capability
+      x-consumers:
+      - Pricing
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids:
+      - modulo-pricing
+      security:
+      - serviceBearer: []
+      parameters:
+      - name: sku
+        in: path
+        required: true
+        description: SKU opaco codificado correctamente en el path; conservar el valor original, incluidos ceros iniciales, sin recortarlo ni recodificarlo como identidad.
+        schema:
+          type: string
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Contexto del SKU existente, también si está inactivo o no es comercialmente elegible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PricingCatalogContext'
+              examples:
+                simple:
+                  value: {sku: '000123', productId: 'producto-ejemplo', isVariant: false, active: true, eligible: true}
+                variante:
+                  value: {sku: 'SKU-V-001', productId: 'producto-padre-ejemplo', isVariant: true, active: true, eligible: true}
+                inactivo:
+                  value: {sku: 'SKU-INACTIVO', productId: 'producto-ejemplo', isVariant: false, active: false, eligible: false}
+                inelegible:
+                  value: {sku: 'SKU-V-002', productId: 'producto-padre-ejemplo', isVariant: true, active: true, eligible: false}
+        '401':
+          description: Autenticación de servicio ausente o inválida, según el contrato de Seguridad existente.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status: {type: integer, const: 401}
+                    code: {type: string, const: TOKEN_INVALIDO}
+                  required: [status, code]
+        '403':
+          description: Scope o identidad no autorizados; poseer catalogo:leer sin pertenecer a la allowlist de esta operación no concede acceso.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status: {type: integer, const: 403}
+                    code: {type: string, const: SCOPE_INSUFICIENTE}
+                  required: [status, code]
+        '404':
+          description: SKU inexistente. El adaptador de Pricing traduce este resultado a null, sin ocultar errores técnicos o de autorización.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status: {type: integer, const: 404}
+                    code: {type: string, const: SKU_NO_ENCONTRADO}
+                  required: [status, code]
+              example: {title: SKU no encontrado, status: 404, code: SKU_NO_ENCONTRADO}
+        '503':
+          description: Error técnico o indisponibilidad; nunca se trata como SKU inexistente.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status: {type: integer, const: 503}
+                    code: {type: string, const: SERVICIO_NO_DISPONIBLE}
+                  required: [status, code]
+              example: {title: Servicio no disponible, status: 503, code: SERVICIO_NO_DISPONIBLE}
+      x-error-codes:
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '404': [SKU_NO_ENCONTRADO]
+        '503': [SERVICIO_NO_DISPONIBLE]
   /productos:
     get:
       tags:
@@ -24693,6 +24805,25 @@ components:
       - NOMBRE_ASC
       - NOMBRE_DESC
       description: Ordenamiento contractual seguro a nivel de producto. El orden por precio permanece fuera mientras no exista una regla product-level.
+    PricingCatalogContext:
+      type: object
+      description: >-
+        DTO de respuesta exacto del puerto PricingCatalogContext.resolve: sku y productId son
+        strings; isVariant indica si corresponde a una variante; active es el estado del SKU
+        y eligible su elegibilidad comercial según Catálogo. No incorpora precios ni stock.
+      properties:
+        sku:
+          type: string
+        productId:
+          type: string
+        isVariant:
+          type: boolean
+        active:
+          type: boolean
+        eligible:
+          type: boolean
+      required: [sku, productId, isVariant, active, eligible]
+      additionalProperties: false
     ResolverCodigoBarrasRequest:
       type: object
       properties:
@@ -24780,7 +24911,12 @@ x-security-contract:
     service_scope: tokens:introspeccion
   service_scopes_pending_registration:
     catalogo:leer:
-      clients: *id020
+      clients:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
+      - modulo-pricing
+      note: modulo-pricing se propone únicamente para obtenerContextoSku; identidad final, grant y token pendientes de G7. No amplía allowlists comerciales.
     precios:leer:
       clients: *id066
     promociones:leer:

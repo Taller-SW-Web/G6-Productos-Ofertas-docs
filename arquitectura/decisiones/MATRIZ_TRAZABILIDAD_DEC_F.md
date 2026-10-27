@@ -64,3 +64,7 @@ G6 comunicó aceptación de M-01–M-09 (`ACEPTADO_G6_COMUNICADO_G1`). Esto no a
 | 9. `400 VALIDACION` | [OpenAPI](../../contratos/http/openapi.yaml), [errores](../../contratos/http/catalogo-errores.md), [pruebas](../../contratos/pruebas/pruebas-contrato.md) | Definición y caso documentados; ejecución y runtime pendientes. |
 
 No se crean DEC-F nuevas. Para estados normativos y persistencia futura, la adenda del [Registro DEC-F](REGISTRO_DEC_F.md) es la referencia asociada.
+
+## Traza del acuerdo privado `skuContext`
+
+El [acuerdo Pricing → Catálogo](../../integraciones/ACUERDO_PRICING_CATALOGO_SKU_CONTEXT.md), registrado el 2026-10-26 con aprobación de diseño de Marco comunicada por Poma, se refleja en [SPEC-003](../../requisitos/specs/SPEC-003-gestion-productos-crud.md), [SPEC-013](../../requisitos/specs/SPEC-013-gestion-precios-individuales-masivos.md), `obtenerContextoSku`/`PricingCatalogContext` de [OpenAPI](../../contratos/http/openapi.yaml), [Contrato API](../../contratos/http/Contrato_Api.md), [kit](../../contratos/http/kit-integracion.md) y [casos de contrato](../../contratos/pruebas/pruebas-contrato.md). No amplía DEC-F-001 ni crea otra decisión. Estado interno: diseño aprobado G6 y contrato documentado; identidad final, grant y token G7 pendientes; endpoint de Catálogo, adaptador de Pricing y pruebas runtime pendientes de evidencia. El registro de avance corresponde al comentario en Backend issue #24.

@@ -169,6 +169,12 @@ con `sub=modulo-despacho`, `aud=api-productos`, `scope=productos:fisicos:leer`.
 - Desactivar al padre bloquea comercialmente todas sus variantes, conservando sus estados individuales.
 - Reactivar vuelve a validar las condiciones (incluyendo Pricing e Inventario `COMPLETED`) y no reactiva automáticamente variantes inactivas. Reactivar una variante tampoco reactiva al padre.
 
+## Consulta privada de contexto SKU para Pricing
+
+Catálogo entrega a Pricing el contexto autoritativo mediante `GET /api/v1/productos/skus/{sku}/contexto`, con el SKU codificado en el path sin alterar su valor. El diseño fue aprobado por Marco y se registra en el [acuerdo skuContext](../../integraciones/ACUERDO_PRICING_CATALOGO_SKU_CONTEXT.md); el [OpenAPI](../../contratos/http/openapi.yaml) gobierna la interfaz.
+
+La respuesta reutiliza los cinco campos de `PricingCatalogContext`: identidad SKU/producto, indicador de variante, estado del SKU y elegibilidad comercial. Un SKU existente inactivo o inelegible responde `200` con sus flags; solo uno inexistente produce `404 SKU_NO_ENCONTRADO`. Los errores técnicos producen `503 SERVICIO_NO_DISPONIBLE` y se conservan `401/403` del contrato de Seguridad. No consulta precios ni disponibilidad para construir el contexto. Esta operación interna se autoriza exclusivamente a la identidad de Pricing propuesta en el acuerdo, con `serviceBearer`, `aud=api-productos` y `catalogo:leer`; confirmación de identidad y grant G7 pendientes. No amplía las allowlists comerciales.
+
 ## 8. Criterio de completitud
 
 La capacidad queda completa cuando el CRUD, preparación de Pricing e inicialización de Inventario son idempotentes, las recuperaciones manuales conservan `operation_id`, emiten nueva `message_id`, correlacionan resultados por `causation_id` descartando mensajes stale, y la activación nunca presupone que un `requested` o `202` ya terminó correctamente.

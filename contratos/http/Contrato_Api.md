@@ -1497,6 +1497,8 @@ Las operaciones públicas SEO no requieren autenticación.
 
 # 21. Scopes propios de `api-productos`
 
+La consulta privada de contexto SKU para Pricing es `GET /api/v1/productos/skus/{sku}/contexto`, operación `obtenerContextoSku` de [OpenAPI](openapi.yaml). Reutiliza el DTO de `PricingCatalogContext`, distingue SKU inexistente (`404 SKU_NO_ENCONTRADO`) de existente inactivo/inelegible (`200` con flags), y conserva `503` técnico y `401/403` de Seguridad. Ver [acuerdo aprobado por G6](../../integraciones/ACUERDO_PRICING_CATALOGO_SKU_CONTEXT.md): `serviceBearer`, audiencia `api-productos`, scope existente `catalogo:leer` y allowlist exclusiva propuesta `modulo-pricing`. La identidad final y el grant/provisión dependen de G7. Esta lectura privada no amplía las allowlists de las consultas comerciales ni acredita implementación.
+
 La audiencia técnica es:
 
 ```text
@@ -1507,7 +1509,7 @@ La línea base conserva **16 scopes** técnicos. El candidato `0.6.0-rc.1` añad
 
 | Scope | Operaciones | Clientes previstos |
 |---|---|---|
-| `catalogo:leer` | `GET /productos`, detalle, categorías, marcas | Marketplace, Chatbot, Retail |
+| `catalogo:leer` | Consultas comerciales y consulta privada `obtenerContextoSku`, con allowlists independientes | Marketplace, Chatbot, Retail en las comerciales; solo Pricing propuesto para `obtenerContextoSku`, pendiente de G7 |
 | `precios:leer` | Consultas de precios | Marketplace, Chatbot, Retail |
 | `promociones:leer` | Consultar promociones | Marketplace, Chatbot, Retail |
 | `promociones:evaluar` | Evaluar promociones | Marketplace, Chatbot, Retail |

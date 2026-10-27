@@ -27,6 +27,10 @@ histórico
 - Variante con override: usa precio específico del SKU.
 - Canal específico puede tener vigencia propia con fallback al global.
 
+### 2.1. Contexto privado desde Catálogo
+
+La consulta de contexto necesaria para resolver SKU/producto se documenta en el [acuerdo privado skuContext](../../integraciones/ACUERDO_PRICING_CATALOGO_SKU_CONTEXT.md) y en [OpenAPI](../../contratos/http/openapi.yaml). Pricing consume `GET /api/v1/productos/skus/{sku}/contexto` mediante el adaptador del puerto `PricingCatalogContext` existente. Solo `404 SKU_NO_ENCONTRADO` se traduce a `null`; `200` conserva los flags de inactividad/inelegibilidad. Fallos de red, técnicos y de autorización se mantienen como errores. El contexto no calcula precios ni disponibilidad y no cambia las reglas de herencia/override de §2. Diseño aprobado por G6; identidad final y token G7, adaptador e integración pendientes de evidencia.
+
 ## 3. Inicialización de precio
 
 Al crear el producto, Catálogo publica:

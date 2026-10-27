@@ -480,6 +480,22 @@ Cada caso corresponde a una función G1 distinta; las llamadas G6 son dependenci
 
 `STATIC_CONTRACT` solo verifica el YAML. Provider, Consumer/Provider, Seguridad y E2E son estados independientes. No marcar PASS sin ejecución vinculada a SHA exacto; ver [matriz de evidencia H4](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/castilla/integraciones/g1-marketplace/MATRIZ_OPERACIONES_H4.md).
 
+## Contexto privado SKU — casos acordados y pendientes de ejecución
+
+Contrato aprobado en diseño por G6: [acuerdo Pricing → Catálogo](../../integraciones/ACUERDO_PRICING_CATALOGO_SKU_CONTEXT.md), `obtenerContextoSku` en [OpenAPI](../http/openapi.yaml). La presencia de estos casos no acredita endpoint ni adaptador implementados; sus resultados deben asociarse al SHA del Backend correspondiente y registrarse en issue #24. Validar el YAML/DTO es evidencia estática separada.
+
+| ID | Alcance | Criterio esperado | Estado |
+|---|---|---|---|
+| CT-CAT-SKUCONTEXT-01 | PROVIDER_CONTRACT | SKU simple existente: `200`, exactamente `sku`, `productId`, `isVariant`, `active`, `eligible` con los tipos del puerto | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-02 | PROVIDER_CONTRACT + ADAPTER | SKU inexistente: `404`, `application/problem+json`, `status=404`, `code=SKU_NO_ENCONTRADO`; solo ese resultado se traduce a `null` | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-03 | PROVIDER_CONTRACT | SKU variante existente: `200`, `isVariant=true`, `productId` del producto al que pertenece | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-04 | PROVIDER_CONTRACT + ADAPTER | SKU existente inactivo: `200`, `active=false` y elegibilidad correspondiente; conservar el DTO, no convertir a `404`/`null` | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-05 | PROVIDER_CONTRACT + ADAPTER | SKU existente inelegible: `200`, `eligible=false`; no ocultar su existencia ni calcular precio/stock | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-06 | PROVIDER_CONTRACT + ADAPTER | Error técnico/indisponibilidad: `503 SERVICIO_NO_DISPONIBLE` como Problem; fallos de red no producen ausencia ni `null` | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-07 | SECURITY | `serviceBearer`, `aud=api-productos`, `catalogo:leer`, identidad de Pricing confirmada por G7; token ausente/inválido `401`, scope insuficiente o cliente fuera de allowlist `403`; no acceso anónimo/humano | PENDIENTE_G7_Y_EJECUCION |
+| CT-CAT-SKUCONTEXT-08 | CONTRACT_COMPATIBILITY | SKU codificado en path conserva valor exacto y ceros iniciales; interfaz del puerto sin cambios; allowlists comerciales sin ampliación | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-09 | SECURITY + ADAPTER | `401/403` nunca se traducen a SKU inexistente o `null` | PENDIENTE_IMPLEMENTACION |
+
 ## Casos documentales Catálogo pendientes de ejecución
 
 | ID | Tipo | Criterio | Estado |

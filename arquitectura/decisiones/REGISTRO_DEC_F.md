@@ -32,6 +32,8 @@ Los mensajes de baja de maestros mantienen sus nombres, exchanges y routing keys
 
 ## DEC-F-001 — SKU vendible como identidad comercial compartida
 
+**Acuerdo privado skuContext registrado el 2026-10-26.** Marco aprobó el diseño de Pricing → Catálogo comunicado por Poma: [acuerdo y estados](../../integraciones/ACUERDO_PRICING_CATALOGO_SKU_CONTEXT.md), reflejado en OpenAPI mediante `obtenerContextoSku`. Se reutiliza el DTO del puerto `PricingCatalogContext` y el mecanismo de servicio existente, sin nueva DEC-F. La aprobación interna de la identidad propuesta `modulo-pricing` no acredita confirmación de registro, grant, token G7 ni implementación/pruebas Backend. El acuerdo permite documentar y desarrollar la frontera propia; la llamada real autenticada depende específicamente de G7.
+
 **Enunciado y justificación.** Precio, disponibilidad, reserva, consumo, combos y referencias comerciales convergen en el SKU vendible canónico de Catálogo. Evita que producto, variante y código de barras se traten como la misma identidad.
 
 **Invariantes G6.** Producto simple: `sku_base` vendible. Producto con variantes: cada variante vendible tiene SKU propio. Inventario se identifica por `(sku, location_id)`; Pricing resuelve herencia/override; combos se expanden a SKU y cantidad. El código de barras es texto opaco y se resuelve a un SKU; no lo sustituye.
