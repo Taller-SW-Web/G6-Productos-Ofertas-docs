@@ -143,9 +143,11 @@ La implementación final debe alinearse a React, TypeScript, Mantine, tema centr
 | Slug con colisión | S02-C | P0 | `slug-con-colision` | URL con sufijo resaltado y alerta |
 | Carrera de slug | S02-C | P0 | `slug-carrera-409` | Aviso persistente y nueva propuesta en el mismo diálogo |
 | Verificación pendiente | S04-P | P0 | `baja-pendiente` | Banner pendiente con identificador de operación |
-| Verificación confirmada | S04-P | P0 | `baja-confirmada` | Resultado `CLEAR` y árbol actualizado |
-| Verificación rechazada | S04-B | P0 | `baja-rechazada` | Motivo de rechazo y categoría intacta |
-| Verificación no concluyente | S04-B | P0 | `baja-no-concluyente` | Aviso genérico sin afirmar cambio |
+| Verificación confirmada | S04-P | P0 | `baja-confirmada` | `status: COMPLETED`, `result: CLEAR` y árbol actualizado |
+| Verificación rechazada | S04-B | P0 | `baja-rechazada` | `status: REJECTED`, `result: IN_USE`; categoría activa |
+| Rechazo técnico definitivo | S04-B | P0 | `baja-rechazada-tecnica` | `status: REJECTED`, `result: null`; no inventar uso activo |
+| Check seguro pendiente | S04-P | P0 | `baja-check-clear-pendiente` | `status: PENDING_DEACTIVATION`, `result: CLEAR`; esperar resolución final |
+| Verificación no concluyente | S04-P | P0 | `baja-no-concluyente` | Aviso de consulta fallida sin afirmar cambio ni rechazo |
 | Ciclo rechazado | S03 | P0 | `ciclo-rechazado` | `409 CICLO_CATEGORIA` junto al selector |
 | Padre inactivo al editar | S03 | P0 | `padre-inactivo-al-editar` | `409 CATEGORIA_PADRE_INACTIVA` junto al selector |
 | Profundidad excedida | S03 | P0 | `profundidad-excedida` | `422 PROFUNDIDAD_CATEGORIA_EXCEDIDA` |

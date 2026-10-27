@@ -22972,6 +22972,12 @@ components:
       - nombre
     OperacionMaestra:
       type: object
+      description: >-
+        Representación pública candidata de baja maestra, pendiente de homologación de los cambios
+        compartidos y de comprobación de consumidores; no acredita compatibilidad runtime.
+        status describe el ciclo de la operación y result únicamente el check de Catálogo.
+        Un result CLEAR aislado no completa la baja ni libera la barrera: se requiere la
+        decisión final de Taxonomía y su evento correlacionado en Catálogo.
       properties:
         operation_id:
           type: string
@@ -22996,8 +23002,17 @@ components:
           - PENDING_DEACTIVATION
           - COMPLETED
           - REJECTED
-          description: Estado público. FAILED técnico interno se representa como REJECTED con razón TECHNICAL_FAILURE.
+          description: >-
+            PENDING_DEACTIVATION indica espera de resolución; COMPLETED solo corresponde a baja
+            confirmada por Taxonomía; REJECTED conserva el maestro activo. REQUESTED/IN_PROGRESS
+            internos se mapean a PENDING_DEACTIVATION, y FAILED técnico a REJECTED con razón
+            TECHNICAL_FAILURE en el protocolo final. No se modifica el enum físico ni se incorpora
+            esa razón al enum HTTP ErrorCode mediante este mapeo.
         result:
+          description: >-
+            Resultado del check, distinto del estado final: CLEAR permite evaluar la confirmación
+            y no equivale a COMPLETED; IN_USE exige rechazo. null representa ausencia de resultado
+            de check, por ejemplo ante timeout o fallo técnico; no se fabrica IN_USE para esos casos.
           oneOf:
           - type: string
             enum:

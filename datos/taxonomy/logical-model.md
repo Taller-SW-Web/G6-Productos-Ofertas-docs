@@ -161,12 +161,16 @@ Bitácora append-only de modificaciones de URLs de categorías para soportar red
 ### 5.9. `OPERACION_BAJA_MAESTRA`
 Entidad técnica observable que gestiona solicitudes asíncronas de desactivación de recursos maestros con dependencias.
 - `id`: Identificador único de la operación (UUID lógico).
-- `operation_id`: Identificador observable de la solicitud (Texto único, ej. `"op-cat-deact-789"`).
-- `entity_type`: Tipo de entidad objetivo (`CATEGORY`, `BRAND`, `CHARACTERISTIC`, `CHARACTERISTIC_VALUE`, `PRODUCT_TYPE`, `PRODUCT_TYPE_CHARACTERISTIC`).
+- `operation_id`: Identificador observable de la solicitud (UUID, conforme a `OperacionMaestra` de OpenAPI).
+- `entity_type`: Tipo de entidad objetivo del protocolo candidato (`CATEGORY`, `BRAND`, `CHARACTERISTIC_VALUE`, `PRODUCT_TYPE`, `PRODUCT_TYPE_CHARACTERISTIC`). `CHARACTERISTIC` queda excluido de este protocolo; su existencia como entidad de dominio no lo habilita como objetivo de baja maestra.
 - `entity_id`: Identificador del recurso que se solicita desactivar (UUID lógico).
-- `status`: Estado del proceso (`REQUESTED`, `IN_PROGRESS`, `COMPLETED`, `REJECTED`, `FAILED`).
+- `status`: Estado interno del proceso (`REQUESTED`, `IN_PROGRESS`, `COMPLETED`, `REJECTED`, `FAILED`); no se expone directamente como vocabulario HTTP.
 - `reason`: Motivo o detalle explicativo de la resolución (Texto opcional).
 - `correlation_id`: Identificador de trazabilidad distribuida (Texto obligatorio).
+
+**Representación pública candidata.** El [schema `OperacionMaestra`](../../contratos/http/openapi.yaml) separa `status: PENDING_DEACTIVATION | COMPLETED | REJECTED` de `result: CLEAR | IN_USE | null`. `REQUESTED` e `IN_PROGRESS` internos se representan como `PENDING_DEACTIVATION`; `COMPLETED` y `REJECTED` conservan su nombre; `FAILED` técnico se representa como `REJECTED` con razón `TECHNICAL_FAILURE` en el protocolo final. Esta razón no se agrega al enum HTTP `ErrorCode`. `CLEAR` es el check previo a la confirmación, nunca un estado terminal; un timeout o fallo técnico no se convierte en `IN_USE`. Catálogo mantiene su barrera hasta consumir el evento final correlacionado de confirmación o rechazo.
+
+Este alineamiento describe el contrato candidato y los consumidores documentales; quedan pendientes la homologación de los cambios públicos, la adaptación de consumidores y la comprobación runtime. El enum físico histórico incluye `CHARACTERISTIC` y los estados internos anteriores: se conserva tal como está en la migración existente. Su presencia física no amplía los cinco tipos admitidos en este protocolo. Ver [modelo físico §29](physical-model.md#29-alineación-futura-de-bajas-maestras) para las modificaciones futuras de persistencia que requieren autorización de Marco; aquí no se crean tablas ni se modifica una migración.
 
 ---
 
@@ -185,9 +189,9 @@ erDiagram
 
     OPERACION_BAJA_MAESTRA }o--|| CATEGORIA : "gestiona baja de"
     OPERACION_BAJA_MAESTRA }o--|| MARCA : "gestiona baja de"
-    OPERACION_BAJA_MAESTRA }o--|| CARACTERISTICA : "gestiona baja de"
     OPERACION_BAJA_MAESTRA }o--|| VALOR_CARACTERISTICA : "gestiona baja de"
     OPERACION_BAJA_MAESTRA }o--|| TIPO_PRODUCTO : "gestiona baja de"
+    OPERACION_BAJA_MAESTRA }o--|| ASOCIACION_TIPO_CARACTERISTICA : "gestiona desasociacion de"
 ```
 
 | Relación | Cardinalidad | Regla de integridad |
