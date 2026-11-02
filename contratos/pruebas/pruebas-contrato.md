@@ -146,9 +146,10 @@ Los métodos `test_marketplace_*` comprueban únicamente aserciones `STATIC_CONT
 | CT-REC-05 | Sin candidatos | HTTP 200 + `recommendations=[]` | PENDIENTE_EJECUCION |
 | CT-REC-06 | Identidad | Recomendación principal por `product_id` | PENDIENTE_EJECUCION |
 | CT-REC-07 | No fuga stock | Sin cantidades internas | PENDIENTE_EJECUCION |
-| CT-REC-B01 | Availability product-level | Reutiliza `EstadoStock`, policy multi-SKU pendiente de decisión propia de Recomendaciones | BLOQUEADA_DECISION |
-| CT-REC-B02 | Variantes → availability | Depende de `D-REC-01` | BLOQUEADA_DECISION |
-| CT-REC-B03 | Variantes → current_price | Depende de `D-REC-02` | BLOQUEADA_DECISION |
+| CT-REC-B01 | Availability product-level | Reutiliza `EstadoStock`; candidato sin disponibilidad positiva demostrada se excluye y no se traduce `INDETERMINADO` a `AGOTADO` | PENDIENTE_EJECUCION |
+| CT-REC-B02 | Variantes → availability | Mixta DISPONIBLE/STOCK_BAJO, todas AGOTADO excluye, indeterminado sin positivos excluye, fallo global devuelve error técnico | PENDIENTE_EJECUCION |
+| CT-REC-B03 | Variantes → current_price | Precio efectivo mínimo («desde») entre SKU con positividad demostrada para canal/instante común; sin SKU o precio válido se excluye | PENDIENTE_EJECUCION |
+| CT-REC-B04 | Fallo de dependencia | Inventory/Pricing timeout, 401/403, 503 o DTO inválido no producen lista vacía, cero ni AGOTADO | PENDIENTE_EJECUCION |
 
 ## 6. Rate limiting
 
@@ -513,3 +514,18 @@ Contrato aprobado en diseño por G6: [acuerdo Pricing → Catálogo](../../integ
 | CT-CAT-MASTER-03 | INTEGRATION | Timeout Taxonomy 60 s cierra durablemente con final; no libera barrera por timeout/ausencia; separar de preparaciones de 300000 ms | PENDIENTE_E2E |
 | CT-CAT-GATEWAY-01 | STATIC_CONTRACT | El generador de rutas excluye operaciones OpenAPI `x-internal: true`; `obtenerContextoSku` no se publica en Gateway | PENDIENTE_BACKEND |
 | CT-CAT-VARIANTS-400 | PROVIDER_CONTRACT | UUID inválido en listado/detalle de variante y query inválida en listado responden `400 VALIDACION`; IDs válidos inexistentes conservan sus 404 | PENDIENTE_EJECUCION |
+
+## Casos documentales añadidos para acuerdos internos G6 H4
+
+| ID | Alcance | Caso | Estado |
+|---|---|---|---|
+| CT-G6-PRICE-EVENT-01 | ASYNCAPI / PROVIDER_CONSUMER | Evento post-commit para objetivo PRODUCTO con `sku=null`, objetivo SKU y transiciones crear/modificar/retirar; actor, canal, moneda, versión e idempotencia | PENDIENTE_IMPLEMENTACION |
+| CT-G6-PRICE-EVENT-02 | ASYNCAPI / CONSUMER | Porcentaje decimal exacto HALF_UP; creación/retiro dan variación null; Promotions invalida y vuelve a consultar Pricing | PENDIENTE_IMPLEMENTACION |
+| CT-G6-INVALIDATION-01 | ASYNCAPI / CONSUMER | Desactivación y stock tipados; Inbox descarta duplicados/versión obsoleta; stock invalida y refresca disponibilidad comercial | PENDIENTE_IMPLEMENTACION |
+| CT-G6-BULK-01 | ASYNCAPI / PROVIDER_CONSUMER | Bulk v2, DTO Catalog referenciados, ALTA/ACTUALIZACION, fila por SKU y padre agrupado; rechazar variante contradictoria | PENDIENTE_IMPLEMENTACION |
+| CT-G6-BULK-02 | ASYNCAPI / IDEMPOTENCY | Retry idéntico reproduce resultado; row_operation_id con payload distinto da IDEMPOTENCY_CONFLICT; completed parcial no afirma éxito de otros dominios | PENDIENTE_IMPLEMENTACION |
+| CT-G6-BULK-03 | FILE_CONTRACT | CSV UTF-8/XLSX una hoja sin macros, límites de bytes/filas/tamaño descomprimido, cabeceras exactas y SKU duplicado | PENDIENTE_PLANTILLA_V2 |
+| CT-G6-EXPORT-01 | PROVIDER_CONSUMER | requested_at único; manifiesto registra observaciones/versions; fallo de fuente requerida da FAILED_GENERAL; no hay snapshot atómico | PENDIENTE_IMPLEMENTACION |
+| CT-G6-COMBO-01 | CONSUMER | precio bajo ambas sumas con mismo canal/instante; dependencia fallida da SERVICIO_NO_DISPONIBLE; disponibilidad no verificable es null/INCOMPLETA y no reserva | PENDIENTE_IMPLEMENTACION |
+| CT-G6-AUTH-01 | SECURITY | JWT real de modulo-productos usa scope y allowlist puntual; demo sin JWT solo red/origen/método/ruta verificados, nunca identidad por cabecera | PENDIENTE_GRANT_G7_Y_EJECUCION |
+| CT-G6-AMQP-01 | BROKER_ISOLATED | ACK solo tras disposición durable; inválido se persiste antes de ACK; 3 reintentos locales y pausa sin ACK; no se presupone DLQ | PENDIENTE_IMPLEMENTACION |

@@ -92,12 +92,13 @@ STOCK_BAJO
 AGOTADO
 ```
 
-Quedan abiertas:
+El texto histórico anterior sobre `D-REC-01/02` como abiertas queda sustituido por el acuerdo interno G6 H4 (2026-11-01), sin borrar su trazabilidad: la decisión ya está aprobada internamente, aunque el contrato/runtime y las pruebas siguen sujetos a su estado documental y operativo.
 
-- `D-REC-01`: cómo obtener un status product-level a partir de múltiples SKU;
-- `D-REC-02`: qué representa `current_price` cuando existen variantes/overrides.
+### Addendum G6 H4 — DEC-G6-INT-02/03
 
-Por ello esos enriquecimientos permanecen provisionales.
+Cada recomendación sigue a nivel `product_id`, sin elegir ni reservar SKU. Solo se agregan variantes elegibles por canal; no se suman ubicaciones. Si cualquier SKU tiene `DISPONIBLE`, el producto queda disponible; si no y alguno tiene `STOCK_BAJO`, queda bajo; si todos `AGOTADO`, se excluye. Si no hay disponibilidad positiva demostrada y queda `INDETERMINADO` o información inconsistente, también se excluye sin traducirlo a agotado. Un fallo global de Inventory o respuesta inválida/autorización/timeout es error técnico de la consulta completa, no lista vacía.
+
+`current_price` es el mínimo precio efectivo entre SKU elegibles con disponibilidad positiva demostrada en el mismo canal e instante `at` UTC; Pricing resuelve oferta vigente, regular, herencia y override. Debe haber moneda homogénea. SKU sin precio no participa; sin precio/disponibilidad positiva no se recomienda el producto. Fallo de Pricing hace fallar la operación. No se agrega SKU al DTO y el valor no garantiza precio de cada variante ni disponibilidad de checkout. Ver la descripción contractual en [OpenAPI](../../contratos/http/openapi.yaml).
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
 
 > **Integración G1 Marketplace H4 (2026-10-20):** G6 aceptó y comunicó M-01–M-09 (`ACEPTADO_G6_COMUNICADO_G1`). Esta SPEC gobierna reglas funcionales de su dominio; operaciones HTTP se verifican en [OpenAPI](../../contratos/http/openapi.yaml), el reparto/estado operativo en [Acuerdo G1–G6 H4](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md) y [alineación](../../integraciones/ALINEACION_MARKETPLACE.md). No declarar runtime, grants G7, despliegue o E2E por esta referencia. Las dependencias de otros owners se limitan a la operación que les corresponde.

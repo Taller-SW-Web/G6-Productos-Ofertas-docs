@@ -36,3 +36,7 @@
 
 ## Seguridad
 El usuario humano debe estar autenticado como `GESTOR_COMERCIAL`. Si se requiere granularidad adicional para consulta o exportación, se aplican capacidades internas asociadas a su `sub`; no se introduce un rol global `AUDITOR_COMERCIAL` ni equivalente.
+
+### Aclaración H4 — objetivos producto/SKU
+
+El evento de cambio efectivo se emite post-commit y distingue `target_type=PRODUCTO|SKU`. Para cambio de precio base de producto, `sku=null`; para override, se informa el SKU. Price Audit persiste y consulta `target_type` y solo acepta `sku=null` para PRODUCTO; no asigna SKU arbitrario. La evolución aditiva de persistencia y su autorización operativa siguen pendientes.

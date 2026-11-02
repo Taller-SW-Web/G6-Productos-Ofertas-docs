@@ -32,6 +32,10 @@ DADO dos componentes SKU con precios y existencias vigentes,
 CUANDO el gestor ingresa un precio promocional menor que la suma de sus precios por separado,  
 ENTONCES el combo se registra exitosamente como activo, mostrando la disponibilidad estimada informativa.
 
+### Aclaración H4 — disponibilidad informativa
+
+La API comercial de Inventory no expone saldos ni un contexto común de cumplimiento para derivar unidades de combo. Si la cantidad no es verificable, la proyección indica `verificable=false`, `cantidadInformativa=null` y `estadoActualizacion=INCOMPLETA`; no suma ubicaciones. Combos no reserva stock ni aplica cupones sin respuesta contractual permisiva de Promotions.
+
 ## Escenario — Rechazo por precio sin ventaja económica
 
 DADO un intento de crear un combo cuyo precio supera o iguala la suma de precios regulares o públicos de sus componentes,  

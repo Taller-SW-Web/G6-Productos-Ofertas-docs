@@ -141,7 +141,7 @@ Permite a los gestores comerciales exportar la totalidad del catálogo activo pa
 ### Reglas de exportación
 
 1. **Procesamiento desacoplado:** La exportación se procesa en segundo plano para evitar tiempos de espera excesivos en llamadas síncronas.
-2. **Consolidación de snapshot:** La exportación toma un snapshot de productos y variantes activos en Catálogo, precios vigentes en Pricing y stock disponible en Inventario.
+2. **Consolidación observada:** La exportación captura `requested_at` UTC y registra por fuente instantes de observación/versiones disponibles; no existe snapshot atómico multi-servicio. Un fallo en fuente requerida termina `FAILED_GENERAL` sin publicar parcial como completa.
 3. **Formatos soportados:** Exclusivamente `CSV` y `XLSX` (sin filtros de segmentación en la petición según `CrearExportacionProductosRequest`).
 
 ---
@@ -183,4 +183,14 @@ FAILED_GENERAL
 - El reporte final distingue errores por fila y por dominio sin invocar compensaciones destructivas entre servicios.
 - La exportación de catálogo se procesa de forma asíncrona y no bloquea las consultas transaccionales.
 
-Bulk coordina el procesamiento y reutiliza los eventos contractuales existentes hacia Catálogo; no crea rutas paralelas ni omite validaciones, identidad SKU, versiones, barreras o transacciones locales de Catálogo. La estructura exacta de payload por fila/dominio queda sujeta a los schemas existentes de OpenAPI/AsyncAPI. Si un campo requerido para la adaptación no está definido allí, registrar esa dependencia contractual concreta antes de implementación; no inventar campos ni copiar contratos en parches locales de Backend.
+Bulk coordina el procesamiento mediante `catalog.bulk.upsert.*` tipados en AsyncAPI; no crea rutas paralelas ni omite validaciones, identidad SKU, versiones, barreras o transacciones locales de Catalog. La estructura por fila/dominio se define en AsyncAPI 0.6.0-rc.4, con referencias a DTO de Catalog del OpenAPI; los pasos de Pricing/Inventory siguen separados y no se simula éxito de dominio.
+
+## Addendum G6 H4 — DEC-G6-INT-08/09/10
+
+Este addendum complementa las reglas anteriores y resuelve las dependencias contractuales de Bulk; los campos de importación/exportación descritos abajo prevalecen sobre cualquier cláusula anterior que dejara el payload pendiente. Bulk v2 es la entrada única de carga multidominio y no escribe directamente en Catalog, Pricing ni Inventory. `catalog.bulk.upsert.requested` lleva batch/row operation IDs estables, template_version 2, modo ALTA/ACTUALIZACION y filas SKU con referencias a DTO de Catalog de OpenAPI; Catalog agrupa por `sku_base`, persiste el padre una sola vez y rechaza atributos contradictorios. Resultados `completed` son por fila y pueden incluir rechazos; `rejected` representa rechazo previo al procesamiento por fila. Idempotencia por row_operation_id y payload semántico; conflicto de payload ⇒ `IDEMPOTENCY_CONFLICT`. No hay rollback distribuido; Bulk consolida `applied_domains`, `failed_domain` y `needs_reconciliation` y no inventa éxito de otros dominios.
+
+La plantilla H4 tiene 16 columnas, CSV UTF-8 o XLSX de una hoja sin macros, archivo máximo 10,485,760 bytes, 5,000 filas de datos y 50 MiB descomprimidos para XLSX; encabezados exactos y SKU sin duplicados. Los literales de las 16 cabeceras deben provenir de la propuesta de plantilla de `apps/bulk-svc/docs/` antes de aceptar archivos productivos. Hasta contar con esos encabezados publicados, solo se implementa y prueba con fixtures explícitos.
+
+Las rutas de importación propia de Pricing `prevalidarImportacionPrecios`/`crearImportacionPrecios` quedan fuera del gate H4: no se declaran implementadas ni se devuelve `202` ficticio sin formato y worker específicos. Las operaciones de precio individuales/programadas y sus eventos oficiales pueden avanzar por separado.
+
+La exportación no es snapshot ACID multi-servicio: captura `requested_at` UTC, fija ese instante en consultas que acepten `at`, y registra en manifiesto Bulk los instantes observados por dominio y versiones disponibles. El resultado es un consolidado observado. Fallo en una fuente requerida produce `FAILED_GENERAL`; no se publica como completa una exportación parcial. Reintentos conservan identidad; reejecución explícita usa nuevo intento/versión sin sobrescribir un artefacto publicado.

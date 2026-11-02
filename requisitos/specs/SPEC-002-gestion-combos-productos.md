@@ -18,7 +18,7 @@ Administrar combos como oferta comercial compuesta sin convertirlos en un segund
 - **Regla de beneficio económico de precio:** El precio promocional del combo debe ser mayor a cero y estrictamente menor que la compra de los componentes por separado, evaluado tanto frente a la suma de sus precios regulares como frente a la suma de sus precios públicos vigentes. Si no cumple esta regla, la solicitud se rechaza con el código canónico `COMBO_PRECIO_INVALIDO`.
 - **Precios maestros:** Pricing mantiene el precio regular y las ofertas de los componentes; el precio del combo no altera los precios maestros.
 - **Inventario:** Inventario mantiene disponibilidad y reservas por SKU; el combo no posee saldo propio ni reserva existencias de forma autónoma.
-- **Disponibilidad informativa:** La disponibilidad mostrada del combo se deriva en tiempo real como `min(floor(stock_disponible_i / cantidad_requerida_i))` y es de naturaleza puramente informativa.
+- **Disponibilidad informativa:** Inventory no expone cantidades ni una fuente común de cumplimiento para derivar disponibilidad cuantitativa de combo. Mientras no exista una verificación autorizada y probada de cesta completa, la respuesta es no verificable (`verificable=false`, `cantidadInformativa=null`, `estadoActualizacion=INCOMPLETA`); no se suman saldos de ubicaciones independientes.
 - **Desactivación de componentes:** Si un producto o SKU componente es desactivado (`catalog.product.deactivated` o `catalog.sku.deactivated`), el combo deja de ser elegible y comprable para nuevas ventas, conservando intacta su definición administrativa histórica.
 - **Promociones/Cupones:** Promociones decide la combinabilidad de cupones con ofertas de combo.
 
@@ -83,3 +83,9 @@ El combo nunca publica comandos de consumo ni de restitución de cupones.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
 
 **Combos:** expandir a líneas SKU y cantidades antes de la verificación/reserva. No sumar saldos de distintas ubicaciones para declarar disponible un combo sin política de cumplimiento probada.
+
+## Addendum G6 H4 — DEC-G6-INT-11
+
+Combos valida por SKU las referencias activas en Catalog y consulta precios regulares y públicos vigentes de Pricing para un mismo canal e instante. Debe cumplirse `0 < precio_combo < suma_regular` y `precio_combo < suma_publica`. Referencia inexistente/inactiva usa el rechazo contractual; desigualdad incumplida usa `COMBO_PRECIO_INVALIDO`; ausencia técnica de un precio autoritativo usa `SERVICIO_NO_DISPONIBLE`, no un precio sintético. Combos no posee stock ni reserva; el orquestador autorizado expande la compra a líneas `(sku, quantity)`.
+
+La API comercial actual no expone saldos ni una fuente común de cumplimiento, por lo que no permite deducir unidades de combo. Mientras no haya contrato autoritativo y probado para cesta completa en un único contexto, `DisponibilidadCombo` usa `verificable=false`, `cantidadInformativa=null`, `estadoActualizacion=INCOMPLETA` y `calculated_at` de la comprobación real. No se exponen `on_hand`, `reserved` ni `location_id` a consumidores comerciales. Promotions conserva autoridad única sobre combinabilidad; Combos no aplica cupones sin respuesta contractual de Promotions que lo permita.
