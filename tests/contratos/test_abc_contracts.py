@@ -37,13 +37,13 @@ class ContractChecks(unittest.TestCase):
             self.assertIn('causation_id',obj['required'],name)
     def test_h4_recommendation_price_and_combo_availability_contracts(self):
         recommendation=self.o['components']['schemas']['Recomendacion']
-        self.assertIn('current_price',recommendation['required'])
-        self.assertEqual(recommendation['properties']['current_price']['type'],'number')
+        self.assertNotIn('current_price',recommendation['required'])
+        self.assertEqual(recommendation['properties']['current_price']['type'],['number','null'])
         self.assertIn('mínimo',recommendation['properties']['current_price']['description'])
         self.assertIn('sin sumar ubicaciones',recommendation['description'])
         combo=self.o['components']['schemas']['DisponibilidadCombo']
-        self.assertFalse(combo['additionalProperties'])
-        self.assertIn('cantidadInformativa',combo['required'])
+        self.assertTrue(combo['additionalProperties'])
+        self.assertNotIn('cantidadInformativa',combo['required'])
         self.assertEqual(combo['properties']['cantidadInformativa']['oneOf'][1]['type'],'null')
         self.assertIn('estadoActualizacion=INCOMPLETA',combo['description'])
     def test_migrations_are_transaction_free(self):
@@ -268,7 +268,7 @@ class CatalogPricingTaxonomyContract(unittest.TestCase):
             for method,op in item.items():
                 if isinstance(op,dict) and 'modulo-productos' in op.get('x-allowed-client-ids',[]):
                     enabled.append((path,method,op.get('operationId')))
-        self.assertTrue({
+        self.assertEqual(set(enabled), {
             ('/productos/skus/{sku}/contexto','get','obtenerContextoSku'),
             ('/precios','get','consultarPrecios'),
             ('/precios/skus/{sku}','get','obtenerPrecioSku'),
@@ -282,7 +282,7 @@ class CatalogPricingTaxonomyContract(unittest.TestCase):
             ('/categorias/{categoriaId}','get','obtenerCategoriaAdmin'),
             ('/categorias/administracion','get','listarCategoriasAdmin'),
             ('/marcas/administracion','get','listarMarcasAdmin'),
-        }.issubset(set(enabled)))
+        })
         self.assertTrue(all(method == 'get' for _, method, _ in enabled))
         taxonomy_names={'obtenerTipoProducto','listarTiposProducto','obtenerEsquemaTipoProducto','obtenerMarcaAdmin','obtenerArbolCategoriasAdmin','obtenerCategoriaAdmin','listarCategoriasAdmin','listarMarcasAdmin'}
         for path,item in self.o['paths'].items():

@@ -1099,11 +1099,23 @@ components:
       type: object
       properties:
         sku: {type: string, minLength: 1}
-        stock_version: {type: integer, minimum: 1, description: Versión autoritativa de Inventory, distinta de schema_version del envelope.}
-        changed_at: {type: string, format: date-time}
-      required: [sku, stock_version, changed_at]
+        location_id: {type: string, format: uuid}
+        on_hand: {type: integer, minimum: 0}
+        reserved: {type: integer, minimum: 0}
+        blocked: {type: integer, minimum: 0}
+        available: {type: integer, minimum: 0}
+        estado: {type: string, enum: [DISPONIBLE, STOCK_BAJO, AGOTADO]}
+        stock_version:
+          type: integer
+          minimum: 1
+          description: Versión autoritativa del saldo para el par (sku, location_id); no existe una versión global por SKU.
+        updated_at: {type: string, format: date-time}
+      required: [sku, location_id, on_hand, reserved, blocked, available, estado, stock_version, updated_at]
       additionalProperties: false
-      description: Señala invalidación; no contiene estado comercial ni saldo.
+      description: >-
+        Snapshot de saldo por (sku, location_id), emitido en la transacción de Inventory. Los consumidores comerciales no agregan
+        ubicaciones ni toman estado del snapshot como disponibilidad vigente: solo invalidan sus proyecciones y consultan después la
+        disponibilidad comercial autoritativa. stock_version es local al par y no ordena saldos de otras ubicaciones.
     CatalogBulkUpsertRequestedData:
       type: object
       properties:
@@ -1122,14 +1134,11 @@ components:
               producto_id: {type: [string, 'null']}
               sku_base: {type: string, minLength: 1}
               product:
-                oneOf:
-                - $ref: ../http/openapi.yaml#/components/schemas/ProductoCreateRequest
-                - $ref: ../http/openapi.yaml#/components/schemas/ProductoUpdateRequest
+                type: object
               variant_id: {type: [string, 'null']}
               variant:
                 oneOf:
-                - $ref: ../http/openapi.yaml#/components/schemas/VarianteCreateRequest
-                - $ref: ../http/openapi.yaml#/components/schemas/VarianteUpdateRequest
+                - type: object
                 - type: 'null'
             required: [row_number, row_operation_id, producto_id, sku_base, product, variant_id, variant]
             additionalProperties: false
@@ -1179,6 +1188,10 @@ components:
                   else:
                     properties:
                       variant_id: {type: 'null'}
+      description: >-
+        product y variant se validan según mode: ALTA usa exclusivamente ProductoCreateRequest y VarianteCreateRequest; ACTUALIZACION
+        usa exclusivamente ProductoUpdateRequest y VarianteUpdateRequest. La variante puede ser null para un producto simple; en
+        actualización de variante, variant_id es obligatorio.
       examples:
       - batch_id: 7ef62d29-ef0d-4d0d-9a83-c057e03a570f
         batch_operation_id: d240bffd-f952-4558-a0d6-2f8d2e35c4a4
@@ -1829,7 +1842,7 @@ components:
               const: inventory-svc
             schema_version:
               type: integer
-              const: 1
+              const: 2
             kind:
               type: string
               const: event

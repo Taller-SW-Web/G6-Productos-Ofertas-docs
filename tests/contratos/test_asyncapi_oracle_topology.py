@@ -197,22 +197,22 @@ class AsyncApiOracleTopologyRegression(unittest.TestCase):
     def test_h4_typed_payloads_preserve_envelope_and_physical_bindings(self):
         messages = self.current["components"]["messages"]
         expected = {
-            "CatalogProductDeactivated": ("catalog.product.deactivated", "po.eventos.x", "CatalogProductDeactivatedData"),
-            "CatalogSkuDeactivated": ("catalog.sku.deactivated", "po.eventos.x", "CatalogSkuDeactivatedData"),
-            "PricingPriceChanged": ("pricing.price.changed", "po.eventos.x", "PricingPriceChangedData"),
-            "InventoryStockChanged": ("inventory.stock.changed", "po.eventos.x", "InventoryStockChangedData"),
-            "CatalogBulkUpsertRequested": ("catalog.bulk.upsert.requested", "po.comandos.x", "CatalogBulkUpsertRequestedData"),
-            "CatalogBulkUpsertCompleted": ("catalog.bulk.upsert.completed", "po.resultados.x", "CatalogBulkUpsertCompletedData"),
-            "CatalogBulkUpsertRejected": ("catalog.bulk.upsert.rejected", "po.resultados.x", "CatalogBulkUpsertRejectedData"),
+            "CatalogProductDeactivated": ("catalog.product.deactivated", "po.eventos.x", "CatalogProductDeactivatedData", 1),
+            "CatalogSkuDeactivated": ("catalog.sku.deactivated", "po.eventos.x", "CatalogSkuDeactivatedData", 1),
+            "PricingPriceChanged": ("pricing.price.changed", "po.eventos.x", "PricingPriceChangedData", 1),
+            "InventoryStockChanged": ("inventory.stock.changed", "po.eventos.x", "InventoryStockChangedData", 2),
+            "CatalogBulkUpsertRequested": ("catalog.bulk.upsert.requested", "po.comandos.x", "CatalogBulkUpsertRequestedData", 1),
+            "CatalogBulkUpsertCompleted": ("catalog.bulk.upsert.completed", "po.resultados.x", "CatalogBulkUpsertCompletedData", 1),
+            "CatalogBulkUpsertRejected": ("catalog.bulk.upsert.rejected", "po.resultados.x", "CatalogBulkUpsertRejectedData", 1),
         }
-        for message_name, (routing_key, exchange, schema_name) in expected.items():
+        for message_name, (routing_key, exchange, schema_name, schema_version) in expected.items():
             message = messages[message_name]
             self.assertEqual(message["x-exchange"], exchange, message_name)
             envelope = message["payload"]["allOf"][0]["$ref"]
             self.assertEqual(envelope, "#/components/schemas/MessageEnvelope", message_name)
             payload = message["payload"]["allOf"][1]
             self.assertEqual(payload["properties"]["data"]["$ref"], f"#/components/schemas/{schema_name}", message_name)
-            self.assertEqual(payload["properties"]["schema_version"]["const"], 1, message_name)
+            self.assertEqual(payload["properties"]["schema_version"]["const"], schema_version, message_name)
             self.assertNotEqual(payload["properties"]["data"]["$ref"], "#/components/schemas/GenericData")
             channel = next(c for c in self.current["channels"].values() if c["address"] == routing_key)
             self.assertEqual(channel["x-exchange"], exchange, message_name)

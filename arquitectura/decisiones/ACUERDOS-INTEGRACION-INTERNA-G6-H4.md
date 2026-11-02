@@ -78,11 +78,11 @@ La planificación adjunta fija el modo demo sin JWT hasta el 2026-11-01, el reto
 ### DEC-G6-INT-07 — Eventos tipados de desactivación y stock
 
 - **Problema:** payloads genéricos no expresan identidad/versiones de invalidación.
-- **Regla normativa:** conservar nombres y topología. `catalog.product.deactivated.data={product_id,product_version>=1,changed_at}`; `catalog.sku.deactivated.data={sku,product_id,sku_version>=1,changed_at}`; `inventory.stock.changed.data={sku,stock_version>=1,changed_at}`. Catalog invalida elegibilidad de producto/SKU en Promotions/Combos; SKU no cambia de padre y una versión vieja nunca reactiva. Stock solo señala cambio: consumidores marcan proyección obsoleta y consultan disponibilidad comercial autoritativa antes de decidir; no inferir estado ni `location_id` de saldo.
+- **Regla normativa:** conservar nombres y topología. `catalog.product.deactivated.data={product_id,product_version>=1,changed_at}`; `catalog.sku.deactivated.data={sku,product_id,sku_version>=1,changed_at}`. Para Inventory, el productor vigente emite envelope `schema_version=2` y un snapshot `data={sku,location_id,on_hand,reserved,blocked,available,estado,stock_version,updated_at}`; `stock_version` pertenece al par `(sku,location_id)` y no existe versión global por SKU. Esta reconciliación concreta el payload sin cambiar la regla aprobada: consumidores comerciales solo invalidan la proyección y consultan disponibilidad comercial autoritativa antes de decidir; no agregan ubicaciones ni toman el snapshot como estado vigente. Catalog invalida elegibilidad de producto/SKU en Promotions/Combos; SKU no cambia de padre y una versión vieja nunca reactiva.
 - **Errores y entrega:** duplicados/obsoletos deduplicados con Inbox y versión; durante invalidación sin consulta fiable se falla cerrado. Versiones de dominio no son `schema_version` del envelope.
 - **Responsables:** Poma/Taco productores; Axel, Marco y Vera consumidores según uso.
 - **Evidencia:** payload tipado, Inbox, evento repetido/obsoleto, consulta de refresco y disponibilidad fallida.
-- **Pendientes:** schemas y ejemplos contractuales; adaptadores/consumidores y pruebas coordinadas antes de activación. No cambiar nombres físicos ni declarar homologación externa.
+- **Pendientes:** el decoder/writer actual de Promotions que espera una disponibilidad normalizada debe adaptarse a invalidar la proyección al recibir el snapshot y consultar luego Inventory; no conectar ese decoder a `available`/`estado` como decisión comercial. Aún faltan publicadores Catalog y adaptadores de consumidores, pruebas coordinadas y transición antes de activar. No cambiar nombres físicos ni declarar homologación externa.
 
 ### DEC-G6-INT-08 — Bulk ↔ Catalog: comando y resultados por fila
 

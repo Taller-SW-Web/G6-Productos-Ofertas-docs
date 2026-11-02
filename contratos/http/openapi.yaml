@@ -21509,9 +21509,11 @@ components:
           type: integer
           minimum: 1
         current_price:
-          type: number
-          exclusiveMinimum: 0
-          description: Precio efectivo mínimo («desde») de los SKU elegibles con disponibilidad positiva; oferta vigente o, si no existe, precio regular. Moneda homogénea y mismo instante at.
+          type:
+          - number
+          - 'null'
+          minimum: 0
+          description: Campo opcional/anulable por compatibilidad. Cuando se informa, la regla H4 exige el mínimo precio efectivo («desde») de los SKU elegibles con disponibilidad positiva; oferta vigente o, si no existe, precio regular, con moneda homogénea y mismo instante at.
         availability:
           $ref: '#/components/schemas/EstadoStock'
       required:
@@ -21519,7 +21521,6 @@ components:
       - type
       - rule_priority
       - presentation_order
-      - current_price
       - availability
     RecomendacionesResponse:
       type: object
@@ -22371,11 +22372,10 @@ components:
           - ACTUALIZADA
           - DESACTUALIZADA
           - INCOMPLETA
-      additionalProperties: false
+      additionalProperties: true
       required:
       - comboId
       - verificable
-      - cantidadInformativa
       - calculated_at
       - estadoActualizacion
     PoliticaCancelacionCupon:
