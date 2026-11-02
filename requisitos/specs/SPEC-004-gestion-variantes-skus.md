@@ -74,6 +74,14 @@ Unidades contractuales: kg y cm. No se utilizan campos planos `largoCm/anchoCm/a
 
 Una variante en `BORRADOR` puede tener perfil físico incompleto; los valores informados deben ser positivos. Activar o reactivar exige los cuatro valores completos. El padre no tiene peso ni dimensiones propios; el volumen de la variante se deriva de sus dimensiones y no se ingresa por separado.
 
+## 5.1. Consulta física por Despacho (homologación G2 H4)
+
+Las variantes son las unidades vendibles físicas y se consultan por su SKU mediante el endpoint por lote definido en [OpenAPI](../../contratos/http/openapi.yaml) y en el [acuerdo G2–G6 H4](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md). La solicitud admite de 1 a 100 SKU únicos, preservados literalmente como identificadores opacos. Una variante existente `ACTIVA`, `INACTIVA` o `BORRADOR` no se clasifica como inexistente por su estado; `noEncontrados[]` se reserva a ausencia de identidad. `BORRADOR` puede carecer de perfil completo.
+
+Una respuesta `200` clasifica cada SKU solicitado exactamente una vez entre `productos[]` y `noEncontrados[]`, sin omisiones, duplicados ni inesperados. Perfil ausente/incompleto o peso, dimensiones o `actualizadoEn` inválidos produce `422 DATOS_FISICOS_INCOMPLETOS` con `details.skusAfectados`, sin éxito parcial. Indisponibilidad técnica responde `503 SERVICIO_NO_DISPONIBLE` sin datos internos. G6 entrega estado y medidas; G2 aplica F-01 (cotización exacta solo para `ACTIVO` con perfil válido; otros estados: `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE`) y F-02 (el estado `INACTIVO`/`BORRADOR` no es rechazo automático para despacho solicitado por Ventas de pedido pagado, preparado y listo, si cumple perfil y validaciones). F-02 no modifica la activación comercial de G6.
+
+El estado propio de una variante y la elegibilidad comercial efectiva pueden divergir: el padre puede estar `BORRADOR` o `INACTIVO` mientras una variante conste `ACTIVA`. La precedencia de esos estados en el consumidor no queda determinada por el contrato físico homologado; Catalog debe resolver/documentar el criterio antes de afirmar elegibilidad. No inferir que variante `ACTIVA` hace vendible al padre. El SKU base del producto con variantes no es unidad física vendible: no se crea un perfil padre y no se prescribe código HTTP; tratamiento técnico pendiente de Catalog.
+
 ## 6. Edición, activación, desactivación y reactivación
 
 La edición ordinaria permite actualizar atributos no identificadores, imagen y perfil físico válido. Conserva `variant_id`, el SKU comercial publicado y los atributos identificadores, conforme a `VarianteUpdateRequest` en OpenAPI vigente.

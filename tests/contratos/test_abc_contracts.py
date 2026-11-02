@@ -21,7 +21,7 @@ class ContractChecks(unittest.TestCase):
                     for x in v:walk(x)
             walk(d)
     def test_versions(self):
-        self.assertEqual(self.o['info']['version'],'0.6.0-rc.2')
+        self.assertEqual(self.o['info']['version'],'0.6.0-rc.3')
         self.assertEqual(self.a['info']['version'],'0.6.0-rc.4')
     def test_reservation_result_mapping(self):
         op=self.o['paths']['/inventario/reservas']['post']
@@ -67,7 +67,7 @@ class ContractChecks(unittest.TestCase):
         self.assertTrue(s.rstrip().endswith('ROLLBACK;'))
         self.assertNotIn('DELETE FROM inventory.stock_threshold_override',s)
     def test_commercial_channel_restriction(self):
-        self.assertEqual(self.o['info']['version'],'0.6.0-rc.2')
+        self.assertEqual(self.o['info']['version'],'0.6.0-rc.3')
         self.assertEqual(self.o['components']['schemas']['Canal']['enum'],['MARKETPLACE','CHATBOT','RETAIL','VENTAS'])
         self.assertEqual(self.o['components']['schemas']['CanalComercial']['enum'],['MARKETPLACE','CHATBOT','RETAIL'])
         # GET /inventario/disponibilidad/comercial
@@ -106,7 +106,7 @@ class ContractChecks(unittest.TestCase):
         self.assertIn('binding=false',desc)
         self.assertNotIn('salvo que exista una modalidad de abastecimiento explícita y ejecutable para atender conjuntamente',desc)
     def test_offline_reconciliation_candidate_operation(self):
-        self.assertEqual(self.o['info']['version'],'0.6.0-rc.2')
+        self.assertEqual(self.o['info']['version'],'0.6.0-rc.3')
         op=self.o['paths']['/inventario/conciliaciones-offline']['post']
         self.assertEqual(op['operationId'],'conciliarVentaOffline')
         self.assertEqual(op['x-status'],'provisional')

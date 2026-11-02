@@ -274,7 +274,7 @@ La explicación humana de responsabilidades e integración se mantiene en:
 
 | Artefacto | Versión |
 |---|---|
-| OpenAPI 3.1.0 | `0.6.0-rc.2`, candidata H4 en revisión; no publicada ni evidencia runtime |
+| OpenAPI 3.1.0 | `0.6.0-rc.3`, candidata H4 con homologación G2–G6 documental; no publicada ni evidencia runtime |
 | AsyncAPI 3.0.0 | `0.6.0-rc.4`, candidata H4; 40 canales/mensajes, nombres/routing keys conservados; payloads tipados requieren corte coordinado |
 | Línea base histórica OpenAPI/AsyncAPI | `0.5.0` (compatibilidad; no sustituida automáticamente en runtime) |
 | Catálogo de errores | Vocabulario humano de códigos, alineado con el contrato candidato |
@@ -282,7 +282,7 @@ La explicación humana de responsabilidades e integración se mantiene en:
 | Topología RabbitMQ | Contrato físico documentado, sin inferir aprovisionamiento del entorno |
 | Kit de integración | Guía documental derivada del contrato candidato |
 
-**Estado de publicación:** OpenAPI `0.6.0-rc.2` y AsyncAPI `0.6.0-rc.4` son candidatas de esta rama, pendientes de revisión/fusión. El cambio AsyncAPI de GenericData a schema tipado es incompatible para consumidores antiguos y requiere despliegue coordinado antes de emisión. La topología observada y los contratos no acreditan estado actual del broker, adaptación de código, grants G7, homologación externa, despliegue ni E2E.
+**Estado de publicación:** OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` son candidatas de esta rama, pendientes de revisión/fusión. La consulta física G2 está homologada contractualmente; grants G7, implementación, despliegue y E2E permanecen pendientes (ver [acuerdo G2–G6 H4](integraciones/ACUERDO_G2_G6_H4_2026-11-02.md)). El cambio AsyncAPI de GenericData a schema tipado es incompatible para consumidores antiguos y requiere despliegue coordinado antes de emisión. La topología observada y los contratos no acreditan estado actual del broker, adaptación de código, grants G7, homologación externa, despliegue ni E2E.
 
 ---
 

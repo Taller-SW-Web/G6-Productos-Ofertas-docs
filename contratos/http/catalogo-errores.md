@@ -1,7 +1,7 @@
 # Catálogo canónico de errores — Productos y Ofertas
 
 **Fuente HTTP:** [`openapi.yaml`](./openapi.yaml)
-**Versión HTTP de referencia:** `0.5.0`
+**Versión HTTP de referencia:** OpenAPI `0.6.0-rc.3` (candidata); `0.5.0` se conserva como antecedente histórico.
 
 Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail`.
 
@@ -41,7 +41,7 @@ Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail
 | `DATOS_INCOMPLETOS` | Datos incompletos. |
 | `CAMBIO_ESTRUCTURAL_NO_PERMITIDO` | Cambio estructural no permitido. |
 | `PERFIL_FISICO_INVALIDO` | Perfil físico inválido. |
-| `DATOS_FISICOS_INCOMPLETOS` | Datos físicos incompletos. |
+| `DATOS_FISICOS_INCOMPLETOS` | HTTP `422` de `consultarDatosFisicos` cuando un SKU existente carece de peso, dimensión o `actualizadoEn`, o algún valor incumple contrato. `details.skusAfectados` es un arreglo no vacío de SKU afectados. No se exige este detalle para `SKU_INVALIDO` ni para todo Problem Details. Es error de datos, no indisponibilidad técnica. |
 | `VARIANTE_NO_ENCONTRADA` | Variante no encontrada. |
 | `PRODUCTO_NO_ADMITE_VARIANTES` | Producto no admite variantes. |
 | `COMBINACION_DUPLICADA` | Combinación duplicada. |
@@ -175,3 +175,6 @@ Los códigos incorporados por HTTP 0.5.0 son `CODIGO_BARRAS_NO_ENCONTRADO`, `RAT
 Se reutilizan los códigos existentes: `SERVICIO_NO_DISPONIBLE` para fallo técnico, timeout, respuesta inválida o dependencia sin fuente autoritativa; `TOKEN_INVALIDO`/`SCOPE_INSUFICIENTE` para autenticación/autorización; `VALIDACION` para contradicción de `product_id` y entrada mal formada; `COMBO_PRECIO_INVALIDO` solo cuando los precios autoritativos existen y no cumplen la desigualdad; `SKU_NO_ENCONTRADO` para ausencia autoritativa de SKU en `skuContext`. No se agrega código nuevo. Un 404 comercial de producto se interpreta como no visible/elegible para la regla y no demuestra inexistencia administrativa. Ningún fallo técnico se transforma en ausencia, precio cero o `AGOTADO`.
 
 Para Bulk, se reutiliza `IDEMPOTENCY_CONFLICT` ante misma identidad de fila con payload semántico diferente. `catalog.bulk.upsert.rejected` detalla el rechazo del comando antes de resultados por fila; no filtra SQL, secretos ni trazas. Un `completed` puede contener filas rechazadas y no afirma éxito de Pricing/Inventory.
+
+
+En `consultarDatosFisicos`, conexión, timeout, PostgreSQL o dependencia temporalmente indisponible corresponde a HTTP `503 SERVICIO_NO_DISPONIBLE`. No se exponen errores SQL, nombres de tablas, credenciales ni detalles internos. Un perfil físico incompleto no se presenta como respuesta `200` parcial.

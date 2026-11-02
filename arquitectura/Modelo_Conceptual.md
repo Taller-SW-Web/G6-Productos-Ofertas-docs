@@ -4,8 +4,8 @@
 **Repositorio:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
 **Archivo:** `arquitectura/Modelo_Conceptual.md`  
 **Arquitectura de referencia:** `arquitectura/Arquitectura.md` (versión corregida en revisión)  
-**Contrato HTTP de referencia:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.1`; baseline histórico `0.5.0`)
-**Contrato asíncrono de referencia:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.1`; baseline histórico `0.5.0`)
+**Contrato HTTP de referencia:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.3`; baseline histórico `0.5.0`)
+**Contrato asíncrono de referencia:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.4`; baseline histórico `0.5.0`)
 **Catálogo de errores:** `contratos/http/catalogo-errores.md` (fuente semántica de códigos; compatibilidad `0.5.0`)
 **Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (guía humana; referencia histórica `0.5.0`)
 **Contrato humano de referencia:** `contratos/http/Contrato_Api.md`
@@ -63,7 +63,7 @@ Esta versión incorpora las decisiones de diseño del modelo de datos:
 9. `SPEC/HU/WF-003`, `004` y `015` ya incorporan estas decisiones; dejan de ser propagaciones futuras.
 10. La idempotencia de Inventario distingue retry legítimo de `IDEMPOTENCY_CONFLICT`.
 11. Los contratos HTTP/asíncronos y códigos estables ya están publicados en OpenAPI, AsyncAPI y `catalogo-errores.md`.
-12. OpenAPI y AsyncAPI `0.5.0` se conservan como **línea base histórica y de compatibilidad**. Los artefactos ejecutables en la rama `nueva` identifican un contrato **candidato** `0.6.0-rc.1` para B1–B4, que no debe confundirse con implementación, grants efectivos, despliegue o conformidad de extremo a extremo.
+12. OpenAPI y AsyncAPI `0.5.0` se conservan como **línea base histórica y de compatibilidad**. Los artefactos ejecutables identifican OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` como candidatos; esa documentación no acredita implementación, grants efectivos, despliegue o conformidad de extremo a extremo.
 13. Taxonomía expone operaciones observables de **baja maestra segura** para recursos con dependencias.
 14. Una operación de baja maestra puede permanecer pendiente después de un `202 Accepted`; su resultado definitivo se resuelve de forma asíncrona.
 15. La operación de baja pertenece a Taxonomía y no implica acceso directo a las tablas del bounded context consumidor.
@@ -1447,15 +1447,15 @@ Las decisiones conceptuales principales ya fueron propagadas.
 
 | Artefacto | Estado |
 |---|---|
-| `arquitectura/Arquitectura.md` | Documento arquitectónico de referencia; su revisión candidata alinea D-INV-01, restricciones por consumidor y baseline `0.5.0` frente a contratos `0.6.0-rc.1` |
-| `contratos/http/Contrato_Api.md` | Referencia humana del baseline `0.5.0`; su conciliación con las decisiones B1–B4 candidatas `0.6.0-rc.1` sigue siendo una tarea documental separada |
+| `arquitectura/Arquitectura.md` | Documento arquitectónico de referencia; su revisión candidata alinea D-INV-01, restricciones por consumidor y baseline `0.5.0` frente a los contratos candidatos actuales |
+| `contratos/http/Contrato_Api.md` | Referencia humana del baseline `0.5.0`; su actualización conforme al OpenAPI candidato vigente `0.6.0-rc.3` incluye la homologación G2–G6 |
 | `SPEC/HU/WF-003` | Actualizados: perfil físico de producto simple y Seguridad |
 | `SPEC/HU/WF-004` | Actualizados: perfil físico de variante/SKU y Seguridad |
 | `SPEC/HU/WF-014` | Auditoría alineada con `GESTOR_COMERCIAL` y capacidades internas, sin rol global de Auditor |
 | `SPEC/HU/WF-015` | Reserva/consumo/liberación, TTL, idempotencia, incidencias, reintegros, conciliación y traslados |
 | `HU/WF-016` | Dashboard y alertas alineados con Gestor Comercial autorizado y proyección de solo lectura |
-| `contratos/http/openapi.yaml` | OpenAPI 3.1.0, `info.version=0.6.0-rc.1` en la rama `nueva`; fuente ejecutable **candidata** de B1–B4, sin declaración de despliegue |
-| `contratos/eventos/asyncapi.yaml` | AsyncAPI 3.0.0, `info.version=0.6.0-rc.1`, con **40 canales y 40 mensajes** candidatos; conserva topología física sin acreditar publicación en runtime |
+| `contratos/http/openapi.yaml` | OpenAPI 3.1.0, `info.version=0.6.0-rc.3`; fuente ejecutable HTTP **candidata** vigente, sin declaración de despliegue |
+| `contratos/eventos/asyncapi.yaml` | AsyncAPI 3.0.0, `info.version=0.6.0-rc.4`, con **40 canales y 40 mensajes** candidatos; conserva topología física sin acreditar publicación en runtime |
 | `contratos/eventos/catalogo-eventos.md` | Catálogo humano; la cifra de **39 mensajes** identifica el baseline histórico `0.5.0`, no la cobertura completa del AsyncAPI candidato de 40 mensajes |
 | `contratos/http/catalogo-errores.md` | Catálogo autoritativo de errores para la compatibilidad base y los códigos del contrato candidato |
 | Operación de baja maestra | Incorporada conceptualmente en Taxonomía y observable por `GET /api/v1/taxonomia/operaciones/{operationId}` |
@@ -1490,7 +1490,7 @@ La actualización confirma que:
 10. `on_hand`, `reserved`, `blocked` y `available` pertenecen al saldo por `(sku, location_id)`.
 11. Taxonomía modela explícitamente la operación de baja maestra segura como concepto observable, sin compartir schema ni convertir el `202 Accepted` en resultado definitivo.
 12. La autorización humana del módulo se apoya en `GESTOR_COMERCIAL`; la granularidad adicional de auditoría o inventario se modela como capacidad interna, no como rol global independiente.
-13. Los contratos OpenAPI/AsyncAPI candidatos `0.6.0-rc.1` de la rama `nueva` reflejan B1–B4, mientras la documentación histórica `0.5.0` conserva el contexto previo. El cierre no acredita backend desplegado ni grants efectivos; quedan tareas documentales, de implementación y de validación sin redefinir ownership.
+13. OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` son contratos candidatos, mientras la documentación histórica `0.5.0` conserva el contexto previo. El cierre no acredita backend desplegado ni grants efectivos; quedan tareas documentales, de implementación y de validación sin redefinir ownership.
 14. D-INV-01 ya fija la proyección comercial por una sola fuente elegible de cumplimiento y el resultado `INDETERMINADO` ante falta o ambigüedad del mapeo, sin introducir entidades maestras adicionales.
 
 ---
