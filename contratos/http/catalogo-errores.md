@@ -169,3 +169,9 @@ Los códigos incorporados por HTTP 0.5.0 son `CODIGO_BARRAS_NO_ENCONTRADO`, `RAT
 - Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
 - Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+## Integración interna G6 H4 — errores de dependencias
+
+Se reutilizan los códigos existentes: `SERVICIO_NO_DISPONIBLE` para fallo técnico, timeout, respuesta inválida o dependencia sin fuente autoritativa; `TOKEN_INVALIDO`/`SCOPE_INSUFICIENTE` para autenticación/autorización; `VALIDACION` para contradicción de `product_id` y entrada mal formada; `COMBO_PRECIO_INVALIDO` solo cuando los precios autoritativos existen y no cumplen la desigualdad; `SKU_NO_ENCONTRADO` para ausencia autoritativa de SKU en `skuContext`. No se agrega código nuevo. Un 404 comercial de producto se interpreta como no visible/elegible para la regla y no demuestra inexistencia administrativa. Ningún fallo técnico se transforma en ausencia, precio cero o `AGOTADO`.
+
+Para Bulk, se reutiliza `IDEMPOTENCY_CONFLICT` ante misma identidad de fila con payload semántico diferente. `catalog.bulk.upsert.rejected` detalla el rechazo del comando antes de resultados por fila; no filtra SQL, secretos ni trazas. Un `completed` puede contener filas rechazadas y no afirma éxito de Pricing/Inventory.

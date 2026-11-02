@@ -53,3 +53,7 @@ ENTONCES el sistema procesa únicamente las dependencias pendientes sin duplicar
 DADO un catálogo activo con productos, variantes, precios y existencias vigentes,  
 CUANDO el gestor solicita una exportación en formato CSV o XLSX,  
 ENTONCES el sistema registra un trabajo asíncrono, genera el archivo consolidado de la totalidad del catálogo en segundo plano y notifica su disponibilidad para descarga directa.
+
+### Aclaración H4 — Bulk v2 y exportación observada
+
+La carga multidominio usa Bulk v2 como entrada única; cada fila representa un SKU vendible y los resultados de Catalog se informan por fila con identidad estable. La plantilla tiene 16 columnas y límites H4; las cabeceras literales deben publicarse desde la propuesta oficial antes de aceptar archivos productivos. La exportación registra un `requested_at` UTC común y tiempos/versiones observados por fuente en manifiesto interno; es un consolidado observado, no un snapshot atómico multi-servicio. Si falla una fuente requerida, el trabajo termina `FAILED_GENERAL` y no publica un archivo completo.

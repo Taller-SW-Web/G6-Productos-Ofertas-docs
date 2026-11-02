@@ -56,5 +56,5 @@ La consulta de candidatos:
 - una lista sin candidatos válidos responde `[]`;
 - el precio y disponibilidad mostrados son informativos y no sustituyen la resolución definitiva del SKU elegido.
 
-`D-REC-01` y `D-REC-02` permanecen abiertas; los enriquecimientos afectados se consideran provisionales.
+La aprobación interna H4 de `D-REC-01/02` se registra en [acuerdos G6 H4](../../arquitectura/decisiones/ACUERDOS-INTEGRACION-INTERNA-G6-H4.md). La disponibilidad se agrega desde SKU elegibles con disponibilidad positiva, sin sumar ubicaciones; el candidato sin positividad demostrada se excluye y `INDETERMINADO` no se vuelve `AGOTADO`. `current_price` es el mínimo precio efectivo entre SKU con disponibilidad positiva para mismo canal e instante UTC. La regla está aprobada internamente; implementación, autorización, contrato publicado y pruebas siguen pendientes según su propio estado.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->

@@ -83,3 +83,7 @@ Evidencia consultada al 2026-10-27: Backend PR #125 abierto, rama `poma`, HEAD `
 | Gateway | `apps/api-gateway/test/generate-routes.mjs` lee los metadatos de seguridad pero no filtra `x-internal`; `obtenerContextoSku` no aparece en la lista generada actual. | Ajustar generador para excluir toda operación `x-internal: true` al generar/publicar rutas y probar que `obtenerContextoSku` no llega al Gateway externo. |
 
 Estos reportes no acreditan homologación externa, grants G7, migraciones aplicadas, despliegue ni E2E inter-servicio. La decisión interna está aprobada; estados externos/implementación siguen separados. No se crea DEC-F.
+
+## Traza de acuerdos complementarios G6 H4 — 2026-11-01
+
+DEC-G6-INT-01–13 complementan las DEC-F registradas y no se numeran como DEC-F. La matriz específica de reglas, contrato, owners, pruebas y dependencias está en [ACUERDOS-INTEGRACION-INTERNA-G6-H4.md](ACUERDOS-INTEGRACION-INTERNA-G6-H4.md). Su incorporación no equivale a implementación ni homologación externa.

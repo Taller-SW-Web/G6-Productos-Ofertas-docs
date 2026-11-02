@@ -91,7 +91,7 @@ flowchart LR
     C6 --> FIN_CREADO
 ```
 
-> **Regla de beneficio de precio y disponibilidad informativa:** Conforme a SPEC-002 y HU-002, el precio del combo debe garantizar una ventaja económica frente a la compra individual, siendo estrictamente menor que la suma de precios regulares y la suma de precios públicos vigentes (`COMBO_PRECIO_INVALIDO`). La disponibilidad estimada es puramente informativa (`min(floor(stock_i / qty_i))`); el combo no reserva stock ni crea saldos propios en inventario.
+> **Regla H4 de beneficio y disponibilidad informativa:** Conforme a DEC-G6-INT-11, el precio del combo debe ser mayor a cero y estrictamente menor que las sumas regular y pública vigentes. La disponibilidad actual no expone cantidades ni contexto común de cumplimiento: mientras no exista verificación autoritativa de cesta completa, `verificable=false`, `cantidadInformativa=null`, `estadoActualizacion=INCOMPLETA`. No se calcula `min(floor(stock_i / qty_i))` a partir de ubicaciones independientes. El combo no reserva stock ni crea saldos propios.
 
 ---
 

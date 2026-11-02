@@ -110,6 +110,7 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 | Equipo y responsabilidades | [`EQUIPO_Y_RESPONSABILIDADES.md`](EQUIPO_Y_RESPONSABILIDADES.md) | Roles transversales, ownership funcional y mecanismos de revisión del equipo |
 | Instrucciones para agentes | [`AGENTS.md`](AGENTS.md) | Orden de lectura, límites de cambios y validaciones mínimas |
 | Registro DEC-F | [`arquitectura/decisiones/REGISTRO_DEC_F.md`](arquitectura/decisiones/REGISTRO_DEC_F.md) | DEC-F-001 a DEC-F-015 adoptadas internamente; homologación de contratos pendiente |
+| Acuerdos internos G6 H4 (2026-11-01) | [`arquitectura/decisiones/ACUERDOS-INTEGRACION-INTERNA-G6-H4.md`](arquitectura/decisiones/ACUERDOS-INTEGRACION-INTERNA-G6-H4.md) | DEC-G6-INT-01 a 13; acuerdos internos complementarios, no homologación ni evidencia de implementación |
 | Matriz de trazabilidad DEC-F | [`arquitectura/decisiones/MATRIZ_TRAZABILIDAD_DEC_F.md`](arquitectura/decisiones/MATRIZ_TRAZABILIDAD_DEC_F.md) | Referencias, estados, contradicciones y validación pendiente |
 | Propuestas DEC-F backend (histórico) | [`arquitectura/decisiones/PROPUESTAS_DEC_F_BACKEND.md`](arquitectura/decisiones/PROPUESTAS_DEC_F_BACKEND.md) | Evidencia histórica; el registro es la fuente normativa vigente |
 | Matriz intermodular backend | [`integraciones/MATRIZ_INTERMODULAR_BACKEND.md`](integraciones/MATRIZ_INTERMODULAR_BACKEND.md) | Estado de integración, homologación y bloqueos por módulo |
@@ -273,15 +274,15 @@ La explicación humana de responsabilidades e integración se mantiene en:
 
 | Artefacto | Versión |
 |---|---|
-| OpenAPI 3.1.0 | `0.6.0-rc.1`, contrato candidato de la rama `nueva` |
-| AsyncAPI 3.0.0 | `0.6.0-rc.3`, contrato candidato; 40 canales / 40 mensajes; refleja nombres de infraestructura base observados históricamente en Oracle y mantiene contratos lógicos |
+| OpenAPI 3.1.0 | `0.6.0-rc.2`, candidata H4 en revisión; no publicada ni evidencia runtime |
+| AsyncAPI 3.0.0 | `0.6.0-rc.4`, candidata H4; 40 canales/mensajes, nombres/routing keys conservados; payloads tipados requieren corte coordinado |
 | Línea base histórica OpenAPI/AsyncAPI | `0.5.0` (compatibilidad; no sustituida automáticamente en runtime) |
 | Catálogo de errores | Vocabulario humano de códigos, alineado con el contrato candidato |
 | Catálogo de eventos | 40 mensajes documentados; publicación real pendiente de comprobación |
 | Topología RabbitMQ | Contrato físico documentado, sin inferir aprovisionamiento del entorno |
 | Kit de integración | Guía documental derivada del contrato candidato |
 
-**Estado de publicación:** OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.3` son candidatas. La topología base fue observada históricamente, pero la candidata no acredita estado actual del broker, adaptación de código, grants, homologación G5, despliegue ni E2E. No anunciar estos contratos como APIs vivas por el mero contenido YAML.
+**Estado de publicación:** OpenAPI `0.6.0-rc.2` y AsyncAPI `0.6.0-rc.4` son candidatas de esta rama, pendientes de revisión/fusión. El cambio AsyncAPI de GenericData a schema tipado es incompatible para consumidores antiguos y requiere despliegue coordinado antes de emisión. La topología observada y los contratos no acreditan estado actual del broker, adaptación de código, grants G7, homologación externa, despliegue ni E2E.
 
 ---
 

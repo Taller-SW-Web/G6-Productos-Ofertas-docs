@@ -131,3 +131,7 @@ Aplica específicamente a los comandos y resultados de inicialización:
 - Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
 - Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+## Addendum de eventos internos G6 H4
+
+AsyncAPI `0.6.0-rc.4` tipa `pricing.price.changed`, `catalog.product.deactivated`, `catalog.sku.deactivated`, `inventory.stock.changed` y los tres eventos `catalog.bulk.upsert.*`, preservando `MessageEnvelope`, nombres/routing keys y exchanges físicos existentes. Las versiones de dominio (`product_version`, `sku_version`, `stock_version`, `price_version`) no son `schema_version` del envelope. Pricing emite el cambio efectivo post-commit; Catalog invalida elegibilidad; Inventory solo invalida proyecciones y no declara un estado comercial; Bulk informa resultado por fila. El cambio desde `GenericData` es incompatible y requiere despliegue coordinado antes de enviar a consumidores antiguos. No acredita implementación, publicación, homologación externa ni DLX.

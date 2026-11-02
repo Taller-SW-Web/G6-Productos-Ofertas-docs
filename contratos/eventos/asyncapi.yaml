@@ -2,15 +2,14 @@ asyncapi: 3.0.0
 id: urn:taller-sw-web:productos-y-ofertas:asyncapi
 info:
   title: Productos y Ofertas — Contrato asíncrono
-  version: 0.6.0-rc.3
+  version: 0.6.0-rc.4
   description: >-
-    Candidata documental incompatible por reconciliar los nombres de exchanges y colas
-    de infraestructura base con la observación histórica de RabbitMQ Oracle del
-    2026-10-19. Conserva los 40 mensajes/canales, payloads, esquemas, operaciones,
-    productores, consumidores, routing keys lógicas y vhost de 0.6.0-rc.2. Solo
-    cambian referencias físicas base y metadatos documentales. La observación no
-    acredita homologación bilateral, despliegue, conectividad AMQP ni integración E2E.
-    Retry/DLX permanece como diseño candidato no aprobado, no aprovisionado y bloqueado.
+    Candidata documental H4 complementaria a los acuerdos internos G6; no está publicada ni acredita grants, implementación o pruebas runtime.
+    Conserva los 40 canales, 40 mensajes, operaciones, productores, consumidores, routing keys, exchanges y vhost de 0.6.0-rc.3. Tipifica
+    siete payloads antes representados con GenericData: precio cambiado, desactivaciones de producto/SKU, cambio de stock y comandos/resultados
+    de upsert masivo Catalog. Este cambio de payload es incompatible con consumidores antiguos y requiere despliegue coordinado antes de emitir.
+    La topología base fue observada históricamente en Oracle el 2026-10-19; la observación no acredita homologación bilateral, despliegue,
+    conectividad AMQP ni integración E2E. Retry/DLX permanece sin aprobación ni aprovisionamiento.
 defaultContentType: application/json
 x-delivery-semantics: at-least-once
 x-physical-topology-status: base-observed-not-homologated
@@ -1012,6 +1011,236 @@ components:
       type: object
       description: Payload específico del mensaje. Para mensajes P1 críticos se especializa mediante schemas dedicados.
       additionalProperties: true
+    CatalogProductDeactivatedData:
+      type: object
+      properties:
+        product_id: {type: string, minLength: 1}
+        product_version: {type: integer, minimum: 1, description: Versión autoritativa del producto, distinta de schema_version del envelope.}
+        changed_at: {type: string, format: date-time}
+      required: [product_id, product_version, changed_at]
+      additionalProperties: false
+    CatalogSkuDeactivatedData:
+      type: object
+      properties:
+        sku: {type: string, minLength: 1}
+        product_id: {type: string, minLength: 1}
+        sku_version: {type: integer, minimum: 1, description: Versión autoritativa del SKU, distinta de schema_version del envelope.}
+        changed_at: {type: string, format: date-time}
+      required: [sku, product_id, sku_version, changed_at]
+      additionalProperties: false
+    PricingPriceChangedData:
+      type: object
+      properties:
+        target_type: {type: string, enum: [PRODUCTO, SKU]}
+        product_id: {type: string, minLength: 1}
+        sku: {type: [string, 'null']}
+        channel_id: {oneOf: [{type: string, enum: [MARKETPLACE, CHATBOT, RETAIL, VENTAS]}, {type: 'null'}]}
+        currency: {type: string, minLength: 3, maxLength: 3}
+        price_type: {type: string, enum: [REGULAR, OFERTA]}
+        previous_price: {type: [string, 'null'], pattern: '^(?:[1-9][0-9]*(?:\.[0-9]+)?|0\.(?:0*[1-9][0-9]*))$'}
+        new_price: {type: [string, 'null'], pattern: '^(?:[1-9][0-9]*(?:\.[0-9]+)?|0\.(?:0*[1-9][0-9]*))$'}
+        operation: {type: string, enum: [CREACION, MODIFICACION, RETIRO_OFERTA]}
+        reason: {type: string, minLength: 1}
+        price_version: {type: integer, minimum: 1}
+        valid_from: {type: string, format: date-time}
+        batch_id: {type: [string, 'null'], format: uuid}
+        actor:
+          type: object
+          properties:
+            user_id: {type: [string, 'null']}
+            email: {type: [string, 'null'], format: email}
+            ip: {type: [string, 'null']}
+          required: [user_id, email, ip]
+          additionalProperties: false
+      required: [target_type, product_id, sku, channel_id, currency, price_type, previous_price, new_price, operation, reason, price_version, valid_from, batch_id, actor]
+      additionalProperties: false
+      allOf:
+      - if:
+          properties: {target_type: {const: PRODUCTO}}
+          required: [target_type]
+        then:
+          properties: {sku: {type: 'null'}}
+      - if:
+          properties: {target_type: {const: SKU}}
+          required: [target_type]
+        then:
+          properties: {sku: {type: string, minLength: 1}}
+      - if:
+          properties: {operation: {const: CREACION}}
+          required: [operation]
+        then:
+          properties:
+            previous_price: {type: 'null'}
+            new_price: {type: string, pattern: '^(?:[1-9][0-9]*(?:\.[0-9]+)?|0\.(?:0*[1-9][0-9]*))$'}
+      - if:
+          properties: {operation: {const: MODIFICACION}}
+          required: [operation]
+        then:
+          properties:
+            previous_price: {type: string, pattern: '^(?:[1-9][0-9]*(?:\.[0-9]+)?|0\.(?:0*[1-9][0-9]*))$'}
+            new_price: {type: string, pattern: '^(?:[1-9][0-9]*(?:\.[0-9]+)?|0\.(?:0*[1-9][0-9]*))$'}
+      - if:
+          properties: {operation: {const: RETIRO_OFERTA}}
+          required: [operation]
+        then:
+          properties:
+            price_type: {const: OFERTA}
+            new_price: {type: 'null'}
+      - if:
+          properties: {target_type: {const: PRODUCTO}, price_type: {const: OFERTA}}
+          required: [target_type, price_type]
+        then:
+          properties: {sku: {type: 'null'}}
+      description: >-
+        Evento post-commit de transición efectiva. PRODUCTO exige sku=null; SKU identifica su sku. CREACION exige previous_price=null
+        y nuevo positivo; MODIFICACION ambos precios; RETIRO_OFERTA exige new_price=null. schema_version envelope permanece 1 para
+        corte coordinado. price_version es versión de dominio, no secuencia global.
+    InventoryStockChangedData:
+      type: object
+      properties:
+        sku: {type: string, minLength: 1}
+        stock_version: {type: integer, minimum: 1, description: Versión autoritativa de Inventory, distinta de schema_version del envelope.}
+        changed_at: {type: string, format: date-time}
+      required: [sku, stock_version, changed_at]
+      additionalProperties: false
+      description: Señala invalidación; no contiene estado comercial ni saldo.
+    CatalogBulkUpsertRequestedData:
+      type: object
+      properties:
+        batch_id: {type: string, format: uuid}
+        batch_operation_id: {type: string, format: uuid}
+        template_version: {type: integer, const: 2}
+        mode: {type: string, enum: [ALTA, ACTUALIZACION]}
+        rows:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            properties:
+              row_number: {type: integer, minimum: 2}
+              row_operation_id: {type: string, format: uuid}
+              producto_id: {type: [string, 'null']}
+              sku_base: {type: string, minLength: 1}
+              product:
+                oneOf:
+                - $ref: ../http/openapi.yaml#/components/schemas/ProductoCreateRequest
+                - $ref: ../http/openapi.yaml#/components/schemas/ProductoUpdateRequest
+              variant_id: {type: [string, 'null']}
+              variant:
+                oneOf:
+                - $ref: ../http/openapi.yaml#/components/schemas/VarianteCreateRequest
+                - $ref: ../http/openapi.yaml#/components/schemas/VarianteUpdateRequest
+                - type: 'null'
+            required: [row_number, row_operation_id, producto_id, sku_base, product, variant_id, variant]
+            additionalProperties: false
+      required: [batch_id, batch_operation_id, template_version, mode, rows]
+      additionalProperties: false
+      description: Una fila por SKU vendible; filas del mismo producto comparten sku_base. Precio y stock se procesan por pasos autorizados separados.
+      allOf:
+      - if:
+          properties: {mode: {const: ALTA}}
+          required: [mode]
+        then:
+          properties:
+            rows:
+              items:
+                properties:
+                  producto_id: {type: 'null'}
+                  variant_id: {type: 'null'}
+                  product:
+                    $ref: ../http/openapi.yaml#/components/schemas/ProductoCreateRequest
+                  variant:
+                    oneOf:
+                    - $ref: ../http/openapi.yaml#/components/schemas/VarianteCreateRequest
+                    - type: 'null'
+      - if:
+          properties: {mode: {const: ACTUALIZACION}}
+          required: [mode]
+        then:
+          properties:
+            rows:
+              items:
+                properties:
+                  producto_id: {type: string, minLength: 1}
+                  product:
+                    $ref: ../http/openapi.yaml#/components/schemas/ProductoUpdateRequest
+                  variant:
+                    oneOf:
+                    - $ref: ../http/openapi.yaml#/components/schemas/VarianteUpdateRequest
+                    - type: 'null'
+                allOf:
+                - if:
+                    properties:
+                      variant: {type: object}
+                    required: [variant]
+                  then:
+                    properties:
+                      variant_id: {type: string, minLength: 1}
+                  else:
+                    properties:
+                      variant_id: {type: 'null'}
+      examples:
+      - batch_id: 7ef62d29-ef0d-4d0d-9a83-c057e03a570f
+        batch_operation_id: d240bffd-f952-4558-a0d6-2f8d2e35c4a4
+        template_version: 2
+        mode: ALTA
+        rows:
+        - row_number: 2
+          row_operation_id: 5ad03a54-1b9b-4e84-9e09-162dbbd4e7d1
+          producto_id: null
+          sku_base: SKU-BASE-001
+          product: {nombre: Producto de ejemplo, descripcion: Descripción, categoriaId: cat-001, tipoProductoId: tipo-001, marcaId: marca-001, precioBaseInicial: 19.90, skuBase: SKU-BASE-001, tieneVariantes: false}
+          variant_id: null
+          variant: null
+      x-negative-examples:
+      - name: update-without-product-id
+        detail: ACTUALIZACION requiere producto_id y variant_id cuando se actualiza una variante; rechazar antes de publicar.
+      - name: duplicate-row-identity-with-different-payload
+        detail: Misma row_operation_id con payload semántico distinto produce IDEMPOTENCY_CONFLICT.
+    CatalogBulkUpsertCompletedData:
+      type: object
+      properties:
+        batch_id: {type: string, format: uuid}
+        batch_operation_id: {type: string, format: uuid}
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              row_number: {type: integer, minimum: 2}
+              row_operation_id: {type: string, format: uuid}
+              product_id: {type: [string, 'null']}
+              sku_base: {type: string, minLength: 1}
+              status: {type: string, enum: [COMPLETED, REJECTED]}
+              code: {type: [string, 'null']}
+            required: [row_number, row_operation_id, product_id, sku_base, status, code]
+            additionalProperties: false
+      required: [batch_id, batch_operation_id, results]
+      additionalProperties: false
+      description: completed significa que el comando se procesó; puede contener filas rechazadas.
+      examples:
+      - batch_id: 7ef62d29-ef0d-4d0d-9a83-c057e03a570f
+        batch_operation_id: d240bffd-f952-4558-a0d6-2f8d2e35c4a4
+        results:
+        - {row_number: 2, row_operation_id: 5ad03a54-1b9b-4e84-9e09-162dbbd4e7d1, product_id: prod-001, sku_base: SKU-BASE-001, status: COMPLETED, code: null}
+        - {row_number: 3, row_operation_id: 3cf6bd6d-74bc-42db-8f1a-87269dcf91e7, product_id: null, sku_base: SKU-BASE-002, status: REJECTED, code: VALIDACION}
+      x-negative-examples:
+      - name: completed-without-row-results
+        detail: No reportar éxito de lote como éxito de todas las filas o dominios; results debe describir cada fila procesada.
+    CatalogBulkUpsertRejectedData:
+      type: object
+      properties:
+        batch_id: {type: string, format: uuid}
+        batch_operation_id: {type: string, format: uuid}
+        code: {type: string, minLength: 1}
+        detail: {type: string, minLength: 1, description: Sin SQL, secretos ni trazas.}
+      required: [batch_id, batch_operation_id, code, detail]
+      additionalProperties: false
+      examples:
+      - {batch_id: 7ef62d29-ef0d-4d0d-9a83-c057e03a570f, batch_operation_id: d240bffd-f952-4558-a0d6-2f8d2e35c4a4, code: VALIDACION, detail: El comando no cumple el contrato de entrada.}
+      x-negative-examples:
+      - name: detail-with-sql-or-secret
+        detail: No incluir SQL, secretos ni trazas en detail.
     MasterDeactivationIdentityData:
       type: object
       properties:
@@ -1468,7 +1697,8 @@ components:
       - promotions-svc
       - combos-svc
       - api-gateway/bff
-      x-status: stable
+      x-status: internal-provisional
+      x-compatibility-cut: coordinated-deployment-required-before-emission-to-existing-consumers
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1479,6 +1709,9 @@ components:
             producer:
               type: string
               const: catalog-svc
+            schema_version:
+              type: integer
+              const: 1
             kind:
               type: string
               const: event
@@ -1486,7 +1719,7 @@ components:
               type: string
               const: catalog.product.deactivated
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/CatalogProductDeactivatedData'
           required:
           - producer
           - kind
@@ -1504,7 +1737,8 @@ components:
       - pricing-svc
       - promotions-svc
       - combos-svc
-      x-status: stable
+      x-status: internal-provisional
+      x-compatibility-cut: coordinated-deployment-required-before-emission-to-existing-consumers
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1515,6 +1749,9 @@ components:
             producer:
               type: string
               const: catalog-svc
+            schema_version:
+              type: integer
+              const: 1
             kind:
               type: string
               const: event
@@ -1522,7 +1759,7 @@ components:
               type: string
               const: catalog.sku.deactivated
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/CatalogSkuDeactivatedData'
           required:
           - producer
           - kind
@@ -1539,7 +1776,8 @@ components:
       - price-audit-svc
       - promotions-svc
       - api-gateway/bff
-      x-status: stable
+      x-status: internal-provisional
+      x-compatibility-cut: coordinated-deployment-required-before-emission-to-existing-consumers
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1550,6 +1788,9 @@ components:
             producer:
               type: string
               const: pricing-svc
+            schema_version:
+              type: integer
+              const: 1
             kind:
               type: string
               const: event
@@ -1557,7 +1798,7 @@ components:
               type: string
               const: pricing.price.changed
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/PricingPriceChangedData'
           required:
           - producer
           - kind
@@ -1574,7 +1815,8 @@ components:
       - combos-svc
       - promotions-svc
       - api-gateway/bff
-      x-status: stable
+      x-status: internal-provisional
+      x-compatibility-cut: coordinated-deployment-required-before-emission-to-existing-consumers
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1585,6 +1827,9 @@ components:
             producer:
               type: string
               const: inventory-svc
+            schema_version:
+              type: integer
+              const: 1
             kind:
               type: string
               const: event
@@ -1592,7 +1837,7 @@ components:
               type: string
               const: inventory.stock.changed
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/InventoryStockChangedData'
           required:
           - producer
           - kind
@@ -2106,8 +2351,9 @@ components:
       x-consumers:
       - catalog-svc
       x-status: internal-provisional
+      x-compatibility-cut: coordinated-provider-consumer-rollout-required
       x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
+      x-business-idempotency-key: batch_operation_id plus rows[].row_operation_id
       payload:
         allOf:
         - $ref: '#/components/schemas/MessageEnvelope'
@@ -2116,6 +2362,9 @@ components:
             producer:
               type: string
               const: bulk-svc
+            schema_version:
+              type: integer
+              const: 1
             kind:
               type: string
               const: command
@@ -2123,7 +2372,7 @@ components:
               type: string
               const: catalog.bulk.upsert.requested
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/CatalogBulkUpsertRequestedData'
           required:
           - producer
           - kind
@@ -2139,8 +2388,9 @@ components:
       x-consumers:
       - bulk-svc
       x-status: internal-provisional
+      x-compatibility-cut: coordinated-provider-consumer-rollout-required
       x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
+      x-business-idempotency-key: batch_operation_id
       payload:
         allOf:
         - $ref: '#/components/schemas/MessageEnvelope'
@@ -2149,6 +2399,9 @@ components:
             producer:
               type: string
               const: catalog-svc
+            schema_version:
+              type: integer
+              const: 1
             kind:
               type: string
               const: result
@@ -2156,7 +2409,7 @@ components:
               type: string
               const: catalog.bulk.upsert.completed
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/CatalogBulkUpsertCompletedData'
           required:
           - producer
           - kind
@@ -2172,8 +2425,9 @@ components:
       x-consumers:
       - bulk-svc
       x-status: internal-provisional
+      x-compatibility-cut: coordinated-provider-consumer-rollout-required
       x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
+      x-business-idempotency-key: batch_operation_id
       payload:
         allOf:
         - $ref: '#/components/schemas/MessageEnvelope'
@@ -2182,6 +2436,9 @@ components:
             producer:
               type: string
               const: catalog-svc
+            schema_version:
+              type: integer
+              const: 1
             kind:
               type: string
               const: result
@@ -2189,7 +2446,7 @@ components:
               type: string
               const: catalog.bulk.upsert.rejected
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/CatalogBulkUpsertRejectedData'
           required:
           - producer
           - kind

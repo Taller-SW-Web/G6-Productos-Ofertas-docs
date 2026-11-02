@@ -1,10 +1,10 @@
 openapi: 3.1.0
 info:
   title: API — Productos y Ofertas
-  version: 0.6.0-rc.1
+  version: 0.6.0-rc.2
   summary: Contrato HTTP de integración y administración del módulo Productos y Ofertas
-  description: Contrato HTTP consolidado P0/P1/P2 del módulo Productos y Ofertas. P2 cierra la recepción de traslados internos de Inventario
-    y la autorización local del operador de inventario. La topología RabbitMQ física se documenta en AsyncAPI 0.5.0 y api/rabbitmq-topologia.md.
+  description: Contrato HTTP candidato actualizado para acuerdos internos G6 H4; no implica grants ni implementación. La semántica de recomendaciones fija precio mínimo efectivo y disponibilidad positiva por SKU sin agregar ubicaciones. Contrato HTTP consolidado P0/P1/P2 del módulo Productos y Ofertas. P2 cierra la recepción de traslados internos de Inventario
+    y la autorización local del operador de inventario. La topología RabbitMQ física se documenta en AsyncAPI 0.6.0-rc.4 y contratos/eventos/rabbitmq-topologia.md.
 servers:
 - url: /api/v1
   description: Base relativa del módulo
@@ -66,6 +66,7 @@ paths:
       x-route-basis: derived-from-capability
       x-consumers:
       - Pricing
+      - Promotions
       x-service-audience: api-productos
       x-required-scope: catalogo:leer
       x-scope-registration-status: pending-security-registration
@@ -823,7 +824,7 @@ paths:
         '429':
         - RATE_LIMIT_EXCEDIDO
       x-route-basis: existing-contract
-      x-allowed-client-ids: *id020
+      x-allowed-client-ids: [modulo-marketplace, modulo-chatbot, modulo-retail, modulo-productos]
       description: Detalle comercial seguro. Para consumidores de canal solo expone producto ACTIVO y elegible en el canal informado.
     patch:
       tags:
@@ -1755,7 +1756,8 @@ paths:
       x-status: stable
       x-source-spec:
       - SPEC-013
-      description: 'Resuelve el precio efectivo de varios SKU para el instante solicitado. Los códigos canónicos son MARKETPLACE, CHATBOT, RETAIL y VENTAS; el alcance global se representa omitiendo canal (channel_id=null). El canal es opcional: si se omite, se utiliza
+      x-consumers: [Catalog, Promotions, Combos]
+      description: 'Resuelve el precio efectivo de varios SKU para el instante solicitado. Los códigos canónicos son MARKETPLACE, CHATBOT, RETAIL y VENTAS; el alcance global se representa omitiendo canal (channel_id=null). El canal es opcional para consumidores generales; Promotions y otras llamadas internas de canal deben enviar el mismo canal validado en todas las operaciones. Si se omite, se utiliza
         el alcance global; si se informa, se aplica el alcance específico con fallback al global cuando corresponda.'
       x-service-audience: api-productos
       x-required-scope: precios:leer
@@ -1958,11 +1960,16 @@ paths:
       x-status: stable
       x-source-spec:
       - SPEC-013
-      description: 'Resuelve el precio vigente o histórico (as-of) de un SKU. El canal es opcional: sin canal se resuelve el alcance
-        global; con canal, se usa el alcance específico con fallback al global.'
+      x-consumers: [Catalog, Promotions, Combos]
+      description: 'Resuelve el precio vigente o histórico (as-of) de un SKU. El canal es opcional para consumidores generales: sin canal se resuelve el alcance global; con canal, se usa el alcance específico con fallback al global. Promotions y otras llamadas internas de canal deben enviar el mismo canal validado en todas las operaciones.'
       x-service-audience: api-productos
       x-required-scope: precios:leer
       x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
+      - modulo-productos
       security:
       - userBearer: []
       - serviceBearer: []
@@ -3331,8 +3338,12 @@ paths:
       - Marketplace
       - Chatbot
       - Retail
-      description: Candidatos a nivel product_id para Marketplace, Chatbot y Retail. El enriquecimiento current_price/availability permanece provisional
-        mientras D-REC-01/D-REC-02 sigan abiertas.
+      description: >-
+        Candidatos a nivel product_id para Marketplace, Chatbot y Retail. D-REC-01/02 están aprobadas internamente en DEC-G6-INT-02/03.
+        Cada availability se agrega por SKU elegibles sin sumar ubicaciones; candidatos sin positividad demostrada se excluyen y
+        fallos globales de dependencia responden como error técnico. current_price es el precio efectivo mínimo («desde») de los SKU
+        con disponibilidad positiva para un mismo instante UTC y canal. La recomendación no elige SKU ni confirma checkout. La candidata
+        requiere implementación, pruebas y despliegue coordinado antes de afirmar capacidad disponible.
   /combos/{comboId}:
     get:
       tags:
@@ -8001,6 +8012,10 @@ paths:
       - Combos
       operationId: consultarDisponibilidadCombo
       summary: Consultar disponibilidad informativa de combo
+      description: >-
+        No deriva cantidades a partir de estados por SKU ni suma ubicaciones. Si no hay una fuente autoritativa de cumplimiento común
+        y cantidad para toda la cesta, responde verificable=false, cantidadInformativa=null y estadoActualizacion=INCOMPLETA; calculated_at
+        es el instante de la comprobación. No expone saldos ni ubicaciones. La cantidad requeriría contrato adicional versionado, autorizado y probado.
       x-status: provisional-internal
       x-source-spec:
       - SPEC-002
@@ -10337,8 +10352,13 @@ paths:
       x-source-spec:
       - SPEC-008
       x-route-basis: derived-from-capability
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids: [modulo-productos]
       security:
       - userBearer: []
+      - serviceBearer: []
       parameters:
       - *id021
       responses:
@@ -10441,8 +10461,13 @@ paths:
       x-source-spec:
       - SPEC-008
       x-route-basis: derived-from-capability
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids: [modulo-productos]
       security:
       - userBearer: []
+      - serviceBearer: []
       parameters:
       - $ref: '#/components/parameters/CategoriaId'
       - *id021
@@ -12633,8 +12658,13 @@ paths:
       x-source-spec:
       - SPEC-010
       x-route-basis: derived-from-capability
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids: [modulo-productos]
       security:
       - userBearer: []
+      - serviceBearer: []
       parameters:
       - *id226
       - *id227
@@ -12896,8 +12926,13 @@ paths:
       x-source-spec:
       - SPEC-010
       x-route-basis: derived-from-capability
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids: [modulo-productos]
       security:
       - userBearer: []
+      - serviceBearer: []
       parameters:
       - $ref: '#/components/parameters/TipoProductoId'
       - *id021
@@ -13305,8 +13340,13 @@ paths:
       x-source-spec:
       - SPEC-010
       x-route-basis: capability-contract
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids: [modulo-productos]
       security:
       - userBearer: []
+      - serviceBearer: []
       parameters:
       - $ref: '#/components/parameters/TipoProductoId'
       - *id021
@@ -13914,8 +13954,13 @@ paths:
       x-source-spec:
       - SPEC-011
       x-route-basis: derived-from-capability
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids: [modulo-productos]
       security:
       - userBearer: []
+      - serviceBearer: []
       parameters:
       - $ref: '#/components/parameters/MarcaId'
       - *id021
@@ -15390,7 +15435,8 @@ paths:
       - Precios
       operationId: prevalidarImportacionPrecios
       summary: Previsualizar/prevalidar archivo de precios
-      x-status: provisional-internal
+      description: Fuera del gate funcional H4. No anunciar como implementada ni aceptar solicitud con 200 hasta contar con formato y worker específicos. La carga multidominio H4 usa Bulk v2 (SPEC-001).
+      x-status: excluded-h4
       x-source-spec:
       - SPEC-013
       x-route-basis: derived-from-capability
@@ -15569,7 +15615,8 @@ paths:
       x-required-role: GESTOR_COMERCIAL
       x-auth-validation: introspection
       summary: Crear importación asíncrona de precios
-      x-status: provisional-internal
+      description: Fuera del gate funcional H4. No anunciar como implementada ni responder 202 ficticio sin formato y worker específicos. La carga multidominio H4 usa Bulk v2 (SPEC-001).
+      x-status: excluded-h4
       x-source-spec:
       - SPEC-013
       x-route-basis: derived-from-capability
@@ -18394,8 +18441,13 @@ paths:
       x-route-basis: derived-from-capability
       description: Ruta separada de la consulta consumible por canales para permitir incluir entidades inactivas sin ampliar la exposición
         pública.
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids: [modulo-productos]
       security:
       - userBearer: []
+      - serviceBearer: []
       parameters:
       - name: categoriaPadreId
         in: query
@@ -18505,8 +18557,13 @@ paths:
       x-route-basis: derived-from-capability
       description: Ruta separada de la consulta consumible por canales para permitir incluir entidades inactivas sin ampliar la exposición
         pública.
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids: [modulo-productos]
       security:
       - userBearer: []
+      - serviceBearer: []
       parameters:
       - name: q
         in: query
@@ -20317,6 +20374,8 @@ paths:
       - Marketplace
       - Chatbot
       - Retail
+      - Promotions
+      - Combos
       x-service-audience: api-productos
       x-required-scope: inventario:disponibilidad:leer
       x-scope-registration-status: pending-security-registration
@@ -20324,6 +20383,7 @@ paths:
       - modulo-marketplace
       - modulo-chatbot
       - modulo-retail
+      - modulo-productos
       security:
       - serviceBearer: []
       parameters:
@@ -21429,6 +21489,11 @@ components:
               type: 'null'
     Recomendacion:
       type: object
+      description: >-
+        Proyección por product_id, sin SKU seleccionado ni garantía para checkout. availability se agrega solo desde SKU elegibles
+        con disponibilidad comercial positiva, sin sumar ubicaciones; candidatos sin positividad demostrada se excluyen. current_price
+        es el mínimo efectivo («desde») de los SKU elegibles con disponibilidad positiva para el mismo canal e instante UTC; se excluyen
+        candidatos sin precio válido. Nunca se interpreta INDETERMINADO como AGOTADO.
       properties:
         product_id:
           type: string
@@ -21444,10 +21509,9 @@ components:
           type: integer
           minimum: 1
         current_price:
-          type:
-          - number
-          - 'null'
-          minimum: 0
+          type: number
+          exclusiveMinimum: 0
+          description: Precio efectivo mínimo («desde») de los SKU elegibles con disponibilidad positiva; oferta vigente o, si no existe, precio regular. Moneda homogénea y mismo instante at.
         availability:
           $ref: '#/components/schemas/EstadoStock'
       required:
@@ -21455,6 +21519,7 @@ components:
       - type
       - rule_priority
       - presentation_order
+      - current_price
       - availability
     RecomendacionesResponse:
       type: object
@@ -22283,12 +22348,16 @@ components:
       - meta
     DisponibilidadCombo:
       type: object
+      description: >-
+        Cuando no existe fuente autoritativa común de cumplimiento y cantidad, verificable=false, cantidadInformativa=null y estadoActualizacion=INCOMPLETA.
+        La respuesta contiene solo información del combo; no incluye saldos ni ubicaciones de Inventory.
       properties:
         comboId:
           type: string
         verificable:
           type: boolean
         cantidadInformativa:
+          description: Cantidad opcional solo cuando puede verificarse en un contexto realizable común; null cuando no es verificable.
           oneOf:
           - type: integer
             minimum: 0
@@ -22302,10 +22371,11 @@ components:
           - ACTUALIZADA
           - DESACTUALIZADA
           - INCOMPLETA
-      additionalProperties: true
+      additionalProperties: false
       required:
       - comboId
       - verificable
+      - cantidadInformativa
       - calculated_at
       - estadoActualizacion
     PoliticaCancelacionCupon:
@@ -24925,14 +24995,15 @@ x-security-contract:
       - modulo-marketplace
       - modulo-chatbot
       - modulo-retail
-      note: modulo-productos es identidad técnica compartida G6 aprobada internamente para obtenerContextoSku, pero no se añade a la allowlist comercial. G7 debe confirmar grant y provisión de credenciales; la identidad no individualiza microservicios.
+      - modulo-productos
+      note: "modulo-productos usa catalogo:leer solo en obtenerProducto, obtenerContextoSku y GETs de lectura maestra señalados en sus allowlists; esto no habilita otras operaciones. G7 debe confirmar grant y provisión de credenciales; la identidad no individualiza microservicios."
     precios:leer:
       clients:
       - modulo-marketplace
       - modulo-chatbot
       - modulo-retail
       - modulo-productos
-      note: "modulo-productos se permite solo en consultarPrecios y obtenerPrecioSku (GET) para la lectura interna Catálogo→Pricing; conserva precios:leer. La allowlist no acredita grant. G7 debe confirmar concesión y provisionar credenciales."
+      note: "modulo-productos se permite solo en consultarPrecios y obtenerPrecioSku (GET) para lecturas de Catalog, Promotions y Combos; conserva precios:leer. La allowlist no acredita grant. G7 debe confirmar concesión y provisionar credenciales."
     promociones:leer:
       clients: *id715
     promociones:evaluar:
@@ -24949,8 +25020,10 @@ x-security-contract:
       - modulo-marketplace
       - modulo-chatbot
       - modulo-retail
+      - modulo-productos
       - modulo-ventas
       - modulo-postventa
+      note: modulo-productos se permite solo en consultarDisponibilidadComercial; no autoriza lectura detallada ni verificación cuantitativa. Grant G7 pendiente.
     inventario:reservar:
       clients: *id720
     inventario:consumir:
