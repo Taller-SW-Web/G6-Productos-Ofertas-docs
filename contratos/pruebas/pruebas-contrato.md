@@ -1,11 +1,11 @@
 # Matriz de pruebas de contrato e integración — Productos y Ofertas
 
-**Contrato HTTP objetivo:** OpenAPI `0.6.0-rc.1` (candidato, no publicado).
-**Contrato asíncrono objetivo:** AsyncAPI `0.6.0-rc.3` (candidato, no publicado).
+**Contrato HTTP objetivo:** OpenAPI `0.6.0-rc.2` (candidato; no prueba publicación/runtime).
+**Contrato asíncrono objetivo:** AsyncAPI `0.6.0-rc.4` (candidato; no prueba publicación/runtime).
 **Referencia histórica auditada:** PR #86, rama `nueva`, commit `c1769607f30e2cabf1449e33c877fa4ef41defe5`; esta matriz conserva los estados pendientes y actualiza la expectativa del vhost en `CT-STATIC-18`.
 **Estado:** definición documental de casos; no asignar `PASS` a pruebas de API, eventos, seguridad o integración sin ejecución reproducible.
 
-En la revisión actual, `contratos/http/openapi.yaml` conserva `0.6.0-rc.1` y `contratos/eventos/asyncapi.yaml` es `0.6.0-rc.3`. AsyncAPI reconcilia nombres de recursos físicos base con una observación histórica Oracle; la numeración independiente evita modificar la candidata HTTP sin cambio. Los casos estáticos permanecen `PENDIENTE_EJECUCION` **hasta disponer de ejecución reproducible de validadores y evidencia vinculada al commit**; tampoco se consideran superadas pruebas provider, seguridad o E2E. `0.5.0` es línea base de compatibilidad, no prueba de despliegue de los candidatos.
+En la revisión actual, `contratos/http/openapi.yaml` es `0.6.0-rc.2` y `contratos/eventos/asyncapi.yaml` es `0.6.0-rc.4`. AsyncAPI reconcilia nombres de recursos físicos base con una observación histórica Oracle; la numeración independiente evita modificar la candidata HTTP sin cambio. Los casos estáticos permanecen `PENDIENTE_EJECUCION` **hasta disponer de ejecución reproducible de validadores y evidencia vinculada al commit**; tampoco se consideran superadas pruebas provider, seguridad o E2E. `0.5.0` es línea base de compatibilidad, no prueba de despliegue de los candidatos.
 
 ## Estados
 
@@ -36,14 +36,14 @@ ARCHITECTURE_INVARIANT
 
 | ID | Tipo | Resultado esperado | Estado |
 |---|---|---|---|
-| CT-STATIC-01 | STATIC_CONTRACT | YAML válido, OpenAPI 3.1.x, `info.version=0.6.0-rc.1`, `$ref` locales resolubles | PENDIENTE_EJECUCION |
+| CT-STATIC-01 | STATIC_CONTRACT | YAML válido, OpenAPI 3.1.x, `info.version=0.6.0-rc.2`, `$ref` locales resolubles | PENDIENTE_EJECUCION |
 | CT-STATIC-02 | STATIC_CONTRACT | `operationId` únicos | PENDIENTE_EJECUCION |
 | CT-STATIC-03 | STATIC_CONTRACT | `ErrorCode` de OpenAPI coincide con la tabla activa de `contratos/http/catalogo-errores.md`, incluidos `OPERACION_INVENTARIO_NO_ENCONTRADA` y `CONTEXTO_ABASTECIMIENTO_INVALIDO` | PENDIENTE_EJECUCION |
 | CT-STATIC-04 | STATIC_CONTRACT | Header canónico `X-Correlation-Id`; no introducir `X-Request-Id` alternativo | PENDIENTE_EJECUCION |
 | CT-STATIC-05 | STATIC_CONTRACT | Código de barras reutiliza `catalogo:leer`; sin scope nuevo | PENDIENTE_EJECUCION |
 | CT-STATIC-06 | STATIC_CONTRACT | `DisponibilidadComercial` expone `sku` y `status`, sin saldos ni ubicaciones internas | PENDIENTE_EJECUCION |
 | CT-STATIC-07 | STATIC_CONTRACT | Schemas comerciales de Catálogo no contienen flags administrativos ni perfiles físicos internos | PENDIENTE_EJECUCION |
-| CT-STATIC-08 | STATIC_CONTRACT | YAML válido, AsyncAPI 3.0.0, `info.version=0.6.0-rc.3`, **40 canales y 40 mensajes**, `$ref` resolubles; se conservan `operation_id` y `causation_id` obligatorios en resultados v2 críticos y en inicializaciones donde corresponda | PENDIENTE_EJECUCION |
+| CT-STATIC-08 | STATIC_CONTRACT | YAML válido, AsyncAPI 3.0.0, `info.version=0.6.0-rc.4`, **40 canales y 40 mensajes**, `$ref` resolubles; se conservan `operation_id` y `causation_id` obligatorios en resultados v2 críticos y en inicializaciones donde corresponda | PENDIENTE_EJECUCION |
 | CT-STATIC-09 | STATIC_CONTRACT | `reservaId` de `POST /inventario/reservas/{reservaId}/confirmar` y `/liberar` tiene `type: string`, `format: uuid`; `order_id` sigue siendo cadena opaca | PENDIENTE_EJECUCION |
 | CT-STATIC-10 | STATIC_CONTRACT | `GET /inventario/operaciones/{operationId}` exige UUID y restringe consumidor a `modulo-ventas`, scope `inventario:operaciones:leer`, sin publicar stock interno | PENDIENTE_EJECUCION |
 | CT-STATIC-11 | STATIC_CONTRACT | `POST /inventario/disponibilidad/comercial/verificar` devuelve evaluación no vinculante sin `location_id` ni cantidades internas; `INDETERMINADO` es una salida de negocio válida | PENDIENTE_EJECUCION |
@@ -524,7 +524,7 @@ Contrato aprobado en diseño por G6: [acuerdo Pricing → Catálogo](../../integ
 | CT-G6-INVALIDATION-01 | ASYNCAPI / CONSUMER | Desactivación y stock tipados; Inbox descarta duplicados/versión obsoleta; stock invalida y refresca disponibilidad comercial | PENDIENTE_IMPLEMENTACION |
 | CT-G6-BULK-01 | ASYNCAPI / PROVIDER_CONSUMER | Bulk v2, DTO Catalog referenciados, ALTA/ACTUALIZACION, fila por SKU y padre agrupado; rechazar variante contradictoria | PENDIENTE_IMPLEMENTACION |
 | CT-G6-BULK-02 | ASYNCAPI / IDEMPOTENCY | Retry idéntico reproduce resultado; row_operation_id con payload distinto da IDEMPOTENCY_CONFLICT; completed parcial no afirma éxito de otros dominios | PENDIENTE_IMPLEMENTACION |
-| CT-G6-BULK-03 | FILE_CONTRACT | CSV UTF-8/XLSX una hoja sin macros, límites de bytes/filas/tamaño descomprimido, cabeceras exactas y SKU duplicado | PENDIENTE_PLANTILLA_V2 |
+| CT-G6-BULK-03 | FILE_CONTRACT | CSV UTF-8/XLSX una hoja sin macros; límites H4; 16 cabeceras exactas en orden; campos por fila; JSON de atributos; ejemplos válidos e inválidos; SKU duplicado. Fixtures: `tests/contratos/fixtures/bulk-v2/` | PENDIENTE_EJECUCION |
 | CT-G6-EXPORT-01 | PROVIDER_CONSUMER | requested_at único; manifiesto registra observaciones/versions; fallo de fuente requerida da FAILED_GENERAL; no hay snapshot atómico | PENDIENTE_IMPLEMENTACION |
 | CT-G6-COMBO-01 | CONSUMER | precio bajo ambas sumas con mismo canal/instante; dependencia fallida da SERVICIO_NO_DISPONIBLE; disponibilidad no verificable es null/INCOMPLETA y no reserva | PENDIENTE_IMPLEMENTACION |
 | CT-G6-AUTH-01 | SECURITY | JWT real de modulo-productos usa scope y allowlist puntual; demo sin JWT solo red/origen/método/ruta verificados, nunca identidad por cabecera | PENDIENTE_GRANT_G7_Y_EJECUCION |

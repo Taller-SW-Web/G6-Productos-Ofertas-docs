@@ -281,3 +281,9 @@ flowchart LR
 6. **Exportación no bloqueante:** La exportación general de productos se ejecuta en segundo plano bajo un trabajo identificable (`export_id`), consolidando la totalidad del catálogo en formato CSV o XLSX sin comprometer la disponibilidad transaccional.
 
 Bulk coordina mediante `catalog.bulk.upsert.*` tipados en AsyncAPI 0.6.0-rc.4; Catalog conserva validaciones, identidad SKU, barreras, versiones y transacciones locales. Bulk v2 usa resultado por fila e idempotencia `row_operation_id`; no hay rollback destructivo ni escritura directa a persistencia de Catalog. La plantilla de 16 cabeceras debe publicarse antes de aceptar archivos productivos. Exportación es un consolidado observado con `requested_at` común, no un snapshot atómico multi-servicio; falla completa si falta una fuente requerida. Véanse DEC-G6-INT-08/09/10 y SPEC-001.
+
+### Aclaración de publicación Bulk v2 y divergencia de Inventory
+
+Las 16 cabeceras, su orden, ejemplos y transformación a DTO son normativos en [SPEC-001, “Plantilla Bulk v2”](../specs/SPEC-001-carga-exportacion-masiva-productos.md#plantilla-bulk-v2--encabezados-y-transformaci%C3%B3n-normativa); los CSV reproducibles se mantienen en `tests/contratos/fixtures/bulk-v2/`. El particionado por familias y las identidades de comando/fila se especifican allí, sin cambiar AsyncAPI rc.4.
+
+El paso del diagrama sin `default_location_id` (registrar identidad sin saldo y completar inicialización) expresa el requisito aprobado de SPEC-001. El handler inspeccionado elige una ubicación si hay exactamente una activa y rechaza si hay cero o varias; SPEC-001 exige identidad sin saldo cuando falta el default. Se registra como divergencia de implementación pendiente para Taco, no como regla nueva ni comportamiento probado. Si además se solicitó stock positivo, INVENTARIO queda pendiente hasta un ajuste masivo operativo; no se inventa ubicación.

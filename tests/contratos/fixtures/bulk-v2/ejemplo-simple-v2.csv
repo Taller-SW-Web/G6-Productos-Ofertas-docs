@@ -1,0 +1,2 @@
+operacion,producto_id,catalog_version,sku_base,sku_variante,nombre,descripcion,categoria_id,marca_id,tipo_producto_id,tiene_variantes,precio_regular,atributos_producto,atributos_variante,imagen_url,stock_inicial
+ALTA,,,SKU-SIMPLE-001,,Producto simple,Producto de prueba,categoria-1,marca-1,tipo-1,false,19.90,[],,,0
