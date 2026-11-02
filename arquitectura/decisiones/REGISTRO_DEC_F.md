@@ -163,9 +163,9 @@ Los mensajes de baja de maestros conservan nombres, exchanges y routing keys y a
 
 **Responsabilidades externas.** Despacho consulta el perfil y mantiene su autoridad logística; no escribe perfil maestro de Catálogo.
 
-**Estados.** Interno: adoptado. Externo: el contrato G2 declara acordadas por ambos equipos la ruta y autorización de consulta física por lote desde `modulo-despacho` con scope `productos:fisicos:leer`. Ese acuerdo documental no acredita la aprobación/registro/concesión administrativa del permiso por Seguridad ni la provisión efectiva de credenciales. Implementación: endpoint/modelos documentados; runtime no acreditado. Pruebas: no certificadas.
+**Estados.** Interno: DEC-F-011 conserva su ownership adoptado por G6. Externo: H-G2-01/02/03 homologados bilateralmente el 2026-11-02; detalle en [Acuerdo G2–G6 H4](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md). Esta aceptación no acredita aprobación/registro/grant de Seguridad ni credenciales. Implementación: pendiente de evidencia en Catalog/G2. CI, despliegue y E2E: pendientes/no acreditados.
 
-**Referencias y pendientes.** SPEC/HU/FLOW-003/004, OpenAPI, Arquitectura §1.4, Modelo, catálogo físico y pruebas; contrato externo G2 [`integraciones/api-contract.md`](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/integraciones/api-contract.md) §3.4 y §5.2. La operación documentada es `POST /api/v1/productos/datos-fisicos/consulta`, `aud=api-productos`, `scope=productos:fisicos:leer`, cliente `modulo-despacho`. Verificar separadamente aprobación, grant de Seguridad, provisión de credenciales y pruebas de integración.
+**Referencias y pendientes.** SPEC/HU/FLOW-003/004, OpenAPI `0.6.0-rc.3` candidata, Arquitectura §1.4, Modelo, catálogo físico y pruebas; contrato externo G2 [`integraciones/api-contract.md`](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/integraciones/api-contract.md) §§3.4, 5.1, 5.2, 7.1 y 11.1. Se mantienen `POST /api/v1/productos/datos-fisicos/consulta`, `aud=api-productos`, `scope=productos:fisicos:leer`, cliente `modulo-despacho`. Pendientes técnicos: precedencia de estado de variante frente al padre, manejo del SKU base no vendible, grants G7, implementación y pruebas verificables.
 
 ## DEC-F-012 — Fuentes normativas, contratos versionados y compatibilidad
 

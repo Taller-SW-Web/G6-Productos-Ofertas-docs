@@ -3,11 +3,11 @@
 **Fecha de actualización:** 2026-10-12  
 **Módulo propietario:** Productos y Ofertas  
 **Documento de integración:** `Contrato_Api.md`  
-**Contrato HTTP canónico:** `openapi.yaml` (`0.6.0-rc.1`, provisional)
-**Contrato asíncrono canónico:** `../eventos/asyncapi.yaml` (`0.6.0-rc.3`, candidato)
+**Contrato HTTP canónico:** `openapi.yaml` (`0.6.0-rc.3`, candidata; operación de Despacho homologada pero aún `provisional`)
+**Contrato asíncrono canónico:** `../eventos/asyncapi.yaml` (`0.6.0-rc.4`, candidato)
 **Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (referencia humana; base histórica `0.5.0`, candidato de 40 mensajes)
 **Catálogo de errores canónico:** `contratos/http/catalogo-errores.md` (vocabulario estable de códigos)
-**Estado:** `0.5.0` como línea base histórica/de compatibilidad; OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.3` como candidata. La revisión `rc.3` reconcilia nombres físicos base observados en Oracle y conserva mensajes, operaciones y routing keys; no acredita despliegue, permisos de G7 ni pruebas de integración.
+**Estado:** `0.5.0` como línea base histórica/de compatibilidad; OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` como candidatas. La revisión `rc.3` reconcilia nombres físicos base observados en Oracle y conserva mensajes, operaciones y routing keys; no acredita despliegue, permisos de G7 ni pruebas de integración.
 
 ## Fuentes utilizadas
 
@@ -493,7 +493,7 @@ Una identidad de operación inexistente devuelve:
 
 # 7. Precios
 
-`contratos/http/openapi.yaml` (contrato candidato `0.6.0-rc.1` en la rama `nueva`, con baseline histórico `0.5.0`; no desplegado) es la fuente de verdad HTTP de Pricing. La superficie distingue consultas estables para consumidores y operaciones administrativas internas derivadas de SPEC-013.
+`contratos/http/openapi.yaml` (contrato candidato vigente `0.6.0-rc.3`, con baseline histórico `0.5.0`; no desplegado) es la fuente de verdad HTTP de Pricing. La superficie distingue consultas estables para consumidores y operaciones administrativas internas derivadas de SPEC-013.
 
 ## 7.1. Consultas estables para consumidores
 
@@ -512,7 +512,7 @@ Estas rutas usan el contrato técnico `precios:leer` cuando son invocadas módul
 
 ## 7.2. Administración de precio base y override
 
-OpenAPI (`0.6.0-rc.1` candidato / baseline histórico `0.5.0`) publica además:
+OpenAPI (`0.6.0-rc.3` candidato / baseline histórico `0.5.0`) publica además:
 
 | Método | Ruta | Estado |
 |---|---|---|
@@ -1329,19 +1329,15 @@ Respuesta conceptual:
 }
 ```
 
-Estado actual del endpoint:
+La semántica bilateral H-G2-01/02/03 quedó homologada el 2026-11-02; véase el [acuerdo G2–G6 H4](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md). OpenAPI `0.6.0-rc.3` sigue siendo candidata y el endpoint conserva estado `provisional`; homologación no acredita implementación ni despliegue.
 
-```text
-provisional
-```
+Seguridad: `serviceBearer`, cliente `modulo-despacho`, `aud=api-productos`, scope `productos:fisicos:leer` y `pending-security-registration` hasta evidencia de grant G7.
 
-La semántica está acordada; queda formalizar el scope definitivo y pruebas de contrato.
+El request acepta de 1 a 100 SKU únicos. Los SKU son opacos y se preservan literalmente. En un `200`, cada solicitado aparece exactamente una vez entre `productos[]` y `noEncontrados[]`; esta última lista significa ausencia de identidad, no estado comercial. G6 admite `ACTIVO`, `INACTIVO` y `BORRADOR`; G2 aplica F-01/F-02 y conserva cantidades agrupadas. La consulta no cambia inventario, precio ni pedido.
 
-Scope propuesto:
+Un perfil existente con peso, dimensión o `actualizadoEn` ausente/inválido produce `422 DATOS_FISICOS_INCOMPLETOS`, con `details.skusAfectados` requerido solo para ese código y sin éxito parcial. `SKU_INVALIDO` también es 422, pero no requiere dicho detalle. Fallos técnicos de conexión, timeout, PostgreSQL o dependencia responden `503 SERVICIO_NO_DISPONIBLE`, sin detalles internos.
 
-```text
-productos:fisicos:leer
-```
+F-01: solo `ACTIVO` y perfil válido da cotización exacta; G2 usa `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE` para `INACTIVO`/`BORRADOR`. F-02: esos estados no son rechazo automático cuando Ventas solicita despacho de pedido declarado pagado, preparado y listo, sujeto a perfil y demás validaciones logísticas; esto no habilita venta ni cambia activación G6. El padre con variantes no tiene perfil físico propio ni se vuelve despachable; código para el SKU padre y precedencia variante `ACTIVA` frente a padre `BORRADOR`/`INACTIVO` quedan como pendientes técnicos de Catalog.
 
 ---
 
@@ -1507,7 +1503,7 @@ La audiencia técnica es:
 api-productos
 ```
 
-La línea base conserva **16 scopes** técnicos. El candidato `0.6.0-rc.1` añade el permiso propuesto `inventario:operaciones:leer` (uso exclusivo `modulo-ventas`) sin incluirlo artificialmente entre esos 16. Su registro y concesión efectivos continúan pendientes de G7. El cliente de servicio debe superar `iss`, `aud`, `tipo`, `exp`, scope y `x-allowed-client-ids` de la operación.
+La línea base conserva **16 scopes** técnicos. El candidato `0.6.0-rc.3` incluye el permiso propuesto `inventario:operaciones:leer` (uso exclusivo `modulo-ventas`) sin incluirlo artificialmente entre esos 16. Su registro y concesión efectivos continúan pendientes de G7. El cliente de servicio debe superar `iss`, `aud`, `tipo`, `exp`, scope y `x-allowed-client-ids` de la operación.
 
 | Scope | Operaciones | Clientes previstos |
 |---|---|---|
@@ -2279,7 +2275,7 @@ Principios:
 - reconciliación ante aplicación parcial;
 - no rollback distribuido ficticio.
 
-La cobertura HTTP administrativa de Bulk forma parte del contrato OpenAPI (`0.6.0-rc.1` candidato en la rama `nueva`, con línea base histórica `0.5.0`; no desplegado). La forma exacta de rutas, requests, estados y errores se toma del contrato ejecutable; este documento conserva únicamente las reglas de ownership y coordinación.
+La cobertura HTTP administrativa de Bulk forma parte del contrato OpenAPI (`0.6.0-rc.3` candidato vigente, con línea base histórica `0.5.0`; no desplegado). La forma exacta de rutas, requests, estados y errores se toma del contrato ejecutable; este documento conserva únicamente las reglas de ownership y coordinación.
 
 ---
 
@@ -2289,7 +2285,7 @@ Price Audit conserva el historial inmutable de cambios de precio.
 
 No se expone como parte de los contratos de canales; su superficie es administrativa.
 
-OpenAPI (`0.6.0-rc.1` candidato / baseline histórico `0.5.0`) publica:
+OpenAPI (`0.6.0-rc.3` candidato / baseline histórico `0.5.0`) publica:
 
 ```text
 GET  /api/v1/auditoria-precios
@@ -2338,10 +2334,10 @@ Versiones de referencia (sin confundir contrato con ejecución):
 
 ```text
 OpenAPI 3.1.0
-info.version = 0.6.0-rc.1  # contrato candidato en rama nueva
+info.version = 0.6.0-rc.3  # contrato HTTP candidato
 baseline histórico = 0.5.0
 AsyncAPI 3.0.0
-info.version = 0.6.0-rc.1  # 40 canales / 40 mensajes
+info.version = 0.6.0-rc.4  # 40 canales / 40 mensajes
 ```
 
 La candidata aún requiere implementación, transición compatible y pruebas E2E; no sustituye automáticamente un contrato consumido en producción.
@@ -2438,7 +2434,7 @@ Pendientes externos/de implementación:
 | ID | Punto | Estado |
 |---|---|---|
 | OPEN-01 | Registro efectivo de los 16 scopes/grants históricos de `api-productos` | Seguridad/G7; pendiente para acceso real |
-| OPEN-02 | Registrar y conceder `inventario:operaciones:leer` a `modulo-ventas` (candidato `0.6.0-rc.1`) | Seguridad/G7; pendiente, no operativo por el mero OpenAPI |
+| OPEN-02 | Registrar y conceder `inventario:operaciones:leer` a `modulo-ventas` (candidato `0.6.0-rc.3`) | Seguridad/G7; pendiente, no operativo por el mero OpenAPI |
 | OPEN-08 | Contract tests Ventas ↔ Inventario contra `inventory-svc` real | Implementación |
 | OPEN-09 | Consumer/provider tests Despacho ↔ Productos contra backends reales | Implementación |
 | OPEN-14 | Sincronizar prototipos HTML con los WF definitivos | Después del freeze documental |
@@ -2572,7 +2568,7 @@ Seguridad:
 - emite tokens de servicio con `aud` y `scope` para APIs propietarias;
 - permite introspección para cambios de precio según el contrato vigente.
 
-La línea base histórica consolidada es OpenAPI/AsyncAPI `0.5.0`; los archivos ejecutables contienen OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.3` como candidato. El catálogo humano de eventos corresponde a los 40 mensajes y su estado editorial no acredita despliegue.
+La línea base histórica consolidada es OpenAPI/AsyncAPI `0.5.0`; los archivos ejecutables contienen OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` como candidatas. El catálogo humano de eventos corresponde a los 40 mensajes y su estado editorial no acredita despliegue.
 
 A partir de esta versión, cualquier cambio de rutas HTTP debe realizarse primero en `contratos/http/openapi.yaml`; los cambios de mensajería deben realizarse primero en `contratos/eventos/asyncapi.yaml`; después se actualizan los documentos humanos derivados.
 
@@ -2581,7 +2577,7 @@ A partir de esta versión, cualquier cambio de rutas HTTP debe realizarse primer
 <!-- HOMOLOGACION-HTTP-0.5.0:START -->
 ## Homologación contractual HTTP 0.5.0
 
-**Referencia histórica de esta homologación:** OpenAPI `0.5.0`. **Fuente HTTP ejecutable en la rama auditada:** `contratos/http/openapi.yaml` (`0.6.0-rc.1`, candidato). El contrato asíncrono candidato está en `contratos/eventos/asyncapi.yaml` con la misma versión, sin afirmar despliegue.
+**Referencia histórica de esta homologación:** OpenAPI `0.5.0`. **Fuente HTTP ejecutable en la rama auditada:** `contratos/http/openapi.yaml` (`0.6.0-rc.3`, candidato). El contrato asíncrono candidato está en `contratos/eventos/asyncapi.yaml` (`0.6.0-rc.4`), sin afirmar despliegue.
 
 ### Catálogo comercial
 

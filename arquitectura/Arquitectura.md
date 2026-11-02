@@ -3,13 +3,13 @@
 **Fecha de actualización:** 2026-10-13
 **Repositorio de documentación:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
 **Archivo:** `arquitectura/Arquitectura.md`  
-**Contrato HTTP canónico:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.1`; referencia histórica `0.5.0`)
-**Contrato asíncrono canónico:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.3`; referencia histórica `0.5.0`)
+**Contrato HTTP canónico:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.3`; referencia histórica `0.5.0`)
+**Contrato asíncrono canónico:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.4`; referencia histórica `0.5.0`)
 **Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (referencia humana; base histórica `0.5.0`)
 **Catálogo canónico de errores:** `contratos/http/catalogo-errores.md` (códigos autoritativos para el contrato candidato)
 **Contrato humano de integración:** `contratos/http/Contrato_Api.md`  
 **Modelo conceptual:** `Modelo_Conceptual.md`  
-**Estado contractual:** línea base `0.5.0` conservada para compatibilidad; OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.3` son contratos **candidatos**. AsyncAPI `rc.3` reconcilia nombres físicos de infraestructura base con una observación histórica de Oracle; conserva los 40 mensajes y canales, operaciones, productores, consumidores, payloads, esquemas y routing keys comerciales. No acredita homologación, despliegue ni ejecución. Las decisiones internas están adoptadas, pero su implementación, despliegue y conformidad E2E no se acreditan mediante este documento.
+**Estado contractual:** línea base `0.5.0` conservada para compatibilidad; OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` son contratos **candidatos**. AsyncAPI `rc.3` reconcilia nombres físicos de infraestructura base con una observación histórica de Oracle; conserva los 40 mensajes y canales, operaciones, productores, consumidores, payloads, esquemas y routing keys comerciales. No acredita homologación, despliegue ni ejecución. Las decisiones internas están adoptadas, pero su implementación, despliegue y conformidad E2E no se acreditan mediante este documento.
 
 > Esta arquitectura es la guía de implementación del backend y de sus integraciones.  
 > Las SPEC son la fuente de verdad para reglas funcionales; `contratos/http/openapi.yaml` gobierna HTTP; `contratos/eventos/asyncapi.yaml` gobierna mensajería; `contratos/http/catalogo-errores.md` gobierna la semántica estable de `code`.
@@ -901,7 +901,7 @@ Fuente canónica:
 contratos/http/openapi.yaml
 ```
 
-La línea base **histórica** `0.5.0` utiliza OpenAPI `3.1.0` y documentaba **106 paths, 133 operaciones y 170 schemas** (`components.schemas`). Estas cifras son una fotografía de esa línea base, **no un inventario del candidato `0.6.0-rc.1`**. El contrato candidato, que también utiliza OpenAPI `3.1.0`, incorpora las superficies provisionales de B1–B4 y no se declara desplegado.
+La línea base **histórica** `0.5.0` utiliza OpenAPI `3.1.0` y documentaba **106 paths, 133 operaciones y 170 schemas** (`components.schemas`). Estas cifras son una fotografía de esa línea base, **no un inventario del candidato `0.6.0-rc.3`**. El contrato candidato, que también utiliza OpenAPI `3.1.0`, incorpora las superficies provisionales de B1–B4 y no se declara desplegado.
 
 Entre los cierres incorporados a esta línea base están:
 
@@ -1687,7 +1687,7 @@ La validación de `aud` evita que un token emitido para otra API pueda reutiliza
 
 ## 21.5. Scopes propios de Productos y Ofertas
 
-El baseline conserva **16 scopes técnicos** de `api-productos` (catálogo heredado `0.5.0`). El candidato OpenAPI `0.6.0-rc.1` propone **un scope adicional**: `inventario:operaciones:leer`, exclusivo para el cliente de servicio `modulo-ventas` al consultar `GET /api/v1/inventario/operaciones/{operationId}`. G7 aún debe registrar y conceder ese scope; documentarlo **no** equivale a un grant activo. Los 16 scopes siguientes permanecen como línea base:
+El baseline conserva **16 scopes técnicos** de `api-productos` (catálogo heredado `0.5.0`). El candidato OpenAPI `0.6.0-rc.3` propone **un scope adicional**: `inventario:operaciones:leer`, exclusivo para el cliente de servicio `modulo-ventas` al consultar `GET /api/v1/inventario/operaciones/{operationId}`. G7 aún debe registrar y conceder ese scope; documentarlo **no** equivale a un grant activo. Los 16 scopes siguientes permanecen como línea base:
 
 ```text
 catalogo:leer
@@ -3180,8 +3180,8 @@ Los principios arquitectónicos principales son:
 7. Marketplace/Chatbot solo consultan; Retail además reporta/resuelve incidencias físicas sin orquestar ventas.
 8. Catálogo mantiene perfil físico por SKU.
 9. Despacho mantiene ownership del empaque.
-10. OpenAPI `0.5.0` es la línea base histórica; `contratos/http/openapi.yaml` `0.6.0-rc.1` es la fuente HTTP candidata para B1–B4, aún no acreditada como desplegada.
-11. AsyncAPI `0.5.0` documentó 39 mensajes históricos; `contratos/eventos/asyncapi.yaml` `0.6.0-rc.3` documenta 40 canales y 40 mensajes candidatos, sin afirmar su ejecución real.
+10. OpenAPI `0.5.0` es la línea base histórica; `contratos/http/openapi.yaml` `0.6.0-rc.3` es la fuente HTTP candidata vigente, aún no acreditada como desplegada.
+11. AsyncAPI `0.5.0` documentó 39 mensajes históricos; `contratos/eventos/asyncapi.yaml` `0.6.0-rc.4` documenta 40 canales y 40 mensajes candidatos, sin afirmar su ejecución real.
 12. `contratos/http/catalogo-errores.md` gobierna los códigos estables y `contratos/eventos/catalogo-eventos.md` la lectura humana de mensajería.
 13. cada servicio aplica arquitectura por capas/puertos.
 14. no se comparten entidades ORM, repositorios ni schemas.

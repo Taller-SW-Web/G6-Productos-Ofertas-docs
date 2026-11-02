@@ -1,6 +1,6 @@
 # Matriz de pruebas de contrato e integración — Productos y Ofertas
 
-**Contrato HTTP objetivo:** OpenAPI `0.6.0-rc.2` (candidato; no prueba publicación/runtime).
+**Contrato HTTP objetivo:** OpenAPI `0.6.0-rc.3` (candidata; no prueba publicación/runtime).
 **Contrato asíncrono objetivo:** AsyncAPI `0.6.0-rc.4` (candidato; no prueba publicación/runtime).
 **Referencia histórica auditada:** PR #86, rama `nueva`, commit `c1769607f30e2cabf1449e33c877fa4ef41defe5`; esta matriz conserva los estados pendientes y actualiza la expectativa del vhost en `CT-STATIC-18`.
 **Estado:** definición documental de casos; no asignar `PASS` a pruebas de API, eventos, seguridad o integración sin ejecución reproducible.
@@ -36,7 +36,7 @@ ARCHITECTURE_INVARIANT
 
 | ID | Tipo | Resultado esperado | Estado |
 |---|---|---|---|
-| CT-STATIC-01 | STATIC_CONTRACT | YAML válido, OpenAPI 3.1.x, `info.version=0.6.0-rc.2`, `$ref` locales resolubles | PENDIENTE_EJECUCION |
+| CT-STATIC-01 | STATIC_CONTRACT | YAML válido, OpenAPI 3.1.x, `info.version=0.6.0-rc.3`, `$ref` locales resolubles | PENDIENTE_EJECUCION |
 | CT-STATIC-02 | STATIC_CONTRACT | `operationId` únicos | PENDIENTE_EJECUCION |
 | CT-STATIC-03 | STATIC_CONTRACT | `ErrorCode` de OpenAPI coincide con la tabla activa de `contratos/http/catalogo-errores.md`, incluidos `OPERACION_INVENTARIO_NO_ENCONTRADA` y `CONTEXTO_ABASTECIMIENTO_INVALIDO` | PENDIENTE_EJECUCION |
 | CT-STATIC-04 | STATIC_CONTRACT | Header canónico `X-Correlation-Id`; no introducir `X-Request-Id` alternativo | PENDIENTE_EJECUCION |
@@ -229,12 +229,58 @@ CT-G5-INV-04A y CT-G5-INV-05A son trabajo interno implementable en G6 sin espera
 
 ## 10. OPEN-09 — Despacho ↔ Productos
 
-| ID | Resultado esperado | Estado |
-|---|---|---|
-| CT-DSP-01 | Batch de datos físicos por SKU | PENDIENTE_IMPLEMENTACION |
-| CT-DSP-02 | Solo peso/dimensiones contractuales; no empaque | PENDIENTE_IMPLEMENTACION |
-| CT-DSP-03 | Solo consumidor autorizado | PENDIENTE_EJECUCION |
-| CT-DSP-04 | Sin stock/precio/pedido en respuesta física | PENDIENTE_EJECUCION |
+La consulta está homologada documentalmente el 2026-11-02. Los casos siguientes definen verificaciones; ninguno está declarado ejecutado por esta actualización. Separar estática, proveedor, consumer-provider, seguridad y E2E.
+
+### 10.1. Contrato estático
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-DSP-STATIC-01 | STATIC_CONTRACT | `consultarDatosFisicos`; request de 1–100 SKU, únicos, string no vacío; enum físico exactamente `ACTIVO`, `INACTIVO`, `BORRADOR`; `200`, `422` y `503` coherentes | PENDIENTE_EJECUCION |
+| CT-DSP-STATIC-02 | STATIC_CONTRACT | `DATOS_FISICOS_INCOMPLETOS` requiere `details.skusAfectados` no vacío; `SKU_INVALIDO` no lo requiere; ejemplo valida contra schema correspondiente | PENDIENTE_EJECUCION |
+| CT-DSP-STATIC-03 | STATIC_CONTRACT | Operación mantiene `serviceBearer`, `modulo-despacho`, `aud=api-productos`, `productos:fisicos:leer` y `pending-security-registration`; sin cambios AsyncAPI | PENDIENTE_EJECUCION |
+| CT-DSP-STATIC-04 | STATIC_CONTRACT | Respuesta `200` clasifica todos y solo los SKU solicitados una vez entre `productos[]`/`noEncontrados[]`; no expone inventario, precio, pedido ni empaque | PENDIENTE_EJECUCION |
+
+### 10.2. Contrato de proveedor
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-DSP-PROV-01 | PROVIDER_CONTRACT | SKU `ACTIVO` con perfil válido se devuelve en `productos[]` | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-02 | PROVIDER_CONTRACT | SKU `INACTIVO` con perfil válido sigue siendo existente y se devuelve con su estado | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-03 | PROVIDER_CONTRACT | SKU `BORRADOR` con perfil válido sigue siendo existente y se devuelve con su estado | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-04 | PROVIDER_CONTRACT | Perfil ausente/incompleto (peso, dimensión o `actualizadoEn`) responde `422 DATOS_FISICOS_INCOMPLETOS` con SKU afectado, no `200` parcial | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-05 | PROVIDER_CONTRACT | Peso o dimensiones no positivos/no válidos producen el error acordado, sin datos internos | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-06 | PROVIDER_CONTRACT | `actualizadoEn` ausente o inválido produce `422 DATOS_FISICOS_INCOMPLETOS` | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-07 | PROVIDER_CONTRACT | SKU realmente inexistente figura una vez en `noEncontrados[]`; INACTIVO/BORRADOR no se esconden allí | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-08 | PROVIDER_CONTRACT | Lote mixto con perfil existente incompleto devuelve 422 sin productos parciales como éxito | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-09 | PROVIDER_CONTRACT | Sin omisiones, duplicados ni SKU inesperados; identidad opaca conserva puntuación, mayúsculas y ceros iniciales | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-10 | PROVIDER_CONTRACT | 1 y 100 únicos son límites admitidos; vacío, >100 y repetidos se rechazan según contrato de request | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-11 | PROVIDER_CONTRACT | Producto padre con variantes no obtiene perfil físico vendible propio; el tratamiento/código para consultar su SKU base queda pendiente de resolución Catalog, sin inventar error | BLOQUEADA_DECISION |
+| CT-DSP-PROV-12 | PROVIDER_CONTRACT | Probar variante `ACTIVA` bajo padre `BORRADOR` e `INACTIVO`; confirmar criterio de precedencia comercial aprobado por Catalog antes de afirmar elegibilidad | BLOQUEADA_DECISION |
+
+### 10.3. Consumer-provider G2↔G6
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-DSP-CP-01 | CONSUMER_PROVIDER | G2 convierte `422 DATOS_FISICOS_INCOMPLETOS` a `422 DESP_ERROR_DATOS_FISICOS_INCOMPLETOS` conservando SKU afectados | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-CP-02 | CONSUMER_PROVIDER | Cotización F-01 exacta solo para ACTIVO con perfil válido; INACTIVO/BORRADOR usa `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE` | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-CP-03 | CONSUMER_PROVIDER | F-02 recibe solicitud solo de Ventas sobre pedido pagado, preparado y listo; estado INACTIVO/BORRADOR no rechaza por sí solo, con perfil y otras validaciones válidos | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-CP-04 | CONSUMER_PROVIDER | G2 conserva y agrupa cantidades para peso/volumen; no modifica inventario, precio ni pedido | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-CP-05 | CONSUMER_PROVIDER | G2 responde `400 DESP_ERROR_LIMITE_SKUS_EXCEDIDO` ante >100 SKU únicos antes de llamar G6 | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-CP-06 | CONSUMER_PROVIDER | Respuesta G6 con SKU omitidos/duplicados/inesperados se rechaza como `502 DESP_ERROR_RESPUESTA_PRODUCTOS_INVALIDA`; sin resultado parcial ni datos inventados | PENDIENTE_IMPLEMENTACION |
+
+### 10.4. Seguridad y E2E
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-DSP-SEC-01 | SECURITY_INTEGRATION | JWT ausente/inválido o vencido: 401 `TOKEN_INVALIDO` | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-SEC-02 | SECURITY_INTEGRATION | Audiencia distinta de `api-productos`: token rechazado | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-SEC-03 | SECURITY_INTEGRATION | Cliente fuera de allowlist es rechazado aunque tenga scope nominal | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-SEC-04 | SECURITY_INTEGRATION | Scope insuficiente: 403 `SCOPE_INSUFICIENTE` | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-SEC-05 | SECURITY_INTEGRATION | Grant G7 y credencial real `modulo-despacho` para `productos:fisicos:leer`/`api-productos` verificados antes de llamada real | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-DSP-PROV-13 | PROVIDER_CONTRACT | PostgreSQL/conexión/timeout/dependencia indisponible devuelve 503 `SERVICIO_NO_DISPONIBLE`, sin detalles SQL/tablas/credenciales | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-E2E-01 | E2E | Recorrido real G2→G6 con credenciales G7 reales, SHA provider/consumer, versiones, entorno y evidencia correlacionada | BLOQUEADA_DEPENDENCIA_EXTERNA |
+
+Códigos `DESP_ERROR_LIMITE_SKUS_EXCEDIDO` (400) y `DESP_ERROR_RESPUESTA_PRODUCTOS_INVALIDA` (502) pertenecen a G2; no se incorporan a `ErrorCode` G6. La matriz de evidencia debe registrar SHA, versiones y salida reproducible antes de asignar `PASS`.
 
 ## 11. Recuperación de preparación — Catálogo (FLOW-003 / FLOW-004 / endurecimiento contractual)
 

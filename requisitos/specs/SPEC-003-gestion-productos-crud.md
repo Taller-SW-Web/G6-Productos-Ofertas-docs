@@ -87,6 +87,16 @@ variant_id = null
 
 El padre no crea saldo ni inicialización física propia (`inventario=null`). Cada SKU de variante se inicializa y recupera desde SPEC-004. El endpoint de producto rechaza reintentar inventario si `tiene_variantes=true`.
 
+## 4.1. Consulta física por Despacho (homologación G2 H4)
+
+Para producto simple, `sku_base` identifica la unidad vendible y Catálogo entrega a Despacho su perfil físico vigente mediante `POST /api/v1/productos/datos-fisicos/consulta`, conforme al [OpenAPI](../../contratos/http/openapi.yaml) y al [acuerdo G2–G6 H4](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md). El request contiene entre 1 y 100 SKU únicos. Los SKU son identificadores opacos: se preservan caracteres, mayúsculas y ceros iniciales.
+
+La respuesta `200` clasifica cada SKU solicitado exactamente una vez entre `productos[]` y `noEncontrados[]`; no admite omisiones, duplicados ni SKU inesperados. `noEncontrados[]` expresa ausencia de identidad consultable, no un estado comercial. Un SKU existente `ACTIVO`, `INACTIVO` o `BORRADOR` no se oculta como inexistente por su estado. Si el perfil de un SKU existente no tiene peso, dimensiones o `actualizadoEn`, o algún valor incumple el contrato, la operación responde `422 DATOS_FISICOS_INCOMPLETOS` con `details.skusAfectados`; no devuelve un lote parcial como éxito. Fallos técnicos de conexión, timeout, PostgreSQL o dependencia indisponible responden `503 SERVICIO_NO_DISPONIBLE`. No se divulgan detalles internos.
+
+G6 proporciona estado y medidas intrínsecas; G2 decide elegibilidad y logística. En F-01, solo `ACTIVO` con perfil válido permite cotización exacta; G2 trata `INACTIVO`/`BORRADOR` como `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE`. En F-02, `INACTIVO`/`BORRADOR` no causan rechazo automático para una solicitud autenticada de Ventas sobre pedido declarado pagado, preparado y listo para entrega, sujeto a perfil válido y demás validaciones G2. Esto no habilita ventas ni altera las condiciones G6 para activar/revivir productos.
+
+Este endpoint solo entrega perfiles de unidades vendibles. `sku_base` de un producto con variantes no representa unidad física vendible; la homologación no crea perfil para el padre ni fija un código HTTP específico para esa consulta. El tratamiento técnico de ese caso queda pendiente del owner Catalog. El permiso G7, implementación y E2E se rastrean separadamente.
+
 ## 5. Activación y operaciones administrativas de preparación
 
 `BORRADOR -> ACTIVO` requiere:

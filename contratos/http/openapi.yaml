@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: API — Productos y Ofertas
-  version: 0.6.0-rc.2
+  version: 0.6.0-rc.3
   summary: Contrato HTTP de integración y administración del módulo Productos y Ofertas
   description: Contrato HTTP candidato actualizado para acuerdos internos G6 H4; no implica grants ni implementación. La semántica de recomendaciones fija precio mínimo efectivo y disponibilidad positiva por SKU sin agregar ubicaciones. Contrato HTTP consolidado P0/P1/P2 del módulo Productos y Ofertas. P2 cierra la recepción de traslados internos de Inventario
     y la autorización local del operador de inventario. La topología RabbitMQ física se documenta en AsyncAPI 0.6.0-rc.4 y contratos/eventos/rabbitmq-topologia.md.
@@ -4731,8 +4731,10 @@ paths:
       x-scope-registration-status: pending-security-registration
       security:
       - serviceBearer: []
-      description: Productos es dueño de peso y dimensiones físicas del SKU. Despacho es dueño del empaque y calcula volumen/peso operativo
-        de despacho.
+      description: >-
+        Productos es dueño del peso y las dimensiones físicas de cada SKU vendible; Despacho es dueño del empaque y calcula el peso y volumen operativos.
+        El request contiene de 1 a 100 SKU únicos y opacos: conservar literalmente caracteres, mayúsculas y ceros iniciales. En una respuesta 200, cada SKU solicitado aparece exactamente una vez, y solo una vez, entre productos y noEncontrados; no se admiten omisiones ni SKU inesperados. noEncontrados significa que la identidad SKU no existe en el dominio consultable; no oculta estados INACTIVO o BORRADOR. Un SKU existente puede ser devuelto con cualquiera de esos estados si su perfil físico es válido. La operación no cambia inventario, precio ni pedidos.
+        Para F-01, G2 permite cotización exacta solo con estado ACTIVO y perfil válido; INACTIVO o BORRADOR produce en G2 422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE. Para F-02, esos estados no son por sí solos motivo de rechazo si Ventas solicita el despacho de un pedido declarado pagado, preparado y listo para entrega, y se cumplen las demás validaciones. Esta excepción no habilita ventas ni cambia la activación comercial G6. Un BORRADOR puede carecer de perfil completo. Si falta o es inválido el peso, una dimensión o actualizadoEn de un SKU existente, G6 responde 422 DATOS_FISICOS_INCOMPLETOS para el lote, nunca 200 parcial, con details.skusAfectados. Fallos de conexión, timeout, PostgreSQL o dependencia no disponible responden 503 SERVICIO_NO_DISPONIBLE. No incluir detalles SQL o internos. El SKU base de un producto con variantes no es unidad vendible ni se transforma en perfil despachable; su código de rechazo específico queda pendiente de resolución técnica de Catalog.
       parameters:
       - $ref: '#/components/parameters/CorrelationId'
       requestBody:
@@ -4743,30 +4745,41 @@ paths:
               $ref: '#/components/schemas/ConsultaDatosFisicosRequest'
       responses:
         '200':
-          description: Datos físicos disponibles y SKU no encontrados
+          description: Clasificación completa de SKU existentes con perfil físico válido y SKU inexistentes. Cada SKU solicitado figura exactamente una vez entre ambas listas; estados comerciales no se convierten en noEncontrados.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConsultaDatosFisicosResponse'
         '422':
-          description: Solicitud inválida
+          description: SKU malformado o existente con perfil físico incompleto/inválido. Los detalles de SKU afectados son obligatorios únicamente para DATOS_FISICOS_INCOMPLETOS.
           content:
             application/problem+json:
               schema:
-                allOf:
-                - $ref: '#/components/schemas/Problem'
-                - type: object
-                  properties:
-                    status:
-                      type: integer
-                      const: 422
-                    code:
-                      type: string
-                      enum: &id145
-                      - SKU_INVALIDO
-                  required:
-                  - status
-                  - code
+                oneOf:
+                - allOf:
+                  - $ref: '#/components/schemas/Problem'
+                  - type: object
+                    properties:
+                      status:
+                        type: integer
+                        const: 422
+                      code:
+                        type: string
+                        const: SKU_INVALIDO
+                    required: [status, code]
+                - allOf:
+                  - $ref: '#/components/schemas/Problem'
+                  - type: object
+                    properties:
+                      status:
+                        type: integer
+                        const: 422
+                      code:
+                        type: string
+                        const: DATOS_FISICOS_INCOMPLETOS
+                      details:
+                        $ref: '#/components/schemas/DetallesDatosFisicosIncompletos'
+                    required: [status, code, details]
               examples:
                 sku_invalido:
                   summary: SKU inválido
@@ -4775,6 +4788,16 @@ paths:
                     title: SKU inválido
                     status: 422
                     code: SKU_INVALIDO
+                    correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+                datos_fisicos_incompletos:
+                  summary: Perfil físico inválido para SKU existentes
+                  value:
+                    type: /errores/datos-fisicos-incompletos
+                    title: Datos físicos incompletos
+                    status: 422
+                    code: DATOS_FISICOS_INCOMPLETOS
+                    details:
+                      skusAfectados: ["SKU-001", "000ABC"]
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
         '400':
           description: Solicitud inválida
@@ -4920,7 +4943,9 @@ paths:
         '400': *id142
         '401': *id143
         '403': *id144
-        '422': *id145
+        '422':
+        - SKU_INVALIDO
+        - DATOS_FISICOS_INCOMPLETOS
         '500': *id146
         '503': *id147
       x-route-basis: existing-contract
@@ -21753,17 +21778,35 @@ components:
       - alto
     ConsultaDatosFisicosRequest:
       type: object
+      description: >-
+        Entre 1 y 100 SKU únicos. Los SKU son identificadores opacos; preservar literalmente sus caracteres, mayúsculas y ceros iniciales.
       properties:
         skus:
           type: array
           items:
             type: string
+            minLength: 1
           minItems: 1
           maxItems: 100
+          uniqueItems: true
       required:
       - skus
+    DetallesDatosFisicosIncompletos:
+      type: object
+      properties:
+        skusAfectados:
+          type: array
+          description: SKU existentes cuyo perfil está ausente, incompleto o inválido.
+          items:
+            type: string
+          minItems: 1
+          uniqueItems: true
+      required: [skusAfectados]
+      additionalProperties: false
     DatosFisicosSku:
       type: object
+      description: Perfil intrínseco de un SKU vendible. estado informa el estado de la entidad; no decide elegibilidad logística.
+
       properties:
         sku:
           type: string
@@ -21772,6 +21815,7 @@ components:
           enum:
           - ACTIVO
           - INACTIVO
+          - BORRADOR
         pesoKg:
           type: number
           exclusiveMinimum: 0
@@ -21788,6 +21832,8 @@ components:
       - actualizadoEn
     ConsultaDatosFisicosResponse:
       type: object
+      description: Respuesta exitosa íntegra. Cada SKU del request aparece exactamente una vez entre productos y noEncontrados, sin SKU omitidos, duplicados o inesperados. noEncontrados expresa ausencia de identidad, no estado comercial. Si un perfil físico existente es incompleto/inválido, se responde 422 sin resultados parciales.
+
       properties:
         productos:
           type: array
