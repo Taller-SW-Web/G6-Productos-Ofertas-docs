@@ -10,6 +10,8 @@ info:
     de upsert masivo Catalog. Este cambio de payload es incompatible con consumidores antiguos y requiere despliegue coordinado antes de emitir.
     La topología base fue observada históricamente en Oracle el 2026-10-19; la observación no acredita homologación bilateral, despliegue,
     conectividad AMQP ni integración E2E. Retry/DLX permanece sin aprobación ni aprovisionamiento.
+    Addendum aprobado 2026-11-03: solo catalog.bulk.upsert.requested acepta schema_version 1 y 2 para resolucion transaccional de SKU;
+    los resultados y demas mensajes conservan las versiones anteriores. template_version de archivo permanece 2.
 defaultContentType: application/json
 x-delivery-semantics: at-least-once
 x-physical-topology-status: base-observed-not-homologated
@@ -1210,6 +1212,161 @@ components:
         detail: ACTUALIZACION requiere producto_id y variant_id cuando se actualiza una variante; rechazar antes de publicar.
       - name: duplicate-row-identity-with-different-payload
         detail: Misma row_operation_id con payload semántico distinto produce IDEMPOTENCY_CONFLICT.
+    CatalogBulkUpsertRequestedDataV2:
+      type: object
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+        batch_operation_id:
+          type: string
+          format: uuid
+        template_version:
+          type: integer
+          const: 2
+        mode:
+          type: string
+          enum:
+          - ALTA
+          - ACTUALIZACION
+        rows:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            properties:
+              row_number:
+                type: integer
+                minimum: 2
+              row_operation_id:
+                type: string
+                format: uuid
+              producto_id:
+                type:
+                - string
+                - 'null'
+              sku_base:
+                type: string
+                minLength: 1
+              product:
+                type: object
+              variant_id:
+                type:
+                - string
+                - 'null'
+                minLength: 1
+              variant:
+                oneOf:
+                - type: object
+                - type: 'null'
+              sku_variante:
+                type:
+                - string
+                - 'null'
+                minLength: 1
+                description: Selector opaco para ACTUALIZACION; Catalog resuelve y bloquea la variante dentro del producto y de
+                  la transaccion.
+            required:
+            - row_number
+            - row_operation_id
+            - producto_id
+            - sku_base
+            - product
+            - variant
+            additionalProperties: false
+      required:
+      - batch_id
+      - batch_operation_id
+      - template_version
+      - mode
+      - rows
+      additionalProperties: false
+      description: 'Comando v2 aprobado internamente el 2026-11-03. ACTUALIZACION de variante requiere variant_id o sku_variante;
+        si ambos existen deben corresponder a la misma variante del producto. Catalog resuelve y bloquea dentro de la transaccion,
+        verifica producto.catalogVersion y variante.catalogVersion independientes, y evita objetivos duplicados en la familia.
+        ALTA conserva variant.sku del DTO; sku_variante externo debe estar ausente o null. Simple conserva variant=null y selectores
+        ausentes o null. No requiere consulta HTTP previa, permisos nuevos ni cambios de PricingCatalogContext. El payload original
+        no se reemplaza por el ID resuelto; replay consulta resultado persistido antes de revalidar versiones. Variante ausente/ajena:
+        VARIANTE_NO_ENCONTRADA; selectores contradictorios: VALIDACION; version obsoleta: VERSION_CONFLICT. Misma identidad con
+        otra intencion: IDEMPOTENCY_CONFLICT. Rechazo de negocio revierte la familia; fallo tecnico revierte el chunk sin resultado
+        terminal. template_version sigue siendo 2. La aprobacion no acredita implementacion, grants ni despliegue.'
+      allOf:
+      - if:
+          properties:
+            mode:
+              const: ALTA
+          required:
+          - mode
+        then:
+          properties:
+            rows:
+              items:
+                properties:
+                  producto_id:
+                    type: 'null'
+                  variant_id:
+                    type: 'null'
+                  product:
+                    $ref: ../http/openapi.yaml#/components/schemas/ProductoCreateRequest
+                  variant:
+                    oneOf:
+                    - $ref: ../http/openapi.yaml#/components/schemas/VarianteCreateRequest
+                    - type: 'null'
+                  sku_variante:
+                    type: 'null'
+      - if:
+          properties:
+            mode:
+              const: ACTUALIZACION
+          required:
+          - mode
+        then:
+          properties:
+            rows:
+              items:
+                properties:
+                  producto_id:
+                    type: string
+                    minLength: 1
+                  product:
+                    allOf:
+                    - $ref: ../http/openapi.yaml#/components/schemas/ProductoUpdateRequest
+                    - required:
+                      - catalogVersion
+                  variant:
+                    oneOf:
+                    - allOf:
+                      - $ref: ../http/openapi.yaml#/components/schemas/VarianteUpdateRequest
+                      - required:
+                        - catalogVersion
+                    - type: 'null'
+                allOf:
+                - if:
+                    properties:
+                      variant:
+                        type: object
+                    required:
+                    - variant
+                  then:
+                    anyOf:
+                    - properties:
+                        variant_id:
+                          type: string
+                          minLength: 1
+                      required:
+                      - variant_id
+                    - properties:
+                        sku_variante:
+                          type: string
+                          minLength: 1
+                      required:
+                      - sku_variante
+                  else:
+                    properties:
+                      variant_id:
+                        type: 'null'
+                      sku_variante:
+                        type: 'null'
     CatalogBulkUpsertCompletedData:
       type: object
       properties:
@@ -2377,7 +2534,9 @@ components:
               const: bulk-svc
             schema_version:
               type: integer
-              const: 1
+              enum:
+              - 1
+              - 2
             kind:
               type: string
               const: command
@@ -2385,14 +2544,32 @@ components:
               type: string
               const: catalog.bulk.upsert.requested
             data:
-              $ref: '#/components/schemas/CatalogBulkUpsertRequestedData'
+              type: object
           required:
           - producer
           - kind
           - name
           - data
+        - if:
+            properties:
+              schema_version:
+                const: 1
+            required:
+            - schema_version
+          then:
+            properties:
+              data:
+                $ref: '#/components/schemas/CatalogBulkUpsertRequestedData'
+          else:
+            properties:
+              data:
+                $ref: '#/components/schemas/CatalogBulkUpsertRequestedDataV2'
       x-exchange: po.comandos.x
       x-routing-key: catalog.bulk.upsert.requested
+      description: Aceptacion dual v1/v2 exclusivamente para este comando. Desplegar Catalog compatible antes de que Bulk emita
+        v2. No reescribir Outbox antiguo ni reutilizar una row_operation_id con payload convertido. Resultados completed/rejected
+        conservan schema_version=1. Nombres, routing key, exchange y template_version=2 permanecen iguales. Productor Bulk pendiente
+        de adaptacion por Marco.
     CatalogBulkUpsertCompleted:
       name: catalog.bulk.upsert.completed
       title: catalog.bulk.upsert.completed

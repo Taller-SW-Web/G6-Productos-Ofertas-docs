@@ -197,7 +197,7 @@ La exportación no es snapshot ACID multi-servicio: captura `requested_at` UTC, 
 
 ## Plantilla Bulk v2 — encabezados y transformación normativa
 
-La siguiente tabla fija los **16 encabezados exactos**, su orden y la regla de transformación. CSV UTF-8 debe usar coma y comillas dobles RFC 4180; XLSX debe contener una hoja declarada, sin macros. Una fila representa un SKU vendible. No se agregan columnas alias ni campos al contrato AsyncAPI.
+La siguiente tabla fija los **16 encabezados exactos**, su orden y la regla de transformación. CSV UTF-8 debe usar coma y comillas dobles RFC 4180; XLSX debe contener una hoja declarada, sin macros. Una fila representa un SKU vendible. No se agregan columnas alias; el addendum aprobado permite solo rows[].sku_variante en el comando AsyncAPI v2.
 
 | # | Encabezado exacto | Tipo/obligatoriedad | Regla y transformación |
 |---:|---|---|---|
@@ -205,7 +205,7 @@ La siguiente tabla fija los **16 encabezados exactos**, su orden y la regla de t
 | 2 | `producto_id` | ID opaco de Catalog | Vacío en ALTA; obligatorio en ACTUALIZACION; se asigna a `rows[].producto_id`. |
 | 3 | `catalog_version` | JSON de versiones | Vacío en ALTA. En actualización: `{"producto":3,"variante":2}` o `{"producto":3,"variante":null}`; `producto` es entero no negativo obligatorio y `variante` entero no negativo o null. Se transforma a `product.catalogVersion` y, al actualizar variante, `variant.catalogVersion`. Versiones de padre e hija no se sustituyen entre sí. |
 | 4 | `sku_base` | Texto no vacío, obligatorio | Identificador de agrupación del producto. En ALTA se asigna al campo externo `sku_base` y a `product.skuBase`; en ACTUALIZACION se verifica contra el producto existente y no se recodifica. |
-| 5 | `sku_variante` | Texto | Simple: vacío; variante: SKU explícito, único y no vacío. ALTA → `variant.sku`. ACTUALIZACION: no se envía SKU en DTO de variante; resolver SKU a `variant_id` mediante lectura contractual autorizada de Catalog. La consulta actual exige identidad `GESTOR_COMERCIAL`, no autorizada a Bulk. Requiere allowlist interna restringida conforme a DEC-G6-INT-01, verificación de producto padre/SKU, rechazo por ausencia/ambigüedad/inconsistencia y revalidación en la transacción de Catalog. No reenviar JWT de usuario, inventar principal ni consultar SQL cross-schema. Pendiente de Poma. |
+| 5 | `sku_variante` | Texto | Simple: vacío; variante: SKU explícito, único y no vacío. ALTA → `variant.sku`. ACTUALIZACION: no se envía SKU dentro del DTO de variante; el comando schema_version=2 lo lleva en `rows[].sku_variante`. Catalog resuelve autoritativamente variant_id dentro de la misma transacción, valida pertenencia al producto y versiones independientes. variant_id sigue como alternativa; si llegan ambos deben coincidir. No requiere HTTP previo, permisos G7 nuevos, JWT del usuario ni SQL cross-schema. El comando v1 conserva su selector variant_id obligatorio. |
 | 6 | `nombre` | Texto | Obligatorio no vacío en ALTA; se asigna a `product.nombre`; en actualización solo se envía si cambia. |
 | 7 | `descripcion` | Texto | Obligatoria no vacía en ALTA; se asigna a `product.descripcion`; vacía en ACTUALIZACION significa sin cambio, no borrado. |
 | 8 | `categoria_id` | ID opaco Taxonomy | Obligatorio en archivo; ALTA → `product.categoriaId`; actualización se verifica y puede mapearse al campo permitido del DTO si se modifica. Catalog revalida maestro. |
@@ -223,9 +223,9 @@ La siguiente tabla fija los **16 encabezados exactos**, su orden y la regla de t
 - Máximo **10 485 760 bytes** por archivo, **5 000 filas de datos** y **50 MiB** de contenido XLSX descomprimido. Rechazar excesos, inconsistencias y contenido activo antes de producir efectos. XLSX: una hoja declarada, sin macros; CSV: UTF-8.
 - Cabeceras literales exactas y orden fijo como la tabla. IDs/SKU son texto opaco (no normalizar a UUID ni número). JSON de celda debe parsear. Rechazar fila vacía intermedia, SKU vendible duplicado en el archivo, fórmulas, macros, vínculos externos peligrosos, XLSX malformado u hoja adicional.
 - Filas del mismo `sku_base` forman una familia contigua; todos los datos del padre deben concordar. Producto simple: una fila, sin `sku_variante` y con `atributos_variante` vacía; esta celda se transforma a `variant=null` en AsyncAPI. Producto con variantes: una fila por variante vendible, SKU distinto, combinación identificadora distinta. El padre con variantes no constituye SKU vendible ni saldo.
-- Las familias no se dividen al particionar mensajes. Toda fila tiene `row_number` de archivo y un `row_operation_id` UUID que Bulk genera y persiste antes de publicación, estable para esa fila lógica entre reintentos; no es una cabecera CSV. El archivo se representa con un `batch_id`; cada comando/chunk con un `batch_operation_id` UUID distinto, persistido antes de publicación y estable para ese comando entre reintentos; cada `row_operation_id` es estable para su fila según su alcance contractual. El `operation_id` del envelope es el `batch_operation_id` del chunk y `correlation_id` permanece estable para el batch. El registro durable de Outbox conserva exactamente su `message_id`, payload e identidad de operación cuando se reintenta su publicación. Mensajes distintos pueden representar una operación semántica ya procesada: el consumidor mantiene idempotencia por identidad de operación, sin depender exclusivamente de `message_id`. Persistir la relación batch→chunks→filas/row_operation_id→correlación→resultado para reanudación y consolidación. Usar campos existentes de envelope, mensajes y workflow; no sumar campos AsyncAPI ni eventos.
+- Las familias no se dividen al particionar mensajes. Toda fila tiene `row_number` de archivo y un `row_operation_id` UUID que Bulk genera y persiste antes de publicación, estable para esa fila lógica entre reintentos; no es una cabecera CSV. El archivo se representa con un `batch_id`; cada comando/chunk con un `batch_operation_id` UUID distinto, persistido antes de publicación y estable para ese comando entre reintentos; cada `row_operation_id` es estable para su fila según su alcance contractual. El `operation_id` del envelope es el `batch_operation_id` del chunk y `correlation_id` permanece estable para el batch. El registro durable de Outbox conserva exactamente su `message_id`, payload e identidad de operación cuando se reintenta su publicación. Mensajes distintos pueden representar una operación semántica ya procesada: el consumidor mantiene idempotencia por identidad de operación, sin depender exclusivamente de `message_id`. Persistir la relación batch→chunks→filas/row_operation_id→correlación→resultado para reanudación y consolidación. Usar campos existentes de envelope, mensajes y workflow; no sumar eventos; la unica extension de selector AsyncAPI autorizada es rows[].sku_variante en el comando schema_version=2.
 - Medir el envelope serializado completo en UTF-8. Cada comando debe ser menor o igual a **1 048 576 bytes**. Empaquetar familias completas de `sku_base` en orden estable; crear nuevo chunk solo entre familias. Si una familia sola excede el máximo, rechazarla antes de publicación; no fragmentarla ni elevar límite. `mode` es homogéneo dentro de cada comando. Un solo `operacion` por archivo es regla de plantilla v2, no una obligación deducible solo de AsyncAPI.
-- `batch_operation_id` identifica intención de comando/chunk; al reintentar conserva ID y payload. `row_operation_id` se conserva por fila lógica. Igual row ID + mismo payload semántico reproduce resultado sin efectos; otro payload produce `IDEMPOTENCY_CONFLICT`; cambiar `message_id` no duplica efecto. `completed` describe el comando procesado y sus resultados por fila, que pueden incluir rechazos; `rejected` es rechazo previo al procesamiento por fila. Se conservan `CatalogBulkUpsertRequestedData`, `CatalogBulkUpsertCompletedData`, `CatalogBulkUpsertRejectedData` y las referencias DTO existentes de AsyncAPI 0.6.0-rc.4/OpenAPI 0.6.0-rc.2; no se agregan eventos, columnas o campos.
+- `batch_operation_id` identifica intención de comando/chunk; al reintentar conserva ID y payload. `row_operation_id` se conserva por fila lógica. Igual row ID + mismo payload semántico reproduce resultado sin efectos; otro payload produce `IDEMPOTENCY_CONFLICT`; cambiar `message_id` no duplica efecto. `completed` describe el comando procesado y sus resultados por fila, que pueden incluir rechazos; `rejected` es rechazo previo al procesamiento por fila. Se conservan `CatalogBulkUpsertRequestedData`, `CatalogBulkUpsertCompletedData`, `CatalogBulkUpsertRejectedData` y las referencias DTO existentes de AsyncAPI 0.6.0-rc.4/OpenAPI 0.6.0-rc.2; no se agregan eventos ni columnas CSV; el addendum v2 siguiente agrega solo el selector de mensaje rows[].sku_variante.
 
 ### Transformación por modo y versiones
 
@@ -251,7 +251,7 @@ Los ejemplos usan identificadores opacos de las fixtures de AsyncAPI (por ejempl
 | Cabecera ausente, reordenada, alias o columna extra; fila no tiene exactamente 16 celdas | Rechazar plantilla con `PLANTILLA_INCOMPATIBLE`. |
 | JSON inválido, atributo sin `caracteristica_id`/`nombre`/`valor`, o sin `valor_id` explícito en la plantilla | Rechazar fila/plantilla sin emitir comandos. |
 | SKU duplicado o dos filas simples para un producto simple; variante sin SKU/identificador/imagen requerida | Rechazar fila/familia; no transformar alta en actualización. |
-| ACTUALIZACION sin producto_id/catalog_version, familia con distintas versiones parentales, variante ausente/ambigua o de otro padre | Rechazar la fila/familia; la variante requiere lectura Catalog autorizada y revalidación transaccional. |
+| ACTUALIZACION sin producto_id/catalog_version, familia con distintas versiones parentales, variante ausente/ambigua o de otro padre | Rechazar la fila/familia; Catalog resuelve la variante y revalida dentro de la transaccion; no se exige lectura HTTP previa. |
 | ACTUALIZACION con `precio_regular` informado o cambios de SKU/estructura/identificadores de variante | Rechazar conforme al error contractual existente; no mutar Catalog/Pricing. |
 | Archivo > 10 485 760 bytes, > 5 000 filas, XLSX > 50 MiB expandido, macros, fórmulas o contenido activo | Rechazar archivo antes de efectos con el error HTTP existente aplicable. |
 | `stock_inicial > 0` sin ubicación verificable o con ajuste Bulk aún no operativo | No declarar INVENTARIO completado ni inventar ubicación; documentar la divergencia de inicialización más abajo. |
@@ -268,9 +268,35 @@ Los ejemplos usan identificadores opacos de las fixtures de AsyncAPI (por ejempl
 
 | Responsable | Pendiente verificable |
 |---|---|
-| Poma / Catalog | Handler funcional `catalog.bulk.upsert.requested`; upsert de padre una sola vez por familia; lectura interna autorizada SKU→variant_id con allowlist DEC-G6-INT-01; revalidación e idempotencia transaccional. |
+| Poma / Catalog | Handler funcional `catalog.bulk.upsert.requested`; upsert de padre una sola vez por familia; resolucion transaccional interna SKU→variant_id para comando v2, compatibilidad v1, revalidacion e idempotencia; sin endpoints ni permisos adicionales. |
 | Vera / Pricing | Consumidor de `pricing.product.initialization.requested`, persistencia idempotente y resultados oficiales. No flujo paralelo de importación ni inicialización duplicada por Bulk. |
 | López / Taxonomy | Lecturas de detalle/esquema de tipos, características, asociaciones y valores conforme a endpoints existentes en OpenAPI que requiere CatalogMasterClient. |
 | Taco / Inventory | Corregir divergencia de inicialización sin ubicación; contrato/handler de ajuste masivo de stock; resultados e idempotencia. |
 | Marco / Bulk | Storage privado, API HTTP/worker de Bulk, parser, límite 1 MiB, chunking durable y consolidación por fila/dominio. |
 | Owners de integración | Adaptadores AMQP y pruebas provider/consumer, broker aislado y E2E. Sin declaración de homologación, despliegue o funcionalidad por publicar esta SPEC/fixtures. |
+
+## Addendum aprobado — selector transaccional Bulk → Catalog (2026-11-03)
+
+La decision interna aprobada sustituye la resolucion HTTP previa de variantes. Solo
+`catalog.bulk.upsert.requested` acepta `schema_version: 1 | 2`, mismo nombre y
+routing key; el archivo conserva `template_version: 2` y las 16 columnas existentes.
+AsyncAPI discrimina los schemas por version; v1 conserva su payload estricto sin
+`sku_variante`. V2 admite `variant_id` y/o `sku_variante` externos al DTO de variante.
+En ACTUALIZACION de variante se exige al menos un selector; si ambos llegan deben
+coincidir y pertenecer al padre. ALTA mantiene SKU en VarianteCreateRequest; simple
+usa variant=null y no requiere selectores. No se modifican DTO HTTP ni PricingCatalogContext.
+
+Las versiones esperadas se mantienen en `product.catalogVersion` y
+`variant.catalogVersion`, enteros no negativos independientes. Catalog bloquea
+padre y variante, valida pertenencia/identidad y evita actualizar dos veces el
+mismo objetivo en una familia. SKU inexistente/ajeno → VARIANTE_NO_ENCONTRADA;
+selectores contradictorios → VALIDACION; version obsoleta → VERSION_CONFLICT.
+Negocio revierte la familia; fallo tecnico revierte el chunk sin resultado terminal.
+
+Replay recupera primero el resultado persistido; no revalida la version ya aplicada.
+No se reemplaza el payload original con el ID resuelto ni se convierte Outbox antiguo
+a v2. Misma identidad con otro payload → IDEMPOTENCY_CONFLICT. Catalog debe aceptar
+v1/v2 antes del cambio de productor de Marco; resultados conservan schema_version=1.
+Pruebas: v1/v2, ALTA/simple, SKU valido/inexistente/ajeno, selectores inconsistentes,
+versiones, objetivos duplicados, concurrencia, replay y BULK-JOINT. La aprobacion
+documental no acredita implementacion de Bulk, homologacion externa ni despliegue.

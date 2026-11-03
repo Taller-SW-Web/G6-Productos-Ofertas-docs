@@ -211,9 +211,15 @@ class AsyncApiOracleTopologyRegression(unittest.TestCase):
             envelope = message["payload"]["allOf"][0]["$ref"]
             self.assertEqual(envelope, "#/components/schemas/MessageEnvelope", message_name)
             payload = message["payload"]["allOf"][1]
-            self.assertEqual(payload["properties"]["data"]["$ref"], f"#/components/schemas/{schema_name}", message_name)
-            self.assertEqual(payload["properties"]["schema_version"]["const"], schema_version, message_name)
-            self.assertNotEqual(payload["properties"]["data"]["$ref"], "#/components/schemas/GenericData")
+            if message_name == "CatalogBulkUpsertRequested":
+                self.assertEqual(payload["properties"]["schema_version"]["enum"], [1, 2])
+                selector = message["payload"]["allOf"][2]
+                self.assertEqual(selector["then"]["properties"]["data"]["$ref"], f"#/components/schemas/{schema_name}")
+                self.assertEqual(selector["else"]["properties"]["data"]["$ref"], "#/components/schemas/CatalogBulkUpsertRequestedDataV2")
+            else:
+                self.assertEqual(payload["properties"]["data"]["$ref"], f"#/components/schemas/{schema_name}", message_name)
+                self.assertEqual(payload["properties"]["schema_version"]["const"], schema_version, message_name)
+                self.assertNotEqual(payload["properties"]["data"]["$ref"], "#/components/schemas/GenericData")
             channel = next(c for c in self.current["channels"].values() if c["address"] == routing_key)
             self.assertEqual(channel["x-exchange"], exchange, message_name)
 
