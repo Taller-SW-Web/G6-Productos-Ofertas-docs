@@ -255,7 +255,7 @@ La consulta está homologada documentalmente el 2026-11-02. Los casos siguientes
 | CT-DSP-PROV-09 | PROVIDER_CONTRACT | Sin omisiones, duplicados ni SKU inesperados; identidad opaca conserva puntuación, mayúsculas y ceros iniciales | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-PROV-10 | PROVIDER_CONTRACT | 1 y 100 únicos son límites admitidos; vacío, >100 y repetidos se rechazan según contrato de request | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-PROV-11 | PROVIDER_CONTRACT | Consultar SKU base de producto con variantes no crea perfil padre; G6 acepta lote rechazado con `422 SKU_INVALIDO` y `details.skusAfectados` obligatorio, no vacío, único y preservado literalmente | PENDIENTE_G2_CONFIRMACION |
-| CT-DSP-PROV-12 | PROVIDER_CONTRACT | Probar variante `ACTIVA` bajo padre `BORRADOR` e `INACTIVO`; confirmar criterio de precedencia comercial aprobado por Catalog antes de afirmar elegibilidad | BLOQUEADA_DECISION |
+| CT-DSP-PROV-12 | PROVIDER_CONTRACT | D-G2-01: verificar variante `ACTIVA` bajo padre `BORRADOR` e `INACTIVO` conforme a precedencia comercial; Backend #162 acredita implementación y pruebas de Catalog | IMPLEMENTADA_PROBADA_BACKEND_162; PENDIENTE_PRUEBAS_CONJUNTAS_G2_G6 |
 
 ### 10.3. Consumer-provider G2↔G6
 
