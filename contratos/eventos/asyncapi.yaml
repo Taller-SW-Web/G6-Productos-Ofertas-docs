@@ -2568,8 +2568,7 @@ components:
       x-routing-key: catalog.bulk.upsert.requested
       description: Aceptacion dual v1/v2 exclusivamente para este comando. Desplegar Catalog compatible antes de que Bulk emita
         v2. No reescribir Outbox antiguo ni reutilizar una row_operation_id con payload convertido. Resultados completed/rejected
-        conservan schema_version=1. Nombres, routing key, exchange y template_version=2 permanecen iguales. Productor Bulk pendiente
-        de adaptacion por Marco.
+        conservan schema_version=1. Nombres, routing key, exchange y template_version=2 permanecen iguales. Consumidor Catalog v1/v2 implementado en Backend PR #162; CI #41717588245 PASS (18/18 jobs), con productor v2 explícito de fixture. Productor Bulk v2 real e integración completa pendientes de verificación; no inferir despliegue.
     CatalogBulkUpsertCompleted:
       name: catalog.bulk.upsert.completed
       title: catalog.bulk.upsert.completed

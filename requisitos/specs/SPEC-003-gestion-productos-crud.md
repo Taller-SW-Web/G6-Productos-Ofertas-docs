@@ -95,7 +95,7 @@ La respuesta `200` clasifica cada SKU solicitado exactamente una vez entre `prod
 
 G6 proporciona estado y medidas intrínsecas; G2 decide elegibilidad y logística. En F-01, solo `ACTIVO` con perfil válido permite cotización exacta; G2 trata `INACTIVO`/`BORRADOR` como `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE`. En F-02, `INACTIVO`/`BORRADOR` no causan rechazo automático para una solicitud autenticada de Ventas sobre pedido declarado pagado, preparado y listo para entrega, sujeto a perfil válido y demás validaciones G2. Esto no habilita ventas ni altera las condiciones G6 para activar/revivir productos.
 
-Este endpoint solo entrega perfiles de unidades vendibles. `sku_base` de un producto con variantes no representa unidad física vendible; la homologación no crea perfil para el padre ni fija un código HTTP específico para esa consulta. El tratamiento técnico de ese caso queda pendiente del owner Catalog. El permiso G7, implementación y E2E se rastrean separadamente.
+Este endpoint solo entrega perfiles de unidades vendibles. `sku_base` de un producto con variantes no representa unidad física vendible y no crea un perfil para el padre. Para esa consulta G6 aceptó responder `422 SKU_INVALIDO` y rechazar el lote completo; `details.skusAfectados` es obligatorio, no vacío, sin duplicados y conserva literalmente todos los SKU afectados. G2 traduce a `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE` en F-01 y F-02, conservando la lista. Solo queda pendiente la confirmación de G2 sobre precedencia de errores en lotes mixtos; véase el [acuerdo G2–G6](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md). Permisos G7, integración autenticada y E2E se rastrean separadamente.
 
 ## 5. Activación y operaciones administrativas de preparación
 
@@ -134,7 +134,7 @@ Esta sección concreta las reglas funcionales de Catálogo y prevalece sobre cua
 
 ### Elegibilidad comercial
 
-La misma regla aplica a `MARKETPLACE`, `CHATBOT`, `RETAIL` y `VENTAS`: un producto simple `ACTIVO` expone `sku_base`; un producto con variantes se expone cuando su padre está `ACTIVO` y al menos una variante está `ACTIVA`, y solo se exponen variantes activas cuyo padre también está activo. Borradores, productos inactivos, variantes inactivas y padres sin variantes activas no son elegibles. No hay defaults ni asignaciones por canal. El parámetro `canal` permanece para el contexto solicitado, incluido Pricing, y no amplía consumidores autorizados. Aplicar elegibilidad antes del conteo y la paginación; el detalle por ID/slug no elegible responde `404 PRODUCTO_NO_ENCONTRADO`; una búsqueda elegible vacía responde `200` con `total=0`. Visibilidad no garantiza precio, stock ni promoción. D-CAT-05/06: decisión comunicada; pendiente de ratificación de Arquitectura y conformidad de consumidores.
+La misma regla aplica a `MARKETPLACE`, `CHATBOT`, `RETAIL` y `VENTAS`: un producto simple `ACTIVO` expone `sku_base`; un producto con variantes se expone cuando su padre está `ACTIVO` y al menos una variante está `ACTIVA`, y solo se exponen variantes activas cuyo padre también está activo. Borradores, productos inactivos, variantes inactivas y padres sin variantes activas no son elegibles. No hay defaults ni asignaciones por canal. El parámetro `canal` permanece para el contexto solicitado, incluido Pricing, y no amplía consumidores autorizados. Aplicar elegibilidad antes del conteo y la paginación; el detalle por ID/slug no elegible responde `404 PRODUCTO_NO_ENCONTRADO`; una búsqueda elegible vacía responde `200` con `total=0`. Visibilidad no garantiza precio, stock ni promoción. D-CAT-05/06: la política funcional está documentada; siguen pendientes la ratificación de Arquitectura y la conformidad de consumidores.
 
 ### Filtros monetarios
 
@@ -189,6 +189,8 @@ La respuesta reutiliza los cinco campos de `PricingCatalogContext`: identidad SK
 
 La capacidad queda completa cuando el CRUD, preparación de Pricing e inicialización de Inventario son idempotentes, las recuperaciones manuales conservan `operation_id`, emiten nueva `message_id`, correlacionan resultados por `causation_id` descartando mensajes stale, y la activación nunca presupone que un `requested` o `202` ya terminó correctamente.
 
+Para MK-003/MK-004 se reportan por separado: contrato HTTP definido en OpenAPI; implementación backend; exposición en Gateway con correspondencia exacta de método y ruta; integración frontend; y E2E. Contrato o backend por sí solos no acreditan los pasos de Gateway, frontend ni E2E. La integración frontend depende de la ruta expuesta, autenticación y disponibilidad real del servicio; el modo demo reversible no sustituye la verificación de JWT real.
+
 ---
 
 <!-- HOMOLOGACION-HTTP-0.5.0:START -->
@@ -210,7 +212,7 @@ producto.status = ACTIVO
 AND elegible_para_canal(producto, canal)
 ```
 
-La política comunicada de D-CAT-05/06 aplica la elegibilidad común por estados descrita en §7, sin persistencia, default ni asignación por canal; requiere ratificación de Arquitectura y conformidad de consumidores.
+La política documentada de D-CAT-05/06 aplica la elegibilidad común por estados descrita en §7, sin persistencia, default ni asignación por canal; siguen pendientes la ratificación de Arquitectura y la conformidad de consumidores.
 
 Para producto simple, cuando exista una asociación vigente y el SKU sea elegible:
 

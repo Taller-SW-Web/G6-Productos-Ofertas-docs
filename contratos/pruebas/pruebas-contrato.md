@@ -5,7 +5,7 @@
 **Referencia histórica auditada:** PR #86, rama `nueva`, commit `c1769607f30e2cabf1449e33c877fa4ef41defe5`; esta matriz conserva los estados pendientes y actualiza la expectativa del vhost en `CT-STATIC-18`.
 **Estado:** definición documental de casos; no asignar `PASS` a pruebas de API, eventos, seguridad o integración sin ejecución reproducible.
 
-En la revisión actual, `contratos/http/openapi.yaml` es `0.6.0-rc.2` y `contratos/eventos/asyncapi.yaml` es `0.6.0-rc.4`. AsyncAPI reconcilia nombres de recursos físicos base con una observación histórica Oracle; la numeración independiente evita modificar la candidata HTTP sin cambio. Los casos estáticos permanecen `PENDIENTE_EJECUCION` **hasta disponer de ejecución reproducible de validadores y evidencia vinculada al commit**; tampoco se consideran superadas pruebas provider, seguridad o E2E. `0.5.0` es línea base de compatibilidad, no prueba de despliegue de los candidatos.
+En `master` a la base de esta rama, `contratos/http/openapi.yaml` es `0.6.0-rc.3` y `contratos/eventos/asyncapi.yaml` es `0.6.0-rc.4`. AsyncAPI reconcilia nombres de recursos físicos base con una observación histórica Oracle; la numeración independiente evita modificar la candidata HTTP sin cambio. Los estados de ejecución en las tablas requieren evidencia reproducible vinculada a SHA; una ejecución local de esta rama no prueba provider, seguridad con grants reales, homologación, despliegue ni E2E.
 
 ## Estados
 
@@ -51,7 +51,7 @@ ARCHITECTURE_INVARIANT
 | CT-STATIC-13 | STATIC_CONTRACT | Los esquemas de éxito de consumo/restauración siguen independientes de los de rechazo; las nuevas referencias no alteran nombres de mensajes, exchanges ni routing keys existentes | PENDIENTE_EJECUCION |
 | CT-STATIC-14 | STATIC_CONTRACT | `ConsultaOperacionInventario` con `status=REJECTED` requiere `result_code` no vacío; sus estados `ACCEPTED`, `PROCESSING`, `COMPLETED`, `REJECTED` y `REQUIRES_REVIEW` conservan la semántica declarada | PENDIENTE_EJECUCION |
 | CT-STATIC-15 | STATIC_CONTRACT | Respuestas `404` de consulta de operación y `422` por contexto comercial inválido usan los códigos del catálogo; `429` y `500` están declarados en las rutas nuevas | PENDIENTE_EJECUCION |
-| CT-STATIC-16 | STATIC_CONTRACT | OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.3` identifican candidatas independientes; AsyncAPI reconcilia nombres físicos base, conserva el vhost y no reemplaza la línea publicada `0.5.0` en runtime | PENDIENTE_EJECUCION |
+| CT-STATIC-16 | STATIC_CONTRACT | OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` identifican candidatas independientes; AsyncAPI conserva nombres físicos base y el vhost; ninguna candidata acredita despliegue ni reemplaza por sí sola la línea `0.5.0` en runtime | PENDIENTE_EJECUCION |
 | CT-STATIC-17 | STATIC_CONTRACT | GET detallado admite exactamente `modulo-ventas` y `modulo-postventa` con `inventario:disponibilidad:leer` y `serviceBearer`, además de `userBearer` para acceso humano autorizado; Marketplace, Chatbot y Retail quedan excluidos del detalle y usan solo rutas comerciales | PENDIENTE_EJECUCION |
 | CT-STATIC-18 | STATIC_CONTRACT | AsyncAPI `servers.rabbitmq.x-vhost` y `x-rabbitmq-topology.vhost` coinciden con `g6-productos-ofertas`; la candidata conserva canales, operaciones, mensajes, payloads, esquemas y routing keys comerciales respecto de `0.6.0-rc.2`; los nombres físicos base se alinean a la observación Oracle | PENDIENTE_EJECUCION |
 | CT-STATIC-19 | STATIC_CONTRACT | GET y POST comerciales incluyen allowlist `modulo-marketplace`, `modulo-chatbot`, `modulo-retail`, con el scope común `inventario:disponibilidad:leer`; `GET /inventario/operaciones/{operationId}` usa `inventario:operaciones:leer` y `modulo-ventas` | PENDIENTE_EJECUCION |
@@ -236,7 +236,7 @@ La consulta está homologada documentalmente el 2026-11-02. Los casos siguientes
 | ID | Tipo | Resultado esperado | Estado |
 |---|---|---|---|
 | CT-DSP-STATIC-01 | STATIC_CONTRACT | `consultarDatosFisicos`; request de 1–100 SKU, únicos, string no vacío; enum físico exactamente `ACTIVO`, `INACTIVO`, `BORRADOR`; `200`, `422` y `503` coherentes | PENDIENTE_EJECUCION |
-| CT-DSP-STATIC-02 | STATIC_CONTRACT | `DATOS_FISICOS_INCOMPLETOS` requiere `details.skusAfectados` no vacío; `SKU_INVALIDO` no lo requiere; ejemplo valida contra schema correspondiente | PENDIENTE_EJECUCION |
+| CT-DSP-STATIC-02 | STATIC_CONTRACT | `DATOS_FISICOS_INCOMPLETOS` requiere `details.skusAfectados` no vacío; para SKU base de producto con variantes, la aceptación G6 de `SKU_INVALIDO` también requiere la lista no vacía, sin duplicados y preservada literalmente; no generalizarlo a todo uso de ese código | PENDIENTE_EJECUCION |
 | CT-DSP-STATIC-03 | STATIC_CONTRACT | Operación mantiene `serviceBearer`, `modulo-despacho`, `aud=api-productos`, `productos:fisicos:leer` y `pending-security-registration`; sin cambios AsyncAPI | PENDIENTE_EJECUCION |
 | CT-DSP-STATIC-04 | STATIC_CONTRACT | Respuesta `200` clasifica todos y solo los SKU solicitados una vez entre `productos[]`/`noEncontrados[]`; no expone inventario, precio, pedido ni empaque | PENDIENTE_EJECUCION |
 
@@ -251,11 +251,11 @@ La consulta está homologada documentalmente el 2026-11-02. Los casos siguientes
 | CT-DSP-PROV-05 | PROVIDER_CONTRACT | Peso o dimensiones no positivos/no válidos producen el error acordado, sin datos internos | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-PROV-06 | PROVIDER_CONTRACT | `actualizadoEn` ausente o inválido produce `422 DATOS_FISICOS_INCOMPLETOS` | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-PROV-07 | PROVIDER_CONTRACT | SKU realmente inexistente figura una vez en `noEncontrados[]`; INACTIVO/BORRADOR no se esconden allí | PENDIENTE_IMPLEMENTACION |
-| CT-DSP-PROV-08 | PROVIDER_CONTRACT | Lote mixto con perfil existente incompleto devuelve 422 sin productos parciales como éxito | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-08 | PROVIDER_CONTRACT | Lote con perfil existente incompleto y sin SKU base no físico devuelve 422 sin productos parciales como éxito | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-PROV-09 | PROVIDER_CONTRACT | Sin omisiones, duplicados ni SKU inesperados; identidad opaca conserva puntuación, mayúsculas y ceros iniciales | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-PROV-10 | PROVIDER_CONTRACT | 1 y 100 únicos son límites admitidos; vacío, >100 y repetidos se rechazan según contrato de request | PENDIENTE_IMPLEMENTACION |
-| CT-DSP-PROV-11 | PROVIDER_CONTRACT | Producto padre con variantes no obtiene perfil físico vendible propio; el tratamiento/código para consultar su SKU base queda pendiente de resolución Catalog, sin inventar error | BLOQUEADA_DECISION |
-| CT-DSP-PROV-12 | PROVIDER_CONTRACT | Probar variante `ACTIVA` bajo padre `BORRADOR` e `INACTIVO`; confirmar criterio de precedencia comercial aprobado por Catalog antes de afirmar elegibilidad | BLOQUEADA_DECISION |
+| CT-DSP-PROV-11 | PROVIDER_CONTRACT | Consultar SKU base de producto con variantes no crea perfil padre; G6 acepta lote rechazado con `422 SKU_INVALIDO` y `details.skusAfectados` obligatorio, no vacío, único y preservado literalmente | PENDIENTE_G2_CONFIRMACION |
+| CT-DSP-PROV-12 | PROVIDER_CONTRACT | D-G2-01: verificar variante `ACTIVA` bajo padre `BORRADOR` e `INACTIVO` conforme a precedencia comercial; Backend #162 acredita implementación y pruebas de Catalog | IMPLEMENTADA_PROBADA_BACKEND_162; PENDIENTE_PRUEBAS_CONJUNTAS_G2_G6 |
 
 ### 10.3. Consumer-provider G2↔G6
 
@@ -267,6 +267,7 @@ La consulta está homologada documentalmente el 2026-11-02. Los casos siguientes
 | CT-DSP-CP-04 | CONSUMER_PROVIDER | G2 conserva y agrupa cantidades para peso/volumen; no modifica inventario, precio ni pedido | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-CP-05 | CONSUMER_PROVIDER | G2 responde `400 DESP_ERROR_LIMITE_SKUS_EXCEDIDO` ante >100 SKU únicos antes de llamar G6 | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-CP-06 | CONSUMER_PROVIDER | Respuesta G6 con SKU omitidos/duplicados/inesperados se rechaza como `502 DESP_ERROR_RESPUESTA_PRODUCTOS_INVALIDA`; sin resultado parcial ni datos inventados | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-CP-07 | CONSUMER_PROVIDER | Para SKU base no físico en producto con variantes, G2 traduce `422 SKU_INVALIDO` a `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE` en F-01/F-02 y conserva `details.skusAfectados` | PENDIENTE_G2_CONFIRMACION |
 
 ### 10.4. Seguridad y E2E
 
@@ -571,6 +572,8 @@ Contrato aprobado en diseño por G6: [acuerdo Pricing → Catálogo](../../integ
 | CT-G6-BULK-01 | ASYNCAPI / PROVIDER_CONSUMER | Bulk v2, DTO Catalog referenciados, ALTA/ACTUALIZACION, fila por SKU y padre agrupado; rechazar variante contradictoria | PENDIENTE_IMPLEMENTACION |
 | CT-G6-BULK-02 | ASYNCAPI / IDEMPOTENCY | Retry idéntico reproduce resultado; row_operation_id con payload distinto da IDEMPOTENCY_CONFLICT; completed parcial no afirma éxito de otros dominios | PENDIENTE_IMPLEMENTACION |
 | CT-G6-BULK-03 | FILE_CONTRACT | CSV UTF-8/XLSX una hoja sin macros; límites H4; 16 cabeceras exactas en orden; campos por fila; JSON de atributos; ejemplos válidos e inválidos; SKU duplicado. Fixtures: `tests/contratos/fixtures/bulk-v2/` | PENDIENTE_EJECUCION |
+
+**Evidencia de implementación separada (Backend PR #162):** consumidor Catalog de `catalog.bulk.upsert.requested` v1/v2 fusionado; CI #41717588245 reporta 18/18 jobs PASS. BULK-CONSUMER-v2 y BULK-JOINT usan productor v2 explícito de fixture con PostgreSQL/RabbitMQ desechables. Esto no acredita productor Bulk v2 real, grants G7, RabbitMQ compartido con retry/DLX, despliegue ni E2E entre servicios reales. El productor v2 y la integración completa siguen pendientes de verificación.
 | CT-G6-EXPORT-01 | PROVIDER_CONSUMER | requested_at único; manifiesto registra observaciones/versions; fallo de fuente requerida da FAILED_GENERAL; no hay snapshot atómico | PENDIENTE_IMPLEMENTACION |
 | CT-G6-COMBO-01 | CONSUMER | precio bajo ambas sumas con mismo canal/instante; dependencia fallida da SERVICIO_NO_DISPONIBLE; disponibilidad no verificable es null/INCOMPLETA y no reserva | PENDIENTE_IMPLEMENTACION |
 | CT-G6-AUTH-01 | SECURITY | JWT real de modulo-productos usa scope y allowlist puntual; demo sin JWT solo red/origen/método/ruta verificados, nunca identidad por cabecera | PENDIENTE_GRANT_G7_Y_EJECUCION |

@@ -4,7 +4,7 @@
 - **Aprobación interna:** Marco aprobó el diseño comunicado por Poma en esta actualización; Poma es responsable de Catálogo y Vera de Pricing.
 - **Traza:** [Backend issue #24](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/issues/24). El comentario de esta actualización registra el acuerdo y la evidencia documental, sin cerrar el issue.
 - **Fuente HTTP ejecutable:** [OpenAPI](../contratos/http/openapi.yaml), operación `obtenerContextoSku`, schema de respuesta `PricingCatalogContext`.
-- **Estado:** diseño aprobado por G6; contrato candidato incorporado en Docs. Confirmación de identidad y grant G7, implementación y pruebas runtime pendientes de evidencia. Este registro no crea otra DEC-F.
+- **Estado:** contrato HTTP privado aprobado internamente por G6 e incorporado en OpenAPI. No implica homologación externa, implementación completa ni despliegue. Integración HTTP autenticada, grants/credenciales G7 y E2E siguen pendientes de evidencia. Este registro no crea otra DEC-F.
 
 ## Contrato aprobado
 
@@ -29,7 +29,7 @@ Los errores HTTP usan `application/problem+json` y el schema `Problem` existente
 
 Se reutiliza el contrato G7 `client_credentials` con identidad técnica compartida por G6: `client_id=modulo-productos`, tipo `servicio`, `aud=api-productos` y scope existente `catalogo:leer`. La allowlist de esta operación contiene únicamente `modulo-productos`; no identifica individualmente a `catalog-svc` ni `pricing-svc`. No se autoriza acceso anónimo ni `userBearer`. El token debe validar firma JWT mediante JWKS, issuer, audiencia, expiración, tipo, scope y autorización por operación. La llamada usa HTTP privado con restricción de red y la ruta no se expone en Gateway externo; cabeceras arbitrarias no prueban identidad.
 
-La decisión está aprobada internamente por Marco. G7 debe confirmar y conceder `catalogo:leer` a `modulo-productos` y provisionar credenciales `client_credentials`; hasta entonces la integración autenticada está `BLOQUEADO_ESPECÍFICO`. La definición documental no demuestra grant ni credenciales. Las allowlists comerciales permanecen intactas y el scope de lectura no concede escritura.
+La decisión y el contrato están aprobados internamente por G6. G7 debe confirmar y conceder `catalogo:leer` a `modulo-productos` y provisionar credenciales `client_credentials`; hasta entonces la integración autenticada está `BLOQUEADO_ESPECÍFICO`. La definición documental no demuestra grant ni credenciales. Las allowlists comerciales permanecen intactas y el scope de lectura no concede escritura. No se aprueba un bypass privado sin JWT para la demo; este requiere una decisión operativa independiente.
 
 ## Responsabilidades y estado operativo
 

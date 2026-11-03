@@ -132,7 +132,7 @@ inventory.bulk.stock.adjust.rejected
 
 Permite a los gestores comerciales exportar la totalidad del catálogo activo para análisis externo, auditoría o integración de canales.
 
-### Endpoints técnicos (OpenAPI 0.4.0)
+### Endpoints técnicos (OpenAPI 0.6.0-rc.3, candidato)
 
 - `POST /carga-masiva/productos/exportaciones`: solicita la generación de un trabajo de exportación indicando el formato (`CSV` o `XLSX`). Responde `202 Accepted` con esquema `TrabajoExportacion` y estado `QUEUED`.
 - `GET /carga-masiva/productos/exportaciones/{exportId}`: consulta el estado del trabajo (`QUEUED`, `PROCESSING`, `COMPLETED`, `FAILED_GENERAL`).
@@ -225,7 +225,7 @@ La siguiente tabla fija los **16 encabezados exactos**, su orden y la regla de t
 - Filas del mismo `sku_base` forman una familia contigua; todos los datos del padre deben concordar. Producto simple: una fila, sin `sku_variante` y con `atributos_variante` vacía; esta celda se transforma a `variant=null` en AsyncAPI. Producto con variantes: una fila por variante vendible, SKU distinto, combinación identificadora distinta. El padre con variantes no constituye SKU vendible ni saldo.
 - Las familias no se dividen al particionar mensajes. Toda fila tiene `row_number` de archivo y un `row_operation_id` UUID que Bulk genera y persiste antes de publicación, estable para esa fila lógica entre reintentos; no es una cabecera CSV. El archivo se representa con un `batch_id`; cada comando/chunk con un `batch_operation_id` UUID distinto, persistido antes de publicación y estable para ese comando entre reintentos; cada `row_operation_id` es estable para su fila según su alcance contractual. El `operation_id` del envelope es el `batch_operation_id` del chunk y `correlation_id` permanece estable para el batch. El registro durable de Outbox conserva exactamente su `message_id`, payload e identidad de operación cuando se reintenta su publicación. Mensajes distintos pueden representar una operación semántica ya procesada: el consumidor mantiene idempotencia por identidad de operación, sin depender exclusivamente de `message_id`. Persistir la relación batch→chunks→filas/row_operation_id→correlación→resultado para reanudación y consolidación. Usar campos existentes de envelope, mensajes y workflow; no sumar eventos; la unica extension de selector AsyncAPI autorizada es rows[].sku_variante en el comando schema_version=2.
 - Medir el envelope serializado completo en UTF-8. Cada comando debe ser menor o igual a **1 048 576 bytes**. Empaquetar familias completas de `sku_base` en orden estable; crear nuevo chunk solo entre familias. Si una familia sola excede el máximo, rechazarla antes de publicación; no fragmentarla ni elevar límite. `mode` es homogéneo dentro de cada comando. Un solo `operacion` por archivo es regla de plantilla v2, no una obligación deducible solo de AsyncAPI.
-- `batch_operation_id` identifica intención de comando/chunk; al reintentar conserva ID y payload. `row_operation_id` se conserva por fila lógica. Igual row ID + mismo payload semántico reproduce resultado sin efectos; otro payload produce `IDEMPOTENCY_CONFLICT`; cambiar `message_id` no duplica efecto. `completed` describe el comando procesado y sus resultados por fila, que pueden incluir rechazos; `rejected` es rechazo previo al procesamiento por fila. Se conservan `CatalogBulkUpsertRequestedData`, `CatalogBulkUpsertCompletedData`, `CatalogBulkUpsertRejectedData` y las referencias DTO existentes de AsyncAPI 0.6.0-rc.4/OpenAPI 0.6.0-rc.2; no se agregan eventos ni columnas CSV; el addendum v2 siguiente agrega solo el selector de mensaje rows[].sku_variante.
+- `batch_operation_id` identifica intención de comando/chunk; al reintentar conserva ID y payload. `row_operation_id` se conserva por fila lógica. Igual row ID + mismo payload semántico reproduce resultado sin efectos; otro payload produce `IDEMPOTENCY_CONFLICT`; cambiar `message_id` no duplica efecto. `completed` describe el comando procesado y sus resultados por fila, que pueden incluir rechazos; `rejected` es rechazo previo al procesamiento por fila. Se conservan `CatalogBulkUpsertRequestedData`, `CatalogBulkUpsertCompletedData`, `CatalogBulkUpsertRejectedData` y las referencias DTO existentes de AsyncAPI 0.6.0-rc.4/OpenAPI 0.6.0-rc.3; no se agregan eventos ni columnas CSV; el addendum v2 siguiente agrega solo el selector de mensaje rows[].sku_variante.
 
 ### Transformación por modo y versiones
 
@@ -295,8 +295,10 @@ Negocio revierte la familia; fallo tecnico revierte el chunk sin resultado termi
 
 Replay recupera primero el resultado persistido; no revalida la version ya aplicada.
 No se reemplaza el payload original con el ID resuelto ni se convierte Outbox antiguo
-a v2. Misma identidad con otro payload → IDEMPOTENCY_CONFLICT. Catalog debe aceptar
-v1/v2 antes del cambio de productor de Marco; resultados conservan schema_version=1.
+a v2. Misma identidad con otro payload → IDEMPOTENCY_CONFLICT. Catalog acepta v1/v2 antes del cambio de productor de Marco; resultados conservan schema_version=1.
 Pruebas: v1/v2, ALTA/simple, SKU valido/inexistente/ajeno, selectores inconsistentes,
-versiones, objetivos duplicados, concurrencia, replay y BULK-JOINT. La aprobacion
-documental no acredita implementacion de Bulk, homologacion externa ni despliegue.
+versiones, objetivos duplicados, concurrencia, replay y BULK-JOINT. El consumidor Catalog
+v1/v2 está implementado en Backend PR #162 (merge `eeaf39ad666d7bc5a11c0b2a80d9c8c4b0016414`, probado en HEAD `f995307b7f704f24c5ef0fb5806518947dc41c07`); CI #41717588245 pasó 18/18
+jobs. BULK-CONSUMER-v2 usó productor explícito de fixture, por lo que no acredita el
+productor Bulk v2 real ni integración desplegada. Ambos siguen pendientes de verificación.
+La aprobación documental no acredita homologación externa.

@@ -24,8 +24,8 @@ El diseño parte de [Modelo_Conceptual.md §4, §14–18 y alineación HTTP 0.5.
 | [WF-003 Markdown](..\..\ux\wireframes\flows\WF-003-gestion-productos-crud.md) / [WF-004 Markdown](..\..\ux\wireframes\flows\WF-004-gestion-variantes-skus.md) | Datos editables y preparación visible |
 | [HU-003](..\..\requisitos\hu\HU-003-gestion-productos-crud.md) / [HU-004](..\..\requisitos\hu\HU-004-gestion-variantes-skus.md) | Criterios de aceptación |
 | [FLOW-003](..\..\requisitos\flujos\FLOW-003-gestion-productos-crud.md) / [FLOW-004](..\..\requisitos\flujos\FLOW-004-gestion-variantes-skus.md) | Secuencias, retry y efectos sobre el padre |
-| [OpenAPI 0.5.0](..\..\contratos\http\openapi.yaml) | ProductoCreate/UpdateRequest, VarianteCreate/UpdateRequest, Atributo, ImagenRef, PerfilFisicoInput y estados |
-| [AsyncAPI 0.4.0](..\..\contratos\eventos\asyncapi.yaml) / [Contrato_Api.md](..\..\contratos\http\Contrato_Api.md) | Envelope, mensajes, idempotencia e integración |
+| [OpenAPI 0.6.0-rc.3](..\..\contratos\http\openapi.yaml) | ProductoCreate/UpdateRequest, VarianteCreate/UpdateRequest, Atributo, ImagenRef, PerfilFisicoInput y estados |
+| [AsyncAPI 0.6.0-rc.4](..\..\contratos\eventos\asyncapi.yaml) / [Contrato_Api.md](..\..\contratos\http\Contrato_Api.md) | Envelope, mensajes, idempotencia e integración |
 | [Arquitectura §7–8, §32 y §39](..\..\arquitectura\Arquitectura.md) | Schema, tablas de referencia, políticas de aplicación y transacciones locales |
 | [CONVENCIONES_BD.md](../CONVENCIONES_BD.md) | UUID, nombres, tipos, timestamps, enums, FK, mensajería y seguridad |
 | [bd/deploy/README.md](../deploy/README.md), [bootstrap.sql](../deploy/bootstrap.sql), [migrate.py](../deploy/migrate.py), [validation-report.md](../deploy/validation-report.md) | Roles actuales, checksum/versionado, transacción del ejecutor y evidencia previa del procedimiento |
@@ -702,13 +702,13 @@ La matriz §6 contiene las trece tablas y §3.1 las relaciones. Entidades concep
 | ID | Pregunta | Fuente / impacto | Bloquea migración |
 |---|---|---|---|
 | D-CAT-01..04 | Cardinalidad inversa SKU→código(s), gestión exclusiva de Catálogo y no reutilización | Diseño de una tabla `sku_barcodes`; migración candidata backend `poma` 0002 | Definición funcional cerrada por Catálogo; aplicación BD, homologación y ratificación formal por trazar |
-| D-CAT-05/06 | Elegibilidad común por estados; sin asignación/default independiente por canal | Política funcional en SPEC-003 §7; no crear `product_channel` ni habilitaciones | Decisión comunicada; ratificación de Arquitectura y conformidad de consumidores pendientes |
-| P-PHY-01 | Payload/versionado de barreras | AsyncAPI GenericData. Validar con owner antes de cerrar campos/listas | No; completar handler/protocolo |
+| D-CAT-05/06 | Elegibilidad común por estados; sin asignación/default independiente por canal | Política funcional en SPEC-003 §7; no crear `product_channel` ni habilitaciones | Política documentada; ratificación de Arquitectura y conformidad de consumidores pendientes |
+| P-PHY-01 | Payload/versionado de barreras | Reglas contractuales aprobadas internamente: cinco tipos, correlación/versionado y `CLEAR | IN_USE`; Catalog PR #168 corrigió correlación y Taxonomy PR #160 cubrió CATEGORY/BRAND | No; tres tipos restantes, validación conjunta y garantías operativas pendientes |
 | P-PHY-02 | Maestros/obligatorios/coherencia comercial | Dominio/contratos; SQL no certifica Taxonomía ni detecta camisa→zapatilla por texto | No para DDL; sí para publicar backend funcional |
 | P-PHY-03 | Consumidores tras reactivación | No inventar eventos; conservar mecanismos del contrato vigente | No para DDL; coordinar integración |
 | P-PHY-04 | Versión Supabase, deployer/runtime y grants reales | Proyecto objetivo sin validar | Sí para desplegar allí |
 | P-PHY-05 | Múltiples conexiones y locks de maestros | UNIQUE/locks locales presentes; adaptador y servidor deben probar carreras reales | No para DDL; pendiente integración |
-| Q-06 | Corrección PATCH del tipo sujeta a publicación confirmada, filas reales, compatibilidad del esquema y versión | SPEC-003 §7 / OpenAPI ProductoUpdateRequest; `publicado_alguna_vez` requiere migración futura y NULL bloquea | Decisión comunicada y contrato documental reflejado; migración, implementación y trazabilidad formal pendientes |
+| Q-06 | Corrección PATCH del tipo sujeta a publicación confirmada, filas reales, compatibilidad del esquema y versión | SPEC-003 §7 / OpenAPI ProductoUpdateRequest; `publicado_alguna_vez` requiere migración futura y NULL bloquea | Regla funcional definida; migración, aplicación efectiva, implementación y trazabilidad formal pendientes |
 
 El diseño resuelve persistencia de 003/004 sin cerrar decisiones comerciales abiertas. No acredita implementación completa de todos los endpoints de catalog-svc.
 
@@ -728,7 +728,7 @@ Comprueba schema/owner; manifest de columnas/tipos/nullability/constraints; PK U
 
 La sección estructural comprueba diseño y la funcional ejecuta reglas. Exit code cero de consultas que solo muestran datos no es suficiente: revisar todos los PASS y ausencia de fixtures después.
 
-La regresión de tipo comprueba únicamente que la persistencia no imponga inmutabilidad absoluta y que cambiar esa columna no altere SKU/modelo. No valida los casos funcionalmente elegible/no elegible/no verificable de Q-06, ni acredita ausencia de identidad publicada; esos escenarios permanecen bloqueados hasta la resolución oficial.
+La regresión de tipo comprueba únicamente que la persistencia no imponga inmutabilidad absoluta y que cambiar esa columna no altere SKU/modelo. No valida los casos funcionalmente elegible/no elegible/no verificable de Q-06 ni acredita ausencia de identidad publicada. La regla funcional Q-06 está definida; faltan pruebas de implementación y evidencia de la migración versionada `publicado_alguna_vez`, sin afirmar que esté aplicada.
 
 ## 26. Despliegue y evidencia
 
@@ -779,6 +779,6 @@ El diseño aprobado de `catalog.sku_barcodes` es una tabla con `id`, `codigo_bar
 
 `catalog.products.publicado_alguna_vez BOOLEAN NULL` es una futura migración versionada, no columna existente: nuevos productos parten de `false`, la primera transición confirmada a `ACTIVO` la fija a `true` en la misma transacción, irreversible; históricos siguen `NULL` sin evidencia autoritativa y `NULL` bloquea Q-06. La corrección de tipo también requiere comprobar cero filas reales en `catalog.variants`, `tiene_variantes=false`, tipo activo, compatibilidad de atributos/esquema y `catalogVersion`. La regla Q-06 fue comunicada y reflejada en el contrato documental; trazabilidad, implementación y migración no están acreditadas.
 
-La baja de maestros reutiliza Inbox, Outbox, locks por `(master_type, master_id)` y `catalog.master_barriers`; no se crea tabla nueva en Catálogo. Las referencias de borradores/inactivos no bloquean el check de uso actual, pero la barrera impide nuevas referencias o reactivaciones incompatibles, incluido Bulk. El contrato de mensajes compartido sigue pendiente de homologación; no inferir despliegue ni compatibilidad de consumidores.
+La baja de maestros reutiliza Inbox, Outbox, locks por `(master_type, master_id)` y `catalog.master_barriers`; no se crea tabla nueva en Catálogo. Las referencias de borradores/inactivos no bloquean el check de uso actual, pero la barrera impide nuevas referencias o reactivaciones incompatibles, incluido Bulk. La regla contractual está aprobada internamente; la corrección de correlación fue fusionada en Backend PR #168 y Taxonomy cubrió `CATEGORY`/`BRAND` en PR #160. Los tres tipos restantes, pruebas conjuntas y garantías operativas continúan pendientes sin evidencia. No inferir homologación externa ni compatibilidad completa de consumidores.
 
 Catálogo filtra por precio efectivo de Pricing; canales canónicos `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS` y global `null`. Conserva un único instante de evaluación en todos los lotes. Presupuesto operativo inicial Catálogo→Pricing: máximo 5 s contando adquisición de token y lotes; no es SLA acreditado y requiere pruebas E2E. La identidad técnica es `modulo-productos`, compartida por G6, con `precios:leer`; no propaga JWT de Marketplace u otro consumidor. `GET /api/v1/productos/skus/{sku}/contexto` es privado y debe quedar fuera de rutas Gateway externas conforme a `x-internal: true`.

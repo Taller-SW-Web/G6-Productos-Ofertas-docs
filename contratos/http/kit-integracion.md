@@ -829,14 +829,14 @@ Productos y Ofertas no decide el empaque.
 
 El contrato detallado está en [OpenAPI](openapi.yaml); el [acuerdo bilateral](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md) registra la homologación del 2026-11-02. G6 devuelve estados `ACTIVO`, `INACTIVO` o `BORRADOR`; no convierte estados en `noEncontrados`. Request: de 1 a 100 SKU únicos, identificadores opacos preservados literalmente. `200` clasifica cada solicitud una vez, sin omisiones, duplicados ni extras; un perfil inválido no produce parcial exitoso.
 
-- `422 DATOS_FISICOS_INCOMPLETOS` identifica perfiles existentes con peso, dimensiones o `actualizadoEn` ausente/inválido mediante `details.skusAfectados`. `SKU_INVALIDO` es 422 independiente y no exige ese campo.
+- `422 DATOS_FISICOS_INCOMPLETOS` identifica perfiles existentes con peso, dimensiones o `actualizadoEn` ausente/inválido mediante `details.skusAfectados`. Para el caso específico de consultar SKU base de un producto con variantes, G6 aceptó `422 SKU_INVALIDO` con `details.skusAfectados` obligatorio, no vacío, sin duplicados y preservado literalmente; esto no generaliza el requisito del campo a todos los usos de `SKU_INVALIDO`. La única confirmación G2 pendiente es la precedencia de errores en lotes mixtos.
 - `503 SERVICIO_NO_DISPONIBLE` corresponde a conexión, timeout, PostgreSQL o dependencia no disponible; no exponer detalles internos.
 - F-01: G2 cotiza exactamente solo SKU `ACTIVO` con perfil válido; `INACTIVO`/`BORRADOR` usa `DESP_ERROR_PRODUCTO_NO_ELEGIBLE`.
 - F-02: `INACTIVO`/`BORRADOR` no es rechazo automático para despacho pedido por Ventas como pagado, preparado y listo, con perfil válido y demás validaciones. Esto no habilita ventas ni cambia activación G6.
 - G2 agrupa SKU de líneas y conserva cantidades para peso/volumen; rechaza más de 100 únicos antes de llamar G6. `DESP_ERROR_LIMITE_SKUS_EXCEDIDO` (400) y `DESP_ERROR_RESPUESTA_PRODUCTOS_INVALIDA` (502) son códigos de G2, no de G6.
 - G6 no muta inventario, precio o pedidos y no calcula empaque. G2 obtiene su propio token; no reenvía tokens de canales.
 
-Seguridad permanece `serviceBearer`, `modulo-despacho`, `aud=api-productos`, `productos:fisicos:leer` y `pending-security-registration` hasta grant/credenciales efectivos de G7. Homologación no acredita implementación, grant, despliegue o E2E. La precedencia de variante `ACTIVA` frente a padre `BORRADOR`/`INACTIVO` y el tratamiento del SKU base del padre con variantes quedan pendientes de Catalog.
+Seguridad permanece `serviceBearer`, `modulo-despacho`, `aud=api-productos`, `productos:fisicos:leer` y `pending-security-registration` hasta grant/credenciales efectivos de G7. H-G2-01/02/03 están homologados; D-G2-01 fue aceptada bilateralmente e implementada en Backend PR #162. G6 aceptó la contrapropuesta D-G2-02; solo falta la confirmación de G2 sobre precedencia de errores en lotes mixtos, según el [acuerdo G2–G6](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md). La homologación no acredita grant, despliegue ni E2E.
 
 ---
 
