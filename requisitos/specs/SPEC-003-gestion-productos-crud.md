@@ -95,7 +95,7 @@ La respuesta `200` clasifica cada SKU solicitado exactamente una vez entre `prod
 
 G6 proporciona estado y medidas intrínsecas; G2 decide elegibilidad y logística. En F-01, solo `ACTIVO` con perfil válido permite cotización exacta; G2 trata `INACTIVO`/`BORRADOR` como `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE`. En F-02, `INACTIVO`/`BORRADOR` no causan rechazo automático para una solicitud autenticada de Ventas sobre pedido declarado pagado, preparado y listo para entrega, sujeto a perfil válido y demás validaciones G2. Esto no habilita ventas ni altera las condiciones G6 para activar/revivir productos.
 
-Este endpoint solo entrega perfiles de unidades vendibles. `sku_base` de un producto con variantes no representa unidad física vendible; la homologación no crea perfil para el padre ni fija un código HTTP específico para esa consulta. El contrato y la regla de elegibilidad están definidos; permisos G7, integración autenticada, implementación aplicable y E2E se rastrean separadamente.
+Este endpoint solo entrega perfiles de unidades vendibles. `sku_base` de un producto con variantes no representa unidad física vendible y no crea un perfil para el padre. Para esa consulta G6 aceptó responder `422 SKU_INVALIDO` y rechazar el lote completo; `details.skusAfectados` es obligatorio, no vacío, sin duplicados y conserva literalmente todos los SKU afectados. G2 traduce a `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE` en F-01 y F-02, conservando la lista. Solo queda pendiente la confirmación de G2 sobre precedencia de errores en lotes mixtos; véase el [acuerdo G2–G6](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md). Permisos G7, integración autenticada y E2E se rastrean separadamente.
 
 ## 5. Activación y operaciones administrativas de preparación
 

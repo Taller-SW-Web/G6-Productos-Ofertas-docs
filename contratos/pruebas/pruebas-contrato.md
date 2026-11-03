@@ -236,7 +236,7 @@ La consulta está homologada documentalmente el 2026-11-02. Los casos siguientes
 | ID | Tipo | Resultado esperado | Estado |
 |---|---|---|---|
 | CT-DSP-STATIC-01 | STATIC_CONTRACT | `consultarDatosFisicos`; request de 1–100 SKU, únicos, string no vacío; enum físico exactamente `ACTIVO`, `INACTIVO`, `BORRADOR`; `200`, `422` y `503` coherentes | PENDIENTE_EJECUCION |
-| CT-DSP-STATIC-02 | STATIC_CONTRACT | `DATOS_FISICOS_INCOMPLETOS` requiere `details.skusAfectados` no vacío; `SKU_INVALIDO` no lo requiere; ejemplo valida contra schema correspondiente | PENDIENTE_EJECUCION |
+| CT-DSP-STATIC-02 | STATIC_CONTRACT | `DATOS_FISICOS_INCOMPLETOS` requiere `details.skusAfectados` no vacío; para SKU base de producto con variantes, la aceptación G6 de `SKU_INVALIDO` también requiere la lista no vacía, sin duplicados y preservada literalmente; no generalizarlo a todo uso de ese código | PENDIENTE_EJECUCION |
 | CT-DSP-STATIC-03 | STATIC_CONTRACT | Operación mantiene `serviceBearer`, `modulo-despacho`, `aud=api-productos`, `productos:fisicos:leer` y `pending-security-registration`; sin cambios AsyncAPI | PENDIENTE_EJECUCION |
 | CT-DSP-STATIC-04 | STATIC_CONTRACT | Respuesta `200` clasifica todos y solo los SKU solicitados una vez entre `productos[]`/`noEncontrados[]`; no expone inventario, precio, pedido ni empaque | PENDIENTE_EJECUCION |
 
@@ -251,10 +251,10 @@ La consulta está homologada documentalmente el 2026-11-02. Los casos siguientes
 | CT-DSP-PROV-05 | PROVIDER_CONTRACT | Peso o dimensiones no positivos/no válidos producen el error acordado, sin datos internos | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-PROV-06 | PROVIDER_CONTRACT | `actualizadoEn` ausente o inválido produce `422 DATOS_FISICOS_INCOMPLETOS` | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-PROV-07 | PROVIDER_CONTRACT | SKU realmente inexistente figura una vez en `noEncontrados[]`; INACTIVO/BORRADOR no se esconden allí | PENDIENTE_IMPLEMENTACION |
-| CT-DSP-PROV-08 | PROVIDER_CONTRACT | Lote mixto con perfil existente incompleto devuelve 422 sin productos parciales como éxito | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-08 | PROVIDER_CONTRACT | Lote con perfil existente incompleto y sin SKU base no físico devuelve 422 sin productos parciales como éxito | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-PROV-09 | PROVIDER_CONTRACT | Sin omisiones, duplicados ni SKU inesperados; identidad opaca conserva puntuación, mayúsculas y ceros iniciales | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-PROV-10 | PROVIDER_CONTRACT | 1 y 100 únicos son límites admitidos; vacío, >100 y repetidos se rechazan según contrato de request | PENDIENTE_IMPLEMENTACION |
-| CT-DSP-PROV-11 | PROVIDER_CONTRACT | Producto padre con variantes no obtiene perfil físico vendible propio; el tratamiento/código para consultar su SKU base queda pendiente de resolución Catalog, sin inventar error | BLOQUEADA_DECISION |
+| CT-DSP-PROV-11 | PROVIDER_CONTRACT | Consultar SKU base de producto con variantes no crea perfil padre; G6 acepta lote rechazado con `422 SKU_INVALIDO` y `details.skusAfectados` obligatorio, no vacío, único y preservado literalmente | PENDIENTE_G2_CONFIRMACION |
 | CT-DSP-PROV-12 | PROVIDER_CONTRACT | Probar variante `ACTIVA` bajo padre `BORRADOR` e `INACTIVO`; confirmar criterio de precedencia comercial aprobado por Catalog antes de afirmar elegibilidad | BLOQUEADA_DECISION |
 
 ### 10.3. Consumer-provider G2↔G6
@@ -267,6 +267,7 @@ La consulta está homologada documentalmente el 2026-11-02. Los casos siguientes
 | CT-DSP-CP-04 | CONSUMER_PROVIDER | G2 conserva y agrupa cantidades para peso/volumen; no modifica inventario, precio ni pedido | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-CP-05 | CONSUMER_PROVIDER | G2 responde `400 DESP_ERROR_LIMITE_SKUS_EXCEDIDO` ante >100 SKU únicos antes de llamar G6 | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-CP-06 | CONSUMER_PROVIDER | Respuesta G6 con SKU omitidos/duplicados/inesperados se rechaza como `502 DESP_ERROR_RESPUESTA_PRODUCTOS_INVALIDA`; sin resultado parcial ni datos inventados | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-CP-07 | CONSUMER_PROVIDER | Para SKU base no físico en producto con variantes, G2 traduce `422 SKU_INVALIDO` a `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE` en F-01/F-02 y conserva `details.skusAfectados` | PENDIENTE_G2_CONFIRMACION |
 
 ### 10.4. Seguridad y E2E
 
