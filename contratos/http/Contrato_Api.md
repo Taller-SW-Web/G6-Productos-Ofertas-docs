@@ -1816,7 +1816,7 @@ Referencia humana:
 contratos/eventos/catalogo-eventos.md
 ```
 
-La línea base histórica AsyncAPI `0.5.0` documentó **39 mensajes lógicos**. El contrato ejecutable candidato AsyncAPI `0.6.0-rc.3` contiene **40 canales y 40 mensajes**, incluido `inventory.reservation.rejected`, sin que esa cifra demuestre publicación real de eventos.
+La línea base histórica AsyncAPI `0.5.0` documentó **39 mensajes lógicos**. El contrato ejecutable candidato AsyncAPI `0.6.0-rc.4` contiene **40 canales y 40 mensajes**, incluido `inventory.reservation.rejected`, sin que esa cifra demuestre publicación real de eventos.
 
 Entre los mensajes externos/integradores más relevantes están:
 
@@ -2411,7 +2411,7 @@ Cambios rompientes requieren nueva versión del schema o del canal contractual.
 
 # 39. Topología RabbitMQ P2
 
-La topología base observada históricamente en Oracle el 2026-10-19 (RabbitMQ 4.2.9, vhost `g6-productos-ofertas`) se documenta en AsyncAPI candidata `0.6.0-rc.3`. Esta observación no acredita estado actual, homologación, adaptación de código ni conexión.
+La topología base observada históricamente en Oracle el 2026-10-19 (RabbitMQ 4.2.9, vhost `g6-productos-ofertas`) se documenta en AsyncAPI candidata `0.6.0-rc.4`. Esta observación no acredita estado actual, homologación, adaptación de código ni conexión.
 
 Exchanges observadas: `po.comandos.x` (topic), `po.eventos.x` (topic), `po.resultados.x` (topic), `po.sin-ruta.x` (fanout); todas durables. Colas observadas, todas quorum/durables: `po.catalogo.q`, `po.pasarela.q`, `po.promociones.q`, `po.combos.q`, `po.inventario.q`, `po.precios.q`, `po.auditoria-precios.q`, `po.ventas.q`, `po.taxonomia.q`, `po.masivos.q` y `po.sin-ruta.q`. Esta última es operativa, no comercial.
 

@@ -7,7 +7,7 @@
 - **Relacionado con:** [SPEC-004](../specs/SPEC-004-gestion-variantes-skus.md) / [WF-004](../../ux/wireframes/flows/WF-004-gestion-variantes-skus.md) / [índice WF-004](../../ux/wireframes/prototipos/WF-004-gestion-variantes-skus/index.html) / [HU-004](../hu/HU-004-gestion-variantes-skus.md) / [FLOW-003](FLOW-003-gestion-productos-crud.md).
 - **Responsable:** Gabriel Poma Gutierrez.
 - **Última actualización:** 2026-10-02.
-- **Contratos consultados:** [OpenAPI vigente 0.5.0](../../contratos/http/openapi.yaml) y [AsyncAPI 0.5.0](../../contratos/eventos/asyncapi.yaml). La ruta de reactivación se mantiene en el contrato vigente.
+- **Contratos consultados:** [OpenAPI candidata vigente 0.6.0-rc.3](../../contratos/http/openapi.yaml) y [AsyncAPI candidata vigente 0.6.0-rc.4](../../contratos/eventos/asyncapi.yaml). La ruta de reactivación se mantiene en el contrato vigente.
 
 ## 2. Objetivo del flujo
 
@@ -218,7 +218,7 @@ flowchart LR
     ULTIMA -->|"Sí"| PADRE --> EVENTO_PADRE --> FIN_OK
 ```
 
-RabbitMQ distribuye `catalog.sku.deactivated` a los consumidores declarados en AsyncAPI 0.5.0 (`inventory-svc`, `pricing-svc`, `promotions-svc`, `combos-svc`). La baja del padre publica `catalog.product.deactivated` conforme a FLOW-003. Catálogo no realiza llamadas directas a esos consumidores ni inventa un evento de reactivación.
+RabbitMQ distribuye `catalog.sku.deactivated` a los consumidores declarados en AsyncAPI candidata vigente 0.6.0-rc.4 (`inventory-svc`, `pricing-svc`, `promotions-svc`, `combos-svc`). La baja del padre publica `catalog.product.deactivated` conforme a FLOW-003. Catálogo no realiza llamadas directas a esos consumidores ni inventa un evento de reactivación.
 
 Si el padre estaba en `BORRADOR` o `INACTIVO`, conserva su estado al desactivar la última variante activa. Desactivar al padre conserva los estados individuales de los hijos y bloquea su exposición comercial; reactivar uno no reactiva automáticamente a los demás.
 

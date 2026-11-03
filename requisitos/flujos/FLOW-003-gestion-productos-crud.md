@@ -7,7 +7,7 @@
 - **Relacionado con:** [SPEC-003](../specs/SPEC-003-gestion-productos-crud.md) / [WF-003](../../ux/wireframes/flows/WF-003-gestion-productos-crud.md) / [índice WF-003](../../ux/wireframes/prototipos/WF-003-gestion-productos-crud/index.html) / [HU-003](../hu/HU-003-gestion-productos-crud.md).
 - **Responsable:** Gabriel Poma Gutierrez.
 - **Última actualización:** 2026-10-02.
-- **Contratos consultados:** [OpenAPI vigente 0.5.0](../../contratos/http/openapi.yaml) y [AsyncAPI 0.5.0](../../contratos/eventos/asyncapi.yaml). Se conservan las extensiones vigentes de las fuentes.
+- **Contratos consultados:** [OpenAPI candidata vigente 0.6.0-rc.3](../../contratos/http/openapi.yaml) y [AsyncAPI candidata vigente 0.6.0-rc.4](../../contratos/eventos/asyncapi.yaml). Se conservan las extensiones vigentes de las fuentes.
 
 ## 2. Objetivo del flujo
 
@@ -283,7 +283,7 @@ flowchart LR
     VALIDAR -->|"No"| ERROR --> FIN_ERROR
 ```
 
-RabbitMQ realiza el fan-out de `catalog.product.deactivated` a los consumidores declarados en AsyncAPI 0.5.0 (`promotions-svc`, `combos-svc`, `api-gateway/bff`); Catálogo no realiza llamadas directas a ellos. La baja conserva identidad y bloquea resolución comercial mientras el producto esté inactivo. Estar `ACTIVO` no garantiza visibilidad en todos los canales: también aplica la elegibilidad comercial de SPEC-003.
+RabbitMQ realiza el fan-out de `catalog.product.deactivated` conforme al contrato candidato AsyncAPI 0.6.0-rc.4 (`promotions-svc`, `combos-svc`, `api-gateway/bff`); Catálogo no realiza llamadas directas a ellos. La versión candidata no acredita publicación/despliegue. La baja conserva identidad y bloquea resolución comercial mientras el producto esté inactivo. Estar `ACTIVO` no garantiza visibilidad en todos los canales: también aplica la elegibilidad comercial de SPEC-003.
 
 Reactivar al padre no reactiva hijos inactivos; reactivar una variante tampoco reactiva al padre. Desactivar la última variante activa solo inactiva automáticamente a un padre que estaba `ACTIVO`; un padre en borrador o inactivo conserva su estado, conforme a FLOW-004.
 

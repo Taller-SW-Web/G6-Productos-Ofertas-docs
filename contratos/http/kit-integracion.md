@@ -836,7 +836,7 @@ El contrato detallado está en [OpenAPI](openapi.yaml); el [acuerdo bilateral](.
 - G2 agrupa SKU de líneas y conserva cantidades para peso/volumen; rechaza más de 100 únicos antes de llamar G6. `DESP_ERROR_LIMITE_SKUS_EXCEDIDO` (400) y `DESP_ERROR_RESPUESTA_PRODUCTOS_INVALIDA` (502) son códigos de G2, no de G6.
 - G6 no muta inventario, precio o pedidos y no calcula empaque. G2 obtiene su propio token; no reenvía tokens de canales.
 
-Seguridad permanece `serviceBearer`, `modulo-despacho`, `aud=api-productos`, `productos:fisicos:leer` y `pending-security-registration` hasta grant/credenciales efectivos de G7. Homologación no acredita implementación, grant, despliegue o E2E. La precedencia de variante `ACTIVA` frente a padre `BORRADOR`/`INACTIVO` y el tratamiento del SKU base del padre con variantes quedan pendientes de Catalog.
+Seguridad permanece `serviceBearer`, `modulo-despacho`, `aud=api-productos`, `productos:fisicos:leer` y `pending-security-registration` hasta grant/credenciales efectivos de G7. H-G2-01/02/03 están homologados; D-G2-01 fue aceptada bilateralmente e implementada en Backend PR #162. D-G2-02 sigue pendiente de cierre bilateral en sus precisiones, descritas en el [acuerdo G2–G6](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md). La homologación no acredita grant, despliegue ni E2E.
 
 ---
 
