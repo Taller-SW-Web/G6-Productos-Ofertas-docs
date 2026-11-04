@@ -758,7 +758,7 @@ GET /api/v1/inventario/disponibilidad
 
 **Consumidores del GET detallado:** `modulo-ventas` y `modulo-postventa` con JWT de servicio, sujetos a `x-allowed-client-ids=[modulo-ventas, modulo-postventa]`, y usuarios administrativos autorizados mediante `userBearer`. M2 puede consultar disponibilidad informativa para CAMBIO; la consulta no reserva ni garantiza stock futuro. **No** corresponde a Marketplace, Chatbot ni Retail. Todos deben tener autorización efectiva; `inventario:disponibilidad:leer` por sí solo no elimina la allowlist.
 
-**Consumidores comerciales:** Marketplace, Chatbot y Retail utilizan `GET /api/v1/inventario/disponibilidad/comercial` (`sku + status`) o `POST /api/v1/inventario/disponibilidad/comercial/verificar` (cantidades solicitadas, respuesta no vinculante). Ambas operaciones limitan `x-allowed-client-ids` a `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`; no exponen `on_hand`, `reserved`, `blocked`, `available`, `stock_version` ni `location_id`. Comparten el scope `inventario:disponibilidad:leer`, pero la autorización se valida operación por operación.
+**Consumidores comerciales externos:** Marketplace, Chatbot y Retail consultan `GET /api/v1/inventario/disponibilidad/comercial` (`sku + status`) y usan `POST /api/v1/inventario/disponibilidad/comercial/verificar` para cantidades solicitadas, con respuesta no vinculante. El consumidor funcional interno previsto para la autorización del GET aprobada el 2026-11-03 es Promotions, que usa la identidad compartida G6 `modulo-productos` exclusivamente con `canal=MARKETPLACE`. Inventory verifica operación GET, cliente, scope existente `inventario:disponibilidad:leer` y canal; el JWT identifica `modulo-productos` y no permite distinguir criptográficamente `promotions-svc` de otros bounded contexts G6. La red privada y la configuración de despliegue aíslan adicionalmente el origen. `client_id` identifica al servicio y `canal` al contexto comercial; no se suplanta `modulo-marketplace`. Esta aprobación no amplía la autorización funcional de Combos ni cambia DEC-G6-INT-11: conserva disponibilidad informativa con `verificable=false`, `cantidadInformativa=null` y `estadoActualizacion=INCOMPLETA` cuando falte fuente autoritativa suficiente; no concede nuevos canales, endpoints ni verificación de cantidades. El POST conserva únicamente `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`, sin acceso para `modulo-productos`. Ambas operaciones comerciales requieren `inventario:disponibilidad:leer` y autorización por operación. El scope y la aprobación no acreditan grant o credenciales G7. Ninguna expone `on_hand`, `reserved`, `blocked`, `available`, `stock_version` ni `location_id`. La disponibilidad detallada es otra operación con allowlist propia (`modulo-ventas`, `modulo-postventa` y acceso humano autorizado); no queda habilitada para consumidores comerciales ni para `modulo-productos`.
 
 La consulta detallada:
 
@@ -2614,7 +2614,9 @@ GET /api/v1/inventario/disponibilidad
 → saldo detallado/autoritativo para Ventas/Postventa y usuarios autorizados
 
 GET /api/v1/inventario/disponibilidad/comercial
-→ Marketplace / Chatbot / Retail
+→ Marketplace / Chatbot / Retail según su canal
+→ consumidor funcional previsto: Promotions, con identidad compartida `modulo-productos`, solo `canal=MARKETPLACE` (aprobación interna 2026-11-03; grant G7 pendiente)
+→ Inventory autoriza por GET + cliente + scope + canal; JWT no individualiza bounded context (red privada/configuración aíslan el origen)
 → sku + status
 ```
 

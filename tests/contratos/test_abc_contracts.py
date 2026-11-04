@@ -76,7 +76,11 @@ class ContractChecks(unittest.TestCase):
         self.assertEqual(get_canal_param['schema']['$ref'],'#/components/schemas/CanalComercial')
         self.assertEqual(get_op['x-allowed-client-ids'],['modulo-marketplace','modulo-chatbot','modulo-retail','modulo-productos'])
         self.assertEqual(get_op['x-required-scope'],'inventario:disponibilidad:leer')
+        self.assertEqual(get_op['x-service-audience'],'api-productos')
+        self.assertIn('MARKETPLACE',get_op['description'])
+        self.assertIn('modulo-productos',get_op['description'])
         self.assertIn('400',get_op['responses'])
+        self.assertIn('401',get_op['responses'])
         self.assertIn('403',get_op['responses'])
         self.assertIn('VALIDACION',get_op['x-error-codes']['400'])
         self.assertIn('SCOPE_INSUFICIENTE',get_op['x-error-codes']['403'])
@@ -86,6 +90,8 @@ class ContractChecks(unittest.TestCase):
         self.assertEqual(post_body_schema['properties']['channel_id']['$ref'],'#/components/schemas/CanalComercial')
         self.assertEqual(post_op['x-allowed-client-ids'],['modulo-marketplace','modulo-chatbot','modulo-retail'])
         self.assertEqual(post_op['x-required-scope'],'inventario:disponibilidad:leer')
+        self.assertEqual(post_op['x-service-audience'],'api-productos')
+        self.assertNotIn('modulo-productos',post_op['x-allowed-client-ids'])
         self.assertIn('400',post_op['responses'])
         self.assertIn('403',post_op['responses'])
         self.assertIn('VALIDACION',post_op['x-error-codes']['400'])
@@ -97,6 +103,13 @@ class ContractChecks(unittest.TestCase):
         self.assertIn('modulo-marketplace -> MARKETPLACE',desc)
         self.assertIn('modulo-chatbot -> CHATBOT',desc)
         self.assertIn('modulo-retail -> RETAIL',desc)
+        self.assertIn('Promotions',desc)
+        self.assertIn('identidad compartida G6',desc)
+        self.assertIn('bounded context',desc)
+        self.assertIn('DEC-G6-INT-11',desc)
+        kit=(ROOT/'contratos/http/kit-integracion.md').read_text(encoding='utf-8')
+        for rule in ('verificable=false','cantidadInformativa=null','estadoActualizacion=INCOMPLETA'):
+            self.assertIn(rule,kit)
     def test_single_location_policy_documented(self):
         desc=self.o['paths']['/inventario/disponibilidad/comercial/verificar']['post']['description']
         self.assertIn('D-INV-01',desc)
@@ -240,11 +253,14 @@ class ContractChecks(unittest.TestCase):
             clients=paths[path][method]['x-allowed-client-ids']
             operation_expected=expected | ({'modulo-productos'} if method == 'get' else set())
             self.assertEqual(set(clients),operation_expected,path)
+            if method == 'post':
+                self.assertNotIn('modulo-productos',clients,path)
             self.assertNotIn('modulo-postventa',clients,path)
         detailed=set(paths['/inventario/disponibilidad']['get']['x-allowed-client-ids'])
         self.assertNotIn('modulo-marketplace',detailed)
         self.assertNotIn('modulo-chatbot',detailed)
         self.assertNotIn('modulo-retail',detailed)
+        self.assertNotIn('modulo-productos',detailed)
 
 
 class CatalogPricingTaxonomyContract(unittest.TestCase):
