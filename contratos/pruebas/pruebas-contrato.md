@@ -236,7 +236,7 @@ La consulta está homologada documentalmente el 2026-11-02. Los casos siguientes
 | ID | Tipo | Resultado esperado | Estado |
 |---|---|---|---|
 | CT-DSP-STATIC-01 | STATIC_CONTRACT | `consultarDatosFisicos`; request de 1–100 SKU, únicos, string no vacío; enum físico exactamente `ACTIVO`, `INACTIVO`, `BORRADOR`; `200`, `422` y `503` coherentes | PENDIENTE_EJECUCION |
-| CT-DSP-STATIC-02 | STATIC_CONTRACT | `DATOS_FISICOS_INCOMPLETOS` requiere `details.skusAfectados` no vacío; para SKU base de producto con variantes, la aceptación G6 de `SKU_INVALIDO` también requiere la lista no vacía, sin duplicados y preservada literalmente; no generalizarlo a todo uso de ese código | PENDIENTE_EJECUCION |
+| CT-DSP-STATIC-02 | STATIC_CONTRACT | Esquema `422`: error estructural ordinario `SKU_INVALIDO` sin details válido; SKU base no físico `SKU_INVALIDO` y `DATOS_FISICOS_INCOMPLETOS` requieren `details.skusAfectados` (`string[]`, `minItems: 1`, `uniqueItems: true`); documentar semántica condicional y ejemplos completos | PASS_CONTRATO_LOCAL |
 | CT-DSP-STATIC-03 | STATIC_CONTRACT | Operación mantiene `serviceBearer`, `modulo-despacho`, `aud=api-productos`, `productos:fisicos:leer` y `pending-security-registration`; sin cambios AsyncAPI | PENDIENTE_EJECUCION |
 | CT-DSP-STATIC-04 | STATIC_CONTRACT | Respuesta `200` clasifica todos y solo los SKU solicitados una vez entre `productos[]`/`noEncontrados[]`; no expone inventario, precio, pedido ni empaque | PENDIENTE_EJECUCION |
 
@@ -254,8 +254,8 @@ La consulta está homologada documentalmente el 2026-11-02. Los casos siguientes
 | CT-DSP-PROV-08 | PROVIDER_CONTRACT | Lote con perfil existente incompleto y sin SKU base no físico devuelve 422 sin productos parciales como éxito | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-PROV-09 | PROVIDER_CONTRACT | Sin omisiones, duplicados ni SKU inesperados; identidad opaca conserva puntuación, mayúsculas y ceros iniciales | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-PROV-10 | PROVIDER_CONTRACT | 1 y 100 únicos son límites admitidos; vacío, >100 y repetidos se rechazan según contrato de request | PENDIENTE_IMPLEMENTACION |
-| CT-DSP-PROV-11 | PROVIDER_CONTRACT | Consultar SKU base de producto con variantes no crea perfil padre; G6 acepta lote rechazado con `422 SKU_INVALIDO` y `details.skusAfectados` obligatorio, no vacío, único y preservado literalmente | PENDIENTE_G2_CONFIRMACION |
-| CT-DSP-PROV-12 | PROVIDER_CONTRACT | D-G2-01: verificar variante `ACTIVA` bajo padre `BORRADOR` e `INACTIVO` conforme a precedencia comercial; Backend #162 acredita implementación y pruebas de Catalog | IMPLEMENTADA_PROBADA_BACKEND_162; PENDIENTE_PRUEBAS_CONJUNTAS_G2_G6 |
+| CT-DSP-PROV-11 | PROVIDER_CONTRACT | sku_base de producto con variantes: identidad existente no física, no inventar perfil; rechazar lote íntegro con `422 SKU_INVALIDO` y todos/solo los SKU base afectados en `details.skusAfectados`, no vacío, únicos, literales y en orden de solicitud. En lotes mixtos precede al perfil incompleto; errores estructurales prevalecen y no requieren details | PROBADA_OPEN-09-PROVIDER_BACKEND_162; PENDIENTE_PRUEBA_DOCUMENTAL |
+| CT-DSP-PROV-12 | PROVIDER_CONTRACT | D-G2-01: verificar matriz estado variante/padre (variante ACTIVA hereda estado padre; INACTIVA/BORRADOR conserva estado), producto simple conserva estado; preserva F-01/F-02 y no altera estados persistidos | IMPLEMENTADA_PROBADA_BACKEND_162; PENDIENTE_PRUEBA_CONTRACTUAL |
 
 ### 10.3. Consumer-provider G2↔G6
 
@@ -267,7 +267,10 @@ La consulta está homologada documentalmente el 2026-11-02. Los casos siguientes
 | CT-DSP-CP-04 | CONSUMER_PROVIDER | G2 conserva y agrupa cantidades para peso/volumen; no modifica inventario, precio ni pedido | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-CP-05 | CONSUMER_PROVIDER | G2 responde `400 DESP_ERROR_LIMITE_SKUS_EXCEDIDO` ante >100 SKU únicos antes de llamar G6 | PENDIENTE_IMPLEMENTACION |
 | CT-DSP-CP-06 | CONSUMER_PROVIDER | Respuesta G6 con SKU omitidos/duplicados/inesperados se rechaza como `502 DESP_ERROR_RESPUESTA_PRODUCTOS_INVALIDA`; sin resultado parcial ni datos inventados | PENDIENTE_IMPLEMENTACION |
-| CT-DSP-CP-07 | CONSUMER_PROVIDER | Para SKU base no físico en producto con variantes, G2 traduce `422 SKU_INVALIDO` a `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE` en F-01/F-02 y conserva `details.skusAfectados` | PENDIENTE_G2_CONFIRMACION |
+| CT-DSP-CP-07 | CONSUMER_PROVIDER | Para uno o varios SKU base no físicos, G2 traduce `422 SKU_INVALIDO` a `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE` en F-01/F-02 y conserva todos los afectados; en F-02 el motivo es identidad no física, no estado INACTIVO/BORRADOR | PENDIENTE_EVIDENCIA_G2 |
+| CT-DSP-CP-08 | CONSUMER_PROVIDER | Lote mixto con bases no físicas y perfiles incompletos selecciona `SKU_INVALIDO` e informa solo los SKU base; sin bases, informa solo SKU incompletos. La prioridad no depende del orden del request | PENDIENTE_PRUEBA_CONTRACTUAL |
+| CT-DSP-PROV-14 | PROVIDER_CONTRACT | Error estructural ordinario `SKU_INVALIDO` no requiere `details.skusAfectados` ni incluye SKU de otras clases | PENDIENTE_PRUEBA_CONTRACTUAL |
+| CT-DSP-PROV-15 | PROVIDER_CONTRACT | Base no física y perfil incompleto con request en ambos órdenes produce el mismo código/clase prioritaria; preservar SKU opacos (ceros iniciales, mayúsculas y puntuación) literalmente, sin duplicados | PENDIENTE_PRUEBA_CONTRACTUAL |
 
 ### 10.4. Seguridad y E2E
 

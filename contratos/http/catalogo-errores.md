@@ -41,11 +41,11 @@ Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail
 | `DATOS_INCOMPLETOS` | Datos incompletos. |
 | `CAMBIO_ESTRUCTURAL_NO_PERMITIDO` | Cambio estructural no permitido. |
 | `PERFIL_FISICO_INVALIDO` | Perfil físico inválido. |
-| `DATOS_FISICOS_INCOMPLETOS` | HTTP `422` de `consultarDatosFisicos` cuando un SKU existente carece de peso, dimensión o `actualizadoEn`, o algún valor incumple contrato. `details.skusAfectados` es un arreglo no vacío de SKU afectados. No se exige este detalle para `SKU_INVALIDO` ni para todo Problem Details. Es error de datos, no indisponibilidad técnica. |
+| `DATOS_FISICOS_INCOMPLETOS` | HTTP `422` de `consultarDatosFisicos` cuando un SKU existente carece de peso, dimensión o `actualizadoEn`, o algún valor incumple contrato. `details.skusAfectados` contiene todos y únicamente los SKU con perfil incompleto, en orden de solicitud, sin duplicados. En lotes mixtos esta condición tiene precedencia después de `SKU_INVALIDO` por SKU base no físico. Es error de datos, no indisponibilidad técnica. |
 | `VARIANTE_NO_ENCONTRADA` | Variante no encontrada. |
 | `PRODUCTO_NO_ADMITE_VARIANTES` | Producto no admite variantes. |
 | `COMBINACION_DUPLICADA` | Combinación duplicada. |
-| `SKU_INVALIDO` | SKU inválido. |
+| `SKU_INVALIDO` | SKU inválido. En `consultarDatosFisicos`, SKU base de producto con variantes tiene identidad de catálogo pero no es unidad física: rechaza el lote completo y exige `details.skusAfectados` no vacío, único, literal y en orden de solicitud, con todos y únicamente los SKU base no físicos afectados. Los errores estructurales ordinarios no requieren este detalle. Precede a `DATOS_FISICOS_INCOMPLETOS` en lotes mixtos. |
 | `ATRIBUTO_IDENTIFICADOR_INVALIDO` | Atributo identificador inválido. |
 | `IMAGEN_INVALIDA` | Imagen inválida. |
 | `SKU_NO_ENCONTRADO` | SKU no encontrado. |
