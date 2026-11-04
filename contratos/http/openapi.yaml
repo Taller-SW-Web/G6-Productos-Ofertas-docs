@@ -3,7 +3,7 @@ info:
   title: API — Productos y Ofertas
   version: 0.6.0-rc.3
   summary: Contrato HTTP de integración y administración del módulo Productos y Ofertas
-  description: Contrato HTTP candidato actualizado para acuerdos internos G6 H4; no implica grants ni implementación. La semántica de recomendaciones fija precio mínimo efectivo y disponibilidad positiva por SKU sin agregar ubicaciones. Contrato HTTP consolidado P0/P1/P2 del módulo Productos y Ofertas. P2 cierra la recepción de traslados internos de Inventario
+  description: Contrato HTTP candidato G6 H4 con homologación bilateral G2 de consulta física; no implica grants, despliegue ni E2E. La semántica de recomendaciones fija precio mínimo efectivo y disponibilidad positiva por SKU sin agregar ubicaciones. Contrato HTTP consolidado P0/P1/P2 del módulo Productos y Ofertas. P2 cierra la recepción de traslados internos de Inventario
     y la autorización local del operador de inventario. La topología RabbitMQ física se documenta en AsyncAPI 0.6.0-rc.4 y contratos/eventos/rabbitmq-topologia.md.
 servers:
 - url: /api/v1
@@ -4733,8 +4733,8 @@ paths:
       - serviceBearer: []
       description: >-
         Productos es dueño del peso y las dimensiones físicas de cada SKU vendible; Despacho es dueño del empaque y calcula el peso y volumen operativos.
-        El request contiene de 1 a 100 SKU únicos y opacos: conservar literalmente caracteres, mayúsculas y ceros iniciales. En una respuesta 200, cada SKU solicitado aparece exactamente una vez, y solo una vez, entre productos y noEncontrados; no se admiten omisiones ni SKU inesperados. noEncontrados significa que la identidad SKU no existe en el dominio consultable; no oculta estados INACTIVO o BORRADOR. Un SKU existente puede ser devuelto con cualquiera de esos estados si su perfil físico es válido. La operación no cambia inventario, precio ni pedidos.
-        Para F-01, G2 permite cotización exacta solo con estado ACTIVO y perfil válido; INACTIVO o BORRADOR produce en G2 422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE. Para F-02, esos estados no son por sí solos motivo de rechazo si Ventas solicita el despacho de un pedido declarado pagado, preparado y listo para entrega, y se cumplen las demás validaciones. Esta excepción no habilita ventas ni cambia la activación comercial G6. Un BORRADOR puede carecer de perfil completo. Si falta o es inválido el peso, una dimensión o actualizadoEn de un SKU existente, G6 responde 422 DATOS_FISICOS_INCOMPLETOS para el lote, nunca 200 parcial, con details.skusAfectados. Fallos de conexión, timeout, PostgreSQL o dependencia no disponible responden 503 SERVICIO_NO_DISPONIBLE. No incluir detalles SQL o internos. El SKU base de un producto con variantes no es unidad vendible ni se transforma en perfil despachable; su código de rechazo específico queda pendiente de resolución técnica de Catalog.
+        El request contiene de 1 a 100 SKU únicos y opacos: conservar literalmente caracteres, mayúsculas y ceros iniciales. En una respuesta 200, cada SKU solicitado aparece exactamente una vez, y solo una vez, entre productos y noEncontrados; no se admiten omisiones ni SKU inesperados. noEncontrados significa que la identidad SKU no existe en el dominio consultable; no oculta estados INACTIVO o BORRADOR. estado representa el estado efectivo del SKU para esta integración: una variante ACTIVA adopta el estado del padre ACTIVO, INACTIVO o BORRADOR; una variante INACTIVA o BORRADOR conserva su estado. Un producto simple conserva su estado. Esto no modifica estados persistidos ni reglas de activación/reactivación. La operación no cambia inventario, precio ni pedidos.
+        Para F-01, G2 permite cotización exacta solo con estado ACTIVO y perfil válido; INACTIVO o BORRADOR produce en G2 422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE. Para F-02, esos estados no son por sí solos motivo de rechazo si Ventas solicita el despacho de un pedido declarado pagado, preparado y listo para entrega, y se cumplen perfil válido y las demás validaciones. Esta excepción no habilita ventas ni cambia la activación comercial G6. Un BORRADOR puede carecer de perfil completo. Si falta o es inválido el peso, una dimensión o actualizadoEn de un SKU existente, G6 responde 422 DATOS_FISICOS_INCOMPLETOS para el lote, nunca 200 parcial, con details.skusAfectados. Si se solicita el sku_base de un producto con variantes, existe identidad de catálogo pero no una unidad física consultable: G6 rechaza el lote completo con 422 SKU_INVALIDO y details.skusAfectados obligatorio para este caso, con todos y únicamente esos SKU base, no vacío, sin duplicados, preservados literalmente y en orden de solicitud. No se inventa perfil físico del padre. Los errores estructurales ordinarios SKU_INVALIDO no requieren ese detalle. En todo error que incluya skusAfectados, todos y únicamente los SKU deben corresponder a la condición del código devuelto. Para lotes mixtos, se aplican en orden lógico: validaciones estructurales; fallo técnico observable (503 SERVICIO_NO_DISPONIBLE); sku_base no físico (422 SKU_INVALIDO); perfil incompleto (422 DATOS_FISICOS_INCOMPLETOS) si no hay sku_base no físico; y 200 íntegro si no hay errores. No se garantiza detectar fallos técnicos que el proveedor no pueda observar. Fallos técnicos responden 503. No incluir detalles SQL o internos.
       parameters:
       - $ref: '#/components/parameters/CorrelationId'
       requestBody:
@@ -4751,11 +4751,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConsultaDatosFisicosResponse'
         '422':
-          description: SKU malformado o existente con perfil físico incompleto/inválido. Los detalles de SKU afectados son obligatorios únicamente para DATOS_FISICOS_INCOMPLETOS.
+          description: SKU estructuralmente inválido (sin requerir detalles) o sku_base no físico de producto con variantes (details.skusAfectados obligatorio y limitado a esos SKU); o perfil físico incompleto/inválido (details.skusAfectados obligatorio).
           content:
             application/problem+json:
               schema:
-                oneOf:
+                anyOf:
                 - allOf:
                   - $ref: '#/components/schemas/Problem'
                   - type: object
@@ -4776,18 +4776,41 @@ paths:
                         const: 422
                       code:
                         type: string
+                        const: SKU_INVALIDO
+                      details:
+                        $ref: '#/components/schemas/DetallesDatosFisicosIncompletos'
+                    required: [status, code, details]
+                - allOf:
+                  - $ref: '#/components/schemas/Problem'
+                  - type: object
+                    properties:
+                      status:
+                        type: integer
+                        const: 422
+                      code:
+                        type: string
                         const: DATOS_FISICOS_INCOMPLETOS
                       details:
                         $ref: '#/components/schemas/DetallesDatosFisicosIncompletos'
                     required: [status, code, details]
               examples:
                 sku_invalido:
-                  summary: SKU inválido
+                  summary: Error estructural ordinario; details no es obligatorio
                   value:
                     type: /errores/sku-invalido
                     title: SKU inválido
                     status: 422
                     code: SKU_INVALIDO
+                    correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+                sku_base_no_fisico:
+                  summary: SKU base de producto con variantes; lote rechazado íntegramente
+                  value:
+                    type: /errores/sku-invalido
+                    title: SKU inválido para consulta física
+                    status: 422
+                    code: SKU_INVALIDO
+                    details:
+                      skusAfectados: ["BASE-001", "000BASE"]
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
                 datos_fisicos_incompletos:
                   summary: Perfil físico inválido para SKU existentes
@@ -21807,7 +21830,7 @@ components:
       properties:
         skusAfectados:
           type: array
-          description: SKU existentes cuyo perfil está ausente, incompleto o inválido.
+          description: SKU afectados exclusivamente por la condición del código devuelto; para DATOS_FISICOS_INCOMPLETOS son perfiles existentes ausentes, incompletos o inválidos; para SKU_INVALIDO en consultarDatosFisicos son SKU base no físicos de productos con variantes.
           items:
             type: string
           minItems: 1
