@@ -74,9 +74,32 @@ class G2PhysicalContractTests(unittest.TestCase):
         self.assertEqual(base_sku["details"]["skusAfectados"], ["BASE-001", "000BASE"])
         self.assertEqual(incomplete["details"]["skusAfectados"], ["SKU-001", "000ABC"])
 
+        self.assertTrue(validator.is_valid(invalid_sku))
+        self.assertTrue(validator.is_valid(base_sku))
+
+        invalid_details = [
+            {"skusAfectados": []},
+            {"skusAfectados": ["BASE-001", "BASE-001"]},
+            {"skusAfectados": ["BASE-001", 7]},
+            {"skusAfectados": ["BASE-001"], "unexpected": True},
+            {"unexpected": True},
+        ]
+        for details in invalid_details:
+            with self.subTest(details=details):
+                self.assertFalse(validator.is_valid({**base_sku, "details": details}))
+
+        incomplete_without_details = {key: value for key, value in incomplete.items() if key != "details"}
+        self.assertFalse(validator.is_valid(incomplete_without_details))
+        for details in invalid_details:
+            with self.subTest(incomplete_details=details):
+                self.assertFalse(validator.is_valid({**incomplete, "details": details}))
+
     def test_physical_semantics_and_error_precedence_are_contractually_documented(self):
         description = self.operation["description"]
         self.assertIn("estado efectivo del SKU", description)
+        reusable_description = self.openapi["components"]["schemas"]["DatosFisicosSku"]["description"]
+        self.assertIn("significado contextual de estado lo define la operación", reusable_description)
+        self.assertNotIn("estado informa el estado de la entidad", reusable_description)
         self.assertIn("sku_base", description)
         self.assertIn("errores estructurales ordinarios SKU_INVALIDO no requieren ese detalle", description)
         self.assertIn("SKU_INVALIDO", description)

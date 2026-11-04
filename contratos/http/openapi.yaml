@@ -4755,7 +4755,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                anyOf:
+                oneOf:
                 - allOf:
                   - $ref: '#/components/schemas/Problem'
                   - type: object
@@ -4767,6 +4767,8 @@ paths:
                         type: string
                         const: SKU_INVALIDO
                     required: [status, code]
+                  not:
+                    required: [details]
                 - allOf:
                   - $ref: '#/components/schemas/Problem'
                   - type: object
@@ -21839,7 +21841,7 @@ components:
       additionalProperties: false
     DatosFisicosSku:
       type: object
-      description: Perfil intrínseco de un SKU vendible. estado informa el estado de la entidad; no decide elegibilidad logística.
+      description: Perfil físico asociado a una representación de SKU. El significado contextual de estado lo define la operación que expone el perfil; el campo no determina elegibilidad logística.
 
       properties:
         sku:
