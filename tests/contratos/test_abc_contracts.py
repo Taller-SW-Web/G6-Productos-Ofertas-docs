@@ -103,8 +103,13 @@ class ContractChecks(unittest.TestCase):
         self.assertIn('modulo-marketplace -> MARKETPLACE',desc)
         self.assertIn('modulo-chatbot -> CHATBOT',desc)
         self.assertIn('modulo-retail -> RETAIL',desc)
-        self.assertIn('GET comercial',desc)
-        self.assertIn('modulo-productos',desc)
+        self.assertIn('Promotions',desc)
+        self.assertIn('identidad compartida G6',desc)
+        self.assertIn('bounded context',desc)
+        self.assertIn('DEC-G6-INT-11',desc)
+        kit=(ROOT/'contratos/http/kit-integracion.md').read_text(encoding='utf-8')
+        for rule in ('verificable=false','cantidadInformativa=null','estadoActualizacion=INCOMPLETA'):
+            self.assertIn(rule,kit)
     def test_single_location_policy_documented(self):
         desc=self.o['paths']['/inventario/disponibilidad/comercial/verificar']['post']['description']
         self.assertIn('D-INV-01',desc)

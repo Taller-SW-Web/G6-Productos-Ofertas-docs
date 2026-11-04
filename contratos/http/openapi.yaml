@@ -20390,9 +20390,12 @@ paths:
       summary: Consultar disponibilidad comercial de uno o varios SKU
       description: Proyección informativa sin cantidades ni ubicaciones internas. No reserva ni garantiza stock. D-INV-01 prohíbe
         agregar saldos entre puntos de cumplimiento independientes; si no existe una ruta de abastecimiento única y
-        ejecutable, el estado es INDETERMINADO. La identidad interna compartida G6 modulo-productos está autorizada
-        únicamente para este GET con canal=MARKETPLACE; CHATBOT y RETAIL no se habilitan para esa identidad.
-        client_id identifica al servicio y canal al contexto comercial. Para verificar cantidades usar POST
+        ejecutable, el estado es INDETERMINADO. Promotions es el consumidor funcional previsto para el acceso
+        interno G6 con client_id modulo-productos, identidad compartida que no distingue criptográficamente
+        promotions-svc de otros bounded contexts G6. Inventory restringe este GET por operación, cliente, scope
+        inventario:disponibilidad:leer y canal=MARKETPLACE; client_id identifica el servicio y canal el contexto
+        comercial. La red privada y la configuración de despliegue aíslan adicionalmente el origen. Esta precisión
+        no concede a Combos nuevas capacidades ni altera DEC-G6-INT-11. Para verificar cantidades usar POST
         /inventario/disponibilidad/comercial/verificar, cuya allowlist no incluye modulo-productos.
       x-status: provisional
       x-source-spec:
@@ -20432,7 +20435,7 @@ paths:
         required: true
         schema:
           $ref: '#/components/schemas/CanalComercial'
-        description: Canal comercial consultado. Los clientes externos deben corresponder al canal (modulo-marketplace -> MARKETPLACE, modulo-chatbot -> CHATBOT, modulo-retail -> RETAIL). La identidad interna G6 modulo-productos solo puede consultar MARKETPLACE en este GET.
+        description: Canal comercial consultado. Los clientes externos deben corresponder al canal (modulo-marketplace -> MARKETPLACE, modulo-chatbot -> CHATBOT, modulo-retail -> RETAIL). El consumidor funcional interno previsto es Promotions, usando la identidad compartida G6 modulo-productos solo para MARKETPLACE en este GET; el JWT no identifica individualmente al bounded context.
       - $ref: '#/components/parameters/CorrelationId'
       responses:
         '200':
@@ -21050,8 +21053,11 @@ components:
         Canales autorizados para consultar proyecciones comerciales de inventario.
         Para clientes externos, el canal solicitado debe corresponder al client_id autenticado:
         modulo-marketplace -> MARKETPLACE, modulo-chatbot -> CHATBOT, modulo-retail -> RETAIL.
-        La identidad interna G6 modulo-productos solo se autoriza para el GET comercial con MARKETPLACE;
-        el POST verificador conserva exclusivamente los clientes comerciales indicados en su operación.
+        El consumidor funcional previsto para la autorización interna del GET es Promotions, mediante la identidad
+        compartida G6 modulo-productos. El JWT no identifica individualmente al bounded context; la política de
+        Inventory restringe operación, cliente, scope y canal. Red privada y configuración de despliegue aíslan
+        adicionalmente el origen. Combos conserva las reglas DEC-G6-INT-11; esta adenda no le concede capacidades.
+        El POST verificador conserva exclusivamente los clientes comerciales indicados en su operación.
         Reglas deterministas de error:
         - 400 + VALIDACION: el valor de canal o channel_id no pertenece al enum MARKETPLACE, CHATBOT, RETAIL, o existe un error de formato de la solicitud.
         - 403 + SCOPE_INSUFICIENTE: el canal solicitado es válido, pero no corresponde al client_id autenticado, o la identidad carece de autorización para la operación.
