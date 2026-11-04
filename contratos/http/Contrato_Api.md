@@ -758,7 +758,7 @@ GET /api/v1/inventario/disponibilidad
 
 **Consumidores del GET detallado:** `modulo-ventas` y `modulo-postventa` con JWT de servicio, sujetos a `x-allowed-client-ids=[modulo-ventas, modulo-postventa]`, y usuarios administrativos autorizados mediante `userBearer`. M2 puede consultar disponibilidad informativa para CAMBIO; la consulta no reserva ni garantiza stock futuro. **No** corresponde a Marketplace, Chatbot ni Retail. Todos deben tener autorización efectiva; `inventario:disponibilidad:leer` por sí solo no elimina la allowlist.
 
-**Consumidores comerciales:** Marketplace, Chatbot y Retail utilizan `GET /api/v1/inventario/disponibilidad/comercial` (`sku + status`) o `POST /api/v1/inventario/disponibilidad/comercial/verificar` (cantidades solicitadas, respuesta no vinculante). Ambas operaciones limitan `x-allowed-client-ids` a `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`; no exponen `on_hand`, `reserved`, `blocked`, `available`, `stock_version` ni `location_id`. Comparten el scope `inventario:disponibilidad:leer`, pero la autorización se valida operación por operación.
+**Consumidores comerciales externos:** Marketplace, Chatbot y Retail consultan `GET /api/v1/inventario/disponibilidad/comercial` (`sku + status`) y usan `POST /api/v1/inventario/disponibilidad/comercial/verificar` para cantidades solicitadas, con respuesta no vinculante. El consumidor interno G6 `modulo-productos` puede usar únicamente el GET con `canal=MARKETPLACE`, autorizado internamente el 2026-11-03; `client_id` identifica al servicio y `canal` al contexto comercial. No suplanta `modulo-marketplace`. El POST conserva únicamente `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`, sin acceso para `modulo-productos`. Ambas operaciones comerciales requieren `inventario:disponibilidad:leer` y autorización por operación; el GET valida además cliente/canal. El scope y la aprobación no acreditan grant o credenciales G7. Ninguna expone `on_hand`, `reserved`, `blocked`, `available`, `stock_version` ni `location_id`. La disponibilidad detallada es otra operación con allowlist propia (`modulo-ventas`, `modulo-postventa` y acceso humano autorizado); no queda habilitada para consumidores comerciales ni para `modulo-productos`.
 
 La consulta detallada:
 
@@ -2614,7 +2614,8 @@ GET /api/v1/inventario/disponibilidad
 → saldo detallado/autoritativo para Ventas/Postventa y usuarios autorizados
 
 GET /api/v1/inventario/disponibilidad/comercial
-→ Marketplace / Chatbot / Retail
+→ Marketplace / Chatbot / Retail según su canal
+→ `modulo-productos` solo con `canal=MARKETPLACE` (aprobación interna 2026-11-03; grant G7 pendiente)
 → sku + status
 ```
 

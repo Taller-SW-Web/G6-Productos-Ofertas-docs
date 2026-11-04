@@ -20390,7 +20390,10 @@ paths:
       summary: Consultar disponibilidad comercial de uno o varios SKU
       description: Proyección informativa sin cantidades ni ubicaciones internas. No reserva ni garantiza stock. D-INV-01 prohíbe
         agregar saldos entre puntos de cumplimiento independientes; si no existe una ruta de abastecimiento única y
-        ejecutable, el estado es INDETERMINADO. Para verificar cantidades usar POST /inventario/disponibilidad/comercial/verificar.
+        ejecutable, el estado es INDETERMINADO. La identidad interna compartida G6 modulo-productos está autorizada
+        únicamente para este GET con canal=MARKETPLACE; CHATBOT y RETAIL no se habilitan para esa identidad.
+        client_id identifica al servicio y canal al contexto comercial. Para verificar cantidades usar POST
+        /inventario/disponibilidad/comercial/verificar, cuya allowlist no incluye modulo-productos.
       x-status: provisional
       x-source-spec:
       - SPEC-015
@@ -20429,7 +20432,7 @@ paths:
         required: true
         schema:
           $ref: '#/components/schemas/CanalComercial'
-        description: Canal comercial solicitante. Debe corresponder al client_id autenticado (modulo-marketplace -> MARKETPLACE, modulo-chatbot -> CHATBOT, modulo-retail -> RETAIL).
+        description: Canal comercial consultado. Los clientes externos deben corresponder al canal (modulo-marketplace -> MARKETPLACE, modulo-chatbot -> CHATBOT, modulo-retail -> RETAIL). La identidad interna G6 modulo-productos solo puede consultar MARKETPLACE en este GET.
       - $ref: '#/components/parameters/CorrelationId'
       responses:
         '200':
@@ -21045,8 +21048,10 @@ components:
       - RETAIL
       description: >-
         Canales autorizados para consultar proyecciones comerciales de inventario.
-        El canal solicitado debe corresponder al client_id autenticado:
+        Para clientes externos, el canal solicitado debe corresponder al client_id autenticado:
         modulo-marketplace -> MARKETPLACE, modulo-chatbot -> CHATBOT, modulo-retail -> RETAIL.
+        La identidad interna G6 modulo-productos solo se autoriza para el GET comercial con MARKETPLACE;
+        el POST verificador conserva exclusivamente los clientes comerciales indicados en su operación.
         Reglas deterministas de error:
         - 400 + VALIDACION: el valor de canal o channel_id no pertenece al enum MARKETPLACE, CHATBOT, RETAIL, o existe un error de formato de la solicitud.
         - 403 + SCOPE_INSUFICIENTE: el canal solicitado es válido, pero no corresponde al client_id autenticado, o la identidad carece de autorización para la operación.

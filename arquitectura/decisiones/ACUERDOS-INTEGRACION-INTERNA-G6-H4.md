@@ -26,6 +26,7 @@ La planificación adjunta fija el modo demo sin JWT hasta el 2026-11-01, el reto
 - **Responsables:** Marco política; Poma, Vera, Taco, López y Axel adaptadores/allowlists de su dominio.
 - **Evidencia:** prueba de autorización positiva y negativa por operación, verificación de JWT y allowlist, no reenvío del token, SHA/CI y prueba E2E separada.
 - **Pendientes:** contrato OpenAPI candidata actualizado; implementación de allowlists/adaptadores y pruebas; grant y credenciales de G7 para JWT real; comprobación de red privada para demo. Sin homologación externa atribuida.
+- **Adenda 2026-11-03 — Promotions → Inventory:** Marco aprueba que la identidad técnica compartida `client_id=modulo-productos`, `tipo=servicio`, `aud=api-productos`, con `inventario:disponibilidad:leer`, consulte únicamente `consultarDisponibilidadComercial` por GET y con `canal=MARKETPLACE`. `client_id` identifica al servicio G6 y `canal` el contexto comercial; no se suplanta `modulo-marketplace`. La autorización se restringe conjuntamente por operación, cliente y canal. No habilita CHATBOT/RETAIL para esa identidad, el POST verificador, disponibilidad detallada, reserva, consumo, liberación ni otros permisos. No se crean scopes ni bypass demo. Taco responde como proveedor; Axel como consumidor; Marco como aprobador. Implementación en Inventory, regresión, SHA/CI, grant/credenciales G7 y E2E autenticado siguen pendientes; la aprobación interna no acredita esos estados ni homologación externa.
 
 ### DEC-G6-INT-02 — D-REC-01, disponibilidad de recomendaciones con variantes
 
@@ -55,6 +56,7 @@ La planificación adjunta fija el modo demo sin JWT hasta el 2026-11-01, el reto
 - **Responsables:** Axel integra; Poma Catalog/contexto; López maestros; Vera Pricing; Taco Inventory.
 - **Evidencia:** resolución SKU→productId, coincidencia/divergencia, referencias activas/inactivas/ausentes, errores técnicos y controles de allowlist.
 - **Pendientes:** OpenAPI y kit actualizados; implementar y probar llamadas/allowlists antes de activar; grants reales G7 pendientes. Ninguna homologación externa se presume.
+- **Precisión aprobada 2026-11-03 — Inventory:** para `consultarDisponibilidadComercial`, Promotions usa `modulo-productos` con el scope y audiencia existentes, exclusivamente para `MARKETPLACE`. La identidad del servicio y el canal son atributos distintos y se validan conjuntamente; el mapa existente de clientes comerciales no se reemplaza. La allowlist de `POST /inventario/disponibilidad/comercial/verificar` y la de disponibilidad detallada permanecen sin cambios. Taco implementa y verifica la política en Inventory; Axel consume sin suplantación; Marco aprobó el alcance. Pendientes: cambio backend de Inventory, pruebas positivas/negativas con modo demo desactivado, SHA de merge, CI, grant y credenciales G7, y repetición E2E autenticada.
 
 ### DEC-G6-INT-05 — Barrera Taxonomy ↔ Catalog (ratificación)
 

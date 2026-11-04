@@ -136,7 +136,7 @@ Al reactivar autenticación, la llamada usa JWT real de `modulo-productos` con `
 | `obtenerProducto` | Validar producto visible/elegible para Promotions | Allowlist interna en OpenAPI; grant G7 pendiente |
 | `obtenerContextoSku` | Resolver SKU→productId y estado para Promotions; contrato privado Catalog→Pricing | Solo operación interna; grant G7 pendiente |
 | `obtenerPrecioSku` / `consultarPrecios` | Precio efectivo para Promotions, Catalog y Combos según operación | `precios:leer`, allowlist puntual; grant G7 pendiente |
-| `consultarDisponibilidadComercial` | Disponibilidad informativa por SKU para Promotions/Combos | `inventario:disponibilidad:leer`, sin cantidades; grant G7 pendiente |
+| `consultarDisponibilidadComercial` (GET comercial) | Promotions consulta disponibilidad informativa por SKU con `client_id=modulo-productos` y `canal=MARKETPLACE` únicamente; identidad de servicio y contexto comercial son distintos y no se suplanta al cliente Marketplace | `inventario:disponibilidad:leer`, `aud=api-productos`; autorización conjunta por operación, cliente y canal; grant/credenciales G7 pendientes |
 | GETs administrativos existentes de categoría, tipo y marca | Validación interna de referencias por regla Promotions | `catalogo:leer`, `serviceBearer` de solo lectura y allowlist `modulo-productos`; grant G7 pendiente |
 
 Productos y Ofertas responde:
@@ -195,7 +195,7 @@ La línea base conserva **16 scopes** de `api-productos`; la candidata OpenAPI `
 | `cupones:validar` | Cupón | Marketplace, Chatbot, Retail |
 | `recomendaciones:leer` | `GET /recomendaciones` (`obtenerRecomendaciones`) | Marketplace, Chatbot, Retail (allowlist de operación) |
 | `combos:leer` | Combos | Sin grant externo inicial |
-| `inventario:disponibilidad:leer` | Disponibilidad detallada y comercial según allowlist | Marketplace, Chatbot, Retail; `modulo-productos` solo `consultarDisponibilidadComercial`; Ventas/Postventa solo detalle donde ya está permitido |
+| `inventario:disponibilidad:leer` | Disponibilidad detallada y comercial según allowlist | Marketplace, Chatbot y Retail según operación; `modulo-productos` solo GET `consultarDisponibilidadComercial` con `canal=MARKETPLACE`; Ventas/Postventa solo detalle donde ya está permitido |
 | `inventario:reservar` | Reserva | Ventas |
 | `inventario:consumir` | Consumo | Ventas |
 | `inventario:liberar` | Liberación | Ventas |
@@ -209,7 +209,7 @@ La línea base conserva **16 scopes** de `api-productos`; la candidata OpenAPI `
 
 **Scope adicional candidato:** `inventario:operaciones:leer` — consulta durable `GET /api/v1/inventario/operaciones/{operationId}`, exclusiva para el cliente de servicio `modulo-ventas`. OpenAPI `0.6.0-rc.3` registra `x-scope-registration-status: pending-security-registration`; su utilización efectiva requiere concesión explícita de G7.
 
-**El scope compartido de disponibilidad no concede acceso indistinto a todas las representaciones.** `GET /api/v1/inventario/disponibilidad` devuelve saldo detallado y su allowlist de clientes de servicio contiene `modulo-ventas` y `modulo-postventa`. M2 lo usa de forma informativa para CAMBIO; la consulta no reserva ni garantiza stock futuro. `GET /api/v1/inventario/disponibilidad/comercial` permite `modulo-marketplace`, `modulo-chatbot`, `modulo-retail` y, para llamada interna G6 aprobada, `modulo-productos`; `POST /api/v1/inventario/disponibilidad/comercial/verificar` mantiene su allowlist de servicio para `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`. Comparten el scope `inventario:disponibilidad:leer`, pero no el acceso a cantidades ni ubicaciones internas. La lectura detallada administrativa mediante JWT de usuario conserva su autorización humana correspondiente. El proveedor debe comprobar audiencia, scope y cliente admitido en la operación; un token de canal con el scope correcto no autoriza el endpoint detallado.
+**El scope compartido de disponibilidad no concede acceso indistinto a todas las representaciones.** `GET /api/v1/inventario/disponibilidad` devuelve saldo detallado y su allowlist de clientes de servicio contiene `modulo-ventas` y `modulo-postventa`. M2 lo usa de forma informativa para CAMBIO; la consulta no reserva ni garantiza stock futuro. En `GET /api/v1/inventario/disponibilidad/comercial`, los clientes externos `modulo-marketplace`, `modulo-chatbot` y `modulo-retail` consultan su canal correspondiente; la identidad técnica G6 `modulo-productos` está autorizada solo para `MARKETPLACE`. `client_id` identifica el servicio y `canal` el contexto comercial, con validación conjunta por operación, cliente y canal. El `POST /api/v1/inventario/disponibilidad/comercial/verificar` mantiene exclusivamente su allowlist comercial actual y no admite `modulo-productos`. Ninguna operación comercial expone cantidades ni ubicaciones internas. El grant y las credenciales G7 para `modulo-productos` siguen pendientes de acreditación. La lectura detallada administrativa mediante JWT de usuario conserva su autorización humana correspondiente; el scope por sí solo no autoriza la ruta detallada.
 
 Todo endpoint técnico valida:
 
