@@ -114,7 +114,7 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 | Matriz de trazabilidad DEC-F | [`arquitectura/decisiones/MATRIZ_TRAZABILIDAD_DEC_F.md`](arquitectura/decisiones/MATRIZ_TRAZABILIDAD_DEC_F.md) | Referencias, estados, contradicciones y validación pendiente |
 | Propuestas DEC-F backend (histórico) | [`arquitectura/decisiones/PROPUESTAS_DEC_F_BACKEND.md`](arquitectura/decisiones/PROPUESTAS_DEC_F_BACKEND.md) | Evidencia histórica; el registro es la fuente normativa vigente |
 | Matriz intermodular backend | [`integraciones/MATRIZ_INTERMODULAR_BACKEND.md`](integraciones/MATRIZ_INTERMODULAR_BACKEND.md) | Estado de integración, homologación y bloqueos por módulo |
-| Política de seguridad progresiva G6 | [`arquitectura/decisiones/POLITICA-SEGURIDAD-PROGRESIVA-G6.md`](arquitectura/decisiones/POLITICA-SEGURIDAD-PROGRESIVA-G6.md) | Tres fases reversibles; decisión transversal separada de DEC-F, implementación y homologación |
+| Política de seguridad progresiva G6 | [`arquitectura/decisiones/POLITICA-SEGURIDAD-PROGRESIVA-G6.md`](arquitectura/decisiones/POLITICA-SEGURIDAD-PROGRESIVA-G6.md) | Decisión adoptada; documento en PR #114 draft, pendiente de merge; implementación separada |
 | Matriz de operaciones de seguridad | [`arquitectura/decisiones/MATRIZ-OPERACIONES-SEGURIDAD-G6.md`](arquitectura/decisiones/MATRIZ-OPERACIONES-SEGURIDAD-G6.md) | Inventario OpenAPI por ocho servicios; lectura pública candidata o pendiente, no grant |
 | Persistencia por bounded context | [`bd/`](datos) | Modelo físico, migraciones y scripts de validación SQL por servicio |
 
