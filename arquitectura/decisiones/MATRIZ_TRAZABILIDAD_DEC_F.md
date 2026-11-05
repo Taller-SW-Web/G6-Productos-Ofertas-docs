@@ -1,5 +1,7 @@
 # Matriz de trazabilidad DEC-F
 
+> **Política transversal fuera de DEC-F:** véase [Política de seguridad progresiva G6](POLITICA-SEGURIDAD-PROGRESIVA-G6.md) y [Matriz de operaciones](MATRIZ-OPERACIONES-SEGURIDAD-G6.md). Esta decisión documenta tres fases operativas y una excepción anónima solo por lectura expresamente aprobada; no crea una DEC-F ni modifica contratos. Los operationIds se inventariaron desde OpenAPI `0.6.0-rc.3`; autorización pública, auditoría de implementación y permisos efectivos continúan pendientes por fila.
+
 **Base G6 de esta actualización:** `origin/master` `e5c8aea` (Docs PR #109 integrado), posterior a la publicación de Bulk v2. OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` siguen siendo candidatas, no evidencia de despliegue. Registro maestro recibido: `G6_REGISTRO_MAESTRO_12_DECISIONES_DEC-F_2026-10-12.md`.
 
 ## Cómo leer la matriz

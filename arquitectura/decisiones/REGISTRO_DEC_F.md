@@ -1,5 +1,7 @@
 # Registro de decisiones DEC-F — G6 Productos y Ofertas
 
+> **Índice de política transversal fuera de DEC-F:** la [Política de seguridad progresiva y reversible de G6](POLITICA-SEGURIDAD-PROGRESIVA-G6.md) documenta las fases `PUBLIC_READ_ONLY`, `SIMULATED_AUTH` y `G7_AUTHENTICATED`, junto con su [matriz por operación](MATRIZ-OPERACIONES-SEGURIDAD-G6.md). Esta referencia no crea DEC-F-016 ni modifica DEC-F-001–015; los estados de implementación, homologación y despliegue siguen independientes.
+
 - **Corte de contraste:** `origin/master` `78a923bbc6bada31b39b3d386331f90a4f812b31` (merge de PR #86).
 - **Antecedente:** `G6_REGISTRO_MAESTRO_12_DECISIONES_DEC-F_2026-10-12.md`, recibido el 12-10-2026.
 - **Alcance:** DEC-F-001–DEC-F-015 son decisiones internas adoptadas por G6. DEC-F-013 a DEC-F-015 fueron aprobadas por Marco el 2026-10-13 y sus invariantes se limitan a la autoridad de Productos y Ofertas. B1–B4 son bloqueantes de integración del PR #86, no decisiones adicionales ni sustitutos. Se conserva [ADR-DEC-F-BLOQUEANTES.md](ADR-DEC-F-BLOQUEANTES.md).
