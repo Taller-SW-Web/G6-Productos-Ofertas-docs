@@ -1772,6 +1772,16 @@ x-scope-registration-status: pending-security-registration
 continúa siendo obligatorio.
 
 
+## 21.6. Fases operativas de seguridad (política transversal)
+
+La política normativa vigente de fases está en [Política de seguridad progresiva y reversible G6](decisiones/POLITICA-SEGURIDAD-PROGRESIVA-G6.md), con el inventario fila por fila en su [matriz de operaciones](decisiones/MATRIZ-OPERACIONES-SEGURIDAD-G6.md). No crea DEC-F ni modifica los scopes, clientes, JWT o permisos contractuales descritos arriba.
+
+La meta es `G7_AUTHENTICATED`. `SIMULATED_AUTH` usa un issuer de demo independiente; `PUBLIC_READ_ONLY` permite anónimo por Internet solo para `operationId`/método/ruta expresamente aprobados tras demostrar ausencia de mutación y revisar sensibilidad. No se exige VPN, Tailscale ni allowlist IP para esas lecturas aprobadas. Ningún GET/POST queda habilitado por el método o prefijo. Las lecturas administrativas, internas y M2M no se exponen por defecto; `x-internal: true` se excluye del Gateway externo.
+
+La excepción sustituye la exigencia anterior de perímetro privado **solo** para cada lectura que se marque `PÚBLICA_APROBADA` en la matriz. Mantiene puertos internos, DB, RabbitMQ, escrituras, administración, guards/autorización residual, validaciones y reglas de negocio. El contrato OpenAPI conserva `security`; la fase es una regla operativa, no un cambio contractual. El selector propuesto `G6_SECURITY_MODE` aún no está implementado y no representa los flags actuales de servicios.
+
+El estado contractual, implementación, CI, permisos efectivos G7, homologación, Oracle y E2E se registra por separado y con SHA. Esta actualización documental no acredita ninguno de ellos.
+
 # 22. Errores
 
 Fuente canónica de códigos:
