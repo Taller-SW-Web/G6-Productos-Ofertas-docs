@@ -1,5 +1,7 @@
 # Evidencia local — 2026-11-05
 
+**Histórico del visor inicial en `2f1346f`.** El objetivo cambió a Swagger Studio oficial: visor retirado y clave duplicada corregida con autorización. Ver [resultados vigentes](RESULTADOS-STUDIO.md).
+
 Base `master`: `a7778ec1a22811c1213a94ef096ab905911342cc`. Rama `poma`. Windows, Node `24.16.0`, npm `11.13.0`, Python `3.14.4`; dependencias npm fijadas en lockfile. Esta evidencia corresponde al contenido del commit que incorpora este archivo; no prueba runtime Backend ni despliegue.
 
 | Comando / acción realmente ejecutada | Resultado |

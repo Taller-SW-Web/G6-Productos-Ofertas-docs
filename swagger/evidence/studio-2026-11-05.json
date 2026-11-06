@@ -1,0 +1,89 @@
+{
+  "observedAt": "2026-11-06T00:30:00Z",
+  "dateLima": "2026-11-05",
+  "organization": {
+    "name": "sanmarcos-bb0",
+    "id": "7a54649e-bfcc-4d31-86de-924b0d3e1346",
+    "membershipVerified": true,
+    "projectListing": "NOT_EXPOSED"
+  },
+  "creation": {
+    "owner": "sanmarcos-bb0",
+    "apiName": "G6-Productos-y-Ofertas",
+    "version": "0.6.0-rc.3",
+    "url": "https://app.swaggerhub.com/apis/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3",
+    "operation": "create"
+  },
+  "postRead": {
+    "items": [
+      {
+        "owner": "sanmarcos-bb0",
+        "name": "G6 Productos y Ofertas",
+        "description": "Contrato HTTP candidato G6 H4 con homologación bilateral G2 de consulta física; no implica grants, despliegue ni E2E. La semántica de recomendaciones fija precio mínimo efectivo y disponibilidad positiva por SKU sin agregar ubicaciones. Contrato HTTP consolidado P0/P1/P2 del módulo Productos y Ofertas. P2 cierra la recepción de traslados internos de Inventario y la autorización local del operador de inventario. La topología RabbitMQ física se documenta en AsyncAPI 0.6.0-rc.4 y contratos/eventos/rabbitmq-topologia.md.",
+        "summary": "Contrato HTTP de integración y administración del módulo Productos y Ofertas",
+        "version": "0.6.0-rc.3",
+        "specification": "openapi-3.1.0",
+        "created": "2026-11-06T00:27:36Z",
+        "modified": "2026-11-06T00:30:00Z",
+        "published": "false",
+        "private": "true",
+        "oasVersion": "3.1.0",
+        "url": "https://api.swaggerhub.com/apis/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3"
+      }
+    ]
+  },
+  "counts": {
+    "Catalog": 21,
+    "Taxonomy": 42,
+    "Pricing": 13,
+    "Price Audit": 5,
+    "Promotions": 22,
+    "Inventory": 19,
+    "Bulk": 8,
+    "Combos": 6
+  },
+  "operations": 136,
+  "tags": 13,
+  "schemas": 177,
+  "sameDefinitionAfterAllowedTransformations": true,
+  "allowedTransformations": [
+    "info.title",
+    "servers"
+  ],
+  "sourceSha256": "3654df676144c47b3c59b1f4034ad87194ab3cd7d9e630c4d3868ee3fa6bcc2b",
+  "sourceHashScope": "Windows working-tree bytes; semanticSha256 is independent of line endings",
+  "sourceGitBlob": "a0b720b84d19ac7e8bbd71be31f2dba3de21e6fc",
+  "semanticSha256": "549fda5691c480a0c821d4bc7c60be2b97ed60c830559bff5998a0a7c37a3883",
+  "validation": {
+    "valid": true,
+    "recognized": true,
+    "spec": {
+      "namespace": "openapi",
+      "version": "3.1.0",
+      "format": "YAML",
+      "mediaType": "application/vnd.oai.openapi+yaml;version=3.1.0"
+    },
+    "summary": {
+      "errors": 0,
+      "warnings": 0,
+      "total": 0,
+      "durationMs": 7015
+    },
+    "findings": []
+  },
+  "apiPrivacyVerified": true,
+  "visualMyApisVerified": false,
+  "tryItOut": {
+    "absoluteServerConfigured": true,
+    "requestsThroughStudioExecuted": false,
+    "proxyConfigured": false,
+    "credentialsStored": false,
+    "browserModeConfigured": false,
+    "corsHeadersAbsentOnObservedGets": true
+  },
+  "synchronization": {
+    "authority": "contratos/http/openapi.yaml",
+    "mode": "manual-unidirectional",
+    "automatic": false
+  }
+}

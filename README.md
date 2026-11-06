@@ -1,6 +1,6 @@
 # Productos y Ofertas
 
-Portal HTTP local: [Swagger UI y validaciones](swagger/README.md). Se construye desde el contrato oficial, incluye operaciones internas y funciona en modo consulta sin backend desplegado. Ver [hallazgos de validación](swagger/HALLAZGOS.md) antes de interpretar el resultado del CI.
+API privada: [G6 Productos y Ofertas en Swagger Studio](https://app.swaggerhub.com/apis/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3). Ver [integración, validaciones y límites de Try it out](swagger/README.md) y [hallazgos vigentes](swagger/HALLAZGOS.md). Docs conserva la fuente contractual.
 
 Repositorio de documentación del módulo **Productos y Ofertas** del proyecto de Taller de Construcción de Software Web.
 

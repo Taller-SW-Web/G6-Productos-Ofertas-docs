@@ -1,0 +1,13 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import YAML from 'yaml';
+import { loadContract, operations } from './contract.mjs';
+import { config, forStudio, stable } from './studio.mjs';
+const { raw, spec } = await loadContract();
+const publication = forStudio(spec);
+await mkdir('reports', { recursive: true });
+await writeFile('reports/studio.json', JSON.stringify(publication, null, 2));
+await writeFile('reports/studio.yaml', YAML.stringify(publication, { aliasDuplicateObjects: false }));
+const manifest = { source: 'contratos/http/openapi.yaml', sourceSha256: createHash('sha256').update(raw).digest('hex'), semanticSha256: createHash('sha256').update(JSON.stringify(stable(publication))).digest('hex'), version: spec.info.version, owner: config.owner, apiName: config.apiName, operations: operations(spec).length, tags: spec.tags.length, schemas: Object.keys(spec.components.schemas).length, transformations: ['info.title', 'servers'], servers: publication.servers };
+await writeFile('reports/manifest.json', JSON.stringify(manifest, null, 2));
+console.log(JSON.stringify(manifest, null, 2));

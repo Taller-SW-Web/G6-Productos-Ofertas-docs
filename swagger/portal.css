@@ -1,7 +1,0 @@
-body { margin: 0; background: #fafbfc; color: #182c40; font-family: system-ui, sans-serif; }
-header { padding: 28px max(24px, calc((100vw - 1420px) / 2)); background: #142b40; color: #fff; }
-header h1 { margin: 8px 0; font-size: 32px; }
-header p { line-height: 1.5; }
-header a { color: #a9dcff; }
-#status { color: #ffdf8b; }
-.swagger-ui .wrapper { max-width: 1460px; }

@@ -1,13 +1,16 @@
-# Hallazgos para auditoría
+# Hallazgos vigentes — Swagger Studio
 
-Base Docs: `a7778ec1a22811c1213a94ef096ab905911342cc` (`master`, 2026-11-05).
+| Hallazgo | Estado / responsable |
+|---|---|
+| Clave `x-allowed-client-ids` idéntica repetida en `obtenerPrecioSku` | Corregida con autorización; cinco líneas retiradas y comparación semántica total PASS; YAML estricto PASS |
+| Anclas YAML y SmartBear | Importación derivada sin anclas; contenido recuperado idéntico y validación SmartBear PASS |
+| Privacidad | Verificada después de crear/actualizar: `sanmarcos-bb0`, versión `0.6.0-rc.3`, `private=true`, `published=false` |
+| CORS de Studio | GET observados sin Allow-Origin/Expose-Headers para `https://app.swaggerhub.com`; owner Gateway/infraestructura debe revisar origen exacto, preflight, headers mínimos y correlación; sin cambios de infraestructura |
+| GET marcas | 503 en texto de Caddy; owner Gateway/Taxonomy/infraestructura debe revisar exposición/upstream; no se afirma negocio funcional |
+| JWT real / versión desplegada | No acreditados por GET sin credenciales; provisión/grant G7 y SHA de runtime pendientes |
+| Modo navegador/proxy de Studio | Preferencia local del navegador no expuesta por complemento; sin proxy ni tokens utilizados; comprobación visual manual pendiente |
+| `InventoryStockChanged`, prueba negativa línea 151 | Fallo preexistente reproducido en base intacta; owner Inventario/contratos debe revisar schema/fixture; AsyncAPI y expectativa intactos |
+| Generador Gateway | Fuente consultada no filtra `x-internal`; owner Gateway debe revisar antes de generar nuevas rutas; documentación no acredita exposición |
+| Gobierno SmartBear | Evaluación previa 404 por configuración de reglas inexistente; no se cambian organización/roles/plan |
 
-| Fuente y ubicación | Operación / problema | Impacto y propuesta |
-|---|---|---|
-| `contratos/http/openapi.yaml:1968` y `:2183` | `GET /precios/skus/{sku}`, `obtenerPrecioSku`: `x-allowed-client-ids` aparece dos veces con los mismos cuatro valores | YAML estricto inválido; owner contractual G6/Pricing debe aprobar retirar la repetición, sin alterar valores. Contrato intacto en este PR. El build elimina solo redundancia idéntica en JSON derivado y lo informa; el CI estricto permanece rojo |
-| YAML original, validación SmartBear apidom-ls | 459 errores informados, muchos sobre anclas/alias y parámetros referenciados | No son 459 defectos confirmados: la copia JSON sin anclas pasa Swagger Parser y SmartBear con cero errores. No cambiar `$ref` ni extensiones válidas para silenciar diagnósticos |
-| Backend `apps/api-gateway/test/generate-routes.mjs`, master observado `58b94a694fc22ad4401450feaffe8b708330518d` | El generador exige operationId y deshabilita regeneración completa; concatena `/api/v1` + path, refresca seguridad/errores en ruta existente y no filtra `x-internal` | No reconstruir Swagger desde controladores ni tabla parcial. Owner Gateway debe revisar filtro explícito antes de futuras generaciones internas. No se cambia Backend ni se afirma una fuga runtime |
-| SmartBear `scan_api_standardization`, organización accesible | HTTP 404: no existe configuración de gobierno | Validación estructural sí funciona; reglas organizacionales pendientes del administrador, sin modificar permisos ni configuración |
-| `tests/contratos/test_asyncapi_h4_event_instances.py:151` / `InventoryStockChanged` | El fixture negativo `inventoryStockChanged` resulta válido | Fallo reproducido sobre el SHA base intacto. Owner Inventario/contratos debe determinar si corresponde corregir schema o fixture; no modificar unilateralmente AsyncAPI ni la expectativa en este PR |
-
-Backend y Frontend se consultaron en modo lectura mediante GitHub. El README Frontend describe modo demo y adapters; no acredita backend desplegado. La lectura de fuentes de código no constituye prueba runtime.
+Solo se modifican Docs y la API privada autorizada. Backend/Frontend, permisos G7, Caddy, CORS, Oracle, Azure y Vercel no se modifican.
