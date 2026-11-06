@@ -1,0 +1,65 @@
+name: Validar y preparar documentación Swagger
+
+on:
+  pull_request:
+    branches: [master]
+    paths: ['swagger/**', 'contratos/**', 'tests/contratos/**', '.github/workflows/swagger-docs.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portal:
+    name: Construir y comprobar portal
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: swagger
+    steps:
+      - name: Descargar fuentes
+        uses: actions/checkout@v4
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: swagger/package-lock.json
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar dependencias fijadas
+        run: |
+          npm ci --ignore-scripts
+          python -m pip install PyYAML==6.0.3 jsonschema==4.25.1
+          npx playwright install --with-deps chromium
+      - name: Validar contrato estricto
+        id: contrato
+        continue-on-error: true
+        run: npm run validate
+      - name: Construir artefacto de revisión
+        run: npm run build
+      - name: Comprobar artefacto y referencias
+        run: npm test
+      - name: Probar portal en Chromium
+        run: npx playwright test
+      - name: Ejecutar regresión contractual existente
+        working-directory: .
+        run: python -m unittest discover -s tests/contratos -v
+      - name: Adjuntar artefacto y evidencias para auditoría
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swagger-revision
+          path: |
+            swagger/dist
+            swagger/reports
+            swagger/test-results
+            swagger/playwright-report
+          retention-days: 7
+      - name: Informar contrato inválido sin ocultar el hallazgo
+        if: always() && steps.contrato.outcome == 'failure'
+        run: |
+          echo 'El contrato fuente no pasa validación estricta; consultar validation.json.'
+          exit 1

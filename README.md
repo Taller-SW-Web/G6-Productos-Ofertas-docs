@@ -1,5 +1,7 @@
 # Productos y Ofertas
 
+Portal HTTP local: [Swagger UI y validaciones](swagger/README.md). Se construye desde el contrato oficial, incluye operaciones internas y funciona en modo consulta sin backend desplegado. Ver [hallazgos de validación](swagger/HALLAZGOS.md) antes de interpretar el resultado del CI.
+
 Repositorio de documentación del módulo **Productos y Ofertas** del proyecto de Taller de Construcción de Software Web.
 
 El módulo concentra las capacidades compartidas de catálogo, taxonomía, precios, promociones, combos, inventario y operaciones masivas que son consumidas por otros módulos del sistema, entre ellos Marketplace, Chatbot, Retail, Ventas/Postventa y Despacho.
