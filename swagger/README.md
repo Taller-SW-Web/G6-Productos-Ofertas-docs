@@ -1,4 +1,13 @@
-# G6 Productos y Ofertas en Swagger Studio
+# APIs G6: Swagger Studio privado y Swagger UI local
+
+Ambas alternativas parten de [contratos/http/openapi.yaml](../contratos/http/openapi.yaml):
+
+| Alternativa | Acceso y ejecución |
+|---|---|
+| Swagger Studio privado | Plataforma oficial web; cuenta y permiso View. Conserva la integración existente y los límites de Try it out descritos abajo |
+| [Swagger UI local](LOCAL.md) | Sin SmartBear ni Internet después de instalar dependencias. Desde la raíz: `npm --prefix swagger run swagger:local`; abrir `http://localhost:8080`. Consulta sin ejecución ni captura de credenciales |
+
+El visor local se recuperó selectivamente de `2f1346f` y se adaptó al parser estricto actual. No modifica la definición remota ni la exportación para Studio. Su prueba de Chromium aislado valida el visor local, no la interfaz privada de SmartBear.
 
 **[Abrir G6 Productos y Ofertas](https://app.swaggerhub.com/apis/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3)** con la cuenta conectada a `sanmarcos-bb0`. El enlace fue devuelto por las herramientas oficiales. Lecturas posteriores confirman `private=true`, `published=false`, título `G6 Productos y Ofertas` y versión `0.6.0-rc.3`.
 
@@ -9,7 +18,7 @@ Accesos a la misma API privada:
 
 La ruta `/apis-docs/` sigue el patrón oficial de SmartBear; las pruebas verifican mismo host, organización, nombre y versión que el editor. Esta comprobación no equivale a abrir visualmente una página privada. Para compañeros, el owner debe conceder acceso View desde Share; enviar el enlace no concede permisos.
 
-Estado: **IMPLEMENTAR_PARCIAL**. Recurso privado persistente verificado por API; ejecución directa desde navegador pendiente de CORS, preferencia de conexión y JWT real. No se controló Chrome ni se verificó visualmente My APIs. El complemento no expone proyectos, asignación de proyectos ni roles administrativos detallados; sí acreditó pertenencia a la organización autorizada y permiso efectivo de creación/lectura/actualización.
+Estado de la integración Studio: **IMPLEMENTAR_PARCIAL**. Recurso privado persistente verificado por API; ejecución directa desde navegador pendiente de CORS, preferencia de conexión y JWT real. No se controló Chrome ni se verificó visualmente My APIs. El complemento no expone proyectos, asignación de proyectos ni roles administrativos detallados; sí acreditó pertenencia a la organización autorizada y permiso efectivo de creación/lectura/actualización.
 
 ## Contrato y áreas
 
@@ -30,7 +39,7 @@ Agrupación orientativa, sin cambiar tags ni ownership; ver [arquitectura](../ar
 
 La [documentación oficial de Studio](https://support.smartbear.com/swagger/studio/docs/en/edit-apis/interactive-api-documentation.html) describe parámetros, respuestas, modelos, headers y duración de Try it out. Se verificó el contenido almacenado, no cada componente visual de esa interfaz.
 
-## Try it out y seguridad
+## Swagger Studio: Try it out y seguridad
 
 Servidor configurado en la copia privada: `https://g6-productos-ofertas.duckdns.org/api/v1`, obtenido de documentación Backend y verificado por DNS/HTTPS con certificado válido. Docs conserva `/api/v1`; ningún path incluye ese prefijo. No se duplicó la base.
 
@@ -70,14 +79,15 @@ cd swagger
 npm ci --ignore-scripts
 npm run validate
 npm run export
+npm run build:local
 npm test
 ```
 
-No se aloja una interfaz HTML. Se retiraron UI, servidor, Playwright y sus dependencias. `reports/studio.yaml` sin anclas, `reports/studio.json` y manifiesto son artefactos descartables, no se editan ni reemplazan la fuente. [studio.config.json](studio.config.json) solo contiene organización, nombre y presentación/servidor verificados. El manifiesto registra hash de fuente y semántico derivado.
+La exportación a Studio mantiene `reports/studio.yaml` sin anclas, `reports/studio.json` y manifiesto como artefactos descartables; no se editan ni reemplazan la fuente. [studio.config.json](studio.config.json) contiene organización, nombre y presentación/servidor verificados. El visor local genera por separado `dist/` desde el mismo YAML, sin aplicar las transformaciones de presentación de Studio ni mantener una copia manual del contrato. Ambas construcciones registran hashes del origen.
 
 La clave repetida idéntica de `obtenerPrecioSku` se eliminó con autorización expresa. El documento parseado antes/después es idéntico: no cambiaron rutas, scopes, permisos, clientes ni reglas. El parser ahora es estricto y rechaza duplicaciones.
 
-El [workflow](../.github/workflows/swagger-docs.yml) valida, exporta, comprueba equivalencia/referencias, patrones de secretos y coherencia de URL, y ejecuta regresión; adjunta `swagger-studio-revision`. No ejecuta sondas al backend ni publica en SmartBear. El fallo anterior de `InventoryStockChanged` se debía a la dependencia opcional de formato ausente; se corrigió el entorno, sin modificar AsyncAPI ni expectativas.
+El mismo [workflow](../.github/workflows/swagger-docs.yml) valida, exporta para Studio, construye el visor local, comprueba equivalencia/referencias, patrones de secretos y coherencia de URL, ejecuta Chromium aislado y la regresión contractual; adjunta `swagger-studio-revision` con ambas construcciones y capturas. No ejecuta sondas al backend ni publica en SmartBear. Se conservan requisitos Python fijados y preflight de fechas inválidas de `61cf5441`; AsyncAPI y expectativas permanecen intactos.
 
 Instalar el mismo conjunto fijado en CI y localmente, y verificar explícitamente el formato antes de las 61 pruebas (desde `swagger/`):
 

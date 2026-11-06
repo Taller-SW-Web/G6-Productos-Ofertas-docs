@@ -1,4 +1,4 @@
-name: Validar contrato y preparar importación a Swagger Studio
+name: Validar contrato, Swagger Studio y visor local
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   contrato:
-    name: Validar contrato y exportación para Studio
+    name: Validar contrato y ambas alternativas Swagger
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,14 +34,19 @@ jobs:
           npm ci --ignore-scripts
           python -m pip install -r requirements-validation.txt
           python -m pip check
+          npx playwright install --with-deps chromium
       - name: Verificar rechazo de fechas inválidas
         run: python scripts/check-validation-environment.py
       - name: Validar contrato estricto
         run: npm run validate
       - name: Preparar definición derivada para Studio
         run: npm run export
+      - name: Construir visor local desde contrato oficial
+        run: npm run build:local
       - name: Comprobar equivalencia y referencias
         run: npm test
+      - name: Probar visor local sin conexiones externas en Chromium
+        run: npm run test:browser
       - name: Ejecutar regresión contractual existente
         working-directory: .
         run: python -m unittest discover -s tests/contratos -v
@@ -52,4 +57,7 @@ jobs:
           name: swagger-studio-revision
           path: |
             swagger/reports
+            swagger/dist
+            swagger/test-results
+            swagger/playwright-report
           retention-days: 7
