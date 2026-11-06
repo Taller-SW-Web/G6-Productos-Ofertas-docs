@@ -32,7 +32,10 @@ jobs:
       - name: Instalar dependencias fijadas
         run: |
           npm ci --ignore-scripts
-          python -m pip install PyYAML==6.0.3 jsonschema==4.25.1
+          python -m pip install -r requirements-validation.txt
+          python -m pip check
+      - name: Verificar rechazo de fechas inválidas
+        run: python scripts/check-validation-environment.py
       - name: Validar contrato estricto
         run: npm run validate
       - name: Preparar definición derivada para Studio

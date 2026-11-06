@@ -1,6 +1,6 @@
 # Productos y Ofertas
 
-API privada: [G6 Productos y Ofertas en Swagger Studio](https://app.swaggerhub.com/apis/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3). Ver [integración, validaciones y límites de Try it out](swagger/README.md) y [hallazgos vigentes](swagger/HALLAZGOS.md). Docs conserva la fuente contractual.
+API privada G6 Productos y Ofertas: [editor de Swagger Studio](https://app.swaggerhub.com/apis/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3) · [vista de documentación](https://app.swaggerhub.com/apis-docs/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3). Ambas requieren acceso autorizado; se comprobó su coherencia, no su visualización privada. Ver [integración, validaciones y límites de Try it out](swagger/README.md) y [hallazgos vigentes](swagger/HALLAZGOS.md). Docs conserva la fuente contractual.
 
 Repositorio de documentación del módulo **Productos y Ofertas** del proyecto de Taller de Construcción de Software Web.
 

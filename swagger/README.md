@@ -2,6 +2,13 @@
 
 **[Abrir G6 Productos y Ofertas](https://app.swaggerhub.com/apis/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3)** con la cuenta conectada a `sanmarcos-bb0`. El enlace fue devuelto por las herramientas oficiales. Lecturas posteriores confirman `private=true`, `published=false`, título `G6 Productos y Ofertas` y versión `0.6.0-rc.3`.
 
+Accesos a la misma API privada:
+
+- [Editor](https://app.swaggerhub.com/apis/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3).
+- [Vista de documentación](https://app.swaggerhub.com/apis-docs/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3).
+
+La ruta `/apis-docs/` sigue el patrón oficial de SmartBear; las pruebas verifican mismo host, organización, nombre y versión que el editor. Esta comprobación no equivale a abrir visualmente una página privada. Para compañeros, el owner debe conceder acceso View desde Share; enviar el enlace no concede permisos.
+
 Estado: **IMPLEMENTAR_PARCIAL**. Recurso privado persistente verificado por API; ejecución directa desde navegador pendiente de CORS, preferencia de conexión y JWT real. No se controló Chrome ni se verificó visualmente My APIs. El complemento no expone proyectos, asignación de proyectos ni roles administrativos detallados; sí acreditó pertenencia a la organización autorizada y permiso efectivo de creación/lectura/actualización.
 
 ## Contrato y áreas
@@ -42,6 +49,16 @@ Las sondas enviaron `Origin: https://app.swaggerhub.com` y no recibieron `Access
 
 Studio permite conexión directa o proxy y guarda la selección en `localStorage`, según su documentación. **El complemento no expone esa preferencia.** No se configuró/utilizó proxy ni se enviaron tokens. Antes de usar un JWT en Authorize, seleccionar modo directo y resolver CORS; no autorizar su transmisión al proxy SmartBear por inferencia. Los tiempos anteriores proceden de Node, no de Try it out. Ejecución/headers/duración dentro de Studio siguen pendientes.
 
+Procedimiento manual pendiente de comprobar en la cuenta del usuario:
+
+1. Iniciar sesión con permiso sobre la API y abrir la vista de documentación en modo Swagger UI.
+2. Al pie de la documentación, seleccionar **Use browser** (conexión directa), no **Use proxy**. Revisar esa selección antes de cada sesión con JWT, porque la preferencia depende del navegador.
+3. Confirmar que el servidor seleccionado es el Gateway HTTPS documentado y que la URL del endpoint contiene `/api/v1` una sola vez.
+4. Antes de usar credenciales, el owner Gateway/infraestructura debe acreditar CORS para el origen real de Studio: allowlist exacta, preflight OPTIONS cuando corresponda, GET y headers `Authorization`/`X-Correlation-Id` permitidos, correlación expuesta mediante `Access-Control-Expose-Headers`. No utilizar wildcard como sustituto de autorización.
+5. Solo con provisión/grant G7 y autorización de prueba, introducir el JWT correspondiente en Authorize y ejecutar GET permitido. No pegar client secrets, guardar tokens en evidencias ni transmitir credenciales al proxy SmartBear. Revisar código HTTP, cuerpo, headers y duración; 200 sin JWT no acredita G7, y 401/403/503 no acredita éxito de negocio.
+
+Estos pasos documentan una revisión pendiente; no afirman que se haya seleccionado el modo, comprobado preflight o ejecutado Try it out. `/marcas` permanece registrado con 503 en la última sonda; no se repitieron sondas de runtime en esta corrección documental.
+
 `serviceBearer` y `userBearer` se importaron intactos como HTTP Bearer JWT, preparados en la especificación para Authorize nativo; interacción visual no verificada. El [kit](../contratos/http/kit-integracion.md) gobierna firma/issuer/expiración, audiencia `api-productos` para servicio, scopes, roles y clientes. No se fabricó OAuth, no se guardaron credenciales ni se activó bypass. Se requiere provisión/grant G7 y mecanismo seguro autorizado para pruebas autenticadas. [Errores contractuales](../contratos/http/catalogo-errores.md).
 
 ## Validación y exportación reproducible
@@ -60,7 +77,18 @@ No se aloja una interfaz HTML. Se retiraron UI, servidor, Playwright y sus depen
 
 La clave repetida idéntica de `obtenerPrecioSku` se eliminó con autorización expresa. El documento parseado antes/después es idéntico: no cambiaron rutas, scopes, permisos, clientes ni reglas. El parser ahora es estricto y rechaza duplicaciones.
 
-El [workflow](../.github/workflows/swagger-docs.yml) valida, exporta, comprueba equivalencia/referencias y ejecuta regresión; adjunta `swagger-studio-revision`. No ejecuta sondas al backend ni publica en SmartBear. La prueba AsyncAPI preexistente de `InventoryStockChanged` continúa fallando, sin modificar contratos ajenos ni expectativas.
+El [workflow](../.github/workflows/swagger-docs.yml) valida, exporta, comprueba equivalencia/referencias, patrones de secretos y coherencia de URL, y ejecuta regresión; adjunta `swagger-studio-revision`. No ejecuta sondas al backend ni publica en SmartBear. El fallo anterior de `InventoryStockChanged` se debía a la dependencia opcional de formato ausente; se corrigió el entorno, sin modificar AsyncAPI ni expectativas.
+
+Instalar el mismo conjunto fijado en CI y localmente, y verificar explícitamente el formato antes de las 61 pruebas (desde `swagger/`):
+
+```powershell
+python -m pip install -r requirements-validation.txt
+python -m pip check
+python scripts/check-validation-environment.py
+python -m unittest discover -s ../tests/contratos -v
+```
+
+`rfc3339-validator==0.1.4` y `six==1.17.0` habilitan el checker de `date-time` en `jsonschema==4.25.1`; todas las dependencias están fijadas en [requirements-validation.txt](requirements-validation.txt). Sin la dependencia opcional, un formato no registrado se acepta incluso usando FORMAT_CHECKER, como advierte [jsonschema](https://python-jsonschema.readthedocs.io/en/stable/validate/). El preflight exige registro, fecha válida aceptada y `not-a-date` rechazada tanto aisladamente como en `InventoryStockChanged.data.updated_at`. El reporte se guarda en `reports/date-time-environment.json`.
 
 Para repetir sondas solo con autorización de lectura del entorno:
 
@@ -70,7 +98,7 @@ python scripts/check-runtime.py
 python scripts/summarize-runtime.py
 ```
 
-Python requiere `PyYAML==6.0.3` y `jsonschema==4.25.1`. Revisar el resumen antes de versionarlo; no publicar cuerpos de negocio ni credenciales. Las sondas hacen solo GET y obtienen un slug real del listado.
+Python utiliza el mismo archivo de requisitos fijados. Revisar el resumen antes de versionarlo; no publicar cuerpos de negocio ni credenciales. Las sondas hacen solo GET y obtienen un slug real del listado. El script histórico de cuerpos HTTP no aplica FORMAT_CHECKER; sus resultados previos siguen siendo estructurales y no se amplían por haber corregido el entorno de las pruebas contractuales.
 
 ## Actualización unidireccional
 

@@ -9,7 +9,7 @@ Base: `poma@2f1346f04f9b772fbde7dd7db094a9e5671dfb15`, master `a7778ec1a22811c12
 - GET HTTPS directos sin tokens: categorías 200/1149 ms, marcas 503/100 ms, productos 200/12085 ms, ficha por slug real 200/2046 ms. DNS/TLS verificados; cuerpos 200 pasan schema estructural sin validación adicional de formatos. [Resumen sin datos de negocio](runtime-summary-2026-11-05.json).
 - Sin JWT real, SHA desplegado, CORS funcional ni ejecución Try it out de navegador acreditados. Sin proxy SmartBear ni mocks usados para estas sondas. Preferencia de conexión no expuesta por complemento.
 - Cuerpos completos solo en `reports/`, excluido de Git. La revisión automática rechazó copiarlos al PR por exposición potencial; se guardó resumen sin registros de negocio.
-- Regresión de 61 pruebas: fallo preexistente `InventoryStockChanged`; no se cambia AsyncAPI ni expectativas para obtener verde.
+- Regresión histórica de 61 pruebas en `bd5f2ef`: falló `InventoryStockChanged`. La auditoría posterior identificó dependencia opcional de fecha ausente y corrigió la instalación, sin cambiar AsyncAPI ni expectativas; ver [corrección de auditoría](AUDITORIA-CORREGIDA.md).
 
 La [documentación oficial](https://support.smartbear.com/swagger/studio/docs/en/edit-apis/interactive-api-documentation.html) describe la interfaz de Studio. Su visualización y modo directo requieren revisión manual del usuario; no se utilizó Computer Use ni otra automatización de navegador.
 
