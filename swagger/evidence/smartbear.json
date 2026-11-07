@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-05",
+  "sourceCommit": "a7778ec1a22811c1213a94ef096ab905911342cc",
+  "sourceSha256": "0e24ea8e9f79e120cc2f89021cb9d3f17f80d8af1529f962bfcdd15791984f0a",
+  "rawYaml": {
+    "valid": false,
+    "errors": 459,
+    "note": "Resultado observado de apidom-ls sobre YAML con anclas y clave duplicada. Los 459 diagnósticos no se consideran 459 defectos contractuales confirmados."
+  },
+  "derivedJson": {
+    "valid": true,
+    "recognized": true,
+    "spec": {
+      "namespace": "openapi",
+      "version": "3.1.0",
+      "format": "YAML",
+      "mediaType": "application/vnd.oai.openapi+yaml;version=3.1.0"
+    },
+    "summary": {
+      "errors": 0,
+      "warnings": 0,
+      "total": 0,
+      "durationMs": 8269
+    },
+    "findings": []
+  },
+  "standardization": {
+    "status": 404,
+    "message": "Cannot find standardization config for org 'sanmarcos-bb0'"
+  },
+  "organizations": 1,
+  "portals": 0,
+  "mutations": []
+}

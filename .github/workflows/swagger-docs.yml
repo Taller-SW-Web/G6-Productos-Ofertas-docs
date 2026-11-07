@@ -1,0 +1,63 @@
+name: Validar contrato, Swagger Studio y visor local
+
+on:
+  pull_request:
+    branches: [master]
+    paths: ['swagger/**', 'contratos/**', 'tests/contratos/**', '.github/workflows/swagger-docs.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contrato:
+    name: Validar contrato y ambas alternativas Swagger
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: swagger
+    steps:
+      - name: Descargar fuentes
+        uses: actions/checkout@v4
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: swagger/package-lock.json
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar dependencias fijadas
+        run: |
+          npm ci --ignore-scripts
+          python -m pip install -r requirements-validation.txt
+          python -m pip check
+          npx playwright install --with-deps chromium
+      - name: Verificar rechazo de fechas inválidas
+        run: python scripts/check-validation-environment.py
+      - name: Validar contrato estricto
+        run: npm run validate
+      - name: Preparar definición derivada para Studio
+        run: npm run export
+      - name: Construir visor local desde contrato oficial
+        run: npm run build:local
+      - name: Comprobar equivalencia y referencias
+        run: npm test
+      - name: Probar visor local sin conexiones externas en Chromium
+        run: npm run test:browser
+      - name: Ejecutar regresión contractual existente
+        working-directory: .
+        run: python -m unittest discover -s tests/contratos -v
+      - name: Adjuntar artefacto y evidencias para auditoría
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swagger-studio-revision
+          path: |
+            swagger/reports
+            swagger/dist
+            swagger/test-results
+            swagger/playwright-report
+          retention-days: 7

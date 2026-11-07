@@ -2180,11 +2180,6 @@ paths:
         '429':
         - RATE_LIMIT_EXCEDIDO
       x-route-basis: existing-contract
-      x-allowed-client-ids:
-      - modulo-marketplace
-      - modulo-chatbot
-      - modulo-retail
-      - modulo-productos
     patch:
       tags:
       - Precios

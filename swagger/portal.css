@@ -1,0 +1,11 @@
+body { margin: 0; background: #fafbfc; color: #182c40; font-family: system-ui, sans-serif; }
+header { padding: 28px max(24px, calc((100vw - 1420px) / 2)); background: #142b40; color: #fff; }
+header h1 { margin: 8px 0; font-size: 32px; }
+header p { line-height: 1.5; }
+header a { color: #a9dcff; }
+#status { color: #ffdf8b; }
+.swagger-ui .wrapper { max-width: 1460px; }
+.security-reference { margin: 20px; padding: 16px; border: 1px solid #c8d4df; background: #fff; }
+.security-reference summary { cursor: pointer; font-weight: 600; }
+.security-reference dt { font-weight: 600; margin-top: 16px; }
+.security-reference dd { margin: 8px 0; line-height: 1.5; }
