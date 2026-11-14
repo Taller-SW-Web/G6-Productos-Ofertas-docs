@@ -23,8 +23,15 @@
 | Dependencia SQL caída | Reintento acotado, recuperación y alerta |
 | `MaxDeliveryCount` alcanzado | Mensaje movido a subcola DLQ de esa cola; intervención/replay autorizado |
 | Evento tardío/orden invertido | Control de versionado/invariantes por agregado en el dominio |
+| Indisponibilidad superior al TTL máximo Basic (14 días) | Outbox/operación SQL siguen siendo fuente durable; no depender de que el mensaje siga en cola. Reconciliar operación e Inbox, y reenviar solo operaciones sin efecto terminal confirmado mediante replay autorizado con la misma identidad funcional e idempotencia |
 
-Basic no permite configurar `DefaultMessageTimeToLive`; no apoyar la expiración de reservas en TTL de mensajes. Inventory debe detectar el vencimiento desde su dato durable `expires_at` y emitir cualquier evento interno mediante outbox. La expiración de mensaje y la expiración comercial son conceptos distintos. Probar la semántica de disposición/DLQ en Azure real; el emulador no sustituye autenticación ni persistencia entre reinicios.
+Basic no permite configurar `DefaultMessageTimeToLive`; su TTL máximo/default de mensaje es 14 días. La expiración de mensajes y la expiración comercial de reservas son conceptos distintos. Inventory conserva la transición comercial mediante su `ReservationExpirationService` existente, que opera sobre `expires_at`; no se crea otro worker de expiración. Si una reserva venció comercialmente, no se reenvía un comando de pago/consumo aunque el registro todavía muestre `ACTIVA`. Probar la semántica de expiración y disposición/DLQ en Azure real; el emulador no sustituye autenticación ni persistencia entre reinicios.
+
+### Cola y flujo HTTP de Promotions
+
+La cola candidata `g6.promotions.commands` recibe solo envíos del relay Outbox del adaptador HTTP interno de `promotions-svc` y solo la consume su worker de operaciones. No se otorga acceso al broker a G5. La admisión HTTP escribe operación e intención Outbox de forma atómica; el relay envía y confirma por entrega; el worker aplica Inbox e idempotencia dentro de su transacción SQL, persiste resultado terminal y luego completa el mensaje. El GET HTTP lee ese resultado durable.
+
+En caída prolongada o TTL vencido: retener operación y Outbox en SQL; comparar cada entrega con Inbox y estado/resultado de operación; marcar solo efectos terminales verificables como completos; clasificar casos ambiguos para conciliación del owner; reenviar operaciones elegibles solo mediante proceso autorizado, con la misma clave funcional e idempotencia. No reemitir ciegamente pagos, consumos o restauraciones ni crear un nuevo `operation_id` para averiguar el resultado.
 
 ## Observabilidad
 

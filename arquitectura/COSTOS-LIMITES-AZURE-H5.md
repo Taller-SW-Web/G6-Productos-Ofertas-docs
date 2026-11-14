@@ -24,7 +24,7 @@ Esta fórmula es una aproximación de planificación: confirmar **qué cuenta co
 
 | Riesgo | Restricción | Mitigación |
 |---|---|---|
-| Payload Bulk | Máximo 256 KB por mensaje/lote incluyendo propiedades; Basic no admite `DefaultMessageTimeToLive` | Chunking semántico o Blob + claim-check; validar checksum. La expiración de reservas sigue `expires_at` durable en Inventory, no TTL del mensaje |
+| Payload Bulk | Máximo 256 KB por mensaje/lote incluyendo propiedades; Basic no admite configurar `DefaultMessageTimeToLive` y el TTL máximo/default de mensaje es 14 días | Chunking semántico o Blob + claim-check; validar checksum. Ante TTL vencido, reconciliar Outbox, Inbox y resultado SQL antes de reenvío idempotente autorizado. La expiración de reservas sigue `expires_at` durable en Inventory, no TTL del mensaje |
 | Fan-out | Basic no tiene topics ni suscripciones | Outbox por destino, entrega independiente |
 | Duplicados | Basic no tiene broker duplicate detection | SQL inbox/idempotencia, IDs estables |
 | Orden | Basic no tiene sessions | Versión de agregado y exclusión de procesamiento concurrente en DB |

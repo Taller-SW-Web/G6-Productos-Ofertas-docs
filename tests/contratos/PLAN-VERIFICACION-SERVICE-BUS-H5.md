@@ -24,6 +24,14 @@
 | H5-MSG-18 | APIM | JWT/audiencia/scopes, cuota compatible con tier, correlación | Seguridad |
 | H5-MSG-19 | Emulador vs Azure real | Diferenciar límites: identidad, métricas, durabilidad, WebSockets; test real extra | Calidad |
 | H5-MSG-20 | Performance | p95 de admisión/finalización, throughput, backlog, DLQ, costos/ops | Rendimiento |
+| H5-MSG-21 | Comando HTTP a cola nueva | Solo adaptador HTTP de Promotions envía a `g6.promotions.commands`; únicamente worker Promotions consume | Arquitectura/seguridad |
+| H5-MSG-22 | Admisión Promotions durable | Transacción operación+Outbox antecede 202; caída de broker conserva ambos | Persistencia/contrato HTTP |
+| H5-MSG-23 | Worker Promotions idempotente | Inbox+efecto+resultado en commit; redelivery tras commit/settle no duplica efecto | Idempotencia/recuperación |
+| H5-MSG-24 | Estado actual de reserva | `ACTIVA` con `expires_at <= observed_at` informa `vigencia_efectiva=VENCIDA` y no permite pago/consumo | Contrato/expiración tardía |
+| H5-MSG-25 | Carrera pago vs vencimiento | Consulta vigente no sustituye validación atómica; Inventory vuelve a comprobar bajo lock y usa mecanismo `ReservationExpirationService` existente | Dominio/concurrencia |
+| H5-MSG-26 | Indisponibilidad >14 días | `DefaultMessageTimeToLive` no configurable y TTL máximo/default 14 días; conservar Outbox/operación; reconciliar Inbox/resultado/efecto; replay solo autorizado, idempotente y sin resultado terminal | TTL/recuperación |
+| H5-MSG-27 | TTL del mensaje separado de reserva | Un mensaje expirado/no entregable no cambia `expires_at` ni estado comercial por sí mismo | Contrato/domino |
+| H5-DOC-01 | Invariantes documentales candidatas | Schemas JSON en propuesta satisfacen ejemplos; topología, estado reserva y TTL Basic no contradicen el documento | Estática documental |
 
 ## Evidencia de cada prueba
 

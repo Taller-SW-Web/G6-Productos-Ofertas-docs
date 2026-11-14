@@ -10,7 +10,7 @@
 G6 migra backend a Azure y necesita mensajería asíncrona operable con bajo costo sin trasladar la administración del broker a otros grupos. Se propone:
 
 1. **Azure Service Bus Basic** como intermediario exclusivamente interno de G6. Un namespace por ambiente con colas duraderas preaprovisionadas.
-2. **G1–G5 y G7** acceden a G6 por endpoints HTTP autenticados en API Management/Gateway G6. No se entregan cadenas de conexión, secretos SAS ni permisos directos de Service Bus a módulos externos.
+2. **Consumidores externos G1–G5** acceden a G6 por endpoints HTTP autenticados en API Management/Gateway G6. G7 conserva identidad y grants; no se entregan cadenas de conexión, secretos SAS ni permisos directos de Service Bus a módulos externos.
 3. **G5 Ventas/Postventa** reemplaza su publicación/consumo directo RabbitMQ por llamadas HTTP de admisión de operación y lectura del resultado durable. Esto requiere acuerdo bilateral antes del corte.
 4. Se conserva el dominio de contratos de negocio (`message_id`, `operation_id`, `correlation_id`, tipo, versión, datos), pero el enrutamiento físico RabbitMQ deja de ser norma del transporte futuro.
 5. Se garantiza **at-least-once** e **idempotencia de efectos**, no exactly-once del broker.
@@ -29,7 +29,13 @@ Esta ADR **no autoriza** por sí sola despliegues, merges, eliminación de Rabbi
 | Transacciones de mensajería | No | Transacción local SQL para negocio/outbox; entrega eventual con conciliación |
 | Mensaje de 1 MiB | No | Límite completo de mensaje de 256 KB; fragmentación semántica o claim-check |
 
-Basic tampoco permite configurar `DefaultMessageTimeToLive` en la cola. La expiración de reservas es una regla de negocio de Inventory basada en `expires_at` persistido y un mecanismo interno durable; no debe delegarse al TTL del mensaje.
+Basic tampoco permite configurar `DefaultMessageTimeToLive`; su TTL máximo/default de mensajes es 14 días. Una caída prolongada puede dejar mensajes expirados, por lo que la recuperación se apoya en las operaciones y Outbox durables de SQL, compara Inbox/resultado persistido, concilia estados ambiguos y solo reenvía sin efecto terminal confirmado mediante replay autorizado e idempotente. Nunca se reemite ciegamente un efecto comercial. La expiración de reservas es una regla de negocio de Inventory basada en `expires_at`, separada del TTL del mensaje.
+
+## Colas heredadas y colas nuevas de H5
+
+Las 18 relaciones productor→consumidor internos deducidas del AsyncAPI H4 son un inventario de relaciones de origen, no el límite ni el inventario completo de colas de H5. No son una equivalencia uno-a-uno ni restringen las colas adicionales que requieran nuevos flujos HTTP asíncronos.
+
+Para consumos y restauraciones de cupón admitidos por HTTP se propone la cola interna `g6.promotions.commands`: el adaptador HTTP de Promotions la alimenta mediante su Outbox durable y la consume exclusivamente el worker de operaciones de Promotions. El worker registra Inbox, aplica idempotencia, persiste el resultado antes de completar el mensaje y lo expone al GET autenticado de operaciones. El flujo se detalla en la [topología H5](../../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) y la [propuesta HTTP](../../contratos/http/PROPUESTA-OPERACIONES-CUPONES-H5.md).
 
 **Criterio de reconsideración:** migrar a Service Bus Standard si la cantidad de destinatarios, el fan-out, el orden estricto o el costo operativo de la distribución propia convierten a Basic en una mala elección. Esta revisión requiere mediciones y aprobación, no supone cambio automático.
 
@@ -97,3 +103,5 @@ G5 ──HTTPS GET /operaciones/{operationId}───────────�
 - https://learn.microsoft.com/en-us/azure/service-bus-messaging/duplicate-detection
 - https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-managed-service-identity
 - https://learn.microsoft.com/en-us/azure/service-bus-messaging/overview-emulator
+- https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-resource-manager-exceptions
+- https://learn.microsoft.com/en-us/azure/service-bus-messaging/message-expiration

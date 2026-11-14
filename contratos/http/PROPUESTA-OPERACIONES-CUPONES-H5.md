@@ -1,77 +1,250 @@
-# Contrato HTTP candidato H5 — operaciones asíncronas de cupones
+# Contrato HTTP candidato H5 — operaciones asíncronas de cupones y estado de reserva
 
-**Estado:** `PROPUESTO_NO_PUBLICADO_EN_OPENAPI`, sin homologación G5/G7 ni implementación acreditada. No sustituye `POST /api/v1/cupones/validar`, que solo valida sin consumir usos.
+**Estado:** `PROPUESTA_NO_PUBLICADA_EN_OPENAPI`; pendiente de revisión interna G6, homologación G5 y autorización G7. Sin implementación H5 acreditada. No sustituye OpenAPI/AsyncAPI H4 ni modifica sus fixtures.
 
-## Operaciones propuestas
+Este documento contiene esquemas JSON Schema candidatos y ejemplos verificables para discusión. Las rutas no existen en OpenAPI vigente. Los nombres de scope pendientes son requisitos funcionales, no concesiones.
 
-| Método | Ruta bajo Gateway | Autoridad | Efecto |
-|---|---|---|---|
-| POST | `/api/v1/cupones/consumos` | Promotions | Admite consumo de cupón |
-| POST | `/api/v1/cupones/restauraciones` | Promotions | Admite restauración por cancelación |
-| GET | `/api/v1/cupones/operaciones/{operationId}` | Promotions | Estado y resultado durable por operación |
+## Operaciones candidatas
 
-> Los nombres de estas rutas se proponen para discusión G5/G6; no son endpoints existentes. El GET de inventario **sí existe**: `/api/v1/inventario/operaciones/{operationId}`; se conserva sin duplicarlo.
+| Método | Ruta candidata | Owner | Efecto/lectura | Cliente de servicio propuesto |
+|---|---|---|---|---|
+| POST | `/api/v1/cupones/consumos` | Promotions | Admite consumo durable, devuelve 202 | `modulo-ventas` tras allowlist y autorización G7 |
+| POST | `/api/v1/cupones/restauraciones` | Promotions | Admite restauración durable, devuelve 202 | `modulo-ventas` tras allowlist y autorización G7 |
+| GET | `/api/v1/cupones/operaciones/{operationId}?order_id={orderId}` | Promotions | Resultado durable, sin ejecutar comandos | `modulo-ventas` tras allowlist y autorización G7 |
+| GET | `/api/v1/inventario/reservas/{reservaId}/estado?order_id={orderId}` | Inventory | Lectura de estado persistido y vigencia efectiva | Consumidor aprobado explícitamente; inicialmente se propone solo `modulo-ventas` |
 
-## Seguridad
+`order_id` es texto opaco de G5. En ambas consultas es requerido y debe coincidir con el pedido persistido en la operación/reserva. Una reserva/operación ausente y una que no corresponde al pedido o cliente se responden con el mismo `404`, para no revelar existencia. `reservation_id` y `operation_id` UUID no son credenciales.
 
-- JWT de servicio válido para `aud=api-productos`, `client_id=modulo-ventas`, scopes específicos de consumo/restauración/consulta por registrar con G7, allowlist por operación.
-- Nunca interpretar `producer` del body como autorización. Obtener identidad del token validado.
-- `operation_id` no es secreto: la consulta verifica además identidad autorizada y pertenencia de operación/orden; no filtrar resultados de terceros.
-- No aceptar el token humano del comprador como reemplazo del token técnico. `customer_ref` del comprador es distinto del `sub` del cliente servicio.
-- Política de rate limit según capacidades efectivas de APIM Consumption; `rate-limit-by-key` no está soportada en Consumption; no documentarla como protección ya aplicada.
+El scope histórico `inventario:operaciones:leer` está documentado para consultar operaciones de Inventory. Su suficiencia para esta ruta debe confirmarse con G7; la ruta no hereda una concesión por aparecer en esta propuesta. Los scopes de consumo, restauración y lectura de resultado de cupones deben definirse/autorizarse con G7. La allowlist acepta únicamente consumidores externos aprobados; no se amplía por conveniencia técnica.
 
-## POST: admisión
+## Seguridad y trazabilidad
 
-Requisitos comunes:
+- JWT de servicio validado en APIM/Gateway y nuevamente en el owner: firma, issuer, audiencia `api-productos`, `client_id`, scope y allowlist por operación. `producer` del envelope interno nunca autentica.
+- `modulo-ventas` es la única identidad externa propuesta para estas operaciones de G5; aceptación y permiso G7 siguen pendientes. No se entregan credenciales Service Bus.
+- El backend compara `order_id` con el valor dueño asociado a la reserva/operación y comprueba que el cliente autenticado está autorizado para la operación. Desajuste y no existencia responden igual para evitar enumeración.
+- El `customer_ref` funcional no reemplaza `client_id` y no autoriza acceso. No se devuelve información de otro pedido, otras campañas ni payloads internos.
+- `X-Correlation-ID` se propaga por HTTP, operación, Outbox, cola interna, Inbox y respuesta; no forma parte del fingerprint idempotente.
 
-- `Authorization: Bearer <token-servicio>`; `Idempotency-Key: <uuid-estable>`; `X-Correlation-ID` opcional según contrato final.
-- El payload funcional conserva las invariantes de AsyncAPI v2. En consumo: `order_id`, `coupon_code`, `channel_id`, `customer_ref` cuando corresponda, `effective_at`, `reservation_id`, `commercial_snapshot_ref`; `operation_id` UUID estable del flujo.
-- Restauración: `order_id`, `consumption_operation_id` del consumo realmente confirmado, `cancellation_reason`, `cancelled_at` original, `operation_id` de restauración distinto y estable.
-- Antes de admitir, validar esquema, permisos, no colisión de idempotencia y precondiciones autoritativamente comprobables. Lo que requiera procesamiento posterior queda pendiente: nunca afirmar consumo final en POST.
-- Persistir **atómicamente** operación aceptada y outbox en base de Promotions, antes de devolver 202. El transporte Azure puede estar temporalmente caído.
+## Admisión, idempotencia y cola interna
 
-Respuesta nominal:
+El body contiene `operation_id` UUID y el header requerido `Idempotency-Key` debe contener exactamente el mismo UUID. Esta regla candidata elimina ambigüedad de precedencia. G5 conserva ese identificador en todos los reintentos de la misma intención. El fingerprint cubre el body funcional normalizado y la identidad de cliente; excluye headers de transporte/traza.
 
-```http
-HTTP/1.1 202 Accepted
-Location: /api/v1/cupones/operaciones/{operationId}
-Retry-After: 2
-Content-Type: application/json
+1. Promotions valida autenticación, allowlist, esquema, idempotencia, pedido y precondiciones autoritativamente verificables. En consumo, exige `reservation_id` y `commercial_snapshot_ref`.
+2. En una transacción local escribe la operación `ACCEPTED`, su fingerprint/clave idempotente y la intención Outbox. Devuelve `202 Accepted` únicamente después del commit; Service Bus puede estar caído.
+3. El relay envía a la cola interna candidata `g6.promotions.commands`; no ofrece acceso AMQP a G5. Las copias/reintentos mantienen su identidad de mensaje y no se marcan confirmados ante timeout ambiguo.
+4. El worker exclusivo de operaciones Promotions usa Inbox por `message_id`, deduplica efectos por `operation_id`, persiste efecto, estado y resultado terminal en la transacción de Promotions, y después completa el mensaje.
+5. El GET consulta el estado durable; no publica, consume ni restaura otra vez.
 
-{"operation_id":"<UUID>","status":"ACCEPTED"}
-```
+Misma identidad y mismo contenido semántico: si es la primera admisión, `202` con snapshot `ACCEPTED`; si es un replay del POST, `200` con el snapshot vigente de la operación, sin nuevo efecto. Misma clave/`operation_id` con contenido o intención distinto, o header/body distintos: `409 IDEMPOTENCY_CONFLICT`. La retención de idempotencia debe cubrir la ventana de reintentos/reconciliación y no puede purgarse con Outbox pendiente o resultado ambiguo; plazo exacto requiere acuerdo antes del OpenAPI definitivo.
 
-Mismo `operation_id` + mismo contenido semántico: devolver admisión o resultado original sin nuevo efecto. Mismo `operation_id` con fingerprint distinto: `409 IDEMPOTENCY_CONFLICT`. Contrato definitivo: documentar además `400`, `401`, `403`, `404`, `422`, `429`, `500`, `503` solo donde apliquen, con catálogo estable de errores y pruebas.
+Los rechazos de negocio producidos por procesamiento se guardan como `REJECTED` y se consultan por GET; un `202` no significa cupón consumido. Los errores de autenticación, formato, colisión o indisponibilidad síncronos no crean una admisión durable.
 
-## GET: consulta
+### Request JSON Schema candidato: `CouponConsumptionRequest`
 
 ```json
 {
-  "operation_id": "<UUID>",
-  "operation_type": "CONSUMIR_CUPON",
-  "status": "COMPLETED",
-  "order_id": "PED-...",
-  "result_code": null,
-  "accepted_at": "2026-11-14T00:00:00Z",
-  "completed_at": "2026-11-14T00:00:02Z"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://g6.invalid/proposals/h5/CouponConsumptionRequest.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "operation_id": { "type": "string", "format": "uuid" },
+    "order_id": { "type": "string", "minLength": 1 },
+    "coupon_code": { "type": "string", "minLength": 1 },
+    "channel_id": { "type": "string", "enum": ["MARKETPLACE", "CHATBOT", "RETAIL"] },
+    "customer_ref": { "oneOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }] },
+    "effective_at": { "type": "string", "format": "date-time" },
+    "reservation_id": { "type": "string", "format": "uuid" },
+    "commercial_snapshot_ref": { "type": "string", "minLength": 1 }
+  },
+  "required": ["operation_id", "order_id", "coupon_code", "channel_id", "effective_at", "reservation_id", "commercial_snapshot_ref"]
 }
 ```
 
-Valores orientativos: `ACCEPTED`, `COMPLETED`, `REJECTED` (estados adicionales solo si están aprobados). El resultado definitivo debe incluir los campos de negocio relevantes (`consumption_id`, `restored`, `outcome` u otros) conforme al DTO y versión acordados. No devolver inventario, información de campañas ajenas ni mensajes internos con secretos.
+Este body conserva los campos funcionales requeridos por `CouponConsumptionRequestedData` AsyncAPI v2; `customer_ref` continúa siendo opcional/nulo en ese contrato.
 
-- Estado pendiente: GET 200 con `status=ACCEPTED` y `Retry-After` recomendado; no `202` indefinido por costumbre.
-- Estado final: resultado inmutable o versionado con historial; repetir GET no ejecuta el comando.
-- Timeout/loss en POST: cliente consulta operación y/o reintenta idénticamente, nunca crea otra operación para averiguar si se completó.
-- Política cliente: polling con backoff acotado, deadline funcional, estado pendiente recuperable y compensación/no-cobro según G5.
+### Request JSON Schema candidato: `CouponRestorationRequest`
 
-## Inventory: deuda funcional no cubierta por GET inicial
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://g6.invalid/proposals/h5/CouponRestorationRequest.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "operation_id": { "type": "string", "format": "uuid" },
+    "order_id": { "type": "string", "minLength": 1 },
+    "consumption_operation_id": { "type": "string", "format": "uuid" },
+    "cancellation_reason": { "type": "string", "minLength": 1 },
+    "cancelled_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["operation_id", "order_id", "consumption_operation_id", "cancellation_reason", "cancelled_at"]
+}
+```
 
-El `GET /api/v1/inventario/operaciones/{operationId}` actual recupera una operación específica, pero **no certifica que una reserva ya confirmada siga vigente** ni necesariamente refleja `inventory.reservation.expired` posteriormente. Se requiere homologar una consulta de estado de reserva por `reservation_id` o alternativa equivalente sin duplicar ownership. Mantener el evento H4 hasta resolver esta decisión de contrato y verificar G5 consumidor.
+La propuesta HTTP exige el `consumption_operation_id` del consumo confirmado que se restaura. El AsyncAPI v2 vigente conserva una forma transicional nullable/opcional; endurecerlo para H5 necesita revisión de compatibilidad y homologación G5, no cambia el contrato H4 aquí. `cancelled_at` es el instante original de cancelación y debe permanecer idéntico en todos los reintentos, nunca regenerarse al reenviar.
 
-## Cambios antes de convertir la propuesta en OpenAPI canónico
+## Respuesta de admisión y consulta de operación
 
-1. Definir DTOs JSON Schema completos y Problem Details (códigos, estados, retención, límites).
-2. Confirmar si `operation_id` aparece en body, header o ambos y las reglas de precedencia (no inventar dualidad ambigua).
-3. Definir origen legítimo de `reservation_id` y permisos verificables para evitar consumir un cupón sin reserva ajena.
-4. Definir endpoint/estado de reserva vigente para expiraciones tardías.
-5. Completar G5/G7 bilateral y pruebas provider/consumer antes de sustituir semántica de AsyncAPI externa.
+Primera admisión: `202 Accepted`, `Location` apunta al GET de operación con el mismo `order_id`, `Retry-After: 2`. Replay: `200 OK` y mismo recurso durable. Los resultados finales se obtienen por GET.
+
+### JSON Schema candidato: `CouponOperationSnapshot`
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://g6.invalid/proposals/h5/CouponOperationSnapshot.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "operation_id": { "type": "string", "format": "uuid" },
+    "operation_type": { "type": "string", "enum": ["CONSUMIR_CUPON", "RESTAURAR_CUPON"] },
+    "status": { "type": "string", "enum": ["ACCEPTED", "PROCESSING", "COMPLETED", "REJECTED"] },
+    "order_id": { "type": "string", "minLength": 1 },
+    "accepted_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "oneOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }] },
+    "result": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "order_id": { "type": "string", "minLength": 1 },
+            "result_code": { "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }] },
+            "consumption_id": { "oneOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }] },
+            "reservation_id": { "type": "string", "format": "uuid" },
+            "commercial_snapshot_ref": { "type": "string", "minLength": 1 },
+            "coupon_code": { "type": "string", "minLength": 1 },
+            "consumption_operation_id": { "oneOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }] },
+            "restored": { "type": "boolean" },
+            "outcome": { "type": "string", "enum": ["RESTORED", "POLICY_KEEPS_CONSUMPTION", "NO_CONSUMPTION"] },
+            "decided_at": { "type": "string", "format": "date-time" },
+            "completed_at": { "type": "string", "format": "date-time" }
+          },
+          "required": []
+        }
+      ]
+    }
+  },
+  "required": ["operation_id", "operation_type", "status", "order_id", "accepted_at", "updated_at", "completed_at", "result"],
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "enum": ["ACCEPTED", "PROCESSING"] } }, "required": ["status"] },
+      "then": { "properties": { "completed_at": { "type": "null" }, "result": { "type": "null" } } }
+    },
+    {
+      "if": { "properties": { "status": { "enum": ["COMPLETED", "REJECTED"] } }, "required": ["status"] },
+      "then": { "properties": { "completed_at": { "type": "string", "format": "date-time" }, "result": { "type": "object" } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "REJECTED" } }, "required": ["status"] },
+      "then": { "properties": { "result": { "properties": { "result_code": { "type": "string", "minLength": 1, "pattern": "\\S" } }, "required": ["result_code"] } } }
+    },
+    {
+      "if": { "properties": { "operation_type": { "const": "CONSUMIR_CUPON" }, "status": { "enum": ["COMPLETED", "REJECTED"] } }, "required": ["operation_type", "status"] },
+      "then": { "properties": { "result": { "required": ["order_id", "coupon_code", "reservation_id", "commercial_snapshot_ref", "decided_at"] } } }
+    },
+    {
+      "if": { "properties": { "operation_type": { "const": "RESTAURAR_CUPON" }, "status": { "const": "COMPLETED" } }, "required": ["operation_type", "status"] },
+      "then": { "properties": { "result": { "properties": { "consumption_operation_id": { "type": "string", "format": "uuid" } }, "required": ["order_id", "consumption_operation_id", "restored", "outcome", "completed_at"] } } }
+    },
+    {
+      "if": { "properties": { "operation_type": { "const": "RESTAURAR_CUPON" }, "status": { "const": "REJECTED" } }, "required": ["operation_type", "status"] },
+      "then": { "properties": { "result": { "properties": { "consumption_operation_id": { "type": "string", "format": "uuid" } }, "required": ["order_id", "consumption_operation_id", "completed_at"] } } }
+    }
+  ]
+}
+```
+
+Consistencia adicional: `ACCEPTED`/`PROCESSING` usan `completed_at: null` y `result: null`; `COMPLETED`/`REJECTED` requieren resultado y `completed_at`. `REJECTED` requiere `result_code` no vacío; `COMPLETED` de consumo conserva `reservation_id`, `commercial_snapshot_ref` y `decided_at`, y de restauración conserva `consumption_operation_id`, `restored`, `outcome` y `completed_at`. El consumidor interpreta esos campos por `operation_type`; no deriva el estado del pedido ni del pago desde Promotions.
+
+Consulta GET pendiente devuelve `200` con estado vigente, no `202` indefinido. El `404` de operación no existente o ajena usa el mismo código/shape. El GET no ejecuta el comando.
+
+## Estado vigente de reserva — ruta candidata
+
+`GET /api/v1/inventario/reservas/{reservaId}/estado?order_id={orderId}` devuelve lectura del estado persistido más la vigencia efectiva al `observed_at` del servidor. `estado_persistido` usa únicamente `ACTIVA`, `CONSUMIDA`, `LIBERADA`, `EXPIRADA`; `expires_at` siempre se devuelve. Para `ACTIVA`, `expires_at <= observed_at` significa `vigencia_efectiva: VENCIDA`, `permite_pago: false` y `permite_consumo_cupon: false`, aunque el ciclo persistido aún no haya guardado la transición `EXPIRADA`. La igualdad se considera vencida.
+
+El GET es de solo lectura. `ReservationExpirationService` existente y su worker actual siguen siendo los mecanismos de transición persistida; no se crea un worker de expiración paralelo ni se afirma que esta propuesta esté implementada. La autorización de pago/consumo y las mutaciones vuelven a comprobar estado y `expires_at` dentro de Inventory de forma atómica; una respuesta GET es una observación y no una reserva de vigencia futura.
+
+`permite_pago` es una precondición de Inventory sobre la reserva, no una decisión de pago ni una orden de cobro: G5 conserva en todo momento el ownership y la decisión comercial del pedido/pago. G5 debe tratar `false` como bloqueo y corroborar el estado al confirmar consumo.
+
+### JSON Schema candidato: `ReservationStatusSnapshot`
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://g6.invalid/proposals/h5/ReservationStatusSnapshot.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "reservation_id": { "type": "string", "format": "uuid" },
+    "order_id": { "type": "string", "minLength": 1 },
+    "estado_persistido": { "type": "string", "enum": ["ACTIVA", "CONSUMIDA", "LIBERADA", "EXPIRADA"] },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "observed_at": { "type": "string", "format": "date-time" },
+    "vigencia_efectiva": { "type": "string", "enum": ["VIGENTE", "VENCIDA", "NO_APLICA"] },
+    "permite_pago": { "type": "boolean" },
+    "permite_consumo_cupon": { "type": "boolean" }
+  },
+  "required": ["reservation_id", "order_id", "estado_persistido", "expires_at", "observed_at", "vigencia_efectiva", "permite_pago", "permite_consumo_cupon"]
+}
+```
+
+Ejemplo crítico de operación atrasada: `estado_persistido=ACTIVA`, `expires_at=2026-11-13T10:00:00Z`, `observed_at=2026-11-13T10:01:00Z`, `vigencia_efectiva=VENCIDA`, ambos permisos `false`. El API no maquilla el estado persistido como `EXPIRADA`; explica por separado la vigencia efectiva. Para estados terminales se usa `vigencia_efectiva=NO_APLICA` y ambos permisos son `false`. Solo `ACTIVA` con `expires_at > observed_at` produce `VIGENTE` y permite proceder a la siguiente validación atómica de negocio.
+
+### Errores HTTP candidatos
+
+Los errores usan el shape Problem Details del contrato HTTP vigente (`type`, `title`, `status`, `code`, `correlationId`); códigos existentes reutilizados cuando su semántica coincide:
+
+| HTTP | `code` | Uso propuesto |
+|---:|---|---|
+| 400 | `VALIDACION` | UUID, query `order_id`, JSON, `Idempotency-Key` o igualdad header/body inválidos |
+| 401 | `TOKEN_INVALIDO` | Token ausente, inválido, expirado o audiencia incorrecta |
+| 403 | `SCOPE_INSUFICIENTE` | Identidad válida fuera del permiso/allowlist aprobados |
+| 404 | `RESERVA_NO_ENCONTRADA` / `OPERACION_CUPON_NO_ENCONTRADA` (segundo código candidato) | Reserva/operación ausente o pedido/cliente no asociado; respuesta uniforme para evitar filtración. `OPERACION_CUPON_NO_ENCONTRADA` requiere aprobación y alta en catálogo antes de publicar |
+| 409 | `IDEMPOTENCY_CONFLICT` | Reuso de clave/operación con otra intención o fingerprint |
+| 409 | `RESERVA_NO_ACTIVA` / `RESERVA_EXPIRADA` | Operación síncrona de Inventory que pierde carrera contra la expiración; una admisión asíncrona de cupón ya aceptada expone rechazo por resultado GET |
+| 429 | `RATE_LIMIT_EXCEDIDO` | Limitación de Gateway efectiva para el tier/configuración elegida |
+| 500 | `ERROR_INTERNO` | Fallo no controlado; sin incluir secretos/detalles internos |
+| 503 | `SERVICIO_NO_DISPONIBLE` | Owner o dependencia SQL no puede aceptar/leer con consistencia requerida |
+
+La lista es una propuesta derivada del catálogo de errores; registrar en el catálogo/OpenAPI solo tras aprobación. No añadir un 422 para un rechazo de negocio que ya puede quedar durable como `REJECTED`.
+
+### JSON Schema candidato: `CouponApiProblem`
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://g6.invalid/proposals/h5/CouponApiProblem.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "type": { "type": "string", "format": "uri-reference" },
+    "title": { "type": "string", "minLength": 1 },
+    "status": { "type": "integer", "minimum": 400, "maximum": 599 },
+    "code": { "type": "string", "enum": ["VALIDACION", "TOKEN_INVALIDO", "SCOPE_INSUFICIENTE", "RESERVA_NO_ENCONTRADA", "OPERACION_CUPON_NO_ENCONTRADA", "IDEMPOTENCY_CONFLICT", "RESERVA_NO_ACTIVA", "RESERVA_EXPIRADA", "RATE_LIMIT_EXCEDIDO", "ERROR_INTERNO", "SERVICIO_NO_DISPONIBLE"] },
+    "correlationId": { "type": "string", "minLength": 1 }
+  },
+  "required": ["type", "title", "status", "code", "correlationId"]
+}
+```
+
+`OPERACION_CUPON_NO_ENCONTRADA` es un identificador propuesto, no un código hoy agregado al catálogo normativo. Ningún error de esta especificación crea ni autoriza un scope G7.
+
+## Consistencia, polling y expiración tardía
+
+- GET de reserva consulta la fuente autoritativa de Inventory y compara `expires_at` con el reloj UTC del servidor en una lectura consistente. Si la transición persistida está atrasada, devuelve `ACTIVA` + `VENCIDA`; no espera al worker para deshabilitar pago/consumo.
+- El worker existente `ReservationExpirationService` busca filas `ACTIVA` vencidas y ejecuta `expirarReservaDurable`; el GET no dispara otro timer/worker. Pago/consumo confirma de nuevo bajo lock y no confía en una lectura previa.
+- G5 consulta estado de reserva tras recuperar un resultado tardío o timeout; si la vigencia no es `VIGENTE`, no cobra ni solicita consumo de cupón. El resultado de la operación de crear reserva no sustituye esta consulta actual.
+- Polling de operación: obedecer `Retry-After`, iniciar en 2 s, backoff exponencial con jitter hasta un máximo propuesto de 30 s; detener al deadline de flujo acordado. Deadline agotado deja el pedido pendiente/reconciliable, nunca permite inferir éxito ni generar nuevo `operation_id`. Parámetros requieren homologación G5.
+- Si POST pierde respuesta, repetir la misma solicitud y `Idempotency-Key`; si estado pendiente, continuar GET con la misma operación; nunca crear otra identidad para descubrir el resultado.
+
+## Gates antes de publicar en OpenAPI
+
+1. Homologar con G5 métodos, schemas, `order_id`, comparación vigente de reserva, estados, polling y comportamiento ante expiración tardía.
+2. Obtener de G7 la allowlist y permisos efectivos por cliente/operación; confirmar si el scope H4 `inventario:operaciones:leer` cubre el GET de reserva.
+3. Acordar retención de claves y resultados para replay/reconciliación.
+4. Ejecutar pruebas provider/consumer, autorización positiva/negativa, carrera entre consulta y vencimiento, y caída/replay sin duplicación.
+5. Solo después preparar un candidato OpenAPI H5 versionado independiente. Esta propuesta no cambia endpoints canónicos H4 ni declara ruta, implementación o homologación.
