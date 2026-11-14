@@ -1,11 +1,11 @@
 # Matriz de pruebas de contrato e integración — Productos y Ofertas
 
-**Contrato HTTP objetivo:** OpenAPI `0.6.0-rc.3` (candidata; no prueba publicación/runtime).
+**Contrato HTTP objetivo:** OpenAPI `0.6.0-rc.4` (candidata; no prueba publicación/runtime).
 **Contrato asíncrono objetivo:** AsyncAPI `0.6.0-rc.4` (candidato; no prueba publicación/runtime).
 **Referencia histórica auditada:** PR #86, rama `nueva`, commit `c1769607f30e2cabf1449e33c877fa4ef41defe5`; esta matriz conserva los estados pendientes y actualiza la expectativa del vhost en `CT-STATIC-18`.
 **Estado:** definición documental de casos; no asignar `PASS` a pruebas de API, eventos, seguridad o integración sin ejecución reproducible.
 
-En `master` a la base de esta rama, `contratos/http/openapi.yaml` es `0.6.0-rc.3` y `contratos/eventos/asyncapi.yaml` es `0.6.0-rc.4`. AsyncAPI reconcilia nombres de recursos físicos base con una observación histórica Oracle; la numeración independiente evita modificar la candidata HTTP sin cambio. Los estados de ejecución en las tablas requieren evidencia reproducible vinculada a SHA; una ejecución local de esta rama no prueba provider, seguridad con grants reales, homologación, despliegue ni E2E.
+En `master` a la base de esta rama, `contratos/http/openapi.yaml` era `0.6.0-rc.3`; esta propuesta actualiza la candidata HTTP a `0.6.0-rc.4` para registrar la adenda interna Inventory. AsyncAPI permanece en `0.6.0-rc.4` y reconcilia nombres de recursos físicos base con una observación histórica Oracle. Los estados de ejecución en las tablas requieren evidencia reproducible vinculada a SHA; una ejecución local de esta rama no prueba provider, seguridad con grants reales, homologación, despliegue ni E2E.
 
 ## Estados
 
@@ -36,7 +36,7 @@ ARCHITECTURE_INVARIANT
 
 | ID | Tipo | Resultado esperado | Estado |
 |---|---|---|---|
-| CT-STATIC-01 | STATIC_CONTRACT | YAML válido, OpenAPI 3.1.x, `info.version=0.6.0-rc.3`, `$ref` locales resolubles | PENDIENTE_EJECUCION |
+| CT-STATIC-01 | STATIC_CONTRACT | YAML válido, OpenAPI 3.1.x, `info.version=0.6.0-rc.4`, `$ref` locales resolubles | PENDIENTE_EJECUCION |
 | CT-STATIC-02 | STATIC_CONTRACT | `operationId` únicos | PENDIENTE_EJECUCION |
 | CT-STATIC-03 | STATIC_CONTRACT | `ErrorCode` de OpenAPI coincide con la tabla activa de `contratos/http/catalogo-errores.md`, incluidos `OPERACION_INVENTARIO_NO_ENCONTRADA` y `CONTEXTO_ABASTECIMIENTO_INVALIDO` | PENDIENTE_EJECUCION |
 | CT-STATIC-04 | STATIC_CONTRACT | Header canónico `X-Correlation-Id`; no introducir `X-Request-Id` alternativo | PENDIENTE_EJECUCION |
@@ -51,7 +51,7 @@ ARCHITECTURE_INVARIANT
 | CT-STATIC-13 | STATIC_CONTRACT | Los esquemas de éxito de consumo/restauración siguen independientes de los de rechazo; las nuevas referencias no alteran nombres de mensajes, exchanges ni routing keys existentes | PENDIENTE_EJECUCION |
 | CT-STATIC-14 | STATIC_CONTRACT | `ConsultaOperacionInventario` con `status=REJECTED` requiere `result_code` no vacío; sus estados `ACCEPTED`, `PROCESSING`, `COMPLETED`, `REJECTED` y `REQUIRES_REVIEW` conservan la semántica declarada | PENDIENTE_EJECUCION |
 | CT-STATIC-15 | STATIC_CONTRACT | Respuestas `404` de consulta de operación y `422` por contexto comercial inválido usan los códigos del catálogo; `429` y `500` están declarados en las rutas nuevas | PENDIENTE_EJECUCION |
-| CT-STATIC-16 | STATIC_CONTRACT | OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` identifican candidatas independientes; AsyncAPI conserva nombres físicos base y el vhost; ninguna candidata acredita despliegue ni reemplaza por sí sola la línea `0.5.0` en runtime | PENDIENTE_EJECUCION |
+| CT-STATIC-16 | STATIC_CONTRACT | OpenAPI y AsyncAPI `0.6.0-rc.4` identifican candidatas independientes; AsyncAPI conserva nombres físicos base y el vhost; ninguna candidata acredita despliegue ni reemplaza por sí sola la línea `0.5.0` en runtime | PENDIENTE_EJECUCION |
 | CT-STATIC-17 | STATIC_CONTRACT | GET detallado admite exactamente `modulo-ventas` y `modulo-postventa` con `inventario:disponibilidad:leer` y `serviceBearer`, además de `userBearer` para acceso humano autorizado; Marketplace, Chatbot y Retail quedan excluidos del detalle y usan solo rutas comerciales | PENDIENTE_EJECUCION |
 | CT-STATIC-18 | STATIC_CONTRACT | AsyncAPI `servers.rabbitmq.x-vhost` y `x-rabbitmq-topology.vhost` coinciden con `g6-productos-ofertas`; la candidata conserva canales, operaciones, mensajes, payloads, esquemas y routing keys comerciales respecto de `0.6.0-rc.2`; los nombres físicos base se alinean a la observación Oracle | PENDIENTE_EJECUCION |
 | CT-STATIC-19 | STATIC_CONTRACT | GET y POST comerciales incluyen allowlist `modulo-marketplace`, `modulo-chatbot`, `modulo-retail`, con el scope común `inventario:disponibilidad:leer`; `GET /inventario/operaciones/{operationId}` usa `inventario:operaciones:leer` y `modulo-ventas` | PENDIENTE_EJECUCION |
