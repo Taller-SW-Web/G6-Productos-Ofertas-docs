@@ -3,7 +3,7 @@
 **Fecha de actualización:** 2026-10-13
 **Repositorio de documentación:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
 **Archivo:** `arquitectura/Arquitectura.md`  
-**Contrato HTTP canónico:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.3`; referencia histórica `0.5.0`)
+**Contrato HTTP canónico:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.4`; referencia histórica `0.5.0`)
 **Contrato asíncrono canónico:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.4`; referencia histórica `0.5.0`)
 **Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (referencia humana; base histórica `0.5.0`)
 **Catálogo canónico de errores:** `contratos/http/catalogo-errores.md` (códigos autoritativos para el contrato candidato)
@@ -729,6 +729,14 @@ La coordinación se implementa con:
 ---
 
 # 10. Mensajería asíncrona
+
+### 10.0. H5 prospectivo (no vigente)
+
+La propuesta [ADR-H5](decisiones/ADR-H5-SERVICE-BUS-BASIC.md) plantea Azure Service Bus Basic exclusivamente para comunicación interna entre bounded contexts G6. Los consumidores externos G1–G5 conservan HTTP autenticado; G7 mantiene identidad y grants. Sustituir los 13 mensajes que AsyncAPI H4 asigna a G5 requiere homologación G5 y autorización G7. No se modifica en esta propuesta el AsyncAPI canónico `0.6.0-rc.4`, el OpenAPI `0.6.0-rc.4` ni sus fixtures. Véanse [topología candidata](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md), [inventario de 40 mensajes](../contratos/eventos/INVENTARIO-40-MENSAJES-H5.md) y [plan de migración](../integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md).
+
+La expiración de reservas sigue siendo una regla de negocio de Inventory basada en su persistencia y `expires_at`; no depende del TTL del mensaje. Basic no permite configurar `DefaultMessageTimeToLive` y su máximo/default de mensajes es 14 días. Inventory conserva el mecanismo existente `ReservationExpirationService`; H5 no propone un worker de expiración paralelo. El GET candidato de estado devuelve por separado `estado_persistido` y vigencia efectiva, y cualquier pago/consumo vuelve a validar `expires_at` dentro de la operación atómica. Véase la [propuesta HTTP de estado de reserva](../contratos/http/PROPUESTA-OPERACIONES-CUPONES-H5.md).
+
+El flujo H5 de cupones por HTTP requiere además la cola nueva candidata `g6.promotions.commands`, producida por el adaptador HTTP de Promotions mediante Outbox y consumida solo por su worker de operaciones. Admisión durable, Inbox/idempotencia, resultado persistido y GET de consulta están detallados en la [topología](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md). Las 18 relaciones derivadas de AsyncAPI H4 son relaciones heredadas y no limitan las colas nuevas de H5.
 
 ## 10.1. RabbitMQ
 

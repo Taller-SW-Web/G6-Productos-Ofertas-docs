@@ -1,5 +1,11 @@
 # Catálogo de eventos y mensajes — Productos y Ofertas
 
+## Estado del transporte por hito
+
+Este catálogo mantiene los 40 mensajes lógicos de AsyncAPI H4. La topología y transporte asociados a RabbitMQ se conservan como H4 histórico. H5 propone cambiar solo la infraestructura entre servicios G6; no cambia por sí misma los nombres, schemas, `operation_id`, idempotencia ni ownership de negocio y no sustituye el AsyncAPI canónico. El mapeo H5 por destinatario y mensaje está en [inventario de 40 mensajes](./INVENTARIO-40-MENSAJES-H5.md).
+
+Para H5, `message_id` identifica la entrega lógica y se reutiliza en el reintento de la misma entrega; `operation_id` identifica la operación funcional idempotente; `correlation_id` enlaza la secuencia. Una copia fan-out tiene registro de entrega/reintento independiente por destinatario. Basic no ofrece deduplicación del broker, por lo que Inbox persistente es requisito propuesto, no implementación acreditada.
+
 **Fuente de verdad:** [`asyncapi.yaml`](asyncapi.yaml)
 **Topología física:** [`rabbitmq-topologia.md`](./rabbitmq-topologia.md)
 

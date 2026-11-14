@@ -1,5 +1,7 @@
 # Topología RabbitMQ — Productos y Ofertas
 
+> **H4 histórico:** conservar esta topología y sus conteos como registro de origen, sin inferir aprovisionamiento vigente. La [topología H5 propuesta](./TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) es prospectiva y no traduce automáticamente exchanges, bindings o colas RabbitMQ a Azure.
+
 **Fuente ejecutable:** [AsyncAPI](asyncapi.yaml), candidata `0.6.0-rc.3`. La topología base fue observada históricamente en Oracle el 2026-10-19; homologación, correspondencia de bindings, implementación y estado runtime actual no se acreditan.
 
 ## 1. Alcance y recursos base

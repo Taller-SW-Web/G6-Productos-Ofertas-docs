@@ -1,5 +1,9 @@
 # Kit de integración — Productos y Ofertas
 
+## Propuesta H5 para consumidores externos
+
+H5 mantiene la integración externa por HTTP; G5 no obtiene credenciales ni acceso directo a Azure Service Bus. Las rutas propuestas de consumo/restauración de cupón y consulta de operación están en [PROPUESTA-OPERACIONES-CUPONES-H5.md](./PROPUESTA-OPERACIONES-CUPONES-H5.md) y aún no forman parte de OpenAPI ni son endpoints disponibles. Promotions usaría la cola interna `g6.promotions.commands`; adaptador HTTP vía Outbox, worker exclusivo, Inbox/idempotencia y resultado durable son una propuesta de implementación. `202 Accepted` solo confirma admisión y persistencia durable; el consumidor recupera el resultado con GET. G5 debe leer el estado actual de reserva: `ACTIVA` con `expires_at` cumplido no habilita pago/consumo. La ruta GET de reserva y su autorización siguen pendientes de homologación G5/G7; el vencimiento lo maneja el `ReservationExpirationService` existente.
+
 **Fecha de actualización:** 2026-11-02
 
 **Repositorio:** `Taller-SW-Web/G6-Productos-Ofertas-docs`
