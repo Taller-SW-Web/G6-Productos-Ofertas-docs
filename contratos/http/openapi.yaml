@@ -7877,7 +7877,25 @@ paths:
         '401': {description: JWT humano inválido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
         '403': {description: Rol GESTOR_COMERCIAL requerido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
         '409': {description: Clave idempotente reutilizada con contenido distinto, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
-        '404': {description: SKU componente inexistente, inactivo o no elegible según provider, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '404':
+          description: SKU componente inexistente, inactivo o no elegible según provider
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 404
+                    code:
+                      type: string
+                      enum:
+                      - SKU_NO_ENCONTRADO
+                  required:
+                  - status
+                  - code
         '500': {description: Error interno; resultado puede ser incierto si ocurrió durante persistencia, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
         '503': {description: Dependencia no disponible; resultado incierto debe reconciliarse con la misma clave, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
       x-error-codes:
