@@ -33,6 +33,52 @@ def validator(name: str) -> jsonschema.Draft202012Validator:
 
 
 class TestServiceBusH5Documentation(unittest.TestCase):
+    def test_reservation_reconciliation_and_commercial_sequence_are_explicit(self):
+        adr = (ROOT / "arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md").read_text(
+            encoding="utf-8"
+        )
+        proposal = PROPOSAL.read_text(encoding="utf-8")
+        matrix = (ROOT / "integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md").read_text(
+            encoding="utf-8"
+        )
+        migration = (ROOT / "integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md").read_text(
+            encoding="utf-8"
+        )
+        for text in (adr, proposal, matrix, migration):
+            self.assertRegex(text, r"periódic[oa]")
+            self.assertIn("no está implementado ni aceptado por G5", text)
+            self.assertIn("G6 no administra estados de pedido", text)
+        for text in (adr, proposal, matrix, migration):
+            self.assertIn("inventory.reservation.created", text)
+            self.assertIn("resultado durable", text)
+            self.assertIn("/inventario/reservas/{reservaId}/confirmar", text)
+        for invariant in (
+            "lease/claim durable",
+            "reanudación tras caída",
+            "backoff",
+            "clave idempotente",
+            "workers concurrentes",
+            "no retroceder el estado",
+        ):
+            self.assertIn(invariant, adr)
+        sequence_section = proposal.split(
+            "Para checkout de Marketplace con cupón", 1
+        )[1].split("No se llama a `/confirmar`", 1)[0]
+        sequence = (
+            "1. Crear pedido conforme al flujo G5",
+            "2. Consultar/validar que la reserva siga vigente",
+            "3. Admitir consumo del cupón",
+            "4. Procesar el pago",
+            "5. Tras pago exitoso",
+            "POST /api/v1/inventario/reservas/{reservaId}/confirmar",
+        )
+        positions = [sequence_section.index(token) for token in sequence]
+        self.assertEqual(positions, sorted(positions))
+        for text in (proposal, matrix, migration):
+            self.assertIn("Chatbot", text)
+            self.assertIn("reemplazo", text.lower())
+            self.assertIn("despacho", text.lower())
+
     def test_promotions_http_queue_is_new_and_scoped_to_its_worker(self):
         topology = (ROOT / "contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md").read_text(
             encoding="utf-8"

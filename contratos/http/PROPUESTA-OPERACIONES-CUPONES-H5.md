@@ -170,6 +170,22 @@ El GET es de solo lectura. `ReservationExpirationService` existente y su worker 
 
 `permite_pago` es una precondición de Inventory sobre la reserva, no una decisión de pago ni una orden de cobro: G5 conserva en todo momento el ownership y la decisión comercial del pedido/pago. G5 debe tratar `false` como bloqueo y corroborar el estado al confirmar consumo.
 
+### Secuencia comercial: reserva creada no es stock consumido
+
+La creación efectiva de una reserva se acredita por `inventory.reservation.created` o por el resultado durable de la operación de reserva en `COMPLETED`, con `reservation_id` y `expires_at`. `202 Accepted` solo acredita admisión; no acredita que la reserva exista. Esta creación tampoco equivale al consumo definitivo de unidades, que es la mutación separada `POST /api/v1/inventario/reservas/{reservaId}/confirmar` (admisión `202`, resultado definitivo por evento/operación durable).
+
+Para checkout de Marketplace con cupón, la secuencia candidata, preservando ownership G5, es:
+
+1. Crear pedido conforme al flujo G5 y esperar la creación efectiva de la reserva.
+2. Consultar/validar que la reserva siga vigente (`ACTIVA` y `expires_at > observed_at`).
+3. Admitir consumo del cupón; esperar resultado terminal `COMPLETED`. Si se rechaza o no puede confirmarse el éxito, no procesar el pago.
+4. Procesar el pago mediante el flujo de G5.
+5. Tras pago exitoso, solicitar `POST /api/v1/inventario/reservas/{reservaId}/confirmar` y esperar su resultado durable de consumo definitivo. Si pago no completado/anulación antes de consumir stock, seguir la liberación y restauración de cupón existentes cuando correspondan.
+
+No se llama a `/confirmar` antes del consumo del cupón o del pago. El endpoint propuesto de estado es una lectura puntual y no notifica por sí mismo expiraciones futuras; por eso la propuesta requiere una conciliación periódica durable dentro de G5 para pedidos y órdenes de reemplazo con reservas activas. Esa tarea solo consulta Inventory y aplica transiciones ya existentes del workflow G5; G6 no administra estados de pedido. Véanse disparadores, exclusiones, concurrencia, recuperación e hitos de homologación en la [ADR H5](../../arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md#reconciliación-durable-g5-ante-expiración-tardía--propuesta-pendiente). El mecanismo de conciliación no está implementado ni aceptado por G5.
+
+Variantes ya documentadas se mantienen: Chatbot conserva su integración actual de consultas comerciales (no crea reservas ni confirma stock); una orden de reemplazo es orden G5 independiente y sin cobro, M1 concilia su reserva por separado, al sellar el paquete solicita el consumo definitivo y espera su resultado antes de despacho. Si vence antes, M1 anula mediante su transición existente y puede abrir otra orden/reserva conforme a su regla vigente. La propuesta H5 no agrega comportamiento a esos flujos sin homologación.
+
 ### JSON Schema candidato: `ReservationStatusSnapshot`
 
 ```json

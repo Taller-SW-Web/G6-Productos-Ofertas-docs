@@ -36,6 +36,10 @@
 
 **P0 semántico:** consultar solo la operación inicial puede NO informar una expiración de reserva que sucede horas después de su éxito. Se propone `GET /api/v1/inventario/reservas/{reservaId}/estado?order_id=...`, limitado a consumidores aprobados, que retorna estado persistido (`ACTIVA`, `CONSUMIDA`, `LIBERADA`, `EXPIRADA`), `expires_at` y vigencia efectiva calculada. `ACTIVA` con vencimiento cumplido se expone como persistida `ACTIVA` + vigencia `VENCIDA` y nunca habilita pago/consumo. G5/G6 deben homologar esquema, autorización, consistencia y reacción; la ruta no existe en OpenAPI canónico ni se declara implementada. El `ReservationExpirationService` existente materializa la transición, sin worker paralelo.
 
+El GET no notifica espontáneamente a G5. Se propone que G5 persista la relación pedido-reserva, active seguimiento al evento `inventory.reservation.created` o resultado durable `COMPLETED`, y ejecute conciliación periódica y al reinicio para pedidos/órdenes de reemplazo vinculados a reservas `ACTIVA` mientras el workflow G5 siga pre-pago/pre-anulación. La lectura `VENCIDA` debe activar solo las transiciones G5 existentes; un error de lectura conserva el seguimiento y reintenta con backoff. Checkpoint/lease y clave idempotente por reserva+transición evitan pérdida o doble anulación bajo concurrencia. La ruta, retención, periodo, estados G5 elegibles, backoff, autorización, reacción a carrera pago/anulación, restauración y pruebas requieren homologación bilateral. **El mecanismo de conciliación no está implementado ni aceptado por G5**; G6 no administra estados de pedido.
+
+Distinción comercial obligatoria: evento `inventory.reservation.created` o resultado de creación `COMPLETED` confirma que la reserva fue creada; no confirma consumo definitivo de stock. El consumo es la operación aparte `POST /api/v1/inventario/reservas/{reservaId}/confirmar`. Para Marketplace con cupón: reserva creada → verificar vigencia → consumir cupón y esperar éxito → procesar pago → confirmar consumo del stock y esperar resultado. No adelantar `/confirmar` al cupón o pago. Chatbot mantiene su acuerdo de consultas comerciales sin reservar ni confirmar stock. Reemplazo M1 crea su orden G5 separada, sin cobro; solicita consumo al sellar paquete y espera resultado antes del despacho; si la reserva vence antes, anula y, si procede conforme al contrato G5, crea orden/reserva nueva.
+
 La cola `g6.promotions.commands` es una cola H5 nueva para comandos HTTP durables de Promotions; no forma parte de las 18 relaciones H4 heredadas y demuestra por qué ese conteo no es tope de colas H5. Solo el adaptador HTTP interno envía y el worker Promotions consume; G5 obtiene admisión/resultado por HTTP.
 
 ## Hallazgos de consumidor real G5
@@ -59,6 +63,6 @@ La cola `g6.promotions.commands` es una cola H5 nueva para comandos HTTP durable
 ## Acuerdos a preservar
 
 - G5 `order_id` textual opaco (`PED-...`); operaciones UUID deterministas, con `operation_id` original en restauración.
-- La confirmación de reserva es previa a consumo de cupón; `202` no significa confirmación.
+- La creación efectiva de la reserva es previa al consumo de cupón; `202` solo indica admisión. El consumo definitivo de stock vía `/confirmar` es posterior al pago en Marketplace con cupón; ambos significados de “confirmación” no deben mezclarse.
 - G5 gobierna pedido, pago y cancelación. G6 no cobra ni cambia estados de pedido.
 - La conciliación offline Retail tiene discrepancias documentadas entre G4/G5/G6; no resolverla mediante la ADR de broker.

@@ -31,6 +31,10 @@
 | H5-MSG-25 | Carrera pago vs vencimiento | Consulta vigente no sustituye validación atómica; Inventory vuelve a comprobar bajo lock y usa mecanismo `ReservationExpirationService` existente | Dominio/concurrencia |
 | H5-MSG-26 | Indisponibilidad >14 días | `DefaultMessageTimeToLive` no configurable y TTL máximo/default 14 días; conservar Outbox/operación; reconciliar Inbox/resultado/efecto; replay solo autorizado, idempotente y sin resultado terminal | TTL/recuperación |
 | H5-MSG-27 | TTL del mensaje separado de reserva | Un mensaje expirado/no entregable no cambia `expires_at` ni estado comercial por sí mismo | Contrato/domino |
+| H5-MSG-28 | Reconciliación G5 tras expiración sin notificación | Evento/COMPLETED de creación inicia registro durable; barrido periódico y recuperación tras caída consultan pedidos y reemplazos elegibles; GET vencida aplica solo transición G5 existente; error reintenta y replay no duplica anulación | Contrato/E2E bilateral pendiente |
+| H5-MSG-29 | Carrera conciliación, pago y anulación | Dos workers/concurrencia no duplican transición; pre-pago consulta vigencia; terminal pagado/anulado no se degrada; reintentos conservan clave y checkpoint | Concurrencia/G5 |
+| H5-MSG-30 | Orden comercial Marketplace con cupón | Reserva efectiva creada → vigencia → consumir cupón y esperar COMPLETED → pagar → POST `/confirmar` y esperar consumo stock; ningún paso de confirmación stock se adelanta | Contract/E2E |
+| H5-MSG-31 | Flujos Chatbot y reemplazo preservados | Chatbot solo consultas comerciales según acuerdo; reemplazo M1 independiente sin cobro, confirmación al sellar y resultado antes de despacho; expiración usa anulación/nueva orden existentes | Regresión contractual |
 | H5-DOC-01 | Invariantes documentales candidatas | Schemas JSON en propuesta satisfacen ejemplos; topología, estado reserva y TTL Basic no contradicen el documento | Estática documental |
 
 ## Evidencia de cada prueba
