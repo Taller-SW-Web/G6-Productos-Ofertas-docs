@@ -3,7 +3,7 @@
 **Fecha de actualización:** 2026-10-13
 **Repositorio de documentación:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
 **Archivo:** `arquitectura/Arquitectura.md`  
-**Contrato HTTP canónico:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.3`; referencia histórica `0.5.0`)
+**Contrato HTTP canónico:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.4`; referencia histórica `0.5.0`)
 **Contrato asíncrono canónico:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.4`; referencia histórica `0.5.0`)
 **Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (referencia humana; base histórica `0.5.0`)
 **Catálogo canónico de errores:** `contratos/http/catalogo-errores.md` (códigos autoritativos para el contrato candidato)
@@ -729,6 +729,12 @@ La coordinación se implementa con:
 ---
 
 # 10. Mensajería asíncrona
+
+### 10.0. H5 prospectivo (no vigente)
+
+La propuesta [ADR-H5](decisiones/ADR-H5-SERVICE-BUS-BASIC.md) plantea Azure Service Bus Basic exclusivamente para comunicación interna entre bounded contexts G6. Los consumidores externos G1–G5 conservan HTTP autenticado; G7 mantiene identidad y grants. Sustituir los 13 mensajes que AsyncAPI H4 asigna a G5 requiere homologación G5 y autorización G7. No se modifica en esta propuesta el AsyncAPI canónico `0.6.0-rc.4`, el OpenAPI `0.6.0-rc.4` ni sus fixtures. Véanse [topología candidata](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md), [inventario de 40 mensajes](../contratos/eventos/INVENTARIO-40-MENSAJES-H5.md) y [plan de migración](../integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md).
+
+La expiración de reservas sigue siendo una regla de negocio de Inventory basada en su persistencia y `expires_at`; no depende de la expiración del mensaje. Como Basic no admite `DefaultMessageTimeToLive`, cualquier señal interna de vencimiento debe derivarse de un proceso durable propio y publicar por outbox. La reacción de G5 a una expiración tardía requiere contrato HTTP de estado de reserva homologado.
 
 ## 10.1. RabbitMQ
 

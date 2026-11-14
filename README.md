@@ -104,6 +104,10 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 | Catálogo de eventos | [`contratos/eventos/catalogo-eventos.md`](contratos/eventos/catalogo-eventos.md) | Eventos publicados y consumidos |
 | Topología RabbitMQ | [`contratos/eventos/rabbitmq-topologia.md`](contratos/eventos/rabbitmq-topologia.md) | Definición física de exchanges, colas y retries |
 | Decisiones RabbitMQ | [`arquitectura/decisiones/rabbitmq.md`](arquitectura/decisiones/rabbitmq.md) | Decisión interna G6 y estados de homologación/implementación |
+| Propuesta de arquitectura H5 | [`arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md`](arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md) | Azure Service Bus Basic solo para mensajería interna G6; módulos externos conservan HTTP |
+| Topología y operación H5 | [`contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md`](contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md), [`arquitectura/operacion-service-bus-basic-h5.md`](arquitectura/operacion-service-bus-basic-h5.md) | Propuestas sin recursos aprovisionados ni implementación acreditada |
+| Inventario y frontera H5 | [`contratos/eventos/INVENTARIO-40-MENSAJES-H5.md`](contratos/eventos/INVENTARIO-40-MENSAJES-H5.md), [`integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md`](integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md) | Reconciliación de 40 mensajes H4, 13 asignados a G5 y relaciones internas candidatas |
+| Plan H5 y gates | [`integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md`](integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md), [`tests/contratos/PLAN-VERIFICACION-SERVICE-BUS-H5.md`](tests/contratos/PLAN-VERIFICACION-SERVICE-BUS-H5.md) | Migración, verificación y bloqueos separados por estado |
 | Operación RabbitMQ | [`arquitectura/operacion-rabbitmq.md`](arquitectura/operacion-rabbitmq.md) | Aprovisionamiento, permisos por aplicación y operación |
 | Pruebas aisladas de RabbitMQ | [`tests/rabbitmq-aislamiento/README.md`](tests/rabbitmq-aislamiento/README.md) | Smoke esencial predeterminado y pruebas ampliadas explícitas para la candidata A en RabbitMQ 4.2.9 aislado |
 | Transición RabbitMQ | [`integraciones/transicion-rabbitmq.md`](integraciones/transicion-rabbitmq.md) | Cambio de vhost, impacto intermodular y pendientes de homologación |
@@ -280,7 +284,7 @@ La explicación humana de responsabilidades e integración se mantiene en:
 
 | Artefacto | Versión |
 |---|---|
-| OpenAPI 3.1.0 | `0.6.0-rc.3`, candidata H4 con homologación G2–G6 documental; no publicada ni evidencia runtime |
+| OpenAPI 3.1.0 | `0.6.0-rc.4`, candidata H4 integrada en master tras PR #118; no es evidencia de runtime |
 | AsyncAPI 3.0.0 | `0.6.0-rc.4`, candidata H4; 40 canales/mensajes, nombres/routing keys conservados; payloads tipados requieren corte coordinado |
 | Línea base histórica OpenAPI/AsyncAPI | `0.5.0` (compatibilidad; no sustituida automáticamente en runtime) |
 | Catálogo de errores | Vocabulario humano de códigos, alineado con el contrato candidato |
@@ -288,7 +292,7 @@ La explicación humana de responsabilidades e integración se mantiene en:
 | Topología RabbitMQ | Contrato físico documentado, sin inferir aprovisionamiento del entorno |
 | Kit de integración | Guía documental derivada del contrato candidato |
 
-**Estado de publicación:** OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` son candidatas de esta rama, pendientes de revisión/fusión. La consulta física G2 está homologada contractualmente; grants G7, implementación, despliegue y E2E permanecen pendientes (ver [acuerdo G2–G6 H4](integraciones/ACUERDO_G2_G6_H4_2026-11-02.md)). El cambio AsyncAPI de GenericData a schema tipado es incompatible para consumidores antiguos y requiere despliegue coordinado antes de emisión. La topología observada y los contratos no acreditan estado actual del broker, adaptación de código, grants G7, homologación externa, despliegue ni E2E.
+**Estado de publicación:** en el corte `master` revisado para esta propuesta, OpenAPI `0.6.0-rc.4` y AsyncAPI `0.6.0-rc.4` son la línea documental H4 integrada tras PR #118. Esto no demuestra vigencia de runtime. La consulta física G2 está homologada contractualmente; grants G7, implementación, despliegue y E2E permanecen pendientes (ver [acuerdo G2–G6 H4](integraciones/ACUERDO_G2_G6_H4_2026-11-02.md)). El cambio AsyncAPI de GenericData a schema tipado es incompatible para consumidores antiguos y requiere despliegue coordinado antes de emisión. La topología observada y los contratos no acreditan estado actual del broker, adaptación de código, grants G7, homologación externa, despliegue ni E2E.
 
 ---
 
@@ -431,6 +435,12 @@ Este repositorio busca mantener:
 ---
 
 ## 14. Próxima evolución documental
+
+### Propuesta H5: Azure Service Bus Basic
+
+H4 conserva RabbitMQ como arquitectura histórica y contrato de referencia; `contratos/http/openapi.yaml`, `contratos/eventos/asyncapi.yaml` y sus fixtures históricos no se sustituyen por esta propuesta. H5 propone Service Bus Basic solo para flujos internos G6. Los consumidores externos G1–G5 acceden a G6 por HTTP autenticado; G7 conserva la autoridad de identidad y grants. Las 13 interacciones AsyncAPI asignadas a `modulo-ventas` requieren migración de frontera por HTTP, con aceptación G5 y autorización G7 pendientes. Decisión interna, homologación, grants, implementación, pruebas y despliegue son estados separados; ninguno se presume alcanzado por estos documentos.
+
+Basic no ofrece topics, sessions, detección de duplicados administrada ni `DefaultMessageTimeToLive`; el máximo de 256 KB incluye propiedades. La expiración comercial de reservas depende del estado y `expires_at` autoritativo de Inventario, no del TTL del broker. Véanse la [ADR propuesta](arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md), la [topología H5](contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) y el [plan de migración](integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md).
 
 Los siguientes artefactos ampliarán la trazabilidad hacia el Hito 2:
 

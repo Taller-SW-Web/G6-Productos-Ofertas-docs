@@ -1,5 +1,7 @@
 # Transición de RabbitMQ
 
+> Este plan corresponde a la transición interna H4 de nombres/configuración RabbitMQ y conserva su estado histórico; no es el plan de retiro del broker ni se reinterpreta como migración a Azure. La propuesta H5 separada está en [PLAN-MIGRACION-MENSAJERIA-H5.md](PLAN-MIGRACION-MENSAJERIA-H5.md).
+
 **Proyecto:** G6 — Productos y Ofertas
 **Estado:** reconciliación documental candidata `0.6.0-rc.3`; homologación externa, adaptación de código y ejecución real pendientes
 **Evidencia base:** auditoría histórica Oracle del 2026-10-19; no representa necesariamente el estado actual del servidor

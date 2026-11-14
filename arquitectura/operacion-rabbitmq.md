@@ -1,5 +1,7 @@
 # Operación de RabbitMQ
 
+> **Alcance histórico H4:** los procedimientos y evidencias de esta guía describen RabbitMQ; se conservan como registro H4 y no acreditan estado actual del broker. La [operación candidata H5](./operacion-service-bus-basic-h5.md) es una propuesta aparte. No ejecutar retiro, dual-write ni aprovisionamiento Azure por esta guía o por la propuesta H5; cualquier corte requiere plan aprobado, drenaje/reconciliación, rollback ensayado y gates de integración.
+
 **G6 — Productos y Ofertas**  
 **Estado:** guía objetivo de operación, aún no ejecutada  
 **Vhost objetivo:** `g6-productos-ofertas`  

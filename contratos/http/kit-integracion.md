@@ -1,5 +1,9 @@
 # Kit de integración — Productos y Ofertas
 
+## Propuesta H5 para consumidores externos
+
+H5 mantiene la integración externa por HTTP; G5 no obtiene credenciales ni acceso directo a Azure Service Bus. Las rutas propuestas de consumo/restauración de cupón y consulta de operación están en [PROPUESTA-OPERACIONES-CUPONES-H5.md](./PROPUESTA-OPERACIONES-CUPONES-H5.md) y aún no forman parte de OpenAPI ni son endpoints disponibles. `202 Accepted` solo confirma admisión y persistencia durable; el consumidor recupera el resultado con GET. G5 debe esperar confirmación efectiva de reserva antes de consumir un cupón. La expiración posterior requiere consulta actual de reserva o notificación autorizada. Todo está pendiente de acuerdo G5, scopes G7, implementación y pruebas.
+
 **Fecha de actualización:** 2026-11-02
 
 **Repositorio:** `Taller-SW-Web/G6-Productos-Ofertas-docs`

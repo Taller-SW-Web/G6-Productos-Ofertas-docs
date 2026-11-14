@@ -581,3 +581,6 @@ Contrato aprobado en diseño por G6: [acuerdo Pricing → Catálogo](../../integ
 | CT-G6-COMBO-01 | CONSUMER | precio bajo ambas sumas con mismo canal/instante; dependencia fallida da SERVICIO_NO_DISPONIBLE; disponibilidad no verificable es null/INCOMPLETA y no reserva | PENDIENTE_IMPLEMENTACION |
 | CT-G6-AUTH-01 | SECURITY | JWT real de modulo-productos usa scope y allowlist puntual; demo sin JWT solo red/origen/método/ruta verificados, nunca identidad por cabecera | PENDIENTE_GRANT_G7_Y_EJECUCION |
 | CT-G6-AMQP-01 | BROKER_ISOLATED | ACK solo tras disposición durable; inválido se persiste antes de ACK; 3 reintentos locales y pausa sin ACK; no se presupone DLQ | PENDIENTE_IMPLEMENTACION |
+# Propuesta de validación documental H5
+
+La [matriz de verificación Service Bus H5](../../tests/contratos/PLAN-VERIFICACION-SERVICE-BUS-H5.md) agrega casos propuestos para mensajería interna y frontera HTTP. Están `NO EJECUTADOS`; no cambian resultados históricos ni fixtures H4. La suite estática debe continuar verificando el AsyncAPI canónico H4 de 40 canales/mensajes. La ejecución de los casos H5 requiere una especificación ejecutable aprobada; pruebas con emulador no acreditan Azure real, grants G7 ni homologación G5.

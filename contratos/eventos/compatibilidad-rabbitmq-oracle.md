@@ -73,3 +73,6 @@ El criterio para cerrar el gate de G5 incluye aceptación de nombres físicos, r
 ## Retry/DLX
 
 `po.retry.x` y `po.dlx.x` conservan nombres y tipos solo como diseño candidato; las colas derivadas y sus claves técnicas están **NO APROBADAS, NO APROVISIONADAS y NO HOMOLOGADAS**. El gate permanece bloqueado y se conserva `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`.
+# Alcance histórico H4
+
+Esta matriz registra auditoría y compatibilidad observadas para RabbitMQ en H4. Sus bindings, ACL y nombres no son equivalencias de recursos o permisos de Azure Service Bus. La propuesta H5 y sus gates se documentan en [topología candidata](./TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) y [plan de migración](../../integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md); no se acreditan recursos, homologación ni runtime H5.
