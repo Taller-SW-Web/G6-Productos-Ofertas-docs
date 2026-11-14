@@ -22,7 +22,7 @@ test('Exportación para Studio conserva todo salvo título y servidor autorizado
   assert.equal(editor.origin, 'https://app.swaggerhub.com');
   assert.equal(docs.origin, editor.origin);
   const publishedVersion = editor.pathname.split('/').at(-1);
-  assert.match(publishedVersion, /^\\d+\\.\\d+\\.\\d+-rc\\.\\d+$/);
+  assert.match(publishedVersion, /^\d+\.\d+\.\d+-rc\.\d+$/);
   assert.equal(editor.pathname, `/apis/${identity}/${publishedVersion}`);
   assert.equal(docs.pathname, `/apis-docs/${identity}/${publishedVersion}`);
   assert.equal(editor.search + editor.hash + docs.search + docs.hash, '');
