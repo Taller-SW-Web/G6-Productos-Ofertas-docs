@@ -61,6 +61,23 @@ class TestServiceBusH5Documentation(unittest.TestCase):
             "no retroceder el estado",
         ):
             self.assertIn(invariant, adr)
+        for text in (adr, proposal, matrix, migration):
+            self.assertIn("`ACTIVA`", text)
+            self.assertIn("`EXPIRADA` persistida", text)
+            self.assertIn("HTTP", text)
+        self.assertIn("no es prerrequisito de la propuesta HTTP", adr)
+        self.assertIn("RabbitMQ H4 `inventory.reservation.created`", adr)
+        self.assertIn("resultado durable `COMPLETED` de la operación que creó la reserva", adr)
+        self.assertIn("`EXPIRADA` solo se excluye cuando G5 ya registró durablemente", adr)
+        self.assertIn("Una lectura HTTP exitosa de Inventory solo aporta observación", adr)
+        self.assertIn("no cierra el seguimiento", proposal)
+        test_plan = (ROOT / "tests/contratos/PLAN-VERIFICACION-SERVICE-BUS-H5.md").read_text(
+            encoding="utf-8"
+        ).lower()
+        self.assertIn("pasa de `activa` a `expirada`", test_plan)
+        self.assertIn("antes del siguiente barrido g5", test_plan)
+        self.assertIn("resultado http durable `completed`", test_plan)
+        self.assertIn("solo entonces cierra el seguimiento", test_plan)
         sequence_section = proposal.split(
             "Para checkout de Marketplace con cupón", 1
         )[1].split("No se llama a `/confirmar`", 1)[0]
