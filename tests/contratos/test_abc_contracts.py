@@ -21,7 +21,7 @@ class ContractChecks(unittest.TestCase):
                     for x in v:walk(x)
             walk(d)
     def test_versions(self):
-        self.assertEqual(self.o['info']['version'],'0.6.0-rc.4')
+        self.assertEqual(self.o['info']['version'],'0.6.0-rc.5')
         self.assertEqual(self.a['info']['version'],'0.6.0-rc.4')
     def test_reservation_result_mapping(self):
         op=self.o['paths']['/inventario/reservas']['post']
@@ -67,7 +67,7 @@ class ContractChecks(unittest.TestCase):
         self.assertTrue(s.rstrip().endswith('ROLLBACK;'))
         self.assertNotIn('DELETE FROM inventory.stock_threshold_override',s)
     def test_commercial_channel_restriction(self):
-        self.assertEqual(self.o['info']['version'],'0.6.0-rc.4')
+        self.assertEqual(self.o['info']['version'],'0.6.0-rc.5')
         self.assertEqual(self.o['components']['schemas']['Canal']['enum'],['MARKETPLACE','CHATBOT','RETAIL','VENTAS'])
         self.assertEqual(self.o['components']['schemas']['CanalComercial']['enum'],['MARKETPLACE','CHATBOT','RETAIL'])
         # GET /inventario/disponibilidad/comercial
@@ -122,7 +122,7 @@ class ContractChecks(unittest.TestCase):
         self.assertIn('binding=false',desc)
         self.assertNotIn('salvo que exista una modalidad de abastecimiento explícita y ejecutable para atender conjuntamente',desc)
     def test_offline_reconciliation_candidate_operation(self):
-        self.assertEqual(self.o['info']['version'],'0.6.0-rc.4')
+        self.assertEqual(self.o['info']['version'],'0.6.0-rc.5')
         op=self.o['paths']['/inventario/conciliaciones-offline']['post']
         self.assertEqual(op['operationId'],'conciliarVentaOffline')
         self.assertEqual(op['x-status'],'provisional')
@@ -289,6 +289,7 @@ class CatalogPricingTaxonomyContract(unittest.TestCase):
                     enabled.append((path,method,op.get('operationId')))
         self.assertEqual(set(enabled), {
             ('/productos/skus/{sku}/contexto','get','obtenerContextoSku'),
+            ('/productos/skus/contexto/lote','post','obtenerContextosSkuLote'),
             ('/precios','get','consultarPrecios'),
             ('/precios/skus/{sku}','get','obtenerPrecioSku'),
             ('/productos/{productoId}','get','obtenerProducto'),
@@ -302,7 +303,8 @@ class CatalogPricingTaxonomyContract(unittest.TestCase):
             ('/categorias/administracion','get','listarCategoriasAdmin'),
             ('/marcas/administracion','get','listarMarcasAdmin'),
         })
-        self.assertTrue(all(method == 'get' for _, method, _ in enabled))
+        self.assertTrue(all(method == 'get' or (method == 'post' and op_id == 'obtenerContextosSkuLote') for _, method, op_id in enabled))
+        self.assertTrue(self.o['paths']['/productos/skus/contexto/lote']['post']['x-internal'])
         taxonomy_names={'obtenerTipoProducto','listarTiposProducto','obtenerEsquemaTipoProducto','obtenerMarcaAdmin','obtenerArbolCategoriasAdmin','obtenerCategoriaAdmin','listarCategoriasAdmin','listarMarcasAdmin'}
         for path,item in self.o['paths'].items():
             for method,op in item.items():

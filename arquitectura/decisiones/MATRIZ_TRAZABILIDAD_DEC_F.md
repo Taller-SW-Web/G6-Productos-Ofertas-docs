@@ -89,3 +89,15 @@ Estos reportes no acreditan homologación externa, grants G7, migraciones aplica
 ## Traza de acuerdos complementarios G6 H4 — 2026-11-01
 
 DEC-G6-INT-01–13 complementan las DEC-F registradas y no se numeran como DEC-F. La matriz específica de reglas, contrato, owners, pruebas y dependencias está en [ACUERDOS-INTEGRACION-INTERNA-G6-H4.md](ACUERDOS-INTEGRACION-INTERNA-G6-H4.md). Su incorporación no equivale a implementación ni homologación externa.
+
+
+## Trazabilidad de optimizaciones G6 autorizadas 2026-11-14
+
+La autorización y criterios aprobados están en [ACUERDO_OPTIMIZACIONES_G6_2026-11-14](../../integraciones/ACUERDO_OPTIMIZACIONES_G6_2026-11-14.md). Se mantienen sin cambios las DEC-F numeradas. El acuerdo especifica la operación, responsables, contratos, límites de rendimiento y estados externos por separado; los casos reproducibles de verificación se añaden en [pruebas-contrato.md](../../contratos/pruebas/pruebas-contrato.md).
+
+| Decisión interna | Relación con DEC-F | Artefactos de trazabilidad | Estado a nivel documental |
+|---|---|---|---|
+| Resolución SKU administrativa y privada por lote | DEC-F-001, DEC-F-004, DEC-F-006 | OpenAPI rc.5; acuerdo G6; casos CT-CAT-SKUBATCH | Contrato candidato; grants G7/CI final no inferidos |
+| Filtrar tipo antes del conteo y página | DEC-F-001, DEC-F-004 | OpenAPI rc.5; acuerdo G6; CT-CAT-TYPE-PAGE | Decisión interna adoptada; homologación de consumidores y pruebas finales separadas |
+| Filtrado por precio efectivo con total exacto | DEC-F-006; conserva autoridad Pricing | SPEC-013, OpenAPI rc.5, acuerdo G6 | Regla interna adoptada; estrategia batch autoritativa; evaluación integral final no inferida |
+| Lecturas administrativas de auditoría y creación idempotente de Combos | DEC-F-006, DEC-F-009 | OpenAPI rc.5; acuerdo G6; casos CT-AUDIT-ADMIN y CT-COMBO-ADMIN-IDEMP | Rutas documentadas contra providers; JWT real/CI final pendientes de su ejecución acreditada |

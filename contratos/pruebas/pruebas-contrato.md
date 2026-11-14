@@ -584,3 +584,20 @@ Contrato aprobado en diseño por G6: [acuerdo Pricing → Catálogo](../../integ
 # Propuesta de validación documental H5
 
 La [matriz de verificación Service Bus H5](../../tests/contratos/PLAN-VERIFICACION-SERVICE-BUS-H5.md) agrega casos propuestos para mensajería interna y frontera HTTP. Están `NO EJECUTADOS`; no cambian resultados históricos ni fixtures H4. La validación documental de schemas e invariantes propuestas se ejecuta en [`test_service_bus_h5_documentation.py`](../../tests/contratos/test_service_bus_h5_documentation.py) y no acredita runtime. La suite estática debe continuar verificando el AsyncAPI canónico H4 de 40 canales/mensajes. Las pruebas de integración H5 requieren contratos aprobados; pruebas con emulador no acreditan Azure real, grants G7 ni homologación G5.
+
+
+## Casos contractuales candidatos 0.6.0-rc.5
+
+| ID | Tipo | Criterio | Estado |
+|---|---|---|---|
+| CT-CAT-SKUBATCH-01 | PROVIDER_CONTRACT | Resolver 1 y 100 SKU; ceros iniciales, puntuación, repetidos y orden estable; respuesta distingue elegible, inactivo, no elegible y ausente | PENDIENTE_EJECUCION_CI_FINAL |
+| CT-CAT-SKUBATCH-02 | SECURITY | Resolver administrativo: 200 con JWT GESTOR_COMERCIAL, 401 sin/invalid JWT, 403 rol ausente, 503 error técnico; POST sin efectos y sin retry automático | PENDIENTE_G7_Y_CI_FINAL |
+| CT-CAT-SKUBATCH-03 | PROVIDER_CONTRACT | Contexto privado batch: cinco campos contractuales, repetidos/orden, SKU no encontrado por item; 401/403/503 request-level; falla cerrada y nunca expuesta por Gateway | PENDIENTE_G7_Y_CI_FINAL |
+| CT-CAT-TYPE-PAGE-01 | PROVIDER_CONTRACT + POSTGRES | Incluir/excluir varios type IDs a través de páginas; q/estado/categoría/marca/canal compuestos; total y páginas se calculan tras filtro; ID inválido 400 | PENDIENTE_CI_FINAL |
+| CT-AUDIT-ADMIN-01 | PROVIDER_CONTRACT | GET administración distingue de la vista pública; JWT GESTOR_COMERCIAL; listar/detalle conservan sku=null y canal_origen=null, filtros y paginación 1..200 | PENDIENTE_CI_FINAL |
+| CT-AUDIT-ADMIN-02 | SECURITY | JWT ausente/invalid 401, rol ausente 403; detalle invalida query extra y UUID; nunca publicar administración como anónimo | PENDIENTE_CI_FINAL |
+| CT-COMBO-ADMIN-IDEMP-01 | PROVIDER_CONTRACT | POST administración acepta key 1..128 según regex exacta; misma identidad+clave+payload recupera el mismo combo y no duplica efectos; la ruta POST legacy permanece | PENDIENTE_CI_FINAL |
+| CT-COMBO-ADMIN-IDEMP-02 | SECURITY + FAILURE_INJECTION | Reutilización conflictiva 409; timeout/pérdida de respuesta reconcilia con la misma clave; no se repite con clave nueva; 401/403 y error técnico preservan resultado incierto | PENDIENTE_CI_FINAL |
+| CT-GATEWAY-PRIVATE-SKU-01 | STATIC_CONTRACT + E2E | Los dos contextos privados (GET single y POST batch) no aparecen en registry ni se enrutan con token humano, servicio o anónimo a través de Gateway | PENDIENTE_CI_FINAL |
+
+El estado se actualizará solo con resultados asociados a SHA final de provider/consumer/Gateway y no por documentación YAML aislada.

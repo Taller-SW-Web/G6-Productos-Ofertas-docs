@@ -7,6 +7,12 @@
 - **Alcance:** DEC-F-001–DEC-F-015 son decisiones internas adoptadas por G6. DEC-F-013 a DEC-F-015 fueron aprobadas por Marco el 2026-10-13 y sus invariantes se limitan a la autoridad de Productos y Ofertas. B1–B4 son bloqueantes de integración del PR #86, no decisiones adicionales ni sustitutos. Se conserva [ADR-DEC-F-BLOQUEANTES.md](ADR-DEC-F-BLOQUEANTES.md).
 - **Estado global:** DEC-F-001–DEC-F-015 adoptadas internamente. La homologación externa, implementación y verificación integral no se infieren de este documento.
 
+## Adenda de aprobación interna G6 — optimizaciones 2026-11-14
+
+El coordinador G6 autorizó completar las decisiones operativas descritas en [Aprobación interna G6 para optimizaciones y contratos](../../integraciones/ACUERDO_OPTIMIZACIONES_G6_2026-11-14.md). Esta adenda no crea DEC-F-016 ni altera la titularidad de otros módulos. Añade decisiones de implementación compatibles con DEC-F existentes: resolución SKU batch con dos identidades aisladas, filtros de tipo antes de paginar, semántica precisa del filtro por precio y publicación de rutas administrativas ya implementadas.
+
+El acuerdo es **adoptado internamente**. La homologación externa, grants G7, implementación por SHA, despliegue y pruebas integrales se reportan por separado; ninguna se infiere de la autorización ni de OpenAPI `0.6.0-rc.5`.
+
 ## Estados y lectura
 
 “Adoptado” describe la decisión interna reportada por el antecedente/ADR. “Homologado” requiere evidencia de aceptación externa. “Implementado” requiere evidencia de código/backend; “probado” requiere resultados reproducibles identificados. La presencia de documentación o contratos candidatos no satisface esos estados.

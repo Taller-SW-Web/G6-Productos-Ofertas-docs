@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: API — Productos y Ofertas
-  version: 0.6.0-rc.4
+  version: 0.6.0-rc.5
   summary: Contrato HTTP de integración y administración del módulo Productos y Ofertas
   description: Contrato HTTP candidato G6 H4 con homologación bilateral G2 de consulta física; no implica grants, despliegue ni E2E. La semántica de recomendaciones fija precio mínimo efectivo y disponibilidad positiva por SKU sin agregar ubicaciones. Contrato HTTP consolidado P0/P1/P2 del módulo Productos y Ofertas. P2 cierra la recepción de traslados internos de Inventario
     y la autorización local del operador de inventario. La topología RabbitMQ física se documenta en AsyncAPI 0.6.0-rc.4 y contratos/eventos/rabbitmq-topologia.md.
@@ -153,6 +153,207 @@ paths:
         '403': [SCOPE_INSUFICIENTE]
         '404': [SKU_NO_ENCONTRADO]
         '503': [SERVICIO_NO_DISPONIBLE]
+  /productos/skus/contexto/lote:
+    post:
+      tags: [Productos]
+      operationId: obtenerContextosSkuLote
+      summary: Consultar contextos privados de SKU para Pricing
+      description: >-
+        Operación únicamente de red privada G6; no debe publicarse ni registrarse en Gateway externo.
+        Conserva la semántica individual de obtenerContextoSku: cada elemento distingue SKU encontrado
+        de inexistente, y context conserva exactamente sku, productId, isVariant, active y eligible.
+        Duplicados y orden de entrada se conservan. Inactividad e inelegibilidad son flags del contexto,
+        no se convierten en SKU inexistente. Errores técnicos fallan toda la solicitud con 503.
+        Es una consulta POST sin efectos comerciales y no admite reintentos automáticos implícitos.
+      x-status: provisional-internal
+      x-internal: true
+      x-consumers: [Pricing]
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: pending-security-registration
+      x-allowed-client-ids: [modulo-productos]
+      security:
+      - serviceBearer: []
+      parameters:
+      - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [skus]
+              properties:
+                skus:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items: {type: string, minLength: 1, maxLength: 256, pattern: '^[^\u0000]+$'}
+      responses:
+        '200':
+          description: Un resultado por SKU en el mismo orden, incluidos duplicados.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: false
+                      required: [sku, status, context]
+                      properties:
+                        sku: {type: string}
+                        status: {type: string, enum: [FOUND, SKU_NO_ENCONTRADO]}
+                        context:
+                          oneOf:
+                          - $ref: '#/components/schemas/PricingCatalogContext'
+                          - type: 'null'
+        '400': {description: Lote inválido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '401': {description: Token de servicio ausente o inválido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '403': {description: Cliente o scope no autorizado, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '503': {description: Catálogo o persistencia no disponible; no representa SKU inexistente, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+      x-error-codes:
+        '400': [VALIDACION]
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '503': [SERVICIO_NO_DISPONIBLE]
+  /productos/administracion:
+    get:
+      tags: [Productos]
+      operationId: listarProductosAdministracion
+      summary: Listar productos para administración de Catálogo
+      description: >-
+        Requiere userBearer con rol GESTOR_COMERCIAL. Admite búsqueda q, estado,
+        categoriaId, marcaId, pagina/tamanio, y los filtros repetibles de inclusión/exclusión
+        de tipo de producto. Todos los filtros se aplican antes del conteo, orden estable
+        (nombre e identidad del producto) y paginación; total y totalPaginas corresponden
+        exactamente al universo filtrado. Máximo 100 IDs opacos por filtro; no descargar
+        el catálogo completo en el navegador para reconstruir páginas.
+      x-status: implemented-candidate
+      x-required-role: GESTOR_COMERCIAL
+      x-gateway-operation: true
+      security: [{userBearer: []}]
+      parameters:
+      - {name: q, in: query, schema: {type: string, maxLength: 200}}
+      - {name: categoriaId, in: query, schema: {type: string}}
+      - {name: marcaId, in: query, schema: {type: string}}
+      - {name: estado, in: query, schema: {$ref: '#/components/schemas/EstadoProducto'}}
+      - {name: tipoProductoIdsIncluidos, in: query, style: form, explode: true, description: Repetible; hasta 100 IDs opacos exactos. Filtro antes del total y la página., schema: {type: array, maxItems: 100, uniqueItems: true, items: {type: string, minLength: 1, maxLength: 256}}}
+      - {name: tipoProductoIdsExcluidos, in: query, style: form, explode: true, description: Repetible; hasta 100 IDs opacos exactos. Filtro antes del total y la página., schema: {type: array, maxItems: 100, uniqueItems: true, items: {type: string, minLength: 1, maxLength: 256}}}
+      - {$ref: '#/components/parameters/Pagina'}
+      - {$ref: '#/components/parameters/Tamanio'}
+      - {$ref: '#/components/parameters/CorrelationId'}
+      responses:
+        '200':
+          description: Página exacta de productos administrativos.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, meta]
+                properties:
+                  items:
+                    type: array
+                    items: {$ref: '#/components/schemas/ProductoResumenAdministracion'}
+                  meta: {$ref: '#/components/schemas/PageMeta'}
+        '400': {description: Filtro o paginación inválidos, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '401': {description: JWT humano inválido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '403': {description: Rol GESTOR_COMERCIAL requerido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '500': {description: Error interno, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '503': {description: Catálogo no disponible, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+      x-error-codes:
+        '400': [VALIDACION]
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '500': [ERROR_INTERNO]
+        '503': [SERVICIO_NO_DISPONIBLE]
+  /productos/administracion/skus/resolver:
+    post:
+      tags: [Productos]
+      operationId: resolverSkusAdministracion
+      summary: Resolver SKU de Combos en lote
+      description: >-
+        Consulta lógica de solo lectura para usuarios G6. Requiere JWT humano userBearer y rol
+        GESTOR_COMERCIAL; nunca usa identidad técnica ni expone credenciales de servicio al navegador.
+        Acepta SKU opacos exactos, incluidos ceros iniciales y caracteres especiales; preserva orden
+        y duplicados. Distingue ELEGIBLE, INACTIVO, NO_ELEGIBLE y NO_ENCONTRADO. No ejecuta escritura
+        comercial ni habilita reintentos automáticos inseguros. Máximo 100 entradas por solicitud.
+      x-status: provisional
+      x-required-role: GESTOR_COMERCIAL
+      x-gateway-operation: true
+      x-consumers: [Frontend Combos]
+      security:
+      - userBearer: []
+      parameters:
+      - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [skus]
+              properties:
+                skus:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items: {type: string, minLength: 1, maxLength: 256, pattern: '^[^\u0000]+$'}
+      responses:
+        '200':
+          description: Resolución autoritativa de cada SKU, en el orden solicitado.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: false
+                      required: [sku, resultado, productId, nombre, productoPadre, variante, estado, tipoProductoId]
+                      properties:
+                        sku: {type: string}
+                        resultado: {type: string, enum: [ELEGIBLE, INACTIVO, NO_ELEGIBLE, NO_ENCONTRADO]}
+                        productId: {type: [string, 'null']}
+                        nombre: {type: [string, 'null']}
+                        productoPadre:
+                          oneOf:
+                          - type: object
+                            required: [productId, nombre, estado, tieneVariantes]
+                            properties:
+                              productId: {type: string}
+                              nombre: {type: string}
+                              estado: {type: string, enum: [BORRADOR, ACTIVO, INACTIVO]}
+                              tieneVariantes: {type: boolean}
+                          - type: 'null'
+                        variante:
+                          oneOf:
+                          - type: object
+                            required: [variantId, sku, estado]
+                            properties:
+                              variantId: {type: string}
+                              sku: {type: string}
+                              estado: {type: string, enum: [BORRADOR, ACTIVA, INACTIVA]}
+                          - type: 'null'
+                        estado: {type: [string, 'null'], enum: [BORRADOR, ACTIVO, INACTIVO, ACTIVA, INACTIVA, null]}
+                        tipoProductoId: {type: [string, 'null']}
+        '400': {description: Lote o correlación inválida, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '401': {description: JWT humano ausente o inválido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '403': {description: El usuario no tiene GESTOR_COMERCIAL, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '503': {description: Persistencia de Catálogo no disponible, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+      x-error-codes:
+        '400': [VALIDACION]
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '503': [SERVICIO_NO_DISPONIBLE]
   /productos:
     get:
       tags:
@@ -187,6 +388,18 @@ paths:
         in: query
         schema:
           type: string
+      - name: tipoProductoIdsIncluidos
+        in: query
+        description: Repetible, máximo 100 identificadores opacos exactos; incluir solo estos tipos. El proveedor filtra antes de contar, ordenar y paginar.
+        schema: {type: array, maxItems: 100, uniqueItems: true, items: {type: string, minLength: 1, maxLength: 256}}
+        style: form
+        explode: true
+      - name: tipoProductoIdsExcluidos
+        in: query
+        description: Repetible, máximo 100 identificadores opacos exactos; excluir estos tipos. Se compone con los demás filtros antes de total y paginación.
+        schema: {type: array, maxItems: 100, uniqueItems: true, items: {type: string, minLength: 1, maxLength: 256}}
+        style: form
+        explode: true
       - name: canal
         in: query
         schema:
@@ -7633,6 +7846,48 @@ paths:
         - ERROR_INTERNO
         '503':
         - SERVICIO_NO_DISPONIBLE
+  /combos/administracion:
+    post:
+      tags: [Combos]
+      operationId: crearComboAdministracion
+      summary: Crear combo con identidad administrativa e idempotencia recuperable
+      description: >-
+        Operación de creación administrativa para userBearer con rol GESTOR_COMERCIAL. Conserva
+        POST /combos para consumidores existentes. Idempotency-Key acepta de 1 a 128 caracteres
+        ASCII [A-Za-z0-9._:-], con alcance por actor autenticado y fingerprint del contenido semántico.
+        Repetir la misma clave y payload recupera el mismo recurso; reutilizar la clave con otra
+        operación o payload devuelve 409. Ante timeout/respuesta perdida, el cliente conserva la clave
+        y consulta/reintenta con la misma intención para reconciliar; no genera una nueva clave ni
+        repite una creación incierta. Rechazo definitivo y resultado incierto no son equivalentes.
+      x-status: implemented-candidate
+      x-required-role: GESTOR_COMERCIAL
+      x-gateway-operation: true
+      security: [{userBearer: []}]
+      parameters:
+      - {$ref: '#/components/parameters/IdempotencyKey'}
+      - {$ref: '#/components/parameters/CorrelationId'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ComboCreateRequest'}
+      responses:
+        '201': {description: Combo creado o recurso original recuperado, content: {application/json: {schema: {$ref: '#/components/schemas/Combo'}}}}
+        '400': {description: Cuerpo o Idempotency-Key inválida, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '401': {description: JWT humano inválido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '403': {description: Rol GESTOR_COMERCIAL requerido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '409': {description: Clave idempotente reutilizada con contenido distinto, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '404': {description: SKU componente inexistente, inactivo o no elegible según provider, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '500': {description: Error interno; resultado puede ser incierto si ocurrió durante persistencia, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '503': {description: Dependencia no disponible; resultado incierto debe reconciliarse con la misma clave, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+      x-error-codes:
+        '400': [VALIDACION]
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '409': [IDEMPOTENCY_CONFLICT]
+        '404': [SKU_NO_ENCONTRADO]
+        '500': [ERROR_INTERNO]
+        '503': [SERVICIO_NO_DISPONIBLE]
   /combos:
     get:
       tags:
@@ -16069,6 +16324,72 @@ paths:
         '500': *id568
         '503': *id569
         '404': *id570
+  /auditoria-precios/administracion:
+    get:
+      tags: [Auditoría de precios]
+      operationId: listarAuditoriaPreciosAdministracion
+      summary: Consultar auditoría completa para administración G6
+      description: >-
+        Operación administrativa con JWT humano y rol GESTOR_COMERCIAL. Devuelve los campos históricos
+        de auditoría, incluidos sku y canal_origen nulos cuando el registro histórico no tenga esa
+        identidad; esta representación no cambia la ruta pública GET /auditoria-precios.
+        pagina inicia en 1, tamanio entre 1 y 200 (predeterminado 20). Filtros opcionales: sku, canal,
+        usuarioId, batchId (UUID), desde y hasta (fecha-hora); desde no puede ser posterior a hasta.
+      x-status: implemented-candidate
+      x-required-role: GESTOR_COMERCIAL
+      x-gateway-operation: true
+      security: [{userBearer: []}]
+      parameters:
+      - {name: sku, in: query, schema: {type: string}}
+      - {name: desde, in: query, schema: {type: string, format: date-time}}
+      - {name: hasta, in: query, schema: {type: string, format: date-time}}
+      - {name: usuarioId, in: query, schema: {type: string}}
+      - {name: canal, in: query, schema: {type: string}}
+      - {name: batchId, in: query, schema: {type: string, format: uuid}}
+      - {$ref: '#/components/parameters/Pagina'}
+      - {$ref: '#/components/parameters/Tamanio'}
+      - {$ref: '#/components/parameters/CorrelationId'}
+      responses:
+        '200': {description: Página administrativa, content: {application/json: {schema: {$ref: '#/components/schemas/PaginaAuditoriaPreciosAdministracion'}}}}
+        '400': {description: Filtros inválidos, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '401': {description: JWT humano inválido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '403': {description: Rol GESTOR_COMERCIAL requerido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '500': {description: Error interno, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '503': {description: Verificación de identidad no disponible, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+      x-error-codes:
+        '400': [VALIDACION]
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '500': [ERROR_INTERNO]
+        '503': [SERVICIO_NO_DISPONIBLE]
+  /auditoria-precios/administracion/{auditId}:
+    get:
+      tags: [Auditoría de precios]
+      operationId: obtenerAuditoriaPrecioAdministracion
+      summary: Obtener registro de auditoría para administración G6
+      description: JWT humano, rol GESTOR_COMERCIAL; conserva campos nulos de la representación administrativa. No cambia GET /auditoria-precios/{auditId}.
+      x-status: implemented-candidate
+      x-required-role: GESTOR_COMERCIAL
+      x-gateway-operation: true
+      security: [{userBearer: []}]
+      parameters:
+      - {name: auditId, in: path, required: true, schema: {type: string, format: uuid}}
+      - {$ref: '#/components/parameters/CorrelationId'}
+      responses:
+        '200': {description: Registro histórico, content: {application/json: {schema: {$ref: '#/components/schemas/RegistroAuditoriaPrecioAdministracion'}}}}
+        '400': {description: UUID inválido o query no permitida, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '401': {description: JWT humano inválido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '403': {description: Rol GESTOR_COMERCIAL requerido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '404': {description: Auditoría inexistente, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '500': {description: Error interno, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '503': {description: Verificación de identidad no disponible, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+      x-error-codes:
+        '400': [VALIDACION]
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '404': [AUDITORIA_PRECIO_NO_ENCONTRADA]
+        '500': [ERROR_INTERNO]
+        '503': [SERVICIO_NO_DISPONIBLE]
   /auditoria-precios:
     get:
       tags:
@@ -20796,8 +21117,9 @@ components:
       required: true
       schema:
         type: string
-        minLength: 8
+        minLength: 1
         maxLength: 128
+        pattern: '^[A-Za-z0-9._:-]+$'
       description: >-
         Clave de intención. En un mismo consumidor, reutilizarla con misma operación y mismo payload
         semántico devuelve el resultado original, sin nuevos efectos; reutilizarla con distinta
@@ -23685,6 +24007,52 @@ components:
       - canal_origen
       - motivo_cambio
       - timestamp
+    ProductoResumenAdministracion:
+      type: object
+      properties:
+        productId: {type: string, format: uuid}
+        catalogVersion: {type: integer, minimum: 0}
+        estado: {$ref: '#/components/schemas/EstadoProducto'}
+        nombre: {type: string}
+        descripcion: {type: [string, 'null']}
+        categoriaId: {type: [string, 'null']}
+        marcaId: {type: [string, 'null']}
+        tipoProductoId: {type: string, minLength: 1}
+        skuBase: {type: [string, 'null']}
+        slug: {type: [string, 'null']}
+        tieneVariantes: {type: boolean}
+        publicadoAlgunaVez: {type: boolean}
+        creadoEn: {type: string, format: date-time}
+        actualizadoEn: {type: string, format: date-time}
+      required: [productId, catalogVersion, estado, nombre, descripcion, categoriaId, marcaId, tipoProductoId, skuBase, slug, tieneVariantes, publicadoAlgunaVez, creadoEn, actualizadoEn]
+    RegistroAuditoriaPrecioAdministracion:
+      type: object
+      properties:
+        id_auditoria: {type: string, format: uuid}
+        target_type: {type: string}
+        sku: {type: [string, 'null']}
+        product_id: {type: [string, 'null']}
+        tipo_precio: {type: string, enum: [REGULAR, OFERTA]}
+        precio_anterior: {type: [number, 'null']}
+        precio_nuevo: {type: [number, 'null']}
+        variacion_porcentual: {type: [number, 'null']}
+        tipo_operacion: {type: string, enum: [CREACION, MODIFICACION, RETIRO_OFERTA]}
+        canal_origen: {type: [string, 'null']}
+        motivo_cambio: {type: [string, 'null']}
+        batch_id: {type: [string, 'null'], format: uuid}
+        usuario_id: {type: [string, 'null']}
+        usuario_email: {type: [string, 'null']}
+        ip_origen: {type: [string, 'null']}
+        timestamp: {type: string, format: date-time}
+      required: [id_auditoria, target_type, sku, product_id, tipo_precio, precio_anterior, precio_nuevo, variacion_porcentual, tipo_operacion, canal_origen, motivo_cambio, batch_id, usuario_id, usuario_email, ip_origen, timestamp]
+    PaginaAuditoriaPreciosAdministracion:
+      type: object
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/RegistroAuditoriaPrecioAdministracion'}
+        meta: {$ref: '#/components/schemas/PageMeta'}
+      required: [items, meta]
     PaginaAuditoriaPrecios:
       type: object
       properties:
@@ -25065,7 +25433,7 @@ x-security-contract:
       - modulo-chatbot
       - modulo-retail
       - modulo-productos
-      note: "modulo-productos usa catalogo:leer solo en obtenerProducto, obtenerContextoSku y GETs de lectura maestra señalados en sus allowlists; esto no habilita otras operaciones. G7 debe confirmar grant y provisión de credenciales; la identidad no individualiza microservicios."
+      note: "modulo-productos usa catalogo:leer solo en operaciones identificadas por allowlist: obtenerProducto, obtenerContextoSku, obtenerContextosSkuLote (solo red privada) y lecturas maestras expresas. Esto no habilita otras operaciones. G7 debe confirmar grant y credenciales; la identidad no individualiza microservicios."
     precios:leer:
       clients:
       - modulo-marketplace
