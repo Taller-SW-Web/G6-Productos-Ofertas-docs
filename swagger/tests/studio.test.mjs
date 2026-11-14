@@ -18,11 +18,13 @@ test('Exportación para Studio conserva todo salvo título y servidor autorizado
   assert.equal(manifest.operations, operations(spec).length);
   const editor = new URL(config.studioUrl);
   const docs = new URL(config.documentationUrl);
-  const identity = `${config.owner}/${config.apiName}/${spec.info.version}`;
+  const identity = `${config.owner}/${config.apiName}`;
   assert.equal(editor.origin, 'https://app.swaggerhub.com');
   assert.equal(docs.origin, editor.origin);
-  assert.equal(editor.pathname, `/apis/${identity}`);
-  assert.equal(docs.pathname, `/apis-docs/${identity}`);
+  const publishedVersion = editor.pathname.split('/').at(-1);
+  assert.match(publishedVersion, /^\\d+\\.\\d+\\.\\d+-rc\\.\\d+$/);
+  assert.equal(editor.pathname, `/apis/${identity}/${publishedVersion}`);
+  assert.equal(docs.pathname, `/apis-docs/${identity}/${publishedVersion}`);
   assert.equal(editor.search + editor.hash + docs.search + docs.hash, '');
   const server = new URL(config.servers[0].url);
   assert.equal(server.protocol, 'https:');
