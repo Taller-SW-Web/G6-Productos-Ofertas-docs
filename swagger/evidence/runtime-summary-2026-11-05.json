@@ -1,0 +1,152 @@
+{
+  "observedAt": "2026-11-06T00:29:15.002Z",
+  "host": "g6-productos-ofertas.duckdns.org",
+  "browserOrigin": "https://app.swaggerhub.com",
+  "backendSha": null,
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/api/v1/categorias",
+      "status": 200,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "x-correlation-id": "ecc7f77a-d771-4bf2-a342-9599ff55a344"
+      },
+      "correlationId": "ecc7f77a-d771-4bf2-a342-9599ff55a344",
+      "durationMs": 1149,
+      "tls": {
+        "authorized": true,
+        "subject": {
+          "CN": "g6-productos-ofertas.duckdns.org"
+        },
+        "issuer": {
+          "C": "US",
+          "O": "Let's Encrypt",
+          "CN": "YE1"
+        },
+        "validTo": "Jan 14 14:50:41 2027 GMT"
+      },
+      "bodySummary": {
+        "type": "dict",
+        "keys": [
+          "categories"
+        ],
+        "businessValues": "[OMITIDOS]"
+      },
+      "schemaResult": "BODY_SCHEMA_PASS",
+      "jwtVerified": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/marcas",
+      "status": 503,
+      "headers": {
+        "content-type": "text/plain; charset=utf-8",
+        "server": "Caddy"
+      },
+      "correlationId": "64be79b0-c6fd-41a7-8bce-7a70a40409b2",
+      "durationMs": 100,
+      "tls": {
+        "authorized": true,
+        "subject": {
+          "CN": "g6-productos-ofertas.duckdns.org"
+        },
+        "issuer": {
+          "C": "US",
+          "O": "Let's Encrypt",
+          "CN": "YE1"
+        },
+        "validTo": "Jan 14 14:50:41 2027 GMT"
+      },
+      "bodySummary": {
+        "type": "str",
+        "keys": [],
+        "businessValues": "[OMITIDOS]"
+      },
+      "schemaResult": "NO_VALIDADO: respuesta no JSON o schema de éxito ausente",
+      "jwtVerified": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/productos?canal=MARKETPLACE&pagina=1&tamanio=1",
+      "status": 200,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "x-correlation-id": "ad221b5d-6354-478a-9c1d-ad23216b234b"
+      },
+      "correlationId": "ad221b5d-6354-478a-9c1d-ad23216b234b",
+      "durationMs": 12085,
+      "tls": {
+        "authorized": true,
+        "subject": {
+          "CN": "g6-productos-ofertas.duckdns.org"
+        },
+        "issuer": {
+          "C": "US",
+          "O": "Let's Encrypt",
+          "CN": "YE1"
+        },
+        "validTo": "Jan 14 14:50:41 2027 GMT"
+      },
+      "bodySummary": {
+        "type": "dict",
+        "keys": [
+          "items",
+          "pagina",
+          "tamanio",
+          "total"
+        ],
+        "businessValues": "[OMITIDOS]"
+      },
+      "schemaResult": "BODY_SCHEMA_PASS",
+      "jwtVerified": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/productos/por-slug/{slug-real-redactado}?canal=MARKETPLACE",
+      "status": 200,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "x-correlation-id": "7c6150ad-dfe0-4b28-bb07-d1a1cea808c2"
+      },
+      "correlationId": "7c6150ad-dfe0-4b28-bb07-d1a1cea808c2",
+      "durationMs": 2046,
+      "tls": {
+        "authorized": true,
+        "subject": {
+          "CN": "g6-productos-ofertas.duckdns.org"
+        },
+        "issuer": {
+          "C": "US",
+          "O": "Let's Encrypt",
+          "CN": "YE1"
+        },
+        "validTo": "Jan 14 14:50:41 2027 GMT"
+      },
+      "bodySummary": {
+        "type": "dict",
+        "keys": [
+          "product_id",
+          "slug",
+          "name",
+          "description",
+          "categoria_id",
+          "tipo_producto_id",
+          "marca_id",
+          "tiene_variantes",
+          "sku_base",
+          "images",
+          "attributes",
+          "variants",
+          "precio_regular",
+          "precio_oferta",
+          "currency",
+          "marca"
+        ],
+        "businessValues": "[OMITIDOS]"
+      },
+      "schemaResult": "BODY_SCHEMA_PASS",
+      "jwtVerified": false
+    }
+  ]
+}

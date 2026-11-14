@@ -1,11 +1,6 @@
 name: Sincronizar ramas con master
 
 on:
-  push:
-    branches:
-      - master
-
-  # Permite ejecutarlo manualmente desde GitHub Actions
   workflow_dispatch:
 
 permissions:

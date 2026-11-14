@@ -1,17 +1,6 @@
 name: Sincronizar ramas de trabajo
 
 on:
-  push:
-    branches: [castilla, poma, cueva, lopez, taco, vera]
-
-  workflow_run:
-    workflows: [Sincronizar ramas con master]
-    types: [completed]
-    branches: [master]
-
-  schedule:
-    - cron: '7/15 * * * *'
-
   workflow_dispatch:
     inputs:
       source:

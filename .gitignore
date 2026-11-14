@@ -1,2 +1,4 @@
 /frontend
-.stitch/
+especificaciones/
+__pycache__/
+*.py[cod]

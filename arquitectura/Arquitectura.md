@@ -1,0 +1,3267 @@
+# Arquitectura del Módulo de Productos y Ofertas
+
+**Fecha de actualización:** 2026-10-13
+**Repositorio de documentación:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
+**Archivo:** `arquitectura/Arquitectura.md`  
+**Contrato HTTP canónico:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.3`; referencia histórica `0.5.0`)
+**Contrato asíncrono canónico:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.4`; referencia histórica `0.5.0`)
+**Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (referencia humana; base histórica `0.5.0`)
+**Catálogo canónico de errores:** `contratos/http/catalogo-errores.md` (códigos autoritativos para el contrato candidato)
+**Contrato humano de integración:** `contratos/http/Contrato_Api.md`  
+**Modelo conceptual:** `Modelo_Conceptual.md`  
+**Estado contractual:** línea base `0.5.0` conservada para compatibilidad; OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` son contratos **candidatos**. AsyncAPI `rc.3` reconcilia nombres físicos de infraestructura base con una observación histórica de Oracle; conserva los 40 mensajes y canales, operaciones, productores, consumidores, payloads, esquemas y routing keys comerciales. No acredita homologación, despliegue ni ejecución. Las decisiones internas están adoptadas, pero su implementación, despliegue y conformidad E2E no se acreditan mediante este documento.
+
+> Esta arquitectura es la guía de implementación del backend y de sus integraciones.  
+> Las SPEC son la fuente de verdad para reglas funcionales; `contratos/http/openapi.yaml` gobierna HTTP; `contratos/eventos/asyncapi.yaml` gobierna mensajería; `contratos/http/catalogo-errores.md` gobierna la semántica estable de `code`.
+
+---
+
+# 0. Objetivo
+
+El módulo **Productos y Ofertas** administra las capacidades comerciales compartidas por Marketplace, Chatbot, Retail, Ventas/Postventa y Despacho:
+
+1. carga y exportación masiva;
+2. combos;
+3. productos;
+4. variantes y SKU;
+5. cupones;
+6. promociones;
+7. cross-sell y upsell;
+8. categorías;
+9. características;
+10. tipo de producto–característica;
+11. marcas;
+12. SEO;
+13. precios;
+14. auditoría de precios;
+15. inventario y disponibilidad;
+16. dashboard y alertas de stock.
+
+La arquitectura debe permitir que estas capacidades evolucionen de forma independiente sin:
+
+- compartir tablas entre bounded contexts;
+- acoplar reglas de negocio al framework;
+- duplicar contratos;
+- depender de llamadas síncronas innecesarias;
+- convertir `api-gateway` en un “microservicio dios”;
+- compartir entidades ORM;
+- propagar detalles de infraestructura al dominio;
+- romper consumidores cuando cambie una implementación interna.
+
+---
+
+# 1. Decisiones arquitectónicas
+
+## 1.1. Bounded contexts
+
+Los ocho bounded contexts son capacidades internas del mismo módulo G6 Productos y Ofertas; no son módulos separados frente a G7. `modulo-productos` es la identidad técnica de servicio compartida por G6 (`aud=api-productos`); no se presenta como identidad individual de cada microservicio.
+
+Se mantienen **ocho bounded contexts de negocio**:
+
+| Aplicación | Bounded context | Responsabilidad |
+|---|---|---|
+| `taxonomy-svc` | Taxonomía | Categorías, marcas, características, valores, tipos de producto, asociaciones y SEO de categoría. |
+| `catalog-svc` | Catálogo | Productos, variantes, SKU, atributos, imágenes, estados, slug de producto y perfil físico por SKU. |
+| `pricing-svc` | Pricing | Precios regulares/oferta, vigencias, canal, versión y programación. |
+| `price-audit-svc` | Auditoría de precios | Registro append-only, consulta, exportación y archivo. |
+| `promotions-svc` | Promociones | Promociones, cupones, consumo de cupón, cross-sell y upsell. |
+| `combos-svc` | Combos | Definición, composición, precio y disponibilidad proyectada de combos. |
+| `inventory-svc` | Inventario | Saldos, reservas, consumo, liberación, expiración, ajustes, incidencias y cuarentenas, reintegros, conciliación offline, traslados y recepciones, Kardex y dashboard. |
+| `bulk-svc` | Bulk | Importación/exportación, validación, coordinación por fila, reintentos y conciliación. |
+
+Además existe:
+
+```text
+api-gateway
+```
+
+como contenedor de acceso/BFF, **no como bounded context de negocio**.
+
+---
+
+## 1.2. Ownership externo
+
+| Dato / proceso | Owner |
+|---|---|
+| Usuario, roles y autenticación | Seguridad y Usuarios |
+| Pedido, pago y estado comercial | M1/Ventas (G5) |
+| Devoluciones y cambios | M2/Postventa (G5) |
+| Producto, SKU, precio, promociones y stock | Productos y Ofertas |
+| Despacho, empaque y entrega | Despacho y Entrega |
+
+G5 es el owner externo general de Ventas/Postventa; M1/Ventas posee pedido y pago, y M2/Postventa posee devoluciones y cambios.
+
+### 1.2.1. Actor humano canónico
+
+El actor humano canónico del módulo **Productos y Ofertas** es el **Gestor Comercial** (`GESTOR_COMERCIAL`).
+
+Auditoría de precios, operación de inventario y consulta analítica son **capacidades funcionales del Gestor Comercial**, no roles humanos globales independientes. Cuando una operación requiera granularidad adicional, el módulo puede asociar capacidades locales al `sub` del Gestor Comercial autenticado, sin introducir nuevas personas en el C4 ni nuevos roles globales en Seguridad.
+
+Por tanto, la documentación del módulo no debe modelar como roles globales independientes a `Auditor`, `Auditor Comercial`, `Responsable de inventario`, `Operador de inventario` o `Trabajador`. Esos términos solo pueden utilizarse como descripción de una responsabilidad operativa, nunca como identidad de autorización separada del `GESTOR_COMERCIAL`.
+
+---
+
+## 1.3. Flujo oficial de inventario
+
+Flujo comercial normal:
+
+```text
+Canal
+  -> Ventas crea CREADO
+  -> Ventas RESERVA
+  -> pago aprobado / PAGADO
+  -> Ventas confirma CONSUMO
+```
+
+Compensaciones:
+
+```text
+anulación pre-consumo -> LIBERACIÓN
+recepción física apta aceptada -> M2/Postventa invoca reintegro F3
+otros motivos contractuales -> M1/Ventas puede invocar reintegro
+venta Retail offline registrada -> CONCILIACIÓN
+```
+
+Para la venta offline, la secuencia G6 documentada conserva a Retail como origen de la venta, a Ventas/Postventa como registro e invocador y a Inventario como autoridad que concilia. La alternativa Retail→G6 directo está comunicada, pero pendiente de homologación; esta descripción no fija un orden nuevo entre venta, pedido, pago y conciliación.
+
+Hechos físicos de tienda:
+
+```text
+Retail -> reporta/resuelve INCIDENCIA -> inventory-svc
+```
+
+Consecuencias:
+
+- Marketplace y Chatbot solo consultan.
+- Retail no muta stock por una venta; solo reporta/resuelve hechos físicos mediante scopes dedicados.
+- M1/Ventas solicita, confirma y libera las reservas del pedido.
+- M2/Postventa invoca el reintegro F3 después de recepción física y verificación de aptitud.
+- Inventario mantiene el saldo autoritativo.
+- Despacho no produce un segundo consumo.
+- La reserva conserva TTL configurable.
+
+---
+
+## 1.4. Datos físicos y Despacho
+
+`catalog-svc` es owner de las propiedades físicas intrínsecas del SKU:
+
+```text
+pesoKg
+largoCm
+anchoCm
+altoCm
+actualizadoEn
+```
+
+Despacho es owner de:
+
+```text
+tipo de empaque
+agrupación de unidades
+cantidad de paquetes
+volumen logístico final
+capacidad de transporte
+```
+
+Productos no debe incorporar reglas de empaquetado.
+
+---
+
+# 2. Principios de diseño para mantenibilidad
+
+## 2.1. Dependency Rule
+
+Cada servicio sigue una arquitectura por capas/puertos:
+
+```text
+interfaces/adapters
+        |
+        v
+application
+        |
+        v
+domain
+```
+
+`infrastructure` implementa puertos definidos hacia adentro:
+
+```text
+domain <- application <- interfaces
+             ^
+             |
+      infrastructure
+```
+
+Reglas:
+
+1. `domain` no importa NestJS.
+2. `domain` no importa PostgreSQL, RabbitMQ, HTTP ni OpenAPI.
+3. `application` no importa implementaciones concretas de persistencia.
+4. `interfaces` traduce HTTP/mensajería a casos de uso.
+5. `infrastructure` implementa repositorios, broker, storage y clientes externos.
+6. Ningún servicio importa código desde `apps/<otro-servicio>`.
+7. Los contratos compartidos viven en `libs/contracts`, no en los dominios.
+
+---
+
+## 2.2. Regla contra el “shared kernel” accidental
+
+No crear una librería común con:
+
+```text
+ProductEntity
+VariantEntity
+PriceEntity
+StockEntity
+PromotionEntity
+```
+
+El código común se limita a capacidades técnicas estables:
+
+```text
+auth
+messaging
+observability
+problem-details
+configuration
+testing helpers
+```
+
+Los conceptos de negocio pertenecen a su bounded context.
+
+---
+
+## 2.3. Contrato ≠ modelo de dominio
+
+Los DTO HTTP y schemas asíncronos no son entidades de dominio.
+
+Ejemplo:
+
+```text
+ReservaInventarioRequest (OpenAPI)
+        |
+        v mapper
+CreateReservationCommand
+        |
+        v
+InventoryReservation (dominio)
+```
+
+Esto permite cambiar:
+
+- nombres externos;
+- serialización;
+- headers;
+- versión HTTP;
+
+sin modificar las invariantes internas.
+
+---
+
+## 2.4. Una razón de cambio por módulo
+
+Un archivo/clase no debe mezclar:
+
+- transporte;
+- autorización;
+- reglas de negocio;
+- persistencia;
+- publicación de eventos.
+
+Ejemplo incorrecto:
+
+```text
+InventoryController
+  -> valida JWT
+  -> ejecuta SQL
+  -> calcula stock
+  -> escribe Kardex
+  -> publica RabbitMQ
+```
+
+Ejemplo correcto:
+
+```text
+InventoryController
+  -> ConfirmReservationUseCase
+       -> ReservationRepository
+       -> StockRepository
+       -> UnitOfWork
+       -> OutboxPort
+```
+
+---
+
+# 3. Estructura del monorepo backend
+
+```text
+backend/
+├── apps/
+│   ├── api-gateway/
+│   ├── taxonomy-svc/
+│   ├── catalog-svc/
+│   ├── pricing-svc/
+│   ├── price-audit-svc/
+│   ├── promotions-svc/
+│   ├── combos-svc/
+│   ├── inventory-svc/
+│   └── bulk-svc/
+│
+├── libs/
+│   ├── contracts/
+│   │   ├── http/
+│   │   ├── events/
+│   │   └── schemas/
+│   └── platform/
+│       ├── auth/
+│       ├── config/
+│       ├── messaging/
+│       ├── observability/
+│       ├── problem-details/
+│       └── testing/
+│
+├── infra/
+│   ├── docker/
+│   ├── rabbitmq/
+│   ├── postgres/
+│   └── local/
+│
+├── scripts/
+├── test/
+├── package.json
+├── pnpm-workspace.yaml
+├── tsconfig.base.json
+└── .github/workflows/
+```
+## 3.1. Qué puede vivir en `libs/contracts`
+
+Solo artefactos de intercambio:
+
+- DTO generados o mantenidos desde OpenAPI;
+- JSON Schema;
+- schemas AsyncAPI;
+- tipos de envelopes;
+- enumeraciones contractuales versionadas;
+- códigos de error publicados.
+
+No contiene:
+
+- servicios de dominio;
+- entidades ORM;
+- repositorios;
+- lógica de negocio.
+
+---
+
+## 3.2. Qué puede vivir en `libs/platform`
+
+Solo infraestructura reusable transversal.
+
+Ejemplos:
+
+```text
+JwtVerifier
+CorrelationIdMiddleware
+ProblemDetailsMapper
+OutboxRelayBase
+InboxDeduplicator
+StructuredLogger
+TelemetryModule
+ConfigLoader
+```
+
+Una utilidad pasa a `platform` únicamente si:
+
+1. no pertenece a un bounded context;
+2. tiene al menos dos consumidores reales;
+3. su semántica no depende de reglas de negocio.
+
+---
+
+# 4. Estructura interna estándar de cada servicio
+
+Ejemplo `inventory-svc`:
+
+```text
+apps/inventory-svc/src/
+├── main.ts
+├── inventory.module.ts
+│
+├── domain/
+│   ├── entities/
+│   │   ├── stock-balance.ts
+│   │   ├── inventory-reservation.ts
+│   │   └── inventory-operation.ts
+│   ├── value-objects/
+│   │   ├── sku.ts
+│   │   ├── location-id.ts
+│   │   └── quantity.ts
+│   ├── services/
+│   ├── events/
+│   ├── errors/
+│   └── ports/
+│       └── repositories/
+│
+├── application/
+│   ├── commands/
+│   ├── queries/
+│   ├── handlers/
+│   ├── ports/
+│   └── policies/
+│
+├── interfaces/
+│   ├── http/
+│   │   ├── controllers/
+│   │   ├── dto/
+│   │   └── mappers/
+│   └── messaging/
+│       ├── consumers/
+│       └── mappers/
+│
+├── infrastructure/
+│   ├── persistence/
+│   │   ├── repositories/
+│   │   ├── entities/
+│   │   └── migrations/
+│   ├── messaging/
+│   ├── config/
+│   └── clock/
+│
+└── health/
+```
+
+Todos los servicios deben usar esta misma plantilla salvo una justificación explícita.
+
+---
+
+# 5. Reglas de dependencias entre paquetes
+
+Permitido:
+
+```text
+interfaces -> application
+infrastructure -> application/domain ports
+application -> domain
+domain -> nada externo
+```
+
+Prohibido:
+
+```text
+domain -> NestJS
+domain -> ORM
+domain -> RabbitMQ
+domain -> Axios/fetch
+catalog-svc -> inventory-svc source code
+inventory-svc -> sales source code
+```
+
+La CI debe bloquear imports ilegales mediante reglas ESLint (`no-restricted-imports` / boundaries).
+
+---
+
+# 6. API Gateway / BFF
+
+## 6.1. Responsabilidades
+
+El gateway puede:
+
+- autenticar requests externos;
+- aplicar rate limiting;
+- propagar `X-Correlation-Id`;
+- enrutar al servicio owner;
+- servir read models;
+- agregar lecturas cuando una pantalla requiere varios dominios;
+- exponer estado de operaciones asíncronas.
+
+---
+
+## 6.2. Prohibiciones
+
+No debe:
+
+- implementar descuentos;
+- determinar stock;
+- crear SKU;
+- cambiar precios;
+- decidir activación;
+- escribir tablas de servicios;
+- convertirse en orquestador de cada proceso interno.
+
+## 6.2.1. Rutas internas
+
+Las operaciones OpenAPI con `x-internal: true` no forman parte de las rutas publicadas por el Gateway externo. La frontera interna se protege con HTTP privado, restricciones de red, validación JWT (firma JWKS, issuer, audiencia, expiración y tipo), scope y autorización de operación; cabeceras arbitrarias no prueban identidad. La inspección del generador Backend `apps/api-gateway/test/generate-routes.mjs` en la rama Poma muestra que hoy extrae `security`, `x-required-scope`, `x-service-audience` y `x-allowed-client-ids`, pero no filtra `x-internal`. Por ello, aunque el listado `CONTRACT_ROUTES` actualmente no contiene `obtenerContextoSku`, al regenerarlo desde OpenAPI el generador puede publicarlo. La exclusión explícita de `x-internal` es pendiente de Backend/Gateway; no se modifica ni regenera en este cambio documental.
+
+---
+
+## 6.3. Acceso externo
+
+Las APIs externas se publican detrás de:
+
+```text
+Ingress / Reverse Proxy
+          |
+          v
+API Gateway
+```
+
+Los servicios de dominio permanecen privados siempre que el despliegue lo permita.
+
+Las rutas públicas siguen `contratos/http/openapi.yaml`.
+
+---
+
+# 7. Persistencia
+
+## 7.1. PostgreSQL
+
+Cada servicio tiene schema y credenciales propias.
+
+| Servicio | Schema |
+|---|---|
+| `taxonomy-svc` | `taxonomy` |
+| `catalog-svc` | `catalog` |
+| `pricing-svc` | `pricing` |
+| `price-audit-svc` | `price_audit` |
+| `promotions-svc` | `promotions` |
+| `combos-svc` | `combos` |
+| `inventory-svc` | `inventory` |
+| `bulk-svc` | `bulk` |
+| `api-gateway` | `read_model` |
+
+Una sola instancia PostgreSQL puede utilizarse para el curso, pero:
+
+```text
+un schema físico compartido != un modelo compartido
+```
+
+---
+
+## 7.2. Tablas conceptuales revisadas
+
+### `taxonomy`
+
+```text
+categories
+brands
+characteristics
+characteristic_values
+product_types
+product_type_characteristics
+category_seo
+slug_history
+master_deactivation_operations
+outbox
+inbox
+```
+
+### `catalog`
+
+```text
+products
+variants
+product_images
+variant_images
+product_attribute_values
+variant_attribute_values
+product_identifying_characteristics
+sku_physical_profiles
+activation_checks
+master_barriers
+outbox
+inbox
+```
+
+### `pricing`
+
+```text
+prices
+price_validities
+scheduled_prices
+bulk_price_jobs
+outbox
+inbox
+```
+
+### `price_audit`
+
+```text
+price_audit_log
+export_jobs
+archive_manifests
+inbox
+```
+
+### `promotions`
+
+```text
+promotions
+promotion_scopes
+combination_policy
+coupons
+coupon_uses
+recommendation_rules
+recommendation_items
+catalog_projection
+price_projection
+stock_projection
+outbox
+inbox
+```
+
+### `combos`
+
+```text
+combos
+combo_items
+component_projection
+outbox
+inbox
+```
+
+### `inventory`
+
+```text
+stock_balance
+reservations
+reservation_lines
+inventory_operations
+kardex
+stock_threshold_override
+inventory_config
+dashboard_projection
+outbox
+inbox
+```
+
+### `bulk`
+
+```text
+batch_jobs
+batch_rows
+row_domain_steps
+export_jobs
+file_manifests
+outbox
+inbox
+```
+
+### `read_model`
+
+```text
+product_listing
+product_detail_view
+combo_view
+operation_status
+event_offsets
+inbox
+```
+
+Los nombres físicos pueden evolucionar; el ownership no.
+
+---
+
+# 8. Migraciones
+
+Cada servicio es dueño de sus migraciones.
+
+Reglas:
+
+1. una migración nunca modifica el schema de otro servicio;
+2. las migraciones deben ser reproducibles desde cero;
+3. no editar migraciones ya aplicadas en ambientes compartidos;
+4. cambios destructivos se realizan con estrategia expand/contract;
+5. las migraciones se ejecutan antes de iniciar la nueva versión;
+6. despliegues no deben depender de creación automática de tablas del ORM.
+
+Ejemplo expand/contract:
+
+```text
+v1: añadir columna nueva nullable
+v2: escribir campo viejo + nuevo
+v3: migrar datos históricos
+v4: leer solo nuevo
+v5: retirar campo viejo
+```
+
+---
+
+# 9. Transacciones
+
+## 9.1. ACID local
+
+Debe usarse para invariantes del mismo servicio.
+
+Ejemplos:
+
+```text
+Reserva + líneas + saldos + Outbox
+Consumo + Kardex + saldos + Outbox
+Liberación + Kardex + saldos + Outbox
+Precio + vigencia + Outbox
+Cupón + contador + Outbox
+```
+
+---
+
+## 9.2. Prohibición de transacción distribuida
+
+No existe una transacción SQL que abarque:
+
+```text
+Ventas + Inventario
+Catálogo + Pricing
+Catálogo + Inventario
+Pricing + Auditoría
+Bulk + Catálogo + Pricing + Inventario
+```
+
+La coordinación se implementa con:
+
+- mensajes;
+- estados explícitos;
+- idempotencia;
+- reintentos;
+- compensación;
+- conciliación.
+
+---
+
+# 10. Mensajería asíncrona
+
+## 10.1. RabbitMQ
+
+P2 documenta la topología base observada históricamente el 2026-10-19 en Oracle (RabbitMQ 4.2.9, vhost `g6-productos-ofertas`). La candidata AsyncAPI `0.6.0-rc.3` refleja los nombres de esa observación. No acredita estado actual del servidor, homologación G5, provisión, adaptación del código, conectividad ni ejecución.
+
+Exchanges base (observados):
+
+```text
+po.comandos.x  topic, durable
+po.eventos.x   topic, durable
+po.resultados.x topic, durable
+po.sin-ruta.x  fanout, durable
+```
+
+Colas base (observadas; todas quorum y durables):
+
+```text
+po.catalogo.q
+po.pasarela.q
+po.promociones.q
+po.combos.q
+po.inventario.q
+po.precios.q
+po.auditoria-precios.q
+po.ventas.q
+po.taxonomia.q
+po.masivos.q
+po.sin-ruta.q  # cola operativa; no pertenece a un contexto comercial
+```
+
+La auditoría informa 57 bindings, pero las definiciones individuales no están disponibles y la correspondencia contractual se mantiene `PENDIENTE_VERIFICACION`. Véase la [matriz de compatibilidad](../contratos/eventos/compatibilidad-rabbitmq-oracle.md).
+
+La semántica contractual conserva routing keys de negocio, alternate exchange, `mandatory`, `basic.return`, publisher confirms, ACK e idempotencia. Un publisher confirm no acredita recepción ni ACK del consumidor.
+
+Retry/DLX sigue **BLOQUEADO, NO APROBADO y NO APROVISIONADO**. `po.retry.x`, `po.dlx.x`, colas derivadas y claves técnicas solo describen el diseño candidato; no hay permisos runtime activos. Se conserva `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`; la recuperación saturada disponible tiene estado FAIL.
+
+## 10.2. Envelope estándar
+
+```json
+{
+  "message_id": "uuid",
+  "kind": "command|event|result",
+  "name": "inventory.reservation.created",
+  "schema_version": 1,
+  "operation_id": "uuid",
+  "correlation_id": "uuid",
+  "causation_id": "uuid-or-null",
+  "occurred_at": "ISO-8601",
+  "producer": "inventory-svc",
+  "actor": {
+    "user_id": "opaque-or-null",
+    "service_id": "modulo-ventas",
+    "channel": "MARKETPLACE"
+  },
+  "data": {}
+}
+```
+
+---
+
+## 10.3. Reglas de publicación
+
+Un evento de dominio:
+
+1. se registra en Outbox en la misma transacción del cambio;
+2. se publica después del commit;
+3. puede ser entregado más de una vez;
+4. debe ser procesable idempotentemente;
+5. no garantiza orden global.
+
+---
+
+## 10.4. Inbox
+
+Todo consumidor que cause efectos debe registrar:
+
+```text
+message_id
+processed_at
+handler
+result
+```
+
+con unicidad por `message_id` o clave semántica equivalente.
+
+---
+
+## 10.5. Reintentos
+
+Diferenciar claramente las cuatro situaciones operativas y su responsabilidad:
+
+### A. Error técnico transitorio
+
+Ejemplos:
+```text
+timeout
+broker no disponible
+DB temporalmente indisponible
+HTTP 503
+```
+
+- **Tratamiento:** Recuperación automática por el propio consumidor mediante la infraestructura RabbitMQ existente (política de reintentos con backoff y dead-lettering técnico).
+- **Responsabilidad:** La UI y el Gestor Comercial **no** deciden ni intervienen en retries técnicos transitorios.
+
+### B. Rechazo de negocio
+
+Ejemplos:
+```text
+STOCK_INSUFICIENTE
+VERSION_CONFLICT
+SKU_INACTIVO
+CUPON_AGOTADO
+```
+
+- **Tratamiento:** Un rechazo de negocio válido se procesa y confirma con ACK en el transporte; no se trata como fallo técnico ni ingresa al retry/DLQ de infraestructura. Cuando el contrato asíncrono correspondiente lo define, el servicio emite su evento de resultado `*.rejected`.
+- **Responsabilidad:** No se reintenta automáticamente por infraestructura. El efecto funcional concreto depende de las reglas del bounded context emisor/receptor (p. ej., fallar una reserva, rechazar una redención de cupón o desestimar una mutación concurrente con versión obsoleta). No proyectar reglas de un bounded context sobre otros dominios.
+
+### C. Ausencia prolongada de resultado
+
+- **Tratamiento:** Catálogo mantiene el estado `PENDING`. Catálogo **no inspecciona directamente la DLQ** del servicio consumidor.
+- **Responsabilidad:** Tras un **umbral operativo configurable para considerar habilitable la recuperación manual**, Catálogo puede habilitar la intervención administrativa (`manual_retry_allowed=true`) sin inferir un rechazo terminal por silencio.
+
+### Recuperación manual de preparación de Catálogo — FLOW-003/FLOW-004
+
+Aplica estrictamente al onboarding y preparación asíncrona de Pricing e Inventario:
+
+1. **Efecto de rechazo en Catálogo:**
+   - Un rechazo de Pricing durante el alta mantiene el producto en estado `BORRADOR`.
+   - Un rechazo de inicialización de Inventario durante el alta mantiene el producto o la variante como no publicable.
+2. **Consulta desacoplada:** `GET /api/v1/productos/{productoId}/preparacion` consulta el estado de coordinación local persistido en Catálogo; **no** realiza llamadas síncronas a Pricing ni a Inventario para construir la respuesta (estos servicios actualizan dicho estado asíncronamente mediante sus eventos de resultado).
+3. **Transición autoritativa de REJECTED a reintentable:**
+   - Al recibir `REJECTED`, Catálogo registra `status=REJECTED` y el código recibido en `code`.
+   - El flag `manual_retry_allowed` es calculado de forma autoritativa por Catálogo (la UI nunca es la autoridad).
+   - Catálogo evalúa si la causa registrada puede corregirse mediante una capacidad actualmente publicada:
+     - **No publicada:** Si la causa no admite corrección mediante una operación publicada de Catálogo (p. ej., Pricing rechazado por un precio base inicial inválido, dado que `ProductoUpdateRequest` no publica mutación de `precioBaseInicial`), se conserva `REJECTED` con `manual_retry_allowed=false`. El paso del tiempo nunca convierte un `REJECTED` no corregible en reintentable.
+     - **Publicada:** Si la causa dispone de una operación publicada para su corrección, el gestor efectúa la corrección en el borrador; Catálogo revalida autoritativamente las precondiciones locales de esa preparación. Si vuelve a ser elegible para intento: `manual_retry_allowed=true`; si no: permanece en `manual_retry_allowed=false`.
+4. **Verificación autoritativa en POST (anti-TOCTOU):** El endpoint de reintento (`POST .../preparacion/reintentar`) revalida autoritativamente las precondiciones y el estado antes de admitir la solicitud. Si entre la consulta y el POST la preparación dejó de ser reintentable, devuelve `HTTP 409 PREPARACION_NO_REINTENTABLE`.
+5. **Concurrencia atómica de admisión:** La admisión es atómica por preparación. Exactamente una solicitud concurrente puede cambiar `manual_retry_allowed=true` a `PENDING` (`manual_retry_allowed=false`) y obtiene `HTTP 202 Accepted`. Las solicitudes concurrentes perdedoras obtienen `HTTP 409 PREPARACION_NO_REINTENTABLE`. Nunca se producen dos publicaciones RabbitMQ ni dos efectos de negocio.
+6. **Conservación de operation_id, nueva message_id y causation_id:**
+   - `operation_id` identifica la preparación lógica de larga vida y se conserva estrictamente para trazabilidad e idempotencia en los consumidores.
+   - Catálogo genera una nueva `message_id` para la nueva publicación del comando a través de Outbox hacia RabbitMQ.
+   - El consumidor reconoce que una nueva `message_id` con la misma `operation_id` tras un `REJECTED` autorizado representa un nuevo intento de la misma preparación y no una segunda entidad de negocio.
+   - Todo resultado asíncrono (`*.completed` o `*.rejected`) porta `causation_id = message_id` del comando `*.requested` que lo originó. Catálogo conserva internamente la `message_id` del intento activo y solo procesa resultados cuyo `causation_id` corresponda a dicho intento, ignorando/registrando resultados tardíos de intentos anteriores como stale.
+   - `operation_id` identifica la preparación lógica de larga vida; `message_id` identifica cada publicación/intento; `causation_id` conecta resultado ↔ intento concreto.
+7. **Reconstrucción con datos actuales del borrador:** Cuando la recuperación se solicita tras corregir datos del borrador, el nuevo comando `*.requested` se construye usando el **estado actual validado** del borrador (no se republica ciegamente el payload antiguo rechazado). Si la causa del rechazo de pricing exigiese modificar `precioBaseInicial`, `manual_retry_allowed` permanece en `false` porque `ProductoUpdateRequest` no incluye dicho campo ni la API vigente expone una operación para alterar el precio base inicial en el borrador. Conservar `operation_id` no significa congelar el payload rechazado.
+8. **Inmutabilidad de COMPLETED:** Una dependencia que ya alcanzó el estado `COMPLETED` nunca vuelve a ejecutarse ni reintentarse; publicaciones posteriores con la misma `operation_id` se descartan idempotentemente sin reejecutar efectos.
+
+---
+
+## 10.6. DLQ
+
+DLQ/cuarentena se reserva para:
+
+- mensajes malformados;
+- schema incompatible;
+- errores técnicos persistentes;
+- poison messages.
+
+Un rechazo de negocio válido no es poison message.
+
+---
+
+# 11. Contratos
+
+## 11.1. HTTP
+
+Fuente canónica:
+
+```text
+contratos/http/openapi.yaml
+```
+
+La línea base **histórica** `0.5.0` utiliza OpenAPI `3.1.0` y documentaba **106 paths, 133 operaciones y 170 schemas** (`components.schemas`). Estas cifras son una fotografía de esa línea base, **no un inventario del candidato `0.6.0-rc.3`**. El contrato candidato, que también utiliza OpenAPI `3.1.0`, incorpora las superficies provisionales de B1–B4 y no se declara desplegado.
+
+Entre los cierres incorporados a esta línea base están:
+
+- resolución previa del slug de categoría mediante `POST /api/v1/seo/categorias/slug/resolver`;
+- creación de categoría con `slugConfirmado`, revalidado al persistir para evitar cambios silenciosos ante carreras;
+- CRUD/consulta administrativa de tipos de producto y sus asociaciones de características;
+- consulta del estado de una baja segura mediante `GET /api/v1/taxonomia/operaciones/{operationId}`;
+- consulta y exportación administrativa de Auditoría de precios;
+- consulta administrativa del estado de preparación de dependencias (`GET /api/v1/productos/{productoId}/preparacion`) y recuperación manual de producto simple (`POST /api/v1/productos/{productoId}/preparacion/reintentar`) y variantes (`POST /api/v1/productos/{productoId}/variantes/{variantId}/preparacion/reintentar`);
+- códigos HTTP específicos para recurso inexistente, conflicto, preparación no reintentable (`PREPARACION_NO_REINTENTABLE`) y límites funcionales de exportación.
+
+Cambios incompatibles requieren nueva versión de la interfaz; los cambios compatibles dentro de `v1` deben actualizar primero OpenAPI y después los documentos humanos derivados.
+
+---
+
+## 11.2. Asíncronos
+
+Fuente canónica:
+
+```text
+contratos/eventos/asyncapi.yaml
+```
+
+El contrato AsyncAPI P0 ya formaliza:
+
+- envelope estándar;
+- `message_id`;
+- `operation_id`;
+- `correlation_id`;
+- `causation_id`;
+- `schema_version`;
+- productor y consumidores previstos;
+- payload de cada mensaje;
+- semántica `command | event | result`;
+- entrega `at-least-once`;
+- deduplicación por `message_id`.
+
+El catálogo de eventos correspondiente es:
+
+```text
+contratos/eventos/catalogo-eventos.md
+```
+
+La línea base histórica AsyncAPI `0.5.0` documentaba **39 mensajes lógicos**. El contrato candidato AsyncAPI `0.6.0-rc.3` documenta **40 canales y 40 mensajes**, incluido `inventory.reservation.rejected`, con datos tipados para resultados críticos. `rc.3` alinea nombres de exchanges y colas base con la observación Oracle y conserva el vhost de `rc.2`; la existencia del contrato no prueba publicaciones efectivas ni despliegue. Los mensajes se distribuyen entre:
+
+- Taxonomía;
+- Catálogo;
+- Pricing;
+- Inventario;
+- Bulk;
+- Promociones/Cupones.
+
+Además de la baja segura de entidades maestras, AsyncAPI `0.5.0` formaliza:
+
+```text
+taxonomy.product-type-schema.changed
+taxonomy.characteristic-value.updated
+```
+
+El primero propaga a Catálogo cambios confirmados del esquema asociado a un `tipo_producto_id`; el segundo propaga renombres confirmados de valores `LISTA`. El flujo genérico de baja segura cubre también `PRODUCT_TYPE` y `PRODUCT_TYPE_CHARACTERISTIC`.
+
+P2 fija los nombres físicos de exchange, queue, retry y DLQ en `contratos/eventos/rabbitmq-topologia.md`.
+
+Los contratos Catálogo → Pricing, Catálogo → Inventario, consumo/restitución de cupón y reintegro físico ya están formalizados en OpenAPI/AsyncAPI según corresponda.
+## 11.3. Catálogos humanos
+
+Dos documentos complementan los contratos ejecutables:
+
+```text
+contratos/eventos/catalogo-eventos.md
+contratos/http/catalogo-errores.md
+```
+
+`catalogo-eventos.md` explica productores, consumidores, correlación, idempotencia, retries y relación OpenAPI ↔ AsyncAPI.
+
+`catalogo-errores.md` centraliza:
+
+- `Problem.code`;
+- códigos de rechazo asíncrono;
+- `401 TOKEN_INVALIDO`;
+- `403 SCOPE_INSUFICIENTE`;
+- `IDEMPOTENCY_CONFLICT`;
+- códigos funcionales por dominio.
+
+La implementación no debe inventar códigos desde controllers/consumers fuera de este catálogo.
+
+---
+
+## 11.4. Contratos generados
+
+Si se usa generación de tipos desde OpenAPI/JSON Schema:
+
+- los tipos generados son DTOs;
+- no deben importarse dentro del dominio;
+- deben mapearse en adapters.
+
+---
+
+# 12. Catálogo y perfil físico
+
+## 12.1. Producto y variante
+
+- `variant_id` es identidad interna.
+- `sku` es identidad comercial.
+- Producto simple usa `sku_base` como SKU vendible.
+- Producto con variantes no posee stock propio.
+
+---
+
+## 12.2. Perfil físico
+
+`catalog-svc` administra:
+
+```text
+sku
+pesoKg
+largoCm
+anchoCm
+altoCm
+actualizadoEn
+```
+
+El perfil se asocia al SKU vendible.
+
+No contiene:
+
+```text
+tipoEmpaque
+cantidadPaquetes
+volumenLogisticoFinal
+```
+
+---
+
+## 12.3. Consulta de Despacho
+
+Contrato:
+
+```http
+POST /api/v1/productos/datos-fisicos/consulta
+```
+
+Características:
+
+- request en lote;
+- consumidor técnico `modulo-despacho`;
+- no consulta base de Catálogo directamente;
+- scope propuesto `productos:fisicos:leer`;
+- no incluye stock;
+- no decide empaque.
+
+---
+
+# 13. Inventario
+
+## 13.1. Modelo autoritativo
+
+Unidad:
+
+```text
+(sku, location_id)
+```
+
+Estado:
+
+```text
+on_hand
+reserved
+blocked
+available
+stock_version
+```
+
+Regla:
+
+```text
+available = max(on_hand - reserved - blocked, 0)
+```
+
+Invariantes:
+
+```text
+reserved + blocked <= on_hand
+on_hand >= 0
+reserved >= 0
+blocked >= 0
+available >= 0
+```
+
+`blocked` representa unidades físicamente presentes pero temporalmente fuera de venta por incidencia/cuarentena.
+
+---
+
+## 13.2. Consulta
+
+```http
+GET /api/v1/inventario/disponibilidad
+```
+
+Consulta detallada por servicio (saldos y ubicación):
+
+```text
+modulo-ventas
+modulo-postventa
+```
+
+```text
+Scope: inventario:disponibilidad:leer
+Audiencia: api-productos
+Autenticación de servicio: client_credentials
+Acceso humano autorizado: userBearer
+```
+
+M2 usa esta respuesta solo como consulta informativa para CAMBIO; no reserva ni consume el reemplazo.
+
+Consulta comercial, sin exponer saldos ni `location_id`:
+
+```http
+GET /api/v1/inventario/disponibilidad/comercial
+POST /api/v1/inventario/disponibilidad/comercial/verificar
+```
+
+Consumidores técnicos: `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`.
+
+La consulta:
+
+- no crea reserva;
+- no garantiza stock futuro;
+- no habilita mutaciones de canal.
+
+---
+
+# 14. Reserva de inventario
+
+## 14.1. Creación
+
+Cuando Ventas registra el pedido en:
+
+```text
+CREADO
+```
+
+solicita:
+
+```http
+POST /api/v1/inventario/reservas
+```
+
+La operación:
+
+1. valida el comando;
+2. comprueba idempotencia;
+3. bloquea únicamente los saldos necesarios durante la transacción;
+4. verifica disponibilidad;
+5. crea reserva + líneas;
+6. incrementa `reserved`;
+7. recalcula `available`;
+8. registra Outbox;
+9. confirma la transacción;
+10. publica resultado.
+
+---
+
+## 14.2. Confirmación
+
+Cuando Ventas cambia el pedido a:
+
+```text
+PAGADO
+```
+
+solicita:
+
+```http
+POST /api/v1/inventario/reservas/{reservaId}/confirmar
+```
+
+Inventario:
+
+```text
+on_hand -= cantidad
+reserved -= cantidad
+blocked no cambia
+available = max(on_hand - reserved - blocked, 0)
+```
+
+y registra Kardex.
+
+La operación debe ser idempotente.
+
+---
+
+## 14.3. Liberación
+
+Ante:
+
+```text
+PAGO_NO_COMPLETADO
+anulación aplicable
+```
+
+Ventas solicita:
+
+```http
+POST /api/v1/inventario/reservas/{reservaId}/liberar
+```
+
+Inventario:
+
+```text
+reserved -= cantidad
+available += cantidad
+```
+
+sin modificar `on_hand`.
+
+---
+
+## 14.4. Expiración
+
+Una reserva activa contiene:
+
+```text
+expires_at
+```
+
+El TTL es configurable por canal/entorno.
+
+Un worker periódico o scheduler de Inventario:
+
+1. localiza reservas expirables;
+2. reclama un lote con locking seguro;
+3. libera cantidades;
+4. registra operación;
+5. publica `inventory.reservation.expired`.
+
+Debe tolerar que al mismo tiempo llegue confirmación o liberación explícita.
+
+Solo una transición final puede ganar.
+
+---
+
+## 14.5. Máquina de estados
+
+```text
+             +------------+
+             |   ACTIVA   |
+             +-----+------+
+                   |
+       +-----------+-----------+
+       |           |           |
+       v           v           v
+  CONSUMIDA    LIBERADA    EXPIRADA
+```
+
+Una repetición de la **misma operación lógica**, con la misma identidad idempotente y el mismo payload semántico, reutiliza el resultado previo sin repetir efectos.
+
+Una **operación distinta** que intenta ejecutar una transición incompatible desde un estado terminal se rechaza con el código funcional correspondiente (`RESERVA_NO_ACTIVA`, `RESERVA_EXPIRADA`, etc.).
+
+Reutilizar la misma identidad idempotente para una intención distinta produce:
+
+```text
+409 IDEMPOTENCY_CONFLICT
+```
+
+Nunca se vuelve a `ACTIVA`.
+
+---
+
+## 14.6. Incidencias físicas y cuarentena
+
+Retail no escribe el saldo directamente. Reporta:
+
+```http
+POST /api/v1/inventario/incidencias
+```
+
+`inventory-svc` bloquea de forma transaccional únicamente unidades `available`:
+
+```text
+blocked += quantity
+available = max(on_hand - reserved - blocked, 0)
+```
+
+La resolución se realiza mediante:
+
+```http
+POST /api/v1/inventario/incidencias/{incidenciaId}/resolver
+```
+
+Una rehabilitación reduce `blocked`. Una merma/faltante confirmado reduce `blocked` y `on_hand`.
+
+## 14.7. Reintegro postventa
+
+`modulo-postventa` invoca directamente F3 después de la recepción física y la verificación de aptitud para reventa. `modulo-ventas` conserva autorización para otros motivos contractuales de reintegro. La ruta es:
+
+```http
+POST /api/v1/inventario/reintegros
+```
+
+La autenticación de servicio usa `client_credentials`, audiencia `api-productos` y scope `inventario:reintegrar`; el registro y grant real de M2 por G7 siguen pendientes. La aprobación comercial de la devolución es distinta de la recepción física: F3 requiere unidades recibidas y aptas para reventa. El SKU se obtiene de `items[].sku` del pedido original. El payload canónico contiene:
+
+```text
+operation_id
+order_id
+source_ref
+reason = DEVOLUCION_ACEPTADA (F3)
+lines[]: sku, quantity, location_id
+```
+
+`location_id` y su resolución contractual y técnica siguen pendientes; no se debe inventar un identificador. Antes de mutar, G6 debe comprobar que existe una ubicación receptora real y que el actor está autorizado para ejecutar esta operación sobre ella. Si la ubicación es inválida, ambigua o no autorizada, G6 rechaza el reintegro sin mutar saldo ni Kardex. No se exige disponibilidad de stock comercial para admitir unidades reintegradas. Un retry idéntico conserva `operation_id` y no genera un segundo movimiento; una recepción parcial posterior usa un `operation_id` nuevo. La respuesta contractual es HTTP `200` con `status: COMPLETED`. G6 valida la idempotencia, actualiza saldo y Kardex transaccionalmente y registra Outbox en la misma transacción. La publicación del evento correspondiente ocurre después del commit, cuando corresponda, y no condiciona la respuesta HTTP.
+
+## 14.8. Conciliación Retail offline
+
+La venta física ya ocurrió en Retail. En la secuencia G6 vigente, Retail sincroniza con Ventas/Postventa y `modulo-ventas` invoca la conciliación. La propuesta Retail→G6 directo está pendiente de homologación con G4/G5/G6; no se establece aquí un nuevo orden entre venta, pedido y pago.
+
+Luego:
+
+```http
+POST /api/v1/inventario/conciliaciones-offline
+```
+
+Inventario aplica:
+
+```text
+applied = min(requested, available)
+unresolved = requested - applied
+```
+
+Inventario conserva la autoridad del saldo central. No crea una reserva retroactiva; aplica solo unidades disponibles, sin consumir unidades reservadas o bloqueadas y sin producir saldos negativos. Los resultados parciales conservan las cantidades solicitadas, aplicadas y no resueltas.
+
+Resultado:
+
+```text
+unresolved = 0 -> COMPLETED
+unresolved > 0 -> REQUIRES_REVIEW
+```
+
+`COMPLETED` y `REQUIRES_REVIEW` son resultados distintos. El registro de la conciliación puede existir aunque `applied = 0`; sin cambio efectivo no se registra movimiento Kardex ni movimiento de cantidad cero. Cada movimiento efectivo queda en Kardex y se preserva la transacción local correspondiente.
+
+Conforme a DEC-F-009, el replay con identidad estable e intención/payload semántico igual devuelve el resultado anterior sin repetir descuentos; reutilizar la identidad con contenido distinto se rechaza con `409 IDEMPOTENCY_CONFLICT`, sin modificar saldo. Una venta física no puede descontarse dos veces aunque cambie la identidad técnica del reintento. La identidad estable de venta, su ámbito de unicidad y su persistencia siguen pendientes de definición/homologación: no se equiparan `ventaLocalUuid`, `offline_sale_id`, `operation_id` ni `order_id`, ni se prescribe una clave o mecanismo. El modelo físico revisado no acredita una persistencia/unicidad que cierre este pendiente.
+
+DEC-F-014 mantiene a Inventario como autoridad de ubicaciones. La referencia pública de tienda no equivale a `location_id`: antes de mutar, Inventario debe resolver la ubicación y autorizar actor, operación y ubicación. Mapeo ausente/ambiguo o actor no autorizado impiden modificar saldo; la lectura comercial no concede escritura. El OpenAPI actual todavía exige `location_id` en `ConciliacionOfflineRequest.lines`; esta incompatibilidad permanece sin resolver.
+
+DEC-F-015 distingue el resultado funcional necesario para Retail de los saldos internos. El contrato actual permite la conciliación a `modulo-ventas` y su respuesta incluye ubicación y saldos; no se retiran esos campos ni se afirma que Retail consuma la respuesta. La futura representación, consumidor, scope y eventual consulta posterior siguen pendientes de acuerdo G4/G7.
+
+## 14.9. Sincronía de capacidades de inventario e incidencias
+
+Incidencias, reintegro y conciliación se confirman en la respuesta HTTP después del commit local. Esto evita crear nuevos mensajes asíncronos que dupliquen un resultado ya autoritativo.
+
+Después del commit pueden publicar:
+
+```text
+inventory.stock.changed
+inventory.stock.adjusted
+```
+
+según corresponda. En conciliación offline solo un cambio efectivo de saldo produce un movimiento/evento de stock; una operación registrada con cantidad aplicada cero no genera movimiento Kardex de cantidad cero.
+
+---
+
+# 15. Concurrencia de inventario
+
+## 15.1. Regla
+
+Dos operaciones concurrentes nunca pueden comprometer las mismas unidades.
+
+---
+
+## 15.2. Estrategia
+
+Dentro de una transacción local:
+
+- bloquear únicamente filas `(sku, location_id)` afectadas;
+- adquirir locks en orden determinista para evitar deadlocks;
+- validar disponibilidad después del lock;
+- actualizar saldo;
+- incrementar `stock_version`;
+- registrar Kardex/Outbox;
+- commit rápido.
+
+No usar:
+
+- lock global del inventario;
+- transacciones largas;
+- locks mientras se llama a otro servicio.
+
+---
+
+## 15.3. Ajustes absolutos
+
+Bulk usa:
+
+```text
+stock_version
+```
+
+Un ajuste con versión obsoleta produce:
+
+```text
+VERSION_CONFLICT
+```
+
+y no sobrescribe ventas/reservas recientes.
+
+---
+
+# 16. Pricing
+
+`pricing-svc` posee:
+
+```text
+precio_regular
+precio_oferta
+currency
+channel_id
+valid_from
+valid_until
+price_version
+```
+
+Reglas:
+
+- aritmética decimal;
+- optimistic concurrency por `price_version`;
+- cambio confirmado publica `pricing.price.changed`;
+- auditoría consume el evento después del commit;
+- Pricing no conoce reglas completas de combinabilidad.
+
+---
+
+# 17. Promociones y cupones
+
+`promotions-svc` resuelve:
+
+- promoción automática;
+- CUPÓN;
+- combinabilidad;
+- mejor beneficio;
+- cross-sell;
+- upsell.
+
+Regla:
+
+```text
+validar cupón != consumir cupón
+```
+
+La evaluación HTTP es side-effect free.
+
+El consumo definitivo de cupón debe correlacionarse con el pedido y ser idempotente.
+
+---
+
+# 18. Combos
+
+`combos-svc` posee la definición comercial.
+
+No posee:
+
+- stock;
+- precio autoritativo de cada componente;
+- producto.
+
+Mantiene proyecciones locales reconstruibles.
+
+Disponibilidad informativa:
+
+```text
+min(floor(available_i / cantidad_i))
+```
+
+La reserva real ocurre en Inventario sobre los SKU componentes.
+
+---
+
+# 19. Bulk
+
+## 19.1. Responsabilidad
+
+`bulk-svc` es un process manager, no un dueño de catálogo/precio/stock.
+
+---
+
+## 19.2. Flujo
+
+```text
+archivo
+  |
+  v
+prevalidación
+  |
+  v
+batch + rows
+  |
+  +--> Catálogo
+  +--> Pricing
+  +--> Inventario
+       |
+       v
+resultados correlacionados
+       |
+       v
+COMPLETED / FAILED / RECONCILIATION_REQUIRED
+```
+
+---
+
+## 19.3. Estado durable
+
+Cada fila registra:
+
+```text
+required_domains[]
+applied_domains[]
+failed_domain
+needs_reconciliation
+```
+
+Un ACK de RabbitMQ no equivale a éxito de dominio.
+
+---
+
+# 20. Auditoría
+
+`price-audit-svc`:
+
+- consume `pricing.price.changed`;
+- deduplica por `message_id` del envelope; `operation_id` conserva la idempotencia de negocio cuando aplique;
+- escribe append-only;
+- no modifica Pricing;
+- expone consulta administrativa paginada y detalle por `auditId`;
+- permite exportación asíncrona y descarga del archivo generado;
+- aplica retención configurable.
+
+La superficie HTTP vigente incluye:
+
+```text
+GET  /api/v1/auditoria-precios
+GET  /api/v1/auditoria-precios/{auditId}
+POST /api/v1/auditoria-precios/exportaciones
+GET  /api/v1/auditoria-precios/exportaciones/{exportId}
+GET  /api/v1/auditoria-precios/exportaciones/{exportId}/archivo
+```
+
+Reglas de exportación:
+
+```text
+CSV <= 100000 filas
+PDF <= 500 filas
+```
+
+Si una solicitud válida excede el límite funcional, se rechaza con:
+
+```text
+422 LIMITE_EXPORTACION_AUDITORIA_EXCEDIDO
+```
+
+y no se crea `export_id`. Un registro inexistente usa:
+
+```text
+404 AUDITORIA_PRECIO_NO_ENCONTRADA
+```
+
+La bitácora continúa siendo estrictamente append-only; ninguna de estas rutas introduce edición o borrado del histórico.
+
+---
+
+# 21. Seguridad
+
+## 21.1. Proveedor de identidad y rol comercial
+
+Productos adopta el contrato publicado por `Taller-SW-Web/Modulo-de-Seguridad`.
+
+Identidad técnica del módulo:
+
+```text
+client_id = modulo-productos
+```
+
+Scopes concedidos a este cliente para consumir Seguridad:
+
+```text
+tokens:introspeccion
+roles:leer
+```
+
+Seguridad publica además el rol global:
+
+```text
+GESTOR_COMERCIAL
+```
+
+que cubre administración de catálogo, precios y promociones. Productos y Ofertas autoriza esas operaciones a partir del claim `roles`; el claim `permisos` pertenece a permisos internos de Seguridad y no es el repositorio de permisos de negocio de Productos.
+
+El único actor humano canónico de Productos y Ofertas es `GESTOR_COMERCIAL`. Las capacidades de auditoría, inventario y consulta analítica se asignan dentro del módulo al `sub` de un Gestor Comercial cuando se necesite granularidad adicional; no crean roles globales adicionales ni nuevas personas en los diagramas C4.
+
+---
+
+## 21.2. Validación JWT de usuario
+
+Tráfico ordinario:
+
+```text
+JWT de usuario
+  -> validar firma/iss/exp localmente
+  -> JWKS cacheado
+  -> comprobar roles y reglas propias
+```
+
+Endpoints de Seguridad:
+
+```http
+GET /api/v1/auth/.well-known/openid-configuration
+GET /api/v1/auth/.well-known/jwks.json
+```
+
+Claims relevantes:
+
+```text
+sub
+email
+roles
+permisos
+tipo
+iss
+exp
+jti
+```
+
+`permisos` no se usa para esperar capacidades internas de Productos.
+
+---
+
+## 21.3. Introspección
+
+Seguridad define introspección para operaciones sensibles y documenta explícitamente el **cambio de precio** como operación sensible. En la integración vigente, `modulo-productos` recibe `tokens:introspeccion` para autorizar cambios de precio.
+
+Antes de admitir una mutación que cambie o programe precios:
+
+```http
+POST /api/v1/auth/introspeccion
+```
+
+Flujo:
+
+```text
+JWT usuario
+  -> validación local
+  -> rol GESTOR_COMERCIAL
+  -> introspección
+  -> activo=true
+  -> ejecutar/admitir cambio de precio
+```
+
+Las lecturas y operaciones no clasificadas como sensibles permanecen en la vía local con JWKS.
+
+---
+
+## 21.4. Tokens de servicio hacia `api-productos`
+
+La audiencia contractual de esta API es:
+
+```text
+api-productos
+```
+
+Un token técnico entrante debe validar:
+
+```text
+iss
+aud contiene api-productos
+tipo = servicio
+exp vigente
+scope requerido por la operación
+```
+
+El `sub` identifica al `client_id` del módulo consumidor. Los scopes viajan en `scope` separados por espacios.
+
+La validación de `aud` evita que un token emitido para otra API pueda reutilizarse contra Productos y Ofertas. Para JWT de servicio, el receptor también valida la **allowlist de `client_id` por operación**, cuando corresponde; poseer un scope nominal no elimina esa restricción.
+
+---
+
+## 21.5. Scopes propios de Productos y Ofertas
+
+El baseline conserva **16 scopes técnicos** de `api-productos` (catálogo heredado `0.5.0`). El candidato OpenAPI `0.6.0-rc.3` propone **un scope adicional**: `inventario:operaciones:leer`, exclusivo para el cliente de servicio `modulo-ventas` al consultar `GET /api/v1/inventario/operaciones/{operationId}`. G7 aún debe registrar y conceder ese scope; documentarlo **no** equivale a un grant activo. Los 16 scopes siguientes permanecen como línea base:
+
+```text
+catalogo:leer
+precios:leer
+promociones:leer
+promociones:evaluar
+cupones:validar
+recomendaciones:leer
+combos:leer
+inventario:disponibilidad:leer
+inventario:reservar
+inventario:consumir
+inventario:liberar
+inventario:reintegrar
+inventario:conciliar-offline
+inventario:incidencias:reportar
+inventario:incidencias:resolver
+productos:fisicos:leer
+```
+
+La operación de conciliación offline del OpenAPI actual admite `modulo-ventas` y requiere `inventario:conciliar-offline`; el registro/grant del scope sigue sujeto a Seguridad/G7. `inventario:disponibilidad:leer` para consultas comerciales de Retail no habilita la mutación ni agrega a Retail a la allowlist. La alternativa de invocación directa Retail→G6 no está homologada.
+
+**Scope propuesto fuera de la lista histórica:** `inventario:operaciones:leer` (`modulo-ventas`; `pending-security-registration` en OpenAPI). No otorgarlo a Marketplace, Chatbot, Retail ni otros clientes.
+
+Agrupación:
+
+```text
+catalog/taxonomy:
+  catalogo:leer
+
+pricing:
+  precios:leer
+
+promotions:
+  promociones:leer
+  promociones:evaluar
+  cupones:validar
+
+recommendations:
+  recomendaciones:leer
+
+combos:
+  combos:leer
+
+inventory:
+  inventario:disponibilidad:leer
+  inventario:reservar
+  inventario:consumir
+  inventario:liberar
+  inventario:reintegrar
+  inventario:conciliar-offline
+  inventario:incidencias:reportar
+  inventario:incidencias:resolver
+
+catalog physical projection:
+  productos:fisicos:leer
+```
+
+**Separación obligatoria de representaciones:** `GET /api/v1/inventario/disponibilidad` expone saldos autoritativos por SKU/ubicación. La allowlist de servicio para esta ruta admite `modulo-ventas` y `modulo-postventa`, además de los usuarios humanos específicamente autorizados mediante `userBearer`. `GET /api/v1/inventario/disponibilidad/comercial` y `POST /api/v1/inventario/disponibilidad/comercial/verificar` sirven a `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`; usan el scope `inventario:disponibilidad:leer`, pero **no** exponen cantidades ni `location_id`. El backend debe aplicar tanto scope como identidad cliente, sin extrapolar los permisos entre rutas. La documentación de consumidores y scopes no acredita grants efectivos.
+
+Mínimo privilegio:
+
+```text
+Marketplace -> lectura/evaluación + disponibilidad
+Chatbot     -> lectura/evaluación + recomendaciones + disponibilidad
+Retail      -> lectura/evaluación + disponibilidad + incidencias físicas
+Ventas      -> disponibilidad + ciclo comercial completo de Inventario
+Postventa   -> disponibilidad detallada + reintegro F3
+Despacho    -> datos físicos
+```
+
+`combos:leer` permanece sin concesión externa inicial.
+
+Para M2/Postventa, este acuerdo prevé únicamente `inventario:disponibilidad:leer` e `inventario:reintegrar`, ambos sujetos a registro/grant G7 y a la allowlist de la ruta. M2 no está autorizado a reservar, consumir, liberar, conciliar offline ni consultar operaciones. `inventario:operaciones:leer` continúa como candidato exclusivo de M1/Ventas; su presencia en OpenAPI no representa un permiso concedido.
+
+Hasta que Seguridad registre el catálogo y grants:
+
+```text
+x-scope-registration-status: pending-security-registration
+```
+
+continúa siendo obligatorio.
+
+
+## 21.6. Fases operativas de seguridad (política transversal)
+
+La decisión arquitectónica de tres fases está adoptada. Su formalización documental se encuentra en el [PR Docs #114](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/pull/114), aún draft y pendiente de merge/publicación: [Política de seguridad progresiva y reversible G6](decisiones/POLITICA-SEGURIDAD-PROGRESIVA-G6.md) y [matriz de operaciones](decisiones/MATRIZ-OPERACIONES-SEGURIDAD-G6.md). No crea DEC-F ni modifica los scopes, clientes, JWT o permisos contractuales descritos arriba.
+
+La meta es `G7_AUTHENTICATED`. `SIMULATED_AUTH` usa un issuer de demo independiente. El objetivo de `PUBLIC_READ_ONLY` es acceso anónimo público a todas las operaciones funcionalmente de lectura de los ocho servicios, sean GET, POST u otro método; la matriz aún no acredita esa cobertura. Cada lectura se clasifica `PUBLICA_APROBADA`, `PENDIENTE_VERIFICACION` o `EXCEPCION_JUSTIFICADA`. Solo las aprobadas se exponen por Internet, sin exigir VPN, Tailscale ni allowlist IP. Ningún GET/POST queda habilitado por el método o prefijo.
+
+Las lecturas administrativas no sensibles se revisan por contenido y pueden aprobarse por operación; la información protegida y los contratos internos/M2M conservan su excepción documentada hasta su resolución. Una operación `x-internal` requiere decisión expresa y homologación cuando corresponda para convertirse en pública. La excepción sustituye la exigencia anterior de perímetro privado solo para cada lectura `PUBLICA_APROBADA`. Mantiene puertos internos, DB, RabbitMQ, escrituras, guards/autorización residual, validaciones y reglas de negocio. OpenAPI conserva `security`; el selector propuesto `G6_SECURITY_MODE` aún no está implementado.
+
+El estado contractual, implementación, CI, permisos efectivos G7, homologación, Oracle y E2E se registra por separado y con SHA. Esta actualización documental no acredita ninguno de ellos.
+
+# 22. Errores
+
+Fuente canónica de códigos:
+
+```text
+contratos/http/catalogo-errores.md
+```
+
+Fuente canónica de respuestas por endpoint:
+
+```text
+contratos/http/openapi.yaml
+```
+
+Todos los adapters HTTP producen:
+
+```text
+application/problem+json
+```
+
+Formato:
+
+```json
+{
+  "type": "/errores/stock-insuficiente",
+  "title": "Stock insuficiente",
+  "status": 409,
+  "detail": "No existe disponibilidad suficiente.",
+  "instance": "/api/v1/inventario/reservas",
+  "code": "STOCK_INSUFICIENTE",
+  "correlationId": "uuid",
+  "details": {}
+}
+```
+
+`Problem.code` ya no es un `string` libre. OpenAPI lo restringe mediante `ErrorCode` y cada operación limita el subconjunto aplicable mediante `x-error-codes`.
+
+La línea base `0.4.0` contiene **95 códigos globales**. Entre las armonizaciones recientes:
+
+```text
+TIPO_PRODUCTO_NO_ENCONTRADO          -> 404
+TIPO_PRODUCTO_INVALIDO               -> 422
+PRODUCTO_NO_ADMITE_VARIANTES         -> 409
+SLUG_DUPLICADO                       -> 409
+OPERACION_MAESTRA_NO_ENCONTRADA      -> 404
+AUDITORIA_PRECIO_NO_ENCONTRADA       -> 404
+LIMITE_EXPORTACION_AUDITORIA_EXCEDIDO -> 422
+```
+
+La separación entre “no encontrado”, “estado/semántica inválida” y “conflicto” debe conservarse en controllers, pruebas de contrato y consumidores.
+
+Reglas:
+
+```text
+401 -> TOKEN_INVALIDO
+403 -> SCOPE_INSUFICIENTE
+```
+
+`SIN_AUTORIZACION` queda retirado de contratos nuevos.
+
+Para idempotencia:
+
+```text
+misma identidad + misma intención
+-> replay sin efectos adicionales
+
+misma identidad + intención distinta
+-> 409 IDEMPOTENCY_CONFLICT
+```
+
+`OPERACION_DUPLICADA` queda retirado de contratos nuevos.
+
+El dominio no conoce códigos HTTP:
+
+```textDomainError
+   |
+   v
+ProblemDetailsMapper
+   |
+   v
+Problem.code + HTTP status
+```
+
+Los consumidores ramifican por `code`, nunca por `title` ni `detail`.
+
+Un rechazo funcional posterior a `202 Accepted` se expresa mediante el `result` AsyncAPI correspondiente; no debe confundirse con un error de transporte.
+
+# 23. Configuración
+
+Toda configuración se valida al arrancar.
+
+No acceder directamente a:
+
+```ts
+process.env.X
+```
+
+desde lógica de negocio.
+
+Debe existir un `ConfigService` tipado por aplicación.
+
+Ejemplos:
+
+```text
+DATABASE_URL
+RABBITMQ_URL
+AUTH_ISSUER
+AUTH_JWKS_URL
+RESERVATION_TTL_*
+MAX_CATEGORY_DEPTH
+MAX_PRODUCT_TYPE_ATTRIBUTES
+AUDIT_HOT_RETENTION_MONTHS
+AUDIT_ARCHIVE_RETENTION_YEARS
+```
+
+La aplicación debe fallar rápido al arrancar si falta una variable obligatoria.
+
+---
+
+# 24. Observabilidad
+
+## 24.1. Correlación
+
+Toda request genera o preserva:
+
+```text
+X-Correlation-Id
+```
+
+Toda operación asíncrona conserva:
+
+```text
+correlation_id
+causation_id
+operation_id
+```
+
+---
+
+## 24.2. Logs
+
+Logs estructurados JSON.
+
+Campos recomendados:
+
+```text
+timestamp
+level
+service
+environment
+correlation_id
+operation_id
+message_id
+route/event
+code
+duration_ms
+```
+
+No registrar:
+
+- JWT;
+- client secrets;
+- contraseñas;
+- archivo completo de importación;
+- PII innecesaria.
+
+---
+
+## 24.3. Métricas
+
+Mínimas:
+
+```text
+HTTP latency/error rate
+DB latency
+consumer lag
+messages processed/rejected/retried
+outbox backlog
+DLQ size
+reservation success/rejection/expiration
+bulk processing duration
+```
+
+---
+
+## 24.4. Tracing
+
+OpenTelemetry propaga contexto entre:
+
+```text
+HTTP
+RabbitMQ
+workers
+DB
+```
+
+Los spans no sustituyen logs de auditoría de negocio.
+
+---
+
+# 25. Health checks
+
+Cada servicio expone:
+
+```text
+/health/live
+/health/ready
+```
+
+`live`:
+
+- confirma que el proceso está vivo;
+- no depende de cada servicio remoto.
+
+`ready`:
+
+- verifica dependencias necesarias para aceptar trabajo;
+- DB;
+- broker cuando la operación lo requiere.
+
+No realizar fan-out a todos los microservicios en cada health check.
+
+---
+
+# 26. Resiliencia
+
+| Riesgo | Respuesta |
+|---|---|
+| Broker temporalmente caído | Outbox mantiene eventos pendientes |
+| Mensaje duplicado | Inbox/idempotencia |
+| Mensaje fuera de orden | versión + estado + reconciliación |
+| Dependencia HTTP lenta | timeout corto y explícito |
+| Dependencia caída | error 503/circuit breaker cuando aplique |
+| Proyección atrasada | `source_version` / `updated_at`; escritura revalida owner |
+| Worker reiniciado | estado durable y reanudable |
+| Poison message | DLQ |
+| Retry storm | backoff + jitter + límite |
+
+No aplicar retries automáticos indiscriminados a mutaciones HTTP sin idempotency key.
+
+---
+
+# 27. API externa vs llamadas internas
+
+## Externa
+
+Definida en:
+
+```text
+contratos/http/openapi.yaml
+```
+
+---
+
+## Interna
+
+Solo crear una llamada síncrona entre microservicios cuando:
+
+1. se necesita respuesta inmediata;
+2. el owner es autoritativo;
+3. la operación es de lectura;
+4. no existe una proyección suficientemente fresca.
+
+Las mutaciones cross-context deben preferir comandos asíncronos.
+
+---
+
+# 28. Caching
+
+Valkey es opcional.
+
+Puede utilizarse para:
+
+- catálogo agregado;
+- read models;
+- rate limiting;
+- metadata poco cambiante.
+
+No utilizar caché como autoridad para:
+
+- reserva;
+- consumo;
+- stock final;
+- límites de cupón;
+- concurrencia de precio.
+
+La invalidación debe basarse en eventos o TTL explícito.
+
+---
+
+# 29. C4 — Nivel 1: contexto actualizado
+
+```mermaid
+flowchart LR
+  gestor["Persona: Gestor comercial<br/>GESTOR_COMERCIAL"]
+
+  market["Sistema externo: Marketplace"]
+  chatbot["Sistema externo: Chatbot"]
+  retail["Sistema externo: Retail"]
+  ventas["Sistema externo: M1 / Ventas (G5)"]
+  postventa["Sistema externo: M2 / Postventa (G5)"]
+  despacho["Sistema externo: Despacho y Entrega"]
+  seguridad["Sistema externo: Seguridad y Usuarios"]
+
+  po["Sistema: Productos y Ofertas"]
+
+  gestor -->|"Administra catálogo, taxonomía, precios, promociones, combos e inventario"| po
+
+  market -->|"Consulta catálogo, precios, promociones y disponibilidad"| po
+  chatbot -->|"Consulta catálogo, precios, promociones, recomendaciones y disponibilidad"| po
+  retail -->|"Consulta oferta y disponibilidad; reporta incidencias físicas autorizadas"| po
+
+  ventas -->|"Reserva, confirma consumo, libera, concilia y otros reintegros contractuales"| po
+  postventa -->|"Consulta disponibilidad detallada; invoca reintegro físico F3"| po
+  po -->|"Resultados de inventario y cupones"| ventas
+  po -->|"Resultados de disponibilidad y reintegro"| postventa
+
+  despacho -->|"Consulta datos físicos por SKU"| po
+
+  po -->|"Valida identidad, roles e introspección de operaciones sensibles"| seguridad
+```
+
+---
+
+# 30. C4 — Nivel 2: contenedores
+
+```mermaid
+flowchart TB
+  gestor["Persona: Gestor comercial"]
+  market["Marketplace"]
+  chatbot["Chatbot"]
+  retail["Retail"]
+  sales["M1 / Ventas (G5)"]
+  postventa["M2 / Postventa (G5)"]
+  dispatch["Despacho"]
+  security["Seguridad y Usuarios"]
+
+  subgraph module["Productos y Ofertas"]
+    fe["React SPA"]
+    ingress["Ingress / Reverse Proxy"]
+    gateway["API Gateway / BFF"]
+
+    taxonomy["taxonomy-svc"]
+    catalog["catalog-svc"]
+    pricing["pricing-svc"]
+    audit["price-audit-svc"]
+    promotions["promotions-svc"]
+    combos["combos-svc"]
+    inventory["inventory-svc"]
+    bulk["bulk-svc"]
+
+    mq[("RabbitMQ")]
+    db[("PostgreSQL<br/>schemas aislados")]
+    cache[("Valkey<br/>opcional")]
+    storage[("Object Storage")]
+  end
+
+  gestor -->|"Usa backoffice"| fe
+  fe -->|HTTPS| ingress
+  market -->|HTTPS lectura/evaluación| ingress
+  chatbot -->|HTTPS lectura/evaluación| ingress
+  retail -->|HTTPS lectura + incidencias físicas| ingress
+  sales -->|HTTPS comandos y consultas de pedido| ingress
+  postventa -->|HTTPS consulta detallada y reintegro F3| ingress
+  dispatch -->|HTTPS datos físicos| ingress
+
+  ingress --> gateway
+
+  gateway --> taxonomy
+  gateway --> catalog
+  gateway --> pricing
+  gateway --> audit
+  gateway --> promotions
+  gateway --> combos
+  gateway --> inventory
+  gateway --> bulk
+
+  taxonomy <--> mq
+  catalog <--> mq
+  pricing <--> mq
+  audit <--> mq
+  promotions <--> mq
+  combos <--> mq
+  inventory <--> mq
+  bulk <--> mq
+  gateway <--> mq
+  sales <-->|"AsyncAPI: eventos y resultados"| mq
+
+  taxonomy -->|"taxonomy schema"| db
+  catalog -->|"catalog schema"| db
+  pricing -->|"pricing schema"| db
+  audit -->|"price_audit schema"| db
+  promotions -->|"promotions schema"| db
+  combos -->|"combos schema"| db
+  inventory -->|"inventory schema"| db
+  bulk -->|"bulk schema"| db
+  gateway -->|"read_model schema"| db
+
+  gateway --> cache
+  bulk --> storage
+  audit --> storage
+
+  gateway -->|"JWKS / introspección"| security
+```
+
+---
+
+# 31. C4 — Nivel 3: `taxonomy-svc`
+
+```mermaid
+flowchart LR
+  http["HTTP adapters"]
+  bus[("RabbitMQ")]
+  db[("taxonomy schema")]
+
+  subgraph svc["taxonomy-svc"]
+    controllers["Category / Brand / Characteristic / ProductType / SEO Controllers"]
+    usecases["Application Use Cases"]
+    domain["Taxonomy Domain"]
+    deactivation["MasterDeactivationCoordinator"]
+    seo["SeoSlugPolicy"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Message Consumers"]
+    outbox["Outbox Relay"]
+  end
+
+  http --> controllers --> usecases --> domain
+  usecases --> deactivation
+  usecases --> seo
+  usecases --> repos
+  repos --> adapters --> db
+  bus --> consumers --> usecases
+  usecases --> outbox --> bus
+```
+
+Reglas contractuales adicionales del componente SEO/Taxonomía:
+
+- `SeoSlugPolicy` genera una propuesta de slug sin reservarla;
+- la creación de categoría recibe `slugConfirmado` y revalida unicidad al persistir;
+- una carrera de unicidad devuelve `409 SLUG_DUPLICADO`; nunca se sustituye silenciosamente el slug ya confirmado por el gestor;
+- `MasterDeactivationCoordinator` persiste/expone el estado consultable por `operationId`;
+- cambios confirmados del esquema de tipo y de valores `LISTA` se publican por los eventos canónicos de AsyncAPI `0.5.0`.
+
+---
+
+# 32. C4 — Nivel 3: `catalog-svc`
+
+```mermaid
+flowchart LR
+  http["HTTP adapters"]
+  bus[("RabbitMQ")]
+  db[("catalog schema")]
+
+  subgraph svc["catalog-svc"]
+    controllers["Product / Variant / Physical Data Controllers"]
+    usecases["Application Use Cases"]
+    domain["Catalog Domain"]
+    schema["AttributeSchemaValidator"]
+    activation["ActivationPolicy"]
+    physical["SkuPhysicalProfileService"]
+    barriers["MasterWriteBarrier"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Message Consumers"]
+    outbox["Outbox Relay"]
+  end
+
+  http --> controllers --> usecases --> domain
+  usecases --> schema
+  usecases --> activation
+  usecases --> physical
+  usecases --> barriers
+  usecases --> repos --> adapters --> db
+  bus --> consumers --> usecases
+  usecases --> outbox --> bus
+```
+
+---
+
+# 33. C4 — Nivel 3: `pricing-svc`
+
+```mermaid
+flowchart LR
+  http["HTTP adapters"]
+  bus[("RabbitMQ")]
+  db[("pricing schema")]
+
+  subgraph svc["pricing-svc"]
+    controllers["Price Controllers"]
+    usecases["Application Use Cases"]
+    domain["Pricing Domain"]
+    resolver["EffectivePriceResolver"]
+    scheduler["ScheduledPriceWorker"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Message Consumers"]
+    outbox["Outbox Relay"]
+  end
+
+  http --> controllers --> usecases --> domain
+  usecases --> resolver
+  scheduler --> usecases
+  usecases --> repos --> adapters --> db
+  bus --> consumers --> usecases
+  usecases --> outbox --> bus
+```
+
+---
+
+# 34. C4 — Nivel 3: `price-audit-svc`
+
+```mermaid
+flowchart LR
+  http["HTTP adapters"]
+  bus[("RabbitMQ")]
+  db[("price_audit schema")]
+  storage[("Archive Storage")]
+
+  subgraph svc["price-audit-svc"]
+    controllers["Audit Query / Export Controllers"]
+    query["AuditQueryUseCases"]
+    consumer["PriceChanged Consumer"]
+    writer["AppendOnlyWriter"]
+    export["Export / Archive Workers"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+  end
+
+  http --> controllers --> query --> repos
+  bus --> consumer --> writer --> repos
+  export --> repos
+  repos --> adapters --> db
+  export --> storage
+```
+
+---
+
+# 35. C4 — Nivel 3: `promotions-svc`
+
+```mermaid
+flowchart LR
+  http["HTTP adapters"]
+  bus[("RabbitMQ")]
+  db[("promotions schema")]
+
+  subgraph svc["promotions-svc"]
+    controllers["Promotion / Coupon / Recommendation Controllers"]
+    usecases["Application Use Cases"]
+    domain["Promotions Domain"]
+    evaluator["BenefitCombinationEvaluator"]
+    coupon["CouponConsumptionPolicy"]
+    recommendations["RecommendationPolicy"]
+    projections["Read Projections"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Message Consumers"]
+    outbox["Outbox Relay"]
+  end
+
+  http --> controllers --> usecases --> domain
+  usecases --> evaluator
+  usecases --> coupon
+  usecases --> recommendations
+  projections --> evaluator
+  projections --> recommendations
+  usecases --> repos --> adapters --> db
+  bus --> consumers --> usecases
+  usecases --> outbox --> bus
+```
+
+---
+
+# 36. C4 — Nivel 3: `combos-svc`
+
+```mermaid
+flowchart LR
+  http["HTTP adapters"]
+  bus[("RabbitMQ")]
+  db[("combos schema")]
+
+  subgraph svc["combos-svc"]
+    controllers["Combo Controllers"]
+    usecases["Application Use Cases"]
+    domain["Combo Domain"]
+    pricing["ComboPricePolicy"]
+    availability["ProjectedAvailability"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Message Consumers"]
+    outbox["Outbox Relay"]
+  end
+
+  http --> controllers --> usecases --> domain
+  usecases --> pricing
+  usecases --> availability
+  usecases --> repos --> adapters --> db
+  bus --> consumers --> usecases
+  usecases --> outbox --> bus
+```
+
+---
+
+# 37. C4 — Nivel 3: `inventory-svc`
+
+```mermaid
+flowchart LR
+  http["HTTP adapters"]
+  bus[("RabbitMQ")]
+  db[("inventory schema")]
+
+  subgraph svc["inventory-svc"]
+    controllers["Availability / Reservation / Incident / Reintegration / Reconciliation / Transfer / Dashboard Controllers"]
+    queries["Inventory Queries / Dashboard Queries"]
+    reservation["Reservation / Consumption / Release Use Cases"]
+    adjustment["Adjustment / Initialization Use Cases"]
+    incidents["Incident / Blocked Stock Use Cases"]
+    reintegration["Reintegration Use Cases"]
+    reconciliation["Offline Reconciliation Use Cases"]
+    transfers["Transfer / Reception Use Cases"]
+    domain["Inventory Domain"]
+    expiry["ReservationExpiryWorker"]
+    kardex["Kardex Policy"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Message Consumers"]
+    outbox["Outbox Relay"]
+  end
+
+  http --> controllers
+  controllers --> queries
+  controllers --> reservation
+  controllers --> adjustment
+  controllers --> incidents
+  controllers --> reintegration
+  controllers --> reconciliation
+  controllers --> transfers
+
+  queries --> repos
+  reservation --> domain
+  adjustment --> domain
+  incidents --> domain
+  reintegration --> domain
+  reconciliation --> domain
+  transfers --> domain
+  expiry --> reservation
+
+  reservation --> kardex
+  adjustment --> kardex
+  incidents --> kardex
+  reintegration --> kardex
+  reconciliation --> kardex
+  transfers --> kardex
+
+  reservation --> repos
+  adjustment --> repos
+  incidents --> repos
+  reintegration --> repos
+  reconciliation --> repos
+  transfers --> repos
+  repos --> adapters --> db
+
+  bus --> consumers --> reservation
+  consumers --> adjustment
+
+  reservation --> outbox --> bus
+  adjustment --> outbox
+  incidents --> outbox
+  reintegration --> outbox
+  reconciliation --> outbox
+  transfers --> outbox
+```
+
+---
+
+# 38. C4 — Nivel 3: `bulk-svc`
+
+```mermaid
+flowchart LR
+  http["HTTP adapters"]
+  bus[("RabbitMQ")]
+  db[("bulk schema")]
+  storage[("File Storage")]
+
+  subgraph svc["bulk-svc"]
+    controllers["Import / Export Controllers"]
+    validation["TemplateV2Validator"]
+    coordinator["RowDomainCoordinator"]
+    retry["Retry / Reconciliation Worker"]
+    export["Export Worker"]
+    repos["Repository Ports"]
+    adapters["Persistence Adapters"]
+    consumers["Result Consumers"]
+    outbox["Outbox Relay"]
+  end
+
+  http --> controllers --> validation --> coordinator
+  coordinator --> repos --> adapters --> db
+  coordinator --> outbox --> bus
+  bus --> consumers --> coordinator
+  retry --> coordinator
+  export --> repos
+  export --> storage
+```
+
+---
+
+# 39. Flujos críticos
+
+## 39.1. Alta de producto simple
+
+1. Catálogo crea producto BORRADOR.
+2. Genera `product_id`, `sku_base` y slug.
+3. Valida Taxonomía mediante contrato/proyección.
+4. Solicita preparación de Pricing.
+5. Solicita inicialización de Inventario con saldo 0.
+6. Espera confirmaciones.
+7. Solo activa al cumplir invariantes funcionales.
+
+No existe escritura directa en schemas de Pricing/Inventario.
+
+---
+
+## 39.2. Alta de variante
+
+1. valida producto padre;
+2. valida esquema de tipo;
+3. genera `variant_id`;
+4. valida/genera SKU;
+5. persiste atributos;
+6. registra perfil físico cuando corresponda;
+7. inicializa Inventario;
+8. resuelve Pricing;
+9. activa únicamente con requisitos completos.
+
+---
+
+## 39.3. Pedido `CREADO`
+
+```text
+Ventas
+  |
+  | POST /inventario/reservas
+  | Idempotency-Key + operation_id
+  v
+API / Inventory admission
+  |
+  +-- autenticación/autorización
+  +-- validación de request
+  +-- conflicto de idempotencia
+  |
+  v
+202 Accepted
+  |
+  v
+Procesamiento asíncrono de Inventario
+  |
+  +-- locks de saldos
+  +-- validación de disponibilidad
+  +-- reserva + líneas
+  +-- Kardex cuando corresponda
+  +-- Outbox en la misma transacción
+  |
+  v
+commit
+  |
+  +--> inventory.reservation.created
+  |
+  └--> inventory.consumption.rejected
+       operation_type = RESERVAR
+```
+
+`202 Accepted` significa **comando admitido**, no reserva completada.
+
+Un retry con la misma identidad y la misma intención no produce una segunda reserva.
+
+## 39.4. Pedido `PAGADO`
+
+```text
+Ventas
+  |
+  | POST /inventario/reservas/{reservaId}/confirmar
+  | Idempotency-Key + operation_id
+  v
+API / Inventory admission
+  |
+  v
+202 Accepted
+  |
+  v
+Procesamiento asíncrono
+  |
+  +-- ACTIVA -> CONSUMIDA
+  +-- on_hand--
+  +-- reserved--
+  +-- Kardex
+  +-- Outbox en transacción local
+  |
+  v
+commit
+  |
+  +--> inventory.reservation.consumed
+  +--> inventory.consumption.completed
+  |
+  └--> inventory.consumption.rejected
+```
+
+La misma confirmación reintentada no vuelve a consumir.
+
+## 39.5. Pago fallido / anulación
+
+```text
+Ventas
+  |
+  | POST /inventario/reservas/{reservaId}/liberar
+  | Idempotency-Key + operation_id
+  v
+API / Inventory admission
+  |
+  v
+202 Accepted
+  |
+  v
+Procesamiento asíncrono
+  |
+  +-- ACTIVA -> LIBERADA
+  +-- reserved--
+  +-- available recalculado
+  +-- Kardex
+  +-- Outbox
+  |
+  v
+inventory.reservation.released
+```
+
+La misma liberación reintentada reutiliza el resultado previo sin incrementar disponibilidad otra vez.
+
+## 39.6. Expiración
+
+```text
+ExpiryWorker
+  |
+  | busca ACTIVA con expires_at <= now
+  v
+ReservationUseCase
+  |
+  +-- lock
+  +-- revalidar estado
+  +-- EXPIRADA
+  +-- liberar reserved
+  +-- evento
+```
+
+---
+
+## 39.7. Despacho
+
+```text
+Despacho
+   |
+   | consulta lote de SKU
+   v
+Catalog
+   |
+   +-- peso
+   +-- dimensiones
+   |
+   v
+Despacho
+   |
+   +-- decide empaque
+   +-- calcula volumen logístico
+```
+
+---
+
+
+## 39.8. Devolución físicamente reintegrable
+
+```text
+1. M2/Postventa confirma recepción física y aptitud para reventa.
+2. M2 obtiene el SKU original desde `items[].sku` del pedido.
+3. M2 construye y envía el reintegro F3 con `DEVOLUCION_ACEPTADA`.
+4. G6 valida idempotencia, existencia de una ubicación receptora real, resolución contractual y técnica de `location_id` (aún pendiente) y autorización del actor para esta operación sobre esa ubicación; si falta, es inválida, ambigua o no autorizada, rechaza sin mutar saldo ni Kardex. No requiere stock comercial disponible para reintegrar.
+5. G6 confirma la actualización transaccional del saldo y Kardex.
+6. G6 responde HTTP `200` con `status: COMPLETED`.
+7. Después del commit, Outbox publica el evento correspondiente cuando aplique; la publicación no condiciona la respuesta HTTP.
+```
+
+## 39.9. Incidencia de tienda
+
+```text
+Retail detecta daño/no ubicación
+  -> POST /inventario/incidencias
+  -> blocked aumenta
+  -> available disminuye
+  -> todos los canales dejan de ver esas unidades como disponibles
+```
+
+## 39.11. Traslado Retail → almacén central
+
+```text
+Retail resuelve incidencia como TRASLADO_ALMACEN_CENTRAL
+  -> inventory-svc crea traslado EN_TRANSITO
+  -> origen: on_hand y blocked disminuyen
+  -> transporte físico fuera del saldo de destino
+  -> Gestor Comercial con capacidad local de inventario confirma recepción
+  -> disponible | bloqueado | merma
+  -> COMPLETADO | COMPLETADO_CON_DISCREPANCIA
+```
+
+La recepción no pertenece a Despacho. Despacho puede certificar retornos de sus propios paquetes, pero no es owner del reingreso de stock.
+
+Autorización del receptor:
+
+```text
+JWT de usuario validado por JWKS
+rol GESTOR_COMERCIAL
+sub vinculado a capacidades locales de inventario
+INVENTARIO_TRASLADOS_LEER
+INVENTARIO_TRASLADOS_RECIBIR
+```
+
+No se crea un rol global adicional en Seguridad.
+
+## 39.11. Venta Retail offline
+
+```text
+Retail offline
+  -> ventaLocalUuid
+  -> sincroniza con Ventas
+  -> Ventas registra pedido/venta
+  -> POST /inventario/conciliaciones-offline
+  -> COMPLETED | REQUIRES_REVIEW
+```
+
+Esta es la secuencia documentada por G6: Ventas invoca la conciliación. La alternativa Retail→G6 directo está comunicada, pero no homologada. G4 usa `ventaLocalUuid`; G6 tiene `offline_sale_id`, `operation_id` y `order_id` en su contrato actual. Su correspondencia, estabilidad y ámbito de unicidad no están completamente acordados; esos nombres no establecen por sí solos una deduplicación entre reintentos técnicos. No se fija orden adicional entre pedido, pago y conciliación.
+
+El replay semántico idéntico devuelve el resultado previo (`COMPLETED` o `REQUIRES_REVIEW`); reutilizar la identidad estable con intención/payload distinto produce `409 IDEMPOTENCY_CONFLICT`. Esta obligación sigue bloqueada por la homologación y definición de identidad estable, no por una solución de persistencia documentada.
+
+
+## 39.12. Preparación de cupón antes del pago
+
+```text
+pedido CREADO
+  -> reserva de stock confirmada
+  -> snapshot comercial de cupón fijado
+  -> promotions.coupon.consumption.requested
+  -> completed
+  -> pago habilitado
+```
+
+Si el pedido se cancela después del consumo:
+
+```text
+promotions.coupon.restoration.requested
+```
+
+Esta secuencia evita cobrar primero y descubrir después que el último uso del cupón ya fue tomado por otro pedido.
+
+## 39.13. Inicialización de Pricing
+
+```text
+catalog-svc
+  -> pricing.product.initialization.requested
+  -> pricing-svc
+  -> completed | rejected
+```
+
+La unidad inicial de Pricing es el producto:
+
+- el producto simple usa ese precio mediante su `sku_base`;
+- la variante sin override hereda ese precio;
+- una variante con override se gestiona posteriormente desde Pricing.
+
+## 39.14. Inicialización de Inventario
+
+```text
+catalog-svc
+  -> inventory.sku.initialization.requested
+  -> inventory-svc
+  -> completed | rejected
+```
+
+La unidad inicial de Inventario es el SKU vendible.
+
+No existe transacción distribuida Catálogo+Pricing+Inventario. El producto/variante permanece `BORRADOR` hasta reunir las confirmaciones requeridas y los reintentos son idempotentes.
+
+## 39.15. `customer_ref`
+
+```text
+Security.sub UUID
+      |
+      +-> canal -> Productos (validación)
+      |
+      +-> Ventas.contacto.clienteId
+                  |
+                  +-> consumo/restitución de cupón
+```
+
+La referencia se trata como identificador opaco y no como copia del perfil del usuario.
+
+
+# 40. Pruebas
+
+## 40.1. Pirámide
+
+### Unitarias
+
+Probar dominio sin NestJS ni DB.
+
+Ejemplos:
+
+- reserva con stock suficiente;
+- reserva insuficiente;
+- transición inválida;
+- TTL;
+- price policy;
+- combinabilidad;
+- SKU identity;
+- reglas de categoría.
+
+### Integración
+
+Con Testcontainers:
+
+- PostgreSQL real;
+- RabbitMQ real;
+- repositorios;
+- Outbox/Inbox;
+- migrations.
+
+### Contract tests
+
+Validar:
+
+```text
+OpenAPI
+JSON Schema
+AsyncAPI
+```
+
+Consumidores externos deben probar contra mocks contractuales.
+
+### E2E
+
+Frontend + gateway + servicios relevantes.
+
+---
+
+## 40.2. Casos críticos mínimos
+
+Inventario:
+
+1. dos reservas simultáneas sobre últimas unidades;
+2. confirmar misma reserva dos veces;
+3. liberar misma reserva dos veces;
+4. confirmación y expiración concurrentes;
+5. confirmación y liberación concurrentes;
+6. ajuste Bulk contra `stock_version` obsoleta;
+7. mensaje duplicado;
+8. Outbox relay reintentado;
+9. evento fuera de orden.
+
+Pricing:
+
+10. `price_version` concurrente;
+11. precio inválido no publica evento;
+12. replay de `pricing.price.changed` no duplica auditoría.
+
+Bulk:
+
+13. 5.001 filas rechazadas;
+14. worker reiniciado;
+15. fila parcialmente aplicada;
+16. reanudar mismo batch sin duplicar cambios.
+
+Catálogo:
+
+17. `variant_id != sku`;
+18. SKU duplicado;
+19. activación incompleta;
+20. perfil físico inválido.
+
+---
+
+# 41. Testing de arquitectura
+
+La CI debe comprobar límites de dependencias.
+
+Ejemplos de reglas:
+
+```text
+domain/** no importa @nestjs/*
+domain/** no importa infrastructure/**
+apps/catalog-svc/** no importa apps/inventory-svc/**
+apps/** no importa ORM entities de otro servicio
+```
+
+Esto evita que el diseño se degrade gradualmente.
+
+---
+
+# 42. CI/CD
+
+Pipeline mínimo:
+
+```text
+1. install
+2. lint
+3. architecture-boundary checks
+4. typecheck
+5. unit tests
+6. OpenAPI/AsyncAPI validation
+7. integration tests
+8. build affected apps
+9. security/dependency scan
+10. Docker build
+11. E2E/contract tests según alcance
+12. deploy
+13. smoke tests
+```
+
+---
+
+## 42.1. Pull requests
+
+Todo cambio contractual debe indicar:
+
+```text
+¿cambia OpenAPI?
+¿cambia AsyncAPI?
+¿cambia schema?
+¿requiere migración?
+¿es compatible?
+¿qué consumidores afecta?
+```
+
+---
+
+# 43. Versionado y compatibilidad
+
+## HTTP
+
+```text
+/api/v1
+```
+
+No introducir breaking changes dentro de `v1`.
+
+---
+
+## Eventos
+
+Cada evento contiene:
+
+```text
+schema_version
+```
+
+Un nuevo campo opcional puede ser compatible.
+
+Cambios de semántica o campos obligatorios requieren nueva versión.
+
+---
+
+# 44. Desarrollo local
+
+El repositorio backend debe permitir:
+
+```text
+pnpm install
+docker compose up -d postgres rabbitmq
+pnpm dev:<servicio>
+```
+
+y un modo para levantar todo el módulo cuando sea necesario.
+
+No exigir servicios cloud para ejecutar unit/integration tests localmente.
+
+---
+
+# 45. Despliegue
+
+Cada aplicación debe poder construirse como artefacto independiente.
+
+Requisitos:
+
+- Dockerfile reproducible;
+- variables de entorno externas;
+- migraciones controladas;
+- readiness/liveness;
+- graceful shutdown;
+- cierre ordenado de consumers;
+- no pérdida de mensajes ya aceptados;
+- logging estructurado.
+
+---
+
+# 46. Graceful shutdown
+
+Al recibir señal de terminación:
+
+1. dejar de aceptar nuevos requests;
+2. dejar de reclamar nuevos mensajes;
+3. completar o abortar limpiamente trabajo en curso;
+4. cerrar conexiones;
+5. confirmar ACK únicamente después de persistir resultado;
+6. terminar proceso.
+
+---
+
+# 47. Política de timeouts
+
+Toda dependencia remota debe tener timeout explícito.
+
+No usar timeouts infinitos.
+
+La configuración se centraliza por adaptador.
+
+Un timeout no se traduce automáticamente en retry de negocio.
+
+---
+
+# 48. Reloj y tiempo
+
+Reglas dependientes del tiempo no deben llamar directamente a:
+
+```ts
+new Date()
+```
+
+desde el dominio.
+
+Definir:
+
+```text
+Clock
+```
+
+como puerto inyectable para:- vigencia;
+- expiración de reserva;
+- promociones;
+- pricing;
+- auditoría.
+
+Esto vuelve deterministas las pruebas.
+
+---
+
+# 49. Identificadores
+
+Usar value objects internos cuando aporten validación:
+
+```text
+Sku
+ProductId
+VariantId
+ReservationId
+OrderId
+LocationId
+OperationId
+```
+
+Los adaptadores convierten strings externos a value objects.
+
+Evitar transportar strings desnudos por todo el dominio sin validación.
+
+---
+
+# 50. Dinero y cantidades
+
+Dinero:
+
+- no utilizar `float`;
+- usar decimal exacto;
+- currency explícita.
+
+Cantidad de inventario:
+
+```text
+integer >= 0
+```
+
+Dimensiones/peso:
+
+- validar positivos;
+- unidad contractual fija: kg y cm;
+- convertir únicamente en adapters cuando un consumidor necesite otra representación.
+
+---
+
+# 51. Nomenclatura del código
+
+Para evitar mezcla arbitraria:
+
+- API pública: nombres definidos por OpenAPI en español.
+- Eventos: nomenclatura contractual existente (`inventory.*`, `pricing.*`, etc.).
+- Código interno: un único idioma consistente por repositorio; se recomienda inglés técnico por coherencia con framework/librerías.
+- Los adapters realizan el mapeo entre contrato externo y modelo interno.
+
+No mezclar en una misma capa:
+
+```text
+crearReserva()
+confirmReservation()
+liberarStock()
+```
+
+Elegir una convención y aplicarla sistemáticamente.
+
+---
+
+# 52. ADRs obligatorios para decisiones de alto impacto
+
+Crear `docs/adr/`.
+
+ADRs iniciales recomendados:
+
+```text
+001-bounded-contexts.md
+002-database-per-schema.md
+003-outbox-inbox.md
+004-api-language-spanish.md
+005-sales-owned-inventory-orchestration.md
+006-sku-physical-profile.md
+007-dispatch-owns-packaging.md
+008-openapi-as-http-source-of-truth.md
+009-clean-architecture-service-template.md
+```
+
+Un ADR explica:
+
+- contexto;
+- decisión;
+- alternativas;
+- consecuencias.
+
+---
+
+# 53. Definición de terminado arquitectónica
+
+Una funcionalidad backend no está terminada si solo “funciona”.
+
+Debe cumplir:
+
+- regla de negocio en domain/application;
+- controller/consumer delgado;
+- persistencia detrás de repository port;
+- errores mapeados;
+- idempotencia cuando corresponda;
+- correlación;
+- logs;
+- pruebas unitarias;
+- integración cuando toque DB/broker;
+- contrato actualizado;
+- migración si cambia schema;
+- ninguna dependencia prohibida.
+
+---
+
+# 54. Pendientes de integración arquitectónica
+
+P2 cerró:
+
+- exchanges, queues, bindings, retry y DLQ;
+- recepción y discrepancias de traslados a almacén central;
+- capacidades locales de inventario asociadas al `GESTOR_COMERCIAL`.
+
+Pendientes que requieren código/infra real:
+
+1. Registrar scopes/grants en Seguridad.
+2. Crear políticas/recursos RabbitMQ del entorno desde IaC/configuración.
+3. Ejecutar contract tests runtime.
+4. Sincronizar prototipos HTML después del freeze documental.
+
+No queda pendiente de definición arquitectónica la topología lógica/física de mensajería.
+# 55. Decisiones deliberadamente NO fijadas
+
+Para evitar acoplamiento prematuro, esta arquitectura no obliga todavía a:
+
+- TypeORM vs Prisma vs SQL directo;
+- proveedor cloud específico;
+- Kubernetes;
+- proveedor de object storage;
+- Valkey obligatorio;
+- número fijo de réplicas;
+- valores definitivos de TTL.
+
+Estas decisiones pueden tomarse más tarde sin alterar los bounded contexts ni los contratos externos.
+
+---
+
+# 56. Conclusión
+
+La arquitectura resultante mantiene ocho bounded contexts con ownership explícito y establece una disciplina de implementación que evita el acoplamiento accidental.
+
+Los principios arquitectónicos principales son:
+
+1. **M1/Ventas orquesta pedido, pago y las mutaciones comerciales de reserva, consumo y liberación**; M2/Postventa administra devoluciones/cambios e invoca directamente el reintegro físico F3.
+2. `CREADO` produce reserva.
+3. `PAGADO` produce consumo.
+4. pago fallido/anulación pre-consumo libera; una reserva consumida nunca se libera.
+5. reservas expiran por TTL configurable.
+6. el reintegro físico F3 lo invoca M2/Postventa después de recepción apta; M1/Ventas conserva acceso para otros motivos contractuales. La conciliación Retail offline mantiene su secuencia contractual separada.
+7. Marketplace/Chatbot solo consultan; Retail además reporta/resuelve incidencias físicas sin orquestar ventas.
+8. Catálogo mantiene perfil físico por SKU.
+9. Despacho mantiene ownership del empaque.
+10. OpenAPI `0.5.0` es la línea base histórica; `contratos/http/openapi.yaml` `0.6.0-rc.3` es la fuente HTTP candidata vigente, aún no acreditada como desplegada.
+11. AsyncAPI `0.5.0` documentó 39 mensajes históricos; `contratos/eventos/asyncapi.yaml` `0.6.0-rc.4` documenta 40 canales y 40 mensajes candidatos, sin afirmar su ejecución real.
+12. `contratos/http/catalogo-errores.md` gobierna los códigos estables y `contratos/eventos/catalogo-eventos.md` la lectura humana de mensajería.
+13. cada servicio aplica arquitectura por capas/puertos.
+14. no se comparten entidades ORM, repositorios ni schemas.
+15. Outbox/Inbox, idempotencia, correlación y pruebas de contrato forman parte de la arquitectura, no son mejoras opcionales.
+16. la CI debe proteger automáticamente los límites de dependencias.
+17. la autorización comercial usa `GESTOR_COMERCIAL`; la integración técnica valida `aud=api-productos` y scopes propios por operación.
+18. los cambios de precio usan introspección; el resto del tráfico de usuario usa validación local con JWKS salvo ampliación contractual futura.
+
+Esta estructura permite implementar cada bounded context de forma independiente, probarlo en aislamiento, desplegarlo por separado y evolucionar contratos sin convertir el monorepo en una aplicación monolítica fuertemente acoplada.
+
+---
+
+<!-- HOMOLOGACION-HTTP-0.5.0:START -->
+## Alineación arquitectónica HTTP 0.5.0
+
+### Fronteras
+
+```text
+Frontend Marketplace
+→ backend/BFF Marketplace (externo al módulo)
+→ Ingress/API Gateway de Productos y Ofertas
+→ servicio owner
+```
+
+El BFF Marketplace no es el `api-gateway` interno.
+
+### catalog-svc
+
+Responsabilidades nuevas/explicitadas:
+
+```text
+CommercialProductQuery
+CommercialEligibilityPolicy
+BarcodeResolver
+```
+
+La persistencia de barcode/elegibilidad sigue detrás de ports mientras `D-CAT-*` permanezcan abiertas.
+
+### inventory-svc
+
+Distinguir:
+
+```text
+DetailedAvailabilityQuery
+CommercialAvailabilityQuery
+CommercialAvailabilityPolicy
+```
+
+**D-INV-01 está adoptada** en `arquitectura/decisiones/ADR-DEC-F-BLOQUEANTES.md`: para esta primera entrega, cada contexto `fulfillment_ref` se resuelve mediante mapeo interno a **una sola ubicación elegible**. No sumar existencias de ubicaciones independientes ni inferir disponibilidad por agregación. Si el mapeo falta, es ambiguo o no permite justificar cumplimiento, la proyección comercial responde `INDETERMINADO` (no `AGOTADO` ni `DISPONIBLE`). `POST /api/v1/inventario/disponibilidad/comercial/verificar` evalúa cantidades completas con `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO`, sin revelar saldos ni `location_id`, con `binding=false` y **sin reservar stock**. La ruta permanece provisional por implementación/pruebas pendientes, **no** porque la decisión continúe abierta. Una agregación real multi-origen requeriría otra ADR y capacidad verificable.
+
+La conciliación offline conserva las reglas de §14.8: mutación solo por cantidades admisibles, replay semántico sin efecto repetido y conflicto de contenido con `409 IDEMPOTENCY_CONFLICT`. La identidad estable de la venta offline y su relación con `operation_id`, `order_id` y el identificador Retail no están resueltas. Inventario debe resolver/autorizar internamente la ubicación; el request OpenAPI actual todavía requiere `location_id`. El endpoint actual admite solo `modulo-ventas` y su response expone datos de saldo a ese consumidor; lectura comercial no concede acceso de escritura ni a la conciliación. La representación futura para Retail y su autorización siguen pendientes de homologación, no implementadas por este texto.
+
+### promotions-svc
+
+`RecommendationPolicy` puede enriquecerse mediante proyecciones mínimas de Catálogo, Pricing e Inventario, sin joins cross-schema ni ownership ajeno. `D-REC-01/02` siguen abiertas.
+
+### Gateway
+
+El rate limiting pertenece a Ingress/API Gateway:
+
+```text
+429 RATE_LIMIT_EXCEDIDO
+Retry-After
+```
+
+La correlación se genera/preserva antes del rechazo.
+
+### Scopes
+
+Se conservan 16 scopes del baseline; la candidata añade `inventario:operaciones:leer` como permiso **pendiente de registro/concesión por G7 y limitado a Ventas**. `catalogo:leer` no habilita el resolver de códigos de barras a clientes distintos de Retail; `inventario:disponibilidad:leer` no habilita saldos detallados a canales sin allowlist. Una credencial efectiva debe acreditar `aud=api-productos`, scope y consumidor admitido; las autorizaciones humanas son independientes.
+
+No reutilizar como cifras actuales los conteos históricos de paths, operaciones, schemas, mensajes o `ErrorCode` de versiones anteriores. Para una publicación definitiva, recalcularlos a partir de OpenAPI/AsyncAPI de la versión aprobada.
+<!-- HOMOLOGACION-HTTP-0.5.0:END -->

@@ -1,0 +1,91 @@
+# SPEC-002 — Gestión de combos de productos
+
+**Responsable:** Marco Renato Castilla Huanca  
+**Rama:** castilla  
+**Trazabilidad:** HU [HU-002](../hu/HU-002-gestion-combos-productos.md) | Wireframe [WF-002](..\..\ux\wireframes\flows\WF-002-gestion-combos-productos.md)
+
+---
+
+## 1. Objetivo
+
+Administrar combos como oferta comercial compuesta sin convertirlos en un segundo owner de precio, stock o cupones.
+
+## 2. Reglas
+
+- **Componentes mínimos:** Un combo contiene al menos dos componentes SKU vendibles directos.
+- **Sin anidamiento:** No se admiten combos anidados ni combos que contengan otros combos.
+- **Sin duplicados:** Cada componente referencia un SKU/producto existente y activo, sin duplicación de ítems dentro del mismo combo.
+- **Regla de beneficio económico de precio:** El precio promocional del combo debe ser mayor a cero y estrictamente menor que la compra de los componentes por separado, evaluado tanto frente a la suma de sus precios regulares como frente a la suma de sus precios públicos vigentes. Si no cumple esta regla, la solicitud se rechaza con el código canónico `COMBO_PRECIO_INVALIDO`.
+- **Precios maestros:** Pricing mantiene el precio regular y las ofertas de los componentes; el precio del combo no altera los precios maestros.
+- **Inventario:** Inventario mantiene disponibilidad y reservas por SKU; el combo no posee saldo propio ni reserva existencias de forma autónoma.
+- **Disponibilidad informativa:** Inventory no expone cantidades ni una fuente común de cumplimiento para derivar disponibilidad cuantitativa de combo. Mientras no exista una verificación autorizada y probada de cesta completa, la respuesta es no verificable (`verificable=false`, `cantidadInformativa=null`, `estadoActualizacion=INCOMPLETA`); no se suman saldos de ubicaciones independientes.
+- **Desactivación de componentes:** Si un producto o SKU componente es desactivado (`catalog.product.deactivated` o `catalog.sku.deactivated`), el combo deja de ser elegible y comprable para nuevas ventas, conservando intacta su definición administrativa histórica.
+- **Promociones/Cupones:** Promociones decide la combinabilidad de cupones con ofertas de combo.
+
+## 3. Inventario y compras
+
+La disponibilidad de un combo se deriva de sus componentes. El combo no crea saldo de inventario ni reserva stock por cuenta propia.
+
+Cuando una compra real crea un pedido:
+
+```text
+Canal -> Ventas -> Inventario (reserva por componente)
+```
+
+## 4. Consumo y reglas de cupones en Checkout
+
+Validar un cupón durante la evaluación del combo:
+
+```text
+POST /cupones/validar
+```
+
+no consume el cupón ni muta estado.
+
+Cuando se procesa el pedido en checkout, el módulo Ventas/Postventa orquesta el proceso con el siguiente orden estricto:
+
+```text
+1. Confirmación de reserva de existencias en Inventario por cada SKU componente
+2. Si aplica cupón: solicitud asíncrona de consumo (promotions.coupon.consumption.requested)
+3. Intento de pago
+```
+
+### Reglas de compensación en checkout
+
+- **Reserva de stock fallida:** Se cancela el pedido; no hay reserva que liberar ni cupón que restaurar.
+- **Consumo de cupón rechazado:** Se solicita la liberación de la reserva de stock a Inventario y se cancela el pedido; no se efectúa cobro ni restitución de cupón.
+- **Pago fallido con cupón previamente consumido:** Se libera la reserva de stock en Inventario y se solicita la restitución del cupón consumido (`promotions.coupon.restoration.requested`).
+- **Pago fallido sin cupón:** Se libera la reserva de stock en Inventario y se cancela el pedido; no se emite ninguna solicitud hacia Promociones.
+
+El combo nunca publica comandos de consumo ni de restitución de cupones.
+
+## 5. Criterios de cierre
+
+- El precio del combo no altera los precios maestros.
+- El precio del combo debe garantizar una ventaja económica frente a la suma de componentes individuales (`COMBO_PRECIO_INVALIDO`).
+- Un combo no crea stock propio ni saldos en almacén.
+- Un combo no consume ni restaura cupones directamente.
+- La desactivación de un componente vuelve el combo no elegible para compra comercial.
+- En cancelaciones de checkout, únicamente se solicita restitución de cupón si este fue efectivamente consumido.
+
+## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+
+**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+
+- `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
+- `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
+- Nuevos contratos provisionales: `GET /inventario/operaciones/{operationId}` (solo Ventas; scope `inventario:operaciones:leer`) y `POST /inventario/disponibilidad/comercial/verificar` (canales, consulta sin efectos).
+- Nuevo evento `inventory.reservation.rejected`; resultados de reserva/consumo/liberación/expiración con datos tipados y correlación obligatoria.
+- `D-INV-01`: no se suman saldos de ubicaciones independientes por defecto. Un canal obtiene `INDETERMINADO` cuando el punto único de cumplimiento no se puede resolver. `SUFICIENTE` exige una fuente de abastecimiento realizable para la cantidad completa; no supone reserva.
+- Cupones: después de reserva confirmada, Ventas envía `reservation_id` y `commercial_snapshot_ref` al solicitar consumo. Los resultados de consumo se tipan y la restauración se vincula a la operación previamente consumida.
+- Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
+- Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
+- Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+**Combos:** expandir a líneas SKU y cantidades antes de la verificación/reserva. No sumar saldos de distintas ubicaciones para declarar disponible un combo sin política de cumplimiento probada.
+
+## Addendum G6 H4 — DEC-G6-INT-11
+
+Combos valida por SKU las referencias activas en Catalog y consulta precios regulares y públicos vigentes de Pricing para un mismo canal e instante. Debe cumplirse `0 < precio_combo < suma_regular` y `precio_combo < suma_publica`. Referencia inexistente/inactiva usa el rechazo contractual; desigualdad incumplida usa `COMBO_PRECIO_INVALIDO`; ausencia técnica de un precio autoritativo usa `SERVICIO_NO_DISPONIBLE`, no un precio sintético. Combos no posee stock ni reserva; el orquestador autorizado expande la compra a líneas `(sku, quantity)`.
+
+La API comercial actual no expone saldos ni una fuente común de cumplimiento, por lo que no permite deducir unidades de combo. Mientras no haya contrato autoritativo y probado para cesta completa en un único contexto, `DisponibilidadCombo` usa `verificable=false`, `cantidadInformativa=null`, `estadoActualizacion=INCOMPLETA` y `calculated_at` de la comprobación real. No se exponen `on_hand`, `reserved` ni `location_id` a consumidores comerciales. Promotions conserva autoridad única sobre combinabilidad; Combos no aplica cupones sin respuesta contractual de Promotions que lo permita.

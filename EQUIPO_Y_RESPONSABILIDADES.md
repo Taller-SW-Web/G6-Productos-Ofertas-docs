@@ -258,22 +258,22 @@ En particular, los mockups mantienen la Definition of Done definida en `mockups/
 
 La asignación funcional detallada de las 16 funcionalidades se mantiene en:
 
-[`wireframes/INDEX.md`](wireframes/INDEX.md)
+[`wireframes/INDEX.md`](ux\wireframes\INDEX.md)
 
 La gobernanza del pipeline de mockups se mantiene en:
 
-[`mockups/README.md`](mockups/README.md)
+[`mockups/README.md`](ux\mockups\README.md)
 
 Las responsabilidades y límites técnicos de los bounded contexts se mantienen en:
 
-[`Arquitectura.md`](Arquitectura.md)
+[`Arquitectura.md`](arquitectura\Arquitectura.md)
 
 El ownership de integración se mantiene en:
 
-[`Contrato_Api.md`](Contrato_Api.md)
+[`Contrato_Api.md`](contratos\http\Contrato_Api.md)
 
 El ownership conceptual de datos se mantiene en:
 
-[`Modelo_Conceptual.md`](Modelo_Conceptual.md)
+[`Modelo_Conceptual.md`](arquitectura\Modelo_Conceptual.md)
 
 Este documento gobierna exclusivamente la **organización y responsabilidades internas del equipo**.

@@ -1,0 +1,9 @@
+# Entorno reproducible de validación contractual (Python 3.12 en CI).
+attrs==26.1.0
+jsonschema==4.25.1
+jsonschema-specifications==2025.9.1
+PyYAML==6.0.3
+referencing==0.37.0
+rfc3339-validator==0.1.4
+rpds-py==2026.9.1
+six==1.17.0

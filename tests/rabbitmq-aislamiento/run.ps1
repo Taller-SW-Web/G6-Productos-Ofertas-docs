@@ -1,0 +1,127 @@
+param(
+    [ValidateSet('essential', 'extended', 'recovery', 'all')]
+    [string] $Profile = 'essential',
+    [ValidateSet('default', 'reduced')]
+    [string] $RecoveryInterval = 'default',
+    [ValidateRange(1, 900)]
+    [int] $ObservationSeconds = 60
+)
+
+$ErrorActionPreference = 'Stop'
+
+$suiteDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$composeFile = Join-Path $suiteDir 'compose.yaml'
+$composeArgs = @('--file', $composeFile)
+if ($Profile -eq 'recovery' -and $RecoveryInterval -eq 'reduced') {
+    $composeArgs += @('--file', (Join-Path $suiteDir 'compose.recovery-reduced.yaml'))
+}
+$project = 'g6rabbitiso' + [guid]::NewGuid().ToString('N').Substring(0, 12)
+$recoveryInvoked = $false
+$recoveryRunnerFailed = $false
+$recoveryGateStatus = $null
+
+function Invoke-DockerCompose([string[]] $Arguments) {
+    & docker compose --project-name $project @composeArgs @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "docker compose failed with exit code $LASTEXITCODE"
+    }
+}
+
+try {
+    $dockerContext = (& docker context show).Trim()
+    if ($LASTEXITCODE -ne 0 -or $dockerContext -ne 'desktop-linux') {
+        throw "The active Docker context must be Docker Desktop's local 'desktop-linux'; current context is '$dockerContext'. No test resources were created."
+    }
+    $dockerEndpoint = (& docker context inspect desktop-linux --format '{{.Endpoints.docker.Host}}').Trim()
+    if ($LASTEXITCODE -ne 0 -or $dockerEndpoint -notmatch '^npipe://') {
+        throw "Docker Desktop's local Linux named-pipe endpoint was not verified ('$dockerEndpoint'). No test resources were created."
+    }
+
+    & docker info --format '{{.OSType}}'
+    if ($LASTEXITCODE -ne 0) {
+        throw 'The active Docker daemon is not available. Start Docker Desktop or select a working context, then rerun.'
+    }
+    $osType = (& docker info --format '{{.OSType}}').Trim()
+    if ($LASTEXITCODE -ne 0 -or $osType -ne 'linux') {
+        throw "A Linux container engine is required; current OSType is '$osType'."
+    }
+
+    Invoke-DockerCompose @('config', '--quiet')
+    Invoke-DockerCompose @('pull', 'rabbitmq')
+    if ($Profile -eq 'recovery') {
+        Invoke-DockerCompose @('up', '-d', '--wait', 'rabbitmq')
+        $effectiveEnvironment = & docker compose --project-name $project @composeArgs exec -T rabbitmq rabbitmqctl eval 'application:get_env(rabbit, dead_letter_worker_publisher_confirm_timeout).' 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Could not inspect effective RabbitMQ DLX worker timeout before recovery test.'
+        }
+        Write-Output "RABBITMQ_EFFECTIVE_DLX_WORKER_TIMEOUT=$($effectiveEnvironment -join ' ')"
+        $expectedInterval = if ($RecoveryInterval -eq 'reduced') { 5000 } else { 180000 }
+        if (($effectiveEnvironment -join "`n") -notmatch "\{ok,$expectedInterval\}") {
+            throw "RabbitMQ effective environment did not confirm dead_letter_worker_publisher_confirm_timeout=$expectedInterval before the test."
+        }
+        $recoveryInvoked = $true
+        $testOutput = & docker compose --project-name $project @composeArgs run --build --rm -e "RABBITMQ_TEST_PROFILE=$Profile" -e "RABBITMQ_RECOVERY_OBSERVATION_SECONDS=$ObservationSeconds" contract-tests 2>&1
+        $testExitCode = $LASTEXITCODE
+        foreach ($line in $testOutput) {
+            $renderedLine = $line.ToString()
+            Write-Output $renderedLine
+            if ($renderedLine -match '^RECOVERY_STATUS=(PASS|FAIL|INCONCLUSO)$') {
+                $recoveryGateStatus = $Matches[1]
+            }
+        }
+        if (-not $recoveryGateStatus) {
+            throw "Recovery profile produced no gate classification (docker compose exit code $testExitCode)."
+        }
+        if ($recoveryGateStatus -eq 'PASS' -and $testExitCode -ne 0) {
+            throw "Recovery reported PASS but docker compose exited with code $testExitCode."
+        }
+        if ($recoveryGateStatus -ne 'PASS' -and $testExitCode -eq 0) {
+            throw "Recovery reported $recoveryGateStatus but docker compose exited with code 0."
+        }
+        if ($testExitCode -ne 0) {
+            throw "docker compose recovery profile failed with exit code $testExitCode."
+        }
+    }
+    else {
+        Invoke-DockerCompose @('run', '--build', '--rm', '-e', "RABBITMQ_TEST_PROFILE=$Profile", 'contract-tests')
+    }
+}
+catch {
+    if ($Profile -eq 'recovery') {
+        $recoveryRunnerFailed = $true
+        if (-not $recoveryInvoked) {
+            Write-Output 'RECOVERY_STATUS=NO EJECUTADO'
+            Write-Output "RECOVERY_REASON=$($_.Exception.Message)"
+        }
+        elseif (-not $recoveryGateStatus) {
+            Write-Output 'RECOVERY_STATUS=NO EJECUTADO'
+            Write-Output "RECOVERY_REASON=$($_.Exception.Message)"
+        }
+        else {
+            Write-Output "RECOVERY_RUNNER_ERROR=$($_.Exception.Message)"
+        }
+    }
+    else {
+        throw
+    }
+}
+finally {
+    if ($Profile -eq 'recovery' -and $recoveryInvoked) {
+        Write-Output 'RABBITMQ_EFFECTIVE_QUEUE_CONFIG_BEGIN'
+        & docker compose --project-name $project @composeArgs exec -T rabbitmq rabbitmqctl list_queues -p g6-test name policy effective_policy_definition arguments messages messages_ready
+        Write-Output 'RABBITMQ_EFFECTIVE_QUEUE_CONFIG_END'
+        Write-Output 'RABBITMQ_BROKER_LOGS_BEGIN'
+        & docker compose --project-name $project @composeArgs logs --no-color --tail 200 rabbitmq 2>$null |
+            ForEach-Object { $_ -replace '(?i)(password|secret|credential)[=: ]+[^ ]+', '$1=[REDACTED]' }
+        Write-Output 'RABBITMQ_BROKER_LOGS_END'
+    }
+    # Project name is unique to this run; cleanup is limited to its containers, network, and named volume.
+    & docker compose --project-name $project @composeArgs down --volumes --remove-orphans --rmi local
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "Isolated Compose cleanup failed for project $project; inspect only resources prefixed with that project name."
+    }
+}
+
+if ($Profile -eq 'recovery' -and $recoveryRunnerFailed) {
+    exit 1
+}

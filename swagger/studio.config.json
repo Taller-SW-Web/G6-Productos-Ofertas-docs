@@ -1,0 +1,13 @@
+{
+  "owner": "sanmarcos-bb0",
+  "apiName": "G6-Productos-y-Ofertas",
+  "title": "G6 Productos y Ofertas",
+  "studioUrl": "https://app.swaggerhub.com/apis/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3",
+  "documentationUrl": "https://app.swaggerhub.com/apis-docs/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3",
+  "servers": [
+    {
+      "url": "https://g6-productos-ofertas.duckdns.org/api/v1",
+      "description": "Gateway Oracle verificado por GET; cobertura parcial y CORS desde Studio pendiente"
+    }
+  ]
+}
