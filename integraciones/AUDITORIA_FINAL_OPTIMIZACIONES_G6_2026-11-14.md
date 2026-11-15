@@ -6,7 +6,7 @@
 
 | PR | HEAD vigente | CI aplicable | Estado técnico de merge |
 |---|---|---|---|
-| Backend #230 | `437d40b82b95fc971dd73cb9e4e13a94367e1c45` | PASS, run [43722209652](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43722209652) | MERGEABLE; estado GitHub `UNSTABLE`, sin merge realizado. |
+| Backend #230 | `437d40b82b95fc971dd73cb9e4e13a94367e1c45` | CI normal PASS [43722209652](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43722209652); el check auxiliar [43722209619](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43722209619) falló antes de tests por Docker/OpenSSL indisponibles en ese job. | MERGEABLE; estado GitHub `UNSTABLE`; check fallido pendiente de resolución, sin merge realizado. |
 | Frontend #82 | `437604956c2cd8797a8d9fd9974c5f1c789aafd3` | CI completa PASS, run [43724483327](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43724483327). | MERGEABLE; requiere aprobación (`REVIEW_REQUIRED`) y CI final. |
 | Docs #120 | SHA de publicación: el commit que añade esta actualización; su valor exacto está en el HEAD del PR y en la entrega final. | Se ejecutará una CI completa al publicar este cambio. | PR abierto, Draft; se verificará después del push. |
 
@@ -327,11 +327,11 @@ Esta actualización supersede los estados de ejecución y conclusiones de las se
 
 | Repositorio / PR | SHA vigente | Validación de código | Estado observado |
 |---|---|---|---|
-| Backend #230 | `437d40b82b95fc971dd73cb9e4e13a94367e1c45` | CI PASS [43722209652](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43722209652); benchmark Bulk separado [43722229469](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43722229469). | Abierto, Draft, mergeable; GitHub reporta `UNSTABLE`. |
+| Backend #230 | `437d40b82b95fc971dd73cb9e4e13a94367e1c45` | CI normal PASS [43722209652](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43722209652); Bulk pareado [43722229469](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43722229469). Check auxiliar fallido [43722209619](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43722209619), artifact de log `14164449730`. | Abierto, Draft, mergeable en contenido; `UNSTABLE` por el check fallido. |
 | Frontend #82 | `437604956c2cd8797a8d9fd9974c5f1c789aafd3` | CI final PASS [43724483327](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43724483327); benchmark focalizado PASS [43724489799](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43724489799). | Abierto, Draft, mergeable; aprobación requerida. |
 | Docs #120 | Este commit publica la actualización; el SHA exacto se identifica en el HEAD del PR tras el push. | CI completa pendiente de la publicación de este commit. | Abierto, Draft; estado tras push pendiente. |
 
-No se atribuye `MERGEABLE` al cumplimiento de protección de rama. Frontend requiere aprobación humana; el check de validación final pasó. Backend y Docs no tienen protección de rama clásica reportada por la consulta, lo cual no descarta reglasets organizacionales. No se efectuó merge.
+No se atribuye `MERGEABLE` al cumplimiento de protección de rama. Frontend requiere aprobación humana; el check de validación final pasó. Backend y Docs no tienen protección de rama clásica reportada por la consulta, lo cual no descarta reglasets organizacionales. El run backend `43722209619` falló en `apps/catalog-svc/test/postgres.persistence.e2e-spec.ts:107` con `Catalog persistence E2E requires Docker and OpenSSL in CI; refusing to skip PostgreSQL coverage`; no se ejecutaron tests de esa suite y el log quedó en artifact `14164449730`. La CI normal `43722209652` sí pasó, incluyendo E2E separado. No se repitió el check por el límite de alcance. No se efectuó merge.
 
 ### Backend — Bulk pareado
 
@@ -359,7 +359,7 @@ Combos — resultados de la comparación focalizada: baseline p50/p95/p99 11.2/3
 ### Alcance del cierre y dependencias
 
 - Se reutiliza la evidencia disponible de Catálogo, Pricing individual/batch, Combos POST, Promotions, Price Audit, Inventario, Gateway y Taxonomía registrada anteriormente. No se repitió ninguno de esos escenarios.
-- Backend: CI final PASS en `437d40b...`; Bulk benchmark PASS como ejecución, pero la conclusión de rendimiento queda INCONCLUSO por la dirección moderada de los perfiles y ausencia de causa demostrada.
+- Backend: CI normal PASS en `437d40b...`; existe el check auxiliar fallido `43722209619` por dependencia Docker/OpenSSL indisponible antes de ejecutar pruebas. Bulk benchmark PASS como ejecución, pero la conclusión de rendimiento queda INCONCLUSO por la dirección moderada de los perfiles y ausencia de causa demostrada.
 - Frontend: CI final PASS (run `43724483327`); benchmark focalizado PASS como ejecución, con las limitaciones anteriores.
 - Docs: el hash final se obtiene del HEAD de PR #120 después de publicar este archivo; el CI correspondiente debe vincularse a ese SHA. Un informe que contiene su propio hash no puede hacerlo de forma autorreferencial.
 - Dependencias externas: concesiones/grants efectivos de G7 y homologaciones de otros consumidores siguen siendo responsabilidad de sus owners. No hay cambios en permisos ni evidencia de concesión. El cierre interno de este documento no las declara resueltas.
