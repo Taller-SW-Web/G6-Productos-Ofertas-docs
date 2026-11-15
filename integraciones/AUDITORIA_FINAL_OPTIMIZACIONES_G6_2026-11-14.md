@@ -2,9 +2,9 @@
 
 ## Alcance y estado
 
-Esta evidencia sigue los Draft PR existentes: Backend #230 (`perf/optimizacion-integral-g6`, corrección en `59775363fc2c5ca8499b775f9872cb794097c2be`), Frontend #82 (`codex/perf-optimizacion-integral-g6`, corrección en `46cd9f0fafcd65b821148e4625e436ad8560c7e3`) y Docs #120 (`docs/optimizaciones-integral-g6-contratos`). No crea ramas o PR sustitutos.
+Esta evidencia sigue los Draft PR existentes: Backend #230 (`perf/optimizacion-integral-g6`, SHA medido `c05154e3167a22bf46b64da8f7f28658e67f0b44`), Frontend #82 (`codex/perf-optimizacion-integral-g6`, SHA `46cd9f0fafcd65b821148e4625e436ad8560c7e3`) y Docs #120 (`docs/optimizaciones-integral-g6-contratos`). No crea ramas o PR sustitutos.
 
-- Backend #230 CI completa: [run 43658275955](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43658275955), PASS. También pasaron [A1/A2](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43658275917) y las suites aisladas [Bulk/PostgreSQL/RabbitMQ](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43658275944). El job de benchmark Pricing fue omitido por ser opt-in; se conserva el benchmark aprobado anterior, no se extrapola.
+- Backend #230 CI completa en SHA `c05154e`: [run 43665450495](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43665450495), PASS. Incluyó los jobs manuales/opcionales de benchmark y publicó el artifact retenido 7 días `pricing-component-benchmarks-c05154e3167a22bf46b64da8f7f28658e67f0b44` (JSON/CSV del token y logs de Pricing). También pasaron [A1/A2](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43658275917) y las suites aisladas [Bulk/PostgreSQL/RabbitMQ](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43658275944).
 - Frontend #82 CI para `46cd9f0`: [run 43658438259](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43658438259), PASS; cuatro shards E2E, build API, suites unitarias, typecheck y lint pasaron. El run incompleto de SHA anterior fue cancelado y no se usa como evidencia.
 - Docs #120 CI del commit `9c56d9c`: [run 43658916417](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/actions/runs/43658916417), PASS. La revisión documental posterior `9a1a9fa` también pasó [CI run 43659877852](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/actions/runs/43659877852).
 
@@ -25,21 +25,41 @@ El emisor JWT de prueba acredita comportamiento de autorización en el entorno d
 
 ## Cobertura de rendimiento por servicio
 
-| Servicio | Evidencia de performance | Cobertura que falta para declarar medido |
+| Servicio | Evidencia de rendimiento obtenida | Runner y pruebas reales intentadas; brecha verificable |
 |---|---|---|
-| Catálogo | Benchmark Pricing previo usa fixture HTTP de Catálogo, no el provider real. | Carga del provider, SQL/EXPLAIN, buffers, pool, bytes y p50/p95/p99 bajo concurrencia sostenida. |
-| Pricing | [Benchmark sintético de Pricing](RESULTADOS_BENCHMARK_PRICING_G6_2026-11-14.md): PostgreSQL 16 desechable, 100 muestras por caso, fixture de Catálogo; p50/p95/p99, consultas y dos planes EXPLAIN. | Throughput sostenido y bytes; conexiones de pool ocupadas; consultas Gateway/Catálogo reales y tamaño representativo de datos. No extrapolar. |
-| Combos | Sin benchmark de carga identificado en la evidencia de este PR antes del cierre. | Percentiles, throughput/concurrencia, HTTP/bytes, SQL/buffers/EXPLAIN, pool, timeout/recuperación. |
-| Inventario | Las suites aisladas prueban integración funcional con PostgreSQL/RabbitMQ, no rendimiento. | Medidas de carga con percentiles, throughput, consultas/planes, pool y recuperación. |
-| Promociones | Las suites aisladas prueban persistencia/contrato, no rendimiento. | Medidas de carga con percentiles, throughput, consultas/planes, pool y recuperación. |
-| Auditoría de precios | El benchmark Pricing no incluye la lectura del servicio Price Audit como endpoint de carga. | Medidas de endpoint, SQL/planes/buffers, pool, throughput y recuperación. |
-| Bulk | Sin benchmark de carga identificado en la evidencia de este PR antes del cierre. | Medidas de admisión/proceso/exportación, throughput, bytes, SQL/planes, pool y recuperación. |
-| Taxonomía | La E2E aislada Taxonomy/Catalog acredita integración, no rendimiento. | Medidas de endpoints taxonómicos con cardinalidades, p50/p95/p99, SQL/planes, pool y recuperación. |
-| Gateway | Las pruebas de routing/identidad acreditan comportamiento y autorización, no rendimiento. | Carga end-to-end, solicitudes/bytes, latencia/errores y upstreams concurrentes. |
+| Catálogo | Ninguna medida de endpoint Catalog aislada del cliente Pricing. | En run [43665450495](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43665450495), `Probar E2E aislado Taxonomy y Catalog` pasó funcionalmente con procesos/dependencias aisladas, pero no ejecuta un generador de carga ni exporta HTTP/SQL/pool/EXPLAIN; el benchmark Pricing usa solo fixture HTTP loopback. |
+| Pricing | Batch 1/20/100 SKU con PostgreSQL 16 desechable y fixture HTTP de Catálogo; y microbenchmark de token firmado local (detalles abajo). | Run [43665450495](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43665450495), job `Medir lotes de Pricing con PostgreSQL desechable`: no levanta HTTP Pricing/Catálogo juntos y no captura pool ocupado ni Gateway; sin carga sostenida del servicio. |
+| Combos | Sin percentiles ni throughput. | Run [43665450495](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43665450495), job `Probar integración de Combos con PostgreSQL, RabbitMQ y Catalog desechables`: proceso y dependencias reales, pruebas funcionales; el runner no instrumenta tasas/bytes/SQL/pool/EXPLAIN ni sostiene carga. |
+| Inventario | Sin percentiles ni throughput. | Run [43665450495](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43665450495), job `Probar integración de Inventory con PostgreSQL y RabbitMQ desechables`: E2E funcional; no existe en ese job una ventana de carga o export de SQL/pool/planes. |
+| Promociones | Sin percentiles ni throughput. | Run [43665450495](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43665450495), job `Probar persistencia de Promotions con PostgreSQL TLS`: E2E funcional aislado; sin generador de carga sostenida ni captura de métricas HTTP/SQL/pool. |
+| Auditoría de precios | Sin carga a endpoint Price Audit. | Run [43665450495](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43665450495), job `Probar persistencia y mensajería de Pricing y Price Audit`: comprueba integración funcional, pero no emite series de latencia/throughput/bytes, SQL dominante o pool. |
+| Bulk | Sin percentiles ni throughput. | Run [43658275944](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43658275944), suite PostgreSQL/RabbitMQ desechables: prueba integración y proceso; no recoge series de carga HTTP, métricas SQL/EXPLAIN ni pool. |
+| Taxonomía | Sin métricas de endpoint Taxonomy. | Run [43665450495](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43665450495), jobs `Probar integración de Taxonomy con PostgreSQL desechable` y `Probar E2E aislado Taxonomy y Catalog`: E2E funcional; no hay capturador de concurrencia, percentiles, bytes, SQL/buffers o pool. |
+| Gateway | Sin throughput ni latencias sostenidas. | Run [43665450495](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43665450495), job `Probar E2E Gateway → Inventory → PostgreSQL 17`: upstream real y ruta integrada, pero no inyecta carga sostenida ni mide solicitudes/bytes/timeout/recovery concurrente. |
+
+Los runners de Actions sí disponen de Docker y levantaron estas dependencias; por tanto Docker Desktop local no es un impedimento. La brecha concreta de las filas indicadas es que los jobs de integración funcional citados no tienen generador de carga ni exportadores de las métricas señaladas. Esa carencia es alcance pendiente del harness de rendimiento, no un bloqueo de G7 ni de infraestructura externa.
+
+### Pricing: evidencia de componente de token y benchmark batch previo
+
+El run [43665450495](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43665450495) se ejecutó en `ubuntu-latest`, Linux x64, Node `v24.15.0`; el runner informó 4 vCPU y 16.8 GB. El artifact `pricing-component-benchmarks-c05154e3167a22bf46b64da8f7f28658e67f0b44` contiene `pricing-token-benchmark.json`, CSV y los logs de batch. No contiene credenciales reales ni datos productivos.
+
+El microbenchmark de token ejecutó 5 waves de warm-up y 100 waves medidas por nivel. Cada wave crea un servicio frío y lanza solicitudes simultáneas al mismo scope contra un emisor JWT firmado loopback con demora controlada de 4 ms. Observó una sola emisión por wave, sin fallos; mide únicamente `CatalogServiceToken → emisor local`, sin proceso HTTP de Pricing, PostgreSQL, RabbitMQ ni pool SQL.
+
+| Concurrencia de llamadas lógicas | Solicitudes lógicas | Emisiones al issuer | p50 | p95 | p99 | Solicitudes lógicas/s | Fallos |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 100 | 100 (1 por wave) | 5.180 ms | 5.653 ms | 6.661 ms | 190.86 | 0 |
+| 4 | 400 | 100 (1 por wave) | 5.094 ms | 5.466 ms | 5.623 ms | 783.89 | 0 |
+| 16 | 1,600 | 100 (1 por wave) | 5.147 ms | 5.409 ms | 5.640 ms | 3,121.85 | 0 |
+
+Estos resultados verifican que el singleflight colapsa emisiones simultáneas del mismo scope en cold start bajo esta demora sintética; no demuestran rendimiento de red G7 ni cambios de capacidad productiva. No se midió saturación o variabilidad entre runners.
+
+El benchmark batch de Pricing del mismo run se conserva como evidencia independiente y comparable con su propio flujo legacy: PostgreSQL 16 desechable, pool máximo 2, timeout SQL 2 s, fixture HTTP de Catálogo con 4 ms artificiales y 100 muestras por caso. En 100 SKU, por ejemplo, el flujo batch observó p50/p95/p99 de 8.17/9.78/12.35 ms y 2 SELECT + 1 llamada a Catálogo; el equivalente legacy observó 544.27/559.99/598.06 ms, 194 SELECT y 100 llamadas al fixture. En 20 SKU, batch hizo 2 SELECT y una llamada versus 38 SELECT y 20 llamadas del flujo legacy. Estos datos del log no son medición contra el provider real de Catálogo, Gateway ni una comparación de ramas `master` vs optimizada; el informe específico [Pricing 100 SKU](RESULTADOS_BENCHMARK_PRICING_G6_2026-11-14.md) conserva el antecedente aprobado.
 
 ## Cobertura de pantallas administrativas
 
 La matriz siguiente se trazó desde `src/app/routes/productRoutes.tsx`, hooks, composición de runtime, adapters y rutas HTTP. Los nombres de endpoint son sus prefijos/patrones; cada adapter determina query, método y parámetros. El Frontend verificó composición Combos con fetch de Gateway aislado. Es una prueba de red simulada y no una captura de Gateway activo. Para todo el tráfico por pantalla, las solicitudes/bytes/latencias no están disponibles; no se presentan como ceros.
+
+Intento reproducible revisado: el [run Frontend 43658438259](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43658438259) ejecutó cuatro shards E2E de navegador, pero su workflow no contiene request/response byte recorder ni export de muestras/percentiles. Por ello ese run verifica comportamiento, no rendimiento. El harness opt-in de esta ronda está en implementación y no tiene todavía un artifact enlazable en este corte; las celdas de abajo conservan esa limitación concreta y temporal, no un impedimento de infraestructura.
 
 | Pantalla / rutas | Hook(s) | Adapter / Gateway | Endpoint(s) | Servicio | Requests / bytes / tiempo |
 |---|---|---|---|---|---|
@@ -64,14 +84,14 @@ La matriz siguiente se trazó desde `src/app/routes/productRoutes.tsx`, hooks, c
 
 No hay mediciones de carga reales por pantalla en estos PR: p50/p95/p99, solicitudes HTTP, bytes, throughput y concurrencia sostenida están pendientes de un Gateway/servicios aislados instrumentados. El mapa anterior acredita trazabilidad de código y los casos de test especificados, no tiempos de runtime.
 
-## Límite del entorno aislado de esta auditoría
+## Ejecución aislada y límites de evidencia
 
-No se usaron tráfico productivo ni `.env.local`. El daemon Docker de esta estación no responde (`Docker Desktop is unable to start`); el servicio `com.docker.service` está detenido y el usuario actual no puede abrirlo para iniciarlo (`Cannot open 'com.docker.service' service`). La distribución WSL tampoco dispone de cliente Docker ni integración de Docker Desktop. Por eso no se ejecutó aquí un nuevo benchmark de nueve servicios ni de pantallas. Esta limitación no convierte los resultados de Pricing en evidencia de los servicios restantes.
+No se usaron tráfico productivo ni `.env.local`. Docker Desktop/WSL local no forma parte de las precondiciones para completar esta auditoría: la ejecución autorizada usa runners desechables de GitHub Actions, donde el job existente `pricing_batch_benchmark` ya verificó Docker y levantó PostgreSQL sintético. Esa ejecución acredita únicamente el alcance del benchmark que realmente ejecuta; no acredita por sí sola carga de los nueve procesos, RabbitMQ, métricas SQL/pool ni mediciones de pantallas.
 
-Las ejecuciones de CI en runners desechables podrán acreditar integración funcional y las mediciones existentes de Pricing. No acreditarán throughput o percentiles de los otros servicios si el workflow no los genera explícitamente.
+Los runs de CI funcional previos no son evidencia de throughput o percentiles. La cobertura de rendimiento solo se actualizará al descargar y vincular los artifacts JSON/CSV de los nuevos workflows opt-in, con su SHA, run, configuración y alcance. Hasta entonces, las tablas anteriores conservan el estado documentado antes de esos runs y no deben interpretarse como mediciones nuevas.
 
 ## Resultado de cierre
 
-- **Corregido:** wiring administrativo de Combos, replay acotado del POST lógico de lectura y compatibilidad de Pricing por modo están implementados en los SHA indicados; las suites locales reportadas pasan. CI completa queda pendiente.
-- **Medido:** solo las dimensiones expresamente reportadas arriba y en el informe de Pricing; la cobertura completa solicitada permanece pendiente.
-- **Bloqueado externamente:** concesión/grant real de G7 y homologaciones externas que resulten contractualmente necesarias. La ausencia de Docker local es una limitación del entorno de esta auditoría, no un bloqueo externo de G6.
+- **Corregido:** wiring administrativo de Combos, replay acotado del POST lógico de lectura, compatibilidad de Pricing por modo y singleflight de emisión técnica por scope están implementados. Backend SHA `c05154e` CI completa PASS en run `43665450495`; el reporte de token verifica una sola emisión por wave del mismo scope y cobertura de pruebas de fallo/aislamiento.
+- **Medido:** microbenchmark del cliente token y benchmark Pricing batch con PostgreSQL + fixture HTTP, según sus alcances separados; el resto de los servicios aún carece de un harness que produzca las métricas indicadas. Las pantallas administrativas siguen en fase de instrumentación browser/API controlada y no se atribuye latencia de provider.
+- **Bloqueado externamente:** solo grants reales de G7 y homologaciones de consumidores externos que requieran aceptación. Docker local no bloquea G6: los jobs de Actions citados corrieron con Docker y dependencias descartables. La cobertura integral sigue pendiente de trabajo interno de harness, no se clasifica como bloqueo externo.
