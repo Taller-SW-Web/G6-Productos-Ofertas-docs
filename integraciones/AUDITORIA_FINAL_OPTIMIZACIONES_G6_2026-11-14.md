@@ -168,7 +168,7 @@ Esta sección registra la continuación sobre los Draft PR existentes. Los resul
 
 | Repositorio | PR | Rama | HEAD revisado | Estado |
 |---|---:|---|---|---|
-| Backend | [#230](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/230) | `perf/optimizacion-integral-g6` | `d9499afba27cf8e9df7a43d902b6ec8597d6f112` | Abierto, Draft, mergeable; CI completa pasó en run 43687118060 |
+| Backend | [#230](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/230) | `perf/optimizacion-integral-g6` | `f8bfd59a12b98574e06b1d0d5374ab3efa89169f` | Abierto, Draft, mergeable; CI completa PASS en run 43690226304 |
 | Frontend | [#82](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/82) | `codex/perf-optimizacion-integral-g6` | `af514a5f455458ca2beeb2d55e58b656f50b8dcb` | Abierto, Draft, mergeable |
 | Docs | [#120](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/pull/120) | `docs/optimizaciones-integral-g6-contratos` | Se actualiza con este commit | Abierto, Draft; verificar mergeability después del push |
 
@@ -196,7 +196,7 @@ No se pudo ejecutar el nuevo workflow manual desde el PR: GitHub respondió HTTP
 | Gateway→Inventario | Exploratorio 43671406877: p95 62.322→42.834 ms | Mejora exploratoria; se conserva sin refactor |
 | Taxonomía | CI/E2E y artifacts de run 43687118060; no carga pareada específica | Cobertura funcional CI, no evidencia de rendimiento comparable |
 
-La solicitud de comparación pareada para Catálogo, Pricing individual y Combos POST queda **PARTIAL**: bloqueada por disponibilidad del workflow en la rama por defecto, no por fallo del harness de medición. No hay nuevos SQL/EXPLAIN/buffers/pool para esas filas; deben obtenerse del artifact del benchmark independiente cuando el workflow sea invocable. Estas métricas son aplicables a endpoints HTTP con persistencia, pero no están disponibles para las comparaciones citadas. No se cambió código funcional para alterar números.
+La situación de disponibilidad y medición de esta sección fue actualizada al cierre en «Resultados pareados finales» más abajo: el despacho fue probado sin merge y los perfiles de Catálogo y Pricing individual sí se obtuvieron; Combos quedó inconcluso tras dos intentos.
 
 ### Matriz frontend y alertas
 
@@ -217,3 +217,31 @@ Las 47/81 alertas por rama se clasifican con el artifact así: 45 `fixture-respo
 - **Pendiente externo:** grants reales de G7 requieren autorización de Seguridad; homologaciones externas permanecen pendientes según sus owners. No se modificaron grants ni se atribuye aceptación externa.
 
 **Resultado global: PARTIAL.** El ciclo de cascada se corrigió en el Draft PR y la CI final completa del backend pasó; Bulk y sus integraciones focalizadas también pasan, y el benchmark frontend fue clasificado sin forzar resultados. El run preexistente de Promotions aún no termina. Las mediciones pareadas de las tres posibles regresiones no pudieron iniciarse hasta que el workflow nuevo esté disponible en la rama por defecto. No hay merge ni despliegue.
+
+## Resultados pareados finales — cierre controlado 2026-11-15
+
+Esta actualización reemplaza los estados «pendiente por workflow no disponible» y «run Promotions activo» anotados en el corte anterior. Baseline fijado y validado: `4c40b31b8a12335d4018861ab6d94cfd69536d7b`; primer candidato: `e210f838d75d0dfe9402fd541bc1335d2a7978fa`; candidato final tras una corrección del harness de Combos: `f8bfd59a12b98574e06b1d0d5374ab3efa89169f`.
+
+### Desbloqueo y evidencia de Actions
+
+El primer despacho directo de `performance-g6.yml` devolvía HTTP 404 porque GitHub solo ofrece `workflow_dispatch` para workflows presentes en la rama por defecto. Se mantuvo `ci.yml` como punto de entrada existente y se llamó al workflow local de rendimiento por `workflow_call`; el modo manual `benchmark` salta los jobs habituales, valida referencias SHA y ejecuta solo el componente solicitado con `contents: read`. El despacho real `gh workflow run ci.yml --ref perf/optimizacion-integral-g6 -f mode=benchmark -f component=catalog -f baseline_sha=4c40...` creó [run 43689547875](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43689547875) para el SHA exacto `e210f838…`; los jobs no seleccionados quedaron omitidos y la consolidación mantuvo el alcance parcial. Esto prueba el mecanismo sin merge.
+
+| Escenario | Run / artefacto | Perfil pareado sobre el mismo runner | Clasificación |
+|---|---|---|---|
+| Catálogo, `GET /api/v1/productos/administracion?pagina=1&tamanio=20`, concurrencia 32 | [43689547875](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43689547875), artifact `catalog-admin-paired-e210f838d75d0dfe9402fd541bc1335d2a7978fa` (ID 14151324185; JSON/CSV por orden) | 1,000 muestras por perfil, dataset sintético de 1,000 productos, 10 warm-ups por nivel; alternancia baseline/candidato/candidato/baseline. p95 baseline 39.266/39.392 ms, candidato 37.965/38.986 ms; medias 39.329 vs 38.476 ms (-2.2%). Throughput por perfil 776.71/767.41 vs 777.99/765.27 req/s. Cero errores/timeouts; 4,000 consultas, shared blocks hit 56,000/read 0 y pool observado 4 al cierre. | **SIN REGRESIÓN CONFIRMADA**; diferencia pequeña, sin intervalo de confianza, no se afirma mejora estable. El dato histórico 32.448→45.086 ms era de runners distintos. |
+| Pricing individual, `GET /api/v1/precios/administracion/skus/G6-PERF-PRICING-INDIVIDUAL-001`, concurrencia 32 | [43689788655](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43689788655), artifact `pricing-individual-paired-e210f838d75d0dfe9402fd541bc1335d2a7978fa` (ID 14151409283; JSON/CSV por orden) | 1,024 muestras y 20 warm-ups por perfil; alternancia baseline/candidato/candidato/baseline, PostgreSQL 16 desechable, pool configurado 2, timeout 5 s. p95 baseline 39.116/34.86 ms, candidato 36.99/34.70 ms; medias 36.988 vs 35.845 ms (-3.1%). Throughput 927.98/991.78 vs 947.17/991 req/s. Cero errores/timeouts; 4,096 consultas en cada perfil (BEGIN/SELECT de precios/SELECT de vigencias/COMMIT), lecturas físicas de buffers 0, pool sin conexiones activas tras la ventana. La fixture intercepta providers expresamente; la ruta medida no los invoca. | **SIN REGRESIÓN CONFIRMADA**; la variación por orden es visible y no permite reclamar mejora causal. No es el batch de 100 SKU. El dato histórico 51.531→61.624 ms era de runners distintos. |
+| Combos, POST administrativo idempotente, concurrencia 32 | [43689949234](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43689949234), artifact de diagnóstico `combos-post-paired-e210f838d75d0dfe9402fd541bc1335d2a7978fa` (ID 14152176004); segundo intento [43690229090](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43690229090), artifact `combos-post-paired-f8bfd59a12b98574e06b1d0d5374ab3efa89169f` (ID 14151619605) | No se produjeron muestras utilizables ni percentiles. Primer intento: `pg_isready` aceptó readiness antes de que existiera `combos_test`; `psql` falló. Se corrigió una vez el probe para esperar una consulta SQL real. Segundo intento superó ese punto, pero falló `npm run test:e2e` (línea 297); PostgreSQL registró `operator does not exist: text = uuid` en el EXPLAIN de `pricing.prices` y rechazos de login de `catalog_app`. | **INCONCLUSO**. Límite de dos ejecuciones agotado; no se hizo otra corrección ni repetición. El fallo restante del harness/fixture debe diagnosticarlo el equipo backend antes de reabrir ese escenario. El antecedente 295.219→370.406 ms, de runners distintos, sigue siendo exploratorio. |
+
+La medición pareada Catálogo utilizó runner hospedado Azure `ubuntu-26.04`, PostgreSQL 17 desechable; Pricing usó runner hospedado `ubuntu-latest`, PostgreSQL 16. La comparación dentro de cada escenario sí comparte runner, dataset sintético y carga entre revisiones, pero no permite extrapolar a producción/Azure de servicio ni comparar niveles entre escenarios. No se generó EXPLAIN comparable utilizable para Combos; tampoco hay intervalos de confianza. No se modificó lógica comercial ni parámetros de producción.
+
+### SHA, CI y pendientes de cierre
+
+| Repo/PR | SHA final observado | CI |
+|---|---|---|
+| Backend #230 | `f8bfd59a12b98574e06b1d0d5374ab3efa89169f` | CI completa PASS en run [43690226304](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43690226304), incluido el job final de imágenes. |
+| Frontend #82 | `af514a5f455458ca2beeb2d55e58b656f50b8dcb` | CI [43673335632](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43673335632) y benchmark [43673337076](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43673337076) PASS, mismos SHA. No se repitieron. |
+| Docs #120 | `ba270b960589bc1c8313ce3d2727d51962d0ebce` (antes de esta actualización) | CI [43687592369](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/actions/runs/43687592369) PASS en ese SHA; debe validarse el commit documental final. |
+
+Pendientes finitos: (1) equipo backend debe diagnosticar el EXPLAIN `text = uuid`/credencial `catalog_app` y validar Combos antes de autorizar una futura medición; no quedan intentos en esta continuación. (2) Esta actualización documental requiere CI en su nuevo SHA. Grants efectivos de G7 y homologaciones externas siguen pendientes de sus owners; no se tocaron. Las métricas de otros servicios, las 81 rutas frontend y los restantes pendientes históricos quedan fuera del alcance actual.
+
+**Resultado global: PARTIAL.** El despacho independiente fue comprobado sin merge; Catálogo y Pricing individual tienen comparación pareada y no muestran regresión confirmada; Combos quedó inconcluso tras dos intentos limitados. No hay CI ni benchmark presentado como integral PASS por los escenarios no medidos.
