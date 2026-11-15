@@ -1,5 +1,21 @@
 # Auditoría final de optimizaciones G6 — 2026-11-14
 
+## Resumen ejecutivo vigente — cierre pre-merge 2026-11-15
+
+**Resultado global: PARTIAL.** Los tres PR continúan abiertos en Draft. No hubo merge ni despliegue. Este resumen y la sección final “Actualización vigente pre-merge” contienen el estado actual; las secciones previas son cortes históricos conservados por trazabilidad y no deben leerse como conclusiones vigentes cuando difieran de esta actualización.
+
+| PR | HEAD vigente | CI aplicable | Estado técnico de merge |
+|---|---|---|---|
+| Backend #230 | `437d40b82b95fc971dd73cb9e4e13a94367e1c45` | PASS, run [43722209652](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43722209652) | MERGEABLE; estado GitHub `UNSTABLE`, sin merge realizado. |
+| Frontend #82 | `437604956c2cd8797a8d9fd9974c5f1c789aafd3` | CI completa PASS, run [43724483327](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43724483327). | MERGEABLE; requiere aprobación (`REVIEW_REQUIRED`) y CI final. |
+| Docs #120 | SHA de publicación: el commit que añade esta actualización; su valor exacto está en el HEAD del PR y en la entrega final. | Se ejecutará una CI completa al publicar este cambio. | PR abierto, Draft; se verificará después del push. |
+
+**CI PASS** significa que los checks de código del SHA indicado finalizaron correctamente. **BENCHMARK PASS** solo indica que el escenario y artefactos terminaron correctamente; no demuestra mejora causal ni calidad productiva. **APTO PARA MERGE** es una evaluación técnica independiente y no implica que GitHub haya satisfecho revisiones/protecciones.
+
+Los escenarios pareados pendientes se cierran así: Bulk se ejecutó en un runner común con cuatro perfiles; la caída histórica extrema no se reprodujo, aunque aparece una diferencia menor e inconclusa. Frontend corrigió fixtures contractuales para reducir respuestas incompletas, con 17 alertas restantes; el conteo de Combos sigue inconcluso porque el settle de 10 ms deja fuera la mayoría de solicitudes por navegación. No se cambió lógica comercial ni se repitió el benchmark backend de Combos.
+
+**Vigencia del SHA documental:** un documento no puede incluir el hash final del commit que contiene su propia edición sin cambiar ese hash. La identificación exacta de Docs se registra externamente como el HEAD de PR #120 y en la entrega final; el commit de este texto es el que publica la actualización.
+
 ## Alcance y estado
 
 Esta evidencia sigue los Draft PR existentes: Backend #230 (`perf/optimizacion-integral-g6`, último benchmark limpio `9aaf4b123552dfbc74da879fa86fd819f06a2d47`; un harness HTTP ampliado está en ejecución sobre un SHA posterior al corte), Frontend #82 (`codex/perf-optimizacion-integral-g6`, SHA medido `af514a5f455458ca2beeb2d55e58b656f50b8dcb`) y Docs #120 (`docs/optimizaciones-integral-g6-contratos`). No crea ramas o PR sustitutos.
@@ -302,3 +318,50 @@ En el ciclo controlado de 100 navegaciones de Combos, el flujo/harness y las rut
 - **Cobertura de benchmark:** Price Audit y Bulk cuentan con datos HTTP por revisión, pero no con pareado en runner común; cualquier diferencia sigue exploratoria. Storage real no está conectado en el perfil Bulk. No se consumen más dispatches de performance en este cierre.
 
 **Resultado global: PARTIAL.** El workflow se pudo despachar por componente; la CI final Backend pasó; los escenarios pareados de Catálogo, Pricing individual, Combos POST y Promotions no reproducen las regresiones históricas como una degradación consistente. Price Audit/Bulk tienen métricas reales de HTTP/proceso con dependencias efímeras, pero runners separados; no sustentan causalidad. La evidencia frontend conserva alertas de fixtures y el aumento de llamadas de Combos no tiene causa demostrada. No se fuerza PASS integral.
+
+## Actualización vigente pre-merge — 2026-11-15
+
+Esta actualización supersede los estados de ejecución y conclusiones de las secciones históricas anteriores. Se mantienen las cifras antiguas para trazabilidad; en particular, el benchmark Bulk con runners separados (run `43695318499`) y el conteo frontend agregado 53→191 no son la última evidencia controlada.
+
+### HEAD, CI y PR
+
+| Repositorio / PR | SHA vigente | Validación de código | Estado observado |
+|---|---|---|---|
+| Backend #230 | `437d40b82b95fc971dd73cb9e4e13a94367e1c45` | CI PASS [43722209652](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43722209652); benchmark Bulk separado [43722229469](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43722229469). | Abierto, Draft, mergeable; GitHub reporta `UNSTABLE`. |
+| Frontend #82 | `437604956c2cd8797a8d9fd9974c5f1c789aafd3` | CI final PASS [43724483327](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43724483327); benchmark focalizado PASS [43724489799](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43724489799). | Abierto, Draft, mergeable; aprobación requerida. |
+| Docs #120 | Este commit publica la actualización; el SHA exacto se identifica en el HEAD del PR tras el push. | CI completa pendiente de la publicación de este commit. | Abierto, Draft; estado tras push pendiente. |
+
+No se atribuye `MERGEABLE` al cumplimiento de protección de rama. Frontend requiere aprobación humana; el check de validación final pasó. Backend y Docs no tienen protección de rama clásica reportada por la consulta, lo cual no descarta reglasets organizacionales. No se efectuó merge.
+
+### Backend — Bulk pareado
+
+El benchmark [run 43722229469](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43722229469) comparó baseline `4c40b31b8a12335d4018861ab6d94cfd69536d7b` con el código de servicio del candidato (HEAD PR `437d40b82b95fc971dd73cb9e4e13a94367e1c45`), en el mismo runner, orden baseline→candidato→candidato→baseline, 1,000 muestras por perfil y 10 warm-ups. Artifact de perfiles `14164957957`; resumen de selección `14165260192`. Los cuatro perfiles finalizaron PASS, sin errores/timeouts.
+
+| Perfil C32 | p50 ms | p95 ms | p99 ms | req/s | SQL | Buffer hits / reads | Pool peak |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Baseline 1 | 91.506 | 107.420 | 121.619 | 338.995 | 11,080 | 91,182 / 0 | 2 |
+| Candidato 1 | 93.024 | 110.228 | 125.572 | 337.798 | 11,082 | 91,206 / 0 | 2 |
+| Candidato 2 | 93.966 | 124.951 | 136.442 | 326.573 | 11,081 | 91,224 / 0 | 2 |
+| Baseline 2 | 92.123 | 110.288 | 125.977 | 338.640 | 11,080 | 91,137 / 0 | 2 |
+
+Promedio de p95: 108.854 ms baseline frente a 117.590 ms candidato; throughput medio: 338.82 frente a 332.19 req/s. La diferencia es moderada y en dirección desfavorable para el candidato, pero no reproduce la caída histórica de p95 144.899→504.264 ms y 279.10→146.17 req/s. No hubo errores/timeouts ni diferencia material de SQL, buffers o pool, y no se identificó una causa de código concreta. Clasificación: **INCONCLUSO; riesgo de latencia menor pendiente de interpretación**, no regresión confirmada. No se corrigió lógica de producto.
+
+El endpoint multipart mide admisión, persistencia/outbox y publicación RabbitMQ. PostgreSQL 17 y RabbitMQ son dependencias reales desechables; Storage está representado por un fixture HTTP. Esto no mide la finalización terminal de importaciones ni el proveedor Storage real. No se debe presentar como prueba de carga de ese flujo completo.
+
+### Frontend — fixtures y Combos
+
+Benchmark histórico de cobertura: [43673337076](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43673337076), artifact `14144894818`: 81 rutas, 14 familias. Revalidación focalizada con cobertura de rutas y 100 ciclos SPA de la familia Combos: [run 43724489799](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43724489799), artifact `14165459886`; baseline `a11e1728e4cf00eb236b6447b713e00b2d32ce00`, candidato `437604956c2cd8797a8d9fd9974c5f1c789aafd3`. Las cifras de alertas de esta revalidación sustituyen las 45 alertas iniciales: quedaron 17 respuestas incompletas, 1 estado vacío/validación esperada y 1 alerta de integración de umbrales. Las fixtures comunes añadidas usan los DTO/campos de OpenAPI y adapters existentes; las pruebas focalizadas y typecheck/lint están descritas en la entrega.
+
+Las 17 alertas residuales se localizan en 10 rutas de Catálogo (página de variantes inconsistente), 4 de Pricing (resolución de SKU desde Catálogo), 1 detalle de Price Audit, 1 selector de producto de Recommendations y 1 integración administrativa de umbrales de Inventario que sigue desconectada. No se inventaron respuestas satisfactorias ni se ocultaron errores. El estado esperado del formulario se conserva como tal. La operación de umbrales está documentada como `GET /api/v1/inventario/umbrales`, owner interno G6 Inventario; el adapter administrativo no está habilitado en el frontend. No hay evidencia para atribuirlo a G7.
+
+Combos — resultados de la comparación focalizada: baseline p50/p95/p99 11.2/33.8/42.9 ms, 123 requests, 109,527 bytes y 1 duplicado; candidato 14.3/31.2/38.5 ms, 102 requests, 92,577 bytes y 0 duplicados. Sin embargo, en 100 iteraciones solo 41 ciclos baseline y 34 candidato capturaron las tres solicitudes esperadas dentro del settle de 10 ms; los ciclos capturados contienen GET de categorías, productos administrativos y Combos. Por tanto, las sumas y bytes no son conteos completos por navegación y no pueden compararse con rigor con el agregado histórico 53→191. No se demostró N+1, retry ni polling redundante. Clasificación **INCONCLUSO**; no se cambió código de producto. La matriz de las 14 familias y el benchmark de 81 rutas se conservan en la sección histórica correspondiente; la revalidación no constituye una nueva corrida completa de 81 rutas.
+
+### Alcance del cierre y dependencias
+
+- Se reutiliza la evidencia disponible de Catálogo, Pricing individual/batch, Combos POST, Promotions, Price Audit, Inventario, Gateway y Taxonomía registrada anteriormente. No se repitió ninguno de esos escenarios.
+- Backend: CI final PASS en `437d40b...`; Bulk benchmark PASS como ejecución, pero la conclusión de rendimiento queda INCONCLUSO por la dirección moderada de los perfiles y ausencia de causa demostrada.
+- Frontend: CI final PASS (run `43724483327`); benchmark focalizado PASS como ejecución, con las limitaciones anteriores.
+- Docs: el hash final se obtiene del HEAD de PR #120 después de publicar este archivo; el CI correspondiente debe vincularse a ese SHA. Un informe que contiene su propio hash no puede hacerlo de forma autorreferencial.
+- Dependencias externas: concesiones/grants efectivos de G7 y homologaciones de otros consumidores siguen siendo responsabilidad de sus owners. No hay cambios en permisos ni evidencia de concesión. El cierre interno de este documento no las declara resueltas.
+
+**Estado documental vigente: PARTIAL.** La ejecución Bulk y las pruebas frontend finalizaron, pero la atribución causal de la diferencia Bulk, el conteo completo de llamadas Combos y parte de las fixtures siguen limitados. “CI PASS”, “BENCHMARK PASS” y “APTO PARA MERGE” permanecen estados separados; ninguno de los dos primeros autoriza el merge.
