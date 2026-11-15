@@ -5,8 +5,8 @@
 Esta evidencia sigue los Draft PR existentes: Backend #230 (`perf/optimizacion-integral-g6`, corrección en `59775363fc2c5ca8499b775f9872cb794097c2be`), Frontend #82 (`codex/perf-optimizacion-integral-g6`, corrección en `46cd9f0fafcd65b821148e4625e436ad8560c7e3`) y Docs #120 (`docs/optimizaciones-integral-g6-contratos`). No crea ramas o PR sustitutos.
 
 - Backend #230 CI completa: [run 43658275955](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43658275955), PASS. También pasaron [A1/A2](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43658275917) y las suites aisladas [Bulk/PostgreSQL/RabbitMQ](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43658275944). El job de benchmark Pricing fue omitido por ser opt-in; se conserva el benchmark aprobado anterior, no se extrapola.
-- Frontend #82 CI para `46cd9f0`: [run 43658438259](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43658438259), en ejecución al redactar esta revisión. El run incompleto de SHA anterior fue cancelado y no se usa como evidencia.
-- Docs #120 CI del commit previo `e00d011`: [run 43658428795](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/actions/runs/43658428795), PASS. Esta actualización requiere un nuevo run documental.
+- Frontend #82 CI para `46cd9f0`: [run 43658438259](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43658438259), PASS; cuatro shards E2E, build API, suites unitarias, typecheck y lint pasaron. El run incompleto de SHA anterior fue cancelado y no se usa como evidencia.
+- Docs #120 CI del commit `9c56d9c`: [run 43658916417](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/actions/runs/43658916417), PASS. La presente actualización requiere un nuevo run documental.
 
 La solicitud exige medidas de rendimiento con servicios reales, carga concurrente sostenida, percentiles p50/p95/p99, solicitudes/bytes, consultas/planes y conexiones. No se considera que una prueba funcional de integración equivalga a un benchmark.
 
