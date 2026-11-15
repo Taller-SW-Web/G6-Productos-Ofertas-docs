@@ -159,3 +159,61 @@ Los runs de CI funcional previos no son evidencia de throughput o percentiles. B
 - **Medido:** 21 variantes de carga HTTP reales comparan seis rutas/contextos en `master` `4c40b31` frente a candidato `9aaf4b1`, con request/response bytes, latencias, throughput y resultados SQL/pool/plan donde se indica. El microbenchmark de token y Pricing batch con fixture HTTP son evidencias separadas. Browser comparó las 14 familias y listas Catálogo 20/100/1,000 filas; las alertas de fixture limitan la cobertura funcional de pantalla.
 - **Pendiente internamente:** Promotions, Audit, Bulk, otros endpoints Gateway, y validación funcional completa/rendimiento útil de todas las pantallas administrativas. Los jobs citados se intentaron en runners Actions y fueron integración funcional sin generador/exportador requerido para esos servicios; el artifact browser tiene fixtures fallidos en 47/81 rutas por rama. No es bloqueo de Docker ni externo.
 - **Bloqueado externamente:** solo grants reales de G7 y homologaciones de consumidores externos que requieran aceptación.
+
+## Continuación controlada — cierre al 2026-11-15
+
+Esta sección registra la continuación sobre los Draft PR existentes. Los resultados históricos anteriores conservan su alcance y no se presentan como mediciones del HEAD final.
+
+### HEAD y estado de PR
+
+| Repositorio | PR | Rama | HEAD revisado | Estado |
+|---|---:|---|---|---|
+| Backend | [#230](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/230) | `perf/optimizacion-integral-g6` | `d9499afba27cf8e9df7a43d902b6ec8597d6f112` | Abierto, Draft, mergeable al corte; CI final en ejecución al registrar esta actualización |
+| Frontend | [#82](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/82) | `codex/perf-optimizacion-integral-g6` | `af514a5f455458ca2beeb2d55e58b656f50b8dcb` | Abierto, Draft, mergeable |
+| Docs | [#120](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/pull/120) | `docs/optimizaciones-integral-g6-contratos` | Se actualiza con este commit | Abierto, Draft; verificar mergeability después del push |
+
+### CI, ciclo de Actions y corrección del harness
+
+El run backend [43683463941](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43683463941), sobre `cd2b905afd76d88c44fb4bb4202b612e87696172`, finalizó **failure**: los dos jobs de Bulk (baseline y candidato) no superaron readiness por `AMQP_TEMPORARY_UNAVAILABLE` y el warmup del candidato recibió HTTP 503. Pricing, Promotions y Price Audit sí terminaron; los jobs dependientes posteriores quedaron omitidos por el encadenamiento. Los runs anteriores 43676507175 localizaron el fallo de Promotions en `ISOLATED_PERSISTENCE_CHECK_FAILED`/servicio 503; 43678318284 y 43680270775 localizaron Bulk en readiness `DATABASE_UNAVAILABLE`. Esos fallos históricos no se atribuyen automáticamente al HEAD nuevo.
+
+En `1bef79559db8158c1b04ad0f04bc695545b6930b` quedó corregida la espera de Bulk para reintentar readiness tanto para PostgreSQL como para RabbitMQ temporalmente no disponible, y registrar el cuerpo de respuesta de warmup. El run focalizado [43687118050](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43687118050) terminó **success** sobre el candidato `d9499af`; la integración histórica Bulk/RabbitMQ [43685621544](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43685621544) y su CI [43685621554](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43685621554) también pasaron sobre `1bef795`. Por tanto, no se hizo otra corrección funcional de Bulk. La duplicación de descubrimiento Bulk no se reprodujo en `cd2b905`/el candidato actual: el workflow excluía `.ci/**` del patrón de pruebas y cada artifact de Bulk identificó una suite; el bloqueo observado fue readiness.
+
+El commit `d9499af` separa los benchmarks manuales del workflow de CI habitual. `.github/workflows/performance-g6.yml` permite seleccionar componente, SHA baseline validado y paralelismo 1/2; aplica límites de tiempo, jobs independientes, limpieza y artifacts/diagnósticos con `always()`. Catálogo y Combos usan ejecución alternada en runner compartido. El resumen marca cobertura seleccionada como parcial y no declara PASS integral. `.github/workflows/ci.yml` conserva los jobs normales y añade una comprobación estática del nuevo workflow. Se validó localmente con `actionlint`, parseo YAML, prueba estática Node y `git diff --check`.
+
+No se pudo ejecutar el nuevo workflow manual desde el PR: GitHub respondió HTTP 404 porque `performance-g6.yml` aún no está disponible en la rama por defecto. No se fusionó el PR para habilitarlo, según el límite de autorización. El run CI final [43687118060](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43687118060) sobre `d9499af` y el run preexistente [43686094401](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43686094401) sobre `1bef795` estaban activos al corte; el segundo seguía en el job pareado de Promotions. No se relanzó ninguno ni se presume su resultado. La prueba manual fallida de dispatch no creó un run.
+
+### Matriz de cobertura backend
+
+| Servicio/escenario | Evidencia disponible en HEAD o comparación | Estado y pendiente concreto |
+|---|---|---|
+| Bulk | PostgreSQL/RabbitMQ desechables, run 43687118050, PASS; logs 43683463941 identifican 503 AMQP | Harness readiness corregido antes del HEAD; perfil HTTP comparativo independiente no ejecutado |
+| Promotions | Baseline/candidato HTTP y pareado del run preexistente 43686094401; persistencia previa falló en runs antiguos | Jobs HTTP terminaron bien; el pareado seguía activo al corte. No inferir métricas pareadas finales |
+| Price Audit | Artifacts baseline/candidato del run 43683463941 disponibles | Sin medición pareada independiente en nuevo workflow |
+| Pricing | Microbenchmark/batch del run previo exitoso; componente separado soportado por el workflow nuevo | No cubre el p95 de Pricing individual solicitado; harness no ofrece comparación revisionada para ese endpoint |
+| Catálogo administrativo | Exploratorio 43671406877: p95 32.448→45.086 ms, runners diferentes | No causal; pareado repetible pendiente por workflow no dispatchable |
+| Combos POST administrativo | Exploratorio 43671406877: p95 295.219→370.406 ms, runners diferentes | No causal; pareado repetible pendiente por workflow no dispatchable |
+| Inventario directo | Exploratorio 43671406877: p95 41.368→29.859 ms | Mejora exploratoria; se conserva sin refactor |
+| Gateway→Inventario | Exploratorio 43671406877: p95 62.322→42.834 ms | Mejora exploratoria; se conserva sin refactor |
+| Taxonomía | CI/E2E y artifacts de run 43687118060; no carga pareada específica | Cobertura funcional CI, no evidencia de rendimiento comparable |
+
+La solicitud de comparación pareada para Catálogo, Pricing individual y Combos POST queda **PARTIAL**: bloqueada por disponibilidad del workflow en la rama por defecto, no por fallo del harness de medición. No hay nuevos SQL/EXPLAIN/buffers/pool para esas filas; deben obtenerse del artifact del benchmark independiente cuando el workflow sea invocable. Estas métricas son aplicables a endpoints HTTP con persistencia, pero no están disponibles para las comparaciones citadas. No se cambió código funcional para alterar números.
+
+### Matriz frontend y alertas
+
+El benchmark [43673337076](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/43673337076) sigue siendo la evidencia para `af514a5f455458ca2beeb2d55e58b656f50b8dcb`: 81 rutas/14 familias, Chromium, mismas fixtures y flujo de navegación SPA, 100 observaciones por familia, 5 warmups. Es navegador con API interceptada y settle de 10 ms; no es carga Gateway/provider ni garantiza capturar llamadas que comiencen después de esa ventana.
+
+En Combos aumentaron las llamadas contadas 53→191 y los bytes de respuesta 36,770→173,877; p50/p95/p99 fueron 11.6/23.8/27.2→15.2/23.1/30.6 ms. Los contadores cubren el mismo flujo y harness en ambas ramas. Los paths observados fueron combos, categories y products (más unos pocos fallidos); los duplicados dentro de observación fueron 6→15. Esto confirma más solicitudes de navegador en el fixture, pero no demuestra N+1 del backend, polling/retry persistente ni degradación de proveedor. No se identificó en esta continuación un caller causal verificable que justifique un cambio frontend; el hallazgo queda exploratorio.
+
+Las 47/81 alertas por rama se clasifican con el artifact así: 45 `fixture-response-incomplete` (fixture incompleta), 1 `fixture-empty-state-validation` (estado esperado de formulario Combos nuevo), 1 `gateway-contract-unavailable` (endpoint/contrato no disponible para la vista de umbrales de Inventario), y 34 rutas sin alertas. No hubo error real de frontend ni dependencia externa clasificada; hubo una observación de consola 503. No se cambiaron respuestas para forzar PASS. Pendiente: completar la fixture para 45 rutas y homologar/disponer el contrato faltante de umbrales por el owner correspondiente.
+
+### Correcciones, evidencia y pendientes finitos
+
+- **Corregido:** readiness temporal de Bulk ya reintenta PostgreSQL y RabbitMQ y expone diagnóstico; el focused run 43687118050 pasa. No se tocaron expectativas comerciales ni aserciones.
+- **Corregido:** dependencia en cascada de benchmarks removida de CI normal; workflow independiente agregado, con selección y publicación de evidencia parcial.
+- **Sin regresión causal confirmada:** las diferencias exploratorias de Catálogo, Pricing individual y Combos POST proceden de runners distintos. Inventario y Gateway conservan sus cambios sin refactor.
+- **PARTIAL, pendiente interno de Actions:** obtener workflow `performance-g6.yml` en rama por defecto mediante el proceso de integración autorizado; luego ejecutar únicamente Catálogo, Pricing individual y Combos POST pareados y revisar SQL/pool/errors. Responsable: owner/coordinación del repo backend para habilitar el workflow; ejecución posterior del equipo G6.
+- **PARTIAL, pendiente interno de medición:** completar perfil comparativo HTTP para Bulk, Promotions y Price Audit si se requiere percentil por servicio. Los logs/CI existentes son funcionales y no reemplazan esas métricas. Responsable: equipo G6.
+- **PARTIAL, pendiente frontend:** completar fixtures de 45 rutas; resolver disponibilidad del contrato de umbrales con su owner. Responsable: equipo frontend para fixtures y owner del contrato para disponibilidad.
+- **Pendiente externo:** grants reales de G7 requieren autorización de Seguridad; homologaciones externas permanecen pendientes según sus owners. No se modificaron grants ni se atribuye aceptación externa.
+
+**Resultado global: PARTIAL.** El ciclo de cascada se corrigió en el Draft PR, Bulk y sus integraciones focalizadas pasan, y el benchmark frontend fue clasificado sin forzar resultados. La CI final del backend y un pareado ya activo no habían terminado al corte; las mediciones pareadas de regresiones no pudieron iniciarse hasta que el workflow nuevo esté disponible en la rama por defecto. No hay merge ni despliegue.
