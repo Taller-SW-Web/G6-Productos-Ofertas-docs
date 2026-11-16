@@ -271,6 +271,41 @@ paths:
         '403': [SCOPE_INSUFICIENTE]
         '500': [ERROR_INTERNO]
         '503': [SERVICIO_NO_DISPONIBLE]
+  /productos/administracion/{productoId}:
+    get:
+      tags: [Productos]
+      operationId: obtenerProductoAdministracion
+      summary: Obtener un producto para administración de Catálogo
+      description: >-
+        Contrato candidato para la ruta existente en Gateway y Catálogo.
+        Lee un producto por UUID, incluidos borradores e inactivos.
+        No aplica elegibilidad comercial ni admite parámetros de consulta.
+      x-status: implemented-candidate
+      x-required-role: GESTOR_COMERCIAL
+      x-gateway-operation: true
+      security: [{userBearer: []}]
+      parameters:
+      - {name: productoId, in: path, required: true, schema: {type: string, format: uuid}}
+      - {$ref: '#/components/parameters/CorrelationId'}
+      responses:
+        '200':
+          description: Detalle administrativo del producto.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ProductoAdministracionDetalle'}
+        '400': {description: 'Identificador, consulta o correlación inválidos', content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '401': {description: JWT humano ausente o inválido, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '403': {description: Identidad o rol no autorizado, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '404': {description: Producto inexistente, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '500': {description: Error interno, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '503': {description: 'Seguridad, Gateway o persistencia no disponible', content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+      x-error-codes:
+        '400': [VALIDACION]
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '404': [PRODUCTO_NO_ENCONTRADO]
+        '500': [ERROR_INTERNO]
+        '503': [SERVICIO_NO_DISPONIBLE]
   /productos/administracion/skus/resolver:
     post:
       tags: [Productos]
@@ -24039,10 +24074,60 @@ components:
         skuBase: {type: [string, 'null']}
         slug: {type: [string, 'null']}
         tieneVariantes: {type: boolean}
-        publicadoAlgunaVez: {type: boolean}
+        publicadoAlgunaVez:
+          type: [boolean, 'null']
+          description: El valor nulo indica historial desconocido y bloquea la corrección Q-06.
         creadoEn: {type: string, format: date-time}
         actualizadoEn: {type: string, format: date-time}
       required: [productId, catalogVersion, estado, nombre, descripcion, categoriaId, marcaId, tipoProductoId, skuBase, slug, tieneVariantes, publicadoAlgunaVez, creadoEn, actualizadoEn]
+    ProductoAdministracionDetalle:
+      allOf:
+      - {$ref: '#/components/schemas/ProductoResumenAdministracion'}
+      - type: object
+        required: [imagenes, atributos, perfilFisico, caracteristicasIdentificadoras]
+        properties:
+          elegibleCorreccionTipo:
+            type: boolean
+            description: >-
+              Disponible en el backend candidato. Verdadero indica borrador simple, sin hijos
+              persistidos y con historial explícito de que nunca se publicó. PATCH revalida
+              estas condiciones, la versión y el esquema de Taxonomía.
+          imagenes:
+            type: array
+            items:
+              type: object
+              required: [url, principal, posicion]
+              properties:
+                url: {type: string}
+                principal: {type: boolean}
+                posicion: {type: integer, minimum: 0}
+          atributos:
+            type: array
+            items:
+              type: object
+              required: [caracteristicaId, nombre, valorId, valor]
+              properties:
+                caracteristicaId: {type: string}
+                nombre: {type: string}
+                valorId: {type: [string, 'null']}
+                valor: {description: Valor JSON de la proyección de Catálogo.}
+          perfilFisico:
+            type: [object, 'null']
+            required: [pesoKg, dimensionesCm, actualizadoEn]
+            properties:
+              pesoKg: {type: [number, 'null'], exclusiveMinimum: 0}
+              dimensionesCm:
+                type: object
+                required: [largo, ancho, alto]
+                properties:
+                  largo: {type: [number, 'null'], exclusiveMinimum: 0}
+                  ancho: {type: [number, 'null'], exclusiveMinimum: 0}
+                  alto: {type: [number, 'null'], exclusiveMinimum: 0}
+              actualizadoEn: {type: string, format: date-time}
+          caracteristicasIdentificadoras:
+            type: array
+            uniqueItems: true
+            items: {type: string}
     RegistroAuditoriaPrecioAdministracion:
       type: object
       properties:

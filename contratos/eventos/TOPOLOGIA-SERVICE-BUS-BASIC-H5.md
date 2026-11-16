@@ -35,6 +35,8 @@ Conteo auditado contra AsyncAPI `0.6.0-rc.4`: 18 pares únicos productor→consu
 
 ## Cola nueva para operaciones HTTP de Promotions
 
+El [incremento candidato de Catalog](../../integraciones/CATALOGO-H5-CANDIDATO.md) materializa las entregas internas de Catalog por destino. La relación `api-gateway/bff` permanece fuera del mapa ejecutable hasta definir un handler aprobado.
+
 Esta cola responde a un flujo H5 HTTP asíncrono y no pertenece a los 18 pares productor→consumidor heredados de H4. Su existencia, como todo H5, es propuesta y no acredita aprovisionamiento ni implementación.
 
 | Cola candidata | Productor interno | Consumidor exclusivo | Mensajes y propósito |
