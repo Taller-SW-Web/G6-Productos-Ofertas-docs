@@ -1,3 +1,5 @@
+> **Estado:** los casos de bindings, grants AMQP y топología RabbitMQ de este archivo son regresiones/antecedentes contractuales H4. Los gates H5 se especifican en `PLAN-VERIFICACION-SERVICE-BUS-H5.md`; no se reinterpreta una prueba H4 como homologación o runtime H5.
+
 # Matriz de pruebas de contrato e integración — Productos y Ofertas
 
 **Contrato HTTP objetivo:** OpenAPI `0.6.0-rc.4` (candidata; no prueba publicación/runtime).

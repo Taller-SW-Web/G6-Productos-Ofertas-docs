@@ -1,3 +1,5 @@
+> **Nota de transición:** las menciones a RabbitMQ en esta especificación describen H4/compatibilidad heredada. Para mensajería nueva H5 rigen Service Bus Basic adoptado y su topología; las reglas de negocio aquí no dependen del transporte.
+
 # HU-003 — Gestión de productos (CRUD principal)
 
 **Responsable:** Gabriel Poma Gutierrez  

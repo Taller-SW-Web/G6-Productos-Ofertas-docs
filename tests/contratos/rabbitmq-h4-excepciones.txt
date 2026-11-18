@@ -1,0 +1,77 @@
+# Excepciones justificadas por archivo; no habilita una instrucción nueva H5.
+AGENTS.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+README.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+arquitectura/Arquitectura.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+arquitectura/decisiones/ACUERDOS-INTEGRACION-INTERNA-G6-H4.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+arquitectura/decisiones/POLITICA-SEGURIDAD-PROGRESIVA-G6.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+arquitectura/decisiones/REGISTRO_DEC_F.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+arquitectura/decisiones/rabbitmq.md | Documento/procedimiento de transporte H4 preservado como legado.
+arquitectura/operacion-rabbitmq.md | Documento/procedimiento de transporte H4 preservado como legado.
+arquitectura/operacion-service-bus-basic-h5.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+contratos/eventos/INVENTARIO-40-MENSAJES-H5.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+contratos/eventos/asyncapi.yaml | Documento/procedimiento de transporte H4 preservado como legado.
+contratos/eventos/catalogo-eventos.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+contratos/eventos/compatibilidad-rabbitmq-oracle.md | Documento/procedimiento de transporte H4 preservado como legado.
+contratos/eventos/rabbitmq-topologia.md | Documento/procedimiento de transporte H4 preservado como legado.
+contratos/http/Contrato_Api.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+contratos/http/PROPUESTA-OPERACIONES-CUPONES-H5.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+contratos/http/kit-integracion.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+contratos/http/openapi.yaml | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+contratos/pruebas/pruebas-contrato.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+datos/bulk/logical-model.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+datos/bulk/physical-model.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+datos/promotions/README.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+datos/promotions/logical-model.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+datos/promotions/physical-model.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+datos/promotions/validation-report.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+integraciones/ACUERDO_G1_G6_H4_2026-10-20.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+integraciones/ACUERDO_G5_G6_H4_2026-10-21.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+integraciones/ALINEACION_VENTAS.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+integraciones/AUDITORIA_FINAL_OPTIMIZACIONES_G6_2026-11-14.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+integraciones/CATALOGO-H4-H5-AUDITORIA.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+integraciones/CATALOGO-H5-CANDIDATO.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+integraciones/MATRIZ_INTERMODULAR_BACKEND.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+integraciones/transicion-rabbitmq.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+ops/postgres-runtime/guia-desarrollo-local.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+ops/rabbitmq/README-onboarding-rabbitmq.md | Documento/procedimiento de transporte H4 preservado como legado.
+requisitos/flujos/FLOW-003-gestion-productos-crud.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+requisitos/flujos/FLOW-004-gestion-variantes-skus.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+requisitos/flujos/FLOW-016-dashboard-alertas-stock.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+requisitos/hu/HU-003-gestion-productos-crud.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+requisitos/hu/HU-004-gestion-variantes-skus.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+requisitos/specs/SPEC-001-carga-exportacion-masiva-productos.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+requisitos/specs/SPEC-004-gestion-variantes-skus.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+requisitos/specs/SPEC-005-gestion-cupones-descuento.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+swagger/evidence/studio-2026-11-05.json | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+tests/contratos/PLAN-VERIFICACION-SERVICE-BUS-H5.md | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+tests/contratos/fixtures/asyncapi-0.6.0-rc.2-invariants.json | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+tests/contratos/fixtures/asyncapi-0.6.0-rc.3-approved-invariants.json | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+tests/contratos/test_asyncapi_oracle_topology.py | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+tests/contratos/test_rabbitmq_h5_documentation.py | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+tests/contratos/test_service_bus_h5_documentation.py | Referencia de contexto H4/compatibilidad/estado; no es una instrucción de implementación RabbitMQ para H5.
+tests/rabbitmq-aislamiento/README.md | Documento/procedimiento de transporte H4 preservado como legado.
+tests/rabbitmq-aislamiento/compose.recovery-reduced.yaml | Documento/procedimiento de transporte H4 preservado como legado.
+tests/rabbitmq-aislamiento/compose.yaml | Documento/procedimiento de transporte H4 preservado como legado.
+tests/rabbitmq-aislamiento/definitions.json | Documento/procedimiento de transporte H4 preservado como legado.
+tests/rabbitmq-aislamiento/run.ps1 | Documento/procedimiento de transporte H4 preservado como legado.
+tests/rabbitmq-aislamiento/test_isolation.py | Documento/procedimiento de transporte H4 preservado como legado.
+ux/mockups/MK-001/component-spec.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+ux/mockups/MK-001/plan.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+ux/mockups/MK-002/component-spec.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+ux/mockups/MK-003/component-spec.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+ux/mockups/MK-003/plan.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+ux/mockups/MK-003/tasks.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+ux/mockups/MK-004/component-spec.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+ux/mockups/MK-004/tasks.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+ux/mockups/MK-016/component-spec.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+ux/wireframes/_TEMPLATE.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+ux/wireframes/flows/WF-001-carga-exportacion-masiva-productos.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+ux/wireframes/flows/WF-003-gestion-productos-crud.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+ux/wireframes/flows/WF-004-gestion-variantes-skus.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+ux/wireframes/flows/WF-016-dashboard-alertas-stock.md | Referencia funcional o UX; el detalle del broker es H4 y no selecciona el transporte H5.
+tests/contratos/rabbitmq-h4-excepciones.txt | Manifiesto explícito de excepciones documentales.

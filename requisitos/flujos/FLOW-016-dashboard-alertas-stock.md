@@ -1,3 +1,5 @@
+> **Base de flujo:** el broker y transporte mencionados en este FLOW corresponden a H4. El evento funcional permanece separado de su transporte; H5 adopta Service Bus Basic para mensajería interna G6.
+
 # FLOW-016 — Dashboard analítico y alertas de stock
 
 ---

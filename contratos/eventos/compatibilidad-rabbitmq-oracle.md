@@ -1,3 +1,5 @@
+> **Clasificación: `LEGADO_H4`.** Este documento conserva decisiones/procedimientos de RabbitMQ del Hito 4 y compatibilidad del runtime existente. No es una instrucción para implementar H5; consulte la ADR y topología Service Bus Basic.
+
 # Matriz de compatibilidad RabbitMQ Oracle — AsyncAPI `0.6.0-rc.3`
 
 **Alcance:** correlacionar la auditoría Oracle del 2026-10-19, el contrato candidato y los pendientes de código/runtime. La fuente de ACL es `backend/ops/oracle/auditorias/2026-10-19_22-32-52_UTC/RABBITMQ.md`, HEAD leído `b3558d742eb010e06eae1b484371c0a97cdea641`. La auditoría es evidencia histórica y no describe necesariamente el estado actual del servidor. La documentación de esta matriz no modifica recursos ni permisos.
