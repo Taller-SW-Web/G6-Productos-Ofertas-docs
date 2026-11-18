@@ -2095,37 +2095,33 @@ La invalidación debe basarse en eventos o TTL explícito.
 
 ---
 
-# 29. C4 — Nivel 1: contexto actualizado
+# 29. C4 — Nivel 1: contexto actualizado H5
 
 ```mermaid
 flowchart LR
   gestor["Persona: Gestor comercial<br/>GESTOR_COMERCIAL"]
+  market["Marketplace"]
+  chatbot["Chatbot"]
+  retail["Retail"]
+  ventas["M1 / Ventas (G5)"]
+  postventa["M2 / Postventa (G5)"]
+  despacho["Despacho y Entrega"]
+  seguridad["Seguridad y Usuarios"]
+  apim["Azure API Management<br/>frontera HTTP externa objetivo H5; despliegue no acreditado"]
+  po["Productos y Ofertas<br/>Gateway G6 + bounded contexts"]
 
-  market["Sistema externo: Marketplace"]
-  chatbot["Sistema externo: Chatbot"]
-  retail["Sistema externo: Retail"]
-  ventas["Sistema externo: M1 / Ventas (G5)"]
-  postventa["Sistema externo: M2 / Postventa (G5)"]
-  despacho["Sistema externo: Despacho y Entrega"]
-  seguridad["Sistema externo: Seguridad y Usuarios"]
-
-  po["Sistema: Productos y Ofertas"]
-
-  gestor -->|"Administra catálogo, taxonomía, precios, promociones, combos e inventario"| po
-
-  market -->|"Consulta catálogo, precios, promociones y disponibilidad"| po
-  chatbot -->|"Consulta catálogo, precios, promociones, recomendaciones y disponibilidad"| po
-  retail -->|"Consulta oferta y disponibilidad; reporta incidencias físicas autorizadas"| po
-
-  ventas -->|"Reserva, confirma consumo, libera, concilia y otros reintegros contractuales"| po
-  postventa -->|"Consulta disponibilidad detallada; invoca reintegro físico F3"| po
-  po -->|"Resultados de inventario y cupones"| ventas
-  po -->|"Resultados de disponibilidad y reintegro"| postventa
-
-  despacho -->|"Consulta datos físicos por SKU"| po
-
-  po -->|"Valida identidad, roles e introspección de operaciones sensibles"| seguridad
+  gestor -->|"Backoffice"| apim
+  market -->|"HTTPS autenticado"| apim
+  chatbot -->|"HTTPS autenticado"| apim
+  retail -->|"HTTPS autenticado"| apim
+  ventas <-->|"HTTPS autenticado; homologación pendiente"| apim
+  postventa <-->|"HTTPS autenticado; homologación pendiente"| apim
+  despacho -->|"HTTPS autenticado"| apim
+  apim <-->|"HTTPS hacia Gateway G6"| po
+  po -->|"Valida identidad y autorización local"| seguridad
 ```
+
+En C4 nivel 2, APIM es la frontera externa y Gateway G6 es su siguiente salto. Service Bus Basic aparece solo dentro de G6. APIM no se presenta como desplegado y las autorizaciones/grants siguen pendientes.
 
 ---
 
@@ -2142,10 +2138,11 @@ flowchart TB
   dispatch["Despacho"]
   security["Seguridad y Usuarios"]
 
-  subgraph module["Productos y Ofertas"]
+  apim["Azure API Management<br/>frontera externa objetivo H5; despliegue no acreditado"]
+
+  subgraph module["Productos y Ofertas — G6"]
     fe["React SPA"]
-    ingress["Ingress / Reverse Proxy"]
-    gateway["API Gateway / BFF"]
+    gateway["API Gateway / BFF G6"]
 
     taxonomy["taxonomy-svc"]
     catalog["catalog-svc"]
@@ -2163,15 +2160,15 @@ flowchart TB
   end
 
   gestor -->|"Usa backoffice"| fe
-  fe -->|HTTPS| ingress
-  market -->|HTTPS lectura/evaluación| ingress
-  chatbot -->|HTTPS lectura/evaluación| ingress
-  retail -->|HTTPS lectura + incidencias físicas| ingress
-  sales -->|HTTPS comandos y consultas de pedido| ingress
-  postventa -->|HTTPS consulta detallada y reintegro F3| ingress
-  dispatch -->|HTTPS datos físicos| ingress
+  fe -->|HTTPS autenticado| apim
+  market -->|HTTPS autenticado| apim
+  chatbot -->|HTTPS autenticado| apim
+  retail -->|HTTPS autenticado| apim
+  sales -->|HTTPS autenticado; homologación pendiente| apim
+  postventa -->|HTTPS autenticado; homologación pendiente| apim
+  dispatch -->|HTTPS autenticado| apim
 
-  ingress --> gateway
+  apim -->|HTTPS autenticado| gateway
 
   gateway --> taxonomy
   gateway --> catalog
@@ -2191,7 +2188,6 @@ flowchart TB
   inventory <--> mq
   bulk <--> mq
   gateway <--> mq
-  sales <-->|"HTTPS autenticado vía APIM/Gateway; homologación G5 pendiente"| ingress
 
   taxonomy -->|"taxonomy schema"| db
   catalog -->|"catalog schema"| db

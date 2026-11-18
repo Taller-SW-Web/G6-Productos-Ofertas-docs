@@ -2,27 +2,28 @@
 
 ## Estado del transporte por hito
 
-Este catálogo mantiene los 40 mensajes lógicos de AsyncAPI H4. La topología y transporte asociados a RabbitMQ se conservan como H4 histórico. H5 propone cambiar solo la infraestructura entre servicios G6; no cambia por sí misma los nombres, schemas, `operation_id`, idempotencia ni ownership de negocio y no sustituye el AsyncAPI canónico. El mapeo H5 por destinatario y mensaje está en [inventario de 40 mensajes](./INVENTARIO-40-MENSAJES-H5.md).
+Este catálogo conserva los **40 mensajes lógicos** de AsyncAPI H4 como referencia funcional. G6 adoptó `Azure Service Bus Basic` exclusivamente para la mensajería interna H5 (`ADOPTADA_G6`). Esta adopción no afirma implementación, aprovisionamiento, autorización G7, homologación G5, runtime probado ni despliegue. El mapeo H5 por destinatario y mensaje está en el [inventario de 40 mensajes](./INVENTARIO-40-MENSAJES-H5.md); no existe todavía un AsyncAPI H5 definitivo homologado.
 
-Para H5, `message_id` identifica la entrega lógica y se reutiliza en el reintento de la misma entrega; `operation_id` identifica la operación funcional idempotente; `correlation_id` enlaza la secuencia. Una copia fan-out tiene registro de entrega/reintento independiente por destinatario. Basic no ofrece deduplicación del broker, por lo que Inbox persistente es requisito propuesto, no implementación acreditada.
+Las reglas funcionales compartidas no dependen del broker: `message_id` identifica una entrega; redeliveries de la misma entrega conservan esa identidad; `operation_id` identifica la operación idempotente cuando aplique; `correlation_id` enlaza la secuencia; una copia fan-out tiene control de entrega por destinatario. La Inbox persistente evita repetir efectos; es un patrón requerido, no prueba de implementación.
 
-**Fuente de verdad:** [`asyncapi.yaml`](asyncapi.yaml)
-**Topología física:** [`rabbitmq-topologia.md`](./rabbitmq-topologia.md)
+**Contrato funcional de origen H4:** [`asyncapi.yaml`](asyncapi.yaml). Su servidor, bindings y topología RabbitMQ no autorizan infraestructura H5.
+**Topología objetivo H5:** [Azure Service Bus Basic](./TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) (diseño objetivo, aprovisionamiento e implementación pendientes).
+**Topología RabbitMQ H4:** [`rabbitmq-topologia.md`](./rabbitmq-topologia.md), referencia física histórica `LEGADO_H4`.
 
-## Reglas comunes
+## Reglas físicas H4 (históricas; no derivar configuración H5)
 
 ```text
 delivery = at-least-once
 publisher confirms = obligatorio
 consumer ack = manual
-deduplicación = message_id
-idempotencia de negocio = operation_id cuando aplique
 routing key = nombre lógico del mensaje
 ```
 
+Publisher confirms, ACK manual, exchanges, colas y routing keys son detalles H4. En H5 el SDK y settlement de Service Bus se rigen por la [topología adoptada objetivo](./TOPOLOGIA-SERVICE-BUS-BASIC-H5.md); no están acreditados como implementados.
+
 ## Mensajes
 
-**Alcance editorial:** esta tabla refleja **40 mensajes lógicos** y **40 canales** de la candidata AsyncAPI `0.6.0-rc.3`. Esta candidata reconcilia únicamente nombres de infraestructura base con la observación Oracle histórica; conserva mensajes, operaciones y claves comerciales de `0.6.0-rc.2`. El antecedente `0.5.0` contenía 39 mensajes. Los estados `stable`, `closed` y `provisional` describen contratos, **no** prueban publicación efectiva ni conformidad E2E.
+**Alcance editorial:** esta tabla refleja **40 mensajes lógicos** y **40 canales** de la candidata AsyncAPI `0.6.0-rc.3`. La versión `0.6.0-rc.4` reconcilia únicamente nombres de infraestructura base con la observación histórica; conserva los 40 mensajes y contratos funcionales. El antecedente `0.5.0` contenía 39 mensajes. Los estados `stable`, `closed` y `provisional` describen contratos, **no** prueban publicación efectiva ni conformidad E2E.
 
 | Nombre | Tipo | Productor | Consumidores | Estado |
 |---|---|---|---|---|
@@ -67,9 +68,11 @@ routing key = nombre lógico del mensaje
 | `taxonomy.master.deactivation.rejected` | `result` | `taxonomy-svc` | catalog-svc | `internal-provisional` |
 | `taxonomy.product-type-schema.changed` | `event` | `taxonomy-svc` | catalog-svc | `internal-provisional` |
 
-## Retry y DLQ
+## Retry y DLQ — mecanismo RabbitMQ H4 histórico
 
-**Gate bloqueado — NO APROBADO / NO APROVISIONADO / NO HOMOLOGADO.** `po.retry.x`, `po.dlx.x`, las colas `<cola>.retry` y `<cola>.dlq`, y el flujo de reintentos se conservan únicamente como diseño candidato. No se activan políticas ni permisos runtime. Las alternativas A/B/C no se adoptan.
+**Solo H4:** `po.retry.x`, `po.dlx.x`, las colas `<cola>.retry` y `<cola>.dlq` y sus procedimientos quedan en la referencia RabbitMQ histórica. No activarlos ni usarlos para construir H5. Para H5, consultar la semántica de Peek-Lock, settlement y DLQ documentada para Service Bus Basic; su implementación y aprovisionamiento siguen pendientes.
+
+El gate H4 de aislamiento sigue bloqueado: `NO APROBADO / NO APROVISIONADO / NO HOMOLOGADO`. No se afirman políticas ni permisos runtime H4.
 
 La recuperación con DLQ saturada permanece sin verificar: `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`. La existencia de texto contractual no acredita que estas pruebas hayan pasado en el broker real ni que haya recuperación. La asignación de `0.6.0-rc.3` a los nombres base implica que cualquier adopción futura de retry/DLX requerirá una versión candidata posterior.
 
@@ -83,15 +86,15 @@ Aplica específicamente a los comandos y resultados de inicialización:
 - `inventory.sku.initialization.completed`
 - `inventory.sku.initialization.rejected`
 
-### Reglas de identidad, transporte e idempotencia
+### Reglas de identidad e idempotencia (funcionales)
 
 1. **`operation_id` (Identidad de negocio de la preparación):**
    - Identifica la **PREPARACIÓN** lógica de larga vida entre Catálogo y el servicio dependiente (Pricing o Inventario).
    - Se genera en el alta inicial y **se conserva estrictamente** a lo largo de toda la vida de esa preparación, incluyendo cualquier recuperación manual autorizada.
 2. **`message_id` (Identidad de publicación y transporte):**
-   - Identifica una publicación o intento concreto a través de RabbitMQ.
-   - Toda redelivery técnica del mismo mensaje en la infraestructura de transporte conserva su `message_id` original y es deduplicada de forma ordinaria por el consumidor.
-   - Cuando Catálogo autoriza una recuperación manual excepcional tras un rechazo o umbral superado, **conserva la `operation_id` pero genera una nueva `message_id`** para la publicación Outbox hacia RabbitMQ.
+   - Identifica una entrega concreta en el transporte asíncrono; el broker no forma parte de la identidad de negocio.
+   - Toda redelivery técnica del mismo mensaje conserva su `message_id` original; el consumidor la deduplica de forma idempotente.
+   - Cuando Catálogo autoriza una recuperación manual excepcional tras un rechazo o umbral superado, **conserva la `operation_id` pero genera una nueva `message_id`** para el nuevo envío de Outbox.
 3. **`causation_id` (Correlación por intento y descarte de resultados stale):**
    - Cada comando `*.requested` tiene su propia `message_id`.
    - El resultado asíncrono correspondiente (`*.completed` o `*.rejected`) emitido por el servicio dependiente DEBE portar `causation_id = message_id` del comando `*.requested` que originó ese resultado.
@@ -126,7 +129,7 @@ Aplica específicamente a los comandos y resultados de inicialización:
 
 ## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
 
-**Decisión interna aprobada; objetivo `0.6.0-rc.1` (no desplegado).** La decisión D-INV-01 está adoptada; la implementación y las pruebas de sus flujos siguen pendientes. Los resultados tipados de rechazo son resultados de negocio válidos, no mensajes poison; los fallos técnicos siguen la política retry/DLQ.
+**`ADOPTADA_G6` para las invariantes internas; implementación y pruebas siguen pendientes.** La decisión D-INV-01 está adoptada; la implementación y las pruebas de sus flujos siguen pendientes. Los resultados tipados de rechazo son resultados de negocio válidos, no mensajes poison. La mención retry/DLQ que sigue corresponde al mecanismo heredado H4; no es instrucción de settlement H5.
 
 - `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
 - `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
@@ -138,6 +141,6 @@ Aplica específicamente a los comandos y resultados de inicialización:
 - Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
 
-## Addendum de eventos internos G6 H4
+## Addendum de eventos internos G6 H4 (transporte histórico)
 
 AsyncAPI `0.6.0-rc.4` tipa `pricing.price.changed`, `catalog.product.deactivated`, `catalog.sku.deactivated`, `inventory.stock.changed` y los tres eventos `catalog.bulk.upsert.*`, preservando `MessageEnvelope`, nombres/routing keys y exchanges físicos existentes. Las versiones de dominio (`product_version`, `sku_version`, `stock_version`, `price_version`) no son `schema_version` del envelope. `inventory.stock.changed` usa envelope v2 y refleja el snapshot emitido por Inventory para el par `(sku, location_id)`, incluidos `on_hand`, `reserved`, `blocked`, `available`, `estado` y `updated_at`; no hay versión global por SKU. Consumidores comerciales solo invalidan la proyección y consultan luego la disponibilidad comercial autoritativa; no agregan ubicaciones ni deciden con el snapshot. Pricing emite el cambio efectivo post-commit; Catalog invalida elegibilidad; Bulk informa resultado por fila. El cambio desde `GenericData` es incompatible y requiere despliegue coordinado antes de enviar a consumidores antiguos. No acredita implementación, publicación, homologación externa ni DLX.

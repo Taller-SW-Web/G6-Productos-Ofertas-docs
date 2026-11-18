@@ -1,3 +1,5 @@
+> **Nota H4:** referencias a identificadores RabbitMQ individuales describen el transporte heredado; `operation_id`/`message_id` del modelo no incorporan entidad de broker.
+
 # Modelo físico — `bulk` (`bulk-svc`)
 
 ## 1. Identificación

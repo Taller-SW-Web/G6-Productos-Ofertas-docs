@@ -1,4 +1,4 @@
-> **Base de flujo:** el broker y transporte mencionados en este FLOW corresponden a H4. El evento funcional permanece separado de su transporte; H5 adopta Service Bus Basic para mensajería interna G6.
+> **Transición H4→H5:** `inventory.stock.changed` y sus reglas de negocio son funcionales; su transporte se desacopla. El diagrama de reactividad H5 usa Azure Service Bus Basic interno G6, adoptado pero sin implementación/provisión acreditadas. RabbitMQ se conserva solo en el antecedente H4 de §4.4.
 
 # FLOW-016 — Dashboard analítico y alertas de stock
 
@@ -8,7 +8,7 @@
 
 - **Código:** FLOW-016
 - **Funcionalidad:** Dashboard analítico y alertas de stock
-- **Relacionado con:** HU-016 / SPEC-016 / WF-016
+- **Relacionado con:** HU-016 / SPEC-016 / WF-016 / ADR-H5-SERVICE-BUS-BASIC
 - **Responsable:** Miguel Ángel Taco Zavala
 - **Última actualización:** 2026-10-02
 
@@ -24,7 +24,7 @@ Representar la carga, agrupación y actualización de las proyecciones del dashb
 
 - Gestor comercial con capacidades de consulta de inventario
 - Sistema de Inventario (inventory-svc): autoridad del saldo, productor de `inventory.stock.changed` y owner del dominio de Inventario y del dashboard operativo
-- Broker RabbitMQ (transporte del evento según AsyncAPI/topología 0.4.0)
+- Mensajería interna G6 para el evento funcional (transporte objetivo H5: Azure Service Bus Basic; pendiente de implementación)
 - api-gateway/bff: consumidor técnico de `inventory.stock.changed`
 - Dashboard UI: interfaz de consulta/refresco sobre proyección de solo lectura
 
@@ -94,7 +94,7 @@ flowchart LR
     A5 --> FIN
 ```
 
-### 4.3 Reactividad ante inventory.stock.changed
+### 4.3 Reactividad H5 ante inventory.stock.changed
 
 ```mermaid
 flowchart LR
@@ -104,14 +104,14 @@ flowchart LR
         A1["Productor: publicar inventory.stock.changed"]
     end
 
-    subgraph INTER["Broker RabbitMQ (transporte AsyncAPI 0.4.0)"]
+    subgraph BUS["Azure Service Bus Basic (H5; objetivo adoptado, no aprovisionado) — interno G6"]
         direction TB
         E1(("inventory.stock.changed"))
     end
 
-    subgraph BFF["api-gateway/bff (consumidor técnico)"]
+    subgraph PROJ["Consumidor/proyección interna G6 (owner y handler por verificar)"]
         direction TB
-        A2["Consumir y validar contra el contrato AsyncAPI 0.4.0"]
+        A2["Recibir y validar el evento funcional según contrato aplicable"]
         A3["Actualizar read model / proyección sin trasladar reglas de negocio de saldo"]
     end
 
@@ -142,7 +142,19 @@ flowchart LR
     A7 --> FIN
 ```
 
-### 4.4 KPIs de traslados por consulta
+### 4.4 Antecedente H4 — reactividad con RabbitMQ (no es el objetivo H5)
+
+El esquema siguiente conserva el transporte documentado por AsyncAPI/topología 0.4.0 en H4. Sus bindings y broker no autorizan el diseño H5.
+
+```mermaid
+flowchart LR
+    inv["inventory-svc: evento inventory.stock.changed"] --> rmq[("RabbitMQ H4 — legado")]
+    rmq --> bff["api-gateway/bff H4: consumidor técnico"]
+    bff --> proj["read model / proyección"]
+    proj --> ui["Dashboard UI: consulta/refresco"]
+```
+
+### 4.5 KPIs de traslados por consulta
 
 ```mermaid
 flowchart LR
@@ -169,7 +181,7 @@ flowchart LR
     B1 --> FIN
 ```
 
-### 4.5 Filtros y caso sin resultados
+### 4.6 Filtros y caso sin resultados
 
 ```mermaid
 flowchart LR
@@ -200,7 +212,7 @@ flowchart LR
 ## 5. Notas generales
 
 - **Solo lectura:** el dashboard no publica eventos de Inventario ni modifica saldos ni Kardex (HU-016 CA-10, SPEC-016 §4).
-- **Reactividad:** `inventory.stock.changed` es el evento funcional de actualización (SPEC-016 §4, HU-016 CA-07). inventory-svc es su productor; api-gateway/bff es su consumidor técnico (AsyncAPI/topología 0.4.0) y actualiza la proyección sin trasladar reglas de negocio de saldo; el Dashboard UI consulta y se refresca sin consumir RabbitMQ directamente (HU-016 CA-10).
+- **Reactividad H5:** `inventory.stock.changed` es el evento funcional de actualización (SPEC-016 §4, HU-016 CA-07), independiente del broker. El objetivo interno G6 lo transporta por Azure Service Bus Basic hasta un consumidor de proyección cuyo owner/handler debe verificarse; no se atribuye ese rol a Gateway por el AsyncAPI H4. La UI consulta/refresca la proyección y no consume el broker (HU-016 CA-10). Implementación y aprovisionamiento siguen pendientes.
 - **Triggers funcionales:** solo `inventory.stock.changed` acciona la actualización del dashboard; `inventory.stock.adjusted` no es trigger funcional de FLOW-016 aunque el BFF también lo consuma (SPEC-016/HU-016).
 - **Traslados:** no existe evento contractual de traslados; los KPIs se obtienen por consulta `GET /api/v1/inventario/traslados` y la recepción la ejecuta un gestor comercial autorizado en WF-015, no desde el dashboard (SPEC-016 §6). Un traslado con discrepancia no altera por sí mismo las unidades disponibles (HU-016 CA-11).
 - **Estados:** `available = max(on_hand - reserved - blocked, 0)`; `AGOTADO` cuando `available = 0`, `STOCK_BAJO` cuando `0 < available <= umbral_efectivo` y `DISPONIBLE` en el resto (SPEC-016 §3).

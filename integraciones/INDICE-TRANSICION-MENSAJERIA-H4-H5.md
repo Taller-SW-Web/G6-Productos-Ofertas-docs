@@ -122,4 +122,4 @@ Clasificar individualmente; no borrar evidencia técnica histórica ni coinciden
 
 ## Excepciones explícitas de la prueba documental
 
-La regresión H5 carga `tests/contratos/rabbitmq-h4-excepciones.txt`. Cada entrada tiene ruta exacta y justificación H4/compatibilidad. Esto permite referencias históricas justificadas sin prohibir indiscriminadamente la palabra RabbitMQ. Agregar excepción exige revisión y motivo concreto.
+La regresión H5 carga `tests/contratos/rabbitmq-h4-excepciones.txt`. Cada excepción queda limitada a una **línea literal exacta**, con ruta y justificación. No hay exclusiones por archivo ni por rótulos `LEGADO_H4`; la prueba siempre vuelve a examinar la línea y cualquier cambio o instrucción añadida exige revisión. La lista histórica proviene del inventario base de 75 documentos y cada referencia conserva su justificación contextual.

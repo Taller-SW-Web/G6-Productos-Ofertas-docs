@@ -1,3 +1,5 @@
+> **Alcance de evidencia:** las menciones RabbitMQ en este reporte identifican una integración/transporte no probado de H4; las pruebas SQL no acreditan consumers ni publicación de eventos H5.
+
 # Evidencia local — promotions-svc / #53
 
 Fecha: **2026-10-03**, America/Lima. Responsable: Axel Cueva. Estado: **VALIDADO LOCALMENTE; DESPLIEGUE COMPARTIDO PENDIENTE**. Rama de entrega: `cueva`. La implementación y su evidencia se conservaron íntegramente al retirar la rama auxiliar.

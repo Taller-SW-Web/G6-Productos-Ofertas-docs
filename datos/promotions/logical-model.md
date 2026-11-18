@@ -1,3 +1,5 @@
+> **Transición H4→H5:** las menciones a publicación de mensajes preservan el antecedente RabbitMQ H4. Persistencia, Inbox/Outbox, transacciones e idempotencia son independientes del broker.
+
 # Modelo lógico — Promociones (`promotions-svc`)
 
 Issue [#53](https://github.com/Taller-SW-Web/Productos-y-Ofertas-docs/issues/53). Responsable: Axel Cueva. Contexto: Promociones. Schema objetivo: `promotions`. Revisado contractualmente: 2026-10-12. Estado: **EN REVISIÓN BD/QA; migración 0004 aplicada en Supabase, backend no acreditado**.
