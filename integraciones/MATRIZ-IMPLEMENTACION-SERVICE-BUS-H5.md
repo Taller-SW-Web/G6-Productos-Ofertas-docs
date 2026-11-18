@@ -1,0 +1,103 @@
+# Matriz de implementación y seguimiento — Azure Service Bus H5
+
+**Estado:** especificación de seguimiento; no habilita recursos, contratos, grants, despliegues ni cortes.  
+**Revisión:** 2026-11-17. **Backend contrastado:** origin/master SHA 8d26885276d933171ff0b1866d6e23f02a959405. **Docs base:** origin/master SHA a1e00c1.
+**Autoridad:** ADR H5 y topología H5. Esta matriz concentra estados por flujo; no duplica la arquitectura ni el plan de migración.
+
+Fuentes normativas: [ADR-H5-SERVICE-BUS-BASIC.md](../arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md), [TOPOLOGIA-SERVICE-BUS-BASIC-H5.md](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md), [PLAN-MIGRACION-MENSAJERIA-H5.md](PLAN-MIGRACION-MENSAJERIA-H5.md), [MATRIZ-EXTERNOS-ASYNCAPI-H5.md](MATRIZ-EXTERNOS-ASYNCAPI-H5.md), [INVENTARIO-40-MENSAJES-H5.md](../contratos/eventos/INVENTARIO-40-MENSAJES-H5.md) y [contrato AsyncAPI H4](../contratos/eventos/asyncapi.yaml), solo como origen semántico. Evidencia parcial del piloto: [cierre Backend #234](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/docs/hito-5/CIERRE_PILOTO_234.md) y [ejecución Azure](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/docs/hito-5/EJECUCION_AZURE_SERVICE_BUS.md).
+
+## Reglas de uso y clasificación
+
+Actualizar el estado solo con SHA de Backend, rutas de código/migración/prueba, comando, resultado y fecha. Una mención contractual, clase, migración candidata o prueba unitaria no demuestra conexión runtime. PENDIENTE_VERIFICACION significa que debe inspeccionarse la fuente indicada antes de decidir. No inventar handlers, colas, owners ni flags.
+
+Estados: IMPLEMENTAR_AHORA (trabajo interno autónomo), IMPLEMENTAR_PARCIAL (frontera aislada), BLOQUEADO_ESPECIFICO (solo condición indicada), IMPLEMENTADO_PENDIENTE_PRUEBAS, VALIDADO_PILOTO (solo alcance Azure aislado), HABILITADO (operación demostrada en entorno nombrado).
+
+Service Bus Basic carece de topics/subscriptions. Una cola por destinatario es una candidata, no una cola existente. AsyncAPI H4 contiene 40 mensajes que se agrupan en 18 pares internos productor→consumidor; ni los mensajes ni esos pares son automáticamente colas o handlers. Las interacciones externas G5 usan HTTP autenticado según la matriz externa. Gateway/APIM no se modela como consumidor de cola: no hay handler aprobado. g6.promotions.commands es un flujo nuevo, fuera de los 18 pares.
+
+## Relaciones internas: 18 registros independientes
+
+Los nombres de cola se copian de la topología candidata vigente; todos permanecen candidatos hasta verificar aprovisionamiento y aprobación por ambiente. Los mensajes se asignan al consumidor únicamente cuando AsyncAPI H4 lo enumera como destinatario. Los owners se refieren a los bounded contexts propios; no implican aprobación externa.
+
+| ID | Productor → consumidor | Mensajes contractuales exactos para este consumidor | Cola candidata | Código/handler identificado en Backend | Wiring, Outbox/Inbox, migración y configuración | Pruebas y evidencia asociada a SHA | Dependencia, trabajo faltante y criterio de habilitación |
+|---|---|---|---|---|---|---|---|
+| R01 | Bulk → Catalog | catalog.bulk.upsert.requested | g6.catalog.from.bulk | Catalog: catalog-bulk.service.ts procesa Bulk; catalog-service-bus.ts y relay son candidatos H5. Asociación del handler a esta cola: PENDIENTE_VERIFICACION. | Inbox Catalog identificada; Outbox de Bulk, migración H5 y flag por destino: PENDIENTE_VERIFICACION. | Pruebas Catalog existentes no acreditan este wiring H5. SHA/caso de integración SB: PENDIENTE_VERIFICACION. | Castilla/Poma: confirmar envío y handler, resolver payloads de hasta 1 MiB frente al límite Basic 256 KB. Habilitar con entrega menor al límite o mecanismo aprobado, Inbox idempotente, recuperación y E2E. |
+| R02 | Bulk → Inventory | inventory.bulk.stock.adjust.requested | g6.inventory.from.bulk | Handler Inventory descrito como BLOCKED_CONTRACT en inventario previo; localizar/verificar al SHA actual. No se atribuye handler SB. | Wiring, Outbox, Inbox, migración, flag e identidad: PENDIENTE_VERIFICACION. | Sin evidencia H5 identificada al SHA base. | Castilla/Taco: bloqueo solo de esta operación. Desbloqueo con contrato resuelto, handler durable y pruebas de redelivery/DLQ/recuperación. |
+| R03 | Bulk → Pricing | pricing.bulk.price.apply.requested | g6.pricing.from.bulk | Pricing: inbox-consumer.ts contiene ruta Bulk, pero el inventario previo la reporta bloqueada; estado exacto del handler y transporte: PENDIENTE_VERIFICACION. | Inbox Pricing identificada en código; Outbox de Bulk, migración y configuración por cola: PENDIENTE_VERIFICACION. | Unitarias/flujo H4 no prueban SB. SHA y E2E H5: PENDIENTE_VERIFICACION. | Castilla/Vera: confirmar contrato de Bulk y completar operación. No activar hasta handler, persistencia e integración idempotente completos. |
+| R04 | Catalog → Bulk | catalog.bulk.upsert.completed; catalog.bulk.upsert.rejected | g6.bulk.from.catalog | Emisión Catalog y handler Bulk Service Bus: PENDIENTE_VERIFICACION. catalog-bulk.service.ts implementa procesamiento de entrada, no acredita este emisor. | Outbox por destino, Inbox Bulk, migraciones, flag e identidad: PENDIENTE_VERIFICACION. | No se identificó prueba H5 de extremo a extremo. | Poma/Castilla: confirmar publicación solo de resultados de esta operación; aceptar con estado terminal durable, correlation y replay sin duplicar resultado. |
+| R05 | Catalog → Combos | catalog.product.deactivated; catalog.sku.deactivated | g6.combos.from.catalog | No se identificó handler Service Bus H5 en Combos al SHA base. | Wiring, Outbox/Inbox/migraciones/flags e identidad: PENDIENTE_VERIFICACION. | Sin evidencia H5 identificada; SHA/pruebas: PENDIENTE_VERIFICACION. | Poma/Castilla: identificar handler propiedad de Combos y efectos idempotentes; probar cada evento, redelivery y rollback por destinatario. |
+| R06 | Catalog → Inventory | catalog.sku.deactivated; inventory.sku.initialization.requested | g6.inventory.from.catalog | Emisor SB Catalog y consumers de estos dos mensajes en Inventory: PENDIENTE_VERIFICACION. | Outbox Catalog por destino, Inbox Inventory, migraciones y configuración: PENDIENTE_VERIFICACION. | No se localizó adaptador SB de Inventory al SHA base. Prueba E2E: PENDIENTE_VERIFICACION. | Poma/Taco: verificar ambos handlers y contratos independientemente; habilitar con persistencia previa al complete e idempotencia bajo redelivery. |
+| R07 | Catalog → Pricing | catalog.sku.deactivated; pricing.product.initialization.requested | g6.pricing.from.catalog | Pricing: catalog-sku-deactivated.ts y pricing-initialization.ts. Config Service Bus y conexión exacta de ambos handlers: PENDIENTE_VERIFICACION. | Inbox presente en Pricing; migración candidata Outbox delivery existe. Wiring/outbox del emisor Catalog, flag/identidad por cola: PENDIENTE_VERIFICACION. | Pruebas unitarias SB presentes; piloto #234 cubre pricing.price.changed, no estos mensajes. Evidencia E2E por SHA: PENDIENTE_VERIFICACION. | Poma/Vera: verificar por separado baja SKU e inicialización; aceptar con efecto/replay único, correlación y resultado durable. |
+| R08 | Catalog → Promotions | catalog.product.deactivated; catalog.sku.deactivated | g6.promotions.from.catalog | No se identificó consumer Service Bus H5 en Promotions al SHA base; código de mensajería localizado allí corresponde a runtime H4. | Configuración, Outbox Catalog, Inbox/migración/identidad Promotions y wiring: PENDIENTE_VERIFICACION. | Sin prueba H5 para estos mensajes. | Poma/Cueva: resolver handlers de Promotions; no duplicar publicación comercial H4/H5. Habilitar cuando el servicio procese ambos eventos idempotentemente y rollback esté probado. |
+| R09 | Catalog → Taxonomy | catalog.master.deactivation.checked | g6.taxonomy.from.catalog | Consumer Taxonomy H5 y handler de respuesta: PENDIENTE_VERIFICACION. | Outbox Catalog, Inbox Taxonomy, migraciones, feature flag y managed identity: PENDIENTE_VERIFICACION. | Sin evidencia H5 localizada. | Poma/Lopez: verificar correlación de la barrera de baja; aceptar resultado durable, reintento y recuperación sin retroceder estado. |
+| R10 | Inventory → Bulk | inventory.stock.adjusted; inventory.bulk.stock.adjust.completed; inventory.bulk.stock.adjust.rejected | g6.bulk.from.inventory | Emisor Inventory y consumers Bulk Service Bus: PENDIENTE_VERIFICACION. | Outbox/Inbox, persistencia de respuesta, migración, flag e identidad: PENDIENTE_VERIFICACION. | Sin evidencia H5 localizada para las tres asignaciones. | Taco/Castilla: verificar semántica por mensaje y causalidad con R02; aceptar sin aplicar ajuste ni resultado dos veces. |
+| R11 | Inventory → Catalog | inventory.sku.initialization.completed; inventory.sku.initialization.rejected | g6.catalog.from.inventory | Consumer Catalog de resultado Inventory: PENDIENTE_VERIFICACION; no confundir con handler Catalog→Inventory. | Outbox Inventory, Inbox Catalog, migración, flag y permisos: PENDIENTE_VERIFICACION. | Sin evidencia H5 identificada. | Taco/Poma: confirmar que ambos resultados son terminales y correlacionados; probar recuperación y replay idempotente. |
+| R12 | Inventory → Combos | inventory.stock.changed | g6.combos.from.inventory | Consumer SB de Combos y emisor H5 Inventory: PENDIENTE_VERIFICACION. | Outbox por destino, Inbox, migraciones, flags e identidad: PENDIENTE_VERIFICACION. | No identificado test de integración SB al SHA base. | Taco/Castilla: mapear contrato a handler real; aceptar por destino con efecto único, DLQ/recovery y flag independiente. |
+| R13 | Inventory → Promotions | inventory.stock.changed | g6.promotions.from.inventory | Consumer SB de Promotions y emisor H5 Inventory: PENDIENTE_VERIFICACION. | Outbox por destino, Inbox, migraciones, flags e identidad: PENDIENTE_VERIFICACION. | No identificado test H5 al SHA base. | Taco/Cueva: confirmar uso de disponibilidad; aceptar procesamiento idempotente, permisos mínimos y apagado/rollback independiente. |
+| R14 | Pricing → Bulk | pricing.bulk.price.apply.completed; pricing.bulk.price.apply.rejected | g6.bulk.from.pricing | Emisor Pricing y consumer de resultados Bulk: PENDIENTE_VERIFICACION. | Outbox Pricing, Inbox Bulk, migraciones, feature flag y permisos: PENDIENTE_VERIFICACION. | Sin evidencia E2E H5 por SHA. | Vera/Castilla: resultados ligados a operación masiva exacta, durables y recuperables; no habilitar sin prueba de reentrega. |
+| R15 | Pricing → Catalog | pricing.product.initialization.completed; pricing.product.initialization.rejected | g6.catalog.from.pricing | Pricing tiene lógica de inicialización; handler Catalog para estos dos resultados y wiring de envío: PENDIENTE_VERIFICACION. Revisar catalog-service-bus.ts. | Inbox Catalog genérica existe; deduplicación semántica, Outbox Pricing, migraciones y flag: PENDIENTE_VERIFICACION. | Pricing tiene pruebas unitarias; no acreditan el consumer. SHA de E2E H5: PENDIENTE_VERIFICACION. | Vera/Poma: completar ciclo R07 y validar resultado terminal recuperable antes de habilitar. |
+| R16 | Pricing → Price Audit | pricing.price.changed | g6.price-audit.from.pricing | Pricing: service-bus-relay.ts/service-bus-deliveries.ts. Price Audit: messaging/service-bus-consumer.ts. Evidencia de Azure real en Backend #234. | Outbox SQL e Inbox/auditoría probados en laboratorio; la migración específica del piloto se aplicó en su base aislada. Configuración para recursos compartidos permanece PENDIENTE_VERIFICACION. Recursos del piloto estaban desplegados en el cierre; verificar su estado y permisos actuales antes de reutilizar. | VALIDADO_PILOTO únicamente: bundle Azure d6c2af3499c079788760d55329d75b5193c21f153a145a4c353991f66fd25eff; bundle de validación Nest 04edefaa99b16615ac750368d22c10728909abaa17ea0ee07e67afe26423dc26. El cierre indica publicación/CI del SHA oficial aún pendiente; no se afirma release de apps actuales. | Vera: reproducir contra recursos vigentes, establecer commit/CI oficial y configurar identidad/workloads compartidos por release aprobada. Habilitación requiere deploy concreto, smoke y rollback; el piloto no basta. |
+| R17 | Pricing → Promotions | pricing.price.changed | g6.promotions.from.pricing | No se identificó consumer SB H5 en Promotions al SHA base; su runtime localizado es H4. | Outbox Pricing existe parcialmente; Inbox Promotions, migración, flags y permisos por destino: PENDIENTE_VERIFICACION. | #234 no cubre Promotions. Pruebas H5/SHA: PENDIENTE_VERIFICACION. | Vera/Cueva: confirmar regla de negocio consumidora y evitar doble efecto con H4; solo activar tras E2E y rollback propios de Promotions. |
+| R18 | Taxonomy → Catalog | taxonomy.category.updated; taxonomy.product-type-schema.changed; taxonomy.characteristic-value.updated; taxonomy.master.deactivation.check.requested; taxonomy.master.deactivated; taxonomy.master.deactivation.rejected | g6.catalog.from.taxonomy | Catalog: catalog-taxonomy-message.ts y catalog-service-bus.ts. Handler de eventos Taxonomy e Inbox identificados; mapeo/wiring del relay para estos seis mensajes: PENDIENTE_VERIFICACION. | Inbox Catalog existe; Outbox Taxonomy, migración H5, flags e identidad por cola: PENDIENTE_VERIFICACION. | Unitarias de handler/bridge no acreditan entrega H5. E2E por mensaje/SHA: PENDIENTE_VERIFICACION. | Lopez/Poma: verificar cada evento contra AsyncAPI y wiring; aceptar secuencia de baja con correlación, replay idempotente y DLQ/recovery probados. |
+
+## Frontera externa G5 (separada de las colas internas)
+
+Los siguientes 13 mensajes son asignaciones históricas de AsyncAPI H4 a modulo-ventas; no son relaciones internas ni colas Service Bus. El destino H5 es HTTP autenticado por APIM/Gateway G6, sin acceso de G5 al namespace. El detalle contractual y de aceptación por mensaje permanece en la [matriz externa normativa](MATRIZ-EXTERNOS-ASYNCAPI-H5.md).
+
+| Dirección | Mensajes heredados | Transporte/estado | Desbloqueo y aceptación |
+|---|---|---|---|
+| Inventory → G5 | inventory.reservation.created; inventory.reservation.rejected; inventory.reservation.consumed; inventory.reservation.released; inventory.reservation.expired; inventory.consumption.completed; inventory.consumption.rejected | Transporte heredado H4 durante transición; HTTP H5 pendiente de homologación/autorización. Código, handlers HTTP, pruebas autenticadas y despliegue por operación: PENDIENTE_VERIFICACION. | Owner G5 + Inventory + G7: acuerdo contractual, grants aprobados, prueba E2E autenticada y corte/rollback verificados. |
+| G5 → Promotions | promotions.coupon.consumption.requested; promotions.coupon.restoration.requested | No usar cola externa; HTTP autenticado a G6. Contrato, scopes/grants y aceptación G5: PENDIENTE_VERIFICACION. | Owner G5 + Promotions + G7: operación HTTP homologada y autorizada, con idempotencia y prueba E2E. |
+| Promotions → G5 | promotions.coupon.consumption.completed; promotions.coupon.consumption.rejected; promotions.coupon.restoration.completed; promotions.coupon.restoration.rejected | HTTP de consulta de resultado durable propuesto; no crear entrega directa por broker a G5. Runtime autenticado y homologación: PENDIENTE_VERIFICACION. | Owner Promotions + G5 + G7: resultado durable observable por HTTP autenticado y secuencia comercial bilateral probada. |
+
+La propuesta de GET/operaciones de cupones está en PROPUESTA-OPERACIONES-CUPONES-H5.md y la cola g6.promotions.commands es interna al mismo bounded context; no sustituye la aceptación de G5/G7. Las dependencias externas bloquean solo estas fronteras, no el trabajo interno independiente.
+
+## Flujo H5 nuevo Promotions
+
+| ID / operación | Productor → consumidor | H4/H5, cola y fuentes | Código, persistencia, identidad y pruebas | Estado/dependencias/criterios |
+|---|---|---|---|---|
+| N01 admisión HTTP de consumo/restauración de cupón, worker y resultado consultable | Adapter HTTP Promotions → worker del mismo servicio | No corresponde a evento AsyncAPI H4. HTTPS autenticado → Service Bus interno; g6.promotions.commands candidata. ADR, topología y PROPUESTA-OPERACIONES-CUPONES-H5.md. | Handler, migraciones, Outbox/Inbox y wiring H5 al SHA base PENDIENTE_VERIFICACION. Se requiere flag cerrado, managed identity/RBAC, autorización G7 y pruebas durable/replay/DLQ. | IMPLEMENTAR_PARCIAL: preparar reglas internas aislables; BLOQUEADO_ESPECIFICO para exponer API hasta contrato aprobado, grants y recursos verificados. Aceptar 202 tras commit durable, GET autorizado, idempotencia/redelivery y E2E. |
+
+## Estado por contexto (no inferir de otros servicios)
+
+| Bounded context | Código observado en Backend SHA base | Lectura |
+|---|---|---|
+| Taxonomy | No se identificó adaptador SB en búsqueda del SHA; runtime heredado identificado como H4. | H5 PENDIENTE_VERIFICACION. |
+| Catalog | catalog-service-bus.ts, relay, handlers Taxonomy/Bulk, Inbox y migration/E2E candidates. | Implementación parcial; validar wiring y pruebas por fila. |
+| Pricing | relay, deliveries, Inbox consumers e initialization handlers; migration candidate. | Implementación presente; único piloto Azure reportado junto con Price Audit en alcance #234. |
+| Price Audit | consumer/config/pruebas Service Bus. | Código presente; Azure solo VALIDADO_PILOTO según alcance #234. |
+| Promotions | Runtime localizado pertenece a H4; g6.promotions.commands es diseño, no implementación acreditada. | H5 PENDIENTE_VERIFICACION. |
+| Combos | No se identificó adaptador SB en búsqueda del SHA base. | H5 PENDIENTE_VERIFICACION. |
+| Inventory | Runtime heredado H4; no se identificó adaptador SB H5 en SHA base. | H5 PENDIENTE_VERIFICACION. |
+| Bulk | Runtime heredado H4; no se identificó adaptador SB H5 en SHA base. | H5 PENDIENTE_VERIFICACION. |
+| Gateway/APIM | Entrada HTTP transversal; ningún handler de cola aprobado identificado. | No consumidor Service Bus. |
+
+## Fases y gates
+
+El detalle arquitectónico permanece en PLAN-MIGRACION-MENSAJERIA-H5.md. Orden de ejecución:
+
+1. Inventariar handlers conectados, contrato, schema, datos, flags, owner y tamaño por fila; actualizar SHAs. No inferir colas.
+2. Implementar primitives y persistencia por owner: transacción negocio+Outbox, Inbox, idempotencia, correlación, retry/DLQ y recovery. Gate: unitarias e integración local con redelivery.
+3. Reproducir Pricing→Price Audit del piloto #234 en SHA actual. Gate: evidencia Azure fechada y acotada al flujo, nunca generalizada.
+4. Cerrar Catalog por destinatario; resolver tamaño >256 KB antes de Bulk. Gate: E2E de cada entrega sin consumidores perdidos.
+5. Migrar pares internos restantes por dependencia causal; mantener H4 activo hasta prueba/corte autorizado. Gate: observabilidad, prueba de apagado y rollback por flujo.
+6. Implementar Promotions HTTP nuevo tras contrato y autorización; Gate: G7 grants, contrato homologado aplicable, persistencia durable y E2E autenticado.
+7. Corte por flujo y retiro global solo cuando no haya productores/consumidores H4 activos y todos los reemplazos estén demostrados.
+
+No ejecutar fases de implementación, Azure compartido, SQL remoto, activación o corte mediante esta matriz.
+
+## Datos pendientes para ejecución sin especulación
+
+- SHA y resultados actuales unitarios/integración/E2E/Azure de cada fila; confirmar wiring de todos los handlers.
+- Colas aprobadas/provisionadas por ambiente, IaC, namespace, RBAC e identidad administrada verificados.
+- Migraciones nuevas aprobadas y aplicadas por entorno, ownership/retención Inbox-Outbox y política de replay.
+- Flags con owner, métricas/alertas, despliegue oscuro, secuencia de corte y rollback.
+- Solución aprobada para payloads H4 mayores que el límite Basic.
+- Contratos/handlers faltantes de Bulk e inicialización Inventory y Taxonomy.
+- Homologación G5, OpenAPI HTTP publicado y scopes/grants G7 de operaciones externas.
+- Inventario de consumidores H4 activos por ambiente y evidencia de ausencia de publicación duplicada.
+
+## Contraste y discrepancias
+
+Docs origin/master SHA a1e00c1 adopta Service Bus Basic y clasifica RabbitMQ como legado H4. Backend origin/master SHA 8d26885276d933171ff0b1866d6e23f02a959405 contiene implementación parcial en Pricing, Price Audit y Catalog, además del piloto #234; no demuestra migración global, aprovisionamiento compartido ni producción. El checkout Docs preexistente estaba en rama docs/rabbitmq-adopcion-retry-dlx con numerosos cambios locales, incluidos AsyncAPI y operación RabbitMQ; dichos cambios no se usaron como norma ni se modificaron. Discrepancias nuevas se resuelven contra ADR adoptada, master y evidencia por SHA del owner.
+
+No se cambian AsyncAPI/OpenAPI ni fixtures H4. La matriz no afirma homologación, grant, despliegue o retiro de RabbitMQ.
