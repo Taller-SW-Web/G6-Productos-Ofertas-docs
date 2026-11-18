@@ -74,7 +74,7 @@ class TestRabbitMqH5Documentation(unittest.TestCase):
 
     def test_catalog_describes_rc4_typed_payload_compatibility(self):
         catalog = (ROOT / "contratos/eventos/catalogo-eventos.md").read_text(encoding="utf-8")
-        asyncapi = (ROOT / "contratos/eventos/asyncapi.yaml").read_text(encoding="utf-8")
+        asyncapi = (ROOT / "contratos/historico/h4/eventos/asyncapi.yaml").read_text(encoding="utf-8")
         self.assertIn("0.6.0-rc.4", asyncapi)
         self.assertIn("siete payloads antes representados con GenericData", asyncapi)
         self.assertIn("incompatible con consumidores antiguos", asyncapi)
@@ -142,8 +142,10 @@ class TestRabbitMqH5Documentation(unittest.TestCase):
     def test_historical_h4_and_contract_invariants_remain_referenced(self):
         index = INDEX.read_text(encoding="utf-8")
         asyncapi = (ROOT / "contratos/eventos/asyncapi.yaml").read_text(encoding="utf-8")
+        h4_asyncapi = (ROOT / "contratos/historico/h4/eventos/asyncapi.yaml").read_text(encoding="utf-8")
         self.assertIn("no autorizan implementación H5", index)
-        self.assertIn("rabbitmq:", asyncapi)
+        self.assertIn("rabbitmq:", h4_asyncapi)
+        self.assertNotIn("rabbitmq:", asyncapi)
         self.assertTrue((ROOT / "tests/contratos/test_asyncapi_oracle_topology.py").is_file())
 
 if __name__ == "__main__":

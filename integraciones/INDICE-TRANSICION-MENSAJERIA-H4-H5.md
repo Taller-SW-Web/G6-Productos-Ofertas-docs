@@ -1,6 +1,8 @@
 # Índice de transición de mensajería H4→H5
 
-**Estado:** inventario documental realizado sobre `origin/master` `f77c442`; PR #119 fusionado (`a53ed842`). La búsqueda cubre menciones textuales, variables y herramientas, colas/exchanges, túneles y fixtures en Markdown, YAML, JSON, scripts y documentación UX. AsyncAPI H4 y fixtures se preservan íntegros.
+**Estado contractual actual:** OpenAPI/AsyncAPI canónicos `0.7.0-rc.1`, `SEMIFINAL_G6`; HTTP externa pendiente de homologación. H4 se verifica desde `contratos/historico/h4/` y sus hashes SHA-256. El inventario de 40 mensajes es trazabilidad H4, no conteo de H5.
+
+**Estado:** inventario documental realizado sobre `origin/master` `f77c442`; PR #119 fusionado (`a53ed842`). La búsqueda cubre menciones textuales, variables y herramientas, colas/exchanges, túneles y fixtures en Markdown, YAML, JSON, scripts y documentación UX. AsyncAPI H4 y fixtures se preservan íntegros. Snapshots byte por byte: `contratos/historico/h4/http/openapi.yaml`, `contratos/historico/h4/eventos/asyncapi.yaml`; hashes en `contratos/historico/h4/SHA256SUMS`.
 
 ## Decisión y estados
 
@@ -123,3 +125,8 @@ Clasificar individualmente; no borrar evidencia técnica histórica ni coinciden
 ## Excepciones explícitas de la prueba documental
 
 La regresión H5 carga `tests/contratos/rabbitmq-h4-excepciones.txt`. Cada excepción queda limitada a una **línea literal exacta**, con ruta y justificación. No hay exclusiones por archivo ni por rótulos `LEGADO_H4`; la prueba siempre vuelve a examinar la línea y cualquier cambio o instrucción añadida exige revisión. La lista histórica proviene del inventario base de 75 documentos y cada referencia conserva su justificación contextual.
+
+
+## Baseline semifinal H5
+
+OpenAPI y AsyncAPI canónicos son `0.7.0-rc.1` (`SEMIFINAL_G6`), pendientes de homologación externa según cada interfaz. El snapshot H4 conserva las versiones `0.6.0-rc.5` y `0.6.0-rc.4`, referencias relativas y las pruebas RabbitMQ correspondientes. La suite H5 se ejecuta en `tests/contratos/test_h5_semifinal_contracts.py`; no acredita implementación, grants, performance, CI de despliegue ni habilitación.

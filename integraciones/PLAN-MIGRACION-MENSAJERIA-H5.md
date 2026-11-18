@@ -39,9 +39,9 @@ No mezclar el cierre académico con homologación externa no obtenida. Evidencia
 
 ## Estrategia de compatibilidad
 
-- No modificar destructivamente H4 AsyncAPI/OpenAPI ni documentación Oracle: crear candidatos H5 y registrar notas de transición.
+- No modificar snapshots ni evidencia H4; los contratos canónicos H5 se versionan como baseline semifinal independiente y los snapshots conservan referencias relativas.
 - La versión futura de AsyncAPI debe conservar nombres, schemas e IDs internos de negocio aprobados. Cambios de transporte son versionados; eliminar destinatario externo sin aprobación explícita rompe integración.
-- El OpenAPI futuro incluye nuevos endpoints asíncronos de promociones solo después de cerrar estados, seguridad, DTO y owner.
+- El OpenAPI canónico `0.7.0-rc.1` incorpora las cinco operaciones H5 como baseline semifinal G6; siguen pendientes la homologación externa aplicable, grants G7, implementación y pruebas antes de habilitar.
 - `g6.promotions.commands` es una cola nueva ligada a operaciones HTTP H5, no una sustitución ni parte del conteo de 18 relaciones internas heredadas de H4. Otras colas de flujos HTTP se inventarían al aprobar cada operación y handler.
 - TTL Basic: `DefaultMessageTimeToLive` no configurable y TTL máximo/default 14 días. Operaciones/Outbox SQL se conservan más allá del TTL; recuperar tras la indisponibilidad requiere cotejar Inbox, resultado y efectos del dominio, y replay autorizado con la misma clave idempotente solo si no hay efecto terminal confirmado.
 - El estado efectivo de reserva compara `expires_at` con reloj de Inventory. Si el estado persistido sigue `ACTIVA` pero el vencimiento se alcanzó, G5 no paga ni consume cupón. `ReservationExpirationService` existente materializa la transición; el endpoint de consulta no inicia un segundo worker.

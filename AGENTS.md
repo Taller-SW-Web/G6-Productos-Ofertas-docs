@@ -6,14 +6,16 @@ Para tareas de mensajería H5, la matriz de implementación Service Bus es la fu
 
 La arquitectura objetivo adoptada por G6 para Hito 5 es **Azure Service Bus Basic exclusivamente para mensajería interna entre bounded contexts G6**. Las integraciones externas usan HTTP autenticado a través de APIM/Gateway G6; contratos, homologación G5 y autorización G7 se verifican por separado. La adopción no demuestra recursos Azure aprovisionados, identidades/grants, implementación, pruebas runtime ni despliegue. Estados vigentes: `ADOPTADA_G6`, `PENDIENTE_APROVISIONAMIENTO_AZURE`, `PENDIENTE_IMPLEMENTACION`, `PENDIENTE_HOMOLOGACION_G5` y `PENDIENTE_AUTORIZACION_G7`. Un colaborador asumió la configuración de recursos Azure; esta asignación no es evidencia de provisión.
 
-RabbitMQ es arquitectura heredada H4. Su AsyncAPI/topología describen el contrato y la infraestructura H4 y pueden consultarse para preservar semántica de negocio e invariantes; **no derivar de allí colas, bindings, routing keys físicos, variables ni comandos para una implementación H5**. La compatibilidad transitoria aplica solo al runtime H4 existente y no autoriza desarrollar una infraestructura RabbitMQ nueva para H5. No inventar un AsyncAPI H5 definitivo ni declarar homologación externa.
+RabbitMQ es arquitectura heredada H4, preservada en [`contratos/historico/h4/eventos/asyncapi.yaml`](contratos/historico/h4/eventos/asyncapi.yaml). El AsyncAPI canónico [`contratos/eventos/asyncapi.yaml`](contratos/eventos/asyncapi.yaml) es la baseline semifinal H5 `0.7.0-rc.1` (`SEMIFINAL_G6`), pendiente de homologación externa donde aplique; no acredita implementación ni recursos. Service Bus Basic aplica solo a mensajería interna G6; consumidores externos usan HTTP autenticado.
+
+La matriz de ajustes de implementación Backend se mantiene en [`COMPATIBILIDAD-BACKEND-CONTRATOS-H5.md`](integraciones/COMPATIBILIDAD-BACKEND-CONTRATOS-H5.md); sus registros son incompatibilidades a corregir, no correcciones ya aplicadas.
 
 ### Orden de lectura para mensajería H5
 
 1. Este archivo y [`README.md`](README.md).
 2. [`ADR-H5-SERVICE-BUS-BASIC.md`](arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md) y [`TOPOLOGIA-SERVICE-BUS-BASIC-H5.md`](contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md).
 3. [`PLAN-MIGRACION-MENSAJERIA-H5.md`](integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md), [`MATRIZ-EXTERNOS-ASYNCAPI-H5.md`](integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md) y [`INVENTARIO-40-MENSAJES-H5.md`](contratos/eventos/INVENTARIO-40-MENSAJES-H5.md).
-4. Contrato funcional AsyncAPI H4 solo como origen semántico, junto con el [índice de transición H4→H5](integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md); sus `servers`, bindings y topología RabbitMQ no definen H5.
+4. Use el AsyncAPI H4 histórico solo como fuente de semántica y regresión; `servers`, bindings y topología RabbitMQ no definen el transporte H5.
 5. SPEC/HU/FLOW y contratos HTTP aplicables; revisar homologación externa y seguridad antes de alterar fronteras.
 
 ## Orden obligatorio de lectura

@@ -214,7 +214,7 @@ class TestServiceBusH5Documentation(unittest.TestCase):
             }
         )
         text = PROPOSAL.read_text(encoding="utf-8")
-        self.assertIn("requiere aprobación y alta en catálogo", text)
+        self.assertIn("está registrado en el catálogo de errores y sigue sujeto a homologación", text)
 
     def test_http_idempotency_and_replay_policy_are_explicit(self):
         text = PROPOSAL.read_text(encoding="utf-8")

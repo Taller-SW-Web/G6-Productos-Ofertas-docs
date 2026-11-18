@@ -1,7 +1,7 @@
 # Matriz de frontera externa H5 — AsyncAPI de G6 a HTTP
 
-**Estado:** auditoría de contrato H4 y propuesta de cambio H5; homologación externa y permisos pendientes.
-**Fuente principal:** `contratos/eventos/asyncapi.yaml` (`0.6.0-rc.4`, 40 mensajes) y `contratos/http/openapi.yaml` (`0.6.0-rc.4`).
+**Estado:** frontera externa propuesta en OpenAPI H5 `0.7.0-rc.1` (`SEMIFINAL_G6`); homologación y permisos efectivos siguen pendientes.
+**Trazabilidad de origen:** snapshot H4 `contratos/historico/h4/eventos/asyncapi.yaml` (`0.6.0-rc.4`, 40 mensajes). Frontera destino: OpenAPI H5 canónico `0.7.0-rc.1`, `SEMIFINAL_G6`, homologación G5/G7 pendiente; la mensajería externa directa por Service Bus queda excluida.
 
 ## Qué grupos realmente aparecen como productores/consumidores externos
 
@@ -11,14 +11,14 @@
 | G2 Despacho | `consultarDatosFisicos` por HTTP, acuerdos H-G2/D-G2 | Mantener HTTP, sin cambio de mensajería |
 | G3 Chatbot | ADR de integración sin eventos, consumo HTTP bajo demanda | Mantener HTTP |
 | G4 Retail | Lecturas/operaciones HTTP; conciliación offline requiere resolver divergencia G4/G5/G6 | No inventar cola directa ni alterar el ownership offline |
-| G5 Ventas/Postventa | Productor de 2 comandos Promotions y consumidor de 11 mensajes Inventory/Promotions según AsyncAPI | Migrar frontera externa a HTTP + consulta de estado, sujeto a aceptación G5; estado de reserva propuesto por GET `/api/v1/inventario/reservas/{reservaId}/estado` |
+| G5 Ventas/Postventa | Productor de 2 comandos Promotions y consumidor de 11 mensajes Inventory/Promotions según AsyncAPI | Migrar frontera externa a HTTP + consulta de estado, sujeto a aceptación G5; estado de reserva en baseline por GET `/api/v1/inventario/reservas/{reservaId}/estado` |
 | G7 Seguridad | Identidades/grants de cliente HTTP; no identificado como consumidor externo del bus G6 | Gestionar grants HTTP; no dar credenciales Basic |
 
 `api-gateway/bff` en los mensajes de G6 no constituye prueba de que G1 Marketplace consuma el broker directamente.
 
 ## Los 13 mensajes de `modulo-ventas`
 
-| Tipo | Mensaje AsyncAPI H4 | Consumidor/operación HTTP H5 propuesta |
+| Tipo | Mensaje AsyncAPI H4 | Consumidor/operación HTTP H5 en baseline semifinal |
 |---|---|---|
 | G5→G6 | `promotions.coupon.consumption.requested` | `POST /api/v1/cupones/consumos` |
 | G5→G6 | `promotions.coupon.restoration.requested` | `POST /api/v1/cupones/restauraciones` |
@@ -34,7 +34,7 @@
 | G6→G5 | `inventory.consumption.completed` | mismo GET |
 | G6→G5 | `inventory.consumption.rejected` | mismo GET |
 
-**P0 semántico:** consultar solo la operación inicial puede NO informar una expiración de reserva que sucede horas después de su éxito. Se propone `GET /api/v1/inventario/reservas/{reservaId}/estado?order_id=...`, limitado a consumidores aprobados, que retorna estado persistido (`ACTIVA`, `CONSUMIDA`, `LIBERADA`, `EXPIRADA`), `expires_at` y vigencia efectiva calculada. `ACTIVA` con vencimiento cumplido se expone como persistida `ACTIVA` + vigencia `VENCIDA` y nunca habilita pago/consumo. G5/G6 deben homologar esquema, autorización, consistencia y reacción; la ruta no existe en OpenAPI canónico ni se declara implementada. El `ReservationExpirationService` existente materializa la transición, sin worker paralelo.
+**P0 semántico:** consultar solo la operación inicial puede NO informar una expiración de reserva que sucede horas después de su éxito. Se propone `GET /api/v1/inventario/reservas/{reservaId}/estado?order_id=...`, limitado a consumidores aprobados, que retorna estado persistido (`ACTIVA`, `CONSUMIDA`, `LIBERADA`, `EXPIRADA`), `expires_at` y vigencia efectiva calculada. `ACTIVA` con vencimiento cumplido se expone como persistida `ACTIVA` + vigencia `VENCIDA` y nunca habilita pago/consumo. G5/G6 deben homologar esquema, autorización, consistencia y reacción; la ruta está declarada en OpenAPI H5 `0.7.0-rc.1`; esto no acredita implementación ni homologación. El `ReservationExpirationService` existente materializa la transición, sin worker paralelo.
 
 El GET no notifica espontáneamente a G5. En H5, G5 persiste la relación pedido-reserva e inicia seguimiento al recuperar por HTTP el resultado durable `COMPLETED` de la operación de creación; no depende de recibir el evento RabbitMQ H4 `inventory.reservation.created` después del corte. El barrido periódico/al reinicio incluye pedidos y reemplazos elegibles donde Inventory informa `ACTIVA` + `VENCIDA` **o** `EXPIRADA` persistida. `EXPIRADA` se excluye únicamente tras decisión de conciliación durable G5 o cuando el estado comercial G5 determine que la transición no corresponde. Una lectura exitosa por sí misma no marca conciliado: checkpoint/lease se cierra junto con la decisión G5 durable; un fallo antes del commit mantiene elegibilidad y reintenta. Clave idempotente por reserva+transición y serialización contra pago/anulación evitan doble efecto. La ruta, retención, periodo, estados G5 elegibles, backoff, autorización, reacción concurrente, restauración y pruebas requieren homologación bilateral. **El mecanismo de conciliación no está implementado ni aceptado por G5**; G6 no administra estados de pedido.
 

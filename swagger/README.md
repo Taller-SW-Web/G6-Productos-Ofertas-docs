@@ -20,9 +20,11 @@ La ruta `/apis-docs/` sigue el patrón oficial de SmartBear; las pruebas verific
 
 Estado de la integración Studio: **IMPLEMENTAR_PARCIAL**. Recurso privado persistente verificado por API; ejecución directa desde navegador pendiente de CORS, preferencia de conexión y JWT real. No se controló Chrome ni se verificó visualmente My APIs. El complemento no expone proyectos, asignación de proyectos ni roles administrativos detallados; sí acreditó pertenencia a la organización autorizada y permiso efectivo de creación/lectura/actualización.
 
+> **Publicación histórica:** los enlaces SwaggerHub de esta guía apuntan a `0.6.0-rc.3`; se conservan como referencia histórica. OpenAPI canónico `0.7.0-rc.1` aún no se ha publicado en SwaggerHub. La validación y generación locales leen `contratos/http/openapi.yaml`.
+
 ## Contrato y áreas
 
-Fuente única: [OpenAPI oficial](../contratos/http/openapi.yaml), OpenAPI 3.1.0. La definición recuperada coincide completamente con la derivación autorizada: solo cambian `info.title` y `servers`. Conserva 136 operaciones, 13 tags, 177 schemas y todos los parámetros, bodies, respuestas, ejemplos, seguridad y extensiones. No se dividió el contrato.
+Fuente única local: [OpenAPI canónico](../contratos/http/openapi.yaml), OpenAPI 3.1.0, versión `0.7.0-rc.1` y 148 operaciones. Los conteos y la definición recuperada de 136 operaciones descritos en los antecedentes de Swagger corresponden a la versión histórica `0.6.0-rc.3`, no a la baseline H5 actual.
 
 | Área | Tags existentes | Operaciones | Runtime observado |
 |---|---|---:|---|

@@ -6,7 +6,7 @@ import unittest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-CONTRACT_FILE = ROOT / "contratos/eventos/asyncapi.yaml"
+CONTRACT_FILE = ROOT / "contratos/historico/h4/eventos/asyncapi.yaml"
 FIXTURE_FILE = ROOT / "tests/contratos/fixtures/asyncapi-0.6.0-rc.3-approved-invariants.json"
 EXPECTED_EXCHANGES = {
     "po.comandos.x": "topic",
@@ -224,7 +224,7 @@ class AsyncApiOracleTopologyRegression(unittest.TestCase):
             self.assertEqual(channel["x-exchange"], exchange, message_name)
 
     def test_bulk_dto_external_references_resolve_to_openapi_schemas(self):
-        openapi_file = ROOT / "contratos/http/openapi.yaml"
+        openapi_file = ROOT / "contratos/historico/h4/http/openapi.yaml"
         openapi = yaml.safe_load(openapi_file.read_text(encoding="utf-8"))
         for ref in walk_refs(self.current):
             if not ref.startswith("../http/openapi.yaml#/"):
