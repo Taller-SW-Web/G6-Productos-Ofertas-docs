@@ -1,3 +1,5 @@
+> **Transición H4→H5:** las referencias de esta SPEC a eventos y publicación RabbitMQ describen el contrato/estado H4. Las reglas de cupón e idempotencia se conservan; Service Bus Basic es el objetivo H5 interno y su runtime no se acredita aquí.
+
 # SPEC-005 — Gestión de cupones de descuento
 
 **Responsable:** Axel Andree Cueva Alcalá  

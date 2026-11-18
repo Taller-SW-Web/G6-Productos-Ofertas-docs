@@ -1,3 +1,5 @@
+> **Transición H4→H5:** los ejemplos RabbitMQ/AsyncAPI y procedimientos físicos que conserva este contrato son antecedentes H4. Para mensajería nueva, Service Bus Basic está adoptado para tráfico interno G6; integraciones externas son HTTP autenticado, con homologación G5 y autorización G7 pendientes. No derivar de esta guía infraestructura H5.
+
 # API Contract — Módulo de Productos y Ofertas
 
 **Fecha de actualización:** 2026-10-12  

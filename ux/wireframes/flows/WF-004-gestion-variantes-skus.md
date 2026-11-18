@@ -24,7 +24,7 @@
 No pedir un precio base obligatorio ni solicitar inicialización de Pricing al crear o reintentar cada variante. La variante hereda el precio del producto padre salvo que el gestor use posteriormente la gestión de Pricing para un precio específico.
 
 ## No mostrar
-RabbitMQ, colas, exchanges, routing keys, nombres de colas, DLQ, contadores de retry, eventos de inicialización, `operation_id`, `message_id`, `causation_id`, ni términos técnicos de infraestructura o endpoints.
+broker, colas, exchanges, routing keys, nombres físicos del transporte, DLQ, contadores de retry, eventos de inicialización, `operation_id`, `message_id`, `causation_id`, ni términos técnicos de infraestructura o endpoints.
 
 ## Edición y cambios de estado
 - Editar atributos no identificadores, imagen y datos físicos; conservar `variant_id`, SKU comercial publicado y atributos identificadores de la variante publicada.

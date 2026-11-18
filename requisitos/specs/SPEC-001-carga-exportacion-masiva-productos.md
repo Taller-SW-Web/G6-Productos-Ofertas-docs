@@ -1,3 +1,5 @@
+> **Transición H4→H5:** referencias AMQP, routing key y adaptadores de esta especificación pertenecen al contrato heredado H4. Reglas de filas, idempotencia y reconciliación son funcionales; para la mensajería interna nueva rige Service Bus Basic adoptado, sin implementación acreditada.
+
 # SPEC-001 — Carga y exportación masiva de productos
 
 **Responsable:** Marco Renato Castilla Huanca  

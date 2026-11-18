@@ -1,5 +1,19 @@
 # Instrucciones para agentes de G6 Productos y Ofertas
 
+## Norma de mensajería H5 (obligatoria)
+
+La arquitectura objetivo adoptada por G6 para Hito 5 es **Azure Service Bus Basic exclusivamente para mensajería interna entre bounded contexts G6**. Las integraciones externas usan HTTP autenticado a través de APIM/Gateway G6; contratos, homologación G5 y autorización G7 se verifican por separado. La adopción no demuestra recursos Azure aprovisionados, identidades/grants, implementación, pruebas runtime ni despliegue. Estados vigentes: `ADOPTADA_G6`, `PENDIENTE_APROVISIONAMIENTO_AZURE`, `PENDIENTE_IMPLEMENTACION`, `PENDIENTE_HOMOLOGACION_G5` y `PENDIENTE_AUTORIZACION_G7`. Un colaborador asumió la configuración de recursos Azure; esta asignación no es evidencia de provisión.
+
+RabbitMQ es arquitectura heredada H4. Su AsyncAPI/topología describen el contrato y la infraestructura H4 y pueden consultarse para preservar semántica de negocio e invariantes; **no derivar de allí colas, bindings, routing keys físicos, variables ni comandos para una implementación H5**. La compatibilidad transitoria aplica solo al runtime H4 existente y no autoriza desarrollar una infraestructura RabbitMQ nueva para H5. No inventar un AsyncAPI H5 definitivo ni declarar homologación externa.
+
+### Orden de lectura para mensajería H5
+
+1. Este archivo y [`README.md`](README.md).
+2. [`ADR-H5-SERVICE-BUS-BASIC.md`](arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md) y [`TOPOLOGIA-SERVICE-BUS-BASIC-H5.md`](contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md).
+3. [`PLAN-MIGRACION-MENSAJERIA-H5.md`](integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md), [`MATRIZ-EXTERNOS-ASYNCAPI-H5.md`](integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md) y [`INVENTARIO-40-MENSAJES-H5.md`](contratos/eventos/INVENTARIO-40-MENSAJES-H5.md).
+4. Contrato funcional AsyncAPI H4 solo como origen semántico, junto con el [índice de transición H4→H5](integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md); sus `servers`, bindings y topología RabbitMQ no definen H5.
+5. SPEC/HU/FLOW y contratos HTTP aplicables; revisar homologación externa y seguridad antes de alterar fronteras.
+
 ## Orden obligatorio de lectura
 
 1. Leer este archivo y `README.md`.

@@ -1,3 +1,5 @@
+> **Clasificación: `LEGADO_H4`.** Este documento conserva decisiones/procedimientos de RabbitMQ del Hito 4 y compatibilidad del runtime existente. No es una instrucción para implementar H5; consulte la ADR y topología Service Bus Basic.
+
 # Pruebas aisladas de aislamiento RabbitMQ
 
 Este arnés ensaya la **alternativa A** de `arquitectura/operacion-rabbitmq.md` en un broker desechable RabbitMQ **4.2.9**. No adopta A ni cambia AsyncAPI `0.6.0-rc.2`; un PASS solo acredita el comportamiento de esta fixture en la versión etiquetada, no homologación, implementación productiva o despliegue.

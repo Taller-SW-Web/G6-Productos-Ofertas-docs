@@ -1,3 +1,5 @@
+> **Base de flujo:** las menciones físicas RabbitMQ de este FLOW reflejan H4. Sus reglas de dominio e identificadores siguen siendo funcionales; para nueva infraestructura de mensajería H5 rige Service Bus Basic adoptado.
+
 # FLOW-003 — Gestión de productos (CRUD principal)
 
 ## 1. Identificación

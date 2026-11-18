@@ -1,3 +1,5 @@
+> **Clasificación: `LEGADO_H4`.** Este documento conserva decisiones/procedimientos de RabbitMQ del Hito 4 y compatibilidad del runtime existente. No es una instrucción para implementar H5; consulte la ADR y topología Service Bus Basic.
+
 # Transición de RabbitMQ
 
 > Este plan corresponde a la transición interna H4 de nombres/configuración RabbitMQ y conserva su estado histórico; no es el plan de retiro del broker ni se reinterpreta como migración a Azure. La propuesta H5 separada está en [PLAN-MIGRACION-MENSAJERIA-H5.md](PLAN-MIGRACION-MENSAJERIA-H5.md).

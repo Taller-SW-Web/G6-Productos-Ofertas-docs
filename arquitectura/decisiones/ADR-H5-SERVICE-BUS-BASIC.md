@@ -1,13 +1,15 @@
 # ADR-H5 — Azure Service Bus Basic como mensajería interna de G6
 
-**Estado:** `PROPUESTA_G6_PENDIENTE_REVISION` — no es una decisión externa homologada ni una implementación.
+**Estado de arquitectura:** `ADOPTADA_G6` (propuesta PR #119, fusionada en master el 2026-11-14; SHA de merge `a53ed842db1b05a12f5e30bc8987df1a137ff49b`). No es homologación externa ni evidencia de implementación.
+
+**Estados pendientes independientes:** `PENDIENTE_APROVISIONAMIENTO_AZURE`; `PENDIENTE_IMPLEMENTACION`; `PENDIENTE_HOMOLOGACION_G5`; `PENDIENTE_AUTORIZACION_G7`. Un integrante del equipo asumió la configuración de los recursos en su cuenta Azure. No hay evidencia aquí de recursos creados, suscripción/identidad/grants, pruebas runtime o despliegue; no inferirlos de esa asignación.
 **Alcance:** Hito 5, ocho microservicios G6, API Gateway y fronteras con G1–G7.
 **Fecha del borrador:** 2026-11-14.
 **Reemplaza operativamente, tras corte aprobado:** RabbitMQ en la infraestructura G6; **no** elimina los acuerdos ni evidencias H4.
 
-## Contexto y decisión propuesta
+## Contexto y decisión adoptada por G6
 
-G6 migra backend a Azure y necesita mensajería asíncrona operable con bajo costo sin trasladar la administración del broker a otros grupos. Se propone:
+G6 migra backend a Azure y necesita mensajería asíncrona operable con bajo costo sin trasladar la administración del broker a otros grupos. La arquitectura objetivo adoptada es:
 
 1. **Azure Service Bus Basic** como intermediario exclusivamente interno de G6. Un namespace por ambiente con colas duraderas preaprovisionadas.
 2. **Consumidores externos G1–G5** acceden a G6 por endpoints HTTP autenticados en API Management/Gateway G6. G7 conserva identidad y grants; no se entregan cadenas de conexión, secretos SAS ni permisos directos de Service Bus a módulos externos.
@@ -15,7 +17,7 @@ G6 migra backend a Azure y necesita mensajería asíncrona operable con bajo cos
 4. Se conserva el dominio de contratos de negocio (`message_id`, `operation_id`, `correlation_id`, tipo, versión, datos), pero el enrutamiento físico RabbitMQ deja de ser norma del transporte futuro.
 5. Se garantiza **at-least-once** e **idempotencia de efectos**, no exactly-once del broker.
 
-Esta ADR **no autoriza** por sí sola despliegues, merges, eliminación de RabbitMQ, activación de cupones, cambios unilaterales en API externas ni declaraciones de homologación G5/G7.
+Esta ADR **no acredita ni autoriza** por sí sola despliegues, merges, eliminación de RabbitMQ, activación de cupones, cambios unilaterales en API externas ni declaraciones de homologación G5/G7.
 
 ## Por qué Basic es aceptable
 

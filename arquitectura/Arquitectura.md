@@ -1,6 +1,6 @@
 # Arquitectura del Módulo de Productos y Ofertas
 
-**Fecha de actualización:** 2026-10-13
+**Fecha de actualización:** 2026-11-17
 **Repositorio de documentación:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
 **Archivo:** `arquitectura/Arquitectura.md`  
 **Contrato HTTP canónico:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.4`; referencia histórica `0.5.0`)
@@ -9,14 +9,27 @@
 **Catálogo canónico de errores:** `contratos/http/catalogo-errores.md` (códigos autoritativos para el contrato candidato)
 **Contrato humano de integración:** `contratos/http/Contrato_Api.md`  
 **Modelo conceptual:** `Modelo_Conceptual.md`  
+**Estado de mensajería:** H5 adoptado por G6: Azure Service Bus Basic exclusivamente interno; HTTP autenticado vía APIM/Gateway para externos. Aprovisionamiento, implementación, autorización G7, homologación G5, pruebas runtime y despliegue siguen pendientes por separado. H4 RabbitMQ queda heredado.
 **Estado contractual:** línea base `0.5.0` conservada para compatibilidad; OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` son contratos **candidatos**. AsyncAPI `rc.3` reconcilia nombres físicos de infraestructura base con una observación histórica de Oracle; conserva los 40 mensajes y canales, operaciones, productores, consumidores, payloads, esquemas y routing keys comerciales. No acredita homologación, despliegue ni ejecución. Las decisiones internas están adoptadas, pero su implementación, despliegue y conformidad E2E no se acreditan mediante este documento.
 
-> Esta arquitectura es la guía de implementación del backend y de sus integraciones.  
+> Esta arquitectura describe conceptos y antecedentes. Para implementar mensajería H5, prevalecen la ADR y topología Service Bus Basic enlazadas abajo; los detalles RabbitMQ de esta página son exclusivamente H4.
 > Las SPEC son la fuente de verdad para reglas funcionales; `contratos/http/openapi.yaml` gobierna HTTP; `contratos/eventos/asyncapi.yaml` gobierna mensajería; `contratos/http/catalogo-errores.md` gobierna la semántica estable de `code`.
 
 ---
 
 # 0. Objetivo
+
+## Mensajería H5 vigente
+
+G6 adoptó **Azure Service Bus Basic** como broker exclusivamente interno para Hito 5. Las integraciones externas se realizan por HTTP autenticado a través de APIM/Gateway G6. La adopción no acredita recursos aprovisionados, identidades o grants, código, pruebas runtime ni despliegue. Un integrante asumió la configuración Azure, aún pendiente de evidencia verificable. G5 no homologó el cambio de sus integraciones; G7 aún debe autorizar identidades/grants aplicables.
+
+Orden normativo de implementación H5: [ADR H5](decisiones/ADR-H5-SERVICE-BUS-BASIC.md) → [topología Service Bus](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) → [plan de migración](../integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md) → contratos HTTP/homologaciones aplicables. El [AsyncAPI H4](../contratos/eventos/asyncapi.yaml) preserva semántica y payloads funcionales; sus servidores, bindings, routing keys y topología RabbitMQ no autorizan diseñar colas o infraestructura H5. Véase el [índice H4→H5](../integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md).
+
+## 0.1. Antecedentes H4
+
+Las secciones de esta arquitectura que muestran RabbitMQ describen exclusivamente H4/compatibilidad transitoria. No son instrucciones de aprovisionamiento ni de desarrollo para H5. Los diagramas objetivo H5 se expresan con Service Bus Basic y HTTP externo.
+
+
 
 El módulo **Productos y Ofertas** administra las capacidades comerciales compartidas por Marketplace, Chatbot, Retail, Ventas/Postventa y Despacho:
 
@@ -323,7 +336,7 @@ backend/
 │
 ├── infra/
 │   ├── docker/
-│   ├── rabbitmq/
+│   ├── messaging/ (Service Bus Basic, objetivo H5)
 │   ├── postgres/
 │   └── local/
 │
@@ -730,15 +743,15 @@ La coordinación se implementa con:
 
 # 10. Mensajería asíncrona
 
-### 10.0. H5 prospectivo (no vigente)
+### 10.0. H5 adoptado (objetivo; implementación pendiente)
 
-La propuesta [ADR-H5](decisiones/ADR-H5-SERVICE-BUS-BASIC.md) plantea Azure Service Bus Basic exclusivamente para comunicación interna entre bounded contexts G6. Los consumidores externos G1–G5 conservan HTTP autenticado; G7 mantiene identidad y grants. Sustituir los 13 mensajes que AsyncAPI H4 asigna a G5 requiere homologación G5 y autorización G7. No se modifica en esta propuesta el AsyncAPI canónico `0.6.0-rc.4`, el OpenAPI `0.6.0-rc.4` ni sus fixtures. Véanse [topología candidata](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md), [inventario de 40 mensajes](../contratos/eventos/INVENTARIO-40-MENSAJES-H5.md) y [plan de migración](../integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md).
+La [ADR-H5 adoptada](decisiones/ADR-H5-SERVICE-BUS-BASIC.md) plantea Azure Service Bus Basic exclusivamente para comunicación interna entre bounded contexts G6. Los consumidores externos G1–G5 conservan HTTP autenticado; G7 mantiene identidad y grants. Sustituir los 13 mensajes que AsyncAPI H4 asigna a G5 requiere homologación G5 y autorización G7. No se modifica en esta propuesta el AsyncAPI canónico `0.6.0-rc.4`, el OpenAPI `0.6.0-rc.4` ni sus fixtures. Véanse [topología candidata](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md), [inventario de 40 mensajes](../contratos/eventos/INVENTARIO-40-MENSAJES-H5.md) y [plan de migración](../integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md).
 
 La expiración de reservas sigue siendo una regla de negocio de Inventory basada en su persistencia y `expires_at`; no depende del TTL del mensaje. Basic no permite configurar `DefaultMessageTimeToLive` y su máximo/default de mensajes es 14 días. Inventory conserva el mecanismo existente `ReservationExpirationService`; H5 no propone un worker de expiración paralelo. El GET candidato de estado devuelve por separado `estado_persistido` y vigencia efectiva, y cualquier pago/consumo vuelve a validar `expires_at` dentro de la operación atómica. Véase la [propuesta HTTP de estado de reserva](../contratos/http/PROPUESTA-OPERACIONES-CUPONES-H5.md).
 
 El flujo H5 de cupones por HTTP requiere además la cola nueva candidata `g6.promotions.commands`, producida por el adaptador HTTP de Promotions mediante Outbox y consumida solo por su worker de operaciones. Admisión durable, Inbox/idempotencia, resultado persistido y GET de consulta están detallados en la [topología](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md). Las 18 relaciones derivadas de AsyncAPI H4 son relaciones heredadas y no limitan las colas nuevas de H5.
 
-## 10.1. RabbitMQ
+## 10.1. LEGADO_H4 — RabbitMQ (no usar como objetivo H5)
 
 P2 documenta la topología base observada históricamente el 2026-10-19 en Oracle (RabbitMQ 4.2.9, vhost `g6-productos-ofertas`). La candidata AsyncAPI `0.6.0-rc.3` refleja los nombres de esa observación. No acredita estado actual del servidor, homologación G5, provisión, adaptación del código, conectividad ni ejecución.
 
@@ -1879,6 +1892,8 @@ Un rechazo funcional posterior a `202 Accepted` se expresa mediante el `result` 
 
 # 23. Configuración
 
+> Variables RabbitMQ descritas en esta sección son legado H4; no son configuración H5. La configuración H5 propuesta se documenta en `arquitectura/operacion-service-bus-basic-h5.md` y aún no está implementada.
+
 Toda configuración se valida al arrancar.
 
 No acceder directamente a:
@@ -1895,7 +1910,7 @@ Ejemplos:
 
 ```text
 DATABASE_URL
-RABBITMQ_URL
+RABBITMQ_URL (solo runtime H4; no configurar para H5)
 AUTH_ISSUER
 AUTH_JWKS_URL
 RESERVATION_TTL_*
@@ -2080,37 +2095,33 @@ La invalidación debe basarse en eventos o TTL explícito.
 
 ---
 
-# 29. C4 — Nivel 1: contexto actualizado
+# 29. C4 — Nivel 1: contexto actualizado H5
 
 ```mermaid
 flowchart LR
   gestor["Persona: Gestor comercial<br/>GESTOR_COMERCIAL"]
+  market["Marketplace"]
+  chatbot["Chatbot"]
+  retail["Retail"]
+  ventas["M1 / Ventas (G5)"]
+  postventa["M2 / Postventa (G5)"]
+  despacho["Despacho y Entrega"]
+  seguridad["Seguridad y Usuarios"]
+  apim["Azure API Management<br/>frontera HTTP externa objetivo H5; despliegue no acreditado"]
+  po["Productos y Ofertas<br/>Gateway G6 + bounded contexts"]
 
-  market["Sistema externo: Marketplace"]
-  chatbot["Sistema externo: Chatbot"]
-  retail["Sistema externo: Retail"]
-  ventas["Sistema externo: M1 / Ventas (G5)"]
-  postventa["Sistema externo: M2 / Postventa (G5)"]
-  despacho["Sistema externo: Despacho y Entrega"]
-  seguridad["Sistema externo: Seguridad y Usuarios"]
-
-  po["Sistema: Productos y Ofertas"]
-
-  gestor -->|"Administra catálogo, taxonomía, precios, promociones, combos e inventario"| po
-
-  market -->|"Consulta catálogo, precios, promociones y disponibilidad"| po
-  chatbot -->|"Consulta catálogo, precios, promociones, recomendaciones y disponibilidad"| po
-  retail -->|"Consulta oferta y disponibilidad; reporta incidencias físicas autorizadas"| po
-
-  ventas -->|"Reserva, confirma consumo, libera, concilia y otros reintegros contractuales"| po
-  postventa -->|"Consulta disponibilidad detallada; invoca reintegro físico F3"| po
-  po -->|"Resultados de inventario y cupones"| ventas
-  po -->|"Resultados de disponibilidad y reintegro"| postventa
-
-  despacho -->|"Consulta datos físicos por SKU"| po
-
-  po -->|"Valida identidad, roles e introspección de operaciones sensibles"| seguridad
+  gestor -->|"Backoffice"| apim
+  market -->|"HTTPS autenticado"| apim
+  chatbot -->|"HTTPS autenticado"| apim
+  retail -->|"HTTPS autenticado"| apim
+  ventas <-->|"HTTPS autenticado; homologación pendiente"| apim
+  postventa <-->|"HTTPS autenticado; homologación pendiente"| apim
+  despacho -->|"HTTPS autenticado"| apim
+  apim <-->|"HTTPS hacia Gateway G6"| po
+  po -->|"Valida identidad y autorización local"| seguridad
 ```
+
+En C4 nivel 2, APIM es la frontera externa y Gateway G6 es su siguiente salto. Service Bus Basic aparece solo dentro de G6. APIM no se presenta como desplegado y las autorizaciones/grants siguen pendientes.
 
 ---
 
@@ -2127,10 +2138,11 @@ flowchart TB
   dispatch["Despacho"]
   security["Seguridad y Usuarios"]
 
-  subgraph module["Productos y Ofertas"]
+  apim["Azure API Management<br/>frontera externa objetivo H5; despliegue no acreditado"]
+
+  subgraph module["Productos y Ofertas — G6"]
     fe["React SPA"]
-    ingress["Ingress / Reverse Proxy"]
-    gateway["API Gateway / BFF"]
+    gateway["API Gateway / BFF G6"]
 
     taxonomy["taxonomy-svc"]
     catalog["catalog-svc"]
@@ -2141,22 +2153,22 @@ flowchart TB
     inventory["inventory-svc"]
     bulk["bulk-svc"]
 
-    mq[("RabbitMQ")]
+    mq[("Azure Service Bus Basic\nobjetivo H5; provisión pendiente")]
     db[("PostgreSQL<br/>schemas aislados")]
     cache[("Valkey<br/>opcional")]
     storage[("Object Storage")]
   end
 
   gestor -->|"Usa backoffice"| fe
-  fe -->|HTTPS| ingress
-  market -->|HTTPS lectura/evaluación| ingress
-  chatbot -->|HTTPS lectura/evaluación| ingress
-  retail -->|HTTPS lectura + incidencias físicas| ingress
-  sales -->|HTTPS comandos y consultas de pedido| ingress
-  postventa -->|HTTPS consulta detallada y reintegro F3| ingress
-  dispatch -->|HTTPS datos físicos| ingress
+  fe -->|HTTPS autenticado| apim
+  market -->|HTTPS autenticado| apim
+  chatbot -->|HTTPS autenticado| apim
+  retail -->|HTTPS autenticado| apim
+  sales -->|HTTPS autenticado; homologación pendiente| apim
+  postventa -->|HTTPS autenticado; homologación pendiente| apim
+  dispatch -->|HTTPS autenticado| apim
 
-  ingress --> gateway
+  apim -->|HTTPS autenticado| gateway
 
   gateway --> taxonomy
   gateway --> catalog
@@ -2175,8 +2187,6 @@ flowchart TB
   combos <--> mq
   inventory <--> mq
   bulk <--> mq
-  gateway <--> mq
-  sales <-->|"AsyncAPI: eventos y resultados"| mq
 
   taxonomy -->|"taxonomy schema"| db
   catalog -->|"catalog schema"| db
@@ -2202,7 +2212,7 @@ flowchart TB
 ```mermaid
 flowchart LR
   http["HTTP adapters"]
-  bus[("RabbitMQ")]
+  bus[("Azure Service Bus Basic\nobjetivo H5; provisión pendiente")]
   db[("taxonomy schema")]
 
   subgraph svc["taxonomy-svc"]
@@ -2241,7 +2251,7 @@ Reglas contractuales adicionales del componente SEO/Taxonomía:
 ```mermaid
 flowchart LR
   http["HTTP adapters"]
-  bus[("RabbitMQ")]
+  bus[("Azure Service Bus Basic\nobjetivo H5; provisión pendiente")]
   db[("catalog schema")]
 
   subgraph svc["catalog-svc"]
@@ -2275,7 +2285,7 @@ flowchart LR
 ```mermaid
 flowchart LR
   http["HTTP adapters"]
-  bus[("RabbitMQ")]
+  bus[("Azure Service Bus Basic\nobjetivo H5; provisión pendiente")]
   db[("pricing schema")]
 
   subgraph svc["pricing-svc"]
@@ -2305,7 +2315,7 @@ flowchart LR
 ```mermaid
 flowchart LR
   http["HTTP adapters"]
-  bus[("RabbitMQ")]
+  bus[("Azure Service Bus Basic\nobjetivo H5; provisión pendiente")]
   db[("price_audit schema")]
   storage[("Archive Storage")]
 
@@ -2333,7 +2343,7 @@ flowchart LR
 ```mermaid
 flowchart LR
   http["HTTP adapters"]
-  bus[("RabbitMQ")]
+  bus[("Azure Service Bus Basic\nobjetivo H5; provisión pendiente")]
   db[("promotions schema")]
 
   subgraph svc["promotions-svc"]
@@ -2368,7 +2378,7 @@ flowchart LR
 ```mermaid
 flowchart LR
   http["HTTP adapters"]
-  bus[("RabbitMQ")]
+  bus[("Azure Service Bus Basic\nobjetivo H5; provisión pendiente")]
   db[("combos schema")]
 
   subgraph svc["combos-svc"]
@@ -2398,7 +2408,7 @@ flowchart LR
 ```mermaid
 flowchart LR
   http["HTTP adapters"]
-  bus[("RabbitMQ")]
+  bus[("Azure Service Bus Basic\nobjetivo H5; provisión pendiente")]
   db[("inventory schema")]
 
   subgraph svc["inventory-svc"]
@@ -2470,7 +2480,7 @@ flowchart LR
 ```mermaid
 flowchart LR
   http["HTTP adapters"]
-  bus[("RabbitMQ")]
+  bus[("Azure Service Bus Basic\nobjetivo H5; provisión pendiente")]
   db[("bulk schema")]
   storage[("File Storage")]
 
@@ -2958,11 +2968,12 @@ Cambios de semántica o campos obligatorios requieren nueva versión.
 
 # 44. Desarrollo local
 
-El repositorio backend debe permitir:
+El ejemplo histórico H4 era:
 
 ```text
 pnpm install
-docker compose up -d postgres rabbitmq
+# H4 legado solamente: docker compose up -d postgres rabbitmq
+# Para H5, la mensajería objetivo es Azure Service Bus Basic; provisión pendiente.
 pnpm dev:<servicio>
 ```
 
@@ -3153,6 +3164,8 @@ Debe cumplir:
 
 # 54. Pendientes de integración arquitectónica
 
+> El inventario RabbitMQ de esta sección corresponde a H4. La infraestructura objetivo H5 es Azure Service Bus Basic y continúa pendiente de aprovisionamiento/implementación.
+
 P2 cerró:
 
 - exchanges, queues, bindings, retry y DLQ;
@@ -3162,7 +3175,7 @@ P2 cerró:
 Pendientes que requieren código/infra real:
 
 1. Registrar scopes/grants en Seguridad.
-2. Crear políticas/recursos RabbitMQ del entorno desde IaC/configuración.
+2. H4: los antiguos recursos RabbitMQ se operaban desde IaC/configuración; para H5 no crear infraestructura RabbitMQ. El aprovisionamiento Service Bus Basic está pendiente.
 3. Ejecutar contract tests runtime.
 4. Sincronizar prototipos HTML después del freeze documental.
 

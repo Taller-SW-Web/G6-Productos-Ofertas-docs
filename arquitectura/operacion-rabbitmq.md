@@ -1,3 +1,5 @@
+> **Clasificación: `LEGADO_H4`.** Este documento conserva decisiones/procedimientos de RabbitMQ del Hito 4 y compatibilidad del runtime existente. No es una instrucción para implementar H5; consulte la ADR y topología Service Bus Basic.
+
 # Operación de RabbitMQ
 
 > **Alcance histórico H4:** los procedimientos y evidencias de esta guía describen RabbitMQ; se conservan como registro H4 y no acreditan estado actual del broker. La [operación candidata H5](./operacion-service-bus-basic-h5.md) es una propuesta aparte. No ejecutar retiro, dual-write ni aprovisionamiento Azure por esta guía o por la propuesta H5; cualquier corte requiere plan aprobado, drenaje/reconciliación, rollback ensayado y gates de integración.
