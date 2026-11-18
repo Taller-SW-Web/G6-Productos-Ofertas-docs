@@ -13,6 +13,23 @@ from referencing.jsonschema import DRAFT202012
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def verify_claim_check_bytes(received_bytes, expected_reference, document_validator):
+    """Validación determinista local de bytes contra una referencia independiente."""
+    if len(received_bytes) != expected_reference["byte_length"]:
+        return "BYTE_LENGTH_MISMATCH"
+    if hashlib.sha256(received_bytes).hexdigest() != expected_reference["sha256"]:
+        return "SHA256_MISMATCH"
+    try:
+        document = json.loads(received_bytes)
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return "INVALID_JSON"
+    if not isinstance(document, dict):
+        return "DOCUMENT_NOT_OBJECT"
+    if not document_validator.is_valid(document):
+        return "INVALID_ROWS"
+    return "ACCEPTED"
+
+
 class H5SemifinalContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -152,10 +169,29 @@ class H5SemifinalContractTests(unittest.TestCase):
         invalid_row = dict(row, row_operation_id="not-a-uuid")
         self.assertFalse(document_validator.is_valid({"rows": [invalid_row]}))
         payload = json.dumps(valid_document, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-        integrity = {"byte_length": len(payload), "sha256": hashlib.sha256(payload).hexdigest()}
-        self.assertTrue(integrity["byte_length"] == len(payload) and integrity["sha256"] == hashlib.sha256(payload).hexdigest())
-        self.assertFalse(integrity["byte_length"] + 1 == len(payload))
-        self.assertFalse(integrity["sha256"] == "0" * 64)
+        # Referencia fija e independiente del cálculo sobre los bytes recibidos.
+        expected = {"byte_length": 388, "sha256": "203d228ae221ed440635c9a9a67e008ba7a22abc0f3b5015ba23efc80b8adbe9"}
+        self.assertEqual(verify_claim_check_bytes(payload, expected, document_validator), "ACCEPTED")
+
+        altered_same_length = bytearray(payload)
+        altered_same_length[-2] ^= 1
+        self.assertEqual(len(altered_same_length), expected["byte_length"])
+        self.assertEqual(verify_claim_check_bytes(bytes(altered_same_length), expected, document_validator), "SHA256_MISMATCH")
+        self.assertEqual(verify_claim_check_bytes(payload + b" ", expected, document_validator), "BYTE_LENGTH_MISMATCH")
+        wrong_hash = dict(expected, sha256="0" * 64)
+        self.assertEqual(verify_claim_check_bytes(payload, wrong_hash, document_validator), "SHA256_MISMATCH")
+
+        invalid_rows = b'{"rows":[]} '
+        invalid_rows_reference = {"byte_length": 12, "sha256": "b83067ed019cdf39a294f608caa862713b59c6de22a0c0d9947bfc4c8bcc5c25"}
+        self.assertEqual(verify_claim_check_bytes(invalid_rows, invalid_rows_reference, document_validator), "INVALID_ROWS")
+        json_string = b'"{\\"rows\\":[{}]}"'
+        string_reference = {"byte_length": 17, "sha256": "e7961c0507b98ed11224d3b315e94689074525201b1c7bffbef0ad040490a7a4"}
+        self.assertEqual(verify_claim_check_bytes(json_string, string_reference, document_validator), "DOCUMENT_NOT_OBJECT")
+
+        equivalent_but_different = b'{ "rows": [' + payload[len(b'{"rows":['):]
+        self.assertEqual(json.loads(equivalent_but_different), valid_document)
+        self.assertNotEqual(equivalent_but_different, payload)
+        self.assertNotEqual(verify_claim_check_bytes(equivalent_but_different, expected, document_validator), "ACCEPTED")
         self.assertEqual(set(endpoint["responses"]["200"]["content"]), {"application/json"})
 
     def test_coupon_header_and_body_idempotency_error_partition(self):
@@ -206,6 +242,23 @@ class H5SemifinalContractTests(unittest.TestCase):
         self.assertEqual(bulk["x-allowed-client-ids"], ["catalog-svc"])
         self.assertNotIn("x-acceptance-assumption", bulk)
         self.assertEqual(bulk["x-required-scope"], "carga-masiva:contenidos:leer")
+        self.assertTrue(bulk["x-internal"])
+        self.assertEqual(bulk["x-owner"], "bulk-svc")
+        self.assertEqual(bulk["x-consumer"], "catalog-svc")
+        self.assertNotIn("modulo-ventas", bulk["x-allowed-client-ids"])
+        self.assertNotIn("modulo-postventa", bulk["x-allowed-client-ids"])
+        self.assertNotIn("x-external-homologation", bulk)
+        self.assertEqual(bulk["x-authorization-status"], "PENDIENTE_AUTORIZACION_G7")
+        self.assertEqual(bulk["x-grant-status"], "PENDIENTE_VERIFICACION_G7")
+        self.assertEqual(bulk["x-runtime-status"], "PENDIENTE_IMPLEMENTACION")
+        self.assertNotIn("PENDIENTE_HOMOLOGACION_EXTERNA", bulk.get("x-integration-decisions", []))
+        external_g5_paths = {
+            "/cupones/consumos",
+            "/cupones/restauraciones",
+            "/cupones/operaciones/{operationId}",
+            "/inventario/reservas/{reservaId}/estado",
+        }
+        self.assertNotIn("/interno/carga-masiva/contenidos/{contentId}", external_g5_paths)
 
     def test_axel_coupon_and_reservation_examples_validate_against_published_schemas(self):
         self.assertTrue(self.schema_validator("CouponConsumptionRequest").is_valid(self.axel["coupon_consumption_request"]))
@@ -248,6 +301,21 @@ class H5SemifinalContractTests(unittest.TestCase):
             self.assertNotIn("modulo-ventas", message.get("x-consumers", []))
             self.assertNotIn("api-gateway/bff", message.get("x-consumers", []))
 
+        requested = api["components"]["messages"]["CatalogBulkUpsertRequested"]
+        self.assertEqual(requested["x-deduplication-key"], "message_id")
+        self.assertEqual(requested["x-business-idempotency-key"], "batch_operation_id")
+        description = requested["description"].lower()
+        self.assertIn("v1 y v2 conservan rows inline", description)
+        self.assertIn("v3 usa content_ref", description)
+        self.assertIn("message_id identifica la entrega", description)
+        self.assertIn("batch_operation_id identifica la operación masiva", description)
+        self.assertIn("verificar su byte_length y sha-256", description)
+        self.assertIn("catalog debe soportar v3", description)
+        self.assertNotRegex(description, r"routing\s*key|exchange")
+        business_description = requested["x-business-idempotency-description"].lower()
+        self.assertIn("v1, v2 y v3", business_description)
+        self.assertIn("row_operation_id", business_description)
+
     def test_h5_internal_instances_preserve_payload_rules_and_claim_check_version(self):
         cases = {
             "pricingPriceChanged": "PricingPriceChanged",
@@ -268,7 +336,27 @@ class H5SemifinalContractTests(unittest.TestCase):
         referenced["data"].pop("rows")
         referenced["data"]["content_ref"] = {"content_id": "12b85ba4-a5b4-44fa-8c06-e554f5026100", "sha256": "a" * 64, "byte_length": 42, "content_type": "application/json"}
         validator = self.message_validator("CatalogBulkUpsertRequested")
+        # Los fixtures históricos V1 se validan sin modificar sus schemas o payloads.
+        self.assertEqual(inline["schema_version"], 1)
+        self.assertTrue(validator.is_valid(inline))
+        self.assertTrue(validator.is_valid(self.fixtures["catalogBulkUpsertRequestedActualizacion"]))
+
+        # V2 mantiene rows inline y la compatibilidad semántica del fixture previo.
+        inline_v2 = json.loads(json.dumps(inline))
+        inline_v2["schema_version"] = 2
+        self.assertTrue(validator.is_valid(inline_v2))
+        self.assertIn("rows", inline_v2["data"])
+        self.assertNotIn("content_ref", inline_v2["data"])
+
         self.assertTrue(validator.is_valid(referenced))
+        self.assertIn("content_ref", referenced["data"])
+        self.assertNotIn("rows", referenced["data"])
+        missing_content_ref = json.loads(json.dumps(referenced))
+        missing_content_ref["data"].pop("content_ref")
+        self.assertFalse(validator.is_valid(missing_content_ref))
+        inline_rows_in_v3 = json.loads(json.dumps(referenced))
+        inline_rows_in_v3["data"]["rows"] = []
+        self.assertFalse(validator.is_valid(inline_rows_in_v3))
         referenced["data"]["content_ref"]["sha256"] = "not-a-sha256"
         self.assertFalse(validator.is_valid(referenced))
         for name, message_name, data in (

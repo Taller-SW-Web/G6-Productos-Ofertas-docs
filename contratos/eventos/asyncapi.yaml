@@ -2280,7 +2280,10 @@ components:
       x-consumers:
       - catalog-svc
       x-deduplication-key: message_id
-      x-business-idempotency-key: batch_operation_id plus rows[].row_operation_id
+      x-business-idempotency-key: batch_operation_id
+      x-business-idempotency-description: Identifica la operación masiva en V1, V2 y V3. V1/V2 transportan rows inline;
+        V3 transporta content_ref y sus row_operation_id solo se conocen después de descargar el documento, verificar
+        byte_length y SHA-256 y validar las filas.
       payload:
         allOf:
         - $ref: '#/components/schemas/MessageEnvelope'
@@ -2338,10 +2341,12 @@ components:
             properties:
               data:
                 $ref: '#/components/schemas/CatalogBulkUpsertRequestedDataV2'
-      description: Aceptacion dual v1/v2 exclusivamente para este comando. Desplegar Catalog compatible antes de
-        que Bulk emita v2. No reescribir Outbox antiguo ni reutilizar una row_operation_id con payload convertido.
-        Resultados completed/rejected conservan schema_version=1. Nombres, routing key, exchange y template_version=2
-        permanecen iguales. Consumidor Catalog v1/v2 implementado en Backend PR
+      description: V1 y V2 conservan rows inline y su compatibilidad semántica; V3 usa content_ref y no incluye rows
+        en el mensaje. message_id identifica la entrega para deduplicación; batch_operation_id identifica la operación
+        masiva. En V3, Catalog obtiene row_operation_id únicamente tras descargar el documento referenciado, verificar
+        su byte_length y SHA-256 y validar sus filas. Catalog debe soportar V3 antes de que Bulk habilite su emisión.
+        No reescribir Outbox antiguo ni reutilizar una row_operation_id con payload convertido. Resultados terminales
+        completed/rejected conservan sus versiones y payloads existentes.
       x-transport: azure-service-bus-basic
       x-contract-status: SEMIFINAL_G6
       x-runtime-status: PENDIENTE_IMPLEMENTACION

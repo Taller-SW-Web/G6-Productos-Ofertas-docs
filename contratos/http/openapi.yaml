@@ -22077,7 +22077,9 @@ paths:
       x-consumer: catalog-svc
       x-internal: true
       x-contract-status: SEMIFINAL_G6
-      x-external-homologation: PENDIENTE_HOMOLOGACION_EXTERNA
+      x-authorization-status: PENDIENTE_AUTORIZACION_G7
+      x-grant-status: PENDIENTE_VERIFICACION_G7
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
       parameters:
       - name: contentId
         in: path
@@ -22128,7 +22130,8 @@ paths:
       - catalog-svc
       x-integration-decisions:
       - ADR-H5-SERVICE-BUS-BASIC
-      - PENDIENTE_HOMOLOGACION_EXTERNA
+      - PENDIENTE_AUTORIZACION_G7
+      - PENDIENTE_IMPLEMENTACION
       x-error-codes:
         '401':
         - TOKEN_INVALIDO
