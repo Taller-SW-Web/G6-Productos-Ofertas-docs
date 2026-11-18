@@ -1,6 +1,6 @@
 # Productos y Ofertas
 
-API privada G6 Productos y Ofertas: [editor de Swagger Studio](https://app.swaggerhub.com/apis/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3) · [vista de documentación](https://app.swaggerhub.com/apis-docs/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3). Ambas requieren acceso autorizado; se comprobó su coherencia, no su visualización privada. Ver [integración, validaciones y límites de Try it out](swagger/README.md) y [hallazgos vigentes](swagger/HALLAZGOS.md). Docs conserva la fuente contractual.
+API privada G6 Productos y Ofertas: [editor de Swagger Studio](https://app.swaggerhub.com/apis/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3) · [vista de documentación](https://app.swaggerhub.com/apis-docs/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3). Ambas son referencias históricas de SwaggerHub `0.6.0-rc.3`; requieren acceso autorizado y no representan la versión H5 `0.7.0-rc.1`, que aún no está publicada allí. Ver [integración, validaciones y límites de Try it out](swagger/README.md) y [hallazgos vigentes](swagger/HALLAZGOS.md). Docs conserva la fuente contractual.
 
 Alternativa sin cuenta ni conexión a SmartBear: [Swagger UI local](swagger/LOCAL.md). Tras instalar dependencias, desde la raíz ejecuta `npm --prefix swagger run swagger:local` y abre `http://localhost:8080`. Solo consulta, con Try it out deshabilitado y escucha exclusiva en loopback.
 
@@ -16,7 +16,7 @@ La documentación sigue un enfoque **contract-first**: las reglas funcionales, c
 
 ### Seguimiento de mensajería H5
 
-La [matriz única de implementación Service Bus H5](integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md) registra relaciones, handlers, evidencia por SHA, dependencias y fases de ejecución. Los 40 mensajes y 18 pares heredados H4 son inventarios lógicos, no prueba de colas o handlers. Para tareas H5, consulta esta matriz junto con la ADR, topología y plan H5. El piloto Pricing/Price Audit es parcial y no representa una migración global.
+El [registro de compatibilidad Backend H5](integraciones/COMPATIBILIDAD-BACKEND-CONTRATOS-H5.md) identifica ajustes prescritos y estados sin atribuirlos como aplicados. La [matriz única de implementación Service Bus H5](integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md) registra relaciones, handlers, evidencia por SHA, dependencias y fases de ejecución. Los 40 mensajes y 18 pares heredados H4 son inventarios lógicos, no prueba de colas o handlers. Para tareas H5, consulta esta matriz junto con la ADR, topología y plan H5. El piloto Pricing/Price Audit es parcial y no representa una migración global.
 
 Productos y Ofertas cubre 16 funcionalidades principales:
 
@@ -109,8 +109,8 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 | Arquitectura objetivo H5 | [`arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md`](arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md) | Azure Service Bus Basic interno G6, adoptado; piloto aislado #234 validado; implementación compartida y verificaciones globales pendientes |
 | Topología y operación H5 | [`contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md`](contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md), [`arquitectura/operacion-service-bus-basic-h5.md`](arquitectura/operacion-service-bus-basic-h5.md) | Arquitectura adoptada; piloto aislado Pricing → Price Audit validado en Azure según #234; recursos y activación compartidos pendientes de verificar |
 
-| Inventario y frontera H5 | [`contratos/eventos/INVENTARIO-40-MENSAJES-H5.md`](contratos/eventos/INVENTARIO-40-MENSAJES-H5.md), [`integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md`](integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md) | 40 mensajes H4, 13 asignaciones a G5, 18 pares internos H4 y cola nueva de comandos HTTP Promotions |
-| Contrato HTTP H5 candidato | [`contratos/http/PROPUESTA-OPERACIONES-CUPONES-H5.md`](contratos/http/PROPUESTA-OPERACIONES-CUPONES-H5.md) | Schemas JSON Schema propuestos para cupones, operaciones durables y estado efectivo de reservas; no publicado ni homologado |
+| Inventario y frontera H5 | [`contratos/eventos/INVENTARIO-40-MENSAJES-H5.md`](contratos/eventos/INVENTARIO-40-MENSAJES-H5.md), [`integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md`](integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md) | 40 mensajes H4, 13 asignaciones a G5, 18 pares internos H4; transición externa HTTP bajo hipótesis G5 de planificación |
+| Baseline HTTP H5 y propuesta G5–G6 | [`contratos/http/PROPUESTA-OPERACIONES-CUPONES-H5.md`](contratos/http/PROPUESTA-OPERACIONES-CUPONES-H5.md), [`integraciones/REFERENCIA-G5-G6-H5-REVISION-01.md`](integraciones/REFERENCIA-G5-G6-H5-REVISION-01.md) | Cuatro rutas externas incluidas en OpenAPI `0.7.0-rc.1` `SEMIFINAL_G6`; hipótesis de aceptación G5 solo para planificación, homologación formal y grants G7 pendientes |
 | Plan H5 y gates | [`integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md`](integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md), [`tests/contratos/PLAN-VERIFICACION-SERVICE-BUS-H5.md`](tests/contratos/PLAN-VERIFICACION-SERVICE-BUS-H5.md) | Migración, verificación y bloqueos separados por estado |
 | Índice de transición H4→H5 | [`integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md`](integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md) | Clasifica contrato H4, compatibilidad transitoria, legado y menciones funcionales |
 | Procedimientos RabbitMQ H4 | [`arquitectura/operacion-rabbitmq.md`](arquitectura/operacion-rabbitmq.md), [`ops/rabbitmq/`](ops/rabbitmq/), [`tests/rabbitmq-aislamiento/README.md`](tests/rabbitmq-aislamiento/README.md) | `LEGADO_H4`; consulta histórica/compatibilidad del runtime anterior, no guía de implementación H5 |
@@ -163,7 +163,7 @@ Ante una diferencia entre documentación narrativa y un contrato ejecutable, se 
 
 ### Mensajería H5 — decisión vigente
 
-G6 adoptó Azure Service Bus Basic exclusivamente para comunicación asíncrona interna entre sus bounded contexts. Las integraciones externas son HTTP autenticado por APIM/Gateway; no se exponen credenciales ni acceso directo al broker. El broker del runtime H4 permanece sujeto a su compatibilidad transitoria. La adopción arquitectónica no equivale a migración global. El piloto aislado Pricing → Price Audit cuenta con pruebas Azure reales según [Backend #234](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/issues/234); esto no acredita vigencia de sus recursos, release de aplicaciones compartidas, infraestructura compartida, migración global, autorización G7 ni homologación G5. Estos estados requieren evidencia propia. Véanse el [cierre #234](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/docs/hito-5/CIERRE_PILOTO_234.md) y la [topología H5](contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md).
+G6 adoptó Azure Service Bus Basic exclusivamente para comunicación asíncrona interna entre sus bounded contexts. Las integraciones externas son HTTP autenticado por APIM/Gateway; no se exponen credenciales ni acceso directo al broker. El broker del runtime H4 permanece sujeto a su compatibilidad transitoria. La adopción arquitectónica no equivale a migración global. El piloto aislado Pricing → Price Audit cuenta con pruebas Azure reales según [Backend #234](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/issues/234); esto no acredita vigencia de sus recursos, release de aplicaciones compartidas, infraestructura compartida, migración global, autorización G7 ni homologación G5. Para la frontera G5–G6 H5, la aceptación se asume solo para planificación conforme a [`G5-G6-H5-REVISION-01`](integraciones/REFERENCIA-G5-G6-H5-REVISION-01.md); homologación bilateral efectiva, grants G7, implementación, E2E y despliegue se acreditan por separado.
 
 Para mensajería H5 consultar primero la [ADR](arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md), la [topología](contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) y el [plan de migración](integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md). El AsyncAPI H4 se conserva por sus semánticas funcionales; no se derivan de él infraestructura, colas o bindings H5. Véase el [índice de transición](integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md).
 
@@ -295,15 +295,15 @@ La explicación humana de responsabilidades e integración se mantiene en:
 
 | Artefacto | Versión |
 |---|---|
-| OpenAPI 3.1.0 | `0.6.0-rc.4`, candidata H4 integrada en master tras PR #118; no es evidencia de runtime |
-| AsyncAPI 3.0.0 | `0.6.0-rc.4`, candidata H4; 40 canales/mensajes, nombres/routing keys conservados; payloads tipados requieren corte coordinado |
+| OpenAPI 3.1.0 | `0.7.0-rc.1`, baseline semifinal H5 G6; 148 operaciones (143 H4 preservadas y 5 nuevas); pendiente de homologación externa e implementación/validación independientes |
+| AsyncAPI 3.0.0 | `0.7.0-rc.1`, baseline semifinal H5; 19 canales y 29 tipos de mensaje para Service Bus Basic interno; H4 íntegro en snapshots históricos |
 | Línea base histórica OpenAPI/AsyncAPI | `0.5.0` (compatibilidad; no sustituida automáticamente en runtime) |
-| Catálogo de errores | Vocabulario humano de códigos, alineado con el contrato candidato |
-| Catálogo de eventos | 40 mensajes documentados; publicación real pendiente de comprobación |
+| Catálogo de errores | Vocabulario humano alineado con OpenAPI H5 `0.7.0-rc.1` semifinal |
+| Catálogo de eventos | 40 mensajes históricos H4; AsyncAPI canónico H5 define 29 tipos, aún sin evidencia de publicación real |
 | Topología RabbitMQ H4 | Contrato histórico; no inferir aprovisionamiento actual ni usar como topología H5 |
 | Kit de integración | Guía documental derivada del contrato candidato |
 
-**Estado de publicación:** en el corte `master` revisado para esta propuesta, OpenAPI `0.6.0-rc.4` y AsyncAPI `0.6.0-rc.4` son la línea documental H4 integrada tras PR #118. Esto no demuestra vigencia de runtime. La consulta física G2 está homologada contractualmente; grants G7, implementación, despliegue y E2E permanecen pendientes (ver [acuerdo G2–G6 H4](integraciones/ACUERDO_G2_G6_H4_2026-11-02.md)). El cambio AsyncAPI de GenericData a schema tipado es incompatible para consumidores antiguos y requiere despliegue coordinado antes de emisión. La topología observada y los contratos no acreditan estado actual del broker, adaptación de código, grants G7, homologación externa, despliegue ni E2E.
+**Estado de publicación:** OpenAPI y AsyncAPI canónicos `0.7.0-rc.1` son `SEMIFINAL_G6`; la versión H4 se conserva byte por byte en `contratos/historico/h4/` con hashes en `SHA256SUMS`. Las interfaces compartidas siguen pendientes de homologación externa. Esto no acredita implementación, runtime, CI/CD, pruebas de integración/performance, grants, APIM habilitado, recursos Azure compartidos ni despliegue. La homologación G2 H4 documentada permanece histórica y no implica aceptación de la baseline H5.
 
 ---
 
@@ -449,7 +449,7 @@ Este repositorio busca mantener:
 
 ### Decisión H5 adoptada: Azure Service Bus Basic
 
-H4 conserva RabbitMQ como arquitectura histórica y contrato de referencia; OpenAPI/AsyncAPI y sus fixtures H4 se preservan como tales. G6 adoptó Azure Service Bus Basic exclusivamente para flujos internos H5. Los consumidores externos G1–G5 acceden a G6 por HTTP autenticado; G7 conserva la autoridad de identidad y grants. Las 13 interacciones AsyncAPI asignadas a `modulo-ventas` requieren migración de frontera por HTTP, con aceptación G5 y autorización G7 pendientes. Decisión interna, homologación, grants, implementación, pruebas y despliegue son estados separados; ninguno se presume alcanzado por estos documentos.
+H4 conserva RabbitMQ como arquitectura histórica en snapshots y fixtures; H5 canónico usa Service Bus Basic interno y fronteras externas HTTP autenticadas. G6 adoptó Azure Service Bus Basic exclusivamente para flujos internos H5. Los consumidores externos G1–G5 acceden a G6 por HTTP autenticado; G7 conserva la autoridad de identidad y grants. Para las 13 asignaciones históricas de `modulo-ventas`, la aceptación de la propuesta G5–G6 se asume solo para planificación; homologación bilateral efectiva y autorización G7 siguen pendientes. Decisión interna, homologación, grants, implementación, pruebas y despliegue son estados separados; ninguno se presume alcanzado por estos documentos.
 
 Basic no ofrece topics, sessions, detección de duplicados administrada ni `DefaultMessageTimeToLive`; el máximo de 256 KB incluye propiedades. La expiración comercial de reservas depende del estado y `expires_at` autoritativo de Inventario, no del TTL del broker. Véanse la [ADR adoptada](arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md), la [topología H5](contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) y el [plan de migración](integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md).
 

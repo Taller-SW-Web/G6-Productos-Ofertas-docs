@@ -1,5 +1,7 @@
 # Topología candidata Service Bus Basic — G6 Hito 5
 
+**Contrato canónico asociado:** AsyncAPI `0.7.0-rc.1`, baseline `SEMIFINAL_G6`; homologación externa pendiente. El piloto aislado no prueba habilitación global.
+
 **Arquitectura:** Azure Service Bus Basic está adoptado por G6 para mensajería interna H5; esta topología define destinos candidatos, no aprobación automática de colas.
 
 **Piloto aislado:** Pricing → Service Bus Basic → Price Audit fue validado en Azure real según Backend #234, con identidad administrada/RBAC, redelivery, persistencia e ingreso a DLQ en un laboratorio aislado. Los recursos del piloto quedaron desplegados, pero su vigencia, titularidad, permisos y estado actual deben verificarse antes de cualquier reutilización. La evidencia no representa release/producción de las aplicaciones compartidas.

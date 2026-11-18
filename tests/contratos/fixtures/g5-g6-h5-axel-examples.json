@@ -1,0 +1,101 @@
+{
+  "source": {
+    "id": "G5-G6-H5-REVISION-01",
+    "date": "2026-11-17",
+    "acceptance_state": "ACEPTACION_G5_ASUMIDA_PARA_PLANIFICACION"
+  },
+  "coupon_consumption_request": {
+    "operation_id": "66666666-6666-4666-8666-666666666666",
+    "order_id": "PED-G5-H5-001",
+    "coupon_code": "CUPON_DE_PRUEBA",
+    "channel_id": "MARKETPLACE",
+    "customer_ref": null,
+    "effective_at": "2026-11-17T20:00:00Z",
+    "reservation_id": "22222222-2222-4222-8222-222222222222",
+    "commercial_snapshot_ref": "PED-G5-H5-001"
+  },
+  "coupon_restoration_request": {
+    "operation_id": "77777777-7777-4777-8777-777777777777",
+    "order_id": "PED-G5-H5-001",
+    "consumption_operation_id": "66666666-6666-4666-8666-666666666666",
+    "cancellation_reason": "ANULACION",
+    "cancelled_at": "2026-11-17T20:10:00Z"
+  },
+  "coupon_operation_pending": {
+    "operation_id": "66666666-6666-4666-8666-666666666666",
+    "operation_type": "CONSUMIR_CUPON",
+    "status": "ACCEPTED",
+    "order_id": "PED-G5-H5-001",
+    "accepted_at": "2026-11-17T20:00:00Z",
+    "updated_at": "2026-11-17T20:00:00Z",
+    "completed_at": null,
+    "result": null
+  },
+  "coupon_operation_completed": {
+    "operation_id": "66666666-6666-4666-8666-666666666666",
+    "operation_type": "CONSUMIR_CUPON",
+    "status": "COMPLETED",
+    "order_id": "PED-G5-H5-001",
+    "accepted_at": "2026-11-17T20:00:00Z",
+    "updated_at": "2026-11-17T20:00:02Z",
+    "completed_at": "2026-11-17T20:00:02Z",
+    "result": {
+      "order_id": "PED-G5-H5-001",
+      "coupon_code": "CUPON_DE_PRUEBA",
+      "reservation_id": "22222222-2222-4222-8222-222222222222",
+      "commercial_snapshot_ref": "PED-G5-H5-001",
+      "decided_at": "2026-11-17T20:00:02Z"
+    }
+  },
+  "reservation_active": {
+    "reservation_id": "22222222-2222-4222-8222-222222222222",
+    "order_id": "PED-G5-H5-001",
+    "estado_persistido": "ACTIVA",
+    "expires_at": "2026-11-17T20:15:00Z",
+    "observed_at": "2026-11-17T20:00:00Z",
+    "vigencia_efectiva": "VIGENTE",
+    "permite_pago": true,
+    "permite_consumo_cupon": true
+  },
+  "reservation_expired": {
+    "reservation_id": "22222222-2222-4222-8222-222222222222",
+    "order_id": "PED-G5-H5-001",
+    "estado_persistido": "ACTIVA",
+    "expires_at": "2026-11-17T20:00:00Z",
+    "observed_at": "2026-11-17T20:00:00Z",
+    "vigencia_efectiva": "VENCIDA",
+    "permite_pago": false,
+    "permite_consumo_cupon": false
+  },
+  "idempotency_cases": [
+    {
+      "case": "header_absent_or_invalid_uuid",
+      "header": null,
+      "body_operation_id": "66666666-6666-4666-8666-666666666666",
+      "status": 400,
+      "code": "VALIDACION"
+    },
+    {
+      "case": "body_operation_id_absent_or_invalid_uuid",
+      "header": "66666666-6666-4666-8666-666666666666",
+      "body_operation_id": null,
+      "status": 400,
+      "code": "VALIDACION"
+    },
+    {
+      "case": "valid_uuids_differ",
+      "header": "66666666-6666-4666-8666-666666666666",
+      "body_operation_id": "77777777-7777-4777-8777-777777777777",
+      "status": 409,
+      "code": "IDEMPOTENCY_CONFLICT"
+    },
+    {
+      "case": "same_identity_different_fingerprint",
+      "header": "66666666-6666-4666-8666-666666666666",
+      "body_operation_id": "66666666-6666-4666-8666-666666666666",
+      "fingerprint_matches_existing": false,
+      "status": 409,
+      "code": "IDEMPOTENCY_CONFLICT"
+    }
+  ]
+}

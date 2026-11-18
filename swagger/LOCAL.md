@@ -1,6 +1,6 @@
 # Swagger UI local para G6
 
-Alternativa de consulta a [Swagger Studio privado](README.md), basada en el mismo [OpenAPI oficial](../contratos/http/openapi.yaml). No requiere cuenta SmartBear ni un backend desplegado. Incluye 136 operaciones, 13 grupos y 177 schemas del contrato vigente, incluidos los internos; no implica disponibilidad runtime.
+Alternativa de consulta a [Swagger Studio privado](README.md), basada en el mismo [OpenAPI oficial](../contratos/http/openapi.yaml). No requiere cuenta SmartBear ni un backend desplegado. Consume el OpenAPI canónico `0.7.0-rc.1`: 148 operaciones. Incluye las operaciones `x-internal` para revisión local; su presencia en Swagger UI no las publica por Gateway/APIM. No implica disponibilidad runtime.
 
 ## Instalar e iniciar
 

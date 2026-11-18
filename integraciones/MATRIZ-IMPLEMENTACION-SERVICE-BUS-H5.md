@@ -1,10 +1,10 @@
 # Matriz de implementación y seguimiento — Azure Service Bus H5
 
-**Estado:** especificación de seguimiento; no habilita recursos, contratos, grants, despliegues ni cortes.  
+**Estado:** seguimiento de implementación; no habilita recursos, grants, runtime, despliegues ni cortes. Los contratos canónicos 0.7.0-rc.1 están en estado SEMIFINAL_G6.
 **Revisión:** 2026-11-17. **Backend contrastado:** origin/master SHA 8d26885276d933171ff0b1866d6e23f02a959405. **Docs base:** origin/master SHA a1e00c1.
 **Autoridad:** ADR H5 y topología H5. Esta matriz concentra estados por flujo; no duplica la arquitectura ni el plan de migración.
 
-Fuentes normativas: [ADR-H5-SERVICE-BUS-BASIC.md](../arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md), [TOPOLOGIA-SERVICE-BUS-BASIC-H5.md](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md), [PLAN-MIGRACION-MENSAJERIA-H5.md](PLAN-MIGRACION-MENSAJERIA-H5.md), [MATRIZ-EXTERNOS-ASYNCAPI-H5.md](MATRIZ-EXTERNOS-ASYNCAPI-H5.md), [INVENTARIO-40-MENSAJES-H5.md](../contratos/eventos/INVENTARIO-40-MENSAJES-H5.md) y [contrato AsyncAPI H4](../contratos/eventos/asyncapi.yaml), solo como origen semántico. Evidencia parcial del piloto: [cierre Backend #234](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/docs/hito-5/CIERRE_PILOTO_234.md) y [ejecución Azure](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/docs/hito-5/EJECUCION_AZURE_SERVICE_BUS.md).
+Fuentes normativas: [ADR-H5-SERVICE-BUS-BASIC.md](../arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md), [TOPOLOGIA-SERVICE-BUS-BASIC-H5.md](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md), [PLAN-MIGRACION-MENSAJERIA-H5.md](PLAN-MIGRACION-MENSAJERIA-H5.md), [MATRIZ-EXTERNOS-ASYNCAPI-H5.md](MATRIZ-EXTERNOS-ASYNCAPI-H5.md), [INVENTARIO-40-MENSAJES-H5.md](../contratos/eventos/INVENTARIO-40-MENSAJES-H5.md) y [snapshot AsyncAPI H4](../contratos/historico/h4/eventos/asyncapi.yaml), solo como origen semántico. El [AsyncAPI canónico H5](../contratos/eventos/asyncapi.yaml) define las 18 relaciones internas y el nuevo canal. Evidencia parcial del piloto: [cierre Backend #234](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/docs/hito-5/CIERRE_PILOTO_234.md) y [ejecución Azure](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/docs/hito-5/EJECUCION_AZURE_SERVICE_BUS.md).
 
 ## Reglas de uso y clasificación
 
@@ -41,7 +41,7 @@ Los nombres de cola se copian de la topología candidata vigente; todos permanec
 
 ## Frontera externa G5 (separada de las colas internas)
 
-Los siguientes 13 mensajes son asignaciones históricas de AsyncAPI H4 a modulo-ventas; no son relaciones internas ni colas Service Bus. El destino H5 es HTTP autenticado por APIM/Gateway G6, sin acceso de G5 al namespace. El detalle contractual y de aceptación por mensaje permanece en la [matriz externa normativa](MATRIZ-EXTERNOS-ASYNCAPI-H5.md).
+Los siguientes 13 mensajes son asignaciones históricas de AsyncAPI H4 a modulo-ventas; no son relaciones internas ni colas Service Bus. El destino H5 es HTTP autenticado por APIM/Gateway G6, sin acceso de G5 al namespace. La propuesta `G5-G6-H5-REVISION-01` se asume íntegramente para planificación interna; su homologación bilateral formal y los grants G7 efectivos continúan pendientes. Esta hipótesis no habilita un flujo ni equivale a aceptación registrada. El detalle contractual y de aceptación por mensaje permanece en la [matriz externa normativa](MATRIZ-EXTERNOS-ASYNCAPI-H5.md) y la [trazabilidad D-01–D-10](REFERENCIA-G5-G6-H5-REVISION-01.md).
 
 | Dirección | Mensajes heredados | Transporte/estado | Desbloqueo y aceptación |
 |---|---|---|---|
@@ -100,4 +100,4 @@ No ejecutar fases de implementación, Azure compartido, SQL remoto, activación 
 
 Docs origin/master SHA a1e00c1 adopta Service Bus Basic y clasifica RabbitMQ como legado H4. Backend origin/master SHA 8d26885276d933171ff0b1866d6e23f02a959405 contiene implementación parcial en Pricing, Price Audit y Catalog, además del piloto #234; no demuestra migración global, aprovisionamiento compartido ni producción. El checkout Docs preexistente estaba en rama docs/rabbitmq-adopcion-retry-dlx con numerosos cambios locales, incluidos AsyncAPI y operación RabbitMQ; dichos cambios no se usaron como norma ni se modificaron. Discrepancias nuevas se resuelven contra ADR adoptada, master y evidencia por SHA del owner.
 
-No se cambian AsyncAPI/OpenAPI ni fixtures H4. La matriz no afirma homologación, grant, despliegue o retiro de RabbitMQ.
+OpenAPI/AsyncAPI canónicos H5 `0.7.0-rc.1` son `SEMIFINAL_G6`; sus interfaces externas siguen pendientes de homologación. Los snapshots y fixtures H4 permanecen inmutables. La matriz no afirma homologación, grant, despliegue o retiro de RabbitMQ.

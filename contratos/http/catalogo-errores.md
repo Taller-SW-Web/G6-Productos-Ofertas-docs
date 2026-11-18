@@ -55,6 +55,7 @@ Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail
 | `STOCK_INSUFICIENTE` | No existe disponibilidad suficiente para completar la operación. |
 | `RESERVA_NO_ENCONTRADA` | Reserva no encontrada. |
 | `OPERACION_INVENTARIO_NO_ENCONTRADA` | Operación de inventario inexistente o no visible para el consumidor. |
+| `OPERACION_CUPON_NO_ENCONTRADA` | Operación de cupón inexistente o no visible para la identidad y pedido consultados. |
 | `CONTEXTO_ABASTECIMIENTO_INVALIDO` | Contexto o referencia de cumplimiento comercial inválido. |
 | `RESERVA_NO_ACTIVA` | Reserva no activa. |
 | `RESERVA_EXPIRADA` | Reserva expirada. |
@@ -106,6 +107,7 @@ Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail
 | `SLUG_DUPLICADO` | Slug duplicado. |
 | `METADATOS_SEO_INVALIDOS` | Metadatos SEO inválidos. |
 | `ARCHIVO_INVALIDO` | Archivo inválido. |
+| `ARCHIVO_NO_ENCONTRADO` | Contenido interno de claim-check inexistente o no visible para el cliente autenticado; respuesta uniforme. |
 | `ARCHIVO_EXCEDE_LIMITE` | Archivo excede el límite. |
 | `PLANTILLA_INCOMPATIBLE` | Plantilla incompatible. |
 | `CONTENIDO_ACTIVO_NO_PERMITIDO` | Contenido activo no permitido. |

@@ -1,6 +1,6 @@
 # Inventario contractual completo de 40 mensajes — AsyncAPI G6 H4 y destino H5
 
-**Estado:** matriz de análisis, no runtime probado ni contrato H5 homologado. Origen: `contratos/eventos/asyncapi.yaml` 0.6.0-rc.4. Actualizar si cambia el contrato.
+**Estado:** inventario de trazabilidad histórica H4; no describe el conteo ni runtime del contrato H5 canónico. Origen histórico inmutable: `contratos/historico/h4/eventos/asyncapi.yaml` 0.6.0-rc.4. El inventario conserva trazabilidad H4; H5 canónico AsyncAPI 0.7.0-rc.1 no representa 40 mensajes de broker. Actualizar si cambia el contrato.
 
 **Clasificación:** `INTERNO` se mantiene en el catálogo G6 y se traslada a colas internas cuando exista handler; `HTTP_G5` exige homologación HTTP externa, con mensajería solo detrás del Gateway. Las referencias a `api-gateway/bff` son internas en este inventario, **no** prueba de suscripción G1 a broker.
 
@@ -69,4 +69,4 @@ Conteo reproducido desde AsyncAPI `0.6.0-rc.4`: 40 canales/mensajes. Trece mensa
 
 ## Regla sobre versiones
 
-La futura candidata AsyncAPI H5 debe derivarse del contrato de negocio H4, reflejar que `modulo-ventas` ya no es un cliente AMQP tras el corte, y mantener los mensajes internos aplicables. **No actualizar el contrato canónico ni las pruebas históricas Oracle hasta aprobar compatibilidad, aceptación de G5 y gates de seguridad.**
+AsyncAPI canónico H5 `0.7.0-rc.1` ya conserva los 27 tipos internos asignados y añade dos comandos internos de Promotions. Las 13 interacciones G5 quedan fuera del transporte Service Bus y se representan por HTTP, aún pendientes de homologación/autorización. El inventario de 40 solo aporta trazabilidad H4; sus pruebas y snapshots permanecen históricos.

@@ -1,26 +1,26 @@
 # Contrato HTTP candidato H5 — operaciones asíncronas de cupones y estado de reserva
 
-**Estado:** `PROPUESTA_NO_PUBLICADA_EN_OPENAPI`; pendiente de revisión interna G6, homologación G5 y autorización G7. Sin implementación H5 acreditada. No sustituye OpenAPI/AsyncAPI H4 ni modifica sus fixtures.
+**Estado:** incluida en OpenAPI H5 `0.7.0-rc.1` como `SEMIFINAL_G6` en el Draft PR #126. La aceptación de G5 se asume solo para planificación (`ACEPTACION_G5_ASUMIDA_PARA_PLANIFICACION`); la homologación bilateral efectiva sigue pendiente de constancia. Grants G7 no comprobados, implementación/runtime por verificar y publicación externa/despliegue no realizados. No sustituye los snapshots OpenAPI/AsyncAPI H4 ni modifica sus fixtures.
 
-Este documento contiene esquemas JSON Schema candidatos y ejemplos verificables para discusión. Las rutas no existen en OpenAPI vigente. Los nombres de scope pendientes son requisitos funcionales, no concesiones.
+Este documento conserva esquemas JSON Schema y ejemplos contractuales derivados de `G5-G6-H5-REVISION-01` (17/11/2026). Las operaciones están incorporadas a OpenAPI H5 `0.7.0-rc.1` como baseline `SEMIFINAL_G6`. La hipótesis de aceptación G5 permite planificar y preparar implementación compatible, pero no equivale a aceptación formal ni homologación. Los grants G7 y la implementación/runtime siguen pendientes; los scopes y allowlists son propuestas contractuales, no concesiones.
 
 ## Operaciones candidatas
 
 | Método | Ruta candidata | Owner | Efecto/lectura | Cliente de servicio propuesto |
 |---|---|---|---|---|
 | POST | `/api/v1/cupones/consumos` | Promotions | Admite consumo durable, devuelve 202 | `modulo-ventas` tras allowlist y autorización G7 |
-| POST | `/api/v1/cupones/restauraciones` | Promotions | Admite restauración durable, devuelve 202 | `modulo-ventas` tras allowlist y autorización G7 |
-| GET | `/api/v1/cupones/operaciones/{operationId}?order_id={orderId}` | Promotions | Resultado durable, sin ejecutar comandos | `modulo-ventas` tras allowlist y autorización G7 |
-| GET | `/api/v1/inventario/reservas/{reservaId}/estado?order_id={orderId}` | Inventory | Lectura de estado persistido y vigencia efectiva | Consumidor aprobado explícitamente; inicialmente se propone solo `modulo-ventas` |
+| POST | `/api/v1/cupones/restauraciones` | Promotions | Admite restauración durable, devuelve 202 | `modulo-ventas` (M1) según propuesta Axel; allowlist/grant G7 no acreditados |
+| GET | `/api/v1/cupones/operaciones/{operationId}?order_id={orderId}` | Promotions | Resultado durable, sin ejecutar comandos | `modulo-ventas` (M1) según propuesta Axel; allowlist/grant G7 no acreditados |
+| GET | `/api/v1/inventario/reservas/{reservaId}/estado?order_id={orderId}` | Inventory | Lectura de estado persistido y vigencia efectiva | `modulo-ventas` (M1); scope dedicado H5, grant G7 no acreditado |
 
 `order_id` es texto opaco de G5. En ambas consultas es requerido y debe coincidir con el pedido persistido en la operación/reserva. Una reserva/operación ausente y una que no corresponde al pedido o cliente se responden con el mismo `404`, para no revelar existencia. `reservation_id` y `operation_id` UUID no son credenciales.
 
-El scope histórico `inventario:operaciones:leer` está documentado para consultar operaciones de Inventory. Su suficiencia para esta ruta debe confirmarse con G7; la ruta no hereda una concesión por aparecer en esta propuesta. Los scopes de consumo, restauración y lectura de resultado de cupones deben definirse/autorizarse con G7. La allowlist acepta únicamente consumidores externos aprobados; no se amplía por conveniencia técnica.
+El GET H5 de estado de reserva utiliza el scope dedicado `inventario:reservas:estado:leer`; no reutiliza ni hereda `inventario:reservar` o `inventario:operaciones:leer`. Los scopes H5 de consumo, restauración y lectura de operación de cupón quedan definidos en el OpenAPI semifinal (`cupones:consumir`, `cupones:restaurar`, `cupones:operaciones:leer`) como propuesta G6 para G7. La allowlist acepta solo `modulo-ventas` para estas cuatro rutas. Grants y permisos efectivos no están comprobados.
 
 ## Seguridad y trazabilidad
 
 - JWT de servicio validado en APIM/Gateway y nuevamente en el owner: firma, issuer, audiencia `api-productos`, `client_id`, scope y allowlist por operación. `producer` del envelope interno nunca autentica.
-- `modulo-ventas` es la única identidad externa propuesta para estas operaciones de G5; aceptación y permiso G7 siguen pendientes. No se entregan credenciales Service Bus.
+- `modulo-ventas` (G5 M1) es el cliente permitido por operación para estas cuatro rutas según la propuesta; `modulo-postventa` (M2) conserva su alcance de devoluciones y no recibe permisos para reservar/consumir stock de reemplazo. Aceptación formal y grants efectivos G7 siguen pendientes. No se entregan credenciales Service Bus.
 - El backend compara `order_id` con el valor dueño asociado a la reserva/operación y comprueba que el cliente autenticado está autorizado para la operación. Desajuste y no existencia responden igual para evitar enumeración.
 - El `customer_ref` funcional no reemplaza `client_id` y no autoriza acceso. No se devuelve información de otro pedido, otras campañas ni payloads internos.
 - `X-Correlation-ID` se propaga por HTTP, operación, Outbox, cola interna, Inbox y respuesta; no forma parte del fingerprint idempotente.
@@ -35,7 +35,7 @@ El body contiene `operation_id` UUID y el header requerido `Idempotency-Key` deb
 4. El worker exclusivo de operaciones Promotions usa Inbox por `message_id`, deduplica efectos por `operation_id`, persiste efecto, estado y resultado terminal en la transacción de Promotions, y después completa el mensaje.
 5. El GET consulta el estado durable; no publica, consume ni restaura otra vez.
 
-Misma identidad y mismo contenido semántico: si es la primera admisión, `202` con snapshot `ACCEPTED`; si es un replay del POST, `200` con el snapshot vigente de la operación, sin nuevo efecto. Misma clave/`operation_id` con contenido o intención distinto, o header/body distintos: `409 IDEMPOTENCY_CONFLICT`. La retención de idempotencia debe cubrir la ventana de reintentos/reconciliación y no puede purgarse con Outbox pendiente o resultado ambiguo; plazo exacto requiere acuerdo antes del OpenAPI definitivo.
+Misma identidad y mismo contenido semántico: si es la primera admisión, `202` con snapshot `ACCEPTED`; si es un replay del POST, `200` con el snapshot durable vigente, sin nuevo efecto. La discrepancia D-05 queda resuelta para esta baseline: header ausente/malformado/UUID inválido → `400 VALIDACION`; `operation_id` ausente/malformado → `400 VALIDACION`; dos UUID válidos distintos → `409 IDEMPOTENCY_CONFLICT`; misma identidad con fingerprint distinto → `409 IDEMPOTENCY_CONFLICT`. La retención de idempotencia debe cubrir reintentos/reconciliación y no puede purgarse con Outbox pendiente o resultado ambiguo; plazo exacto sigue pendiente de cierre.
 
 Los rechazos de negocio producidos por procesamiento se guardan como `REJECTED` y se consultan por GET; un `202` no significa cupón consumido. Los errores de autenticación, formato, colisión o indisponibilidad síncronos no crean una admisión durable.
 
@@ -55,7 +55,7 @@ Los rechazos de negocio producidos por procesamiento se guardan como `REJECTED` 
     "customer_ref": { "oneOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }] },
     "effective_at": { "type": "string", "format": "date-time" },
     "reservation_id": { "type": "string", "format": "uuid" },
-    "commercial_snapshot_ref": { "type": "string", "minLength": 1 }
+    "commercial_snapshot_ref": { "type": "string", "minLength": 1, "description": "Exactamente igual a order_id; no requiere hash ni tabla adicional." }
   },
   "required": ["operation_id", "order_id", "coupon_code", "channel_id", "effective_at", "reservation_id", "commercial_snapshot_ref"]
 }
@@ -82,7 +82,7 @@ Este body conserva los campos funcionales requeridos por `CouponConsumptionReque
 }
 ```
 
-La propuesta HTTP exige el `consumption_operation_id` del consumo confirmado que se restaura. El AsyncAPI v2 vigente conserva una forma transicional nullable/opcional; endurecerlo para H5 necesita revisión de compatibilidad y homologación G5, no cambia el contrato H4 aquí. `cancelled_at` es el instante original de cancelación y debe permanecer idéntico en todos los reintentos, nunca regenerarse al reenviar.
+La propuesta HTTP y el comando interno AsyncAPI H5 exigen el `consumption_operation_id` del consumo original confirmado. El snapshot AsyncAPI H4 conserva su forma histórica transicional, byte a byte; no se altera H4. `cancelled_at` es el instante original de cancelación y debe permanecer idéntico en todos los reintentos, nunca regenerarse al reenviar.
 
 ## Respuesta de admisión y consulta de operación
 
@@ -162,7 +162,7 @@ Consistencia adicional: `ACCEPTED`/`PROCESSING` usan `completed_at: null` y `res
 
 Consulta GET pendiente devuelve `200` con estado vigente, no `202` indefinido. El `404` de operación no existente o ajena usa el mismo código/shape. El GET no ejecuta el comando.
 
-## Estado vigente de reserva — ruta candidata
+## Estado vigente de reserva — operación en baseline semifinal H5
 
 `GET /api/v1/inventario/reservas/{reservaId}/estado?order_id={orderId}` devuelve lectura del estado persistido más la vigencia efectiva al `observed_at` del servidor. `estado_persistido` usa únicamente `ACTIVA`, `CONSUMIDA`, `LIBERADA`, `EXPIRADA`; `expires_at` siempre se devuelve. Para `ACTIVA`, `expires_at <= observed_at` significa `vigencia_efectiva: VENCIDA`, `permite_pago: false` y `permite_consumo_cupon: false`, aunque el ciclo persistido aún no haya guardado la transición `EXPIRADA`. La igualdad se considera vencida.
 
@@ -182,7 +182,7 @@ Para checkout de Marketplace con cupón, la secuencia candidata, preservando own
 4. Procesar el pago mediante el flujo de G5.
 5. Tras pago exitoso, solicitar `POST /api/v1/inventario/reservas/{reservaId}/confirmar` y esperar su resultado durable de consumo definitivo. Si pago no completado/anulación antes de consumir stock, seguir la liberación y restauración de cupón existentes cuando correspondan.
 
-No se llama a `/confirmar` antes del consumo del cupón o del pago. El endpoint propuesto de estado es una lectura puntual y no notifica por sí mismo expiraciones futuras; por eso la propuesta requiere una conciliación periódica durable dentro de G5 para pedidos y órdenes de reemplazo con reservas aún elegibles. La conciliación debe detectar tanto `ACTIVA` + `vigencia_efectiva=VENCIDA` como `EXPIRADA` persistida; el `ReservationExpirationService` existente puede persistir `EXPIRADA` entre barridos. G5 inicia el seguimiento al recuperar por HTTP el resultado durable `COMPLETED` de creación de reserva, sin depender del evento RabbitMQ H4 `inventory.reservation.created` después del corte H5. Un GET exitoso solo informa el estado observado y no cierra el seguimiento: G5 lo cierra únicamente después de persistir la decisión/transición comercial aplicable. G5 aplica sus transiciones existentes; G6 no administra estados de pedido. Véanse disparadores, elegibilidad, exclusiones, concurrencia, recuperación e hitos de homologación en la [ADR H5](../../arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md#reconciliación-durable-g5-ante-expiración-tardía--propuesta-pendiente). El mecanismo de conciliación no está implementado ni aceptado por G5.
+No se llama a `/confirmar` antes del consumo del cupón o del pago. El endpoint de estado en la baseline es una lectura puntual y no notifica por sí mismo expiraciones futuras; por eso la propuesta requiere una conciliación periódica durable dentro de G5 para pedidos y órdenes de reemplazo con reservas aún elegibles. La conciliación debe detectar tanto `ACTIVA` + `vigencia_efectiva=VENCIDA` como `EXPIRADA` persistida; el `ReservationExpirationService` existente puede persistir `EXPIRADA` entre barridos. G5 inicia el seguimiento al recuperar por HTTP el resultado durable `COMPLETED` de creación de reserva, sin depender del evento RabbitMQ H4 `inventory.reservation.created` después del corte H5. Un GET exitoso solo informa el estado observado y no cierra el seguimiento: G5 lo cierra únicamente después de persistir la decisión/transición comercial aplicable. G5 aplica sus transiciones existentes; G6 no administra estados de pedido. Véanse disparadores, elegibilidad, exclusiones, concurrencia, recuperación e hitos de homologación en la [ADR H5](../../arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md#reconciliación-durable-g5-ante-expiración-tardía--propuesta-pendiente). El mecanismo de conciliación no está implementado ni aceptado por G5.
 
 Variantes ya documentadas se mantienen: Chatbot conserva su integración actual de consultas comerciales (no crea reservas ni confirma stock); una orden de reemplazo es orden G5 independiente y sin cobro, M1 concilia su reserva por separado, al sellar el paquete solicita el consumo definitivo y espera su resultado antes de despacho. Si vence antes, M1 anula mediante su transición existente y puede abrir otra orden/reserva conforme a su regla vigente. La propuesta H5 no agrega comportamiento a esos flujos sin homologación.
 
@@ -216,17 +216,17 @@ Los errores usan el shape Problem Details del contrato HTTP vigente (`type`, `ti
 
 | HTTP | `code` | Uso propuesto |
 |---:|---|---|
-| 400 | `VALIDACION` | UUID, query `order_id`, JSON, `Idempotency-Key` o igualdad header/body inválidos |
+| 400 | `VALIDACION` | UUID/header o body ausente o malformado; query `order_id` o JSON inválidos. Si header/body son UUID válidos pero distintos, responde 409. |
 | 401 | `TOKEN_INVALIDO` | Token ausente, inválido, expirado o audiencia incorrecta |
 | 403 | `SCOPE_INSUFICIENTE` | Identidad válida fuera del permiso/allowlist aprobados |
-| 404 | `RESERVA_NO_ENCONTRADA` / `OPERACION_CUPON_NO_ENCONTRADA` (segundo código candidato) | Reserva/operación ausente o pedido/cliente no asociado; respuesta uniforme para evitar filtración. `OPERACION_CUPON_NO_ENCONTRADA` requiere aprobación y alta en catálogo antes de publicar |
+| 404 | `RESERVA_NO_ENCONTRADA` / `OPERACION_CUPON_NO_ENCONTRADA` | Reserva/operación ausente, ajena al pedido o no visible para el cliente autenticado; respuesta uniforme para evitar filtración. El segundo código ya figura en catálogo/OpenAPI semifinal y sigue sujeto a homologación. |
 | 409 | `IDEMPOTENCY_CONFLICT` | Reuso de clave/operación con otra intención o fingerprint |
 | 409 | `RESERVA_NO_ACTIVA` / `RESERVA_EXPIRADA` | Operación síncrona de Inventory que pierde carrera contra la expiración; una admisión asíncrona de cupón ya aceptada expone rechazo por resultado GET |
 | 429 | `RATE_LIMIT_EXCEDIDO` | Limitación de Gateway efectiva para el tier/configuración elegida |
 | 500 | `ERROR_INTERNO` | Fallo no controlado; sin incluir secretos/detalles internos |
 | 503 | `SERVICIO_NO_DISPONIBLE` | Owner o dependencia SQL no puede aceptar/leer con consistencia requerida |
 
-La lista es una propuesta derivada del catálogo de errores; registrar en el catálogo/OpenAPI solo tras aprobación. No añadir un 422 para un rechazo de negocio que ya puede quedar durable como `REJECTED`.
+La tabla resume los errores incluidos en el OpenAPI semifinal y el catálogo. Su uso externo permanece sujeto a homologación formal. No añadir un 422 para un rechazo de negocio que puede quedar durable como `REJECTED`.
 
 ### JSON Schema candidato: `CouponApiProblem`
 
@@ -247,20 +247,20 @@ La lista es una propuesta derivada del catálogo de errores; registrar en el cat
 }
 ```
 
-`OPERACION_CUPON_NO_ENCONTRADA` es un identificador propuesto, no un código hoy agregado al catálogo normativo. Ningún error de esta especificación crea ni autoriza un scope G7.
+`OPERACION_CUPON_NO_ENCONTRADA` ya está incorporado al catálogo y al OpenAPI semifinal; su uso externo aún requiere homologación. Ningún error de esta especificación crea ni autoriza un scope G7.
 
 ## Consistencia, polling y expiración tardía
 
 - GET de reserva consulta la fuente autoritativa de Inventory y compara `expires_at` con el reloj UTC del servidor en una lectura consistente. Si la transición persistida está atrasada, devuelve `ACTIVA` + `VENCIDA`; no espera al worker para deshabilitar pago/consumo.
 - El worker existente `ReservationExpirationService` busca filas `ACTIVA` vencidas y ejecuta `expirarReservaDurable`; el GET no dispara otro timer/worker. Pago/consumo confirma de nuevo bajo lock y no confía en una lectura previa.
 - G5 consulta estado de reserva tras recuperar un resultado tardío o timeout; si la vigencia no es `VIGENTE`, no cobra ni solicita consumo de cupón. El resultado de la operación de crear reserva no sustituye esta consulta actual.
-- Polling de operación: obedecer `Retry-After`, iniciar en 2 s, backoff exponencial con jitter hasta un máximo propuesto de 30 s; detener al deadline de flujo acordado. Deadline agotado deja el pedido pendiente/reconciliable, nunca permite inferir éxito ni generar nuevo `operation_id`. Parámetros requieren homologación G5.
+- Polling de operación: `Retry-After: 2` segundos, backoff exponencial con jitter e intervalo máximo candidato de 30 segundos. No se define una duración numérica definitiva de retención, frecuencia de conciliación ni deadline comercial; son parámetros pendientes de cierre y no bloquean el trabajo interno autónomo. Un deadline acordado agotado deja el pedido pendiente/reconciliable, nunca permite inferir éxito ni generar otro `operation_id`.
 - Si POST pierde respuesta, repetir la misma solicitud y `Idempotency-Key`; si estado pendiente, continuar GET con la misma operación; nunca crear otra identidad para descubrir el resultado.
 
-## Gates antes de publicar en OpenAPI
+## Estados y condiciones antes de homologar externamente y habilitar
 
-1. Homologar con G5 métodos, schemas, `order_id`, comparación vigente de reserva, estados, polling y comportamiento ante expiración tardía.
-2. Obtener de G7 la allowlist y permisos efectivos por cliente/operación; confirmar si el scope H4 `inventario:operaciones:leer` cubre el GET de reserva.
-3. Acordar retención de claves y resultados para replay/reconciliación.
-4. Ejecutar pruebas provider/consumer, autorización positiva/negativa, carrera entre consulta y vencimiento, y caída/replay sin duplicación.
-5. Solo después preparar un candidato OpenAPI H5 versionado independiente. Esta propuesta no cambia endpoints canónicos H4 ni declara ruta, implementación o homologación.
+1. OpenAPI H5 ya incorpora las cuatro rutas en estado `SEMIFINAL_G6`; esto no acredita homologación formal G5 ni publicación externa.
+2. G7 debe comprobar en tokens reales audiencia `api-productos`, `client_id`, scopes dedicados y allowlists; la hipótesis de aceptación no es grant.
+3. Cerrar la duración numérica de retención, frecuencia de conciliación y deadline comercial, preservando operaciones pendientes o ambiguas.
+4. Ejecutar pruebas provider/consumer, autorización positiva/negativa, carrera de vencimiento y pérdida/replay sin duplicación antes de activación o corte.
+5. Implementación, infraestructura compartida, E2E, homologación bilateral, publicación externa y despliegue son estados independientes. No se declara realizado el corte ni el rollback.
