@@ -149,7 +149,7 @@ Este microservicio no procesa pagos, reembolsos ni decide el estado del pedido. 
 
 **Pendiente para integración real:** acuerdo G5 sobre confirmación de reserva antes de consumir, tratamiento del `201` externo y correlación de restauraciones; compatibilidad y despliegue de eventos v2; implementación del handler/outbox con replay seguro y pruebas concurrentes. La validación SQL de la migración `0004` no sustituye esas evidencias.
 
-## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+## Addendum contractual histórico 0.6.0-rc.1 — Cuatro bloqueantes G6
 
 **Antecedente contractual `0.6.0-rc.1`:** decisión interna aprobada, no publicado como integración funcional y sin sustituir los contratos canónicos H5 `0.7.0-rc.1` (`SEMIFINAL_G6`). Las migraciones `inventory 0002` y `promotions 0004` están aplicadas en Supabase y superaron los validadores SQL correspondientes; el backend y los eventos reales siguen pendientes de prueba.
 
