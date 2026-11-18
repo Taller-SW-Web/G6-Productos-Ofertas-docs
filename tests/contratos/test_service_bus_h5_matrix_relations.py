@@ -5,6 +5,8 @@ import re
 import unittest
 from pathlib import Path
 
+import yaml
+
 
 ROOT = Path(__file__).resolve().parents[2]
 MATRIX = ROOT / "integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md"
@@ -104,17 +106,23 @@ class TestServiceBusH5MatrixRelations(unittest.TestCase):
                 self.assertTrue(all(actual[relation]["details"]))
 
     def test_normative_document_changes_trigger_swagger_contract_workflow(self):
-        text = WORKFLOW.read_text(encoding="utf-8")
-        pull_request = re.search(
-            r"(?ms)^  pull_request:\s*\n(.*?)(?=^  workflow_dispatch:)",
-            text,
+        workflow = yaml.load(
+            WORKFLOW.read_text(encoding="utf-8"), Loader=yaml.BaseLoader
         )
-        self.assertIsNotNone(pull_request)
-        paths = re.search(r"(?ms)^    paths:\s*\n((?:      - .*\n)+)", pull_request.group(1))
-        self.assertIsNotNone(paths)
-        configured = set(re.findall(r"- '([^']+)'", paths.group(1)))
-        self.assertTrue({"AGENTS.md", "README.md", "integraciones/**"} <= configured)
-        self.assertIn("tests/contratos/**", configured)
+        triggers = workflow["on"]
+
+        self.assertIn("pull_request", triggers)
+        pull_request = triggers["pull_request"]
+        self.assertEqual(pull_request["branches"], ["master"])
+        self.assertTrue(
+            {"ready_for_review", "synchronize"} <= set(pull_request["types"])
+        )
+        self.assertNotIn("paths", pull_request)
+        self.assertNotIn("paths-ignore", pull_request)
+
+        self.assertIn("push", triggers)
+        self.assertEqual(triggers["push"]["branches"], ["master"])
+        self.assertIn("workflow_dispatch", triggers)
 
 
 if __name__ == "__main__":
