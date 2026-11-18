@@ -1,5 +1,8 @@
 # Modelos conceptuales de datos — Módulo de Productos y Ofertas
 
+> **Actualización contextual H5:** las versiones `0.6.x` que aparecen en esta cabecera corresponden al corte documental histórico. Los contratos canónicos actuales son OpenAPI y AsyncAPI `0.7.0-rc.1` (`SEMIFINAL_G6`). Esta nota no altera entidades, atributos ni relaciones conceptuales.
+
+
 **Fecha de actualización:** 2026-10-13
 **Repositorio:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
 **Archivo:** `arquitectura/Modelo_Conceptual.md`  

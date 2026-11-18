@@ -1,4 +1,4 @@
-> **Estado:** los casos de bindings, grants AMQP y топología RabbitMQ de este archivo son regresiones/antecedentes contractuales H4. Los gates H5 se especifican en `PLAN-VERIFICACION-SERVICE-BUS-H5.md`; no se reinterpreta una prueba H4 como homologación o runtime H5.
+> **Estado:** los casos que verifican contratos `0.6.x`, bindings, grants AMQP y topología RabbitMQ de este archivo son regresiones/antecedentes contractuales H4. El plan H5 de Service Bus en `PLAN-VERIFICACION-SERVICE-BUS-H5.md` es verificación nueva; los resultados históricos no equivalen a PASS, homologación ni runtime H5.
 
 # Matriz de pruebas de contrato e integración — Productos y Ofertas
 

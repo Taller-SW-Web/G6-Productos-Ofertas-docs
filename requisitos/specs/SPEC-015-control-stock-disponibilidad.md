@@ -1626,7 +1626,7 @@ No confundir `GET.status` (`DISPONIBLE/STOCK_BAJO/AGOTADO/INDETERMINADO`) con `P
 
 ## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
 
-**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+**Decisión interna aprobada en el antecedente contractual `0.6.0-rc.1` (no desplegado); este addendum histórico no sustituye los contratos canónicos H5 `0.7.0-rc.1` (`SEMIFINAL_G6`).**
 
 - `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
 - `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.

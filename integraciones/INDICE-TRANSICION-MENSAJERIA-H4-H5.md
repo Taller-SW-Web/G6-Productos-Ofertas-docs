@@ -118,9 +118,9 @@ Clasificar individualmente; no borrar evidencia técnica histórica ni coinciden
 
 ## Contrato H4 que sigue como referencia funcional
 
-- `contratos/eventos/asyncapi.yaml` y fixtures Oracle preservan semántica de eventos, mensajes, payloads, schemas e invariantes contractuales H4. El índice de mensajes H5 mapea qué relaciones siguen internas y qué frontera externa requiere HTTP.
+- `contratos/historico/h4/eventos/asyncapi.yaml` y fixtures Oracle preservan semántica de eventos, mensajes, payloads, schemas e invariantes contractuales H4. El AsyncAPI canónico `contratos/eventos/asyncapi.yaml` es H5 (`0.7.0-rc.1`, `SEMIFINAL_G6`); el índice de mensajes H5 mapea qué relaciones siguen internas y qué frontera externa requiere HTTP.
 - Los `servers`, bindings, `RABBITMQ_*`, `amqplib`, exchanges, routing keys físicas, nombres de colas, túneles y comandos Docker describen H4; no autorizan implementación H5.
-- No hay AsyncAPI H5 definitivo homologado. Consultar [inventario H5](../contratos/eventos/INVENTARIO-40-MENSAJES-H5.md), [frontera externa](MATRIZ-EXTERNOS-ASYNCAPI-H5.md) y [topología Service Bus](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md).
+- El AsyncAPI canónico H5 `contratos/eventos/asyncapi.yaml` está en estado `SEMIFINAL_G6`, no homologado externamente. Consultar [inventario H5](../contratos/eventos/INVENTARIO-40-MENSAJES-H5.md), [frontera externa](MATRIZ-EXTERNOS-ASYNCAPI-H5.md) y [topología Service Bus](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md).
 - Preservar acuerdos H4, semántica de negocio, ownership externo y fixtures inmutables.
 
 ## Excepciones explícitas de la prueba documental

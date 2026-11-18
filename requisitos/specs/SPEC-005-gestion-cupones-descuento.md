@@ -14,7 +14,7 @@
 
 Administrar cupones asociados a promociones y controlar validación, consumo y restitución sin trasladar la autoridad sobre el pedido a Promociones.
 
-**Estado de evidencia:** las decisiones contractuales de `0.6.0-rc.1` están adoptadas en G6 como objetivo, pero siguen pendientes las pruebas de integración y la implementación de los consumidores/productores reales. La migración `datos/promotions/migrations/0004_coupon_idempotency_receipts.sql` ya fue aplicada y su validación SQL en Supabase pasó; eso **no acredita** handlers, publicaciones RabbitMQ ni integración de extremo a extremo.
+**Antecedente contractual:** las decisiones de `0.6.0-rc.1` corresponden a un corte histórico y no sustituyen los contratos canónicos H5 `0.7.0-rc.1` (`SEMIFINAL_G6`). Su estado de evidencia conserva pendientes las pruebas de integración y la implementación de consumidores/productores reales. La migración `datos/promotions/migrations/0004_coupon_idempotency_receipts.sql` ya fue aplicada y su validación SQL en Supabase pasó; eso **no acredita** handlers, publicaciones RabbitMQ ni integración de extremo a extremo.
 
 ## 2. Identidad del cliente
 
@@ -151,7 +151,7 @@ Este microservicio no procesa pagos, reembolsos ni decide el estado del pedido. 
 
 ## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
 
-**Decisión interna aprobada; objetivo `0.6.0-rc.1` no publicado como integración funcional.** Las migraciones `inventory 0002` y `promotions 0004` están aplicadas en Supabase y superaron los validadores SQL correspondientes; el backend y los eventos reales siguen pendientes de prueba.
+**Antecedente contractual `0.6.0-rc.1`:** decisión interna aprobada, no publicado como integración funcional y sin sustituir los contratos canónicos H5 `0.7.0-rc.1` (`SEMIFINAL_G6`). Las migraciones `inventory 0002` y `promotions 0004` están aplicadas en Supabase y superaron los validadores SQL correspondientes; el backend y los eventos reales siguen pendientes de prueba.
 
 - **B1:** `order_id` es referencia opaca textual de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID ni intercambiar las identidades de operación y mensaje.
 - **B2:** las operaciones de Inventario `POST /inventario/reservas`, `/confirmar` y `/liberar` devuelven `202` solo cuando admiten el comando. El éxito o rechazo definitivo se recupera de la operación/evento; `inventory.reservation.rejected` expresa rechazo posterior a la admisión.

@@ -6,7 +6,7 @@ Este catálogo conserva los **40 mensajes lógicos** de AsyncAPI H4 como referen
 
 Las reglas funcionales compartidas no dependen del broker: `message_id` identifica una entrega; redeliveries de la misma entrega conservan esa identidad; `operation_id` identifica la operación idempotente cuando aplique; `correlation_id` enlaza la secuencia; una copia fan-out tiene control de entrega por destinatario. La Inbox persistente evita repetir efectos; es un patrón requerido, no prueba de implementación.
 
-**Contrato funcional de origen H4:** [`asyncapi.yaml`](asyncapi.yaml). Su servidor, bindings y topología RabbitMQ no autorizan infraestructura H5.
+**Contrato funcional de origen H4:** [`../historico/h4/eventos/asyncapi.yaml`](../historico/h4/eventos/asyncapi.yaml). Este catálogo conserva los 40 mensajes de H4 como inventario histórico; el AsyncAPI canónico [`asyncapi.yaml`](asyncapi.yaml) es el contrato H5 `0.7.0-rc.1` (`SEMIFINAL_G6`) y es distinto del snapshot H4. Sus servidores/bindings no equivalen a prueba de implementación H5.
 **Topología objetivo H5:** [Azure Service Bus Basic](./TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) (diseño objetivo, aprovisionamiento e implementación pendientes).
 **Topología RabbitMQ H4:** [`rabbitmq-topologia.md`](./rabbitmq-topologia.md), referencia física histórica `LEGADO_H4`.
 

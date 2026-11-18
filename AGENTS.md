@@ -1,5 +1,11 @@
 # Instrucciones para agentes de G6 Productos y Ofertas
 
+## Objetivo vigente — Hito 5
+
+> CI/CD incluyendo revision Seguridad — Evidencia de Pruebas de integración — Evidencia de Pruebas de performance — Uso de API Management y Mecanismo asincrónico entre Microservicios
+
+Los cuatro criterios y sus evidencias se registran en [hitos/HITO_5.md](hitos/HITO_5.md). H4 es el hito anterior y su AsyncAPI se conserva en `contratos/historico/h4/`; los contratos canónicos H5 son `contratos/http/openapi.yaml` y `contratos/eventos/asyncapi.yaml` (`0.7.0-rc.1`, `SEMIFINAL_G6`). Mantén la norma vigente de Azure Service Bus Basic y no infieras implementación, homologación o despliegue desde la documentación.
+
 Para tareas de mensajería H5, la matriz de implementación Service Bus es la fuente única del seguimiento por flujo: [MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md](integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md). Léela junto con la ADR, topología y plan H5 indicados abajo.
 
 ## Norma de mensajería H5 (obligatoria)
