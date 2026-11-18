@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-const wf=await readFile('.github/workflows/swagger-docs.yml','utf8');
-const sync=await readFile('.github/workflows/sync-workspaces.yml','utf8');
+const wf=(await readFile('.github/workflows/swagger-docs.yml','utf8')).replace(/\r\n/g,'\n');
+const sync=(await readFile('.github/workflows/sync-workspaces.yml','utf8')).replace(/\r\n/g,'\n');
 const syncTests=await readFile('tests/automation/test_sync_workspaces.py','utf8');
 test('Swagger docs ejecuta en Draft/Ready y posmerge con agregador estable',()=>{assert.match(wf,/opened, reopened, synchronize, ready_for_review, converted_to_draft, edited/);assert.match(wf,/push:[\s\S]*?branches: \[master\]/);assert.match(wf,/name: validate-docs/);assert.match(wf,/draft == false/);});
 test('la concurrencia agrupa por PR/ref y manuales no se cancelan',()=>{assert.match(wf,/group: swagger-docs-\$\{\{ github\.event\.pull_request\.number \|\| github\.ref \}\}/);assert.match(wf,/cancel-in-progress: \$\{\{ github\.event_name != 'workflow_dispatch' \}\}/);});

@@ -88,6 +88,8 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 
 ## 2. Cómo navegar este repositorio
 
+La [nota de retiro fusionado de CI/CD Oracle y de infraestructura VM/Compose](ops/RETIRO-INFRAESTRUCTURA-ORACLE-VM.md) registra el merge de Backend #245 y enlaza los SHA y ejecuciones de CI verificadas. Los artefactos retirados siguen disponibles en el historial Git; Azure Container Apps H5 permanece como operación vigente. El cierre no declara migrada completamente la mensajería H5.
+
 | Artefacto | Ubicación | Propósito |
 |---|---|---|
 | Especificaciones funcionales | [`specs/`](requisitos/specs) | Reglas de negocio y comportamiento esperado |
