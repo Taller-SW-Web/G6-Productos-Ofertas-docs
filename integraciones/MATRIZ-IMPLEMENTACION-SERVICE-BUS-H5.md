@@ -41,7 +41,7 @@ Los nombres de cola se copian de la topología candidata vigente; todos permanec
 
 ## Frontera externa G5 (separada de las colas internas)
 
-Los siguientes 13 mensajes son asignaciones históricas de AsyncAPI H4 a modulo-ventas; no son relaciones internas ni colas Service Bus. El destino H5 es HTTP autenticado por APIM/Gateway G6, sin acceso de G5 al namespace. El detalle contractual y de aceptación por mensaje permanece en la [matriz externa normativa](MATRIZ-EXTERNOS-ASYNCAPI-H5.md).
+Los siguientes 13 mensajes son asignaciones históricas de AsyncAPI H4 a modulo-ventas; no son relaciones internas ni colas Service Bus. El destino H5 es HTTP autenticado por APIM/Gateway G6, sin acceso de G5 al namespace. La propuesta `G5-G6-H5-REVISION-01` se asume íntegramente para planificación interna; su homologación bilateral formal y los grants G7 efectivos continúan pendientes. Esta hipótesis no habilita un flujo ni equivale a aceptación registrada. El detalle contractual y de aceptación por mensaje permanece en la [matriz externa normativa](MATRIZ-EXTERNOS-ASYNCAPI-H5.md) y la [trazabilidad D-01–D-10](REFERENCIA-G5-G6-H5-REVISION-01.md).
 
 | Dirección | Mensajes heredados | Transporte/estado | Desbloqueo y aceptación |
 |---|---|---|---|

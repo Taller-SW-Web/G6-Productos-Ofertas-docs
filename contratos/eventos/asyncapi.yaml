@@ -1378,6 +1378,7 @@ components:
         - reason
     CouponConsumptionRequestedData:
       type: object
+      description: order_id es texto opaco. commercial_snapshot_ref debe ser exactamente el mismo valor de order_id; no exige hash ni tabla adicional.
       properties:
         order_id:
           type: string
@@ -1402,6 +1403,7 @@ components:
         commercial_snapshot_ref:
           type: string
           minLength: 1
+          description: Copia literal e inmutable de order_id.
         effective_at:
           type: string
           format: date-time
@@ -1414,6 +1416,7 @@ components:
       - commercial_snapshot_ref
     CouponRestorationRequestedData:
       type: object
+      description: consumption_operation_id identifica el consumo original confirmado; cancelled_at permanece idéntico en todos los reintentos.
       properties:
         order_id:
           type: string

@@ -21715,15 +21715,20 @@ paths:
       summary: Admitir consumo idempotente de cupón
       description: 'Primera admisión durable tras commit conjunto de operación e intención Outbox: 202; replay idéntico:
         200 sin efecto nuevo; intención distinta: 409 IDEMPOTENCY_CONFLICT. 202 no implica efecto comercial completado.
-        Baseline SEMIFINAL_G6, PENDIENTE_HOMOLOGACION_EXTERNA.'
+        Idempotency-Key ausente/malformado o operation_id ausente/malformado: 400 VALIDACION; ambos UUID válidos
+        pero distintos: 409 IDEMPOTENCY_CONFLICT. Reutilizar una identidad con fingerprint distinto también es 409.
+        commercial_snapshot_ref es exactamente order_id. Baseline SEMIFINAL_G6, aceptación G5 asumida para planificación,
+        homologación formal pendiente.'
       x-owner: promotions-svc
       x-contract-status: SEMIFINAL_G6
       x-external-homologation: PENDIENTE_HOMOLOGACION_EXTERNA
+      x-acceptance-assumption: ACEPTACION_G5_ASUMIDA_PARA_PLANIFICACION
+      x-grant-status: PENDIENTE_VERIFICACION_G7
       parameters:
       - name: Idempotency-Key
         in: header
         required: true
-        description: Debe coincidir exactamente con body.operation_id; reutilizar sin cambios al reintentar.
+        description: UUID requerido. Ausente o malformado produce 400 VALIDACION; con otro UUID válido que el body produce 409 IDEMPOTENCY_CONFLICT. Reutilizar sin cambios al reintentar.
         schema:
           type: string
           format: uuid
@@ -21758,7 +21763,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/CouponOperationSnapshot'
         '409':
-          description: La misma identidad se reutilizó con intención distinta.
+          description: Header y body tienen UUID válidos distintos, o identidad reutilizada con fingerprint distinto.
           content:
             application/problem+json:
               schema:
@@ -21831,15 +21836,19 @@ paths:
       summary: Admitir restauración idempotente de cupón
       description: 'Primera admisión durable tras commit conjunto de operación e intención Outbox: 202; replay idéntico:
         200 sin efecto nuevo; intención distinta: 409 IDEMPOTENCY_CONFLICT. 202 no implica efecto comercial completado.
-        Baseline SEMIFINAL_G6, PENDIENTE_HOMOLOGACION_EXTERNA.'
+        Idempotency-Key ausente/malformado o operation_id ausente/malformado: 400 VALIDACION; ambos UUID válidos
+        pero distintos: 409 IDEMPOTENCY_CONFLICT. Reutilizar una identidad con fingerprint distinto también es 409.
+        Baseline SEMIFINAL_G6, aceptación G5 asumida para planificación, homologación formal pendiente.'
       x-owner: promotions-svc
       x-contract-status: SEMIFINAL_G6
       x-external-homologation: PENDIENTE_HOMOLOGACION_EXTERNA
+      x-acceptance-assumption: ACEPTACION_G5_ASUMIDA_PARA_PLANIFICACION
+      x-grant-status: PENDIENTE_VERIFICACION_G7
       parameters:
       - name: Idempotency-Key
         in: header
         required: true
-        description: Debe coincidir exactamente con body.operation_id; reutilizar sin cambios al reintentar.
+        description: UUID requerido. Ausente o malformado produce 400 VALIDACION; con otro UUID válido que el body produce 409 IDEMPOTENCY_CONFLICT. Reutilizar sin cambios al reintentar.
         schema:
           type: string
           format: uuid
@@ -21915,10 +21924,13 @@ paths:
       tags:
       - Cupones
       summary: Consultar resultado durable de operación de cupón
-      description: Consulta de solo lectura. No vuelve a ejecutar el comando. Operación ausente, ajena al pedido
-        o no visible devuelve 404 uniforme.
+      description: Consulta de solo lectura. No vuelve a ejecutar el comando. order_id debe coincidir con la operación
+        persistida y el cliente autenticado debe estar autorizado para verla. Operación ausente, ajena al pedido/cliente
+        o no visible devuelve el mismo 404 uniforme.
       x-owner: promotions-svc
       x-contract-status: SEMIFINAL_G6
+      x-acceptance-assumption: ACEPTACION_G5_ASUMIDA_PARA_PLANIFICACION
+      x-grant-status: PENDIENTE_VERIFICACION_G7
       x-external-homologation: PENDIENTE_HOMOLOGACION_EXTERNA
       parameters:
       - name: operationId
@@ -21982,12 +21994,15 @@ paths:
       tags:
       - Inventario
       summary: Consultar estado persistido y vigencia efectiva de reserva
-      description: Solo lectura; no ejecuta expiración ni modifica stock, pedido o pago. ACTIVA con expires_at >
+      description: order_id debe coincidir con la reserva persistida y el cliente autenticado autorizado. Solo lectura;
+        no ejecuta expiración ni modifica stock, pedido o pago. ACTIVA con expires_at >
         observed_at produce VIGENTE y ambos indicadores true; ACTIVA con expires_at <= observed_at produce VENCIDA
         y ambos false; estados terminales producen NO_APLICA y ambos false. La vista es puntual y no sustituye la
         validación atómica antes de mutaciones.
       x-owner: inventory-svc
       x-contract-status: SEMIFINAL_G6
+      x-acceptance-assumption: ACEPTACION_G5_ASUMIDA_PARA_PLANIFICACION
+      x-grant-status: PENDIENTE_VERIFICACION_G7
       x-external-homologation: PENDIENTE_HOMOLOGACION_EXTERNA
       parameters:
       - name: reservaId
@@ -22052,9 +22067,10 @@ paths:
       - Carga masiva
       summary: Obtener contenido JSON inmutable mediante claim-check
       description: Acceso técnico privado para catalog-svc. contentId es UUID opaco, no URL ni ruta física. Devuelve
-        bytes UTF-8 originales application/json, Content-Length y SHA-256 de bytes originales en hex minúsculo.
-        No anónimo, no enumeración entre trabajos, no revela configuración privada. Catalog verifica hash y longitud
-        antes de procesar filas. Retener mientras existan comandos, entregas, resultados o conciliaciones pendientes
+        bytes UTF-8 originales application/json sin parsear ni reserializar, Content-Length y SHA-256 de bytes originales
+        en hex minúsculo. Catalog verifica Content-Length, SHA-256 y content_ref.byte_length sobre los bytes recibidos,
+        valida el documento y su integridad antes de aplicar filas. No anónimo, no enumeración entre trabajos, no revela
+        configuración privada. Retener mientras existan comandos, entregas, resultados o conciliaciones pendientes
         y al menos 30 días tras resultado terminal conciliado; política contractual propuesta G6 pendiente de acreditación
         operativa, no configuración Supabase aplicada. No exponer por Gateway público ni fachada APIM.
       x-owner: bulk-svc
@@ -22072,7 +22088,7 @@ paths:
           format: uuid
       responses:
         '200':
-          description: Bytes UTF-8 originales del documento JSON.
+          description: Bytes UTF-8 originales del documento JSON; no reserializar antes de verificar su integridad.
           headers:
             Content-Length:
               schema:
@@ -22086,10 +22102,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
-                contentMediaType: application/json
-                contentEncoding: utf-8
-                description: Cuerpo JSON serializado conservando los bytes UTF-8 originales.
+                $ref: '#/components/schemas/BulkContentDocument'
         '404':
           description: Contenido inexistente o no visible; respuesta uniforme.
           content:
@@ -26738,6 +26751,7 @@ components:
           - type: string
             format: uuid
           - type: 'null'
+          description: Dato funcional; no es credencial ni sustituye client_id autenticado.
         effective_at:
           type: string
           format: date-time
@@ -26747,6 +26761,8 @@ components:
         commercial_snapshot_ref:
           type: string
           minLength: 1
+          description: Debe ser exactamente el mismo texto opaco que order_id; no se requiere hash ni tabla adicional.
+          x-equals-property: order_id
       required:
       - operation_id
       - order_id
@@ -26769,6 +26785,7 @@ components:
         consumption_operation_id:
           type: string
           format: uuid
+          description: operation_id del consumo original confirmado.
         cancellation_reason:
           type: string
           minLength: 1
@@ -27044,6 +27061,18 @@ components:
           properties:
             estado_persistido:
               const: ACTIVA
+          required:
+          - estado_persistido
+        then:
+          properties:
+            vigencia_efectiva:
+              enum:
+              - VIGENTE
+              - VENCIDA
+      - if:
+          properties:
+            estado_persistido:
+              const: ACTIVA
             vigencia_efectiva:
               const: VIGENTE
           required:
@@ -27100,6 +27129,125 @@ components:
       required:
       - sha256
       - byte_length
+    BulkContentDocument:
+      type: object
+      additionalProperties: false
+      properties:
+        rows:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/BulkContentRowV2'
+      required:
+      - rows
+      description: Documento JSON claim-check Bulk V2 con solo rows; batch_id, batch_operation_id, template_version y mode permanecen en el mensaje AsyncAPI V3. Catalog comprueba compatibilidad de las filas con mode antes de aplicarlas.
+    BulkContentRowV2:
+      type: object
+      additionalProperties: false
+      properties:
+        row_number:
+          type: integer
+          minimum: 2
+        row_operation_id:
+          type: string
+          format: uuid
+        producto_id:
+          type:
+          - string
+          - 'null'
+        sku_base:
+          type: string
+          minLength: 1
+        product:
+          type: object
+        variant_id:
+          type:
+          - string
+          - 'null'
+          minLength: 1
+        variant:
+          oneOf:
+          - type: object
+          - type: 'null'
+        sku_variante:
+          type:
+          - string
+          - 'null'
+          minLength: 1
+          description: Selector de variante requerido para ACTUALIZACION de una variante cuando no hay variant_id.
+      required:
+      - row_number
+      - row_operation_id
+      - producto_id
+      - sku_base
+      - product
+      - variant
+      allOf:
+      - if:
+          properties:
+            producto_id:
+              type: 'null'
+          required:
+          - producto_id
+        then:
+          properties:
+            product:
+              $ref: '#/components/schemas/ProductoCreateRequest'
+            variant_id:
+              type: 'null'
+            variant:
+              oneOf:
+              - $ref: '#/components/schemas/VarianteCreateRequest'
+              - type: 'null'
+            sku_variante:
+              type: 'null'
+      - if:
+          properties:
+            producto_id:
+              type: string
+          required:
+          - producto_id
+        then:
+          properties:
+            product:
+              allOf:
+              - $ref: '#/components/schemas/ProductoUpdateRequest'
+              - required:
+                - catalogVersion
+            variant:
+              oneOf:
+              - allOf:
+                - $ref: '#/components/schemas/VarianteUpdateRequest'
+                - required:
+                  - catalogVersion
+              - type: 'null'
+          allOf:
+          - if:
+              properties:
+                variant:
+                  type: object
+              required:
+              - variant
+            then:
+              anyOf:
+              - properties:
+                  variant_id:
+                    type: string
+                    minLength: 1
+                required:
+                - variant_id
+              - properties:
+                  sku_variante:
+                    type: string
+                    minLength: 1
+                required:
+                - sku_variante
+            else:
+              properties:
+                variant_id:
+                  type: 'null'
+                sku_variante:
+                  type: 'null'
   headers:
     RetryAfter:
       description: Tiempo sugerido antes de reintentar. Puede expresarse según la semántica HTTP de Retry-After.
