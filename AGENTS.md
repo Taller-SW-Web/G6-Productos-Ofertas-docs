@@ -1,5 +1,7 @@
 # Instrucciones para agentes de G6 Productos y Ofertas
 
+Para tareas de mensajería H5, la matriz de implementación Service Bus es la fuente única del seguimiento por flujo: [MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md](integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md). Léela junto con la ADR, topología y plan H5 indicados abajo.
+
 ## Norma de mensajería H5 (obligatoria)
 
 La arquitectura objetivo adoptada por G6 para Hito 5 es **Azure Service Bus Basic exclusivamente para mensajería interna entre bounded contexts G6**. Las integraciones externas usan HTTP autenticado a través de APIM/Gateway G6; contratos, homologación G5 y autorización G7 se verifican por separado. La adopción no demuestra recursos Azure aprovisionados, identidades/grants, implementación, pruebas runtime ni despliegue. Estados vigentes: `ADOPTADA_G6`, `PENDIENTE_APROVISIONAMIENTO_AZURE`, `PENDIENTE_IMPLEMENTACION`, `PENDIENTE_HOMOLOGACION_G5` y `PENDIENTE_AUTORIZACION_G7`. Un colaborador asumió la configuración de recursos Azure; esta asignación no es evidencia de provisión.

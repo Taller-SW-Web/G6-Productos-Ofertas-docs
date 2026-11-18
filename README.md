@@ -14,6 +14,10 @@ La documentación sigue un enfoque **contract-first**: las reglas funcionales, c
 
 ## 1. Alcance del módulo
 
+### Seguimiento de mensajería H5
+
+La [matriz única de implementación Service Bus H5](integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md) registra relaciones, handlers, evidencia por SHA, dependencias y fases de ejecución. Los 40 mensajes y 18 pares heredados H4 son inventarios lógicos, no prueba de colas o handlers. Para tareas H5, consulta esta matriz junto con la ADR, topología y plan H5. El piloto Pricing/Price Audit es parcial y no representa una migración global.
+
 Productos y Ofertas cubre 16 funcionalidades principales:
 
 | ID | Funcionalidad |
