@@ -90,7 +90,7 @@ class TestRabbitMqH5Documentation(unittest.TestCase):
         paths = scan_paths()
         inventory = INDEX.read_text(encoding="utf-8")
         inventory_paths = set(re.findall(r"^- `([^`]+)`$", inventory, re.M))
-        self.assertEqual(len(inventory_paths), 75, "El inventario base auditado debe conservar sus 75 rutas")
+        self.assertEqual(len(inventory_paths), 76, "El inventario transicional debe incluir las 76 rutas normativas")
         scanner_source = "tests/contratos/test_rabbitmq_h5_documentation.py"
         # The scanner implementation is inventoried but its literal negative fixtures are tested separately below.
         scanned_inventory = inventory_paths - {scanner_source}
