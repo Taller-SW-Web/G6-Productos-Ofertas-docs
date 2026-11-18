@@ -3,7 +3,15 @@ name: Validar contrato, Swagger Studio y visor local
 on:
   pull_request:
     branches: [master]
-    paths: ['swagger/**', 'contratos/**', 'tests/contratos/**', '.github/workflows/swagger-docs.yml']
+    paths:
+      - 'AGENTS.md'
+      - 'README.md'
+      - 'integraciones/**'
+      - 'arquitectura/**'
+      - 'swagger/**'
+      - 'contratos/**'
+      - 'tests/contratos/**'
+      - '.github/workflows/swagger-docs.yml'
   workflow_dispatch:
 
 permissions:
