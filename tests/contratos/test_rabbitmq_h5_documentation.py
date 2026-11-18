@@ -28,7 +28,8 @@ def scan_paths() -> set[str]:
     paths = {"AGENTS.md", "README.md"}
     for folder in SCAN_ROOTS:
         for path in (ROOT / folder).rglob("*"):
-            if path.is_file() and path.suffix.lower() in EXTENSIONS and "node_modules" not in path.parts:
+            if (path.is_file() and path.suffix.lower() in EXTENSIONS
+                    and not {"node_modules", "dist", "reports", "test-results", "playwright-report"}.intersection(path.parts):
                 relative = path.relative_to(ROOT).as_posix()
                 if relative != "tests/contratos/test_rabbitmq_h5_documentation.py":
                     paths.add(relative)
