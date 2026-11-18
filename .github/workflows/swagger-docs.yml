@@ -3,22 +3,21 @@ name: Validar contrato, Swagger Studio y visor local
 on:
   pull_request:
     branches: [master]
-    paths:
-      - 'AGENTS.md'
-      - 'README.md'
-      - 'integraciones/**'
-      - 'arquitectura/**'
-      - 'swagger/**'
-      - 'contratos/**'
-      - 'tests/contratos/**'
-      - '.github/workflows/swagger-docs.yml'
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft, edited]
+  push:
+    branches: [master]
   workflow_dispatch:
+
+concurrency:
+  group: swagger-docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 permissions:
   contents: read
 
 jobs:
   contrato:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     name: Validar contrato y ambas alternativas Swagger
     runs-on: ubuntu-latest
     defaults:
@@ -33,6 +32,12 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: swagger/package-lock.json
+      - name: Probar el veredicto estable validate-docs
+        working-directory: .
+        run: node --test scripts/ci/verify-docs-results.test.mjs
+      - name: Probar disparadores documentales Draft y Ready
+        working-directory: .
+        run: node --test scripts/ci/draft-ready-policy.test.mjs
       - name: Preparar Python
         uses: actions/setup-python@v5
         with:
@@ -69,3 +74,14 @@ jobs:
             swagger/test-results
             swagger/playwright-report
           retention-days: 7
+
+  validate_docs:
+    name: validate-docs
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    needs: [contrato]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exigir validaciones documentales obligatorias
+        env:
+          RESULTADOS: ${{ toJSON(needs) }}
+        run: node scripts/ci/verify-docs-results.mjs "$RESULTADOS"
