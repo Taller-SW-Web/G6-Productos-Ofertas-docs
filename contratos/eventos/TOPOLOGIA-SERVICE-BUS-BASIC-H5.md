@@ -1,6 +1,12 @@
 # Topología candidata Service Bus Basic — G6 Hito 5
 
-**Estado:** propuesta; no hay colas creadas, bindings migrados ni entrega probada. El AsyncAPI H4 sigue siendo el inventario lógico de origen.
+**Arquitectura:** Azure Service Bus Basic está adoptado por G6 para mensajería interna H5; esta topología define destinos candidatos, no aprobación automática de colas.
+
+**Piloto aislado:** Pricing → Service Bus Basic → Price Audit fue validado en Azure real según Backend #234, con identidad administrada/RBAC, redelivery, persistencia e ingreso a DLQ en un laboratorio aislado. Los recursos del piloto quedaron desplegados, pero su vigencia, titularidad, permisos y estado actual deben verificarse antes de cualquier reutilización. La evidencia no representa release/producción de las aplicaciones compartidas.
+
+**Pendiente de acreditar separadamente:** infraestructura compartida por ambiente, activación de las aplicaciones compartidas, migración global y retiro de RabbitMQ; homologación bilateral G5; autorización efectiva G7. No hay evidencia en esta topología que permita declarar esos estados alcanzados. Consultar [cierre Backend #234](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/docs/hito-5/CIERRE_PILOTO_234.md) y [ejecución Azure](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/docs/hito-5/EJECUCION_AZURE_SERVICE_BUS.md).
+
+El AsyncAPI H4 sigue siendo el inventario lógico de origen. No se afirma que todas las colas candidatas estén creadas ni que todas las entregas estén probadas.
 
 ## Regla de diseño
 
