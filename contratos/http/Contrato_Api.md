@@ -1,3 +1,5 @@
+> **Transición H4→H5:** los ejemplos RabbitMQ/AsyncAPI y procedimientos físicos que conserva este contrato son antecedentes H4. Para mensajería nueva, Service Bus Basic está adoptado para tráfico interno G6; integraciones externas son HTTP autenticado, con homologación G5 y autorización G7 pendientes. No derivar de esta guía infraestructura H5.
+
 # API Contract — Módulo de Productos y Ofertas
 
 **Fecha de actualización:** 2026-10-12  
@@ -2662,3 +2664,6 @@ Estos ajustes documentan reglas administrativas y no acreditan implementación o
 ## Elegibilidad comercial por canal
 
 La política funcional comunicada aplica de igual forma a `MARKETPLACE`, `CHATBOT`, `RETAIL` y `VENTAS`: producto simple activo expone `sku_base`; producto con variantes requiere padre activo y al menos una variante activa, y solo son visibles variantes activas con padre activo. No existen asignaciones, defaults ni tablas independientes por canal. El parámetro `canal` conserva el contexto de la consulta y no otorga scopes. Elegibilidad se evalúa antes del total y la paginación; visibilidad no garantiza precio, stock ni promociones. D-CAT-05/06: decisión comunicada; pendiente de ratificación de Arquitectura y conformidad de consumidores. Para regla detallada consultar [SPEC-003 §7](../../requisitos/specs/SPEC-003-gestion-productos-crud.md).
+# Nota H5 — propuesta HTTP externa
+
+Este contrato narrativo conserva los flujos RabbitMQ/AsyncAPI H4 como histórico. La propuesta H5 de HTTP para sustituir los mensajes de G5 se mantiene separada y no altera OpenAPI `0.6.0-rc.4`: [operaciones candidatas de cupones y estado de reserva](./PROPUESTA-OPERACIONES-CUPONES-H5.md), [matriz de mensajes externos](../../integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md). Incluye la ruta propuesta `GET /api/v1/inventario/reservas/{reservaId}/estado`; los endpoints son candidatos, no implementados. Las operaciones HTTP de cupones encolarían internamente en `g6.promotions.commands`, sin dar credenciales de broker a G5. `202` significa admisión durable. Un `ACTIVA` con `expires_at` cumplido se informa con vigencia efectiva vencida y no habilita pago/consumo. G5 requiere confirmación final de la reserva antes del consumo de cupón. Homologación G5, scopes G7, implementación y E2E siguen pendientes.

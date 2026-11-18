@@ -1,3 +1,5 @@
+> **Nota de transición:** las menciones a RabbitMQ en esta especificación describen H4/compatibilidad heredada. Para mensajería nueva H5 rigen Service Bus Basic adoptado y su topología; las reglas de negocio aquí no dependen del transporte.
+
 # SPEC-004 — Gestión de variantes y SKU
 
 **Responsable:** Gabriel Poma Gutierrez  
@@ -48,15 +50,15 @@ default_location_id opcional
 
 Reglas del ciclo de Inventario de variante:
 - `PENDING` ordinario: representa trabajo en curso o recuperación técnica automática; no muestra acción manual.
-- Errores técnicos transitorios: se recuperan automáticamente mediante la política RabbitMQ existente de Inventario (hasta 3 reintentos con 30 s de espera antes de DLQ).
+- Errores técnicos transitorios: se recuperan automáticamente mediante la política de reintentos de mensajería del servicio de Inventario.
 - Catálogo correlaciona resultados asíncronos mediante `causation_id = message_id` del comando requested activo, descartando/ignorando idempotentemente resultados tardíos de intentos anteriores como stale:
   - `inventory.sku.initialization.completed` → pasa a `COMPLETED`. La variante queda preparada para activación. Una preparación `COMPLETED` es terminal y nunca vuelve a ejecutarse ni reintentarse.
   - `inventory.sku.initialization.rejected` → pasa a `REJECTED`. Mantiene la variante como no publicable y registra el código recibido en `code`. `manual_retry_allowed=false`; editar atributos/perfil no habilita retry. Solo un código específico podrá habilitarse tras acreditar causa real, operación correctiva publicada y replay idempotente probado.
 - Ausencia prolongada de resultado: Catálogo mantiene `PENDING`; timeout solo habilita evaluación si existe `published_at` de la publicación confirmada del intento vigente y transcurrieron 300000 ms. Además se requiere replay idempotente verificado, intención idéntica, admisión transaccional y un único reintento concurrente (ver §8). Sin `published_at` no se habilita por tiempo. Catálogo no inspecciona la DLQ.
 - Recuperación manual: cuando `manual_retry_allowed=true`, el Gestor Comercial puede solicitar `POST /api/v1/productos/{productoId}/variantes/{variantId}/preparacion/reintentar`.
   - La admisión es **atómica por preparación**: exactamente una solicitud concurrente pasa `manual_retry_allowed=true` a `PENDING / manual_retry_allowed=false` y devuelve HTTP `202 Accepted` (`OperationAccepted`) conservando la `operation_id` original.
-  - Las solicitudes concurrentes competidoras o las realizadas sobre preparaciones en curso técnico, ya completadas o sin precondiciones validadas devuelven HTTP `409 PREPARACION_NO_REINTENTABLE`. Nunca se producen dos publicaciones RabbitMQ ni dos efectos de negocio.
-  - El endpoint revalida autoritativamente las precondiciones antes de admitir (anti-TOCTOU), genera una nueva `message_id` para transporte RabbitMQ y construye el nuevo comando con el **estado actual validado de la variante** (perfil físico y atributos actualizados; no el payload antiguo).
+  - Las solicitudes concurrentes competidoras o las realizadas sobre preparaciones en curso técnico, ya completadas o sin precondiciones validadas devuelven HTTP `409 PREPARACION_NO_REINTENTABLE`. Nunca se producen dos publicaciones de mensajería ni dos efectos de negocio.
+  - El endpoint revalida autoritativamente las precondiciones antes de admitir (anti-TOCTOU), genera una nueva `message_id` para transporte de mensajería y construye el nuevo comando con el **estado actual validado de la variante** (perfil físico y atributos actualizados; no el payload antiguo).
   - La consulta `GET /api/v1/productos/{productoId}/preparacion` lee el estado de coordinación local de Catálogo sin realizar llamadas síncronas a Inventario.
 
 ## 5. Perfil físico

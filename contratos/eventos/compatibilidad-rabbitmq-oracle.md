@@ -1,3 +1,5 @@
+> **Clasificación: `LEGADO_H4`.** Este documento conserva decisiones/procedimientos de RabbitMQ del Hito 4 y compatibilidad del runtime existente. No es una instrucción para implementar H5; consulte la ADR y topología Service Bus Basic.
+
 # Matriz de compatibilidad RabbitMQ Oracle — AsyncAPI `0.6.0-rc.3`
 
 **Alcance:** correlacionar la auditoría Oracle del 2026-10-19, el contrato candidato y los pendientes de código/runtime. La fuente de ACL es `backend/ops/oracle/auditorias/2026-10-19_22-32-52_UTC/RABBITMQ.md`, HEAD leído `b3558d742eb010e06eae1b484371c0a97cdea641`. La auditoría es evidencia histórica y no describe necesariamente el estado actual del servidor. La documentación de esta matriz no modifica recursos ni permisos.
@@ -73,3 +75,6 @@ El criterio para cerrar el gate de G5 incluye aceptación de nombres físicos, r
 ## Retry/DLX
 
 `po.retry.x` y `po.dlx.x` conservan nombres y tipos solo como diseño candidato; las colas derivadas y sus claves técnicas están **NO APROBADAS, NO APROVISIONADAS y NO HOMOLOGADAS**. El gate permanece bloqueado y se conserva `RECUPERACION_DLQ_SATURADA_NO_VERIFICADA`.
+# Alcance histórico H4
+
+Esta matriz registra auditoría y compatibilidad observadas para RabbitMQ en H4. Sus bindings, ACL y nombres no son equivalencias de recursos o permisos de Azure Service Bus. La propuesta H5 y sus gates se documentan en [topología candidata](./TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) y [plan de migración](../../integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md); no se acreditan recursos, homologación ni runtime H5.

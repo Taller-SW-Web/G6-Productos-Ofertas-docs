@@ -1,6 +1,8 @@
+> **Transición H4→H5:** los pasos SQL, inbox/outbox y transaccionales son invariantes reutilizables. ACK, publish y publisher confirm que se mencionan abajo son únicamente el procedimiento RabbitMQ H4; el procedimiento H5 se remite a SDK/Peek-Lock/settlement Service Bus, aún no implementado.
+
 # Persistencia de promotions-svc — #53
 
-Schema interno `promotions`, propiedad de Axel Cueva. Implementa la persistencia de SPEC-005, SPEC-006 y SPEC-007; no crea un backend HTTP ni un consumidor RabbitMQ.
+Schema interno `promotions`, propiedad de Axel Cueva. Implementa la persistencia de SPEC-005, SPEC-006 y SPEC-007. Este artefacto cubre SQL, no crea un backend HTTP ni evidencia consumidores de mensajería. RabbitMQ corresponde al transporte heredado H4; la adopción H5 de Service Bus Basic no acredita implementación.
 
 ## Archivos y ejecución
 
@@ -26,7 +28,9 @@ La prueba usa el usuario administrador **solo del contenedor local**, verifica e
 
 La conexión runtime usa un login independiente miembro de `po_promotions_runtime`; nunca del owner. Toda modificación de un agregado se hace en una transacción. Primero bloquear sus padres antes de cambiar hijos; para cupones, bloquear el cupón antes de su promoción. Aplicar `READ COMMITTED`, transacciones cortas y retry completo ante `40P01`/`40001` (no repetir una sentencia aislada).
 
-`fn_consume_coupon` y `fn_restore_coupon` guardan historia y controlan cupos. El adaptador aplica inbox, cambio de negocio y outbox en **la misma transacción**, confirmando el mensaje de RabbitMQ después del commit. `fn_begin_inbox(envelope, handler)` devuelve true para la primera entrega, false para el duplicado idéntico y rechaza un ID reutilizado con otro contenido. Si devuelve false, usar el `result` previo. No publicar directamente en RabbitMQ antes del commit. Outbox conserva el envelope contractual; el publicador marca `published_at` únicamente después de confirmación del broker. Esto permite reentrega: el consumidor deduplica por `(message_id, handler)`.
+`fn_consume_coupon` y `fn_restore_coupon` guardan historia y controlan cupos. Las invariantes funcionales y SQL se mantienen: Inbox, cambio de negocio y Outbox se procesan en **la misma transacción**; `fn_begin_inbox(envelope, handler)` devuelve true para la primera entrega, false para el duplicado idéntico y rechaza un ID reutilizado con otro contenido. Si devuelve false, usar el `result` previo. La Outbox conserva el envelope contractual y la deduplicación `(message_id, handler)` permite procesar entregas repetidas sin repetir el efecto.
+
+**Procedimiento histórico RabbitMQ H4:** confirmar manualmente el mensaje después del commit; no publicar directamente antes del commit; marcar `published_at` solo tras publisher confirm. ACK, publicación por RabbitMQ y publisher confirms son detalles físicos H4, no procedimientos H5. Para H5, la arquitectura adoptada es Azure Service Bus Basic interno G6: seguir la documentación de su SDK, Peek-Lock, settlement y [topología H5](../../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md). Esa referencia es objetivo documental; no afirma que el cliente/consumer, recursos Azure, identidad, settlements o pruebas runtime estén implementados.
 
 Las funciones no deciden pagos, cancelación del pedido, stock ni monto comercial. El backend autentica, autoriza, valida referencias activas y verifica el snapshot comercial final con Ventas antes de consumir. El evento de consumo no contiene líneas/subtotal: SQL no puede reconstruirlos. Una consulta/validación positiva no reserva ni consume.
 

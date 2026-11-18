@@ -37,4 +37,4 @@ Permitir borrador incompleto, con valores informados positivos; activar/reactiva
 - Desactivar al padre bloquea comercialmente sus variantes conservando sus estados individuales. Reactivar revalida las condiciones del padre sin reactivar hijos inactivos; reactivar un hijo tampoco reactiva al padre.
 
 ## No mostrar
-RabbitMQ, colas, exchanges, routing keys, nombres físicos de colas, DLQ, contadores de retry, nombres de mensajes de eventos, `operation_id`, `message_id`, `causation_id`, `price_version`, nombres de tablas o endpoints.
+broker, colas, exchanges, routing keys, nombres físicos del transporte, DLQ, contadores de retry, nombres internos de mensajes, `operation_id`, `message_id`, `causation_id`, `price_version`, nombres de tablas o endpoints.

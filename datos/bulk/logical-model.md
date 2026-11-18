@@ -1,3 +1,5 @@
+> **Nota H4:** las menciones ACK/settlement describen una confirmación técnica histórica; la regla funcional reutilizable es que la confirmación del transporte no significa que el paso de dominio esté `COMPLETED`.
+
 # Modelo lógico — `bulk` (`bulk-svc`)
 
 - **Issue:** #57 — `[Hito 2][BD] Implementar persistencia de bulk-svc`

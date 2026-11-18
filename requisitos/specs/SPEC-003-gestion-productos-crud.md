@@ -55,7 +55,7 @@ motivo_cambio = ALTA_PRODUCTO
 
 Reglas del ciclo de Pricing:
 - `PENDING` representa la operación en curso o en recuperación técnica automática ordinaria del consumidor; no equivale a error ni genera botón de reintento humano inmediato.
-- Los fallos técnicos transitorios en el procesamiento de Pricing se recuperan automáticamente mediante la política RabbitMQ existente de ese servicio.
+- Los fallos técnicos transitorios en el procesamiento de Pricing se recuperan automáticamente mediante la política de reintentos de mensajería del servicio.
 - Pricing emite resultado asíncrono con `causation_id = message_id` del comando requested correspondiente. Catálogo conserva internamente cuál es la `message_id` del intento activo y solo procesa resultados cuyo `causation_id` coincida con dicho intento, descartando/ignorando idempotentemente resultados tardíos de intentos anteriores como stale:
   - `pricing.product.initialization.completed` → pasa a `COMPLETED`. Acredita la existencia del primer precio del producto. Pricing publica `pricing.price.changed` después de su commit. Una preparación `COMPLETED` es terminal y nunca vuelve a ejecutarse.
   - `pricing.product.initialization.rejected` → pasa a `REJECTED`. Mantiene el producto en `BORRADOR` y registra el código de causa en `code`. No se reintenta automáticamente por infraestructura. El flag `manual_retry_allowed` es calculado y autoritativo en Catálogo. Un `REJECTED` solo puede volverse manualmente reintentable cuando su causa pueda recuperarse mediante capacidades actualmente publicadas. Si la resolución exige modificar un dato para el que no existe operación publicada (por ejemplo `precioBaseInicial`), `manual_retry_allowed` permanece en `false`.
@@ -76,7 +76,7 @@ sku = sku_base
 variant_id = null
 ```
 
-- Los fallos técnicos transitorios del consumidor de Inventario se recuperan automáticamente mediante su política RabbitMQ (máximo 3 reintentos con 30 s de espera antes de DLQ).
+- Los fallos técnicos transitorios del consumidor de Inventario se recuperan automáticamente mediante su política de reintentos de mensajería (máximo 3 intentos automáticos según configuración del servicio).
 - Catálogo correlaciona los resultados asíncronos mediante `causation_id = message_id` del requested activo, ignorando resultados stale de intentos previos:
   - `inventory.sku.initialization.completed` → pasa a `COMPLETED`. Es terminal y nunca se repite.
   - `inventory.sku.initialization.rejected` → pasa a `REJECTED`. Mantiene el producto en `BORRADOR` y registra `code`. No se reintenta automáticamente. La edición del borrador desencadena reevaluación autoritativa de precondiciones en Catálogo para determinar si `manual_retry_allowed` pasa a `true`.
@@ -115,7 +115,7 @@ Durante el alta, un rechazo de Pricing/Inventario en las dependencias requeridas
 ### Operaciones administrativas de preparación
 
 - `GET /api/v1/productos/{productoId}/preparacion`: permite a la UI del Gestor Comercial conocer el estado real de cada dependencia (`status: PENDING | COMPLETED | REJECTED`, `manual_retry_allowed: boolean`, `code: string | null`) sin inferirlo de booleanos antiguos. Esta lectura consulta exclusivamente el estado local persistido de Catálogo sin realizar llamadas síncronas a Pricing ni a Inventario.
-- `POST /api/v1/productos/{productoId}/preparacion/reintentar`: solicita recuperación manual de Pricing o del Inventario del `sku_base`. La admisión es **atómica por preparación**: exactamente una solicitud concurrente pasa `manual_retry_allowed=true` a `PENDING / manual_retry_allowed=false` y devuelve HTTP `202 Accepted` (`OperationAccepted`) con la `operation_id` original. `202` formaliza admisión del reintento, no éxito final. Las solicitudes concurrentes competidoras o las realizadas sobre preparaciones en curso técnico, ya completadas o sin precondiciones validadas devuelven HTTP `409 PREPARACION_NO_REINTENTABLE`. Nunca se producen dos publicaciones RabbitMQ ni dos efectos de negocio.
+- `POST /api/v1/productos/{productoId}/preparacion/reintentar`: solicita recuperación manual de Pricing o del Inventario del `sku_base`. La admisión es **atómica por preparación**: exactamente una solicitud concurrente pasa `manual_retry_allowed=true` a `PENDING / manual_retry_allowed=false` y devuelve HTTP `202 Accepted` (`OperationAccepted`) con la `operation_id` original. `202` formaliza admisión del reintento, no éxito final. Las solicitudes concurrentes competidoras o las realizadas sobre preparaciones en curso técnico, ya completadas o sin precondiciones validadas devuelven HTTP `409 PREPARACION_NO_REINTENTABLE`. Nunca se producen dos publicaciones de mensajería ni dos efectos de negocio.
 
 ## 6. Perfil físico
 
@@ -145,6 +145,8 @@ La misma regla aplica a `MARKETPLACE`, `CHATBOT`, `RETAIL` y `VENTAS`: un produc
 Un SKU vendible tiene cero o más códigos; cada código exacto, opaco y globalmente único pertenece a un solo SKU, incluso después del retiro. Se preservan ceros iniciales sin imponer simbología o longitud. Producto simple usa `sku_base`; con variantes usa el SKU de la variante, nunca el SKU base no vendible del padre. No se exige código para activar. Solo `GESTOR_COMERCIAL` administra altas, consulta por SKU y retiro lógico; código y propietario son inmutables y no se reasignan ni reutilizan. Desactivar conserva la asociación. La resolución entrega SKU solo si el código está vigente y el SKU es comercialmente elegible; si no, `404 CODIGO_BARRAS_NO_ENCONTRADO`, sin consultar precios o stock. Una reactivación vuelve a resolver solo si la asociación sigue vigente. La migración candidata `sku_barcodes` en backend `poma` no acredita aplicación en base de datos ni homologación; la ratificación formal está pendiente de trazabilidad. OpenAPI y su DTO de resolución permanecen sin cambios por esta regla.
 
 ### Corrección de tipo (Q-06)
+
+El [detalle administrativo candidato](../../contratos/http/openapi.yaml) expone `elegibleCorreccionTipo` para que la UI pueda decidir si ofrece la corrección. Su valor corresponde al snapshot leído. El PATCH vuelve a comprobar versión, estado, hijos, historia de publicación y compatibilidad de atributos. Si el campo falta o el historial es desconocido, la UI mantiene el selector bloqueado.
 
 El PATCH existente admite la propiedad opcional `tipoProductoId`. Solo se permite en `BORRADOR`, con `tiene_variantes=false`, cero filas reales en `catalog.variants`, `publicado_alguna_vez=false`, tipo nuevo `ACTIVO` en Taxonomy, atributos compatibles con el esquema y `schemaVersion`, y concurrencia validada por `catalogVersion`. Publicación significa exclusivamente la primera transición confirmada `BORRADOR → ACTIVO`. El campo persistido `catalog.products.publicado_alguna_vez BOOLEAN NULL` requiere una futura migración versionada: nuevos productos empiezan en `false`, la primera activación confirmada lo fija en `true` atómicamente e irreversible; históricos son `NULL` salvo evidencia autoritativa y `NULL` bloquea la corrección. No inferirlo del estado actual.
 
