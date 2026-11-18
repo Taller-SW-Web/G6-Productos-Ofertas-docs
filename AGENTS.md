@@ -99,3 +99,14 @@ Detén el cambio que dependa de la contradicción. Conserva ambas referencias, r
 Antes de implementar una integración G1, leer [`integraciones/ACUERDO_G1_G6_H4_2026-10-20.md`](integraciones/ACUERDO_G1_G6_H4_2026-10-20.md), [`integraciones/ALINEACION_MARKETPLACE.md`](integraciones/ALINEACION_MARKETPLACE.md), `contratos/http/openapi.yaml` y [`kit-integracion.md`](contratos/http/kit-integracion.md). Para ejecución Backend, también leer el [paquete operativo obligatorio](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/tree/castilla/integraciones/g1-marketplace). Acuerdo/guía no reemplazan SPEC, DEC-F/ADR ni contrato ejecutable.
 
 La aceptación G6 del 2026-10-20 está documentada en el [Acuerdo G1–G6 H4](integraciones/ACUERDO_G1_G6_H4_2026-10-20.md); debe leerse antes de editar integración Marketplace, junto con el OpenAPI y la guía Backend. No utilices documentos históricos de preparación para afirmar aceptación pendiente, ni atribuyas ratificación G1 o grant G7 no acreditados.
+
+
+## Flujo de CI para PR
+
+- Codex desarrolla y corrige sobre PR Draft.
+- No ejecuta suites locales completas de manera rutinaria; usa pruebas focalizadas para depurar.
+- Las validaciones integrales se ejecutan en GitHub Actions al pasar el PR a Ready for Review.
+- Un PR no se declara validado hasta obtener todos los checks obligatorios para la revisión actual.
+- Cada commit en Ready invalida la validación anterior y genera una nueva ejecución; volver a Draft difiere nuevas suites pesadas.
+- Los resultados deben corresponder al código y SHA probados. No se hace merge con checks pendientes o fallidos.
+- Marcar un PR Ready no activa despliegues de producción.
