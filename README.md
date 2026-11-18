@@ -88,6 +88,8 @@ El inventario detallado de funcionalidades, responsables y artefactos canónicos
 
 ## 2. Cómo navegar este repositorio
 
+La [nota de retiro de CI/CD Oracle y de infraestructura VM/Compose](ops/RETIRO-INFRAESTRUCTURA-ORACLE-VM.md) enlaza el corte histórico de Backend y distingue evidencia anterior de los procedimientos Azure Container Apps H5 vigentes. No convierte la evidencia histórica en estado actual ni declara migrada la mensajería H5.
+
 | Artefacto | Ubicación | Propósito |
 |---|---|---|
 | Especificaciones funcionales | [`specs/`](requisitos/specs) | Reglas de negocio y comportamiento esperado |
