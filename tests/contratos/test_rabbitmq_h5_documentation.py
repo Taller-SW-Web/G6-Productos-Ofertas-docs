@@ -63,6 +63,28 @@ class TestRabbitMqH5Documentation(unittest.TestCase):
             self.assertIn("Azure Service Bus Basic", text)
             self.assertIn("H4", text)
 
+    def test_h5_c4_keeps_gateway_out_of_service_bus_topology(self):
+        architecture = (ROOT / "arquitectura/Arquitectura.md").read_text(encoding="utf-8")
+        c4 = architecture.split("# 30. C4 — Nivel 2: contenedores", 1)[1].split("# 31.", 1)[0]
+        self.assertIn("apim -->|HTTPS autenticado| gateway", c4)
+        self.assertNotRegex(c4, r"gateway\s*<-->\s*mq")
+        self.assertNotIn("proyeccion", c4.lower())
+        self.assertIn("taxonomy <--> mq", c4)
+        self.assertIn("inventory <--> mq", c4)
+
+    def test_catalog_describes_rc4_typed_payload_compatibility(self):
+        catalog = (ROOT / "contratos/eventos/catalogo-eventos.md").read_text(encoding="utf-8")
+        asyncapi = (ROOT / "contratos/eventos/asyncapi.yaml").read_text(encoding="utf-8")
+        self.assertIn("0.6.0-rc.4", asyncapi)
+        self.assertIn("siete payloads antes representados con GenericData", asyncapi)
+        self.assertIn("incompatible con consumidores antiguos", asyncapi)
+        for event in ("pricing.price.changed", "catalog.product.deactivated",
+                      "catalog.sku.deactivated", "inventory.stock.changed",
+                      "catalog.bulk.upsert.*"):
+            self.assertIn(event, catalog)
+        self.assertIn("incompatible con consumidores anteriores", catalog)
+        self.assertNotIn("reconcilia únicamente nombres", catalog)
+
     def test_scans_inventory_and_all_normative_operational_documentation(self):
         exceptions = load_exceptions()
         paths = scan_paths()

@@ -2187,7 +2187,6 @@ flowchart TB
   combos <--> mq
   inventory <--> mq
   bulk <--> mq
-  gateway <--> mq
 
   taxonomy -->|"taxonomy schema"| db
   catalog -->|"catalog schema"| db

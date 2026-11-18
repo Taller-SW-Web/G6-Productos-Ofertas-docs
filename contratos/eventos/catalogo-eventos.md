@@ -23,7 +23,7 @@ Publisher confirms, ACK manual, exchanges, colas y routing keys son detalles H4.
 
 ## Mensajes
 
-**Alcance editorial:** esta tabla refleja **40 mensajes lógicos** y **40 canales** de la candidata AsyncAPI `0.6.0-rc.3`. La versión `0.6.0-rc.4` reconcilia únicamente nombres de infraestructura base con la observación histórica; conserva los 40 mensajes y contratos funcionales. El antecedente `0.5.0` contenía 39 mensajes. Los estados `stable`, `closed` y `provisional` describen contratos, **no** prueban publicación efectiva ni conformidad E2E.
+**Alcance editorial:** esta tabla refleja **40 mensajes lógicos** y **40 canales** de AsyncAPI `0.6.0-rc.4`. Esta versión conserva mensajes, canales, operaciones, productores, consumidores y bindings físicos de `0.6.0-rc.3`, y tipifica siete payloads antes genéricos: `pricing.price.changed`, `catalog.product.deactivated`, `catalog.sku.deactivated`, `inventory.stock.changed` y los tres `catalog.bulk.upsert.*`. El cambio de payload es incompatible con consumidores anteriores y requiere despliegue coordinado antes de emitir; no es solo una reconciliación de nombres físicos. El antecedente `0.5.0` contenía 39 mensajes. Los estados `stable`, `closed` y `provisional` describen contratos, **no** prueban publicación efectiva ni conformidad E2E.
 
 | Nombre | Tipo | Productor | Consumidores | Estado |
 |---|---|---|---|---|
