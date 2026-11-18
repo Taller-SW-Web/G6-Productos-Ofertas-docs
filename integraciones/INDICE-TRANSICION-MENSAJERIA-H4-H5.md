@@ -21,7 +21,7 @@ Contratos ejecutables, topologías, pruebas, configuración y guías operativas 
 
 - `arquitectura/decisiones/rabbitmq.md`
 - `arquitectura/operacion-rabbitmq.md`
-- `contratos/eventos/asyncapi.yaml`
+- `contratos/historico/h4/eventos/asyncapi.yaml`
 - `contratos/eventos/compatibilidad-rabbitmq-oracle.md`
 - `contratos/eventos/rabbitmq-topologia.md`
 - `ops/rabbitmq/README-onboarding-rabbitmq.md`
