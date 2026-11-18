@@ -76,3 +76,9 @@ Auditoría de autenticación, bitácora de catálogo, rollback de precios y edic
 
 ## Criterio de completitud
 La bitácora es append-only, representa correctamente valores nulos, exporta dentro de límites, distingue un registro inexistente mediante `AUDITORIA_PRECIO_NO_ENCONTRADA`, rechaza excesos con `LIMITE_EXPORTACION_AUDITORIA_EXCEDIDO` sin crear un trabajo y autoriza consulta/exportación bajo el rol global `GESTOR_COMERCIAL` con granularidad interna del módulo cuando corresponda.
+
+## Addendum G6 H4 — DEC-G6-INT-06
+
+`pricing.price.changed` se emite durablemente después del commit de una transición efectiva; no en prevalidación ni al programar un cambio futuro. Un cambio base produce un evento objetivo PRODUCTO (`sku=null`), un override produce objetivo SKU. El payload tipado y las reglas de `target_type`, `price_version`, valores anteriores/nuevos nullable, porcentaje decimal HALF_UP e idempotencia constan en [AsyncAPI](../../contratos/eventos/asyncapi.yaml) y en [acuerdos internos G6 H4](../../arquitectura/decisiones/ACUERDOS-INTEGRACION-INTERNA-G6-H4.md).
+
+Price Audit debe persistir/consultar `target_type` y permitir `sku=null` solo para PRODUCTO; no se inventa SKU sustituto. Una evolución aditiva de persistencia requerirá autorización/procedimiento y no está acreditada por este addendum. La recepción de un mensaje tipado tampoco prueba integración desplegada.

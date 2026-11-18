@@ -26,6 +26,8 @@ Coordinación: ejecución general #61; entradas transversales #59 y #60. Alcance
 
 Las fuentes funcionales prevalecen sobre los artefactos visuales. Este documento no redefine CA ni reglas de negocio; las discrepancias se registran en §14.
 
+El seguimiento de bajas se alinea con `OperacionMaestra` del [OpenAPI candidato](../../../contratos/http/openapi.yaml): `status` público `PENDING_DEACTIVATION | COMPLETED | REJECTED`, separado de `result: CLEAR | IN_USE | null`. Los cambios públicos siguen pendientes de homologación y adaptación de consumidores; esta alineación documental no acredita compatibilidad runtime. `CLEAR` es un check previo: no confirma por sí solo la baja ni libera la barrera de Catálogo.
+
 ### 2.1 Trazabilidad de criterios de aceptación de HU-008
 
 Los 14 CA originales se conservan sin renumerar ni reinterpretar. `Tarea` remite a [tasks.md](tasks.md) y `Evidencia` a las secciones de `validation-report.md` (aún no emitido).
@@ -80,7 +82,7 @@ Los 14 CA originales se conservan sin renumerar ni reinterpretar. `Tarea` remite
 | MK-008-S02-C | Confirmar slug SEO | Mostrar el slug final propuesto antes de publicar | S02 / continuar | Confirmar creación | Confirmado: S01 con la categoría creada; `409`: permanece en S02-C para nueva propuesta | P0 | `/MK008/S02-C` |
 | MK-008-S03 | Editar categoría | Modificar datos y reubicar la categoría | S01 o S05 / Editar | Guardar cambios | Confirmado: S01; rechazo: permanece en S03 | P0 | `/MK008/S03` |
 | MK-008-S04 | Solicitar desactivación | Explicar el impacto y admitir la solicitud de baja | S01 o S05 / Desactivar | Solicitar desactivación | `202`: S04-P | P0 | `/MK008/S04` |
-| MK-008-S04-P | Verificando dependencias | Mostrar la admisión y el seguimiento de la operación | S04 / confirmar | Consultar estado de la operación | `CLEAR`/`COMPLETED`: S01; `REJECTED`: S04-B | P0 | `/MK008/S04-P` |
+| MK-008-S04-P | Verificando dependencias | Mostrar la admisión y el seguimiento de la operación | S04 / confirmar | Consultar estado de la operación | `status: COMPLETED`: S01; `status: REJECTED`: S04-B; pendiente o consulta fallida: conservar seguimiento | P0 | `/MK008/S04-P` |
 | MK-008-S04-B | Baja rechazada | Explicar el bloqueo sin alterar el estado activo | S04-P / resultado rechazado | Entendido | S01 con la categoría intacta | P0 | `/MK008/S04-B` |
 | MK-008-S05 | Detalle de categoría | Leer datos, padre, hijas, estado y slug | S01 / Ver detalle | Editar o reactivar | S03, S04 o S01 | P0 | `/MK008/S05` |
 | MK-008-S05-R | Reactivación bloqueada | Explicar que el padre está inactivo | S05 / Reactivar padre inactivo | Reactivar el padre primero | S05 del padre; la hija permanece inactiva | P0 | `/MK008/S05-R` |
@@ -104,9 +106,9 @@ flowchart LR
     S03 -->|"200 OK"| S01
     S01 -->|"Desactivar"| S04["S04 Solicitar baja"]
     S04 -->|"202 Accepted"| S04P["S04-P Verificando"]
-    S04P -->|"CLEAR/COMPLETED"| S01
+    S04P -->|"status COMPLETED"| S01
     S04P -->|"REJECTED"| S04B["S04-B Rechazada"]
-    S04P -->|"Error o sin resultado"| S04B
+    S04P -->|"PENDING_DEACTIVATION, CLEAR aislado o consulta fallida"| S04P
     S01 -->|"Ver detalle"| S05["S05 Detalle"]
     S05 -->|"Editar"| S03
     S05 -->|"Desactivar"| S04
@@ -259,7 +261,7 @@ No se redefinen componentes del Design System; las particularidades viven en §9
 |---|---|---:|---|
 | `operacion` | Identificador de operación | Sí | Solo el identificador, sin eventos ni topics visibles |
 | `entidadTipo` | Categoría | Sí | Texto operativo: «Categoría» |
-| `estado` | Pendiente / Confirmada / Rechazada | Sí | Derivado de `PENDING_DEACTIVATION`, `CLEAR`/`COMPLETED`, `REJECTED` |
+| `estado` | Pendiente / Confirmada / Rechazada | Sí | Derivado exclusivamente de `status: PENDING_DEACTIVATION`, `COMPLETED`, `REJECTED`; `result` no reemplaza el estado |
 | `motivoRechazo` | Texto | No | Presente solo en rechazo |
 | `consultable` | Booleano | Sí | Permite consultar el estado sin recargar la pantalla |
 
@@ -268,9 +270,9 @@ No se redefinen componentes del Design System; las particularidades viven en §9
 | Estado | Disparador | Representación visual | Acción permitida |
 |---|---|---|---|
 | Pendiente | `202` admitido o `PENDING_DEACTIVATION` | Banner informativo con acción Consultar estado | Consultar, volver al árbol |
-| Confirmada | `CLEAR` o `COMPLETED` | Banner de resultado y árbol actualizado | Volver al árbol |
-| Rechazada | `REJECTED` o `result: HAS_ACTIVE_PRODUCTS` | S04-B con motivo | Entendido |
-| No concluyente | Error de consulta o resultado ausente | S04-B genérico, sin afirmar cambio | Entendido / Consultar de nuevo |
+| Confirmada | `status: COMPLETED` tras decisión final de Taxonomía | Banner de resultado y árbol actualizado | Volver al árbol |
+| Rechazada | `status: REJECTED`; `result: IN_USE` si hubo uso incompatible, `null` si faltó check por timeout/fallo técnico | S04-B con motivo, sin fabricar uso activo ante fallo técnico | Entendido |
+| No concluyente | Error de consulta, resultado ausente o `CLEAR` con estado pendiente | S04-P conserva seguimiento y aviso, sin afirmar cambio ni rechazo | Consultar de nuevo / Volver al árbol |
 
 **Interacciones**
 
@@ -374,7 +376,7 @@ No se redefinen componentes del Design System; las particularidades viven en §9
 |---|---|---|
 | Pendiente | «Solicitud recibida. Estamos comprobando si la baja es segura.» | WF-008 §5 |
 | Confirmada | «La categoría quedó desactivada.» | SPEC-008 R4 |
-| No concluyente | «No pudimos confirmar que la baja sea segura. No se realizó ningún cambio.» | SPEC-009 R6 (copy transversal) |
+| No concluyente | «No pudimos consultar el resultado de la baja. Consulta de nuevo para conocer su estado.» | `OperacionMaestra`; fallo de consulta no prueba el resultado de la operación |
 
 ### MK-008-S04-B — Baja rechazada
 
@@ -382,8 +384,8 @@ No se redefinen componentes del Design System; las particularidades viven en §9
 **Estructura y layout** 1. Modal de resultado con motivo. 2. Acción Entendido.
 **Componentes presentes** DS-C21, DS-C22, DS-C01.
 **Acción primaria** Entendido, que vuelve a S01.
-**Acciones secundarias** Consultar de nuevo el estado si el motivo fue ausencia de resultado.
-**Estados requeridos** rechazo por productos activos, no concluyente.
+**Acciones secundarias** Volver a consultar la operación si se requiere verificar su estado registrado.
+**Estados requeridos** rechazo definitivo por productos activos o por timeout/fallo técnico; una consulta no concluyente permanece en S04-P.
 **Contenido clave y microtexto**
 
 | Elemento | Texto / Patrón | Fuente de procedencia |
@@ -469,9 +471,11 @@ No se redefinen componentes del Design System; las particularidades viven en §9
 | `profundidad-excedida` | Tercer nivel | S03 / Error | `422 PROFUNDIDAD_CATEGORIA_EXCEDIDA` |
 | `version-conflict` | Escritura concurrente | S03 / Error | `409 VERSION_CONFLICT`; se recarga y se conserva el borrador |
 | `baja-pendiente` | Verificación en curso | S04-P / Pendiente | `202` con identificador de operación y estado pendiente |
-| `baja-confirmada` | Verificación segura | S04-P / Confirmada | Resultado `CLEAR`; categoría inactiva |
-| `baja-rechazada` | Productos activos | S04-B / Rechazada | Resultado `REJECTED` con productos activos |
-| `baja-no-concluyente` | Consulta sin resultado fiable | S04-B / No concluyente | Estado previo conservado |
+| `baja-confirmada` | Baja confirmada | S04-P / Confirmada | `status: COMPLETED`, `result: CLEAR`; categoría inactiva |
+| `baja-rechazada` | Productos activos | S04-B / Rechazada | `status: REJECTED`, `result: IN_USE`; categoría activa |
+| `baja-rechazada-tecnica` | Timeout o fallo técnico sin check | S04-B / Rechazada | `status: REJECTED`, `result: null`; categoría activa |
+| `baja-check-clear-pendiente` | Check seguro sin decisión final | S04-P / Pendiente | `status: PENDING_DEACTIVATION`, `result: CLEAR`; no anunciar baja completada |
+| `baja-no-concluyente` | Consulta sin resultado fiable | S04-P / No concluyente | Resultado desconocido; permitir nueva consulta sin afirmar cambio |
 | `subcategorias-activas` | Baja con hijas activas | S04 / Error | `409 CATEGORIA_CON_SUBCATEGORIAS_ACTIVAS` |
 | `reactivacion-padre-inactivo` | Reactivación bloqueada | S05-R / Default | Padre inactivo; hija inactiva |
 | `categoria-no-encontrada` | Identificador inexistente | S03, S05 / Error | `404 CATEGORIA_NO_ENCONTRADA`; retorno al árbol sin datos inventados |

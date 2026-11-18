@@ -66,6 +66,8 @@ Aplicar [Convenciones BD](../CONVENCIONES_BD.md) sin reescribirlas por servicio.
 
 Tipo de precio, operación, canal, moneda y códigos de error no son enums PostgreSQL compartidos. Canal es text nullable; moneda char(3) cuando el contrato la informa. Nunca reutilizar tipos de otro contexto.
 
+Para el contrato vigente, los valores comerciales canónicos de `pricing.prices.channel_id` son `MARKETPLACE`, `CHATBOT`, `RETAIL` y `VENTAS`; `NULL` representa el precio global. La columna permanece `text`, sin mapping adicional a UUID ni tabla de canales. Antes de cambiar una BD compartida, el owner debe comprobar registros históricos UUID u otras representaciones y tramitar migración autorizada/verificable si existen. La documentación no afirma conversión aplicada. `client_id=modulo-productos` es identidad de servicio G6 y no un identificador de canal; `PRICING_CHANNEL_IDS` y validaciones UUID del backend quedan pendientes de adecuación.
+
 ## 8. Modelo por tabla
 
 ### 8.1. `pricing.prices`

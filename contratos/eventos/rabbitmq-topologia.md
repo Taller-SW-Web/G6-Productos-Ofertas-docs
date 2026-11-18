@@ -1,4 +1,8 @@
+> **Clasificación: `LEGADO_H4`.** Este documento conserva decisiones/procedimientos de RabbitMQ del Hito 4 y compatibilidad del runtime existente. No es una instrucción para implementar H5; consulte la ADR y topología Service Bus Basic.
+
 # Topología RabbitMQ — Productos y Ofertas
+
+> **H4 histórico:** conservar esta topología y sus conteos como registro de origen, sin inferir aprovisionamiento vigente. La [topología H5 propuesta](./TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) es prospectiva y no traduce automáticamente exchanges, bindings o colas RabbitMQ a Azure.
 
 **Fuente ejecutable:** [AsyncAPI](asyncapi.yaml), candidata `0.6.0-rc.3`. La topología base fue observada históricamente en Oracle el 2026-10-19; homologación, correspondencia de bindings, implementación y estado runtime actual no se acreditan.
 

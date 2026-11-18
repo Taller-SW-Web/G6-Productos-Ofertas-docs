@@ -1,7 +1,7 @@
 # Catálogo canónico de errores — Productos y Ofertas
 
 **Fuente HTTP:** [`openapi.yaml`](./openapi.yaml)
-**Versión HTTP de referencia:** `0.5.0`
+**Versión HTTP de referencia:** OpenAPI `0.6.0-rc.3` (candidata); `0.5.0` se conserva como antecedente histórico.
 
 Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail`.
 
@@ -41,11 +41,11 @@ Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail
 | `DATOS_INCOMPLETOS` | Datos incompletos. |
 | `CAMBIO_ESTRUCTURAL_NO_PERMITIDO` | Cambio estructural no permitido. |
 | `PERFIL_FISICO_INVALIDO` | Perfil físico inválido. |
-| `DATOS_FISICOS_INCOMPLETOS` | Datos físicos incompletos. |
+| `DATOS_FISICOS_INCOMPLETOS` | HTTP `422` de `consultarDatosFisicos` cuando un SKU existente carece de peso, dimensión o `actualizadoEn`, o algún valor incumple contrato. `details.skusAfectados` contiene todos y únicamente los SKU con perfil incompleto, en orden de solicitud, sin duplicados. En lotes mixtos esta condición tiene precedencia después de `SKU_INVALIDO` por SKU base no físico. Es error de datos, no indisponibilidad técnica. |
 | `VARIANTE_NO_ENCONTRADA` | Variante no encontrada. |
 | `PRODUCTO_NO_ADMITE_VARIANTES` | Producto no admite variantes. |
 | `COMBINACION_DUPLICADA` | Combinación duplicada. |
-| `SKU_INVALIDO` | SKU inválido. |
+| `SKU_INVALIDO` | SKU inválido. En `consultarDatosFisicos`, SKU base de producto con variantes tiene identidad de catálogo pero no es unidad física: rechaza el lote completo y exige `details.skusAfectados` no vacío, único, literal y en orden de solicitud, con todos y únicamente los SKU base no físicos afectados. Los errores estructurales ordinarios no requieren este detalle. Precede a `DATOS_FISICOS_INCOMPLETOS` en lotes mixtos. |
 | `ATRIBUTO_IDENTIFICADOR_INVALIDO` | Atributo identificador inválido. |
 | `IMAGEN_INVALIDA` | Imagen inválida. |
 | `SKU_NO_ENCONTRADO` | SKU no encontrado. |
@@ -55,6 +55,7 @@ Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail
 | `STOCK_INSUFICIENTE` | No existe disponibilidad suficiente para completar la operación. |
 | `RESERVA_NO_ENCONTRADA` | Reserva no encontrada. |
 | `OPERACION_INVENTARIO_NO_ENCONTRADA` | Operación de inventario inexistente o no visible para el consumidor. |
+| `OPERACION_CUPON_NO_ENCONTRADA` | Operación de cupón inexistente o no visible para la identidad y pedido consultados. |
 | `CONTEXTO_ABASTECIMIENTO_INVALIDO` | Contexto o referencia de cumplimiento comercial inválido. |
 | `RESERVA_NO_ACTIVA` | Reserva no activa. |
 | `RESERVA_EXPIRADA` | Reserva expirada. |
@@ -106,6 +107,7 @@ Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail
 | `SLUG_DUPLICADO` | Slug duplicado. |
 | `METADATOS_SEO_INVALIDOS` | Metadatos SEO inválidos. |
 | `ARCHIVO_INVALIDO` | Archivo inválido. |
+| `ARCHIVO_NO_ENCONTRADO` | Contenido interno de claim-check inexistente o no visible para el cliente autenticado; respuesta uniforme. |
 | `ARCHIVO_EXCEDE_LIMITE` | Archivo excede el límite. |
 | `PLANTILLA_INCOMPATIBLE` | Plantilla incompatible. |
 | `CONTENIDO_ACTIVO_NO_PERMITIDO` | Contenido activo no permitido. |
@@ -124,6 +126,8 @@ Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail
 
 | `RATE_LIMIT_EXCEDIDO` | La identidad o cliente excedió temporalmente la política de solicitudes permitida; la respuesta HTTP es 429 y puede incluir `Retry-After`. |
 | `PREPARACION_NO_REINTENTABLE` | La preparación existe pero el estado actual no admite recuperación manual. |
+
+Las consultas `GET /api/v1/productos/{productoId}/variantes` y `GET /api/v1/productos/{productoId}/variantes/{variantId}` responden `400 VALIDACION` (Problem JSON) para UUID sintácticamente inválido o query inválida. Un ID válido inexistente conserva `404 PRODUCTO_NO_ENCONTRADO` o `404 VARIANTE_NO_ENCONTRADA`.
 
 ## Recepción de traslados
 
@@ -167,3 +171,12 @@ Los códigos incorporados por HTTP 0.5.0 son `CODIGO_BARRAS_NO_ENCONTRADO`, `RAT
 - Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
 - Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+## Integración interna G6 H4 — errores de dependencias
+
+Se reutilizan los códigos existentes: `SERVICIO_NO_DISPONIBLE` para fallo técnico, timeout, respuesta inválida o dependencia sin fuente autoritativa; `TOKEN_INVALIDO`/`SCOPE_INSUFICIENTE` para autenticación/autorización; `VALIDACION` para contradicción de `product_id` y entrada mal formada; `COMBO_PRECIO_INVALIDO` solo cuando los precios autoritativos existen y no cumplen la desigualdad; `SKU_NO_ENCONTRADO` para ausencia autoritativa de SKU en `skuContext`. No se agrega código nuevo. Un 404 comercial de producto se interpreta como no visible/elegible para la regla y no demuestra inexistencia administrativa. Ningún fallo técnico se transforma en ausencia, precio cero o `AGOTADO`.
+
+Para Bulk, se reutiliza `IDEMPOTENCY_CONFLICT` ante misma identidad de fila con payload semántico diferente. `catalog.bulk.upsert.rejected` detalla el rechazo del comando antes de resultados por fila; no filtra SQL, secretos ni trazas. Un `completed` puede contener filas rechazadas y no afirma éxito de Pricing/Inventory.
+
+
+En `consultarDatosFisicos`, conexión, timeout, PostgreSQL o dependencia temporalmente indisponible corresponde a HTTP `503 SERVICIO_NO_DISPONIBLE`. No se exponen errores SQL, nombres de tablas, credenciales ni detalles internos. Un perfil físico incompleto no se presenta como respuesta `200` parcial.

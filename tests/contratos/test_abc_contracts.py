@@ -5,8 +5,8 @@ ROOT=Path(__file__).resolve().parents[2]
 class ContractChecks(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.o=yaml.safe_load((ROOT/'contratos/http/openapi.yaml').read_text(encoding='utf-8'))
-        cls.a=yaml.safe_load((ROOT/'contratos/eventos/asyncapi.yaml').read_text(encoding='utf-8'))
+        cls.o=yaml.safe_load((ROOT/'contratos/historico/h4/http/openapi.yaml').read_text(encoding='utf-8'))
+        cls.a=yaml.safe_load((ROOT/'contratos/historico/h4/eventos/asyncapi.yaml').read_text(encoding='utf-8'))
     def test_references(self):
         for d in (self.o,self.a):
             def walk(v):
@@ -21,8 +21,8 @@ class ContractChecks(unittest.TestCase):
                     for x in v:walk(x)
             walk(d)
     def test_versions(self):
-        self.assertEqual(self.o['info']['version'],'0.6.0-rc.1')
-        self.assertEqual(self.a['info']['version'],'0.6.0-rc.3')
+        self.assertEqual(self.o['info']['version'],'0.6.0-rc.5')
+        self.assertEqual(self.a['info']['version'],'0.6.0-rc.4')
     def test_reservation_result_mapping(self):
         op=self.o['paths']['/inventario/reservas']['post']
         self.assertIn('inventory.reservation.rejected',op['x-async-result-events'])
@@ -35,6 +35,17 @@ class ContractChecks(unittest.TestCase):
             self.assertIn('schema_version',obj['required'],name)
             self.assertIn('operation_id',obj['required'],name)
             self.assertIn('causation_id',obj['required'],name)
+    def test_h4_recommendation_price_and_combo_availability_contracts(self):
+        recommendation=self.o['components']['schemas']['Recomendacion']
+        self.assertNotIn('current_price',recommendation['required'])
+        self.assertEqual(recommendation['properties']['current_price']['type'],['number','null'])
+        self.assertIn('mínimo',recommendation['properties']['current_price']['description'])
+        self.assertIn('sin sumar ubicaciones',recommendation['description'])
+        combo=self.o['components']['schemas']['DisponibilidadCombo']
+        self.assertTrue(combo['additionalProperties'])
+        self.assertNotIn('cantidadInformativa',combo['required'])
+        self.assertEqual(combo['properties']['cantidadInformativa']['oneOf'][1]['type'],'null')
+        self.assertIn('estadoActualizacion=INCOMPLETA',combo['description'])
     def test_migrations_are_transaction_free(self):
         for p in ('datos/inventory-svc/migrations/0001_inventory_initial.sql','datos/inventory-svc/migrations/0002_order_id_operaciones_disponibilidad.sql','datos/promotions/migrations/0004_coupon_idempotency_receipts.sql'):
             s=(ROOT/p).read_text(encoding='utf-8')
@@ -56,16 +67,23 @@ class ContractChecks(unittest.TestCase):
         self.assertTrue(s.rstrip().endswith('ROLLBACK;'))
         self.assertNotIn('DELETE FROM inventory.stock_threshold_override',s)
     def test_commercial_channel_restriction(self):
-        self.assertEqual(self.o['info']['version'],'0.6.0-rc.1')
+        self.assertEqual(self.o['info']['version'],'0.6.0-rc.5')
         self.assertEqual(self.o['components']['schemas']['Canal']['enum'],['MARKETPLACE','CHATBOT','RETAIL','VENTAS'])
         self.assertEqual(self.o['components']['schemas']['CanalComercial']['enum'],['MARKETPLACE','CHATBOT','RETAIL'])
         # GET /inventario/disponibilidad/comercial
         get_op=self.o['paths']['/inventario/disponibilidad/comercial']['get']
         get_canal_param=next(p for p in get_op['parameters'] if p.get('name')=='canal')
         self.assertEqual(get_canal_param['schema']['$ref'],'#/components/schemas/CanalComercial')
-        self.assertEqual(get_op['x-allowed-client-ids'],['modulo-marketplace','modulo-chatbot','modulo-retail'])
+        self.assertEqual(get_op['x-allowed-client-ids'],['modulo-marketplace','modulo-chatbot','modulo-retail','modulo-productos'])
         self.assertEqual(get_op['x-required-scope'],'inventario:disponibilidad:leer')
+        self.assertEqual(get_op['x-service-audience'],'api-productos')
+        self.assertIn('MARKETPLACE',get_op['description'])
+        self.assertIn('CHATBOT',get_op['description'])
+        self.assertIn('RETAIL',get_op['description'])
+        self.assertIn('2026-11-13',get_op['description'])
+        self.assertIn('modulo-productos',get_op['description'])
         self.assertIn('400',get_op['responses'])
+        self.assertIn('401',get_op['responses'])
         self.assertIn('403',get_op['responses'])
         self.assertIn('VALIDACION',get_op['x-error-codes']['400'])
         self.assertIn('SCOPE_INSUFICIENTE',get_op['x-error-codes']['403'])
@@ -75,6 +93,8 @@ class ContractChecks(unittest.TestCase):
         self.assertEqual(post_body_schema['properties']['channel_id']['$ref'],'#/components/schemas/CanalComercial')
         self.assertEqual(post_op['x-allowed-client-ids'],['modulo-marketplace','modulo-chatbot','modulo-retail'])
         self.assertEqual(post_op['x-required-scope'],'inventario:disponibilidad:leer')
+        self.assertEqual(post_op['x-service-audience'],'api-productos')
+        self.assertNotIn('modulo-productos',post_op['x-allowed-client-ids'])
         self.assertIn('400',post_op['responses'])
         self.assertIn('403',post_op['responses'])
         self.assertIn('VALIDACION',post_op['x-error-codes']['400'])
@@ -86,6 +106,13 @@ class ContractChecks(unittest.TestCase):
         self.assertIn('modulo-marketplace -> MARKETPLACE',desc)
         self.assertIn('modulo-chatbot -> CHATBOT',desc)
         self.assertIn('modulo-retail -> RETAIL',desc)
+        self.assertIn('Promotions',desc)
+        self.assertIn('identidad compartida G6',desc)
+        self.assertIn('bounded context',desc)
+        self.assertIn('DEC-G6-INT-11',desc)
+        kit=(ROOT/'contratos/http/kit-integracion.md').read_text(encoding='utf-8')
+        for rule in ('verificable=false','cantidadInformativa=null','estadoActualizacion=INCOMPLETA'):
+            self.assertIn(rule,kit)
     def test_single_location_policy_documented(self):
         desc=self.o['paths']['/inventario/disponibilidad/comercial/verificar']['post']['description']
         self.assertIn('D-INV-01',desc)
@@ -95,7 +122,7 @@ class ContractChecks(unittest.TestCase):
         self.assertIn('binding=false',desc)
         self.assertNotIn('salvo que exista una modalidad de abastecimiento explícita y ejecutable para atender conjuntamente',desc)
     def test_offline_reconciliation_candidate_operation(self):
-        self.assertEqual(self.o['info']['version'],'0.6.0-rc.1')
+        self.assertEqual(self.o['info']['version'],'0.6.0-rc.5')
         op=self.o['paths']['/inventario/conciliaciones-offline']['post']
         self.assertEqual(op['operationId'],'conciliarVentaOffline')
         self.assertEqual(op['x-status'],'provisional')
@@ -227,12 +254,92 @@ class ContractChecks(unittest.TestCase):
         expected={'modulo-marketplace','modulo-chatbot','modulo-retail'}
         for path,method in commercial:
             clients=paths[path][method]['x-allowed-client-ids']
-            self.assertEqual(set(clients),expected,path)
+            operation_expected=expected | ({'modulo-productos'} if method == 'get' else set())
+            self.assertEqual(set(clients),operation_expected,path)
+            if method == 'post':
+                self.assertNotIn('modulo-productos',clients,path)
             self.assertNotIn('modulo-postventa',clients,path)
         detailed=set(paths['/inventario/disponibilidad']['get']['x-allowed-client-ids'])
         self.assertNotIn('modulo-marketplace',detailed)
         self.assertNotIn('modulo-chatbot',detailed)
         self.assertNotIn('modulo-retail',detailed)
+        self.assertNotIn('modulo-productos',detailed)
+
+
+class CatalogPricingTaxonomyContract(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.o=yaml.safe_load((ROOT/'contratos/http/openapi.yaml').read_text(encoding='utf-8'))
+        cls.a=yaml.safe_load((ROOT/'contratos/eventos/asyncapi.yaml').read_text(encoding='utf-8'))
+
+    def test_g6_identity_is_limited_to_approved_internal_read_operations(self):
+        expected={'modulo-marketplace','modulo-chatbot','modulo-retail','modulo-productos'}
+        operations=(
+            self.o['paths']['/precios']['get'],
+            self.o['paths']['/precios/skus/{sku}']['get'],
+        )
+        self.assertEqual([op['operationId'] for op in operations],['consultarPrecios','obtenerPrecioSku'])
+        for op in operations:
+            self.assertEqual(op['x-required-scope'],'precios:leer')
+            self.assertEqual(set(op['x-allowed-client-ids']),expected)
+        enabled=[]
+        for path,item in self.o['paths'].items():
+            for method,op in item.items():
+                if isinstance(op,dict) and 'modulo-productos' in op.get('x-allowed-client-ids',[]):
+                    enabled.append((path,method,op.get('operationId')))
+        self.assertEqual(set(enabled), {
+            ('/productos/skus/{sku}/contexto','get','obtenerContextoSku'),
+            ('/productos/skus/contexto/lote','post','obtenerContextosSkuLote'),
+            ('/precios','get','consultarPrecios'),
+            ('/precios/skus/{sku}','get','obtenerPrecioSku'),
+            ('/productos/{productoId}','get','obtenerProducto'),
+            ('/inventario/disponibilidad/comercial','get','consultarDisponibilidadComercial'),
+            ('/tipos-producto','get','listarTiposProducto'),
+            ('/tipos-producto/{tipoProductoId}','get','obtenerTipoProducto'),
+            ('/tipos-producto/{tipoProductoId}/caracteristicas','get','obtenerEsquemaTipoProducto'),
+            ('/marcas/{marcaId}','get','obtenerMarcaAdmin'),
+            ('/categorias/arbol','get','obtenerArbolCategoriasAdmin'),
+            ('/categorias/{categoriaId}','get','obtenerCategoriaAdmin'),
+            ('/categorias/administracion','get','listarCategoriasAdmin'),
+            ('/marcas/administracion','get','listarMarcasAdmin'),
+        })
+        self.assertTrue(all(method == 'get' or (method == 'post' and op_id == 'obtenerContextosSkuLote') for _, method, op_id in enabled))
+        self.assertTrue(self.o['paths']['/productos/skus/contexto/lote']['post']['x-internal'])
+        taxonomy_names={'obtenerTipoProducto','listarTiposProducto','obtenerEsquemaTipoProducto','obtenerMarcaAdmin','obtenerArbolCategoriasAdmin','obtenerCategoriaAdmin','listarCategoriasAdmin','listarMarcasAdmin'}
+        for path,item in self.o['paths'].items():
+            for method,op in item.items():
+                if isinstance(op,dict) and op.get('operationId') in taxonomy_names:
+                    self.assertEqual(op['x-required-scope'],'catalogo:leer',op['operationId'])
+                    self.assertEqual(op['x-allowed-client-ids'],['modulo-productos'],op['operationId'])
+                    self.assertIn({'serviceBearer':[]},op['security'],op['operationId'])
+        self.assertIn('G7',self.o['x-security-contract']['service_scopes_pending_registration']['precios:leer']['note'])
+
+    def test_price_channel_ids_are_enum_or_null(self):
+        schemas=self.o['components']['schemas']
+        self.assertEqual(schemas['Canal']['enum'],['MARKETPLACE','CHATBOT','RETAIL','VENTAS'])
+        names=('PrecioUpdateRequest','ProgramacionPrecioRequest','ProgramacionPrecio','ProgramacionPrecioProducto')
+        for name in names:
+            channel=schemas[name]['properties']['channelId']
+            self.assertEqual(channel['oneOf'],[
+                {'$ref':'#/components/schemas/Canal'},
+                {'type':'null'},
+            ],name)
+
+    def test_taxonomy_association_versions_remain_distinct_and_authoritative(self):
+        schemas=self.a['components']['schemas']
+        association=schemas['MasterDeactivationAssociationData']
+        self.assertEqual(set(association['properties']),{
+            'entity_type','entity_id','tipo_producto_id','caracteristica_id','version',
+        })
+        version_description=association['properties']['version']['description'].lower()
+        self.assertIn('taxonomy',version_description)
+        self.assertIn('conserva y verifica',version_description)
+        completed=schemas['MasterDeactivationCompletedData']['oneOf'][1]['allOf'][1]
+        self.assertEqual(set(completed['properties']),{'schema_version_resultante'})
+        self.assertIn('schema_version_resultante',completed['required'])
+        message=self.a['components']['messages']['TaxonomyMasterDeactivationCheckRequested']['payload']['allOf'][1]
+        self.assertIn('schema_version',message['properties'])
+        self.assertEqual(message['properties']['data']['$ref'],'#/components/schemas/MasterDeactivationData')
 
 
 class MarketplaceCatalogContract(unittest.TestCase):
@@ -258,7 +365,7 @@ class MarketplaceCatalogContract(unittest.TestCase):
             self.assertEqual(op['x-service-audience'],'api-productos',path)
             self.assertEqual(op['x-scope-registration-status'],'pending-security-registration',path)
             self.assertEqual(set(op['x-allowed-client-ids']),allowed,path)
-        self.assertEqual(set(self.o['x-security-contract']['service_scopes_pending_registration']['catalogo:leer']['clients']),allowed)
+        self.assertEqual(set(self.o['x-security-contract']['service_scopes_pending_registration']['catalogo:leer']['clients']),allowed|{'modulo-productos'})
 
         schemes=self.o['components']['securitySchemes']
         self.assertEqual(schemes['serviceBearer']['type'],'http')

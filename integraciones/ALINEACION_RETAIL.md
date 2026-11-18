@@ -186,6 +186,12 @@ El **GET** comercial devuelve estados (`DISPONIBLE/STOCK_BAJO/AGOTADO/INDETERMIN
 - Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
 
+## Código de barras y resolución de SKU — alcance documental
+
+Cada código exacto es texto opaco, globalmente único y pertenece a un solo SKU vendible; ceros iniciales se conservan. SKU simple usa `sku_base`; para productos con variantes, el código corresponde al SKU de la variante, nunca al SKU base no vendible del padre. Retail consume `POST /api/v1/productos/codigos-barras/resolver` sin mutar asociaciones, consultar precio o stock, y recibe `{ "sku": "..." }` únicamente si el código sigue vigente y el SKU es comercialmente elegible. Inexistente, retirado o no elegible responde `404 CODIGO_BARRAS_NO_ENCONTRADO`.
+
+Catálogo administra códigos exclusivamente con `GESTOR_COMERCIAL`; retiro lógico no borra ni libera el valor para reasignación. La capacidad de administración y la migración candidata `0002` del backend `poma` no se consideran aplicadas, desplegadas ni homologadas por esta alineación. La tabla propuesta y su estado se describen en [modelo físico de Catálogo](../datos/catalog-svc/physical-model.md); el OpenAPI de resolución se mantiene sin cambios para este punto.
+
 **Retail:** `fulfillment_ref` es una referencia pública de tienda (no se permite exponer `location_id`). La correspondencia tienda→ubicación debe provisionarse en Inventario y validarse antes de afirmar suficiencia.
 
 ## 11. Conciliación offline — acuerdo G5 comunicado y homologación pendiente

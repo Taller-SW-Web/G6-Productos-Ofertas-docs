@@ -1,11 +1,13 @@
+> **Estado:** los casos de bindings, grants AMQP y топología RabbitMQ de este archivo son regresiones/antecedentes contractuales H4. Los gates H5 se especifican en `PLAN-VERIFICACION-SERVICE-BUS-H5.md`; no se reinterpreta una prueba H4 como homologación o runtime H5.
+
 # Matriz de pruebas de contrato e integración — Productos y Ofertas
 
-**Contrato HTTP objetivo:** OpenAPI `0.6.0-rc.1` (candidato, no publicado).
-**Contrato asíncrono objetivo:** AsyncAPI `0.6.0-rc.3` (candidato, no publicado).
+**Contrato HTTP objetivo:** OpenAPI `0.6.0-rc.4` (candidata; no prueba publicación/runtime).
+**Contrato asíncrono objetivo:** AsyncAPI `0.6.0-rc.4` (candidato; no prueba publicación/runtime).
 **Referencia histórica auditada:** PR #86, rama `nueva`, commit `c1769607f30e2cabf1449e33c877fa4ef41defe5`; esta matriz conserva los estados pendientes y actualiza la expectativa del vhost en `CT-STATIC-18`.
 **Estado:** definición documental de casos; no asignar `PASS` a pruebas de API, eventos, seguridad o integración sin ejecución reproducible.
 
-En la revisión actual, `contratos/http/openapi.yaml` conserva `0.6.0-rc.1` y `contratos/eventos/asyncapi.yaml` es `0.6.0-rc.3`. AsyncAPI reconcilia nombres de recursos físicos base con una observación histórica Oracle; la numeración independiente evita modificar la candidata HTTP sin cambio. Los casos estáticos permanecen `PENDIENTE_EJECUCION` **hasta disponer de ejecución reproducible de validadores y evidencia vinculada al commit**; tampoco se consideran superadas pruebas provider, seguridad o E2E. `0.5.0` es línea base de compatibilidad, no prueba de despliegue de los candidatos.
+En `master` a la base de esta rama, `contratos/http/openapi.yaml` era `0.6.0-rc.3`; esta propuesta actualiza la candidata HTTP a `0.6.0-rc.4` para registrar la adenda interna Inventory. AsyncAPI permanece en `0.6.0-rc.4` y reconcilia nombres de recursos físicos base con una observación histórica Oracle. Los estados de ejecución en las tablas requieren evidencia reproducible vinculada a SHA; una ejecución local de esta rama no prueba provider, seguridad con grants reales, homologación, despliegue ni E2E.
 
 ## Estados
 
@@ -36,14 +38,14 @@ ARCHITECTURE_INVARIANT
 
 | ID | Tipo | Resultado esperado | Estado |
 |---|---|---|---|
-| CT-STATIC-01 | STATIC_CONTRACT | YAML válido, OpenAPI 3.1.x, `info.version=0.6.0-rc.1`, `$ref` locales resolubles | PENDIENTE_EJECUCION |
+| CT-STATIC-01 | STATIC_CONTRACT | YAML válido, OpenAPI 3.1.x, `info.version=0.6.0-rc.4`, `$ref` locales resolubles | PENDIENTE_EJECUCION |
 | CT-STATIC-02 | STATIC_CONTRACT | `operationId` únicos | PENDIENTE_EJECUCION |
 | CT-STATIC-03 | STATIC_CONTRACT | `ErrorCode` de OpenAPI coincide con la tabla activa de `contratos/http/catalogo-errores.md`, incluidos `OPERACION_INVENTARIO_NO_ENCONTRADA` y `CONTEXTO_ABASTECIMIENTO_INVALIDO` | PENDIENTE_EJECUCION |
 | CT-STATIC-04 | STATIC_CONTRACT | Header canónico `X-Correlation-Id`; no introducir `X-Request-Id` alternativo | PENDIENTE_EJECUCION |
 | CT-STATIC-05 | STATIC_CONTRACT | Código de barras reutiliza `catalogo:leer`; sin scope nuevo | PENDIENTE_EJECUCION |
 | CT-STATIC-06 | STATIC_CONTRACT | `DisponibilidadComercial` expone `sku` y `status`, sin saldos ni ubicaciones internas | PENDIENTE_EJECUCION |
 | CT-STATIC-07 | STATIC_CONTRACT | Schemas comerciales de Catálogo no contienen flags administrativos ni perfiles físicos internos | PENDIENTE_EJECUCION |
-| CT-STATIC-08 | STATIC_CONTRACT | YAML válido, AsyncAPI 3.0.0, `info.version=0.6.0-rc.3`, **40 canales y 40 mensajes**, `$ref` resolubles; se conservan `operation_id` y `causation_id` obligatorios en resultados v2 críticos y en inicializaciones donde corresponda | PENDIENTE_EJECUCION |
+| CT-STATIC-08 | STATIC_CONTRACT | YAML válido, AsyncAPI 3.0.0, `info.version=0.6.0-rc.4`, **40 canales y 40 mensajes**, `$ref` resolubles; se conservan `operation_id` y `causation_id` obligatorios en resultados v2 críticos y en inicializaciones donde corresponda | PENDIENTE_EJECUCION |
 | CT-STATIC-09 | STATIC_CONTRACT | `reservaId` de `POST /inventario/reservas/{reservaId}/confirmar` y `/liberar` tiene `type: string`, `format: uuid`; `order_id` sigue siendo cadena opaca | PENDIENTE_EJECUCION |
 | CT-STATIC-10 | STATIC_CONTRACT | `GET /inventario/operaciones/{operationId}` exige UUID y restringe consumidor a `modulo-ventas`, scope `inventario:operaciones:leer`, sin publicar stock interno | PENDIENTE_EJECUCION |
 | CT-STATIC-11 | STATIC_CONTRACT | `POST /inventario/disponibilidad/comercial/verificar` devuelve evaluación no vinculante sin `location_id` ni cantidades internas; `INDETERMINADO` es una salida de negocio válida | PENDIENTE_EJECUCION |
@@ -51,7 +53,7 @@ ARCHITECTURE_INVARIANT
 | CT-STATIC-13 | STATIC_CONTRACT | Los esquemas de éxito de consumo/restauración siguen independientes de los de rechazo; las nuevas referencias no alteran nombres de mensajes, exchanges ni routing keys existentes | PENDIENTE_EJECUCION |
 | CT-STATIC-14 | STATIC_CONTRACT | `ConsultaOperacionInventario` con `status=REJECTED` requiere `result_code` no vacío; sus estados `ACCEPTED`, `PROCESSING`, `COMPLETED`, `REJECTED` y `REQUIRES_REVIEW` conservan la semántica declarada | PENDIENTE_EJECUCION |
 | CT-STATIC-15 | STATIC_CONTRACT | Respuestas `404` de consulta de operación y `422` por contexto comercial inválido usan los códigos del catálogo; `429` y `500` están declarados en las rutas nuevas | PENDIENTE_EJECUCION |
-| CT-STATIC-16 | STATIC_CONTRACT | OpenAPI `0.6.0-rc.1` y AsyncAPI `0.6.0-rc.3` identifican candidatas independientes; AsyncAPI reconcilia nombres físicos base, conserva el vhost y no reemplaza la línea publicada `0.5.0` en runtime | PENDIENTE_EJECUCION |
+| CT-STATIC-16 | STATIC_CONTRACT | OpenAPI y AsyncAPI `0.6.0-rc.4` identifican candidatas independientes; AsyncAPI conserva nombres físicos base y el vhost; ninguna candidata acredita despliegue ni reemplaza por sí sola la línea `0.5.0` en runtime | PENDIENTE_EJECUCION |
 | CT-STATIC-17 | STATIC_CONTRACT | GET detallado admite exactamente `modulo-ventas` y `modulo-postventa` con `inventario:disponibilidad:leer` y `serviceBearer`, además de `userBearer` para acceso humano autorizado; Marketplace, Chatbot y Retail quedan excluidos del detalle y usan solo rutas comerciales | PENDIENTE_EJECUCION |
 | CT-STATIC-18 | STATIC_CONTRACT | AsyncAPI `servers.rabbitmq.x-vhost` y `x-rabbitmq-topology.vhost` coinciden con `g6-productos-ofertas`; la candidata conserva canales, operaciones, mensajes, payloads, esquemas y routing keys comerciales respecto de `0.6.0-rc.2`; los nombres físicos base se alinean a la observación Oracle | PENDIENTE_EJECUCION |
 | CT-STATIC-19 | STATIC_CONTRACT | GET y POST comerciales incluyen allowlist `modulo-marketplace`, `modulo-chatbot`, `modulo-retail`, con el scope común `inventario:disponibilidad:leer`; `GET /inventario/operaciones/{operationId}` usa `inventario:operaciones:leer` y `modulo-ventas` | PENDIENTE_EJECUCION |
@@ -72,7 +74,7 @@ ARCHITECTURE_INVARIANT
 | CT-MKT-08 | Precio con oferta | Regular/oferta diferenciados | PENDIENTE_EJECUCION |
 | CT-MKT-09 | SKU sin existencias en fuente de cumplimiento determinada | HTTP 200 + `AGOTADO`, no 404; si la fuente no puede determinarse, `INDETERMINADO` | PENDIENTE_EJECUCION |
 | CT-MKT-10 | Cupón no aplicable | Resultado de negocio conforme OpenAPI | PENDIENTE_EJECUCION |
-| CT-MKT-11 | Recomendaciones | Marketplace autorizado | PENDIENTE_EJECUCION |
+| CT-MKT-11 | Recomendaciones | La operación allowlist enumera Marketplace/Chatbot/Retail; scope registry pending enumera solo Chatbot. Registrar discrepancia; no inferir grant G7. | PENDIENTE_ALINEACION_CONTRACTUAL_G7 |
 | CT-MKT-12 | No fuga administrativa | Allowlist de campos comerciales; sin flags internos | PENDIENTE_EJECUCION |
 | CT-MKT-13 | Correlación | `X-Correlation-Id` propagado | PENDIENTE_EJECUCION |
 
@@ -146,9 +148,10 @@ Los métodos `test_marketplace_*` comprueban únicamente aserciones `STATIC_CONT
 | CT-REC-05 | Sin candidatos | HTTP 200 + `recommendations=[]` | PENDIENTE_EJECUCION |
 | CT-REC-06 | Identidad | Recomendación principal por `product_id` | PENDIENTE_EJECUCION |
 | CT-REC-07 | No fuga stock | Sin cantidades internas | PENDIENTE_EJECUCION |
-| CT-REC-B01 | Availability product-level | Reutiliza `EstadoStock`, policy multi-SKU pendiente de decisión propia de Recomendaciones | BLOQUEADA_DECISION |
-| CT-REC-B02 | Variantes → availability | Depende de `D-REC-01` | BLOQUEADA_DECISION |
-| CT-REC-B03 | Variantes → current_price | Depende de `D-REC-02` | BLOQUEADA_DECISION |
+| CT-REC-B01 | Availability product-level | Reutiliza `EstadoStock`; candidato sin disponibilidad positiva demostrada se excluye y no se traduce `INDETERMINADO` a `AGOTADO` | PENDIENTE_EJECUCION |
+| CT-REC-B02 | Variantes → availability | Mixta DISPONIBLE/STOCK_BAJO, todas AGOTADO excluye, indeterminado sin positivos excluye, fallo global devuelve error técnico | PENDIENTE_EJECUCION |
+| CT-REC-B03 | Variantes → current_price | Precio efectivo mínimo («desde») entre SKU con positividad demostrada para canal/instante común; sin SKU o precio válido se excluye | PENDIENTE_EJECUCION |
+| CT-REC-B04 | Fallo de dependencia | Inventory/Pricing timeout, 401/403, 503 o DTO inválido no producen lista vacía, cero ni AGOTADO | PENDIENTE_EJECUCION |
 
 ## 6. Rate limiting
 
@@ -170,7 +173,7 @@ Los métodos `test_marketplace_*` comprueban únicamente aserciones `STATIC_CONT
 | CT-SEC-04 | Scope correcto + cliente no permitido → rechazo | PENDIENTE_EJECUCION |
 | CT-SEC-05 | Scope de disponibilidad no habilita automáticamente lectura detallada | PENDIENTE_EJECUCION |
 | CT-SEC-06 | `modulo-ventas` con `inventario:operaciones:leer` obtiene token con `aud=api-productos`; otros clientes no reciben acceso a consultas de operaciones | BLOQUEADA_DEPENDENCIA_EXTERNA |
-| CT-SEC-07 | Los scopes de Productos para Chatbot definidos por G6 constan como confirmados y otorgados por G7, no solo propuestos | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-SEC-07 | Verificar por evidencia G7, separadamente, la ratificación documental G6 de los siete scopes y su registro/grant/provisión efectiva para `modulo-chatbot` con audiencia `api-productos` | BLOQUEADA_DEPENDENCIA_EXTERNA |
 
 Las pruebas con grants reales permanecen `BLOQUEADA_DEPENDENCIA_EXTERNA` mientras Seguridad no registre y aprovisione las concesiones. La existencia de `x-required-scope` en OpenAPI **no prueba** que G7 emita el scope.
 
@@ -181,6 +184,20 @@ Las pruebas con grants reales permanecen `BLOQUEADA_DEPENDENCIA_EXTERNA` mientra
 | CT-CHAT-01 | Usa `/inventario/disponibilidad/comercial` | PENDIENTE_EJECUCION |
 | CT-CHAT-02 | Sigue consumiendo `/recomendaciones?canal=CHATBOT` | PENDIENTE_EJECUCION |
 | CT-CHAT-03 | No recibe cantidades internas | PENDIENTE_EJECUCION |
+| CT-CHAT-04 | `POST /inventario/disponibilidad/comercial/verificar` envía `channel_id=CHATBOT` y `fulfillment.mode=ENVIO_DOMICILIO` según D1 | PENDIENTE_EJECUCION |
+| CT-CHAT-05 | La solicitud de Chatbot no incluye `fulfillment_ref` inventado | PENDIENTE_EJECUCION |
+| CT-CHAT-06 | La respuesta de verificación se lee desde `items[].result`, valida los tres resultados del schema y exige `binding=false` | PENDIENTE_EJECUCION |
+| CT-CHAT-07 | GET comercial distingue y presenta conforme al contrato `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO` e `INDETERMINADO` | PENDIENTE_EJECUCION |
+| CT-CHAT-08 | `INDETERMINADO` contractual válido se acepta y muestra «No pudimos confirmar el stock», nunca agotado/pocas unidades; respuesta incompleta o inválida es disponibilidad no obtenida y bloquea agregar al carrito y continuar checkout | PENDIENTE_EJECUCION |
+| CT-CHAT-09 | Respuesta batch incompleta, con SKU duplicado o con SKU ausente/no coincidente se trata como disponibilidad no obtenida, sin mapear a estado comercial | PENDIENTE_EJECUCION |
+| CT-CHAT-10 | Respuesta fuera de schema (enum desconocido, propiedades/estructura incompatibles) se rechaza como disponibilidad no obtenida | PENDIENTE_EJECUCION |
+| CT-CHAT-11 | HTTP `401`, `403`, `422`, `429` y `503` conservan su semántica y no se convierten en resultado comercial; `429` respeta `Retry-After` si existe | PENDIENTE_EJECUCION |
+| CT-CHAT-12 | `X-Correlation-Id` tiene formato UUID con guiones y el mismo valor se propaga a las llamadas de una interacción | PENDIENTE_EJECUCION |
+| CT-CHAT-13 | Cliente `modulo-chatbot` usa `serviceBearer`, audiencia `api-productos`, scope por operación y allowlist; se verifica separadamente la ratificación de siete scopes y el grant/provisión G7 | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-CHAT-14 | Precio ausente/null se presenta como «Precio no disponible», nunca como `S/ 0.00` | PENDIENTE_EJECUCION |
+| CT-CHAT-15 | `MODULES_MODE=http` ejecuta contra servicios reales con evidencia por entorno/versión/SHA/autenticación; pruebas `fake` se reportan separadas y no como homologación | BLOQUEADA_DEPENDENCIA_EXTERNA |
+
+Los casos nuevos documentan criterios aún no ejecutados. `CT-CHAT-13` depende de G7 para probar permisos efectivos y `CT-CHAT-15` de que el entorno real y la evidencia de homologación estén disponibles; no se atribuye PASS por la aceptación documental A16/A17.
 
 ## 9. OPEN-08 — Ventas ↔ Inventario
 
@@ -214,12 +231,62 @@ CT-G5-INV-04A y CT-G5-INV-05A son trabajo interno implementable en G6 sin espera
 
 ## 10. OPEN-09 — Despacho ↔ Productos
 
-| ID | Resultado esperado | Estado |
-|---|---|---|
-| CT-DSP-01 | Batch de datos físicos por SKU | PENDIENTE_IMPLEMENTACION |
-| CT-DSP-02 | Solo peso/dimensiones contractuales; no empaque | PENDIENTE_IMPLEMENTACION |
-| CT-DSP-03 | Solo consumidor autorizado | PENDIENTE_EJECUCION |
-| CT-DSP-04 | Sin stock/precio/pedido en respuesta física | PENDIENTE_EJECUCION |
+La consulta está homologada documentalmente el 2026-11-02. Los casos siguientes definen verificaciones; ninguno está declarado ejecutado por esta actualización. Separar estática, proveedor, consumer-provider, seguridad y E2E.
+
+### 10.1. Contrato estático
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-DSP-STATIC-01 | STATIC_CONTRACT | `consultarDatosFisicos`; request de 1–100 SKU, únicos, string no vacío; enum físico exactamente `ACTIVO`, `INACTIVO`, `BORRADOR`; `200`, `422` y `503` coherentes | PENDIENTE_EJECUCION |
+| CT-DSP-STATIC-02 | STATIC_CONTRACT | Esquema `422`: error estructural ordinario `SKU_INVALIDO` sin details válido; SKU base no físico `SKU_INVALIDO` y `DATOS_FISICOS_INCOMPLETOS` requieren `details.skusAfectados` (`string[]`, `minItems: 1`, `uniqueItems: true`); documentar semántica condicional y ejemplos completos | PASS_CONTRATO_LOCAL |
+| CT-DSP-STATIC-03 | STATIC_CONTRACT | Operación mantiene `serviceBearer`, `modulo-despacho`, `aud=api-productos`, `productos:fisicos:leer` y `pending-security-registration`; sin cambios AsyncAPI | PENDIENTE_EJECUCION |
+| CT-DSP-STATIC-04 | STATIC_CONTRACT | Respuesta `200` clasifica todos y solo los SKU solicitados una vez entre `productos[]`/`noEncontrados[]`; no expone inventario, precio, pedido ni empaque | PENDIENTE_EJECUCION |
+
+### 10.2. Contrato de proveedor
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-DSP-PROV-01 | PROVIDER_CONTRACT | SKU `ACTIVO` con perfil válido se devuelve en `productos[]` | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-02 | PROVIDER_CONTRACT | SKU `INACTIVO` con perfil válido sigue siendo existente y se devuelve con su estado | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-03 | PROVIDER_CONTRACT | SKU `BORRADOR` con perfil válido sigue siendo existente y se devuelve con su estado | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-04 | PROVIDER_CONTRACT | Perfil ausente/incompleto (peso, dimensión o `actualizadoEn`) responde `422 DATOS_FISICOS_INCOMPLETOS` con SKU afectado, no `200` parcial | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-05 | PROVIDER_CONTRACT | Peso o dimensiones no positivos/no válidos producen el error acordado, sin datos internos | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-06 | PROVIDER_CONTRACT | `actualizadoEn` ausente o inválido produce `422 DATOS_FISICOS_INCOMPLETOS` | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-07 | PROVIDER_CONTRACT | SKU realmente inexistente figura una vez en `noEncontrados[]`; INACTIVO/BORRADOR no se esconden allí | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-08 | PROVIDER_CONTRACT | Lote con perfil existente incompleto y sin SKU base no físico devuelve 422 sin productos parciales como éxito | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-09 | PROVIDER_CONTRACT | Sin omisiones, duplicados ni SKU inesperados; identidad opaca conserva puntuación, mayúsculas y ceros iniciales | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-10 | PROVIDER_CONTRACT | 1 y 100 únicos son límites admitidos; vacío, >100 y repetidos se rechazan según contrato de request | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-PROV-11 | PROVIDER_CONTRACT | sku_base de producto con variantes: identidad existente no física, no inventar perfil; rechazar lote íntegro con `422 SKU_INVALIDO` y todos/solo los SKU base afectados en `details.skusAfectados`, no vacío, únicos, literales y en orden de solicitud. En lotes mixtos precede al perfil incompleto; errores estructurales prevalecen y no requieren details | PROBADA_OPEN-09-PROVIDER_BACKEND_162; PENDIENTE_PRUEBA_DOCUMENTAL |
+| CT-DSP-PROV-12 | PROVIDER_CONTRACT | D-G2-01: verificar matriz estado variante/padre (variante ACTIVA hereda estado padre; INACTIVA/BORRADOR conserva estado), producto simple conserva estado; preserva F-01/F-02 y no altera estados persistidos | IMPLEMENTADA_PROBADA_BACKEND_162; PENDIENTE_PRUEBA_CONTRACTUAL |
+
+### 10.3. Consumer-provider G2↔G6
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-DSP-CP-01 | CONSUMER_PROVIDER | G2 convierte `422 DATOS_FISICOS_INCOMPLETOS` a `422 DESP_ERROR_DATOS_FISICOS_INCOMPLETOS` conservando SKU afectados | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-CP-02 | CONSUMER_PROVIDER | Cotización F-01 exacta solo para ACTIVO con perfil válido; INACTIVO/BORRADOR usa `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE` | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-CP-03 | CONSUMER_PROVIDER | F-02 recibe solicitud solo de Ventas sobre pedido pagado, preparado y listo; estado INACTIVO/BORRADOR no rechaza por sí solo, con perfil y otras validaciones válidos | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-CP-04 | CONSUMER_PROVIDER | G2 conserva y agrupa cantidades para peso/volumen; no modifica inventario, precio ni pedido | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-CP-05 | CONSUMER_PROVIDER | G2 responde `400 DESP_ERROR_LIMITE_SKUS_EXCEDIDO` ante >100 SKU únicos antes de llamar G6 | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-CP-06 | CONSUMER_PROVIDER | Respuesta G6 con SKU omitidos/duplicados/inesperados se rechaza como `502 DESP_ERROR_RESPUESTA_PRODUCTOS_INVALIDA`; sin resultado parcial ni datos inventados | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-CP-07 | CONSUMER_PROVIDER | Para uno o varios SKU base no físicos, G2 traduce `422 SKU_INVALIDO` a `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE` en F-01/F-02 y conserva todos los afectados; en F-02 el motivo es identidad no física, no estado INACTIVO/BORRADOR | PENDIENTE_EVIDENCIA_G2 |
+| CT-DSP-CP-08 | CONSUMER_PROVIDER | Lote mixto con bases no físicas y perfiles incompletos selecciona `SKU_INVALIDO` e informa solo los SKU base; sin bases, informa solo SKU incompletos. La prioridad no depende del orden del request | PENDIENTE_PRUEBA_CONTRACTUAL |
+| CT-DSP-PROV-14 | PROVIDER_CONTRACT | Error estructural ordinario `SKU_INVALIDO` no requiere `details.skusAfectados` ni incluye SKU de otras clases | PENDIENTE_PRUEBA_CONTRACTUAL |
+| CT-DSP-PROV-15 | PROVIDER_CONTRACT | Base no física y perfil incompleto con request en ambos órdenes produce el mismo código/clase prioritaria; preservar SKU opacos (ceros iniciales, mayúsculas y puntuación) literalmente, sin duplicados | PENDIENTE_PRUEBA_CONTRACTUAL |
+
+### 10.4. Seguridad y E2E
+
+| ID | Tipo | Resultado esperado | Estado |
+|---|---|---|---|
+| CT-DSP-SEC-01 | SECURITY_INTEGRATION | JWT ausente/inválido o vencido: 401 `TOKEN_INVALIDO` | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-SEC-02 | SECURITY_INTEGRATION | Audiencia distinta de `api-productos`: token rechazado | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-SEC-03 | SECURITY_INTEGRATION | Cliente fuera de allowlist es rechazado aunque tenga scope nominal | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-SEC-04 | SECURITY_INTEGRATION | Scope insuficiente: 403 `SCOPE_INSUFICIENTE` | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-SEC-05 | SECURITY_INTEGRATION | Grant G7 y credencial real `modulo-despacho` para `productos:fisicos:leer`/`api-productos` verificados antes de llamada real | BLOQUEADA_DEPENDENCIA_EXTERNA |
+| CT-DSP-PROV-13 | PROVIDER_CONTRACT | PostgreSQL/conexión/timeout/dependencia indisponible devuelve 503 `SERVICIO_NO_DISPONIBLE`, sin detalles SQL/tablas/credenciales | PENDIENTE_IMPLEMENTACION |
+| CT-DSP-E2E-01 | E2E | Recorrido real G2→G6 con credenciales G7 reales, SHA provider/consumer, versiones, entorno y evidencia correlacionada | BLOQUEADA_DEPENDENCIA_EXTERNA |
+
+Códigos `DESP_ERROR_LIMITE_SKUS_EXCEDIDO` (400) y `DESP_ERROR_RESPUESTA_PRODUCTOS_INVALIDA` (502) pertenecen a G2; no se incorporan a `ErrorCode` G6. La matriz de evidencia debe registrar SHA, versiones y salida reproducible antes de asignar `PASS`.
 
 ## 11. Recuperación de preparación — Catálogo (FLOW-003 / FLOW-004 / endurecimiento contractual)
 
@@ -422,3 +489,117 @@ La homologación contractual documentada en G5 issue #51 no acredita implementac
 - Misma identidad/operación/payload semántico produce replay sin efectos nuevos; identidad reutilizada con payload diferente produce conflicto. `message_id` identifica cada entrega RabbitMQ.
 - Las transiciones pagar/expirar/liberar se serializan por reserva y respetan el `expires_at` real de Inventario.
 - Estos contratos siguen **provisionales** hasta que backend, seguridad y pruebas integradas demuestren conformidad. No comunicar disponibilidad real por el solo hecho de que el esquema SQL fue validado.
+
+## Marketplace H4: cobertura adicional y evidencias
+
+Casos ampliados CT-MKT:
+
+| ID | Tipo | Caso / aserción | Estado |
+|---|---|---|---|
+| CT-MKT-26 | PROVIDER_CONTRACT | Producto simple elegible usa `sku_base` cuando corresponda; no deduce SKU de IDs | PENDIENTE_PROVIDER |
+| CT-MKT-27 | PROVIDER_CONTRACT | Producto con variantes conserva `variant_id != sku`; variantes no elegibles se excluyen | PENDIENTE_PROVIDER |
+| CT-MKT-28 | CONSUMER_PROVIDER | G1 page 0/1 se traduce a G6 pagina 1/2; pageSize y metadatos se preservan | PENDIENTE |
+| CT-MKT-29 | PROVIDER_CONTRACT | Filtros publicados aplican globalmente; múltiples/precio no se simulan sobre página parcial | PENDIENTE; brecha explícita |
+| CT-MKT-30 | PROVIDER_CONTRACT | Disponibilidad mapea los cuatro estados; `INDETERMINADO` es 200 distinto de 404/5xx | PENDIENTE_PROVIDER |
+| CT-MKT-31 | PROVIDER_CONTRACT | POST verificación con N líneas devuelve SUFICIENTE/INSUFICIENTE/INDETERMINADO y `binding=false`; no reserva | PENDIENTE_PROVIDER |
+| CT-MKT-32 | PROVIDER_CONTRACT | Contexto fulfillment válido, ausente/ambiguo y semánticamente inválido: fuente no resoluble → indeterminado; inválido → 422 conforme al contrato | PENDIENTE; contexto G2/G5/G6 |
+| CT-MKT-33 | PROVIDER_CONTRACT | Promoción aplicable/no aplicable y cupón válido/inválido no consumen beneficio | PENDIENTE_HTTP_HANDLER |
+| CT-MKT-34 | STATIC_CONTRACT | OperationIds y schemas de catálogo, precio, inventario, promoción, cupón/recomendación concuerdan con OpenAPI | Validar en suite estática existente |
+| CT-MKT-35 | SECURITY_INTEGRATION | JWT firmado, audience/cliente/scope/allowlist válidos permite operación | PENDIENTE_GRANT_G7 |
+| CT-MKT-36 | SECURITY_INTEGRATION | Sin scope o cliente no autorizado → 403; token expirado/firma inválida → 401 | PENDIENTE_SEGURIDAD |
+| CT-MKT-37 | CONSUMER_PROVIDER | timeout, error upstream y respuesta/schema inválido no se traducen a INDETERMINADO/AGOTADO; correlación conservada | PENDIENTE |
+| CT-MKT-38 | PROVIDER_CONTRACT | Búsqueda sin coincidencias → 200 vacío; producto no elegible no se filtra fuera de elegibilidad | PENDIENTE_PROVIDER |
+| CT-MKT-39 | E2E | Recorrido BFF G1→Gateway→owner con JWT real, dataset identificado y error/reintento | PENDIENTE_E2E |
+| CT-MKT-40 | E2E | Journey Marketplace completo con BFF/Gateway/owners, identidad real y dataset identificado; confirmar que el resultado corresponde a la función ejecutada | PENDIENTE_E2E |
+
+## Funciones de carrito, checkout y favoritos — evidencia separada
+
+Cada caso corresponde a una función G1 distinta; las llamadas G6 son dependencias de datos y no trasladan el ownership del BFF.
+
+| ID | Función | Verificación | Estado |
+|---|---|---|---|
+| CT-MKT-41 | F-019 visualizar carrito | La lectura del carrito G1 no modifica cantidades; errores de enriquecimiento conservan representación coherente o atención por línea. | PENDIENTE_G1_E2E |
+| CT-MKT-42 | F-020 fusionar carrito anónimo | Fusión, propiedad, concurrencia, transacción e idempotencia son G1; verificación Inventory `binding=false` no autoriza por sí sola cantidad ajustada para mutación. | PENDIENTE_G1_E2E |
+| CT-MKT-43 | F-021 mover ítem del carrito a favoritos | G1 valida identidad/elegibilidad, upsert Wishlist y borra línea transaccionalmente; no evalúa promociones ni muta stock. | PENDIENTE_G1_E2E |
+| CT-MKT-44 | F-023 cotización de checkout | G1 compone datos Catalog/Pricing/Inventory/Promotions según uso y consulta cotización de envío G2; la ruta BFF no se atribuye a G6 y quote vencida no se prepara. | PENDIENTE_G1_G2_G5 |
+| CT-MKT-45 | F-024 validar/aplicar cupón | Promotions `evaluarPromociones` y `validarCupon`; evaluación/validación repetida no consume ni reserva. Consumo/restauración corresponde a secuencia G5. | PENDIENTE_HTTP_HANDLER |
+| CT-MKT-46 | F-025 preparar checkout/revalidar stock | `verificarCantidadComercial` usa N y contexto aplicable; `SUFICIENTE` no reserva; `STOCK_NOT_AVAILABLE` solo se justifica con respuesta autoritativa para esa cantidad. | PENDIENTE_G1_G6_G2_G5 |
+| CT-MKT-47 | F-026 crear pedido | G5 `POST /api/v1/pedidos`; retry conserva `Idempotency-Key` y payload; recuperación según G5; `CREADO` no es `PAGADO`; no inventar `pago.metodoPago`. | PENDIENTE_G1_G5 |
+| CT-MKT-48 | F-036 agregar favorito | G1 persiste por identidad de producto definida; Catalog valida identidad/elegibilidad; no hay API Wishlist G6. | PENDIENTE_G1_E2E |
+| CT-MKT-49 | F-037 visualizar favoritos | G1 devuelve solo titular; Catalog valida identidad/elegibilidad y Pricing/Inventory aportan datos actuales solo si la vista los presenta. | PENDIENTE_G1_E2E |
+| CT-MKT-50 | F-038 quitar favorito/Deshacer | Delete es local G1; al restaurar se revalida el recurso y no se accede a Wishlist G6. | PENDIENTE_G1_E2E |
+| CT-MKT-51 | F-039 mover favorito al carrito | G1 no elimina favorito hasta éxito; verifica selección de variante y consulta disponibilidad según cantidad; POST Inventory sigue no vinculante. | PENDIENTE_G1_E2E |
+| CT-MKT-52 | F-006 inicio/categorías/destacados | Taxonomy `listarCategorias` y Catalog `listarProductos` se prueban como operaciones separadas; `featuredProducts[]` lo compone G1 y G6 no ofrece curaduría editorial. | PENDIENTE_PROVIDER_Y_BFF |
+
+`STATIC_CONTRACT` solo verifica el YAML. Provider, Consumer/Provider, Seguridad y E2E son estados independientes. No marcar PASS sin ejecución vinculada a SHA exacto; ver [matriz de evidencia H4](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/castilla/integraciones/g1-marketplace/MATRIZ_OPERACIONES_H4.md).
+
+## Contexto privado SKU — casos acordados y pendientes de ejecución
+
+Contrato aprobado en diseño por G6: [acuerdo Pricing → Catálogo](../../integraciones/ACUERDO_PRICING_CATALOGO_SKU_CONTEXT.md), `obtenerContextoSku` en [OpenAPI](../http/openapi.yaml). La presencia de estos casos no acredita endpoint ni adaptador implementados; sus resultados deben asociarse al SHA del Backend correspondiente y registrarse en issue #24. Validar el YAML/DTO es evidencia estática separada.
+
+| ID | Alcance | Criterio esperado | Estado |
+|---|---|---|---|
+| CT-CAT-SKUCONTEXT-01 | PROVIDER_CONTRACT | SKU simple existente: `200`, exactamente `sku`, `productId`, `isVariant`, `active`, `eligible` con los tipos del puerto | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-02 | PROVIDER_CONTRACT + ADAPTER | SKU inexistente: `404`, `application/problem+json`, `status=404`, `code=SKU_NO_ENCONTRADO`; solo ese resultado se traduce a `null` | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-03 | PROVIDER_CONTRACT | SKU variante existente: `200`, `isVariant=true`, `productId` del producto al que pertenece | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-04 | PROVIDER_CONTRACT + ADAPTER | SKU existente inactivo: `200`, `active=false` y elegibilidad correspondiente; conservar el DTO, no convertir a `404`/`null` | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-05 | PROVIDER_CONTRACT + ADAPTER | SKU existente inelegible: `200`, `eligible=false`; no ocultar su existencia ni calcular precio/stock | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-06 | PROVIDER_CONTRACT + ADAPTER | Error técnico/indisponibilidad: `503 SERVICIO_NO_DISPONIBLE` como Problem; fallos de red no producen ausencia ni `null` | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-07 | SECURITY | Identidad compartida G6 `modulo-productos`, tipo `servicio`, `aud=api-productos`, `catalogo:leer`; JWT valida firma JWKS/issuer/audiencia/exp/tipo/scope/operación; token ausente/inválido `401`, scope/allowlist inválidos `403`; sin acceso anónimo/humano | PENDIENTE_GRANT_G7_Y_EJECUCION |
+| CT-CAT-SKUCONTEXT-08 | CONTRACT_COMPATIBILITY | SKU codificado en path conserva valor exacto y ceros iniciales; interfaz del puerto sin cambios; allowlists comerciales sin ampliación | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-SKUCONTEXT-09 | SECURITY + ADAPTER | `401/403` nunca se traducen a SKU inexistente o `null` | PENDIENTE_IMPLEMENTACION |
+
+## Casos documentales Catálogo pendientes de ejecución
+
+| ID | Tipo | Criterio | Estado |
+|---|---|---|---|
+| CT-CAT-PRICE-01 | PROVIDER_CONTRACT | `precioMin`/`precioMax` inclusivos usan precio efectivo vigente Pricing en PEN; filtro por todos los SKU elegibles antes de paginar; variante en rango cuenta el padre una vez | PENDIENTE_EJECUCION |
+| CT-CAT-PRICE-02 | INTEGRATION | SKU sin precio vigente no satisface filtro; error/truncamiento técnico detectado responde `503` sin resultados parciales; ausencia legítima no equivale a lote incompleto | PENDIENTE_HOMOLOGACION |
+| CT-CAT-PRICE-03 | CONTRACT_COMPATIBILITY | Canales canónicos `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS`; global `channel_id=null`; `client_id` no se confunde con canal; `channel_id` textual y sin mapping UUID nuevo | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-PRICE-04 | INTEGRATION | Un SKU con coma usa GET individual existente y path codificado; presupuesto total máximo 5 s incluye adquisición token y todos los lotes con un `at` común | PENDIENTE_E2E |
+| CT-CAT-TYPE-01 | PROVIDER_CONTRACT | PATCH `tipoProductoId` requiere borrador, sin variantes ni filas reales, `publicado_alguna_vez=false`, tipo activo, atributos/esquema compatibles y `catalogVersion`; NULL bloquea | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-BARCODE-01 | PROVIDER_CONTRACT | Código exacto, globalmente único, no reutilizable; resolución devuelve SKU solo si asociación vigente y SKU comercialmente elegible | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-RETRY-01 | INTEGRATION | Todo `REJECTED` no reintenta; `PENDING` solo tras 300000 ms desde `published_at` confirmado y con replay idempotente/admisión atómica verificados | PENDIENTE_HOMOLOGACION |
+| CT-CAT-VARIANT-01 | PROVIDER_CONTRACT | Crear variante omitiendo, anulando o enviando vacío `sku` devuelve `422 SKU_INVALIDO`; SKU reservado devuelve `409 SKU_DUPLICADO` | PENDIENTE_IMPLEMENTACION |
+| CT-CAT-MASTER-01 | CONTRACT_COMPATIBILITY | Baja maestra de cinco tipos; cuatro mensajes existentes tipados y correlacionados; resultado solo `CLEAR | IN_USE`; `CLEAR` aislado no libera; final debe coincidir en entidad, IDs, operation_id y version | PENDIENTE_HOMOLOGACION |
+| CT-CAT-MASTER-02 | CONSUMER_PROVIDER | Asociación porta `tipo_producto_id`, `caracteristica_id`; versión capturada es schema_version del tipo; final exitoso trae schema_version_resultante posterior y válido | PENDIENTE_HOMOLOGACION |
+| CT-CAT-MASTER-03 | INTEGRATION | Timeout Taxonomy 60 s cierra durablemente con final; no libera barrera por timeout/ausencia; separar de preparaciones de 300000 ms | PENDIENTE_E2E |
+| CT-CAT-GATEWAY-01 | STATIC_CONTRACT | El generador de rutas excluye operaciones OpenAPI `x-internal: true`; `obtenerContextoSku` no se publica en Gateway | PENDIENTE_BACKEND |
+| CT-CAT-VARIANTS-400 | PROVIDER_CONTRACT | UUID inválido en listado/detalle de variante y query inválida en listado responden `400 VALIDACION`; IDs válidos inexistentes conservan sus 404 | PENDIENTE_EJECUCION |
+
+## Casos documentales añadidos para acuerdos internos G6 H4
+
+| ID | Alcance | Caso | Estado |
+|---|---|---|---|
+| CT-G6-PRICE-EVENT-01 | ASYNCAPI / PROVIDER_CONSUMER | Evento post-commit para objetivo PRODUCTO con `sku=null`, objetivo SKU y transiciones crear/modificar/retirar; actor, canal, moneda, versión e idempotencia | PENDIENTE_IMPLEMENTACION |
+| CT-G6-PRICE-EVENT-02 | ASYNCAPI / CONSUMER | Porcentaje decimal exacto HALF_UP; creación/retiro dan variación null; Promotions invalida y vuelve a consultar Pricing | PENDIENTE_IMPLEMENTACION |
+| CT-G6-INVALIDATION-01 | ASYNCAPI / CONSUMER | Desactivación y stock tipados; Inbox descarta duplicados/versión obsoleta; stock invalida y refresca disponibilidad comercial | PENDIENTE_IMPLEMENTACION |
+| CT-G6-BULK-01 | ASYNCAPI / PROVIDER_CONSUMER | Bulk v2, DTO Catalog referenciados, ALTA/ACTUALIZACION, fila por SKU y padre agrupado; rechazar variante contradictoria | PENDIENTE_IMPLEMENTACION |
+| CT-G6-BULK-02 | ASYNCAPI / IDEMPOTENCY | Retry idéntico reproduce resultado; row_operation_id con payload distinto da IDEMPOTENCY_CONFLICT; completed parcial no afirma éxito de otros dominios | PENDIENTE_IMPLEMENTACION |
+| CT-G6-BULK-03 | FILE_CONTRACT | CSV UTF-8/XLSX una hoja sin macros; límites H4; 16 cabeceras exactas en orden; campos por fila; JSON de atributos; ejemplos válidos e inválidos; SKU duplicado. Fixtures: `tests/contratos/fixtures/bulk-v2/` | PENDIENTE_EJECUCION |
+
+**Evidencia de implementación separada (Backend PR #162):** consumidor Catalog de `catalog.bulk.upsert.requested` v1/v2 fusionado; CI #41717588245 reporta 18/18 jobs PASS. BULK-CONSUMER-v2 y BULK-JOINT usan productor v2 explícito de fixture con PostgreSQL/RabbitMQ desechables. Esto no acredita productor Bulk v2 real, grants G7, RabbitMQ compartido con retry/DLX, despliegue ni E2E entre servicios reales. El productor v2 y la integración completa siguen pendientes de verificación.
+| CT-G6-EXPORT-01 | PROVIDER_CONSUMER | requested_at único; manifiesto registra observaciones/versions; fallo de fuente requerida da FAILED_GENERAL; no hay snapshot atómico | PENDIENTE_IMPLEMENTACION |
+| CT-G6-COMBO-01 | CONSUMER | precio bajo ambas sumas con mismo canal/instante; dependencia fallida da SERVICIO_NO_DISPONIBLE; disponibilidad no verificable es null/INCOMPLETA y no reserva | PENDIENTE_IMPLEMENTACION |
+| CT-G6-AUTH-01 | SECURITY | JWT real de modulo-productos usa scope y allowlist puntual; demo sin JWT solo red/origen/método/ruta verificados, nunca identidad por cabecera | PENDIENTE_GRANT_G7_Y_EJECUCION |
+| CT-G6-AMQP-01 | BROKER_ISOLATED | ACK solo tras disposición durable; inválido se persiste antes de ACK; 3 reintentos locales y pausa sin ACK; no se presupone DLQ | PENDIENTE_IMPLEMENTACION |
+# Propuesta de validación documental H5
+
+La [matriz de verificación Service Bus H5](../../tests/contratos/PLAN-VERIFICACION-SERVICE-BUS-H5.md) agrega casos propuestos para mensajería interna y frontera HTTP. Están `NO EJECUTADOS`; no cambian resultados históricos ni fixtures H4. La validación documental de schemas e invariantes propuestas se ejecuta en [`test_service_bus_h5_documentation.py`](../../tests/contratos/test_service_bus_h5_documentation.py) y no acredita runtime. La suite estática debe continuar verificando el AsyncAPI canónico H4 de 40 canales/mensajes. Las pruebas de integración H5 requieren contratos aprobados; pruebas con emulador no acreditan Azure real, grants G7 ni homologación G5.
+
+
+## Casos contractuales candidatos 0.6.0-rc.5
+
+| ID | Tipo | Criterio | Estado |
+|---|---|---|---|
+| CT-CAT-SKUBATCH-01 | PROVIDER_CONTRACT | Resolver 1 y 100 SKU; ceros iniciales, puntuación, repetidos y orden estable; respuesta distingue elegible, inactivo, no elegible y ausente | PENDIENTE_EJECUCION_CI_FINAL |
+| CT-CAT-SKUBATCH-02 | SECURITY | Resolver administrativo: 200 con JWT GESTOR_COMERCIAL, 401 sin/invalid JWT, 403 rol ausente, 503 error técnico; POST sin efectos y sin retry automático | PENDIENTE_G7_Y_CI_FINAL |
+| CT-CAT-SKUBATCH-03 | PROVIDER_CONTRACT | Contexto privado batch: cinco campos contractuales, repetidos/orden, SKU no encontrado por item; 401/403/503 request-level; falla cerrada y nunca expuesta por Gateway | PENDIENTE_G7_Y_CI_FINAL |
+| CT-CAT-TYPE-PAGE-01 | PROVIDER_CONTRACT + POSTGRES | Incluir/excluir varios type IDs a través de páginas; q/estado/categoría/marca/canal compuestos; total y páginas se calculan tras filtro; ID inválido 400 | PENDIENTE_CI_FINAL |
+| CT-AUDIT-ADMIN-01 | PROVIDER_CONTRACT | GET administración distingue de la vista pública; JWT GESTOR_COMERCIAL; listar/detalle conservan sku=null y canal_origen=null, filtros y paginación 1..200 | PENDIENTE_CI_FINAL |
+| CT-AUDIT-ADMIN-02 | SECURITY | JWT ausente/invalid 401, rol ausente 403; detalle invalida query extra y UUID; nunca publicar administración como anónimo | PENDIENTE_CI_FINAL |
+| CT-COMBO-ADMIN-IDEMP-01 | PROVIDER_CONTRACT | POST administración acepta key 1..128 según regex exacta; misma identidad+clave+payload recupera el mismo combo y no duplica efectos; la ruta POST legacy permanece | PENDIENTE_CI_FINAL |
+| CT-COMBO-ADMIN-IDEMP-02 | SECURITY + FAILURE_INJECTION | Reutilización conflictiva 409; timeout/pérdida de respuesta reconcilia con la misma clave; no se repite con clave nueva; 401/403 y error técnico preservan resultado incierto | PENDIENTE_CI_FINAL |
+| CT-GATEWAY-PRIVATE-SKU-01 | STATIC_CONTRACT + E2E | Los dos contextos privados (GET single y POST batch) no aparecen en registry ni se enrutan con token humano, servicio o anónimo a través de Gateway | PENDIENTE_CI_FINAL |
+
+El estado se actualizará solo con resultados asociados a SHA final de provider/consumer/Gateway y no por documentación YAML aislada.

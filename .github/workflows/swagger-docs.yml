@@ -1,0 +1,97 @@
+name: Validar contrato, Swagger Studio y visor local
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft, edited]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: swagger-docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+
+permissions:
+  contents: read
+
+jobs:
+  contrato:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    name: Validar contrato y ambas alternativas Swagger
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: swagger
+    steps:
+      - name: Descargar fuentes
+        uses: actions/checkout@v4
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: swagger/package-lock.json
+      - name: Probar el veredicto estable validate-docs
+        working-directory: .
+        run: node --test scripts/ci/verify-docs-results.test.mjs
+      - name: Probar disparadores documentales Draft y Ready
+        working-directory: .
+        run: node --test scripts/ci/draft-ready-policy.test.mjs
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Ejecutar pruebas aisladas de sincronización de workspaces
+        working-directory: .
+        run: python -m unittest discover -s tests/automation -p "test_sync_workspaces.py" -v
+      - name: Instalar dependencias fijadas
+        run: |
+          npm ci --ignore-scripts
+          python -m pip install -r requirements-validation.txt
+          python -m pip check
+          npx playwright install --with-deps chromium
+      - name: Verificar rechazo de fechas inválidas
+        run: python scripts/check-validation-environment.py
+      - name: Validar contrato estricto
+        run: npm run validate
+      - name: Preparar definición derivada para Studio
+        run: npm run export
+      - name: Construir visor local desde contrato oficial
+        run: npm run build:local
+      - name: Comprobar equivalencia y referencias
+        run: npm test
+      - name: Probar visor local sin conexiones externas en Chromium
+        run: npm run test:browser
+      - name: Ejecutar regresión contractual existente
+        working-directory: .
+        run: python -m unittest discover -s tests/contratos -v
+      - name: Adjuntar artefacto y evidencias para auditoría
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swagger-studio-revision
+          path: |
+            swagger/reports
+            swagger/dist
+            swagger/test-results
+            swagger/playwright-report
+          retention-days: 7
+
+  validate_docs:
+    name: validate-docs
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    needs: [contrato]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener el código evaluado
+        uses: actions/checkout@v4
+      - name: Preparar Node.js para el verificador
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Exigir validaciones documentales obligatorias
+        working-directory: .
+        env:
+          RESULTADOS: ${{ toJSON(needs) }}
+        run: node scripts/ci/verify-docs-results.mjs "$RESULTADOS"

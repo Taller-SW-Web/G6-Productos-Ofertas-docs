@@ -1,3 +1,5 @@
+> **Transición H4→H5:** los ACK/publicación/confirmaciones mencionados en las especificaciones físicas de Inbox/Outbox son pasos de settlement RabbitMQ H4. Las invariantes SQL, transacciones e idempotencia se conservan; H5 usa el patrón Service Bus descrito en su topología, sin implementación acreditada.
+
 # Modelo físico — promotions-svc / schema `promotions`
 
 ## 1. Identificación

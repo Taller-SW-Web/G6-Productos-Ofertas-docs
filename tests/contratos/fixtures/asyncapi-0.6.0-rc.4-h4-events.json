@@ -1,0 +1,243 @@
+{
+  "catalogProductDeactivated": {
+    "message_id": "30000000-0000-4000-8000-000000000001",
+    "schema_version": 1,
+    "occurred_at": "2026-11-01T10:00:00Z",
+    "correlation_id": "40000000-0000-4000-8000-000000000001",
+    "causation_id": "20000000-0000-4000-8000-000000000001",
+    "operation_id": "20000000-0000-4000-8000-000000000001",
+    "producer": "catalog-svc",
+    "kind": "event",
+    "name": "catalog.product.deactivated",
+    "data": {
+      "product_id": "product-123",
+      "product_version": 4,
+      "changed_at": "2026-11-01T09:59:59Z"
+    }
+  },
+  "catalogSkuDeactivated": {
+    "message_id": "30000000-0000-4000-8000-000000000002",
+    "schema_version": 1,
+    "occurred_at": "2026-11-01T10:00:00Z",
+    "correlation_id": "40000000-0000-4000-8000-000000000001",
+    "causation_id": "20000000-0000-4000-8000-000000000002",
+    "operation_id": "20000000-0000-4000-8000-000000000002",
+    "producer": "catalog-svc",
+    "kind": "event",
+    "name": "catalog.sku.deactivated",
+    "data": {
+      "sku": "SKU-123-M",
+      "product_id": "product-123",
+      "sku_version": 5,
+      "changed_at": "2026-11-01T09:59:59Z"
+    }
+  },
+  "pricingPriceChanged": {
+    "message_id": "30000000-0000-4000-8000-000000000003",
+    "schema_version": 1,
+    "occurred_at": "2026-11-01T10:00:00Z",
+    "correlation_id": "40000000-0000-4000-8000-000000000001",
+    "causation_id": "20000000-0000-4000-8000-000000000003",
+    "operation_id": "20000000-0000-4000-8000-000000000003",
+    "producer": "pricing-svc",
+    "kind": "event",
+    "name": "pricing.price.changed",
+    "data": {
+      "target_type": "SKU",
+      "product_id": "product-123",
+      "sku": "SKU-123-M",
+      "channel_id": null,
+      "currency": "PEN",
+      "price_type": "REGULAR",
+      "previous_price": "19.90",
+      "new_price": "18.90",
+      "operation": "MODIFICACION",
+      "reason": "ACTUALIZACION_MANUAL",
+      "price_version": 2,
+      "valid_from": "2026-11-01T10:00:00Z",
+      "batch_id": null,
+      "actor": {"user_id": null, "email": null, "ip": null}
+    }
+  },
+  "inventoryStockChanged": {
+    "message_id": "30000000-0000-4000-8000-000000000004",
+    "schema_version": 2,
+    "occurred_at": "2026-11-01T10:00:00Z",
+    "correlation_id": "40000000-0000-4000-8000-000000000001",
+    "causation_id": "20000000-0000-4000-8000-000000000004",
+    "operation_id": "20000000-0000-4000-8000-000000000004",
+    "producer": "inventory-svc",
+    "kind": "event",
+    "name": "inventory.stock.changed",
+    "data": {
+      "sku": "NIK-REV7-NEG-41",
+      "location_id": "9129b578-631e-1735-8427-b683fb524380",
+      "on_hand": 12,
+      "reserved": 2,
+      "blocked": 1,
+      "available": 9,
+      "estado": "DISPONIBLE",
+      "stock_version": 8,
+      "updated_at": "2026-11-01T10:00:00Z"
+    }
+  },
+  "catalogBulkUpsertRequestedAlta": {
+    "message_id": "30000000-0000-4000-8000-000000000005",
+    "schema_version": 1,
+    "occurred_at": "2026-11-01T10:00:00Z",
+    "correlation_id": "40000000-0000-4000-8000-000000000002",
+    "causation_id": "20000000-0000-4000-8000-000000000005",
+    "operation_id": "20000000-0000-4000-8000-000000000005",
+    "producer": "bulk-svc",
+    "kind": "command",
+    "name": "catalog.bulk.upsert.requested",
+    "data": {
+      "batch_id": "10000000-0000-4000-8000-000000000001",
+      "batch_operation_id": "20000000-0000-4000-8000-000000000005",
+      "template_version": 2,
+      "mode": "ALTA",
+      "rows": [
+        {
+          "row_number": 2,
+          "row_operation_id": "21000000-0000-4000-8000-000000000001",
+          "producto_id": null,
+          "sku_base": "SKU-SIMPLE-001",
+          "product": {
+            "nombre": "Producto simple",
+            "descripcion": "Producto de prueba",
+            "categoriaId": "categoria-1",
+            "tipoProductoId": "tipo-1",
+            "marcaId": "marca-1",
+            "precioBaseInicial": 19.9,
+            "skuBase": "SKU-SIMPLE-001",
+            "tieneVariantes": false
+          },
+          "variant_id": null,
+          "variant": null
+        },
+        {
+          "row_number": 3,
+          "row_operation_id": "21000000-0000-4000-8000-000000000002",
+          "producto_id": null,
+          "sku_base": "SKU-VARIANT-001",
+          "product": {
+            "nombre": "Producto con variante",
+            "descripcion": "Producto de prueba",
+            "categoriaId": "categoria-1",
+            "tipoProductoId": "tipo-1",
+            "marcaId": "marca-1",
+            "precioBaseInicial": 29.9,
+            "skuBase": "SKU-VARIANT-001",
+            "tieneVariantes": true
+          },
+          "variant_id": null,
+          "variant": {
+            "sku": "SKU-VARIANT-001-M",
+            "atributosIdentificadores": [
+              {"caracteristica_id": "talla", "nombre": "Talla", "valor": "M"}
+            ],
+            "imagenUrl": "https://catalog.example/sku-variant-001-m.jpg"
+          }
+        }
+      ]
+    }
+  },
+  "catalogBulkUpsertRequestedActualizacion": {
+    "message_id": "30000000-0000-4000-8000-000000000006",
+    "schema_version": 1,
+    "occurred_at": "2026-11-01T10:01:00Z",
+    "correlation_id": "40000000-0000-4000-8000-000000000003",
+    "causation_id": "20000000-0000-4000-8000-000000000006",
+    "operation_id": "20000000-0000-4000-8000-000000000006",
+    "producer": "bulk-svc",
+    "kind": "command",
+    "name": "catalog.bulk.upsert.requested",
+    "data": {
+      "batch_id": "10000000-0000-4000-8000-000000000002",
+      "batch_operation_id": "20000000-0000-4000-8000-000000000006",
+      "template_version": 2,
+      "mode": "ACTUALIZACION",
+      "rows": [
+        {
+          "row_number": 2,
+          "row_operation_id": "21000000-0000-4000-8000-000000000003",
+          "producto_id": "product-123",
+          "sku_base": "SKU-VARIANT-001",
+          "product": {
+            "nombre": "Producto actualizado",
+            "descripcion": "Descripción revisada",
+            "categoriaId": "categoria-1",
+            "marcaId": "marca-1",
+            "tipoProductoId": "tipo-1",
+            "atributos": [],
+            "imagenes": [{"url": "https://catalog.example/product-123.jpg", "principal": true}],
+            "perfilFisico": null,
+            "catalogVersion": 3
+          },
+          "variant_id": "variant-123",
+          "variant": {
+            "atributosNoIdentificadores": [],
+            "imagenUrl": "https://catalog.example/sku-variant-001-m-new.jpg",
+            "perfilFisico": null,
+            "catalogVersion": 2
+          }
+        },
+        {
+          "row_number": 3,
+          "row_operation_id": "21000000-0000-4000-8000-000000000004",
+          "producto_id": "product-456",
+          "sku_base": "SKU-SIMPLE-002",
+          "product": {
+            "nombre": "Producto simple actualizado",
+            "descripcion": "Descripción corregida",
+            "categoriaId": "categoria-2",
+            "marcaId": "marca-2",
+            "tipoProductoId": "tipo-2",
+            "atributos": [],
+            "imagenes": [],
+            "perfilFisico": null,
+            "catalogVersion": 1
+          },
+          "variant_id": null,
+          "variant": null
+        }
+      ]
+    }
+  },
+  "catalogBulkUpsertCompleted": {
+    "message_id": "30000000-0000-4000-8000-000000000007",
+    "schema_version": 1,
+    "occurred_at": "2026-11-01T10:02:00Z",
+    "correlation_id": "40000000-0000-4000-8000-000000000002",
+    "causation_id": "30000000-0000-4000-8000-000000000005",
+    "operation_id": "20000000-0000-4000-8000-000000000005",
+    "producer": "catalog-svc",
+    "kind": "result",
+    "name": "catalog.bulk.upsert.completed",
+    "data": {
+      "batch_id": "10000000-0000-4000-8000-000000000001",
+      "batch_operation_id": "20000000-0000-4000-8000-000000000005",
+      "results": [
+        {"row_number": 2, "row_operation_id": "21000000-0000-4000-8000-000000000001", "product_id": "product-789", "sku_base": "SKU-SIMPLE-001", "status": "COMPLETED", "code": null},
+        {"row_number": 3, "row_operation_id": "21000000-0000-4000-8000-000000000002", "product_id": null, "sku_base": "SKU-VARIANT-001", "status": "REJECTED", "code": "VALIDACION"}
+      ]
+    }
+  },
+  "catalogBulkUpsertRejected": {
+    "message_id": "30000000-0000-4000-8000-000000000008",
+    "schema_version": 1,
+    "occurred_at": "2026-11-01T10:03:00Z",
+    "correlation_id": "40000000-0000-4000-8000-000000000003",
+    "causation_id": "30000000-0000-4000-8000-000000000006",
+    "operation_id": "20000000-0000-4000-8000-000000000006",
+    "producer": "catalog-svc",
+    "kind": "result",
+    "name": "catalog.bulk.upsert.rejected",
+    "data": {
+      "batch_id": "10000000-0000-4000-8000-000000000002",
+      "batch_operation_id": "20000000-0000-4000-8000-000000000006",
+      "code": "VALIDACION",
+      "detail": "El comando no cumple el contrato de entrada."
+    }
+  }
+}

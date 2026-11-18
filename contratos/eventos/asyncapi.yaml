@@ -1,964 +1,556 @@
 asyncapi: 3.0.0
 id: urn:taller-sw-web:productos-y-ofertas:asyncapi
 info:
-  title: Productos y Ofertas — Contrato asíncrono
-  version: 0.6.0-rc.3
-  description: >-
-    Candidata documental incompatible por reconciliar los nombres de exchanges y colas
-    de infraestructura base con la observación histórica de RabbitMQ Oracle del
-    2026-10-19. Conserva los 40 mensajes/canales, payloads, esquemas, operaciones,
-    productores, consumidores, routing keys lógicas y vhost de 0.6.0-rc.2. Solo
-    cambian referencias físicas base y metadatos documentales. La observación no
-    acredita homologación bilateral, despliegue, conectividad AMQP ni integración E2E.
-    Retry/DLX permanece como diseño candidato no aprobado, no aprovisionado y bloqueado.
+  title: Productos y Ofertas — Contrato asíncrono H5
+  version: 0.7.0-rc.1
+  description: Baseline SEMIFINAL_G6 para mensajería interna exclusivamente mediante Azure Service Bus Basic. Pendiente
+    de homologación externa en las fronteras HTTP correspondientes. No acredita aprovisionamiento, implementación,
+    validación, grants, habilitación ni despliegue. RabbitMQ se conserva en el snapshot H4. Entrega at-least-once,
+    Outbox por destinatario, Inbox antes de settlement y DLQ supervisada; no exactly-once.
 defaultContentType: application/json
 x-delivery-semantics: at-least-once
-x-physical-topology-status: base-observed-not-homologated
-x-physical-topology-status-description: >-
-  Los nombres y tipos de la infraestructura base fueron observados en una auditoría
-  Oracle del 2026-10-19. Este estado no certifica el estado actual del servidor, la
-  correspondencia individual de bindings, conectividad, entrega, ACK, homologación,
-  despliegue ni pruebas E2E.
-x-external-homologation-status: pending
-x-retry-dlx-status: blocked-not-provisioned
 channels:
-  taxonomyCategoryUpdated:
-    address: taxonomy.category.updated
-    messages:
-      TaxonomyCategoryUpdated:
-        $ref: '#/components/messages/TaxonomyCategoryUpdated'
-    x-routing-key: taxonomy.category.updated
-    x-binding-status: pending-verification
-    x-exchange: po.eventos.x
-  taxonomyProductTypeSchemaChanged:
-    address: taxonomy.product-type-schema.changed
-    messages:
-      TaxonomyProductTypeSchemaChanged:
-        $ref: '#/components/messages/TaxonomyProductTypeSchemaChanged'
-    x-routing-key: taxonomy.product-type-schema.changed
-    x-binding-status: pending-verification
-    x-exchange: po.eventos.x
-  taxonomyCharacteristicValueUpdated:
-    address: taxonomy.characteristic-value.updated
-    messages:
-      TaxonomyCharacteristicValueUpdated:
-        $ref: '#/components/messages/TaxonomyCharacteristicValueUpdated'
-    x-routing-key: taxonomy.characteristic-value.updated
-    x-binding-status: pending-verification
-    x-exchange: po.eventos.x
-  catalogProductDeactivated:
-    address: catalog.product.deactivated
-    messages:
-      CatalogProductDeactivated:
-        $ref: '#/components/messages/CatalogProductDeactivated'
-    x-routing-key: catalog.product.deactivated
-    x-binding-status: pending-verification
-    x-exchange: po.eventos.x
-  catalogSkuDeactivated:
-    address: catalog.sku.deactivated
-    messages:
-      CatalogSkuDeactivated:
-        $ref: '#/components/messages/CatalogSkuDeactivated'
-    x-routing-key: catalog.sku.deactivated
-    x-binding-status: pending-verification
-    x-exchange: po.eventos.x
-  pricingPriceChanged:
-    address: pricing.price.changed
-    messages:
-      PricingPriceChanged:
-        $ref: '#/components/messages/PricingPriceChanged'
-    x-routing-key: pricing.price.changed
-    x-binding-status: pending-verification
-    x-exchange: po.eventos.x
-  inventoryStockChanged:
-    address: inventory.stock.changed
-    messages:
-      InventoryStockChanged:
-        $ref: '#/components/messages/InventoryStockChanged'
-    x-routing-key: inventory.stock.changed
-    x-binding-status: pending-verification
-    x-exchange: po.eventos.x
-  inventoryStockAdjusted:
-    address: inventory.stock.adjusted
-    messages:
-      InventoryStockAdjusted:
-        $ref: '#/components/messages/InventoryStockAdjusted'
-    x-routing-key: inventory.stock.adjusted
-    x-binding-status: pending-verification
-    x-exchange: po.eventos.x
-  inventoryReservationCreated:
-    address: inventory.reservation.created
-    messages:
-      InventoryReservationCreated:
-        $ref: '#/components/messages/InventoryReservationCreated'
-    x-routing-key: inventory.reservation.created
-    x-binding-status: pending-verification
-    x-exchange: po.eventos.x
-  inventoryReservationRejected:
-    address: inventory.reservation.rejected
-    messages:
-      InventoryReservationRejected:
-        $ref: '#/components/messages/InventoryReservationRejected'
-    x-routing-key: inventory.reservation.rejected
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  inventoryReservationConsumed:
-    address: inventory.reservation.consumed
-    messages:
-      InventoryReservationConsumed:
-        $ref: '#/components/messages/InventoryReservationConsumed'
-    x-routing-key: inventory.reservation.consumed
-    x-binding-status: pending-verification
-    x-exchange: po.eventos.x
-  inventoryReservationReleased:
-    address: inventory.reservation.released
-    messages:
-      InventoryReservationReleased:
-        $ref: '#/components/messages/InventoryReservationReleased'
-    x-routing-key: inventory.reservation.released
-    x-binding-status: pending-verification
-    x-exchange: po.eventos.x
-  inventoryReservationExpired:
-    address: inventory.reservation.expired
-    messages:
-      InventoryReservationExpired:
-        $ref: '#/components/messages/InventoryReservationExpired'
-    x-routing-key: inventory.reservation.expired
-    x-binding-status: pending-verification
-    x-exchange: po.eventos.x
-  inventoryConsumptionCompleted:
-    address: inventory.consumption.completed
-    messages:
-      InventoryConsumptionCompleted:
-        $ref: '#/components/messages/InventoryConsumptionCompleted'
-    x-routing-key: inventory.consumption.completed
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  inventoryConsumptionRejected:
-    address: inventory.consumption.rejected
-    messages:
-      InventoryConsumptionRejected:
-        $ref: '#/components/messages/InventoryConsumptionRejected'
-    x-routing-key: inventory.consumption.rejected
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  taxonomyMasterDeactivationCheckRequested:
-    address: taxonomy.master.deactivation.check.requested
-    messages:
-      TaxonomyMasterDeactivationCheckRequested:
-        $ref: '#/components/messages/TaxonomyMasterDeactivationCheckRequested'
-    x-routing-key: taxonomy.master.deactivation.check.requested
-    x-binding-status: pending-verification
-    x-exchange: po.comandos.x
-  catalogMasterDeactivationChecked:
-    address: catalog.master.deactivation.checked
-    messages:
-      CatalogMasterDeactivationChecked:
-        $ref: '#/components/messages/CatalogMasterDeactivationChecked'
-    x-routing-key: catalog.master.deactivation.checked
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  taxonomyMasterDeactivated:
-    address: taxonomy.master.deactivated
-    messages:
-      TaxonomyMasterDeactivated:
-        $ref: '#/components/messages/TaxonomyMasterDeactivated'
-    x-routing-key: taxonomy.master.deactivated
-    x-binding-status: pending-verification
-    x-exchange: po.eventos.x
-  taxonomyMasterDeactivationRejected:
-    address: taxonomy.master.deactivation.rejected
-    messages:
-      TaxonomyMasterDeactivationRejected:
-        $ref: '#/components/messages/TaxonomyMasterDeactivationRejected'
-    x-routing-key: taxonomy.master.deactivation.rejected
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  catalogBulkUpsertRequested:
-    address: catalog.bulk.upsert.requested
+  g6_catalog_from_bulk:
+    address: g6.catalog.from.bulk
     messages:
       CatalogBulkUpsertRequested:
         $ref: '#/components/messages/CatalogBulkUpsertRequested'
-    x-routing-key: catalog.bulk.upsert.requested
-    x-binding-status: pending-verification
-    x-exchange: po.comandos.x
-  catalogBulkUpsertCompleted:
-    address: catalog.bulk.upsert.completed
-    messages:
-      CatalogBulkUpsertCompleted:
-        $ref: '#/components/messages/CatalogBulkUpsertCompleted'
-    x-routing-key: catalog.bulk.upsert.completed
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  catalogBulkUpsertRejected:
-    address: catalog.bulk.upsert.rejected
-    messages:
-      CatalogBulkUpsertRejected:
-        $ref: '#/components/messages/CatalogBulkUpsertRejected'
-    x-routing-key: catalog.bulk.upsert.rejected
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  pricingBulkPriceApplyRequested:
-    address: pricing.bulk.price.apply.requested
-    messages:
-      PricingBulkPriceApplyRequested:
-        $ref: '#/components/messages/PricingBulkPriceApplyRequested'
-    x-routing-key: pricing.bulk.price.apply.requested
-    x-binding-status: pending-verification
-    x-exchange: po.comandos.x
-  pricingBulkPriceApplyCompleted:
-    address: pricing.bulk.price.apply.completed
-    messages:
-      PricingBulkPriceApplyCompleted:
-        $ref: '#/components/messages/PricingBulkPriceApplyCompleted'
-    x-routing-key: pricing.bulk.price.apply.completed
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  pricingBulkPriceApplyRejected:
-    address: pricing.bulk.price.apply.rejected
-    messages:
-      PricingBulkPriceApplyRejected:
-        $ref: '#/components/messages/PricingBulkPriceApplyRejected'
-    x-routing-key: pricing.bulk.price.apply.rejected
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  inventoryBulkStockAdjustRequested:
-    address: inventory.bulk.stock.adjust.requested
+    x-producer: bulk-svc
+    x-consumer: catalog-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_inventory_from_bulk:
+    address: g6.inventory.from.bulk
     messages:
       InventoryBulkStockAdjustRequested:
         $ref: '#/components/messages/InventoryBulkStockAdjustRequested'
-    x-routing-key: inventory.bulk.stock.adjust.requested
-    x-binding-status: pending-verification
-    x-exchange: po.comandos.x
-  inventoryBulkStockAdjustCompleted:
-    address: inventory.bulk.stock.adjust.completed
+    x-producer: bulk-svc
+    x-consumer: inventory-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: BLOCKED_CONTRACT
+  g6_pricing_from_bulk:
+    address: g6.pricing.from.bulk
     messages:
-      InventoryBulkStockAdjustCompleted:
-        $ref: '#/components/messages/InventoryBulkStockAdjustCompleted'
-    x-routing-key: inventory.bulk.stock.adjust.completed
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  inventoryBulkStockAdjustRejected:
-    address: inventory.bulk.stock.adjust.rejected
+      PricingBulkPriceApplyRequested:
+        $ref: '#/components/messages/PricingBulkPriceApplyRequested'
+    x-producer: bulk-svc
+    x-consumer: pricing-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: BLOCKED_CONTRACT
+  g6_bulk_from_catalog:
+    address: g6.bulk.from.catalog
     messages:
-      InventoryBulkStockAdjustRejected:
-        $ref: '#/components/messages/InventoryBulkStockAdjustRejected'
-    x-routing-key: inventory.bulk.stock.adjust.rejected
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  promotionsCouponConsumptionCompleted:
-    address: promotions.coupon.consumption.completed
+      CatalogBulkUpsertCompleted:
+        $ref: '#/components/messages/CatalogBulkUpsertCompleted'
+      CatalogBulkUpsertRejected:
+        $ref: '#/components/messages/CatalogBulkUpsertRejected'
+    x-producer: catalog-svc
+    x-consumer: bulk-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_combos_from_catalog:
+    address: g6.combos.from.catalog
     messages:
-      PromotionsCouponConsumptionCompleted:
-        $ref: '#/components/messages/PromotionsCouponConsumptionCompleted'
-    x-routing-key: promotions.coupon.consumption.completed
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  promotionsCouponConsumptionRejected:
-    address: promotions.coupon.consumption.rejected
+      CatalogProductDeactivated:
+        $ref: '#/components/messages/CatalogProductDeactivated'
+      CatalogSkuDeactivated:
+        $ref: '#/components/messages/CatalogSkuDeactivated'
+    x-producer: catalog-svc
+    x-consumer: combos-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_inventory_from_catalog:
+    address: g6.inventory.from.catalog
     messages:
-      PromotionsCouponConsumptionRejected:
-        $ref: '#/components/messages/PromotionsCouponConsumptionRejected'
-    x-routing-key: promotions.coupon.consumption.rejected
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  promotionsCouponConsumptionRequested:
-    address: promotions.coupon.consumption.requested
-    messages:
-      PromotionsCouponConsumptionRequested:
-        $ref: '#/components/messages/PromotionsCouponConsumptionRequested'
-    x-routing-key: promotions.coupon.consumption.requested
-    x-binding-status: pending-verification
-    x-exchange: po.comandos.x
-  promotionsCouponRestorationRequested:
-    address: promotions.coupon.restoration.requested
-    messages:
-      PromotionsCouponRestorationRequested:
-        $ref: '#/components/messages/PromotionsCouponRestorationRequested'
-    x-routing-key: promotions.coupon.restoration.requested
-    x-binding-status: pending-verification
-    x-exchange: po.comandos.x
-  promotionsCouponRestorationCompleted:
-    address: promotions.coupon.restoration.completed
-    messages:
-      PromotionsCouponRestorationCompleted:
-        $ref: '#/components/messages/PromotionsCouponRestorationCompleted'
-    x-routing-key: promotions.coupon.restoration.completed
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  promotionsCouponRestorationRejected:
-    address: promotions.coupon.restoration.rejected
-    messages:
-      PromotionsCouponRestorationRejected:
-        $ref: '#/components/messages/PromotionsCouponRestorationRejected'
-    x-routing-key: promotions.coupon.restoration.rejected
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  pricingProductInitializationRequested:
-    address: pricing.product.initialization.requested
-    messages:
-      PricingProductInitializationRequested:
-        $ref: '#/components/messages/PricingProductInitializationRequested'
-    x-routing-key: pricing.product.initialization.requested
-    x-binding-status: pending-verification
-    x-exchange: po.comandos.x
-  pricingProductInitializationCompleted:
-    address: pricing.product.initialization.completed
-    messages:
-      PricingProductInitializationCompleted:
-        $ref: '#/components/messages/PricingProductInitializationCompleted'
-    x-routing-key: pricing.product.initialization.completed
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  pricingProductInitializationRejected:
-    address: pricing.product.initialization.rejected
-    messages:
-      PricingProductInitializationRejected:
-        $ref: '#/components/messages/PricingProductInitializationRejected'
-    x-routing-key: pricing.product.initialization.rejected
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  inventorySkuInitializationRequested:
-    address: inventory.sku.initialization.requested
-    messages:
+      CatalogSkuDeactivated:
+        $ref: '#/components/messages/CatalogSkuDeactivated'
       InventorySkuInitializationRequested:
         $ref: '#/components/messages/InventorySkuInitializationRequested'
-    x-routing-key: inventory.sku.initialization.requested
-    x-binding-status: pending-verification
-    x-exchange: po.comandos.x
-  inventorySkuInitializationCompleted:
-    address: inventory.sku.initialization.completed
+    x-producer: catalog-svc
+    x-consumer: inventory-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_pricing_from_catalog:
+    address: g6.pricing.from.catalog
+    messages:
+      CatalogSkuDeactivated:
+        $ref: '#/components/messages/CatalogSkuDeactivated'
+      PricingProductInitializationRequested:
+        $ref: '#/components/messages/PricingProductInitializationRequested'
+    x-producer: catalog-svc
+    x-consumer: pricing-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_promotions_from_catalog:
+    address: g6.promotions.from.catalog
+    messages:
+      CatalogProductDeactivated:
+        $ref: '#/components/messages/CatalogProductDeactivated'
+      CatalogSkuDeactivated:
+        $ref: '#/components/messages/CatalogSkuDeactivated'
+    x-producer: catalog-svc
+    x-consumer: promotions-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_taxonomy_from_catalog:
+    address: g6.taxonomy.from.catalog
+    messages:
+      CatalogMasterDeactivationChecked:
+        $ref: '#/components/messages/CatalogMasterDeactivationChecked'
+    x-producer: catalog-svc
+    x-consumer: taxonomy-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_bulk_from_inventory:
+    address: g6.bulk.from.inventory
+    messages:
+      InventoryStockAdjusted:
+        $ref: '#/components/messages/InventoryStockAdjusted'
+      InventoryBulkStockAdjustCompleted:
+        $ref: '#/components/messages/InventoryBulkStockAdjustCompleted'
+      InventoryBulkStockAdjustRejected:
+        $ref: '#/components/messages/InventoryBulkStockAdjustRejected'
+    x-producer: inventory-svc
+    x-consumer: bulk-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_catalog_from_inventory:
+    address: g6.catalog.from.inventory
     messages:
       InventorySkuInitializationCompleted:
         $ref: '#/components/messages/InventorySkuInitializationCompleted'
-    x-routing-key: inventory.sku.initialization.completed
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
-  inventorySkuInitializationRejected:
-    address: inventory.sku.initialization.rejected
-    messages:
       InventorySkuInitializationRejected:
         $ref: '#/components/messages/InventorySkuInitializationRejected'
-    x-routing-key: inventory.sku.initialization.rejected
-    x-binding-status: pending-verification
-    x-exchange: po.resultados.x
+    x-producer: inventory-svc
+    x-consumer: catalog-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_combos_from_inventory:
+    address: g6.combos.from.inventory
+    messages:
+      InventoryStockChanged:
+        $ref: '#/components/messages/InventoryStockChanged'
+    x-producer: inventory-svc
+    x-consumer: combos-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_promotions_from_inventory:
+    address: g6.promotions.from.inventory
+    messages:
+      InventoryStockChanged:
+        $ref: '#/components/messages/InventoryStockChanged'
+    x-producer: inventory-svc
+    x-consumer: promotions-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_bulk_from_pricing:
+    address: g6.bulk.from.pricing
+    messages:
+      PricingBulkPriceApplyCompleted:
+        $ref: '#/components/messages/PricingBulkPriceApplyCompleted'
+      PricingBulkPriceApplyRejected:
+        $ref: '#/components/messages/PricingBulkPriceApplyRejected'
+    x-producer: pricing-svc
+    x-consumer: bulk-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_catalog_from_pricing:
+    address: g6.catalog.from.pricing
+    messages:
+      PricingProductInitializationCompleted:
+        $ref: '#/components/messages/PricingProductInitializationCompleted'
+      PricingProductInitializationRejected:
+        $ref: '#/components/messages/PricingProductInitializationRejected'
+    x-producer: pricing-svc
+    x-consumer: catalog-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_price_audit_from_pricing:
+    address: g6.price-audit.from.pricing
+    messages:
+      PricingPriceChanged:
+        $ref: '#/components/messages/PricingPriceChanged'
+    x-producer: pricing-svc
+    x-consumer: price-audit-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_promotions_from_pricing:
+    address: g6.promotions.from.pricing
+    messages:
+      PricingPriceChanged:
+        $ref: '#/components/messages/PricingPriceChanged'
+    x-producer: pricing-svc
+    x-consumer: promotions-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_catalog_from_taxonomy:
+    address: g6.catalog.from.taxonomy
+    messages:
+      TaxonomyCategoryUpdated:
+        $ref: '#/components/messages/TaxonomyCategoryUpdated'
+      TaxonomyProductTypeSchemaChanged:
+        $ref: '#/components/messages/TaxonomyProductTypeSchemaChanged'
+      TaxonomyCharacteristicValueUpdated:
+        $ref: '#/components/messages/TaxonomyCharacteristicValueUpdated'
+      TaxonomyMasterDeactivationCheckRequested:
+        $ref: '#/components/messages/TaxonomyMasterDeactivationCheckRequested'
+      TaxonomyMasterDeactivated:
+        $ref: '#/components/messages/TaxonomyMasterDeactivated'
+      TaxonomyMasterDeactivationRejected:
+        $ref: '#/components/messages/TaxonomyMasterDeactivationRejected'
+    x-producer: taxonomy-svc
+    x-consumer: catalog-svc
+    x-contract-status: SEMIFINAL_G6
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  g6_promotions_commands:
+    address: g6.promotions.commands
+    messages:
+      PromotionsCouponConsumptionRequested:
+        $ref: '#/components/messages/PromotionsCouponConsumptionRequested'
+      PromotionsCouponRestorationRequested:
+        $ref: '#/components/messages/PromotionsCouponRestorationRequested'
+    x-producer: promotions-svc HTTP adapter via durable Outbox
+    x-consumer: promotions-svc operations worker
+    x-contract-status: SEMIFINAL_G6
+    description: Cola interna nueva; no pertenece a los 18 pares heredados.
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
 operations:
-  sendTaxonomyCategoryUpdated:
+  publish_g6_catalog_from_bulk:
     action: send
     channel:
-      $ref: '#/channels/taxonomyCategoryUpdated'
+      $ref: '#/channels/g6_catalog_from_bulk'
     messages:
-    - $ref: '#/channels/taxonomyCategoryUpdated/messages/TaxonomyCategoryUpdated'
-    x-producer: taxonomy-svc
-  receiveTaxonomyCategoryUpdated:
+    - $ref: '#/channels/g6_catalog_from_bulk/messages/CatalogBulkUpsertRequested'
+    x-producer: bulk
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_catalog_from_bulk:
     action: receive
     channel:
-      $ref: '#/channels/taxonomyCategoryUpdated'
+      $ref: '#/channels/g6_catalog_from_bulk'
     messages:
-    - $ref: '#/channels/taxonomyCategoryUpdated/messages/TaxonomyCategoryUpdated'
-    x-consumers:
-    - catalog-svc
-    - api-gateway/bff
-  sendTaxonomyProductTypeSchemaChanged:
+    - $ref: '#/channels/g6_catalog_from_bulk/messages/CatalogBulkUpsertRequested'
+    x-consumer: catalog
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_inventory_from_bulk:
     action: send
     channel:
-      $ref: '#/channels/taxonomyProductTypeSchemaChanged'
+      $ref: '#/channels/g6_inventory_from_bulk'
     messages:
-    - $ref: '#/channels/taxonomyProductTypeSchemaChanged/messages/TaxonomyProductTypeSchemaChanged'
-    x-producer: taxonomy-svc
-  receiveTaxonomyProductTypeSchemaChanged:
+    - $ref: '#/channels/g6_inventory_from_bulk/messages/InventoryBulkStockAdjustRequested'
+    x-producer: bulk
+    x-runtime-status: BLOCKED_CONTRACT
+  consume_g6_inventory_from_bulk:
     action: receive
     channel:
-      $ref: '#/channels/taxonomyProductTypeSchemaChanged'
+      $ref: '#/channels/g6_inventory_from_bulk'
     messages:
-    - $ref: '#/channels/taxonomyProductTypeSchemaChanged/messages/TaxonomyProductTypeSchemaChanged'
-    x-consumers:
-    - catalog-svc
-  sendTaxonomyCharacteristicValueUpdated:
+    - $ref: '#/channels/g6_inventory_from_bulk/messages/InventoryBulkStockAdjustRequested'
+    x-consumer: inventory
+    x-runtime-status: BLOCKED_CONTRACT
+  publish_g6_pricing_from_bulk:
     action: send
     channel:
-      $ref: '#/channels/taxonomyCharacteristicValueUpdated'
+      $ref: '#/channels/g6_pricing_from_bulk'
     messages:
-    - $ref: '#/channels/taxonomyCharacteristicValueUpdated/messages/TaxonomyCharacteristicValueUpdated'
-    x-producer: taxonomy-svc
-  receiveTaxonomyCharacteristicValueUpdated:
+    - $ref: '#/channels/g6_pricing_from_bulk/messages/PricingBulkPriceApplyRequested'
+    x-producer: bulk
+    x-runtime-status: BLOCKED_CONTRACT
+  consume_g6_pricing_from_bulk:
     action: receive
     channel:
-      $ref: '#/channels/taxonomyCharacteristicValueUpdated'
+      $ref: '#/channels/g6_pricing_from_bulk'
     messages:
-    - $ref: '#/channels/taxonomyCharacteristicValueUpdated/messages/TaxonomyCharacteristicValueUpdated'
-    x-consumers:
-    - catalog-svc
-  sendCatalogProductDeactivated:
+    - $ref: '#/channels/g6_pricing_from_bulk/messages/PricingBulkPriceApplyRequested'
+    x-consumer: pricing
+    x-runtime-status: BLOCKED_CONTRACT
+  publish_g6_bulk_from_catalog:
     action: send
     channel:
-      $ref: '#/channels/catalogProductDeactivated'
+      $ref: '#/channels/g6_bulk_from_catalog'
     messages:
-    - $ref: '#/channels/catalogProductDeactivated/messages/CatalogProductDeactivated'
-    x-producer: catalog-svc
-  receiveCatalogProductDeactivated:
+    - $ref: '#/channels/g6_bulk_from_catalog/messages/CatalogBulkUpsertCompleted'
+    - $ref: '#/channels/g6_bulk_from_catalog/messages/CatalogBulkUpsertRejected'
+    x-producer: catalog
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_bulk_from_catalog:
     action: receive
     channel:
-      $ref: '#/channels/catalogProductDeactivated'
+      $ref: '#/channels/g6_bulk_from_catalog'
     messages:
-    - $ref: '#/channels/catalogProductDeactivated/messages/CatalogProductDeactivated'
-    x-consumers:
-    - promotions-svc
-    - combos-svc
-    - api-gateway/bff
-  sendCatalogSkuDeactivated:
+    - $ref: '#/channels/g6_bulk_from_catalog/messages/CatalogBulkUpsertCompleted'
+    - $ref: '#/channels/g6_bulk_from_catalog/messages/CatalogBulkUpsertRejected'
+    x-consumer: bulk
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_combos_from_catalog:
     action: send
     channel:
-      $ref: '#/channels/catalogSkuDeactivated'
+      $ref: '#/channels/g6_combos_from_catalog'
     messages:
-    - $ref: '#/channels/catalogSkuDeactivated/messages/CatalogSkuDeactivated'
-    x-producer: catalog-svc
-  receiveCatalogSkuDeactivated:
+    - $ref: '#/channels/g6_combos_from_catalog/messages/CatalogProductDeactivated'
+    - $ref: '#/channels/g6_combos_from_catalog/messages/CatalogSkuDeactivated'
+    x-producer: catalog
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_combos_from_catalog:
     action: receive
     channel:
-      $ref: '#/channels/catalogSkuDeactivated'
+      $ref: '#/channels/g6_combos_from_catalog'
     messages:
-    - $ref: '#/channels/catalogSkuDeactivated/messages/CatalogSkuDeactivated'
-    x-consumers:
-    - inventory-svc
-    - pricing-svc
-    - promotions-svc
-    - combos-svc
-  sendPricingPriceChanged:
+    - $ref: '#/channels/g6_combos_from_catalog/messages/CatalogProductDeactivated'
+    - $ref: '#/channels/g6_combos_from_catalog/messages/CatalogSkuDeactivated'
+    x-consumer: combos
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_inventory_from_catalog:
     action: send
     channel:
-      $ref: '#/channels/pricingPriceChanged'
+      $ref: '#/channels/g6_inventory_from_catalog'
     messages:
-    - $ref: '#/channels/pricingPriceChanged/messages/PricingPriceChanged'
-    x-producer: pricing-svc
-  receivePricingPriceChanged:
+    - $ref: '#/channels/g6_inventory_from_catalog/messages/CatalogSkuDeactivated'
+    - $ref: '#/channels/g6_inventory_from_catalog/messages/InventorySkuInitializationRequested'
+    x-producer: catalog
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_inventory_from_catalog:
     action: receive
     channel:
-      $ref: '#/channels/pricingPriceChanged'
+      $ref: '#/channels/g6_inventory_from_catalog'
     messages:
-    - $ref: '#/channels/pricingPriceChanged/messages/PricingPriceChanged'
-    x-consumers:
-    - price-audit-svc
-    - promotions-svc
-    - api-gateway/bff
-  sendInventoryStockChanged:
+    - $ref: '#/channels/g6_inventory_from_catalog/messages/CatalogSkuDeactivated'
+    - $ref: '#/channels/g6_inventory_from_catalog/messages/InventorySkuInitializationRequested'
+    x-consumer: inventory
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_pricing_from_catalog:
     action: send
     channel:
-      $ref: '#/channels/inventoryStockChanged'
+      $ref: '#/channels/g6_pricing_from_catalog'
     messages:
-    - $ref: '#/channels/inventoryStockChanged/messages/InventoryStockChanged'
-    x-producer: inventory-svc
-  receiveInventoryStockChanged:
+    - $ref: '#/channels/g6_pricing_from_catalog/messages/CatalogSkuDeactivated'
+    - $ref: '#/channels/g6_pricing_from_catalog/messages/PricingProductInitializationRequested'
+    x-producer: catalog
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_pricing_from_catalog:
     action: receive
     channel:
-      $ref: '#/channels/inventoryStockChanged'
+      $ref: '#/channels/g6_pricing_from_catalog'
     messages:
-    - $ref: '#/channels/inventoryStockChanged/messages/InventoryStockChanged'
-    x-consumers:
-    - combos-svc
-    - promotions-svc
-    - api-gateway/bff
-  sendInventoryStockAdjusted:
+    - $ref: '#/channels/g6_pricing_from_catalog/messages/CatalogSkuDeactivated'
+    - $ref: '#/channels/g6_pricing_from_catalog/messages/PricingProductInitializationRequested'
+    x-consumer: pricing
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_promotions_from_catalog:
     action: send
     channel:
-      $ref: '#/channels/inventoryStockAdjusted'
+      $ref: '#/channels/g6_promotions_from_catalog'
     messages:
-    - $ref: '#/channels/inventoryStockAdjusted/messages/InventoryStockAdjusted'
-    x-producer: inventory-svc
-  receiveInventoryStockAdjusted:
+    - $ref: '#/channels/g6_promotions_from_catalog/messages/CatalogProductDeactivated'
+    - $ref: '#/channels/g6_promotions_from_catalog/messages/CatalogSkuDeactivated'
+    x-producer: catalog
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_promotions_from_catalog:
     action: receive
     channel:
-      $ref: '#/channels/inventoryStockAdjusted'
+      $ref: '#/channels/g6_promotions_from_catalog'
     messages:
-    - $ref: '#/channels/inventoryStockAdjusted/messages/InventoryStockAdjusted'
-    x-consumers:
-    - bulk-svc
-    - api-gateway/bff
-  sendInventoryReservationCreated:
+    - $ref: '#/channels/g6_promotions_from_catalog/messages/CatalogProductDeactivated'
+    - $ref: '#/channels/g6_promotions_from_catalog/messages/CatalogSkuDeactivated'
+    x-consumer: promotions
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_taxonomy_from_catalog:
     action: send
     channel:
-      $ref: '#/channels/inventoryReservationCreated'
+      $ref: '#/channels/g6_taxonomy_from_catalog'
     messages:
-    - $ref: '#/channels/inventoryReservationCreated/messages/InventoryReservationCreated'
-    x-producer: inventory-svc
-  receiveInventoryReservationCreated:
+    - $ref: '#/channels/g6_taxonomy_from_catalog/messages/CatalogMasterDeactivationChecked'
+    x-producer: catalog
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_taxonomy_from_catalog:
     action: receive
     channel:
-      $ref: '#/channels/inventoryReservationCreated'
+      $ref: '#/channels/g6_taxonomy_from_catalog'
     messages:
-    - $ref: '#/channels/inventoryReservationCreated/messages/InventoryReservationCreated'
-    x-consumers:
-    - modulo-ventas
-    - api-gateway/bff
-  sendInventoryReservationRejected:
+    - $ref: '#/channels/g6_taxonomy_from_catalog/messages/CatalogMasterDeactivationChecked'
+    x-consumer: taxonomy
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_bulk_from_inventory:
     action: send
     channel:
-      $ref: '#/channels/inventoryReservationRejected'
+      $ref: '#/channels/g6_bulk_from_inventory'
     messages:
-    - $ref: '#/channels/inventoryReservationRejected/messages/InventoryReservationRejected'
-    x-producer: inventory-svc
-  receiveInventoryReservationRejected:
+    - $ref: '#/channels/g6_bulk_from_inventory/messages/InventoryStockAdjusted'
+    - $ref: '#/channels/g6_bulk_from_inventory/messages/InventoryBulkStockAdjustCompleted'
+    - $ref: '#/channels/g6_bulk_from_inventory/messages/InventoryBulkStockAdjustRejected'
+    x-producer: inventory
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_bulk_from_inventory:
     action: receive
     channel:
-      $ref: '#/channels/inventoryReservationRejected'
+      $ref: '#/channels/g6_bulk_from_inventory'
     messages:
-    - $ref: '#/channels/inventoryReservationRejected/messages/InventoryReservationRejected'
-    x-consumers:
-    - modulo-ventas
-  sendInventoryReservationConsumed:
+    - $ref: '#/channels/g6_bulk_from_inventory/messages/InventoryStockAdjusted'
+    - $ref: '#/channels/g6_bulk_from_inventory/messages/InventoryBulkStockAdjustCompleted'
+    - $ref: '#/channels/g6_bulk_from_inventory/messages/InventoryBulkStockAdjustRejected'
+    x-consumer: bulk
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_catalog_from_inventory:
     action: send
     channel:
-      $ref: '#/channels/inventoryReservationConsumed'
+      $ref: '#/channels/g6_catalog_from_inventory'
     messages:
-    - $ref: '#/channels/inventoryReservationConsumed/messages/InventoryReservationConsumed'
-    x-producer: inventory-svc
-  receiveInventoryReservationConsumed:
+    - $ref: '#/channels/g6_catalog_from_inventory/messages/InventorySkuInitializationCompleted'
+    - $ref: '#/channels/g6_catalog_from_inventory/messages/InventorySkuInitializationRejected'
+    x-producer: inventory
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_catalog_from_inventory:
     action: receive
     channel:
-      $ref: '#/channels/inventoryReservationConsumed'
+      $ref: '#/channels/g6_catalog_from_inventory'
     messages:
-    - $ref: '#/channels/inventoryReservationConsumed/messages/InventoryReservationConsumed'
-    x-consumers:
-    - modulo-ventas
-    - api-gateway/bff
-  sendInventoryReservationReleased:
+    - $ref: '#/channels/g6_catalog_from_inventory/messages/InventorySkuInitializationCompleted'
+    - $ref: '#/channels/g6_catalog_from_inventory/messages/InventorySkuInitializationRejected'
+    x-consumer: catalog
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_combos_from_inventory:
     action: send
     channel:
-      $ref: '#/channels/inventoryReservationReleased'
+      $ref: '#/channels/g6_combos_from_inventory'
     messages:
-    - $ref: '#/channels/inventoryReservationReleased/messages/InventoryReservationReleased'
-    x-producer: inventory-svc
-  receiveInventoryReservationReleased:
+    - $ref: '#/channels/g6_combos_from_inventory/messages/InventoryStockChanged'
+    x-producer: inventory
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_combos_from_inventory:
     action: receive
     channel:
-      $ref: '#/channels/inventoryReservationReleased'
+      $ref: '#/channels/g6_combos_from_inventory'
     messages:
-    - $ref: '#/channels/inventoryReservationReleased/messages/InventoryReservationReleased'
-    x-consumers:
-    - modulo-ventas
-    - api-gateway/bff
-  sendInventoryReservationExpired:
+    - $ref: '#/channels/g6_combos_from_inventory/messages/InventoryStockChanged'
+    x-consumer: combos
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_promotions_from_inventory:
     action: send
     channel:
-      $ref: '#/channels/inventoryReservationExpired'
+      $ref: '#/channels/g6_promotions_from_inventory'
     messages:
-    - $ref: '#/channels/inventoryReservationExpired/messages/InventoryReservationExpired'
-    x-producer: inventory-svc
-  receiveInventoryReservationExpired:
+    - $ref: '#/channels/g6_promotions_from_inventory/messages/InventoryStockChanged'
+    x-producer: inventory
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_promotions_from_inventory:
     action: receive
     channel:
-      $ref: '#/channels/inventoryReservationExpired'
+      $ref: '#/channels/g6_promotions_from_inventory'
     messages:
-    - $ref: '#/channels/inventoryReservationExpired/messages/InventoryReservationExpired'
-    x-consumers:
-    - modulo-ventas
-    - api-gateway/bff
-  sendInventoryConsumptionCompleted:
+    - $ref: '#/channels/g6_promotions_from_inventory/messages/InventoryStockChanged'
+    x-consumer: promotions
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_bulk_from_pricing:
     action: send
     channel:
-      $ref: '#/channels/inventoryConsumptionCompleted'
+      $ref: '#/channels/g6_bulk_from_pricing'
     messages:
-    - $ref: '#/channels/inventoryConsumptionCompleted/messages/InventoryConsumptionCompleted'
-    x-producer: inventory-svc
-  receiveInventoryConsumptionCompleted:
+    - $ref: '#/channels/g6_bulk_from_pricing/messages/PricingBulkPriceApplyCompleted'
+    - $ref: '#/channels/g6_bulk_from_pricing/messages/PricingBulkPriceApplyRejected'
+    x-producer: pricing
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_bulk_from_pricing:
     action: receive
     channel:
-      $ref: '#/channels/inventoryConsumptionCompleted'
+      $ref: '#/channels/g6_bulk_from_pricing'
     messages:
-    - $ref: '#/channels/inventoryConsumptionCompleted/messages/InventoryConsumptionCompleted'
-    x-consumers:
-    - modulo-ventas
-  sendInventoryConsumptionRejected:
+    - $ref: '#/channels/g6_bulk_from_pricing/messages/PricingBulkPriceApplyCompleted'
+    - $ref: '#/channels/g6_bulk_from_pricing/messages/PricingBulkPriceApplyRejected'
+    x-consumer: bulk
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_catalog_from_pricing:
     action: send
     channel:
-      $ref: '#/channels/inventoryConsumptionRejected'
+      $ref: '#/channels/g6_catalog_from_pricing'
     messages:
-    - $ref: '#/channels/inventoryConsumptionRejected/messages/InventoryConsumptionRejected'
-    x-producer: inventory-svc
-  receiveInventoryConsumptionRejected:
+    - $ref: '#/channels/g6_catalog_from_pricing/messages/PricingProductInitializationCompleted'
+    - $ref: '#/channels/g6_catalog_from_pricing/messages/PricingProductInitializationRejected'
+    x-producer: pricing
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_catalog_from_pricing:
     action: receive
     channel:
-      $ref: '#/channels/inventoryConsumptionRejected'
+      $ref: '#/channels/g6_catalog_from_pricing'
     messages:
-    - $ref: '#/channels/inventoryConsumptionRejected/messages/InventoryConsumptionRejected'
-    x-consumers:
-    - modulo-ventas
-  sendTaxonomyMasterDeactivationCheckRequested:
+    - $ref: '#/channels/g6_catalog_from_pricing/messages/PricingProductInitializationCompleted'
+    - $ref: '#/channels/g6_catalog_from_pricing/messages/PricingProductInitializationRejected'
+    x-consumer: catalog
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_price_audit_from_pricing:
     action: send
     channel:
-      $ref: '#/channels/taxonomyMasterDeactivationCheckRequested'
+      $ref: '#/channels/g6_price_audit_from_pricing'
     messages:
-    - $ref: '#/channels/taxonomyMasterDeactivationCheckRequested/messages/TaxonomyMasterDeactivationCheckRequested'
-    x-producer: taxonomy-svc
-  receiveTaxonomyMasterDeactivationCheckRequested:
+    - $ref: '#/channels/g6_price_audit_from_pricing/messages/PricingPriceChanged'
+    x-producer: pricing
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_price_audit_from_pricing:
     action: receive
     channel:
-      $ref: '#/channels/taxonomyMasterDeactivationCheckRequested'
+      $ref: '#/channels/g6_price_audit_from_pricing'
     messages:
-    - $ref: '#/channels/taxonomyMasterDeactivationCheckRequested/messages/TaxonomyMasterDeactivationCheckRequested'
-    x-consumers:
-    - catalog-svc
-  sendCatalogMasterDeactivationChecked:
+    - $ref: '#/channels/g6_price_audit_from_pricing/messages/PricingPriceChanged'
+    x-consumer: price-audit
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_promotions_from_pricing:
     action: send
     channel:
-      $ref: '#/channels/catalogMasterDeactivationChecked'
+      $ref: '#/channels/g6_promotions_from_pricing'
     messages:
-    - $ref: '#/channels/catalogMasterDeactivationChecked/messages/CatalogMasterDeactivationChecked'
-    x-producer: catalog-svc
-  receiveCatalogMasterDeactivationChecked:
+    - $ref: '#/channels/g6_promotions_from_pricing/messages/PricingPriceChanged'
+    x-producer: pricing
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_promotions_from_pricing:
     action: receive
     channel:
-      $ref: '#/channels/catalogMasterDeactivationChecked'
+      $ref: '#/channels/g6_promotions_from_pricing'
     messages:
-    - $ref: '#/channels/catalogMasterDeactivationChecked/messages/CatalogMasterDeactivationChecked'
-    x-consumers:
-    - taxonomy-svc
-  sendTaxonomyMasterDeactivated:
+    - $ref: '#/channels/g6_promotions_from_pricing/messages/PricingPriceChanged'
+    x-consumer: promotions
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_catalog_from_taxonomy:
     action: send
     channel:
-      $ref: '#/channels/taxonomyMasterDeactivated'
+      $ref: '#/channels/g6_catalog_from_taxonomy'
     messages:
-    - $ref: '#/channels/taxonomyMasterDeactivated/messages/TaxonomyMasterDeactivated'
-    x-producer: taxonomy-svc
-  receiveTaxonomyMasterDeactivated:
+    - $ref: '#/channels/g6_catalog_from_taxonomy/messages/TaxonomyCategoryUpdated'
+    - $ref: '#/channels/g6_catalog_from_taxonomy/messages/TaxonomyProductTypeSchemaChanged'
+    - $ref: '#/channels/g6_catalog_from_taxonomy/messages/TaxonomyCharacteristicValueUpdated'
+    - $ref: '#/channels/g6_catalog_from_taxonomy/messages/TaxonomyMasterDeactivationCheckRequested'
+    - $ref: '#/channels/g6_catalog_from_taxonomy/messages/TaxonomyMasterDeactivated'
+    - $ref: '#/channels/g6_catalog_from_taxonomy/messages/TaxonomyMasterDeactivationRejected'
+    x-producer: taxonomy
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_catalog_from_taxonomy:
     action: receive
     channel:
-      $ref: '#/channels/taxonomyMasterDeactivated'
+      $ref: '#/channels/g6_catalog_from_taxonomy'
     messages:
-    - $ref: '#/channels/taxonomyMasterDeactivated/messages/TaxonomyMasterDeactivated'
-    x-consumers:
-    - catalog-svc
-    - api-gateway/bff
-  sendTaxonomyMasterDeactivationRejected:
+    - $ref: '#/channels/g6_catalog_from_taxonomy/messages/TaxonomyCategoryUpdated'
+    - $ref: '#/channels/g6_catalog_from_taxonomy/messages/TaxonomyProductTypeSchemaChanged'
+    - $ref: '#/channels/g6_catalog_from_taxonomy/messages/TaxonomyCharacteristicValueUpdated'
+    - $ref: '#/channels/g6_catalog_from_taxonomy/messages/TaxonomyMasterDeactivationCheckRequested'
+    - $ref: '#/channels/g6_catalog_from_taxonomy/messages/TaxonomyMasterDeactivated'
+    - $ref: '#/channels/g6_catalog_from_taxonomy/messages/TaxonomyMasterDeactivationRejected'
+    x-consumer: catalog
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  publish_g6_promotions_commands:
     action: send
     channel:
-      $ref: '#/channels/taxonomyMasterDeactivationRejected'
+      $ref: '#/channels/g6_promotions_commands'
     messages:
-    - $ref: '#/channels/taxonomyMasterDeactivationRejected/messages/TaxonomyMasterDeactivationRejected'
-    x-producer: taxonomy-svc
-  receiveTaxonomyMasterDeactivationRejected:
-    action: receive
-    channel:
-      $ref: '#/channels/taxonomyMasterDeactivationRejected'
-    messages:
-    - $ref: '#/channels/taxonomyMasterDeactivationRejected/messages/TaxonomyMasterDeactivationRejected'
-    x-consumers:
-    - catalog-svc
-  sendCatalogBulkUpsertRequested:
-    action: send
-    channel:
-      $ref: '#/channels/catalogBulkUpsertRequested'
-    messages:
-    - $ref: '#/channels/catalogBulkUpsertRequested/messages/CatalogBulkUpsertRequested'
-    x-producer: bulk-svc
-  receiveCatalogBulkUpsertRequested:
-    action: receive
-    channel:
-      $ref: '#/channels/catalogBulkUpsertRequested'
-    messages:
-    - $ref: '#/channels/catalogBulkUpsertRequested/messages/CatalogBulkUpsertRequested'
-    x-consumers:
-    - catalog-svc
-  sendCatalogBulkUpsertCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/catalogBulkUpsertCompleted'
-    messages:
-    - $ref: '#/channels/catalogBulkUpsertCompleted/messages/CatalogBulkUpsertCompleted'
-    x-producer: catalog-svc
-  receiveCatalogBulkUpsertCompleted:
-    action: receive
-    channel:
-      $ref: '#/channels/catalogBulkUpsertCompleted'
-    messages:
-    - $ref: '#/channels/catalogBulkUpsertCompleted/messages/CatalogBulkUpsertCompleted'
-    x-consumers:
-    - bulk-svc
-  sendCatalogBulkUpsertRejected:
-    action: send
-    channel:
-      $ref: '#/channels/catalogBulkUpsertRejected'
-    messages:
-    - $ref: '#/channels/catalogBulkUpsertRejected/messages/CatalogBulkUpsertRejected'
-    x-producer: catalog-svc
-  receiveCatalogBulkUpsertRejected:
-    action: receive
-    channel:
-      $ref: '#/channels/catalogBulkUpsertRejected'
-    messages:
-    - $ref: '#/channels/catalogBulkUpsertRejected/messages/CatalogBulkUpsertRejected'
-    x-consumers:
-    - bulk-svc
-  sendPricingBulkPriceApplyRequested:
-    action: send
-    channel:
-      $ref: '#/channels/pricingBulkPriceApplyRequested'
-    messages:
-    - $ref: '#/channels/pricingBulkPriceApplyRequested/messages/PricingBulkPriceApplyRequested'
-    x-producer: bulk-svc
-  receivePricingBulkPriceApplyRequested:
-    action: receive
-    channel:
-      $ref: '#/channels/pricingBulkPriceApplyRequested'
-    messages:
-    - $ref: '#/channels/pricingBulkPriceApplyRequested/messages/PricingBulkPriceApplyRequested'
-    x-consumers:
-    - pricing-svc
-  sendPricingBulkPriceApplyCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/pricingBulkPriceApplyCompleted'
-    messages:
-    - $ref: '#/channels/pricingBulkPriceApplyCompleted/messages/PricingBulkPriceApplyCompleted'
-    x-producer: pricing-svc
-  receivePricingBulkPriceApplyCompleted:
-    action: receive
-    channel:
-      $ref: '#/channels/pricingBulkPriceApplyCompleted'
-    messages:
-    - $ref: '#/channels/pricingBulkPriceApplyCompleted/messages/PricingBulkPriceApplyCompleted'
-    x-consumers:
-    - bulk-svc
-  sendPricingBulkPriceApplyRejected:
-    action: send
-    channel:
-      $ref: '#/channels/pricingBulkPriceApplyRejected'
-    messages:
-    - $ref: '#/channels/pricingBulkPriceApplyRejected/messages/PricingBulkPriceApplyRejected'
-    x-producer: pricing-svc
-  receivePricingBulkPriceApplyRejected:
-    action: receive
-    channel:
-      $ref: '#/channels/pricingBulkPriceApplyRejected'
-    messages:
-    - $ref: '#/channels/pricingBulkPriceApplyRejected/messages/PricingBulkPriceApplyRejected'
-    x-consumers:
-    - bulk-svc
-  sendInventoryBulkStockAdjustRequested:
-    action: send
-    channel:
-      $ref: '#/channels/inventoryBulkStockAdjustRequested'
-    messages:
-    - $ref: '#/channels/inventoryBulkStockAdjustRequested/messages/InventoryBulkStockAdjustRequested'
-    x-producer: bulk-svc
-  receiveInventoryBulkStockAdjustRequested:
-    action: receive
-    channel:
-      $ref: '#/channels/inventoryBulkStockAdjustRequested'
-    messages:
-    - $ref: '#/channels/inventoryBulkStockAdjustRequested/messages/InventoryBulkStockAdjustRequested'
-    x-consumers:
-    - inventory-svc
-  sendInventoryBulkStockAdjustCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/inventoryBulkStockAdjustCompleted'
-    messages:
-    - $ref: '#/channels/inventoryBulkStockAdjustCompleted/messages/InventoryBulkStockAdjustCompleted'
-    x-producer: inventory-svc
-  receiveInventoryBulkStockAdjustCompleted:
-    action: receive
-    channel:
-      $ref: '#/channels/inventoryBulkStockAdjustCompleted'
-    messages:
-    - $ref: '#/channels/inventoryBulkStockAdjustCompleted/messages/InventoryBulkStockAdjustCompleted'
-    x-consumers:
-    - bulk-svc
-  sendInventoryBulkStockAdjustRejected:
-    action: send
-    channel:
-      $ref: '#/channels/inventoryBulkStockAdjustRejected'
-    messages:
-    - $ref: '#/channels/inventoryBulkStockAdjustRejected/messages/InventoryBulkStockAdjustRejected'
-    x-producer: inventory-svc
-  receiveInventoryBulkStockAdjustRejected:
-    action: receive
-    channel:
-      $ref: '#/channels/inventoryBulkStockAdjustRejected'
-    messages:
-    - $ref: '#/channels/inventoryBulkStockAdjustRejected/messages/InventoryBulkStockAdjustRejected'
-    x-consumers:
-    - bulk-svc
-  sendPromotionsCouponConsumptionCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/promotionsCouponConsumptionCompleted'
-    messages:
-    - $ref: '#/channels/promotionsCouponConsumptionCompleted/messages/PromotionsCouponConsumptionCompleted'
+    - $ref: '#/channels/g6_promotions_commands/messages/PromotionsCouponConsumptionRequested'
+    - $ref: '#/channels/g6_promotions_commands/messages/PromotionsCouponRestorationRequested'
     x-producer: promotions-svc
-  receivePromotionsCouponConsumptionCompleted:
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+  consume_g6_promotions_commands:
     action: receive
     channel:
-      $ref: '#/channels/promotionsCouponConsumptionCompleted'
+      $ref: '#/channels/g6_promotions_commands'
     messages:
-    - $ref: '#/channels/promotionsCouponConsumptionCompleted/messages/PromotionsCouponConsumptionCompleted'
-    x-consumers:
-    - modulo-ventas
-  sendPromotionsCouponConsumptionRejected:
-    action: send
-    channel:
-      $ref: '#/channels/promotionsCouponConsumptionRejected'
-    messages:
-    - $ref: '#/channels/promotionsCouponConsumptionRejected/messages/PromotionsCouponConsumptionRejected'
-    x-producer: promotions-svc
-  receivePromotionsCouponConsumptionRejected:
-    action: receive
-    channel:
-      $ref: '#/channels/promotionsCouponConsumptionRejected'
-    messages:
-    - $ref: '#/channels/promotionsCouponConsumptionRejected/messages/PromotionsCouponConsumptionRejected'
-    x-consumers:
-    - modulo-ventas
-  sendPromotionsCouponConsumptionRequested:
-    action: send
-    channel:
-      $ref: '#/channels/promotionsCouponConsumptionRequested'
-    messages:
-    - $ref: '#/channels/promotionsCouponConsumptionRequested/messages/PromotionsCouponConsumptionRequested'
-    x-producer: modulo-ventas
-  receivePromotionsCouponConsumptionRequested:
-    action: receive
-    channel:
-      $ref: '#/channels/promotionsCouponConsumptionRequested'
-    messages:
-    - $ref: '#/channels/promotionsCouponConsumptionRequested/messages/PromotionsCouponConsumptionRequested'
-    x-consumers:
-    - promotions-svc
-  sendPromotionsCouponRestorationRequested:
-    action: send
-    channel:
-      $ref: '#/channels/promotionsCouponRestorationRequested'
-    messages:
-    - $ref: '#/channels/promotionsCouponRestorationRequested/messages/PromotionsCouponRestorationRequested'
-    x-producer: modulo-ventas
-  receivePromotionsCouponRestorationRequested:
-    action: receive
-    channel:
-      $ref: '#/channels/promotionsCouponRestorationRequested'
-    messages:
-    - $ref: '#/channels/promotionsCouponRestorationRequested/messages/PromotionsCouponRestorationRequested'
-    x-consumers:
-    - promotions-svc
-  sendPromotionsCouponRestorationCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/promotionsCouponRestorationCompleted'
-    messages:
-    - $ref: '#/channels/promotionsCouponRestorationCompleted/messages/PromotionsCouponRestorationCompleted'
-    x-producer: promotions-svc
-  receivePromotionsCouponRestorationCompleted:
-    action: receive
-    channel:
-      $ref: '#/channels/promotionsCouponRestorationCompleted'
-    messages:
-    - $ref: '#/channels/promotionsCouponRestorationCompleted/messages/PromotionsCouponRestorationCompleted'
-    x-consumers:
-    - modulo-ventas
-  sendPromotionsCouponRestorationRejected:
-    action: send
-    channel:
-      $ref: '#/channels/promotionsCouponRestorationRejected'
-    messages:
-    - $ref: '#/channels/promotionsCouponRestorationRejected/messages/PromotionsCouponRestorationRejected'
-    x-producer: promotions-svc
-  receivePromotionsCouponRestorationRejected:
-    action: receive
-    channel:
-      $ref: '#/channels/promotionsCouponRestorationRejected'
-    messages:
-    - $ref: '#/channels/promotionsCouponRestorationRejected/messages/PromotionsCouponRestorationRejected'
-    x-consumers:
-    - modulo-ventas
-  sendPricingProductInitializationRequested:
-    action: send
-    channel:
-      $ref: '#/channels/pricingProductInitializationRequested'
-    messages:
-    - $ref: '#/channels/pricingProductInitializationRequested/messages/PricingProductInitializationRequested'
-    x-producer: catalog-svc
-  receivePricingProductInitializationRequested:
-    action: receive
-    channel:
-      $ref: '#/channels/pricingProductInitializationRequested'
-    messages:
-    - $ref: '#/channels/pricingProductInitializationRequested/messages/PricingProductInitializationRequested'
-    x-consumers:
-    - pricing-svc
-  sendPricingProductInitializationCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/pricingProductInitializationCompleted'
-    messages:
-    - $ref: '#/channels/pricingProductInitializationCompleted/messages/PricingProductInitializationCompleted'
-    x-producer: pricing-svc
-  receivePricingProductInitializationCompleted:
-    action: receive
-    channel:
-      $ref: '#/channels/pricingProductInitializationCompleted'
-    messages:
-    - $ref: '#/channels/pricingProductInitializationCompleted/messages/PricingProductInitializationCompleted'
-    x-consumers:
-    - catalog-svc
-  sendPricingProductInitializationRejected:
-    action: send
-    channel:
-      $ref: '#/channels/pricingProductInitializationRejected'
-    messages:
-    - $ref: '#/channels/pricingProductInitializationRejected/messages/PricingProductInitializationRejected'
-    x-producer: pricing-svc
-  receivePricingProductInitializationRejected:
-    action: receive
-    channel:
-      $ref: '#/channels/pricingProductInitializationRejected'
-    messages:
-    - $ref: '#/channels/pricingProductInitializationRejected/messages/PricingProductInitializationRejected'
-    x-consumers:
-    - catalog-svc
-  sendInventorySkuInitializationRequested:
-    action: send
-    channel:
-      $ref: '#/channels/inventorySkuInitializationRequested'
-    messages:
-    - $ref: '#/channels/inventorySkuInitializationRequested/messages/InventorySkuInitializationRequested'
-    x-producer: catalog-svc
-  receiveInventorySkuInitializationRequested:
-    action: receive
-    channel:
-      $ref: '#/channels/inventorySkuInitializationRequested'
-    messages:
-    - $ref: '#/channels/inventorySkuInitializationRequested/messages/InventorySkuInitializationRequested'
-    x-consumers:
-    - inventory-svc
-  sendInventorySkuInitializationCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/inventorySkuInitializationCompleted'
-    messages:
-    - $ref: '#/channels/inventorySkuInitializationCompleted/messages/InventorySkuInitializationCompleted'
-    x-producer: inventory-svc
-  receiveInventorySkuInitializationCompleted:
-    action: receive
-    channel:
-      $ref: '#/channels/inventorySkuInitializationCompleted'
-    messages:
-    - $ref: '#/channels/inventorySkuInitializationCompleted/messages/InventorySkuInitializationCompleted'
-    x-consumers:
-    - catalog-svc
-  sendInventorySkuInitializationRejected:
-    action: send
-    channel:
-      $ref: '#/channels/inventorySkuInitializationRejected'
-    messages:
-    - $ref: '#/channels/inventorySkuInitializationRejected/messages/InventorySkuInitializationRejected'
-    x-producer: inventory-svc
-  receiveInventorySkuInitializationRejected:
-    action: receive
-    channel:
-      $ref: '#/channels/inventorySkuInitializationRejected'
-    messages:
-    - $ref: '#/channels/inventorySkuInitializationRejected/messages/InventorySkuInitializationRejected'
-    x-consumers:
-    - catalog-svc
+    - $ref: '#/channels/g6_promotions_commands/messages/PromotionsCouponConsumptionRequested'
+    - $ref: '#/channels/g6_promotions_commands/messages/PromotionsCouponRestorationRequested'
+    x-consumer: promotions-svc
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
 components:
   schemas:
     MessageEnvelope:
@@ -1012,8 +604,781 @@ components:
       type: object
       description: Payload específico del mensaje. Para mensajes P1 críticos se especializa mediante schemas dedicados.
       additionalProperties: true
+    CatalogProductDeactivatedData:
+      type: object
+      properties:
+        product_id:
+          type: string
+          minLength: 1
+        product_version:
+          type: integer
+          minimum: 1
+          description: Versión autoritativa del producto
+          distinta de schema_version del envelope.: null
+        changed_at:
+          type: string
+          format: date-time
+      required:
+      - product_id
+      - product_version
+      - changed_at
+      additionalProperties: false
+    CatalogSkuDeactivatedData:
+      type: object
+      properties:
+        sku:
+          type: string
+          minLength: 1
+        product_id:
+          type: string
+          minLength: 1
+        sku_version:
+          type: integer
+          minimum: 1
+          description: Versión autoritativa del SKU
+          distinta de schema_version del envelope.: null
+        changed_at:
+          type: string
+          format: date-time
+      required:
+      - sku
+      - product_id
+      - sku_version
+      - changed_at
+      additionalProperties: false
+    PricingPriceChangedData:
+      type: object
+      properties:
+        target_type:
+          type: string
+          enum:
+          - PRODUCTO
+          - SKU
+        product_id:
+          type: string
+          minLength: 1
+        sku:
+          type:
+          - string
+          - 'null'
+        channel_id:
+          oneOf:
+          - type: string
+            enum:
+            - MARKETPLACE
+            - CHATBOT
+            - RETAIL
+            - VENTAS
+          - type: 'null'
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        price_type:
+          type: string
+          enum:
+          - REGULAR
+          - OFERTA
+        previous_price:
+          type:
+          - string
+          - 'null'
+          pattern: ^(?:[1-9][0-9]*(?:\.[0-9]+)?|0\.(?:0*[1-9][0-9]*))$
+        new_price:
+          type:
+          - string
+          - 'null'
+          pattern: ^(?:[1-9][0-9]*(?:\.[0-9]+)?|0\.(?:0*[1-9][0-9]*))$
+        operation:
+          type: string
+          enum:
+          - CREACION
+          - MODIFICACION
+          - RETIRO_OFERTA
+        reason:
+          type: string
+          minLength: 1
+        price_version:
+          type: integer
+          minimum: 1
+        valid_from:
+          type: string
+          format: date-time
+        batch_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        actor:
+          type: object
+          properties:
+            user_id:
+              type:
+              - string
+              - 'null'
+            email:
+              type:
+              - string
+              - 'null'
+              format: email
+            ip:
+              type:
+              - string
+              - 'null'
+          required:
+          - user_id
+          - email
+          - ip
+          additionalProperties: false
+      required:
+      - target_type
+      - product_id
+      - sku
+      - channel_id
+      - currency
+      - price_type
+      - previous_price
+      - new_price
+      - operation
+      - reason
+      - price_version
+      - valid_from
+      - batch_id
+      - actor
+      additionalProperties: false
+      allOf:
+      - if:
+          properties:
+            target_type:
+              const: PRODUCTO
+          required:
+          - target_type
+        then:
+          properties:
+            sku:
+              type: 'null'
+      - if:
+          properties:
+            target_type:
+              const: SKU
+          required:
+          - target_type
+        then:
+          properties:
+            sku:
+              type: string
+              minLength: 1
+      - if:
+          properties:
+            operation:
+              const: CREACION
+          required:
+          - operation
+        then:
+          properties:
+            previous_price:
+              type: 'null'
+            new_price:
+              type: string
+              pattern: ^(?:[1-9][0-9]*(?:\.[0-9]+)?|0\.(?:0*[1-9][0-9]*))$
+      - if:
+          properties:
+            operation:
+              const: MODIFICACION
+          required:
+          - operation
+        then:
+          properties:
+            previous_price:
+              type: string
+              pattern: ^(?:[1-9][0-9]*(?:\.[0-9]+)?|0\.(?:0*[1-9][0-9]*))$
+            new_price:
+              type: string
+              pattern: ^(?:[1-9][0-9]*(?:\.[0-9]+)?|0\.(?:0*[1-9][0-9]*))$
+      - if:
+          properties:
+            operation:
+              const: RETIRO_OFERTA
+          required:
+          - operation
+        then:
+          properties:
+            price_type:
+              const: OFERTA
+            new_price:
+              type: 'null'
+      - if:
+          properties:
+            target_type:
+              const: PRODUCTO
+            price_type:
+              const: OFERTA
+          required:
+          - target_type
+          - price_type
+        then:
+          properties:
+            sku:
+              type: 'null'
+      description: Evento post-commit de transición efectiva. PRODUCTO exige sku=null; SKU identifica su sku. CREACION
+        exige previous_price=null y nuevo positivo; MODIFICACION ambos precios; RETIRO_OFERTA exige new_price=null.
+        schema_version envelope permanece 1 para corte coordinado. price_version es versión de dominio, no secuencia
+        global.
+    InventoryStockChangedData:
+      type: object
+      properties:
+        sku:
+          type: string
+          minLength: 1
+        location_id:
+          type: string
+          format: uuid
+        on_hand:
+          type: integer
+          minimum: 0
+        reserved:
+          type: integer
+          minimum: 0
+        blocked:
+          type: integer
+          minimum: 0
+        available:
+          type: integer
+          minimum: 0
+        estado:
+          type: string
+          enum:
+          - DISPONIBLE
+          - STOCK_BAJO
+          - AGOTADO
+        stock_version:
+          type: integer
+          minimum: 1
+          description: Versión autoritativa del saldo para el par (sku, location_id); no existe una versión global
+            por SKU.
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - sku
+      - location_id
+      - on_hand
+      - reserved
+      - blocked
+      - available
+      - estado
+      - stock_version
+      - updated_at
+      additionalProperties: false
+      description: 'Snapshot de saldo por (sku, location_id), emitido en la transacción de Inventory. Los consumidores
+        comerciales no agregan ubicaciones ni toman estado del snapshot como disponibilidad vigente: solo invalidan
+        sus proyecciones y consultan después la disponibilidad comercial autoritativa. stock_version es local al
+        par y no ordena saldos de otras ubicaciones.'
+    CatalogBulkUpsertRequestedData:
+      type: object
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+        batch_operation_id:
+          type: string
+          format: uuid
+        template_version:
+          type: integer
+          const: 2
+        mode:
+          type: string
+          enum:
+          - ALTA
+          - ACTUALIZACION
+        rows:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            properties:
+              row_number:
+                type: integer
+                minimum: 2
+              row_operation_id:
+                type: string
+                format: uuid
+              producto_id:
+                type:
+                - string
+                - 'null'
+              sku_base:
+                type: string
+                minLength: 1
+              product:
+                type: object
+              variant_id:
+                type:
+                - string
+                - 'null'
+              variant:
+                oneOf:
+                - type: object
+                - type: 'null'
+            required:
+            - row_number
+            - row_operation_id
+            - producto_id
+            - sku_base
+            - product
+            - variant_id
+            - variant
+            additionalProperties: false
+      required:
+      - batch_id
+      - batch_operation_id
+      - template_version
+      - mode
+      - rows
+      additionalProperties: false
+      description: 'product y variant se validan según mode: ALTA usa exclusivamente ProductoCreateRequest y VarianteCreateRequest;
+        ACTUALIZACION usa exclusivamente ProductoUpdateRequest y VarianteUpdateRequest. La variante puede ser null
+        para un producto simple; en actualización de variante, variant_id es obligatorio.'
+      allOf:
+      - if:
+          properties:
+            mode:
+              const: ALTA
+          required:
+          - mode
+        then:
+          properties:
+            rows:
+              items:
+                properties:
+                  producto_id:
+                    type: 'null'
+                  variant_id:
+                    type: 'null'
+                  product:
+                    $ref: ../http/openapi.yaml#/components/schemas/ProductoCreateRequest
+                  variant:
+                    oneOf:
+                    - $ref: ../http/openapi.yaml#/components/schemas/VarianteCreateRequest
+                    - type: 'null'
+      - if:
+          properties:
+            mode:
+              const: ACTUALIZACION
+          required:
+          - mode
+        then:
+          properties:
+            rows:
+              items:
+                properties:
+                  producto_id:
+                    type: string
+                    minLength: 1
+                  product:
+                    $ref: ../http/openapi.yaml#/components/schemas/ProductoUpdateRequest
+                  variant:
+                    oneOf:
+                    - $ref: ../http/openapi.yaml#/components/schemas/VarianteUpdateRequest
+                    - type: 'null'
+                allOf:
+                - if:
+                    properties:
+                      variant:
+                        type: object
+                    required:
+                    - variant
+                  then:
+                    properties:
+                      variant_id:
+                        type: string
+                        minLength: 1
+                  else:
+                    properties:
+                      variant_id:
+                        type: 'null'
+      examples:
+      - batch_id: 7ef62d29-ef0d-4d0d-9a83-c057e03a570f
+        batch_operation_id: d240bffd-f952-4558-a0d6-2f8d2e35c4a4
+        template_version: 2
+        mode: ALTA
+        rows:
+        - row_number: 2
+          row_operation_id: 5ad03a54-1b9b-4e84-9e09-162dbbd4e7d1
+          producto_id: null
+          sku_base: SKU-BASE-001
+          product:
+            nombre: Producto de ejemplo
+            descripcion: Descripción
+            categoriaId: cat-001
+            tipoProductoId: tipo-001
+            marcaId: marca-001
+            precioBaseInicial: 19.9
+            skuBase: SKU-BASE-001
+            tieneVariantes: false
+          variant_id: null
+          variant: null
+      x-negative-examples:
+      - name: update-without-product-id
+        detail: ACTUALIZACION requiere producto_id y variant_id cuando se actualiza una variante; rechazar antes
+          de publicar.
+      - name: duplicate-row-identity-with-different-payload
+        detail: Misma row_operation_id con payload semántico distinto produce IDEMPOTENCY_CONFLICT.
+    CatalogBulkUpsertRequestedDataV2:
+      type: object
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+        batch_operation_id:
+          type: string
+          format: uuid
+        template_version:
+          type: integer
+          const: 2
+        mode:
+          type: string
+          enum:
+          - ALTA
+          - ACTUALIZACION
+        rows:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            properties:
+              row_number:
+                type: integer
+                minimum: 2
+              row_operation_id:
+                type: string
+                format: uuid
+              producto_id:
+                type:
+                - string
+                - 'null'
+              sku_base:
+                type: string
+                minLength: 1
+              product:
+                type: object
+              variant_id:
+                type:
+                - string
+                - 'null'
+                minLength: 1
+              variant:
+                oneOf:
+                - type: object
+                - type: 'null'
+              sku_variante:
+                type:
+                - string
+                - 'null'
+                minLength: 1
+                description: Selector opaco para ACTUALIZACION; Catalog resuelve y bloquea la variante dentro del
+                  producto y de la transaccion.
+            required:
+            - row_number
+            - row_operation_id
+            - producto_id
+            - sku_base
+            - product
+            - variant
+            additionalProperties: false
+      required:
+      - batch_id
+      - batch_operation_id
+      - template_version
+      - mode
+      - rows
+      additionalProperties: false
+      description: 'Comando v2 aprobado internamente el 2026-11-03. ACTUALIZACION de variante requiere variant_id
+        o sku_variante; si ambos existen deben corresponder a la misma variante del producto. Catalog resuelve y
+        bloquea dentro de la transaccion, verifica producto.catalogVersion y variante.catalogVersion independientes,
+        y evita objetivos duplicados en la familia. ALTA conserva variant.sku del DTO; sku_variante externo debe
+        estar ausente o null. Simple conserva variant=null y selectores ausentes o null. No requiere consulta HTTP
+        previa, permisos nuevos ni cambios de PricingCatalogContext. El payload original no se reemplaza por el
+        ID resuelto; replay consulta resultado persistido antes de revalidar versiones. Variante ausente/ajena:
+        VARIANTE_NO_ENCONTRADA; selectores contradictorios: VALIDACION; version obsoleta: VERSION_CONFLICT. Misma
+        identidad con otra intencion: IDEMPOTENCY_CONFLICT. Rechazo de negocio revierte la familia; fallo tecnico
+        revierte el chunk sin resultado terminal. template_version sigue siendo 2. La aprobacion no acredita implementacion,
+        grants ni despliegue.'
+      allOf:
+      - if:
+          properties:
+            mode:
+              const: ALTA
+          required:
+          - mode
+        then:
+          properties:
+            rows:
+              items:
+                properties:
+                  producto_id:
+                    type: 'null'
+                  variant_id:
+                    type: 'null'
+                  product:
+                    $ref: ../http/openapi.yaml#/components/schemas/ProductoCreateRequest
+                  variant:
+                    oneOf:
+                    - $ref: ../http/openapi.yaml#/components/schemas/VarianteCreateRequest
+                    - type: 'null'
+                  sku_variante:
+                    type: 'null'
+      - if:
+          properties:
+            mode:
+              const: ACTUALIZACION
+          required:
+          - mode
+        then:
+          properties:
+            rows:
+              items:
+                properties:
+                  producto_id:
+                    type: string
+                    minLength: 1
+                  product:
+                    allOf:
+                    - $ref: ../http/openapi.yaml#/components/schemas/ProductoUpdateRequest
+                    - required:
+                      - catalogVersion
+                  variant:
+                    oneOf:
+                    - allOf:
+                      - $ref: ../http/openapi.yaml#/components/schemas/VarianteUpdateRequest
+                      - required:
+                        - catalogVersion
+                    - type: 'null'
+                allOf:
+                - if:
+                    properties:
+                      variant:
+                        type: object
+                    required:
+                    - variant
+                  then:
+                    anyOf:
+                    - properties:
+                        variant_id:
+                          type: string
+                          minLength: 1
+                      required:
+                      - variant_id
+                    - properties:
+                        sku_variante:
+                          type: string
+                          minLength: 1
+                      required:
+                      - sku_variante
+                  else:
+                    properties:
+                      variant_id:
+                        type: 'null'
+                      sku_variante:
+                        type: 'null'
+    CatalogBulkUpsertCompletedData:
+      type: object
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+        batch_operation_id:
+          type: string
+          format: uuid
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              row_number:
+                type: integer
+                minimum: 2
+              row_operation_id:
+                type: string
+                format: uuid
+              product_id:
+                type:
+                - string
+                - 'null'
+              sku_base:
+                type: string
+                minLength: 1
+              status:
+                type: string
+                enum:
+                - COMPLETED
+                - REJECTED
+              code:
+                type:
+                - string
+                - 'null'
+            required:
+            - row_number
+            - row_operation_id
+            - product_id
+            - sku_base
+            - status
+            - code
+            additionalProperties: false
+      required:
+      - batch_id
+      - batch_operation_id
+      - results
+      additionalProperties: false
+      description: completed significa que el comando se procesó; puede contener filas rechazadas.
+      examples:
+      - batch_id: 7ef62d29-ef0d-4d0d-9a83-c057e03a570f
+        batch_operation_id: d240bffd-f952-4558-a0d6-2f8d2e35c4a4
+        results:
+        - row_number: 2
+          row_operation_id: 5ad03a54-1b9b-4e84-9e09-162dbbd4e7d1
+          product_id: prod-001
+          sku_base: SKU-BASE-001
+          status: COMPLETED
+          code: null
+        - row_number: 3
+          row_operation_id: 3cf6bd6d-74bc-42db-8f1a-87269dcf91e7
+          product_id: null
+          sku_base: SKU-BASE-002
+          status: REJECTED
+          code: VALIDACION
+      x-negative-examples:
+      - name: completed-without-row-results
+        detail: No reportar éxito de lote como éxito de todas las filas o dominios; results debe describir cada
+          fila procesada.
+    CatalogBulkUpsertRejectedData:
+      type: object
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+        batch_operation_id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          minLength: 1
+        detail:
+          type: string
+          minLength: 1
+          description: Sin SQL
+          secretos ni trazas.: null
+      required:
+      - batch_id
+      - batch_operation_id
+      - code
+      - detail
+      additionalProperties: false
+      examples:
+      - batch_id: 7ef62d29-ef0d-4d0d-9a83-c057e03a570f
+        batch_operation_id: d240bffd-f952-4558-a0d6-2f8d2e35c4a4
+        code: VALIDACION
+        detail: El comando no cumple el contrato de entrada.
+      x-negative-examples:
+      - name: detail-with-sql-or-secret
+        detail: No incluir SQL, secretos ni trazas en detail.
+    MasterDeactivationIdentityData:
+      type: object
+      properties:
+        entity_type:
+          type: string
+          enum:
+          - CATEGORY
+          - BRAND
+          - PRODUCT_TYPE
+          - CHARACTERISTIC_VALUE
+        entity_id:
+          type: string
+          minLength: 1
+          description: Identidad opaca del maestro, preservada sin transformación.
+        version:
+          type: integer
+          minimum: 0
+          description: Versión autoritativa capturada por Taxonomy al admitir la baja; no es schema_version del
+            envelope.
+      required:
+      - entity_type
+      - entity_id
+      - version
+      additionalProperties: true
+    MasterDeactivationAssociationData:
+      type: object
+      properties:
+        entity_type:
+          type: string
+          const: PRODUCT_TYPE_CHARACTERISTIC
+        entity_id:
+          type: string
+          minLength: 1
+        tipo_producto_id:
+          type: string
+          minLength: 1
+          description: Identificador del tipo de producto autoritativo de la asociación.
+        caracteristica_id:
+          type: string
+          minLength: 1
+          description: Identificador de la característica autoritativo de la asociación.
+        version:
+          type: integer
+          minimum: 0
+          description: schema_version autoritativa del tipo capturada y proporcionada por Taxonomy al admitir la
+            operación; Catalog la conserva y verifica. No es schema_version del envelope ni una versión de fila
+            de asociación.
+      required:
+      - entity_type
+      - entity_id
+      - tipo_producto_id
+      - caracteristica_id
+      - version
+      additionalProperties: true
+    MasterDeactivationData:
+      oneOf:
+      - $ref: '#/components/schemas/MasterDeactivationIdentityData'
+      - $ref: '#/components/schemas/MasterDeactivationAssociationData'
+    MasterDeactivationCheckedData:
+      allOf:
+      - $ref: '#/components/schemas/MasterDeactivationData'
+      - type: object
+        properties:
+          result:
+            type: string
+            enum:
+            - CLEAR
+            - IN_USE
+        required:
+        - result
+    MasterDeactivationCompletedData:
+      oneOf:
+      - $ref: '#/components/schemas/MasterDeactivationIdentityData'
+      - allOf:
+        - $ref: '#/components/schemas/MasterDeactivationAssociationData'
+        - type: object
+          properties:
+            schema_version_resultante:
+              type: integer
+              minimum: 1
+              description: Evolución confirmada del esquema posterior a la versión capturada; no se equipara a la
+                versión de la fila de asociación.
+          required:
+          - schema_version_resultante
+    MasterDeactivationRejectedData:
+      allOf:
+      - $ref: '#/components/schemas/MasterDeactivationData'
+      - type: object
+        properties:
+          reason:
+            type: string
+            minLength: 1
+        required:
+        - reason
     CouponConsumptionRequestedData:
       type: object
+      description: order_id es texto opaco. commercial_snapshot_ref debe ser exactamente el mismo valor de order_id; no exige hash ni tabla adicional.
       properties:
         order_id:
           type: string
@@ -1038,6 +1403,7 @@ components:
         commercial_snapshot_ref:
           type: string
           minLength: 1
+          description: Copia literal e inmutable de order_id.
         effective_at:
           type: string
           format: date-time
@@ -1050,14 +1416,14 @@ components:
       - commercial_snapshot_ref
     CouponRestorationRequestedData:
       type: object
+      description: consumption_operation_id identifica el consumo original confirmado; cancelled_at permanece idéntico en todos los reintentos.
       properties:
         order_id:
           type: string
           minLength: 1
         consumption_operation_id:
-          type: [string, 'null']
+          type: string
           format: uuid
-          description: Referencia de consumo original; opcional solo en transición, pendiente de conciliación por G5/G6.
         cancellation_reason:
           type: string
           minLength: 1
@@ -1065,9 +1431,10 @@ components:
           type: string
           format: date-time
       required:
-      - order_id
       - cancellation_reason
       - cancelled_at
+      - consumption_operation_id
+      - order_id
     CouponRestorationResultData:
       type: object
       properties:
@@ -1078,7 +1445,9 @@ components:
           - string
           - 'null'
         consumption_operation_id:
-          type: [string, 'null']
+          type:
+          - string
+          - 'null'
           format: uuid
         restored:
           type: boolean
@@ -1100,14 +1469,26 @@ components:
       type: object
       description: Rechazo definitivo de restauración, separado de los outcomes de restauración completada.
       properties:
-        order_id: {type: string, minLength: 1}
+        order_id:
+          type: string
+          minLength: 1
         consumption_operation_id:
-          type: [string, 'null']
+          type:
+          - string
+          - 'null'
           format: uuid
           description: Referencia del consumo original, opcional durante la transición con Ventas.
-        result_code: {type: string, minLength: 1, pattern: '\S'}
-        completed_at: {type: string, format: date-time}
-      required: [order_id, result_code, completed_at]
+        result_code:
+          type: string
+          minLength: 1
+          pattern: \S
+        completed_at:
+          type: string
+          format: date-time
+      required:
+      - order_id
+      - result_code
+      - completed_at
     PricingProductInitializationRequestedData:
       type: object
       properties:
@@ -1216,75 +1597,234 @@ components:
     InventoryReservationCreatedData:
       type: object
       properties:
-        order_id: {type: string, minLength: 1}
-        reservation_id: {type: string, format: uuid}
-        expires_at: {type: string, format: date-time}
-        decided_at: {type: string, format: date-time}
+        order_id:
+          type: string
+          minLength: 1
+        reservation_id:
+          type: string
+          format: uuid
+        expires_at:
+          type: string
+          format: date-time
+        decided_at:
+          type: string
+          format: date-time
         lines:
           type: array
           minItems: 1
           items:
             type: object
             properties:
-              sku: {type: string, minLength: 1}
-              quantity: {type: integer, minimum: 1}
-            required: [sku, quantity]
-      required: [order_id, reservation_id, expires_at, decided_at, lines]
+              sku:
+                type: string
+                minLength: 1
+              quantity:
+                type: integer
+                minimum: 1
+            required:
+            - sku
+            - quantity
+      required:
+      - order_id
+      - reservation_id
+      - expires_at
+      - decided_at
+      - lines
     InventoryReservationRejectedData:
       type: object
       properties:
-        order_id: {type: string, minLength: 1}
-        result_code: {type: string, minLength: 1}
-        decided_at: {type: string, format: date-time}
-      required: [order_id, result_code, decided_at]
+        order_id:
+          type: string
+          minLength: 1
+        result_code:
+          type: string
+          minLength: 1
+        decided_at:
+          type: string
+          format: date-time
+      required:
+      - order_id
+      - result_code
+      - decided_at
     InventoryReservationTransitionData:
       type: object
       properties:
-        order_id: {type: string, minLength: 1}
-        reservation_id: {type: string, format: uuid}
-        decided_at: {type: string, format: date-time}
-        reason_code: {type: [string, 'null']}
-      required: [order_id, reservation_id, decided_at]
+        order_id:
+          type: string
+          minLength: 1
+        reservation_id:
+          type: string
+          format: uuid
+        decided_at:
+          type: string
+          format: date-time
+        reason_code:
+          type:
+          - string
+          - 'null'
+      required:
+      - order_id
+      - reservation_id
+      - decided_at
     InventoryConsumptionResultData:
       type: object
       properties:
-        order_id: {type: string, minLength: 1}
-        reservation_id: {type: string, format: uuid}
-        decided_at: {type: string, format: date-time}
-        result_code: {type: [string, 'null']}
-      required: [order_id, reservation_id, decided_at]
+        order_id:
+          type: string
+          minLength: 1
+        reservation_id:
+          type: string
+          format: uuid
+        decided_at:
+          type: string
+          format: date-time
+        result_code:
+          type:
+          - string
+          - 'null'
+      required:
+      - order_id
+      - reservation_id
+      - decided_at
     InventoryConsumptionRejectedData:
       type: object
       description: Rechazo definitivo de consumo posterior a admisión, con causa funcional obligatoria.
       properties:
-        order_id: {type: string, minLength: 1}
-        reservation_id: {type: string, format: uuid}
-        decided_at: {type: string, format: date-time}
-        result_code: {type: string, minLength: 1, pattern: '\S'}
-      required: [order_id, reservation_id, decided_at, result_code]
+        order_id:
+          type: string
+          minLength: 1
+        reservation_id:
+          type: string
+          format: uuid
+        decided_at:
+          type: string
+          format: date-time
+        result_code:
+          type: string
+          minLength: 1
+          pattern: \S
+      required:
+      - order_id
+      - reservation_id
+      - decided_at
+      - result_code
     CouponConsumptionResultData:
       type: object
       properties:
-        order_id: {type: string, minLength: 1}
-        coupon_code: {type: string, minLength: 1}
-        reservation_id: {type: string, format: uuid}
-        commercial_snapshot_ref: {type: string, minLength: 1}
-        result_code: {type: [string, 'null']}
-        consumption_id: {type: [string, 'null'], format: uuid}
-        decided_at: {type: string, format: date-time}
-      required: [order_id, coupon_code, reservation_id, commercial_snapshot_ref, decided_at]
+        order_id:
+          type: string
+          minLength: 1
+        coupon_code:
+          type: string
+          minLength: 1
+        reservation_id:
+          type: string
+          format: uuid
+        commercial_snapshot_ref:
+          type: string
+          minLength: 1
+        result_code:
+          type:
+          - string
+          - 'null'
+        consumption_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        decided_at:
+          type: string
+          format: date-time
+      required:
+      - order_id
+      - coupon_code
+      - reservation_id
+      - commercial_snapshot_ref
+      - decided_at
     CouponConsumptionRejectedData:
       type: object
       description: Rechazo de consumo de cupón; el código de negocio es obligatorio y no representa consumo exitoso.
       properties:
-        order_id: {type: string, minLength: 1}
-        coupon_code: {type: string, minLength: 1}
-        reservation_id: {type: string, format: uuid}
-        commercial_snapshot_ref: {type: string, minLength: 1}
-        result_code: {type: string, minLength: 1, pattern: '\S'}
-        consumption_id: {type: [string, 'null'], format: uuid}
-        decided_at: {type: string, format: date-time}
-      required: [order_id, coupon_code, reservation_id, commercial_snapshot_ref, decided_at, result_code]
+        order_id:
+          type: string
+          minLength: 1
+        coupon_code:
+          type: string
+          minLength: 1
+        reservation_id:
+          type: string
+          format: uuid
+        commercial_snapshot_ref:
+          type: string
+          minLength: 1
+        result_code:
+          type: string
+          minLength: 1
+          pattern: \S
+        consumption_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        decided_at:
+          type: string
+          format: date-time
+      required:
+      - order_id
+      - coupon_code
+      - reservation_id
+      - commercial_snapshot_ref
+      - decided_at
+      - result_code
+    BulkContentReference:
+      type: object
+      additionalProperties: false
+      properties:
+        content_id:
+          type: string
+          format: uuid
+        sha256:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+        byte_length:
+          type: integer
+          minimum: 1
+        content_type:
+          type: string
+          const: application/json
+      required:
+      - content_id
+      - sha256
+      - byte_length
+      - content_type
+    CatalogBulkUpsertRequestedDataV3:
+      type: object
+      additionalProperties: false
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+        batch_operation_id:
+          type: string
+          format: uuid
+        template_version:
+          type: integer
+          const: 2
+        mode:
+          type: string
+          enum:
+          - ALTA
+          - ACTUALIZACION
+        content_ref:
+          $ref: '#/components/schemas/BulkContentReference'
+      required:
+      - batch_id
+      - batch_operation_id
+      - template_version
+      - mode
+      - content_ref
+      description: Variante claim-check schema_version 3; el documento JSON referenciado conserva el esquema funcional
+        de filas. No combina rows y content_ref.
   messages:
     TaxonomyCategoryUpdated:
       name: taxonomy.category.updated
@@ -1293,8 +1833,6 @@ components:
       x-producer: taxonomy-svc
       x-consumers:
       - catalog-svc
-      - api-gateway/bff
-      x-status: stable
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1318,8 +1856,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.eventos.x
-      x-routing-key: taxonomy.category.updated
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     TaxonomyProductTypeSchemaChanged:
       name: taxonomy.product-type-schema.changed
       title: taxonomy.product-type-schema.changed
@@ -1327,7 +1866,6 @@ components:
       x-producer: taxonomy-svc
       x-consumers:
       - catalog-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1351,8 +1889,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.eventos.x
-      x-routing-key: taxonomy.product-type-schema.changed
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     TaxonomyCharacteristicValueUpdated:
       name: taxonomy.characteristic-value.updated
       title: taxonomy.characteristic-value.updated
@@ -1360,7 +1899,6 @@ components:
       x-producer: taxonomy-svc
       x-consumers:
       - catalog-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1384,18 +1922,17 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.eventos.x
-      x-routing-key: taxonomy.characteristic-value.updated
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     CatalogProductDeactivated:
       name: catalog.product.deactivated
       title: catalog.product.deactivated
       contentType: application/json
       x-producer: catalog-svc
       x-consumers:
-      - promotions-svc
       - combos-svc
-      - api-gateway/bff
-      x-status: stable
+      - promotions-svc
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1406,6 +1943,9 @@ components:
             producer:
               type: string
               const: catalog-svc
+            schema_version:
+              type: integer
+              const: 1
             kind:
               type: string
               const: event
@@ -1413,25 +1953,25 @@ components:
               type: string
               const: catalog.product.deactivated
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/CatalogProductDeactivatedData'
           required:
           - producer
           - kind
           - name
           - data
-      x-exchange: po.eventos.x
-      x-routing-key: catalog.product.deactivated
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     CatalogSkuDeactivated:
       name: catalog.sku.deactivated
       title: catalog.sku.deactivated
       contentType: application/json
       x-producer: catalog-svc
       x-consumers:
+      - combos-svc
       - inventory-svc
       - pricing-svc
       - promotions-svc
-      - combos-svc
-      x-status: stable
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1442,6 +1982,9 @@ components:
             producer:
               type: string
               const: catalog-svc
+            schema_version:
+              type: integer
+              const: 1
             kind:
               type: string
               const: event
@@ -1449,14 +1992,15 @@ components:
               type: string
               const: catalog.sku.deactivated
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/CatalogSkuDeactivatedData'
           required:
           - producer
           - kind
           - name
           - data
-      x-exchange: po.eventos.x
-      x-routing-key: catalog.sku.deactivated
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     PricingPriceChanged:
       name: pricing.price.changed
       title: pricing.price.changed
@@ -1465,8 +2009,6 @@ components:
       x-consumers:
       - price-audit-svc
       - promotions-svc
-      - api-gateway/bff
-      x-status: stable
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1477,6 +2019,9 @@ components:
             producer:
               type: string
               const: pricing-svc
+            schema_version:
+              type: integer
+              const: 1
             kind:
               type: string
               const: event
@@ -1484,14 +2029,15 @@ components:
               type: string
               const: pricing.price.changed
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/PricingPriceChangedData'
           required:
           - producer
           - kind
           - name
           - data
-      x-exchange: po.eventos.x
-      x-routing-key: pricing.price.changed
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     InventoryStockChanged:
       name: inventory.stock.changed
       title: inventory.stock.changed
@@ -1500,8 +2046,6 @@ components:
       x-consumers:
       - combos-svc
       - promotions-svc
-      - api-gateway/bff
-      x-status: stable
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1512,6 +2056,9 @@ components:
             producer:
               type: string
               const: inventory-svc
+            schema_version:
+              type: integer
+              const: 2
             kind:
               type: string
               const: event
@@ -1519,14 +2066,15 @@ components:
               type: string
               const: inventory.stock.changed
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/InventoryStockChangedData'
           required:
           - producer
           - kind
           - name
           - data
-      x-exchange: po.eventos.x
-      x-routing-key: inventory.stock.changed
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     InventoryStockAdjusted:
       name: inventory.stock.adjusted
       title: inventory.stock.adjusted
@@ -1534,8 +2082,6 @@ components:
       x-producer: inventory-svc
       x-consumers:
       - bulk-svc
-      - api-gateway/bff
-      x-status: stable
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1559,307 +2105,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.eventos.x
-      x-routing-key: inventory.stock.adjusted
-    InventoryReservationCreated:
-      name: inventory.reservation.created
-      title: inventory.reservation.created
-      contentType: application/json
-      x-producer: inventory-svc
-      x-consumers:
-      - modulo-ventas
-      - api-gateway/bff
-      x-status: provisional
-      x-payload-schema-version: 2
-      x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
-      payload:
-        allOf:
-        - $ref: '#/components/schemas/MessageEnvelope'
-        - type: object
-          properties:
-            schema_version: {type: integer, const: 2}
-            operation_id:
-              type: string
-              format: uuid
-            causation_id:
-              type: string
-              minLength: 1
-            producer:
-              type: string
-              const: inventory-svc
-            kind:
-              type: string
-              const: event
-            name:
-              type: string
-              const: inventory.reservation.created
-            data:
-              $ref: '#/components/schemas/InventoryReservationCreatedData'
-          required:
-          - schema_version
-          - operation_id
-          - causation_id
-          - producer
-          - kind
-          - name
-          - data
-      x-exchange: po.eventos.x
-      x-routing-key: inventory.reservation.created
-    InventoryReservationRejected:
-      name: inventory.reservation.rejected
-      title: inventory.reservation.rejected
-      contentType: application/json
-      x-producer: inventory-svc
-      x-consumers:
-      - modulo-ventas
-      x-status: provisional
-      x-payload-schema-version: 2
-      x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
-      payload:
-        allOf:
-        - $ref: '#/components/schemas/MessageEnvelope'
-        - type: object
-          properties:
-            schema_version: {type: integer, const: 2}
-            operation_id:
-              type: string
-              format: uuid
-            causation_id:
-              type: string
-              minLength: 1
-            producer: {type: string, const: inventory-svc}
-            kind: {type: string, const: result}
-            name: {type: string, const: inventory.reservation.rejected}
-            data:
-              $ref: '#/components/schemas/InventoryReservationRejectedData'
-          required: [schema_version, operation_id, causation_id, producer, kind, name, data]
-      x-exchange: po.resultados.x
-      x-routing-key: inventory.reservation.rejected
-    InventoryReservationConsumed:
-      name: inventory.reservation.consumed
-      title: inventory.reservation.consumed
-      contentType: application/json
-      x-producer: inventory-svc
-      x-consumers:
-      - modulo-ventas
-      - api-gateway/bff
-      x-status: provisional
-      x-payload-schema-version: 2
-      x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
-      payload:
-        allOf:
-        - $ref: '#/components/schemas/MessageEnvelope'
-        - type: object
-          properties:
-            schema_version: {type: integer, const: 2}
-            operation_id:
-              type: string
-              format: uuid
-            causation_id:
-              type: string
-              minLength: 1
-            producer:
-              type: string
-              const: inventory-svc
-            kind:
-              type: string
-              const: event
-            name:
-              type: string
-              const: inventory.reservation.consumed
-            data:
-              $ref: '#/components/schemas/InventoryReservationTransitionData'
-          required:
-          - schema_version
-          - operation_id
-          - causation_id
-          - producer
-          - kind
-          - name
-          - data
-      x-exchange: po.eventos.x
-      x-routing-key: inventory.reservation.consumed
-    InventoryReservationReleased:
-      name: inventory.reservation.released
-      title: inventory.reservation.released
-      contentType: application/json
-      x-producer: inventory-svc
-      x-consumers:
-      - modulo-ventas
-      - api-gateway/bff
-      x-status: provisional
-      x-payload-schema-version: 2
-      x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
-      payload:
-        allOf:
-        - $ref: '#/components/schemas/MessageEnvelope'
-        - type: object
-          properties:
-            schema_version: {type: integer, const: 2}
-            operation_id:
-              type: string
-              format: uuid
-            causation_id:
-              type: string
-              minLength: 1
-            producer:
-              type: string
-              const: inventory-svc
-            kind:
-              type: string
-              const: event
-            name:
-              type: string
-              const: inventory.reservation.released
-            data:
-              $ref: '#/components/schemas/InventoryReservationTransitionData'
-          required:
-          - schema_version
-          - operation_id
-          - causation_id
-          - producer
-          - kind
-          - name
-          - data
-      x-exchange: po.eventos.x
-      x-routing-key: inventory.reservation.released
-    InventoryReservationExpired:
-      name: inventory.reservation.expired
-      title: inventory.reservation.expired
-      contentType: application/json
-      x-producer: inventory-svc
-      x-consumers:
-      - modulo-ventas
-      - api-gateway/bff
-      x-status: provisional
-      x-payload-schema-version: 2
-      x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
-      payload:
-        allOf:
-        - $ref: '#/components/schemas/MessageEnvelope'
-        - type: object
-          properties:
-            schema_version: {type: integer, const: 2}
-            operation_id:
-              type: string
-              format: uuid
-            causation_id:
-              type: string
-              minLength: 1
-            producer:
-              type: string
-              const: inventory-svc
-            kind:
-              type: string
-              const: event
-            name:
-              type: string
-              const: inventory.reservation.expired
-            data:
-              $ref: '#/components/schemas/InventoryReservationTransitionData'
-          required:
-          - schema_version
-          - operation_id
-          - causation_id
-          - producer
-          - kind
-          - name
-          - data
-      x-exchange: po.eventos.x
-      x-routing-key: inventory.reservation.expired
-    InventoryConsumptionCompleted:
-      name: inventory.consumption.completed
-      title: inventory.consumption.completed
-      contentType: application/json
-      x-producer: inventory-svc
-      x-consumers:
-      - modulo-ventas
-      x-status: provisional
-      x-payload-schema-version: 2
-      x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
-      payload:
-        allOf:
-        - $ref: '#/components/schemas/MessageEnvelope'
-        - type: object
-          properties:
-            schema_version: {type: integer, const: 2}
-            operation_id:
-              type: string
-              format: uuid
-            causation_id:
-              type: string
-              minLength: 1
-            producer:
-              type: string
-              const: inventory-svc
-            kind:
-              type: string
-              const: result
-            name:
-              type: string
-              const: inventory.consumption.completed
-            data:
-              $ref: '#/components/schemas/InventoryConsumptionResultData'
-          required:
-          - schema_version
-          - operation_id
-          - causation_id
-          - producer
-          - kind
-          - name
-          - data
-      x-exchange: po.resultados.x
-      x-routing-key: inventory.consumption.completed
-    InventoryConsumptionRejected:
-      name: inventory.consumption.rejected
-      title: inventory.consumption.rejected
-      contentType: application/json
-      x-producer: inventory-svc
-      x-consumers:
-      - modulo-ventas
-      x-status: provisional
-      x-payload-schema-version: 2
-      x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
-      payload:
-        allOf:
-        - $ref: '#/components/schemas/MessageEnvelope'
-        - type: object
-          properties:
-            schema_version: {type: integer, const: 2}
-            operation_id:
-              type: string
-              format: uuid
-            causation_id:
-              type: string
-              minLength: 1
-            producer:
-              type: string
-              const: inventory-svc
-            kind:
-              type: string
-              const: result
-            name:
-              type: string
-              const: inventory.consumption.rejected
-            data:
-              $ref: '#/components/schemas/InventoryConsumptionRejectedData'
-          required:
-          - schema_version
-          - operation_id
-          - causation_id
-          - producer
-          - kind
-          - name
-          - data
-      x-exchange: po.resultados.x
-      x-routing-key: inventory.consumption.rejected
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     TaxonomyMasterDeactivationCheckRequested:
       name: taxonomy.master.deactivation.check.requested
       title: taxonomy.master.deactivation.check.requested
@@ -1867,7 +2115,6 @@ components:
       x-producer: taxonomy-svc
       x-consumers:
       - catalog-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1875,6 +2122,12 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version:
+              type: integer
+              minimum: 1
+            operation_id:
+              type: string
+              format: uuid
             producer:
               type: string
               const: taxonomy-svc
@@ -1885,14 +2138,17 @@ components:
               type: string
               const: taxonomy.master.deactivation.check.requested
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/MasterDeactivationData'
           required:
+          - schema_version
+          - operation_id
           - producer
           - kind
           - name
           - data
-      x-exchange: po.comandos.x
-      x-routing-key: taxonomy.master.deactivation.check.requested
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     CatalogMasterDeactivationChecked:
       name: catalog.master.deactivation.checked
       title: catalog.master.deactivation.checked
@@ -1900,7 +2156,6 @@ components:
       x-producer: catalog-svc
       x-consumers:
       - taxonomy-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1908,6 +2163,12 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version:
+              type: integer
+              minimum: 1
+            operation_id:
+              type: string
+              format: uuid
             producer:
               type: string
               const: catalog-svc
@@ -1918,14 +2179,17 @@ components:
               type: string
               const: catalog.master.deactivation.checked
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/MasterDeactivationCheckedData'
           required:
+          - schema_version
+          - operation_id
           - producer
           - kind
           - name
           - data
-      x-exchange: po.resultados.x
-      x-routing-key: catalog.master.deactivation.checked
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     TaxonomyMasterDeactivated:
       name: taxonomy.master.deactivated
       title: taxonomy.master.deactivated
@@ -1933,8 +2197,6 @@ components:
       x-producer: taxonomy-svc
       x-consumers:
       - catalog-svc
-      - api-gateway/bff
-      x-status: internal-provisional
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1942,6 +2204,12 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version:
+              type: integer
+              minimum: 1
+            operation_id:
+              type: string
+              format: uuid
             producer:
               type: string
               const: taxonomy-svc
@@ -1952,14 +2220,17 @@ components:
               type: string
               const: taxonomy.master.deactivated
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/MasterDeactivationCompletedData'
           required:
+          - schema_version
+          - operation_id
           - producer
           - kind
           - name
           - data
-      x-exchange: po.eventos.x
-      x-routing-key: taxonomy.master.deactivated
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     TaxonomyMasterDeactivationRejected:
       name: taxonomy.master.deactivation.rejected
       title: taxonomy.master.deactivation.rejected
@@ -1967,7 +2238,6 @@ components:
       x-producer: taxonomy-svc
       x-consumers:
       - catalog-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -1975,6 +2245,12 @@ components:
         - $ref: '#/components/schemas/MessageEnvelope'
         - type: object
           properties:
+            schema_version:
+              type: integer
+              minimum: 1
+            operation_id:
+              type: string
+              format: uuid
             producer:
               type: string
               const: taxonomy-svc
@@ -1985,14 +2261,17 @@ components:
               type: string
               const: taxonomy.master.deactivation.rejected
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/MasterDeactivationRejectedData'
           required:
+          - schema_version
+          - operation_id
           - producer
           - kind
           - name
           - data
-      x-exchange: po.resultados.x
-      x-routing-key: taxonomy.master.deactivation.rejected
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     CatalogBulkUpsertRequested:
       name: catalog.bulk.upsert.requested
       title: catalog.bulk.upsert.requested
@@ -2000,9 +2279,11 @@ components:
       x-producer: bulk-svc
       x-consumers:
       - catalog-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
+      x-business-idempotency-key: batch_operation_id
+      x-business-idempotency-description: Identifica la operación masiva en V1, V2 y V3. V1/V2 transportan rows inline;
+        V3 transporta content_ref y sus row_operation_id solo se conocen después de descargar el documento, verificar
+        byte_length y SHA-256 y validar las filas.
       payload:
         allOf:
         - $ref: '#/components/schemas/MessageEnvelope'
@@ -2011,6 +2292,12 @@ components:
             producer:
               type: string
               const: bulk-svc
+            schema_version:
+              type: integer
+              enum:
+              - 1
+              - 2
+              - 3
             kind:
               type: string
               const: command
@@ -2018,14 +2305,51 @@ components:
               type: string
               const: catalog.bulk.upsert.requested
             data:
-              $ref: '#/components/schemas/GenericData'
+              type: object
           required:
           - producer
           - kind
           - name
           - data
-      x-exchange: po.comandos.x
-      x-routing-key: catalog.bulk.upsert.requested
+        - if:
+            properties:
+              schema_version:
+                const: 1
+            required:
+            - schema_version
+          then:
+            properties:
+              data:
+                $ref: '#/components/schemas/CatalogBulkUpsertRequestedData'
+        - if:
+            properties:
+              schema_version:
+                const: 3
+            required:
+            - schema_version
+          then:
+            properties:
+              data:
+                $ref: '#/components/schemas/CatalogBulkUpsertRequestedDataV3'
+        - if:
+            properties:
+              schema_version:
+                const: 2
+            required:
+            - schema_version
+          then:
+            properties:
+              data:
+                $ref: '#/components/schemas/CatalogBulkUpsertRequestedDataV2'
+      description: V1 y V2 conservan rows inline y su compatibilidad semántica; V3 usa content_ref y no incluye rows
+        en el mensaje. message_id identifica la entrega para deduplicación; batch_operation_id identifica la operación
+        masiva. En V3, Catalog obtiene row_operation_id únicamente tras descargar el documento referenciado, verificar
+        su byte_length y SHA-256 y validar sus filas. Catalog debe soportar V3 antes de que Bulk habilite su emisión.
+        No reescribir Outbox antiguo ni reutilizar una row_operation_id con payload convertido. Resultados terminales
+        completed/rejected conservan sus versiones y payloads existentes.
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     CatalogBulkUpsertCompleted:
       name: catalog.bulk.upsert.completed
       title: catalog.bulk.upsert.completed
@@ -2033,9 +2357,8 @@ components:
       x-producer: catalog-svc
       x-consumers:
       - bulk-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
+      x-business-idempotency-key: batch_operation_id
       payload:
         allOf:
         - $ref: '#/components/schemas/MessageEnvelope'
@@ -2044,6 +2367,9 @@ components:
             producer:
               type: string
               const: catalog-svc
+            schema_version:
+              type: integer
+              const: 1
             kind:
               type: string
               const: result
@@ -2051,14 +2377,15 @@ components:
               type: string
               const: catalog.bulk.upsert.completed
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/CatalogBulkUpsertCompletedData'
           required:
           - producer
           - kind
           - name
           - data
-      x-exchange: po.resultados.x
-      x-routing-key: catalog.bulk.upsert.completed
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     CatalogBulkUpsertRejected:
       name: catalog.bulk.upsert.rejected
       title: catalog.bulk.upsert.rejected
@@ -2066,9 +2393,8 @@ components:
       x-producer: catalog-svc
       x-consumers:
       - bulk-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
+      x-business-idempotency-key: batch_operation_id
       payload:
         allOf:
         - $ref: '#/components/schemas/MessageEnvelope'
@@ -2077,6 +2403,9 @@ components:
             producer:
               type: string
               const: catalog-svc
+            schema_version:
+              type: integer
+              const: 1
             kind:
               type: string
               const: result
@@ -2084,14 +2413,15 @@ components:
               type: string
               const: catalog.bulk.upsert.rejected
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/CatalogBulkUpsertRejectedData'
           required:
           - producer
           - kind
           - name
           - data
-      x-exchange: po.resultados.x
-      x-routing-key: catalog.bulk.upsert.rejected
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     PricingBulkPriceApplyRequested:
       name: pricing.bulk.price.apply.requested
       title: pricing.bulk.price.apply.requested
@@ -2099,7 +2429,6 @@ components:
       x-producer: bulk-svc
       x-consumers:
       - pricing-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -2123,8 +2452,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.comandos.x
-      x-routing-key: pricing.bulk.price.apply.requested
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: BLOCKED_CONTRACT
     PricingBulkPriceApplyCompleted:
       name: pricing.bulk.price.apply.completed
       title: pricing.bulk.price.apply.completed
@@ -2132,7 +2462,6 @@ components:
       x-producer: pricing-svc
       x-consumers:
       - bulk-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -2156,8 +2485,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.resultados.x
-      x-routing-key: pricing.bulk.price.apply.completed
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     PricingBulkPriceApplyRejected:
       name: pricing.bulk.price.apply.rejected
       title: pricing.bulk.price.apply.rejected
@@ -2165,7 +2495,6 @@ components:
       x-producer: pricing-svc
       x-consumers:
       - bulk-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -2189,8 +2518,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.resultados.x
-      x-routing-key: pricing.bulk.price.apply.rejected
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     InventoryBulkStockAdjustRequested:
       name: inventory.bulk.stock.adjust.requested
       title: inventory.bulk.stock.adjust.requested
@@ -2198,7 +2528,6 @@ components:
       x-producer: bulk-svc
       x-consumers:
       - inventory-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -2222,8 +2551,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.comandos.x
-      x-routing-key: inventory.bulk.stock.adjust.requested
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: BLOCKED_CONTRACT
     InventoryBulkStockAdjustCompleted:
       name: inventory.bulk.stock.adjust.completed
       title: inventory.bulk.stock.adjust.completed
@@ -2231,7 +2561,6 @@ components:
       x-producer: inventory-svc
       x-consumers:
       - bulk-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -2255,8 +2584,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.resultados.x
-      x-routing-key: inventory.bulk.stock.adjust.completed
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     InventoryBulkStockAdjustRejected:
       name: inventory.bulk.stock.adjust.rejected
       title: inventory.bulk.stock.adjust.rejected
@@ -2264,7 +2594,6 @@ components:
       x-producer: inventory-svc
       x-consumers:
       - bulk-svc
-      x-status: internal-provisional
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -2288,272 +2617,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.resultados.x
-      x-routing-key: inventory.bulk.stock.adjust.rejected
-    PromotionsCouponConsumptionCompleted:
-      name: promotions.coupon.consumption.completed
-      title: promotions.coupon.consumption.completed
-      contentType: application/json
-      x-producer: promotions-svc
-      x-consumers:
-      - modulo-ventas
-      x-status: provisional-external
-      x-payload-schema-version: 2
-      x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
-      payload:
-        allOf:
-        - $ref: '#/components/schemas/MessageEnvelope'
-        - type: object
-          properties:
-            schema_version: {type: integer, const: 2}
-            operation_id:
-              type: string
-              format: uuid
-            causation_id:
-              type: string
-              minLength: 1
-            producer:
-              type: string
-              const: promotions-svc
-            kind:
-              type: string
-              const: result
-            name:
-              type: string
-              const: promotions.coupon.consumption.completed
-            data:
-              $ref: '#/components/schemas/CouponConsumptionResultData'
-          required:
-          - schema_version
-          - operation_id
-          - causation_id
-          - producer
-          - kind
-          - name
-          - data
-      x-exchange: po.resultados.x
-      x-routing-key: promotions.coupon.consumption.completed
-    PromotionsCouponConsumptionRejected:
-      name: promotions.coupon.consumption.rejected
-      title: promotions.coupon.consumption.rejected
-      contentType: application/json
-      x-producer: promotions-svc
-      x-consumers:
-      - modulo-ventas
-      x-status: provisional-external
-      x-payload-schema-version: 2
-      x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
-      payload:
-        allOf:
-        - $ref: '#/components/schemas/MessageEnvelope'
-        - type: object
-          properties:
-            schema_version: {type: integer, const: 2}
-            operation_id:
-              type: string
-              format: uuid
-            causation_id:
-              type: string
-              minLength: 1
-            producer:
-              type: string
-              const: promotions-svc
-            kind:
-              type: string
-              const: result
-            name:
-              type: string
-              const: promotions.coupon.consumption.rejected
-            data:
-              $ref: '#/components/schemas/CouponConsumptionRejectedData'
-          required:
-          - schema_version
-          - operation_id
-          - causation_id
-          - producer
-          - kind
-          - name
-          - data
-      x-exchange: po.resultados.x
-      x-routing-key: promotions.coupon.consumption.rejected
-    PromotionsCouponConsumptionRequested:
-      name: promotions.coupon.consumption.requested
-      title: promotions.coupon.consumption.requested
-      contentType: application/json
-      x-producer: modulo-ventas
-      x-consumers:
-      - promotions-svc
-      x-status: p1-closed
-      x-payload-schema-version: 2
-      x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
-      payload:
-        allOf:
-        - $ref: '#/components/schemas/MessageEnvelope'
-        - type: object
-          properties:
-            schema_version: {type: integer, const: 2}
-            operation_id:
-              type: string
-              format: uuid
-            causation_id:
-              type: string
-              minLength: 1
-            producer:
-              type: string
-              const: modulo-ventas
-            kind:
-              type: string
-              const: command
-            name:
-              type: string
-              const: promotions.coupon.consumption.requested
-            data:
-              $ref: '#/components/schemas/CouponConsumptionRequestedData'
-          required:
-          - schema_version
-          - operation_id
-          - causation_id
-          - producer
-          - kind
-          - name
-          - data
-      x-exchange: po.comandos.x
-      x-routing-key: promotions.coupon.consumption.requested
-    PromotionsCouponRestorationRequested:
-      name: promotions.coupon.restoration.requested
-      title: promotions.coupon.restoration.requested
-      contentType: application/json
-      x-producer: modulo-ventas
-      x-consumers:
-      - promotions-svc
-      x-status: p1-closed
-      x-payload-schema-version: 2
-      x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
-      payload:
-        allOf:
-        - $ref: '#/components/schemas/MessageEnvelope'
-        - type: object
-          properties:
-            schema_version: {type: integer, const: 2}
-            operation_id:
-              type: string
-              format: uuid
-            causation_id:
-              type: string
-              minLength: 1
-            producer:
-              type: string
-              const: modulo-ventas
-            kind:
-              type: string
-              const: command
-            name:
-              type: string
-              const: promotions.coupon.restoration.requested
-            data:
-              $ref: '#/components/schemas/CouponRestorationRequestedData'
-          required:
-          - schema_version
-          - operation_id
-          - causation_id
-          - producer
-          - kind
-          - name
-          - data
-      x-exchange: po.comandos.x
-      x-routing-key: promotions.coupon.restoration.requested
-    PromotionsCouponRestorationCompleted:
-      name: promotions.coupon.restoration.completed
-      title: promotions.coupon.restoration.completed
-      contentType: application/json
-      x-producer: promotions-svc
-      x-consumers:
-      - modulo-ventas
-      x-status: p1-closed
-      x-payload-schema-version: 2
-      x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
-      payload:
-        allOf:
-        - $ref: '#/components/schemas/MessageEnvelope'
-        - type: object
-          properties:
-            schema_version: {type: integer, const: 2}
-            operation_id:
-              type: string
-              format: uuid
-            causation_id:
-              type: string
-              minLength: 1
-            producer:
-              type: string
-              const: promotions-svc
-            kind:
-              type: string
-              const: result
-            name:
-              type: string
-              const: promotions.coupon.restoration.completed
-            data:
-              $ref: '#/components/schemas/CouponRestorationResultData'
-          required:
-          - schema_version
-          - operation_id
-          - causation_id
-          - producer
-          - kind
-          - name
-          - data
-      x-exchange: po.resultados.x
-      x-routing-key: promotions.coupon.restoration.completed
-    PromotionsCouponRestorationRejected:
-      name: promotions.coupon.restoration.rejected
-      title: promotions.coupon.restoration.rejected
-      contentType: application/json
-      x-producer: promotions-svc
-      x-consumers:
-      - modulo-ventas
-      x-status: p1-closed
-      x-payload-schema-version: 2
-      x-deduplication-key: message_id
-      x-business-idempotency-key: operation_id
-      payload:
-        allOf:
-        - $ref: '#/components/schemas/MessageEnvelope'
-        - type: object
-          properties:
-            schema_version: {type: integer, const: 2}
-            operation_id:
-              type: string
-              format: uuid
-            causation_id:
-              type: string
-              minLength: 1
-            producer:
-              type: string
-              const: promotions-svc
-            kind:
-              type: string
-              const: result
-            name:
-              type: string
-              const: promotions.coupon.restoration.rejected
-            data:
-              $ref: '#/components/schemas/CouponRestorationRejectedData'
-          required:
-          - schema_version
-          - operation_id
-          - causation_id
-          - producer
-          - kind
-          - name
-          - data
-      x-exchange: po.resultados.x
-      x-routing-key: promotions.coupon.restoration.rejected
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     PricingProductInitializationRequested:
       name: pricing.product.initialization.requested
       title: pricing.product.initialization.requested
@@ -2561,7 +2627,6 @@ components:
       x-producer: catalog-svc
       x-consumers:
       - pricing-svc
-      x-status: p1-closed
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -2589,8 +2654,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.comandos.x
-      x-routing-key: pricing.product.initialization.requested
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     PricingProductInitializationCompleted:
       name: pricing.product.initialization.completed
       title: pricing.product.initialization.completed
@@ -2598,7 +2664,6 @@ components:
       x-producer: pricing-svc
       x-consumers:
       - catalog-svc
-      x-status: p1-closed
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -2630,8 +2695,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.resultados.x
-      x-routing-key: pricing.product.initialization.completed
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     PricingProductInitializationRejected:
       name: pricing.product.initialization.rejected
       title: pricing.product.initialization.rejected
@@ -2639,7 +2705,6 @@ components:
       x-producer: pricing-svc
       x-consumers:
       - catalog-svc
-      x-status: p1-closed
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -2671,8 +2736,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.resultados.x
-      x-routing-key: pricing.product.initialization.rejected
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     InventorySkuInitializationRequested:
       name: inventory.sku.initialization.requested
       title: inventory.sku.initialization.requested
@@ -2680,7 +2746,6 @@ components:
       x-producer: catalog-svc
       x-consumers:
       - inventory-svc
-      x-status: p1-closed
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -2708,8 +2773,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.comandos.x
-      x-routing-key: inventory.sku.initialization.requested
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     InventorySkuInitializationCompleted:
       name: inventory.sku.initialization.completed
       title: inventory.sku.initialization.completed
@@ -2717,7 +2783,6 @@ components:
       x-producer: inventory-svc
       x-consumers:
       - catalog-svc
-      x-status: p1-closed
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -2749,8 +2814,9 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.resultados.x
-      x-routing-key: inventory.sku.initialization.completed
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     InventorySkuInitializationRejected:
       name: inventory.sku.initialization.rejected
       title: inventory.sku.initialization.rejected
@@ -2758,7 +2824,6 @@ components:
       x-producer: inventory-svc
       x-consumers:
       - catalog-svc
-      x-status: p1-closed
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
       payload:
@@ -2790,498 +2855,140 @@ components:
           - kind
           - name
           - data
-      x-exchange: po.resultados.x
-      x-routing-key: inventory.sku.initialization.rejected
-servers:
-  rabbitmq:
-    host: '{host}:{port}'
-    protocol: amqp
-    protocolVersion: 0.9.1
-    description: Broker RabbitMQ de G6 Productos y Ofertas.
-    variables:
-      host:
-        default: rabbitmq
-      port:
-        default: '5672'
-    x-vhost: g6-productos-ofertas
-x-rabbitmq-policy:
-  main_queue_type: quorum
-  retry_queue_type: quorum
-  dlq_type: quorum
-  publisher_confirms: true
-  consumer_ack: manual
-  default_prefetch: 20
-  application_retry_attempts: 3
-  retry_delay_ms: 30000
-  unroutable_publish: mandatory=true + alternate exchange po.sin-ruta.x
-  unroutable_publish_behavior: >-
-    If the primary exchange cannot route a message but po.sin-ruta.x routes it to
-    po.sin-ruta.q, RabbitMQ considers it routed and does not send basic.return;
-    if the alternate exchange also cannot route it, mandatory=true causes
-    basic.return. Publisher confirms are an independent signal.
-  business_rejection_rule: Business rejections are acknowledged and translated to contract results/events; they are not sent to retry/DLQ.
-  retry_dlx_status: blocked-not-provisioned
-  retry_dlx_approval: not-approved
-x-rabbitmq-topology:
-  vhost: g6-productos-ofertas
-  observation:
-    source: Oracle RabbitMQ audit dated 2026-10-19; historical, not necessarily current server state
-    rabbitmq_version: 4.2.9
-    observed_binding_count: 57
-    exact_binding_mapping_status: PENDIENTE_VERIFICACION
-    note: The observed count does not establish exact correspondence with AsyncAPI bindings; no binding definition export is available here.
-  external_homologation_status: pending
-  retry_dlx_status: blocked-not-provisioned
-  exchanges:
-    po.comandos.x:
-      type: topic
-      durable: true
-      status: base-observed-not-homologated
-      alternate_exchange: po.sin-ruta.x
-    po.eventos.x:
-      type: topic
-      durable: true
-      status: base-observed-not-homologated
-      alternate_exchange: po.sin-ruta.x
-    po.resultados.x:
-      type: topic
-      durable: true
-      status: base-observed-not-homologated
-      alternate_exchange: po.sin-ruta.x
-    po.retry.x:
-      type: direct
-      durable: true
-      status: candidate-not-approved
-      provisioned: false
-    po.dlx.x:
-      type: direct
-      durable: true
-      status: candidate-not-approved
-      provisioned: false
-    po.sin-ruta.x:
-      type: fanout
-      durable: true
-      status: base-observed-not-homologated
-  queues:
-    po.catalogo.q:
-      consumer: catalog-svc
-      type: quorum
-      durable: true
-      status: base-observed-not-homologated
-      prefetch: 20
-      bindings:
-      - exchange: po.comandos.x
-        routing_key: catalog.bulk.upsert.requested
-      - exchange: po.comandos.x
-        routing_key: taxonomy.master.deactivation.check.requested
-      - exchange: po.eventos.x
-        routing_key: taxonomy.category.updated
-      - exchange: po.eventos.x
-        routing_key: taxonomy.characteristic-value.updated
-      - exchange: po.eventos.x
-        routing_key: taxonomy.master.deactivated
-      - exchange: po.eventos.x
-        routing_key: taxonomy.product-type-schema.changed
-      - exchange: po.resultados.x
-        routing_key: inventory.sku.initialization.completed
-      - exchange: po.resultados.x
-        routing_key: inventory.sku.initialization.rejected
-      - exchange: po.resultados.x
-        routing_key: pricing.product.initialization.completed
-      - exchange: po.resultados.x
-        routing_key: pricing.product.initialization.rejected
-      - exchange: po.resultados.x
-        routing_key: taxonomy.master.deactivation.rejected
-      retry_queue: po.catalogo.q.retry
-      dlq: po.catalogo.q.dlq
-    po.catalogo.q.retry:
-      consumer: catalog-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.retry.x
-        routing_key: po.catalogo.q
-      message_ttl_ms: 30000
-      dead_letter_exchange: ''
-      dead_letter_routing_key: po.catalogo.q
-    po.catalogo.q.dlq:
-      consumer: catalog-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.dlx.x
-        routing_key: po.catalogo.q
-      manual_recovery: true
-    po.pasarela.q:
-      consumer: api-gateway/bff
-      type: quorum
-      durable: true
-      status: base-observed-not-homologated
-      prefetch: 20
-      bindings:
-      - exchange: po.eventos.x
-        routing_key: catalog.product.deactivated
-      - exchange: po.eventos.x
-        routing_key: inventory.reservation.consumed
-      - exchange: po.eventos.x
-        routing_key: inventory.reservation.created
-      - exchange: po.eventos.x
-        routing_key: inventory.reservation.expired
-      - exchange: po.eventos.x
-        routing_key: inventory.reservation.released
-      - exchange: po.eventos.x
-        routing_key: inventory.stock.adjusted
-      - exchange: po.eventos.x
-        routing_key: inventory.stock.changed
-      - exchange: po.eventos.x
-        routing_key: pricing.price.changed
-      - exchange: po.eventos.x
-        routing_key: taxonomy.category.updated
-      - exchange: po.eventos.x
-        routing_key: taxonomy.master.deactivated
-      retry_queue: po.pasarela.q.retry
-      dlq: po.pasarela.q.dlq
-    po.pasarela.q.retry:
-      consumer: api-gateway/bff
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.retry.x
-        routing_key: po.pasarela.q
-      message_ttl_ms: 30000
-      dead_letter_exchange: ''
-      dead_letter_routing_key: po.pasarela.q
-    po.pasarela.q.dlq:
-      consumer: api-gateway/bff
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.dlx.x
-        routing_key: po.pasarela.q
-      manual_recovery: true
-    po.promociones.q:
-      consumer: promotions-svc
-      type: quorum
-      durable: true
-      status: base-observed-not-homologated
-      prefetch: 20
-      bindings:
-      - exchange: po.comandos.x
-        routing_key: promotions.coupon.consumption.requested
-      - exchange: po.comandos.x
-        routing_key: promotions.coupon.restoration.requested
-      - exchange: po.eventos.x
-        routing_key: catalog.product.deactivated
-      - exchange: po.eventos.x
-        routing_key: catalog.sku.deactivated
-      - exchange: po.eventos.x
-        routing_key: inventory.stock.changed
-      - exchange: po.eventos.x
-        routing_key: pricing.price.changed
-      retry_queue: po.promociones.q.retry
-      dlq: po.promociones.q.dlq
-    po.promociones.q.retry:
-      consumer: promotions-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.retry.x
-        routing_key: po.promociones.q
-      message_ttl_ms: 30000
-      dead_letter_exchange: ''
-      dead_letter_routing_key: po.promociones.q
-    po.promociones.q.dlq:
-      consumer: promotions-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.dlx.x
-        routing_key: po.promociones.q
-      manual_recovery: true
-    po.combos.q:
-      consumer: combos-svc
-      type: quorum
-      durable: true
-      status: base-observed-not-homologated
-      prefetch: 20
-      bindings:
-      - exchange: po.eventos.x
-        routing_key: catalog.product.deactivated
-      - exchange: po.eventos.x
-        routing_key: catalog.sku.deactivated
-      - exchange: po.eventos.x
-        routing_key: inventory.stock.changed
-      retry_queue: po.combos.q.retry
-      dlq: po.combos.q.dlq
-    po.combos.q.retry:
-      consumer: combos-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.retry.x
-        routing_key: po.combos.q
-      message_ttl_ms: 30000
-      dead_letter_exchange: ''
-      dead_letter_routing_key: po.combos.q
-    po.combos.q.dlq:
-      consumer: combos-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.dlx.x
-        routing_key: po.combos.q
-      manual_recovery: true
-    po.inventario.q:
-      consumer: inventory-svc
-      type: quorum
-      durable: true
-      status: base-observed-not-homologated
-      prefetch: 20
-      bindings:
-      - exchange: po.comandos.x
-        routing_key: inventory.bulk.stock.adjust.requested
-      - exchange: po.comandos.x
-        routing_key: inventory.sku.initialization.requested
-      - exchange: po.eventos.x
-        routing_key: catalog.sku.deactivated
-      retry_queue: po.inventario.q.retry
-      dlq: po.inventario.q.dlq
-    po.inventario.q.retry:
-      consumer: inventory-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.retry.x
-        routing_key: po.inventario.q
-      message_ttl_ms: 30000
-      dead_letter_exchange: ''
-      dead_letter_routing_key: po.inventario.q
-    po.inventario.q.dlq:
-      consumer: inventory-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.dlx.x
-        routing_key: po.inventario.q
-      manual_recovery: true
-    po.precios.q:
-      consumer: pricing-svc
-      type: quorum
-      durable: true
-      status: base-observed-not-homologated
-      prefetch: 20
-      bindings:
-      - exchange: po.comandos.x
-        routing_key: pricing.bulk.price.apply.requested
-      - exchange: po.comandos.x
-        routing_key: pricing.product.initialization.requested
-      - exchange: po.eventos.x
-        routing_key: catalog.sku.deactivated
-      retry_queue: po.precios.q.retry
-      dlq: po.precios.q.dlq
-    po.precios.q.retry:
-      consumer: pricing-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.retry.x
-        routing_key: po.precios.q
-      message_ttl_ms: 30000
-      dead_letter_exchange: ''
-      dead_letter_routing_key: po.precios.q
-    po.precios.q.dlq:
-      consumer: pricing-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.dlx.x
-        routing_key: po.precios.q
-      manual_recovery: true
-    po.auditoria-precios.q:
-      consumer: price-audit-svc
-      type: quorum
-      durable: true
-      status: base-observed-not-homologated
-      prefetch: 20
-      bindings:
-      - exchange: po.eventos.x
-        routing_key: pricing.price.changed
-      retry_queue: po.auditoria-precios.q.retry
-      dlq: po.auditoria-precios.q.dlq
-    po.auditoria-precios.q.retry:
-      consumer: price-audit-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.retry.x
-        routing_key: po.auditoria-precios.q
-      message_ttl_ms: 30000
-      dead_letter_exchange: ''
-      dead_letter_routing_key: po.auditoria-precios.q
-    po.auditoria-precios.q.dlq:
-      consumer: price-audit-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.dlx.x
-        routing_key: po.auditoria-precios.q
-      manual_recovery: true
-    po.ventas.q:
-      consumer: modulo-ventas
-      type: quorum
-      durable: true
-      status: base-observed-not-homologated
-      prefetch: 20
-      bindings:
-      - exchange: po.eventos.x
-        routing_key: inventory.reservation.consumed
-      - exchange: po.eventos.x
-        routing_key: inventory.reservation.created
-      - exchange: po.resultados.x
-        routing_key: inventory.reservation.rejected
-      - exchange: po.eventos.x
-        routing_key: inventory.reservation.expired
-      - exchange: po.eventos.x
-        routing_key: inventory.reservation.released
-      - exchange: po.resultados.x
-        routing_key: inventory.consumption.completed
-      - exchange: po.resultados.x
-        routing_key: inventory.consumption.rejected
-      - exchange: po.resultados.x
-        routing_key: promotions.coupon.consumption.completed
-      - exchange: po.resultados.x
-        routing_key: promotions.coupon.consumption.rejected
-      - exchange: po.resultados.x
-        routing_key: promotions.coupon.restoration.completed
-      - exchange: po.resultados.x
-        routing_key: promotions.coupon.restoration.rejected
-      retry_queue: po.ventas.q.retry
-      dlq: po.ventas.q.dlq
-    po.ventas.q.retry:
-      consumer: modulo-ventas
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.retry.x
-        routing_key: po.ventas.q
-      message_ttl_ms: 30000
-      dead_letter_exchange: ''
-      dead_letter_routing_key: po.ventas.q
-    po.ventas.q.dlq:
-      consumer: modulo-ventas
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.dlx.x
-        routing_key: po.ventas.q
-      manual_recovery: true
-    po.taxonomia.q:
-      consumer: taxonomy-svc
-      type: quorum
-      durable: true
-      status: base-observed-not-homologated
-      prefetch: 20
-      bindings:
-      - exchange: po.resultados.x
-        routing_key: catalog.master.deactivation.checked
-      retry_queue: po.taxonomia.q.retry
-      dlq: po.taxonomia.q.dlq
-    po.taxonomia.q.retry:
-      consumer: taxonomy-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.retry.x
-        routing_key: po.taxonomia.q
-      message_ttl_ms: 30000
-      dead_letter_exchange: ''
-      dead_letter_routing_key: po.taxonomia.q
-    po.taxonomia.q.dlq:
-      consumer: taxonomy-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.dlx.x
-        routing_key: po.taxonomia.q
-      manual_recovery: true
-    po.masivos.q:
-      consumer: bulk-svc
-      type: quorum
-      durable: true
-      status: base-observed-not-homologated
-      prefetch: 20
-      bindings:
-      - exchange: po.eventos.x
-        routing_key: inventory.stock.adjusted
-      - exchange: po.resultados.x
-        routing_key: catalog.bulk.upsert.completed
-      - exchange: po.resultados.x
-        routing_key: catalog.bulk.upsert.rejected
-      - exchange: po.resultados.x
-        routing_key: inventory.bulk.stock.adjust.completed
-      - exchange: po.resultados.x
-        routing_key: inventory.bulk.stock.adjust.rejected
-      - exchange: po.resultados.x
-        routing_key: pricing.bulk.price.apply.completed
-      - exchange: po.resultados.x
-        routing_key: pricing.bulk.price.apply.rejected
-      retry_queue: po.masivos.q.retry
-      dlq: po.masivos.q.dlq
-    po.masivos.q.retry:
-      consumer: bulk-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.retry.x
-        routing_key: po.masivos.q
-      message_ttl_ms: 30000
-      dead_letter_exchange: ''
-      dead_letter_routing_key: po.masivos.q
-    po.masivos.q.dlq:
-      consumer: bulk-svc
-      type: quorum
-      durable: true
-      status: candidate-not-provisioned
-      binding:
-        exchange: po.dlx.x
-        routing_key: po.masivos.q
-      manual_recovery: true
-    po.sin-ruta.q:
-      consumer: platform/operations
-      type: quorum
-      durable: true
-      status: base-observed-not-homologated
-      binding:
-        exchange: po.sin-ruta.x
-        routing_key: '#'
-      purpose: Detectar publicaciones sin binding; no es una cola de negocio.
-  retry_flow:
-  - Consumer receives from main quorum queue with manual ack.
-  - 'Transient technical failure: republish the same envelope to po.retry.x with routing key equal to the main queue name and x-retry-count
-    + 1; ack original.'
-  - Retry queue waits 30000 ms and dead-letters directly back to the main queue through the default exchange.
-  - After 3 application retries, publish to po.dlx.x with routing key equal to the main queue name; ack original.
-  - Malformed/schema-unsupported poison messages go directly to DLQ.
-  - Business rejections are acked and emit their domain rejected result when the contract defines one.
-  outbox_inbox:
-    publisher: Transactional Outbox before publish; mark published only after publisher confirm.
-    consumer: Inbox/deduplication by message_id before side effects; business operation_id remains idempotency key.
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
+    PromotionsCouponConsumptionRequested:
+      name: promotions.coupon.consumption.requested
+      title: promotions.coupon.consumption.requested
+      contentType: application/json
+      x-producer: promotions-svc
+      x-consumers:
+      - promotions-svc operations worker
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-deduplication-key: message_id
+      x-business-idempotency-key: operation_id
+      payload:
+        allOf:
+        - $ref: '#/components/schemas/MessageEnvelope'
+        - type: object
+          properties:
+            message_id:
+              type: string
+              format: uuid
+            correlation_id:
+              type: string
+              format: uuid
+            schema_version:
+              type: integer
+              const: 2
+            operation_id:
+              type: string
+              format: uuid
+            producer:
+              type: string
+              const: promotions-svc
+            kind:
+              type: string
+              const: command
+            name:
+              type: string
+              const: promotions.coupon.consumption.requested
+            data:
+              $ref: '#/components/schemas/CouponConsumptionRequestedData'
+          required:
+          - message_id
+          - correlation_id
+          - schema_version
+          - operation_id
+          - producer
+          - kind
+          - name
+          - data
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
+    PromotionsCouponRestorationRequested:
+      name: promotions.coupon.restoration.requested
+      title: promotions.coupon.restoration.requested
+      contentType: application/json
+      x-producer: promotions-svc
+      x-consumers:
+      - promotions-svc operations worker
+      x-transport: azure-service-bus-basic
+      x-contract-status: SEMIFINAL_G6
+      x-deduplication-key: message_id
+      x-business-idempotency-key: operation_id
+      payload:
+        allOf:
+        - $ref: '#/components/schemas/MessageEnvelope'
+        - type: object
+          properties:
+            message_id:
+              type: string
+              format: uuid
+            correlation_id:
+              type: string
+              format: uuid
+            schema_version:
+              type: integer
+              const: 2
+            operation_id:
+              type: string
+              format: uuid
+            producer:
+              type: string
+              const: promotions-svc
+            kind:
+              type: string
+              const: command
+            name:
+              type: string
+              const: promotions.coupon.restoration.requested
+            data:
+              $ref: '#/components/schemas/CouponRestorationRequestedData'
+          required:
+          - message_id
+          - correlation_id
+          - schema_version
+          - operation_id
+          - producer
+          - kind
+          - name
+          - data
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
+x-contract-status: SEMIFINAL_G6
+x-external-homologation: PENDIENTE_HOMOLOGACION_EXTERNA
+x-transport:
+  provider: Azure Service Bus
+  tier: Basic
+  scope: mensajería interna G6
+  max_message_size_bytes_including_properties: 262144
+  topics: false
+  duplicate_detection: false
+  delivery: at-least-once
+  outbox: transaccional SQL y entrega por destinatario
+  inbox: deduplicación durable antes de complete
+  dlq: solo poison/permanent technical failures; rechazos de negocio producen resultados durables
+  max_complete_message_size_bytes: 262144
+  message_size_includes_properties_and_encoding: true
+  sessions: false
+  delivery_model: '#/x-delivery-model'
+x-blocked-contracts:
+- inventory.bulk.stock.adjust.requested
+- pricing.bulk.price.apply.requested
+x-delivery-model:
+  delivery: at-least-once
+  exactly_once: false
+  outbox:
+    write: business state and delivery intent in one local SQL transaction
+    fanout: one durable delivery per recipient
+    stable_message_id: reuse the same MessageId during retries
+    mark_sent: only after positive SDK send result
+  inbox:
+    deduplication_key: message_id
+    settlement: persist inbox, business effect and durable result before completeMessage
+    redelivery: must not repeat the business effect
+  dlq:
+    purpose: poison messages and permanent technical failures with sanitized diagnostics
+    business_rejection: persist terminal business result and settle; do not use DLQ
+    recovery: supervised and reconciled; never treat blocked feature as implemented

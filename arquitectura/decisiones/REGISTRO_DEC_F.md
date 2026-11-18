@@ -1,17 +1,49 @@
 # Registro de decisiones DEC-F — G6 Productos y Ofertas
 
+> **Índice de política transversal fuera de DEC-F:** la [Política de seguridad progresiva y reversible de G6](POLITICA-SEGURIDAD-PROGRESIVA-G6.md) documenta las fases `PUBLIC_READ_ONLY`, `SIMULATED_AUTH` y `G7_AUTHENTICATED`, junto con su [matriz por operación](MATRIZ-OPERACIONES-SEGURIDAD-G6.md). Esta referencia no crea DEC-F-016 ni modifica DEC-F-001–015; los estados de implementación, homologación y despliegue siguen independientes.
+
 - **Corte de contraste:** `origin/master` `78a923bbc6bada31b39b3d386331f90a4f812b31` (merge de PR #86).
 - **Antecedente:** `G6_REGISTRO_MAESTRO_12_DECISIONES_DEC-F_2026-10-12.md`, recibido el 12-10-2026.
 - **Alcance:** DEC-F-001–DEC-F-015 son decisiones internas adoptadas por G6. DEC-F-013 a DEC-F-015 fueron aprobadas por Marco el 2026-10-13 y sus invariantes se limitan a la autoridad de Productos y Ofertas. B1–B4 son bloqueantes de integración del PR #86, no decisiones adicionales ni sustitutos. Se conserva [ADR-DEC-F-BLOQUEANTES.md](ADR-DEC-F-BLOQUEANTES.md).
 - **Estado global:** DEC-F-001–DEC-F-015 adoptadas internamente. La homologación externa, implementación y verificación integral no se infieren de este documento.
 
+## Adenda de aprobación interna G6 — optimizaciones 2026-11-14
+
+El coordinador G6 autorizó completar las decisiones operativas descritas en [Aprobación interna G6 para optimizaciones y contratos](../../integraciones/ACUERDO_OPTIMIZACIONES_G6_2026-11-14.md). Esta adenda no crea DEC-F-016 ni altera la titularidad de otros módulos. Añade decisiones de implementación compatibles con DEC-F existentes: resolución SKU batch con dos identidades aisladas, filtros de tipo antes de paginar, semántica precisa del filtro por precio y publicación de rutas administrativas ya implementadas.
+
+El acuerdo es **adoptado internamente**. La homologación externa, grants G7, implementación por SHA, despliegue y pruebas integrales se reportan por separado; ninguna se infiere de la autorización ni de OpenAPI `0.6.0-rc.5`.
+
 ## Estados y lectura
 
 “Adoptado” describe la decisión interna reportada por el antecedente/ADR. “Homologado” requiere evidencia de aceptación externa. “Implementado” requiere evidencia de código/backend; “probado” requiere resultados reproducibles identificados. La presencia de documentación o contratos candidatos no satisface esos estados.
 
-PR #86 está fusionado en el `master` contrastado. OpenAPI y AsyncAPI `0.6.0-rc.1` continúan descritos en el repositorio como candidatos/provisionales; su fusión no acredita integración E2E. Las migraciones Inventario 0002 y Promociones 0004 tienen evidencia de aplicación estructural en [datos/deploy/README.md](../../datos/deploy/README.md), pero eso no acredita handlers, mensajería, grants efectivos ni E2E.
+Al corte de esta rama, los contratos ejecutables de referencia son OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4`, ambos candidatos. Su publicación documental no acredita integración E2E. Las migraciones Inventario 0002 y Promociones 0004 tienen evidencia de aplicación estructural en [datos/deploy/README.md](../../datos/deploy/README.md), pero eso no acredita handlers, mensajería, grants efectivos ni E2E.
+
+## Adenda documental Catálogo — resoluciones 1–9
+
+Esta adenda conserva las DEC-F existentes y no crea una DEC-F nueva. Las resoluciones funcionales fueron comunicadas por sus responsables conforme al encargo; no se presentan como comentarios o commits que no constan en GitHub. Cuando falta ratificación pública, el estado es «decisión comunicada; pendiente de registrar trazabilidad en repositorio».
+
+| Punto | Estado interno documentado | Estado externo / implementación |
+|---|---|---|
+| D-CAT-05/06, elegibilidad común de canales | Política funcional descrita; ratificación pendiente | Pendiente de Arquitectura y conformidad de consumidores; sin tablas ni implementación inferida |
+| `precioMin` / `precioMax` | Marco aprueba precio efectivo vigente de Pricing en PEN, límites inclusivos, filtro antes de contar/paginar y fallo cerrado sin páginas parciales | Integración inter-servicio/verificación pendiente; máximo inicial 5 s incluyendo token y lotes es objetivo operativo, no SLA; E2E pendiente |
+| D-CAT-01..04, códigos de barras | Definición funcional cerrada por Catálogo | Avances de implementación/migración candidatos; aplicación efectiva de BD, homologación y ratificación formal no acreditadas |
+| Q-06 | Regla funcional aprobada para corrección de tipo mediante PATCH, con precondiciones verificables | Trazabilidad formal, migración versionada `publicado_alguna_vez`, aplicación efectiva y pruebas de implementación pendientes |
+| Retry `REJECTED` / `PENDING` | `REJECTED` no reintentable; timeout PENDING requiere condiciones verificadas; diseño de 300000 ms comunicado | Compatibilidad de diseño confirmada por Pricing/Inventory; pruebas integradas y homologación pendientes |
+| SKU de variante | Obligatorio, explícito, global e inmutable | D-G2-01 sobre precedencia padre/variante aceptada bilateralmente e implementada en Backend PR #162; los estados de otros alcances se mantienen separados |
+| Barreras Taxonomy | Mensajes tipados para cinco maestros; correlación, versionado y timeout inicial de 60 s aprobados internamente por Marco | Corrección de correlación Catalog fusionada en Backend PR #168; Taxonomy implementó cobertura de `CATEGORY`/`BRAND` en PR #160. Tres tipos restantes y validación conjunta pendientes; contrato externo no se declara homologado por la aprobación interna. |
+| Canales Pricing | Códigos canónicos `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS`; global `null`; `channel_id` textual | Backend debe retirar mapping UUID; verificar datos históricos antes de cualquier migración autorizada. Sin conversión aplicada acreditada |
+| `400 VALIDACION` variantes | Regla de validación comunicada y reflejada en OpenAPI | Trazabilidad formal, pruebas y runtime pendientes |
+
+Persistencia: `catalog.master_barriers` ya está en la migración inicial; Marco aprobó como diseño de Catálogo `0002_create_sku_barcodes.sql` y `0003_product_publication_history.sql`, sin aplicación/despliegue acreditados. La baja Taxonomy requiere migraciones aditivas de `source_version`, unicidad activa y persistencia/recovery; no se añade una `taxonomy_version` propia de asociación para este protocolo. No editar migraciones históricas ni inferir aplicación.
+
+Los mensajes de baja de maestros conservan nombres, exchanges y routing keys y ahora documentan payloads tipados, `operation_id`, correlación y versiones. La versión AsyncAPI es candidata; productores/consumidores externos deben homologarla antes de declararla interoperable. No se agregan eventos ni canales.
 
 ## DEC-F-001 — SKU vendible como identidad comercial compartida
+
+**Consolidación aprobada por Marco.** Para `skuContext`, Catalog→Pricing y Pricing→Catalog usan la identidad técnica compartida G6 `modulo-productos`, tipo `servicio`, audiencia `api-productos` y scopes existentes `catalogo:leer` / `precios:leer`, según la operación. La aprobación es interna; grants y credenciales requieren confirmación G7. No se identifica un microservicio individualmente con ese JWT. La consulta comercial de Catálogo usa precio efectivo vigente de Pricing; canales canónicos son `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS` y global `null`. Revisar [acuerdo y estados](../../integraciones/ACUERDO_PRICING_CATALOGO_SKU_CONTEXT.md). Esto extiende la trazabilidad sin crear DEC-F.
+
+**Consolidación aprobada de baja Taxonomy.** Los cinco tipos son `CATEGORY`, `BRAND`, `PRODUCT_TYPE`, `CHARACTERISTIC_VALUE` y `PRODUCT_TYPE_CHARACTERISTIC`. AsyncAPI mantiene sus cuatro mensajes existentes y requiere payload tipado, `schema_version` de envelope, `operation_id`, `correlation_id`, identidad y `version`; la asociación añade `tipo_producto_id` y `caracteristica_id`. Resultado de check: exclusivamente `CLEAR | IN_USE`; Backend PR #168 corrigió la correlación y el resultado de barrera en Catalog; Backend PR #160 cubrió `CATEGORY` y `BRAND` en Taxonomy. Los tres tipos restantes y pruebas conjuntas siguen pendientes. `CLEAR` no libera barrera. Timeout inicial: 60 s, separado de preparaciones Catálogo de 300000 ms. Las migraciones aditivas Taxonomy quedan aprobadas como diseño, sujetas a proceso para BD compartida.
 
 **Enunciado y justificación.** Precio, disponibilidad, reserva, consumo, combos y referencias comerciales convergen en el SKU vendible canónico de Catálogo. Evita que producto, variante y código de barras se traten como la misma identidad.
 
@@ -139,9 +171,9 @@ PR #86 está fusionado en el `master` contrastado. OpenAPI y AsyncAPI `0.6.0-rc.
 
 **Responsabilidades externas.** Despacho consulta el perfil y mantiene su autoridad logística; no escribe perfil maestro de Catálogo.
 
-**Estados.** Interno: adoptado. Externo: el contrato G2 declara acordadas por ambos equipos la ruta y autorización de consulta física por lote desde `modulo-despacho` con scope `productos:fisicos:leer`. Ese acuerdo documental no acredita la aprobación/registro/concesión administrativa del permiso por Seguridad ni la provisión efectiva de credenciales. Implementación: endpoint/modelos documentados; runtime no acreditado. Pruebas: no certificadas.
+**Estados.** Interno: DEC-F-011 conserva su ownership adoptado por G6. Externo: H-G2-01/02/03 y D-G2-01/02 homologados bilateralmente; G2 confirmó la precedencia de errores en lotes mixtos en el comentario [#6632557247](https://github.com/Taller-SW-Web/G2-Despacho-Specs/issues/15#issuecomment-6632557247). Detalle en [Acuerdo G2–G6 H4](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md). Esto no acredita grants G7 ni credenciales. Implementación/CI Catalog PR #162 está registrada allí; despliegue y E2E real no acreditados.
 
-**Referencias y pendientes.** SPEC/HU/FLOW-003/004, OpenAPI, Arquitectura §1.4, Modelo, catálogo físico y pruebas; contrato externo G2 [`integraciones/api-contract.md`](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/integraciones/api-contract.md) §3.4 y §5.2. La operación documentada es `POST /api/v1/productos/datos-fisicos/consulta`, `aud=api-productos`, `scope=productos:fisicos:leer`, cliente `modulo-despacho`. Verificar separadamente aprobación, grant de Seguridad, provisión de credenciales y pruebas de integración.
+**Referencias.** SPEC/HU/FLOW-003/004, OpenAPI `0.6.0-rc.3` candidata, Arquitectura §1.4, Modelo, catálogo físico y pruebas; contrato externo G2 [`integraciones/api-contract.md`](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/integraciones/api-contract.md) §§3.4, 5.1, 5.2, 7.1 y 11.1. Se mantienen `POST /api/v1/productos/datos-fisicos/consulta`, `aud=api-productos`, `scope=productos:fisicos:leer`, cliente `modulo-despacho`. Los estados de homologación, implementación, consumidor, grant, despliegue y E2E se registran por separado en **Estados** y en el acuerdo G2–G6.
 
 ## DEC-F-012 — Fuentes normativas, contratos versionados y compatibilidad
 
@@ -195,5 +227,13 @@ PR #86 está fusionado en el `master` contrastado. OpenAPI y AsyncAPI `0.6.0-rc.
 
 1. Homologar documentalmente la invocación de conciliación offline: antecedente comunica Retail→G6 directo; alineaciones describen Ventas→G6. No inferir orden entre creación de pedido y conciliación.
 2. No inventar consumo/restauración de cupón para venta offline sin reserva; elevar a owners de negocio si se requiere.
-3. Mantener `0.6.0-rc.1` como candidato mientras falte evidencia de implementación y conformidad E2E.
+3. Mantener las versiones candidatas OpenAPI/AsyncAPI identificadas en README como candidatas mientras falte evidencia de implementación y conformidad E2E.
 4. Resolver referencias contradichas o incompletas según [MATRIZ_TRAZABILIDAD_DEC_F.md](MATRIZ_TRAZABILIDAD_DEC_F.md); ninguna decisión se declara completa.
+
+## Referencia de estado G1 Marketplace H4 — 2026-10-20
+
+G6 comunicó aceptación de M-01–M-09 (`ACEPTADO_G6_COMUNICADO_G1`). Esto no altera las invariantes DEC-F ni atribuye decisiones a G1/G2/G5/G7. Para correspondencia y estado de cada operación consultar el [Acuerdo H4](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md) y la [alineación](../../integraciones/ALINEACION_MARKETPLACE.md). Las declaraciones internas de decisiones adoptadas no equivalen a contrato implementado, grant, despliegue o E2E.
+
+## Acuerdos complementarios de integración interna G6 H4 — 2026-11-01
+
+El liderazgo G6 aprobó internamente DEC-G6-INT-01 a DEC-G6-INT-13, registradas en [ACUERDOS-INTEGRACION-INTERNA-G6-H4.md](ACUERDOS-INTEGRACION-INTERNA-G6-H4.md). No son DEC-F nuevas y no alteran DEC-F-001–015. Los contratos HTTP y AsyncAPI candidatos, las SPEC/FLOW sincronizadas y los cambios de compatibilidad deben leerse junto con dicho documento. Ninguna cláusula acredita homologación de otro grupo, grant G7, implementación, prueba runtime ni despliegue.

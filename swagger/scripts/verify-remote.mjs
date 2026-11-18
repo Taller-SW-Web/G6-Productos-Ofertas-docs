@@ -1,0 +1,10 @@
+import { readFile } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import { loadContract, operations } from './contract.mjs';
+import { forStudio } from './studio.mjs';
+const path = process.argv[2];
+if (!path) throw new Error('Indicar el JSON recuperado mediante get_api_definition; no usar una copia local como evidencia remota');
+const remote = JSON.parse(await readFile(path, 'utf8'));
+const { spec } = await loadContract();
+assert.deepEqual(remote, forStudio(spec));
+console.log(`Definición remota idéntica a la derivación autorizada: ${operations(remote).length} operaciones, versión ${remote.info.version}`);

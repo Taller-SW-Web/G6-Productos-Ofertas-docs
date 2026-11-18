@@ -1,0 +1,59 @@
+# Plan de migración H5: RabbitMQ → Service Bus Basic y G5 por HTTP
+
+**Estado:** candidato para revisión, NO plan de despliegue aprobado. Ruta contract-first, evidencia por SHA.
+
+## Alcance y exclusiones
+
+Incluye: ocho servicios backend G6, Gateway/APIM, productores/consumidores del AsyncAPI, piloto G5 y seguridad G7. Excluye: reescribir lógica de negocio que ya funciona, introducir nuevos contratos de Retail/Despacho/Chatbot, activar promociones/cupones con dependencias incumplidas o declarar E2E sobre mocks.
+
+## Fases y gates
+
+| Fase | Owner primario | Entregable | Gate para siguiente fase |
+|---|---|---|---|
+| D0 Inventario y decisión | Coordinación G6 + Docs | ADR, matriz de 40 mensajes, topología, riesgos, costos | Revisión G6, clasificación por runtime, topología aprovisionable |
+| D1 Contratos externos | G6 Docs, G5, G7 | OpenAPI HTTP candidato, matriz G5, estados de expiración/GET, scopes propuestos | Aceptación bilateral G5 y autorización contractual G7, sin asumir grants |
+| I1 Adaptador base | G6 backend/infra | SDK, abstraction, IaC Basic, outbox_delivery, inbox | Prueba local y real de fallo/reintento/identidad |
+| I2 Piloto interno | Pricing + Price Audit | `pricing.price.changed` → auditoría | CI, E2E interno, duplicados, DLQ, métricas, costo |
+| I2a Comandos HTTP Promotions | Promotions + G6 infraestructura | Cola interna `g6.promotions.commands`; adaptador de admisión con operación/Outbox atómicas; worker exclusivo con Inbox/idempotencia y resultado durable; GET de resultado | Reconciliación de replay, caídas antes/después de commit y settlement, autorización del worker; G5 sigue sin acceso al broker |
+| I3 Comandos y resultados | Catalog, Pricing, Inventory | Inicializaciones, resultados, idempotencia | Contratos y correlaciones E2E por servicio |
+| I4 Fan-out | Catalog, Inventory, Combos, Promotions | Distribución a múltiples colas; bloqueos funcionales aislados | Cada destino recibe una copia y se recupera por separado |
+| I5 Bulk y Taxonomy | Bulk, Catalog, Taxonomy | Bulk 256 KB/claim-check y baja maestros | Volumen, correlación, orden por agregado y recuperación |
+| I6 Frontera HTTP G5 | Promotions, Inventory, Gateway, G5 | Cupones POST/GET; GET `/api/v1/inventario/reservas/{reservaId}/estado`; conciliador durable periódico en G5 para pedidos y reemplazos elegibles | Seguimiento inicia con HTTP `COMPLETED` de creación (sin depender del evento RabbitMQ H4 post-corte); cubre `ACTIVA`+`VENCIDA` y `EXPIRADA` persistida. Cerrar solo al persistir decisión G5. G5/G6 homologan elegibilidad, lease/checkpoint, backoff, idempotencia, concurrencia y transiciones existentes; G7 autoriza identidad/allowlist. `ReservationExpirationService` actual, sin worker paralelo. Aceptación G5 asumida solo para planificación según `G5-G6-H5-REVISION-01`; conciliación no implementada ni homologada formalmente |
+| I7 Retiro de RabbitMQ | Coordinación G6 y owners | Inventario cero dependencias, rollback/drenaje, docs finales | Solo después de autorizar corte y validar datos pendientes |
+| Cierre H5 | QA + DevOps | CI/CD con revisión seguridad, integración, performance, APIM y mensajería | Evidencia reproducible de los cuatro requisitos del Hito 5 |
+
+No mezclar el cierre académico con homologación externa no obtenida. Evidencias de integración interna pueden acreditarse separadamente.
+
+## Flujos bloqueados por código o acuerdos anteriores
+
+| Flujo | Limitación conocida | Decisión provisional |
+|---|---|---|
+| Bulk→Inventory | Handler `inventory.bulk.stock.adjust.requested` marca `BLOCKED_CONTRACT` | No anunciar procesamiento masivo funcional |
+| Bulk→Pricing | Consumidor registra/bloquea comando masivo; no equivale a aplicación | Implementar cuando se apruebe negocio |
+| Inventory→Promotions | Runtime de cupones requiere identidad y elegibilidad aún bloqueadas | No desbloquear solo por cambiar broker |
+| Catalog→Pricing/Inventory | Flujos de inicialización reales sujetos a versión/correlación | Pruebas por contrato antes de habilitar |
+| Taxonomy→Catalog | Algunos mensajes declarados en bindings sin handlers completos en versión auditada | Reconciliar implementación vigente antes de crear cola |
+| G5→Promotions | G5 emite schema v1 con campos obligatorios v2 faltantes | Rehacer client contract-first |
+| G6 Inventory→G5 | `inventory.reservation.expired` después de operación previa | Diseñar consulta de estado actual/reserva o notificación confiable |
+| G4 Retail offline | Documentos G4/G5/G6 atribuyen invocador distinto | Acuerdo intermodular separado, sin cambios implícitos |
+
+## Estrategia de compatibilidad
+
+- No modificar snapshots ni evidencia H4; los contratos canónicos H5 se versionan como baseline semifinal independiente y los snapshots conservan referencias relativas.
+- La versión futura de AsyncAPI debe conservar nombres, schemas e IDs internos de negocio aprobados. Cambios de transporte son versionados; eliminar destinatario externo sin aprobación explícita rompe integración.
+- El OpenAPI canónico `0.7.0-rc.1` incorpora las cinco operaciones H5 como baseline semifinal G6; siguen pendientes la homologación externa aplicable, grants G7, implementación y pruebas antes de habilitar.
+- `g6.promotions.commands` es una cola nueva ligada a operaciones HTTP H5, no una sustitución ni parte del conteo de 18 relaciones internas heredadas de H4. Otras colas de flujos HTTP se inventarían al aprobar cada operación y handler.
+- TTL Basic: `DefaultMessageTimeToLive` no configurable y TTL máximo/default 14 días. Operaciones/Outbox SQL se conservan más allá del TTL; recuperar tras la indisponibilidad requiere cotejar Inbox, resultado y efectos del dominio, y replay autorizado con la misma clave idempotente solo si no hay efecto terminal confirmado.
+- El estado efectivo de reserva compara `expires_at` con reloj de Inventory. Si el estado persistido sigue `ACTIVA` pero el vencimiento se alcanzó, G5 no paga ni consume cupón. `ReservationExpirationService` existente materializa la transición; el endpoint de consulta no inicia un segundo worker.
+- El GET de estado no provoca reacción automática en G5. Antes de habilitar el flujo, el owner G5 debe implementar durablemente registros/conciliador que inician al recuperar por HTTP el resultado de creación `COMPLETED` (sin depender del evento RabbitMQ H4 `inventory.reservation.created` tras el corte), recuperan tras caída y sondean pedidos/reemplazos elegibles; reintentos usan checkpoint y clave idempotente por transición, con serialización frente a pago/anulación. Debe detectar `ACTIVA`+`VENCIDA` y `EXPIRADA` persistida, que el `ReservationExpirationService` puede materializar entre barridos. `EXPIRADA` solo se excluye con decisión durable G5 ya registrada o si el estado comercial G5 descarta esa transición. Una lectura exitosa no cierra seguimiento: solo se cierra tras persistir decisión G5. G6 no administra estados de pedido. Pendiente aceptación bilateral y pruebas de recuperación/concurrencia; el mecanismo no está implementado ni aceptado por G5.
+- Secuencia de Marketplace con cupón: reserva efectiva creada (`inventory.reservation.created` o COMPLETED durable) → consultar vigencia actual → consumir cupón y esperar éxito → procesar pago → solicitar `POST /api/v1/inventario/reservas/{reservaId}/confirmar` y esperar consumo definitivo de stock. No confirmar stock antes de cupón o pago. Chatbot conserva sus consultas comerciales acordadas; reemplazo M1 conserva orden G5 sin cobro, consume al sellar paquete y espera resultado antes de despacho, anulando y creando otra orden/reserva solo conforme a su flujo existente si expiró.
+- Incluir pruebas de consumidor/contract-test G5 basadas en DTO HTTP, no conservar `RabbitTemplate` en modo real cuando ocurra el corte.
+- Mantener una ventana de compatibilidad clara si G5 no puede migrar al mismo tiempo; **no** ejecutar simultáneamente el mismo consumo funcional por dos canales sin deduplicación de operación verificada.
+
+## Criterio de resultados
+
+Separar `DOCUMENTADO`, `ADOPTADO_G6`, `HOMOLOGADO_G5`, `AUTORIZADO_G7`, `IMPLEMENTADO`, `CI_VERIFICADA`, `DESPLEGADO`, `E2E_VERIFICADO` y `PERFORMANCE_VERIFICADA`. Cada afirmación incluye commit, entorno, evidencia, versión, actor, timestamp y responsable. Una prueba en emulador o contra stub no equivale a integración externa real.
+
+## Coordinación y cambio de ownership
+
+G5 sigue dueño de pedido/pago/cancelación, G6 Inventory de stock y G6 Promotions de cupones. G5 debe cambiar código de `CuponesClient.java`, `ConsumidorProductos.java`, `MensajesProductosService.java`, `MensajeInventario.java`, `ProductosClient.java` y `application.yml` solo en su propio repositorio y bajo su aprobación. G6 no altera repos G5 unilateralmente.

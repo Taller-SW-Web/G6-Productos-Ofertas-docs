@@ -1,6 +1,12 @@
+> **Alcance de transporte:** este kit conserva pasos de integración H4 para trazabilidad. RabbitMQ/AsyncAPI no define el transporte H5. Consulte primero la [ADR Service Bus Basic adoptada](../../arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md), la [topología H5](../eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) y el [índice de transición](../../integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md). Los clientes externos usan HTTP autenticado.
+
 # Kit de integración — Productos y Ofertas
 
-**Fecha de actualización:** 2026-10-14
+## Propuesta H5 para consumidores externos
+
+H5 mantiene la integración externa por HTTP; G5 no obtiene credenciales ni acceso directo a Azure Service Bus. Las rutas propuestas de consumo/restauración de cupón y consulta de operación están en [PROPUESTA-OPERACIONES-CUPONES-H5.md](./PROPUESTA-OPERACIONES-CUPONES-H5.md) y aún no forman parte de OpenAPI ni son endpoints disponibles. Promotions usaría la cola interna `g6.promotions.commands`; adaptador HTTP vía Outbox, worker exclusivo, Inbox/idempotencia y resultado durable son una propuesta de implementación. `202 Accepted` solo confirma admisión y persistencia durable; el consumidor recupera el resultado con GET. G5 debe leer el estado actual de reserva: `ACTIVA` con `expires_at` cumplido no habilita pago/consumo. La ruta GET de reserva y su autorización siguen pendientes de homologación G5/G7; el vencimiento lo maneja el `ReservationExpirationService` existente.
+
+**Fecha de actualización:** 2026-11-02
 
 **Repositorio:** `Taller-SW-Web/G6-Productos-Ofertas-docs`
 **API propietaria:** `api-productos`  
@@ -57,7 +63,7 @@ Ejemplo conceptual:
 {PRO}/api/v1/productos
 ```
 
-**Versión documental de referencia:** `0.6.0-rc.1` (contrato candidato OpenAPI/AsyncAPI, aún no acreditado como backend desplegado o integración E2E). Las reglas anteriores no modificadas conservan `0.5.0` como baseline de compatibilidad; su mención histórica no reemplaza los contratos candidatos.
+**Versiones documentales de referencia H4:** OpenAPI `0.6.0-rc.4` y AsyncAPI `0.6.0-rc.4` son candidatas de esta rama; no acreditan backend desplegado, grant G7 ni E2E. El cambio de payloads de GenericData a schemas tipados en AsyncAPI exige rollout coordinado antes de emitir. Las reglas anteriores no modificadas conservan `0.5.0` como antecedente, sin reemplazar los contratos candidatos actuales.
 
 ---
 
@@ -123,6 +129,22 @@ scope
 
 separados por espacios.
 
+Para las llamadas internas aprobadas entre bounded contexts G6 se reutiliza la identidad compartida `client_id=modulo-productos`, `tipo=servicio`, `aud=api-productos` y el scope existente propio de la operación. Ese JWT identifica a G6, no a un microservicio específico; el aislamiento de servicio se apoya en HTTP privado, red restringida y autorización por operación. G7 aún debe confirmar grants y provisionar credenciales. No reutilizar el JWT del consumidor comercial ni aceptar cabeceras arbitrarias como prueba criptográfica.
+
+### Llamadas G6 en demo y con JWT
+
+El modo demo H4 sin JWT solo puede habilitarse tras verificar red privada, origen autorizado, acceso de operadores y ausencia de upstreams públicos. El bypass es reversible y acotado a la combinación método/ruta y origen; no se confía en `X-Forwarded-For` ni en cabeceras de identidad. Cada extremo de una llamada debe tener habilitación explícita cuando corresponda. La demostración no es autorización para producción.
+
+Al reactivar autenticación, la llamada usa JWT real de `modulo-productos` con `aud=api-productos`, scope existente y allowlist puntual de la operación. La aprobación interna de G6 para la allowlist no acredita registro, grant ni provisión de credenciales por G7. Operaciones administrativas de escritura siguen requiriendo `userBearer` y autorización humana `GESTOR_COMERCIAL`; los GET internos no convierten una mutación en acción de servicio.
+
+| Operación existente | Uso interno aprobado | Estado de autorización |
+|---|---|---|
+| `obtenerProducto` | Validar producto visible/elegible para Promotions | Allowlist interna en OpenAPI; grant G7 pendiente |
+| `obtenerContextoSku` | Resolver SKU→productId y estado para Promotions; contrato privado Catalog→Pricing | Solo operación interna; grant G7 pendiente |
+| `obtenerPrecioSku` / `consultarPrecios` | Precio efectivo para Promotions, Catalog y Combos según operación | `precios:leer`, allowlist puntual; grant G7 pendiente |
+| `consultarDisponibilidadComercial` (GET comercial) | Consumidor funcional previsto: Promotions, con identidad compartida G6 `client_id=modulo-productos`. La ampliación interna aprobada por Marco el 2026-11-13 propone habilitar los tres canales comerciales únicamente en este GET; la autorización original de 2026-11-03 a MARKETPLACE se conserva como antecedente. Inventory valida operación + cliente + scope y el canal enumerado; los clientes externos mantienen correspondencia estricta con su canal. El JWT no distingue Promotions de otros bounded contexts G6. La ampliación no acredita homologación externa ni grant G7, que sigue pendiente. Combos conserva trazabilidad DEC-G6-INT-11 y sus reglas de disponibilidad informativa (`verificable=false`, `cantidadInformativa=null`, `estadoActualizacion=INCOMPLETA` sin fuente autoritativa suficiente); esta adenda no le concede nuevos permisos, canales, endpoints ni verificación de cantidades. | `inventario:disponibilidad:leer`, `aud=api-productos`; grant/credenciales G7 pendientes |
+| GETs administrativos existentes de categoría, tipo y marca | Validación interna de referencias por regla Promotions | `catalogo:leer`, `serviceBearer` de solo lectura y allowlist `modulo-productos`; grant G7 pendiente |
+
 Productos y Ofertas responde:
 
 ```text
@@ -168,18 +190,18 @@ Un consumidor no debe inventar un scope que Productos y Ofertas no haya publicad
 
 # 5. Scopes propios de `api-productos`
 
-La línea base conserva **16 scopes** de `api-productos`; la candidata `0.6.0-rc.1` incorpora como propuesta contractual adicional `inventario:operaciones:leer` para `modulo-ventas`. **G7 todavía debe registrar y conceder este scope**. No se considera parte de los 16 scopes heredados ni un permiso ya aprovisionado.
+La línea base conserva **16 scopes** de `api-productos`; la candidata OpenAPI `0.6.0-rc.4` conserva `inventario:operaciones:leer` como propuesta contractual adicional para `modulo-ventas`. **G7 todavía debe registrar y conceder este scope**. No se considera parte de los 16 scopes heredados ni un permiso ya aprovisionado.
 
 | Scope | Operación principal | `client_id` previsto |
 |---|---|---|
-| `catalogo:leer` | Catálogo/categorías/marcas | Marketplace, Chatbot, Retail |
-| `precios:leer` | Precio | Marketplace, Chatbot, Retail |
+| `catalogo:leer` | Catálogo/categorías/marcas; contexto SKU privado con autorización por operación | Marketplace, Chatbot, Retail para comerciales; `modulo-productos` solo para `obtenerProducto`, `obtenerContextoSku` y GETs maestros internos indicados arriba; grant G7 pendiente |
+| `precios:leer` | Solo consultas de precios (`GET`); no autoriza actualización ni programación | Marketplace, Chatbot, Retail; `modulo-productos` solo en `consultarPrecios` y `obtenerPrecioSku`; grant y credenciales G7 pendientes |
 | `promociones:leer` | Promociones | Marketplace, Chatbot, Retail |
 | `promociones:evaluar` | Evaluación | Marketplace, Chatbot, Retail |
 | `cupones:validar` | Cupón | Marketplace, Chatbot, Retail |
-| `recomendaciones:leer` | Recomendaciones | Chatbot |
+| `recomendaciones:leer` | `GET /recomendaciones` (`obtenerRecomendaciones`) | Marketplace, Chatbot, Retail (allowlist de operación) |
 | `combos:leer` | Combos | Sin grant externo inicial |
-| `inventario:disponibilidad:leer` | Disponibilidad detallada y comercial según allowlist | Marketplace, Chatbot, Retail, Ventas, Postventa |
+| `inventario:disponibilidad:leer` | Disponibilidad detallada y comercial según allowlist | Marketplace, Chatbot y Retail según operación; `modulo-productos` solo el GET `consultarDisponibilidadComercial` para los canales MARKETPLACE/CHATBOT/RETAIL conforme a la adenda interna 2026-11-13; Ventas/Postventa solo detalle donde ya está permitido. Grant G7 y homologación externa pendientes |
 | `inventario:reservar` | Reserva | Ventas |
 | `inventario:consumir` | Consumo | Ventas |
 | `inventario:liberar` | Liberación | Ventas |
@@ -191,9 +213,9 @@ La línea base conserva **16 scopes** de `api-productos`; la candidata `0.6.0-rc
 
 **Límite de autorización de Retail:** `modulo-retail` no está autorizado por el contrato vigente para reservar, consumir, liberar ni reintegrar stock; esas operaciones no incluyen Retail en sus allowlists. Solo está pendiente de homologación su posible invocación directa de `POST /api/v1/inventario/conciliaciones-offline`. El acuerdo G5–G4 que registra esa llamada no concede permiso ni modifica el OpenAPI. `inventario:disponibilidad:leer` permite consultas de disponibilidad según allowlist y no autoriza conciliación. G7 debe confirmar registro, aprobación, grant y credenciales de servicio para la operación/consumidor que se acuerden.
 
-**Scope adicional candidato:** `inventario:operaciones:leer` — consulta durable `GET /api/v1/inventario/operaciones/{operationId}`, exclusiva para el cliente de servicio `modulo-ventas`. OpenAPI `0.6.0-rc.1` registra `x-scope-registration-status: pending-security-registration`; su utilización efectiva requiere concesión explícita de G7.
+**Scope adicional candidato:** `inventario:operaciones:leer` — consulta durable `GET /api/v1/inventario/operaciones/{operationId}`, exclusiva para el cliente de servicio `modulo-ventas`. OpenAPI `0.6.0-rc.4` registra `x-scope-registration-status: pending-security-registration`; su utilización efectiva requiere concesión explícita de G7.
 
-**El scope compartido de disponibilidad no concede acceso indistinto a todas las representaciones.** `GET /api/v1/inventario/disponibilidad` devuelve saldo detallado y su allowlist de clientes de servicio contiene `modulo-ventas` y `modulo-postventa`. M2 lo usa de forma informativa para CAMBIO; la consulta no reserva ni garantiza stock futuro. En cambio, `GET /api/v1/inventario/disponibilidad/comercial` y `POST /api/v1/inventario/disponibilidad/comercial/verificar` tienen allowlist de servicio para `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`. Comparten el scope `inventario:disponibilidad:leer`, pero no el acceso a cantidades ni ubicaciones internas. La lectura detallada administrativa mediante JWT de usuario conserva su autorización humana correspondiente. El proveedor debe comprobar audiencia, scope y cliente admitido en la operación; un token de canal con el scope correcto no autoriza el endpoint detallado.
+**El scope compartido de disponibilidad no concede acceso indistinto a todas las representaciones.** `GET /api/v1/inventario/disponibilidad` devuelve saldo detallado y su allowlist de clientes de servicio contiene `modulo-ventas` y `modulo-postventa`. M2 lo usa de forma informativa para CAMBIO; la consulta no reserva ni garantiza stock futuro. En `GET /api/v1/inventario/disponibilidad/comercial`, los clientes externos `modulo-marketplace`, `modulo-chatbot` y `modulo-retail` consultan su canal correspondiente. La autorización interna original de 2026-11-03 limitaba `modulo-productos` a MARKETPLACE; la nueva adenda de Marco del 2026-11-13 amplía la propuesta contractual de este GET a MARKETPLACE, CHATBOT y RETAIL. Inventory restringe por operación, cliente, scope y enum de canal, y mantiene la correspondencia de cada cliente externo con su canal. El JWT identifica a G6 como `modulo-productos`, no a `promotions-svc` individualmente. Red privada y configuración de despliegue son controles de aislamiento adicionales. Esta autorización no amplía las capacidades de Combos: DEC-G6-INT-11 conserva la disponibilidad informativa (`verificable=false`, `cantidadInformativa=null`, `estadoActualizacion=INCOMPLETA` si falta fuente autoritativa suficiente); no se autoriza para Combos un nuevo canal, endpoint o verificación cuantitativa. El `POST /api/v1/inventario/disponibilidad/comercial/verificar` mantiene exclusivamente su allowlist comercial y no admite `modulo-productos`. Ninguna operación comercial expone cantidades ni ubicaciones internas. El grant y las credenciales G7 para `modulo-productos`, así como la homologación externa de la ampliación, siguen pendientes. La lectura detallada administrativa mediante JWT de usuario conserva su autorización humana correspondiente; el scope por sí solo no autoriza la ruta detallada.
 
 Todo endpoint técnico valida:
 
@@ -229,13 +251,13 @@ El alcance documentado con M1/Ventas para pedidos web es:
 
 | Capa | Evidencia actual | Estado / comprobación requerida |
 |---|---|---|
-| Protocolo/broker | AsyncAPI candidata `0.6.0-rc.3` y [topología](../eventos/rabbitmq-topologia.md) declaran `g6-productos-ofertas` en el servidor y `x-vhost` | La candidata anterior `0.6.0-rc.2` usa el mismo vhost; `rc.3` reconcilia exchanges/colas con la observación Oracle del 2026-10-19. La observación no acredita estado actual, homologación G5, despliegue ni conexión; la aceptación de nombres y la red siguen pendientes |
+| Protocolo/broker | AsyncAPI candidata `0.6.0-rc.4` y [topología](../eventos/rabbitmq-topologia.md) declaran `g6-productos-ofertas` en el servidor y `x-vhost` | Conserva exchanges/colas/routing keys observados y tipa siete payloads H4; la observación no acredita estado actual, homologación externa, despliegue ni conexión. Retry/DLX no está aprovisionado |
 | Broker disponible | La documentación especifica protocolo y topología deseada | Disponibilidad, DNS/red, autenticación y acceso al broker real: sin verificar; requiere evidencia operativa de Infraestructura |
-| Exchanges, colas y bindings | AsyncAPI `0.6.0-rc.3` y su matriz documentan nombres base observados y bindings contractuales | Hay 57 bindings en el reporte, pero la correspondencia individual sigue `PENDIENTE_VERIFICACION`; el código y runtime no están acreditados |
+| Exchanges, colas y bindings | AsyncAPI `0.6.0-rc.4` y su matriz documentan nombres base observados y bindings contractuales | Hay 57 bindings en el reporte, pero la correspondencia individual sigue `PENDIENTE_VERIFICACION`; el código y runtime no están acreditados |
 | Implementación G6 | HTTP, eventos y consulta durable están especificados | Productores/consumidores NestJS, Outbox/Inbox y persistencia de resultado no quedan acreditados por YAML ni docs; requieren evidencia de código y prueba |
 | Permisos G7 | Scopes y allowlists declarados por operación | Grants/provisión de `inventario:reservar`, `inventario:consumir`, `inventario:liberar`, `inventario:operaciones:leer` y `inventario:reintegrar` requieren evidencia G7 por consumidor; no se deducen de nombres contractuales |
 | Prueba integrada G5↔G6 | G5 documenta consumo directo del broker; AsyncAPI define eventos y resultados | Prueba reproducible con commits/versions de productor G6, consumidor G5 y entorno broker aún no disponible |
-| Despliegue | OpenAPI identifica `0.6.0-rc.1`; AsyncAPI `0.6.0-rc.3` es candidata | Despliegue operativo y transición de consumidores requieren evidencia de versión/entorno, compatibilidad y pruebas reproducibles; la candidata no es runtime |
+| Despliegue | OpenAPI `0.6.0-rc.4` y AsyncAPI `0.6.0-rc.4` son candidatas | Despliegue operativo y transición coordinada de consumidores requieren evidencia de versión/entorno, compatibilidad y pruebas reproducibles; las candidatas no son runtime |
 
 Para Retail offline, G5 confirmó el 2026-10-14 que Retail invoca directamente `POST /api/v1/inventario/conciliaciones-offline` y que M1 no reserva, confirma ni concilia inventario Retail. Retail no está autorizado para reservar, consumir, liberar ni reintegrar. El permiso de disponibilidad comercial no autoriza conciliaciones. La ruta del OpenAPI vigente solo permite `modulo-ventas`, exige `location_id` en cada línea y devuelve ubicación/saldos internos. G4 v0.4 aún prohíbe esa llamada directa. Se conserva como `ACUERDO_EXTERNO_DOCUMENTADO` de G5, no como homologación bilateral ni permiso. G7 debe confirmar registro, aprobación, grant y credenciales de servicio; su estado no se infiere del acuerdo G5–G4. La propuesta y los responsables de homologación constan en [ALINEACION_RETAIL](../../integraciones/ALINEACION_RETAIL.md). No cambies la llamada al contrato hasta que G4/G5/G6 acuerden actor, identidad, referencia pública de tienda, secuencia, DTO minimizado y transición.
 
@@ -267,6 +289,8 @@ modulo-despacho:
 ```
 
 **Extensión candidata de la matriz (sin concesión efectiva):** `modulo-ventas` podrá utilizar `inventario:operaciones:leer` solo cuando G7 registre y otorgue el permiso para `api-productos`. No corresponde a Marketplace, Chatbot ni Retail, y su documentación no prueba que la API ya esté activa.
+
+La matriz anterior enumera scopes contractuales previstos por consumidor; no acredita grants efectivos ni constituye gate de aceptación G6. El alcance operativo vigente de Marketplace se rige por el [Acuerdo H4](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md) y la [alineación H4](../../integraciones/ALINEACION_MARKETPLACE.md).
 
 Los scopes enumerados para `modulo-postventa` (`inventario:disponibilidad:leer` e `inventario:reintegrar`) están sujetos a registro y concesión de G7 (`pending-security-registration`); la matriz no afirma grants efectivos.
 
@@ -603,100 +627,26 @@ La disponibilidad de un combo es informativa y no crea una reserva de sus compon
 
 ---
 
-## 6.11. Primer corte Marketplace ↔ Productos y Ofertas (G1–G6)
+## 6.11. Integración H4 Marketplace ↔ Productos y Ofertas (G1–G6)
 
-Esta guía separa la API interna de G6 del contrato público del BFF G1. OpenAPI gobierna las rutas, parámetros, esquemas de seguridad, respuestas y schemas G6. Las menciones al BFF describen su adaptación y no amplían el contrato G6.
+G6 aceptó y comunicó los nueve acuerdos M-01–M-09 el 2026-10-20 (`ACEPTADO_G6_COMUNICADO_G1`). La aceptación habilita trabajo interno G6 y no equivale a ratificación documental de G1, grant de G7 ni prueba de runtime. El alcance no queda limitado al primer corte de categorías/búsqueda: G1 SPECS `main@d87ebb4`, v0.7.0 (19/10), enumera 23 F con datos actuales de G6 y dos dependencias indirectas/condicionales (25 F); las responsabilidades permanecen distribuidas.
 
-### Frontera y host
+La matriz exhaustiva por F, owner, operación, scope, identidad, rama/PR/SHA, implementación, CI, despliegue, grant, Provider/Consumer, E2E, dependencia y condición de cierre está en el [paquete operativo Backend](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/tree/castilla/integraciones/g1-marketplace). La semántica de compatibilidad vive en [ALINEACION_MARKETPLACE.md](../../integraciones/ALINEACION_MARKETPLACE.md), y la fuente normativa en el [Acuerdo H4](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md).
 
-```text
-Frontend Marketplace → Backend/BFF Marketplace → Gateway G6 → servicio owner
-```
+La matriz separa una fila para cada una de las 25 funciones G1 auditadas. F-019 visualizar carrito, F-020 fusionar carrito anónimo, F-021 mover ítem a favoritos, F-023 cotizar checkout, F-024 validar/aplicar cupón, F-025 preparar checkout/revalidar stock y F-026 crear pedido son funciones distintas con ownership y dependencias propias. Las rutas de carrito/checkout/pedido del BFF son de G1; `POST /api/v1/pedidos` pertenece a G5. G6 aporta únicamente las operaciones comerciales identificadas por operación; la verificación de cantidad es no vinculante y no autoriza por sí sola a mutar carrito.
 
-El navegador llama al BFF; el BFF obtiene/usa el JWT de servicio para G6. No expone `client_secret`, token de servicio ni otras credenciales al navegador. OpenAPI declara `servers.url: /api/v1`, una base relativa. Al combinarla con los paths se obtienen las rutas completas siguientes; no se ha acreditado aquí un host absoluto por ambiente.
+### Ejemplos por dominio
 
-### Rutas del corte y schemas
+- **Catalog:** `listarProductos` y `obtenerProductoPorSlug`; mapear paginación base cero de G1 a base uno G6. `product_id`, `slug`, `variant_id`, `sku` y `sku_base` son identidades diferentes. Solo filtros del OpenAPI; sin filtrado global ficticio sobre páginas parciales.
+- **Pricing:** `consultarPrecios` y `obtenerPrecioSku`; resolver SKU vendible, canal y vigencia. No fabricar precio de producto padre ni snapshot único.
+- **Inventory:** `consultarDisponibilidadComercial` y `verificarCantidadComercial`; cuatro estados incluido `INDETERMINADO` (200), D-INV-01 fuente única; el POST es `binding=false`, no reserva.
+- **Promotions:** `listarPromociones`, `evaluarPromociones`, `validarCupon`, `obtenerRecomendaciones`; evaluación/validación sin consumo. Handler HTTP y pruebas deben distinguirse de AMQP/Outbox.
 
-| Alcance | Solicitud completa | operationId | Respuesta 200 G6 |
-|---|---|---|---|
-| Obligatoria | `GET /api/v1/categorias` | `listarCategorias` | Objeto `{"categories":[...]}` con elementos `Categoria`. El campo `status` está definido y admite `ACTIVA`/`INACTIVA`; el contrato de esta operación declara categorías activas. El proveedor debe validar ese filtro. |
-| Obligatoria | `GET /api/v1/productos?canal=MARKETPLACE&q={texto}&pagina={n}&tamanio={n}` | `listarProductos` | `PaginaProductosComercial`: `items`, `pagina`, `tamanio`, `total`; los elementos son `ProductoResumenComercial`. |
-| Condicional | `GET /api/v1/productos/por-slug/{slug}?canal=MARKETPLACE` | `obtenerProductoPorSlug` | `ProductoDetalleComercial`, compuesto por `ProductoResumenComercial`, `marca` y `variants` de tipo `VarianteComercial`. |
+**Allowlist y grant de recomendaciones:** `obtenerRecomendaciones` declara `x-allowed-client-ids` en OpenAPI con `modulo-marketplace`, `modulo-chatbot` y `modulo-retail`; el registro `x-security-contract.service_scopes_pending_registration.recomendaciones:leer.clients` enumera solo `modulo-chatbot`. La discrepancia entre la allowlist de operación y el registro de scopes pendientes queda pendiente de resolución; la fila de consumidores refleja la allowlist de operación y no prueba grant ni autorización efectiva. G7 debe confirmar registro y grants antes de invocación real.
 
-Para solicitudes módulo-a-módulo, `canal=MARKETPLACE` se incluye en listado y detalle. El schema del parámetro `canal` en listado no marca `required: true`, pero su descripción lo exige semánticamente para consumidores de canal. En detalle tanto `slug` como `canal` están marcados obligatorios. `q` es opcional en G6; F-007 lo exige en el BFF y valida entre 2 y 120 caracteres antes de reenviar. No trasladar ese límite a OpenAPI G6.
+El BFF G1 conserva presentación, filtros que no estén en contrato G6, carrito, favoritos, checkout y cliente técnico. G2 define lo propio de envío/cumplimiento; G5 mantiene snapshot durable, pedido, pago, confirmación de reserva y consumo/restauración; G7 registra grants y emite token. No crear pedidos, carrito, `fulfillment_ref`, DTO snapshot o scopes dentro de G6 por inferencia.
 
-### Paginación y adaptación del BFF
-
-G1 valida `page >= 0` y `1 <= pageSize <= 48`. F-007 ejemplifica `pageSize=24`; no es el default del proveedor. G6 usa `pagina >= 1`, `tamanio` entre 1 y 100, con defaults publicados 1 y 20. El adaptador transforma:
-
-```text
-pagina = page + 1
-tamanio = pageSize
-```
-
-Por tanto, G1 `page=0&pageSize=24` consulta G6 `pagina=1&tamanio=24`; G1 `page=1&pageSize=24` consulta G6 `pagina=2&tamanio=24`. G6 responde `items/pagina/tamanio/total`; el BFF publica su propio `data` y metadatos `page` conforme a F-007/F-010. Si necesita `totalPages`, se deriva de `total` y del tamaño efectivo; no se exige ese campo a G6. Sin coincidencias conserva el `200` y `items: []`, nunca convierte automáticamente la página vacía en 404.
-
-### Ejemplos contractuales reproducibles
-
-Las solicitudes siguientes son plantillas. `<HOST-VERIFICADO>` y `<JWT-SERVICIO>` son placeholders; no son URL, credencial ni evidencia de llamada realizada. La ruta condicional puede omitirse si G1 no la necesita en el gate inicial.
-
-Categorías:
-
-```http
-GET <HOST-VERIFICADO>/api/v1/categorias
-Authorization: Bearer <JWT-SERVICIO>
-X-Correlation-Id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
-```
-
-Resultado esperado: `200 application/json` con `{ "categories": [...] }`; el arreglo puede estar vacío. Una fixture documental válida podría incluir `{"categoria_id":"CAT-FIXTURE-01","parent_id":null,"name":"Calzado","status":"ACTIVA"}`. Es una fixture ilustrativa, no dato productivo. Provider debe confirmar que no se devuelvan categorías inactivas.
-
-Búsqueda y página vacía:
-
-```http
-GET <HOST-VERIFICADO>/api/v1/productos?canal=MARKETPLACE&q=zapatillas&pagina=1&tamanio=24
-Authorization: Bearer <JWT-SERVICIO>
-X-Correlation-Id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
-```
-
-Resultado esperado: `200 application/json` conforme a `PaginaProductosComercial`; una respuesta sin coincidencias usa `{"items":[],"pagina":1,"tamanio":24,"total":0}`. Producto activo no elegible no debe aparecer. `estado` no es un mecanismo para ampliar visibilidad.
-
-Detalle condicional:
-
-```http
-GET <HOST-VERIFICADO>/api/v1/productos/por-slug/zapatillas-demo?canal=MARKETPLACE
-Authorization: Bearer <JWT-SERVICIO>
-X-Correlation-Id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
-```
-
-Resultado esperado: `200` según `ProductoDetalleComercial`; slug inexistente/no elegible usa `404` y `Problem.code=PRODUCTO_NO_ENCONTRADO`. En producto simple validar `sku_base` según el caso funcional aunque OpenAPI lo permite `null` y no lo requiere a todo producto. Para producto con variantes validar identidad separada `variant_id`/`sku` y elegibilidad. `VarianteComercial` no declara `status`. Los ejemplos de detalle con IDs ficticios deben tratarse como fixtures, nunca como observaciones de datos productivos.
-
-### Seguridad, errores y correlación
-
-Para estas operaciones OpenAPI `0.6.0-rc.1` declara `client_id=modulo-marketplace` en las allowlists, `x-required-scope: catalogo:leer`, `x-service-audience: api-productos` y `x-scope-registration-status: pending-security-registration`. G7 debe registrar y conceder el grant; el YAML no prueba autorización efectiva.
-
-- `listarCategorias` admite `serviceBearer`.
-- `listarProductos` declara `serviceBearer` y `userBearer` como alternativas del security requirement. Un llamado BFF usa el token de servicio; no se le exigen claims humanos del esquema de usuario.
-- `obtenerProductoPorSlug` conserva ambas alternativas publicadas (`serviceBearer` y `userBearer`). El BFF usa el JWT técnico para su llamada módulo-a-módulo; no se infieren claims humanos para ese token.
-- `X-Correlation-Id` es header UUID opcional en OpenAPI G6. Si el BFF entrega un `X-Request-Id` con UUID válido, el adaptador puede copiar ese valor sin cambios a `X-Correlation-Id` en la llamada a G6 para conservar la correlación; si no hay UUID disponible, puede omitir el header, pues G6 no lo exige. La transformación no cambia el contrato público del BFF ni vuelve obligatorio el header de G6.
-- Las respuestas G6 incluyen `401 TOKEN_INVALIDO`, `403 SCOPE_INSUFICIENTE` y `503 SERVICIO_NO_DISPONIBLE`. El detalle puede además responder `404 PRODUCTO_NO_ENCONTRADO`. Las operaciones declaran `429 RATE_LIMIT_EXCEDIDO` con header `Retry-After`.
-- F-007/F-010 documentan códigos públicos BFF como `INVALID_SEARCH_QUERY`, `INVALID_PAGE` y `CATALOG_UNAVAILABLE`. No son automáticamente equivalentes a los códigos G6; la traducción pertenece al contrato/implementación G1 y requiere su propia validación.
-
-### Tipos y límites de evidencia
-
-Una fixture documental muestra la forma de un ejemplo; una aserción `STATIC_CONTRACT` verifica propiedades estructuradas del YAML. Ninguna de las dos acredita comportamiento Provider, autorización real, llamada HTTP desde G1 ni E2E. Esos resultados requieren pruebas `PROVIDER_CONTRACT`/`CONSUMER_PROVIDER`/integradas reproducibles sobre versiones y entornos identificados.
-
-Los schemas comerciales declaran las propiedades publicadas, no necesariamente `additionalProperties: false`. La revisión estática puede comprobar que campos como `pricing_preparado`, `inventario_inicializado`, `perfil_fisico`, saldos o ubicaciones no forman parte de sus `properties`; solo una prueba provider puede comprobar filtrado efectivo ante datos de origen.
-
-### Dependencias y límites abiertos
-
-- OpenAPI no acredita URL pública del proveedor, credenciales, grant efectivo de G7, handlers implementados, despliegue ni pruebas BFF→G6.
-- F-006 espera `slug` e imagen en tarjetas de categoría; G6 `Categoria` no garantiza esos campos. No inventarlos ni declarar resuelta la composición de tarjetas mediante `listarCategorias` solamente.
-- F-011 define un DTO BFF público distinto de `ProductoDetalleComercial`. Su transformación, incluidas marca, galería y especificaciones, debe probarse por separado; este kit no la declara homologada ni probada.
-- El primer corte excluye Pricing, Inventario, promociones, cupones, checkout, pago y recomendaciones. Las pruebas históricas correspondientes se conservan en la matriz sin atribuirles implementación de esta entrega.
-
-La matriz y estados de prueba están en [pruebas-contrato.md](../pruebas/pruebas-contrato.md).
-
----
+Registrar seis estados independientes: `CONTRATO_DEFINIDO`, `IMPLEMENTADO`, `CI_VERIFICADA`, `DESPLEGADO`, `AUTORIZACION_VERIFICADA`, `E2E_VERIFICADO`. Un YAML/fixture/mock/CI de otro SHA/HTTP 200 aislado no sustituye evidencia de implementación, grant, despliegue o E2E.
 
 # 7. Integración de Ventas/Postventa con Inventario
 
@@ -880,6 +830,19 @@ capacidad logística
 ```
 
 Productos y Ofertas no decide el empaque.
+
+## Acuerdo operativo G2–G6 H4
+
+El contrato detallado está en [OpenAPI](openapi.yaml); el [acuerdo bilateral](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md) registra la homologación de H-G2-01/02/03 y D-G2-01/02, incluida la precedencia, al 2026-11-04. `estado` representa el estado efectivo para la integración: variante ACTIVA refleja el estado del padre; variante INACTIVA/BORRADOR conserva el propio; producto simple conserva su estado. No se modifican estados persistidos ni reglas de activación. G6 no convierte estados en `noEncontrados`. Request: de 1 a 100 SKU únicos, identificadores opacos preservados literalmente. `200` clasifica cada solicitud una vez, sin omisiones, duplicados ni extras; un perfil inválido no produce parcial exitoso.
+
+- `422 DATOS_FISICOS_INCOMPLETOS` identifica perfiles existentes con peso, dimensiones o `actualizadoEn` ausente/inválido mediante `details.skusAfectados`. Para consultar SKU base de producto con variantes, G6 responde `422 SKU_INVALIDO` con lote íntegro rechazado y `details.skusAfectados` obligatorio: todos y únicamente esos SKU, no vacío, sin duplicados, literales y en orden de solicitud. Este detalle no se exige para errores estructurales ordinarios `SKU_INVALIDO`. Precedencia aceptada: validaciones estructurales; fallo técnico observable 503; base no física 422 SKU_INVALIDO; si no hay base, perfil incompleto 422 DATOS_FISICOS_INCOMPLETOS; éxito 200. La prioridad es independiente del orden de solicitud y los afectados solo corresponden a la condición del código.
+- `503 SERVICIO_NO_DISPONIBLE` corresponde a conexión, timeout, PostgreSQL o dependencia no disponible; no exponer detalles internos.
+- F-01: G2 cotiza exactamente solo SKU `ACTIVO` con perfil válido; `INACTIVO`/`BORRADOR` usa `DESP_ERROR_PRODUCTO_NO_ELEGIBLE`.
+- F-02: `INACTIVO`/`BORRADOR` no es rechazo automático para despacho pedido por Ventas como pagado, preparado y listo, con perfil válido y demás validaciones. Esto no habilita ventas ni cambia activación G6.
+- G2 agrupa SKU de líneas y conserva cantidades para peso/volumen; rechaza más de 100 únicos antes de llamar G6. `DESP_ERROR_LIMITE_SKUS_EXCEDIDO` (400) y `DESP_ERROR_RESPUESTA_PRODUCTOS_INVALIDA` (502) son códigos de G2, no de G6.
+- G6 no muta inventario, precio o pedidos y no calcula empaque. G2 obtiene su propio token; no reenvía tokens de canales.
+
+Seguridad permanece `serviceBearer`, `modulo-despacho`, `aud=api-productos`, `productos:fisicos:leer` y `pending-security-registration` hasta grant/credenciales efectivos de G7. H-G2-01/02/03 están homologados; D-G2-01 fue aceptada bilateralmente e implementada en Backend PR #162. G6 aceptó la contrapropuesta D-G2-02; solo falta la confirmación de G2 sobre precedencia de errores en lotes mixtos, según el [acuerdo G2–G6](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md). La homologación no acredita grant, despliegue ni E2E.
 
 ---
 
@@ -1225,6 +1188,42 @@ customer_ref = Security access-token sub
 
 Nunca usar `sub=modulo-chatbot`.
 
+## 16.1. Operativa acordada A16/A17 para G3
+
+G3/G6 registran A16 y A17 como **ACEPTADOS DOCUMENTALMENTE** en [ALINEACION_CHATBOT.md](../../integraciones/ALINEACION_CHATBOT.md), con trazabilidad en [Docs #87](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/issues/87). El contrato ejecutable candidato de esta rama es [OpenAPI](openapi.yaml) `0.6.0-rc.4`; este acuerdo no acredita implementación, grants efectivos ni homologación HTTP.
+
+### Secuencia de consultas
+
+1. Buscar productos con `GET /productos?canal=CHATBOT`; el listado no incorpora precio ni disponibilidad. No enviar `estado=ACTIVO` como filtro administrativo del consumidor.
+2. Obtener el detalle elegido con `GET /productos/{productoId}?canal=CHATBOT` y resolver allí variantes y SKU.
+3. Consultar Pricing separadamente: `GET /precios` para lotes y `GET /precios/skus/{sku}` para el precio individual adicional. Usar `canal=CHATBOT`; el lote de precios admite hasta 100 SKU.
+4. Consultar disponibilidad por separado con `GET /inventario/disponibilidad/comercial`, `canal=CHATBOT`, entre 1 y 100 SKU. No usar el GET de inventario detallado.
+5. Cuando el flujo necesite comprobar una cantidad solicitada, usar `POST /inventario/disponibilidad/comercial/verificar`.
+
+No agrupar por inferencia productos, precios o stock en una respuesta nueva. Promociones y cupones usan sus operaciones independientes ya publicadas; `GET /promociones` envía `canal=CHATBOT` conforme a OpenAPI.
+
+### Verificación comercial por cantidad
+
+Enviar `channel_id=CHATBOT`, `fulfillment: {mode: ENVIO_DOMICILIO}` y `lines[{sku, quantity}]`. En este corte no enviar `fulfillment_ref`; el consumidor no dispone de una referencia pública acordada y no debe inventarla. OpenAPI permite el campo opcional, pero el modo del canal aceptado por A17 es envío a domicilio. `lines` admite de 1 a 100 elementos según el schema.
+
+Es una operación distinta del GET comercial: el GET devuelve un estado por SKU (`DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`, `INDETERMINADO`); el POST evalúa `requested_quantity` y responde `items[].result` (`SUFICIENTE`, `INSUFICIENTE`, `INDETERMINADO`) con `binding=false`. Ninguna de las dos operaciones reserva unidades ni garantiza disponibilidad futura. G3 acepta `INDETERMINADO` contractual válido y muestra «No pudimos confirmar el stock»; nunca lo interpreta como `AGOTADO` ni «pocas unidades».
+
+### Validación de respuesta y errores
+
+Para GET/POST, comprobar que la respuesta respeta el schema vigente y que cada SKU solicitado tiene correspondencia exacta; una fila ausente, duplicada o con SKU distinto, un estado/resultado fuera del enum o estructura incompatible significa **disponibilidad no obtenida**, distinta de un `INDETERMINADO` contractual válido. G3 no agrega la línea al carrito ni permite continuar checkout cuando la disponibilidad no se obtuvo. Esa condición no se reetiqueta como agotada ni como `INDETERMINADO` contractual.
+
+Los HTTP `401`, `403`, `422`, `429` y `503` conservan la semántica del contrato/catálogo aplicable; no se convierten automáticamente en estados comerciales ni se inventan códigos de negocio. Ante `429`, respetar `Retry-After` si está presente. Evaluar promociones no crea pedidos ni reservas; validar un cupón no consume usos.
+
+### Autenticación, canal y correlación
+
+Todas las llamadas reales usan `serviceBearer` de `client_id=modulo-chatbot`, audiencia `api-productos`, scope requerido por operación y su allowlist. G6 ratificó los siete scopes `catalogo:leer`, `precios:leer`, `promociones:leer`, `promociones:evaluar`, `cupones:validar`, `recomendaciones:leer` e `inventario:disponibilidad:leer`. La ratificación no es registro ni grant; la emisión/provisión depende de G7 (Seguridad #33 y #10). En operaciones de disponibilidad, `canal`/`channel_id` corresponde a `CHATBOT` y debe coincidir con la identidad técnica conforme a OpenAPI.
+
+Enviar `X-Correlation-Id` como UUID con guiones y propagar el mismo id a las llamadas de módulos que formen parte de la interacción. Para cupón, `customer_ref` representa el `sub` humano del cliente, nunca el token técnico; puede ser `null` si la política admite anonimato.
+
+### Requisitos verificables de homologación HTTP
+
+Ejecutar backend G3 en `MODULES_MODE=http`, separado de `MODULES_MODE=fake`. El resultado debe identificar entorno (local/staging), servicios reales participantes, versiones, SHA de G3/G6, autenticación y evidencia reproducible de solicitudes/respuestas. Las pruebas con fakes no acreditan integración real. El owner debe registrar por separado fallos y resultados; una respuesta HTTP 2xx no prueba por sí sola homologación bilateral. Véase el seguimiento vigente en [G6 Backend #27](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/issues/27) y [#19](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/issues/19).
+
 # 17. Regla especial para Despacho
 
 Queda confirmado contractualmente:
@@ -1347,7 +1346,7 @@ Antes de declarar una integración cerrada:
 | Pendiente | Estado |
 |---|---|
 | Registro de los 16 scopes de la línea base y sus grants en Seguridad | Externo; no bloquea documentación, sí el acceso real |
-| Registro de `inventario:operaciones:leer` para `modulo-ventas` (candidato `0.6.0-rc.1`) | G7; pendiente de confirmación y concesión, no operativo por el mero OpenAPI |
+| Registro de `inventario:operaciones:leer` para `modulo-ventas` (candidato `0.6.0-rc.4`) | G7; pendiente de confirmación y concesión, no operativo por el mero OpenAPI |
 | Crear recursos RabbitMQ del entorno desde la topología P2 | Implementación/infra |
 | Contract tests runtime Ventas ↔ Inventario | Implementación |
 | Consumer/provider tests Despacho ↔ Productos | Implementación |
@@ -1464,7 +1463,7 @@ No expone `location_id`, `on_hand`, `reserved`, `blocked`, `available`, `thresho
 GET /api/v1/recomendaciones?productoId={id}&canal={MARKETPLACE|CHATBOT|RETAIL}
 ```
 
-`availability/current_price` product-level siguen provisionales por `D-REC-01/D-REC-02`.
+La regla interna H4 aprobada `D-REC-01/02` mantiene la respuesta en `product_id`, agrega disponibilidad desde SKU elegibles sin sumar ubicaciones y define `current_price` como precio efectivo mínimo («desde») entre variantes con disponibilidad positiva, en un mismo canal e instante UTC. Sin positividad demostrada se excluye el candidato; error global de dependencia devuelve fallo técnico, no lista vacía. Esta decisión no acredita implementación ni E2E.
 
 ### Rate limiting
 
@@ -1484,3 +1483,7 @@ GET /api/v1/recomendaciones?productoId={id}&canal={MARKETPLACE|CHATBOT|RETAIL}
 - Misma identidad/operación/payload semántico => mismo resultado y cero efectos nuevos; identidad reutilizada con payload distinto => `IDEMPOTENCY_CONFLICT`. Los eventos tienen `message_id` propio para deduplicación de transporte.
 - Las transiciones pagar/expirar/liberar se serializan por reserva; se respeta `expires_at` emitido por Inventario.
 - Estos contratos siguen **provisionales** hasta que la implementación, migraciones y pruebas integradas sean verificadas. No anunciar disponibilidad real antes del cierre.
+
+## Filtros de precio en catálogo
+
+`precioMin` y `precioMax` representan extremos inclusivos en PEN del precio efectivo vigente de Pricing: oferta vigente o, en su ausencia, precio regular. Sin conversión. Para variantes se compara cada SKU activo/elegible y el padre cuenta una vez. Catálogo consulta todos los candidatos en lotes de 1–100 SKU con un mismo `at`, filtra antes de contar/paginar y no devuelve páginas parciales ante fallo. La identidad G6 compartida es `modulo-productos` con `precios:leer`; el OpenAPI la permite únicamente en los GET `consultarPrecios` y `obtenerPrecioSku`, sin reutilizar token entrante ni ampliar escrituras, programación u otros dominios. El grant y las credenciales siguen pendientes de G7. Canales canónicos: `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS`; global `null`. Para SKU con coma en CSV, usar GET individual existente con path codificado. Presupuesto inicial máximo 5 s incluye adquisición token y lotes, pendiente de E2E y no SLA. Ver [SPEC-003 §7](../../requisitos/specs/SPEC-003-gestion-productos-crud.md).

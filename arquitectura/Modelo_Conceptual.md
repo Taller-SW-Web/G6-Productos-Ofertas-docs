@@ -4,8 +4,8 @@
 **Repositorio:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
 **Archivo:** `arquitectura/Modelo_Conceptual.md`  
 **Arquitectura de referencia:** `arquitectura/Arquitectura.md` (versión corregida en revisión)  
-**Contrato HTTP de referencia:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.1`; baseline histórico `0.5.0`)
-**Contrato asíncrono de referencia:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.1`; baseline histórico `0.5.0`)
+**Contrato HTTP de referencia:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.3`; baseline histórico `0.5.0`)
+**Contrato asíncrono de referencia:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.4`; baseline histórico `0.5.0`)
 **Catálogo de errores:** `contratos/http/catalogo-errores.md` (fuente semántica de códigos; compatibilidad `0.5.0`)
 **Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (guía humana; referencia histórica `0.5.0`)
 **Contrato humano de referencia:** `contratos/http/Contrato_Api.md`
@@ -63,7 +63,7 @@ Esta versión incorpora las decisiones de diseño del modelo de datos:
 9. `SPEC/HU/WF-003`, `004` y `015` ya incorporan estas decisiones; dejan de ser propagaciones futuras.
 10. La idempotencia de Inventario distingue retry legítimo de `IDEMPOTENCY_CONFLICT`.
 11. Los contratos HTTP/asíncronos y códigos estables ya están publicados en OpenAPI, AsyncAPI y `catalogo-errores.md`.
-12. OpenAPI y AsyncAPI `0.5.0` se conservan como **línea base histórica y de compatibilidad**. Los artefactos ejecutables en la rama `nueva` identifican un contrato **candidato** `0.6.0-rc.1` para B1–B4, que no debe confundirse con implementación, grants efectivos, despliegue o conformidad de extremo a extremo.
+12. OpenAPI y AsyncAPI `0.5.0` se conservan como **línea base histórica y de compatibilidad**. Los artefactos ejecutables identifican OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` como candidatos; esa documentación no acredita implementación, grants efectivos, despliegue o conformidad de extremo a extremo.
 13. Taxonomía expone operaciones observables de **baja maestra segura** para recursos con dependencias.
 14. Una operación de baja maestra puede permanecer pendiente después de un `202 Accepted`; su resultado definitivo se resuelve de forma asíncrona.
 15. La operación de baja pertenece a Taxonomía y no implica acceso directo a las tablas del bounded context consumidor.
@@ -1326,7 +1326,7 @@ price_audit.price_id
 | `categoria_id` | Taxonomía |
 | `marca_id` | Taxonomía |
 | `tipo_producto_id` | Taxonomía |
-| `channel_id` | enumeración contractual |
+| `channel_id` | texto nullable en Pricing: `MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS`; `NULL` = global; no es `client_id` de Seguridad |
 | `user_id` | Seguridad |
 | `customer_ref` | Seguridad |
 | `order_id` | M1/Ventas |
@@ -1447,15 +1447,15 @@ Las decisiones conceptuales principales ya fueron propagadas.
 
 | Artefacto | Estado |
 |---|---|
-| `arquitectura/Arquitectura.md` | Documento arquitectónico de referencia; su revisión candidata alinea D-INV-01, restricciones por consumidor y baseline `0.5.0` frente a contratos `0.6.0-rc.1` |
-| `contratos/http/Contrato_Api.md` | Referencia humana del baseline `0.5.0`; su conciliación con las decisiones B1–B4 candidatas `0.6.0-rc.1` sigue siendo una tarea documental separada |
+| `arquitectura/Arquitectura.md` | Documento arquitectónico de referencia; su revisión candidata alinea D-INV-01, restricciones por consumidor y baseline `0.5.0` frente a los contratos candidatos actuales |
+| `contratos/http/Contrato_Api.md` | Referencia humana del baseline `0.5.0`; su actualización conforme al OpenAPI candidato vigente `0.6.0-rc.3` incluye la homologación G2–G6 |
 | `SPEC/HU/WF-003` | Actualizados: perfil físico de producto simple y Seguridad |
 | `SPEC/HU/WF-004` | Actualizados: perfil físico de variante/SKU y Seguridad |
 | `SPEC/HU/WF-014` | Auditoría alineada con `GESTOR_COMERCIAL` y capacidades internas, sin rol global de Auditor |
 | `SPEC/HU/WF-015` | Reserva/consumo/liberación, TTL, idempotencia, incidencias, reintegros, conciliación y traslados |
 | `HU/WF-016` | Dashboard y alertas alineados con Gestor Comercial autorizado y proyección de solo lectura |
-| `contratos/http/openapi.yaml` | OpenAPI 3.1.0, `info.version=0.6.0-rc.1` en la rama `nueva`; fuente ejecutable **candidata** de B1–B4, sin declaración de despliegue |
-| `contratos/eventos/asyncapi.yaml` | AsyncAPI 3.0.0, `info.version=0.6.0-rc.1`, con **40 canales y 40 mensajes** candidatos; conserva topología física sin acreditar publicación en runtime |
+| `contratos/http/openapi.yaml` | OpenAPI 3.1.0, `info.version=0.6.0-rc.3`; fuente ejecutable HTTP **candidata** vigente, sin declaración de despliegue |
+| `contratos/eventos/asyncapi.yaml` | AsyncAPI 3.0.0, `info.version=0.6.0-rc.4`, con **40 canales y 40 mensajes** candidatos; conserva topología física sin acreditar publicación en runtime |
 | `contratos/eventos/catalogo-eventos.md` | Catálogo humano; la cifra de **39 mensajes** identifica el baseline histórico `0.5.0`, no la cobertura completa del AsyncAPI candidato de 40 mensajes |
 | `contratos/http/catalogo-errores.md` | Catálogo autoritativo de errores para la compatibilidad base y los códigos del contrato candidato |
 | Operación de baja maestra | Incorporada conceptualmente en Taxonomía y observable por `GET /api/v1/taxonomia/operaciones/{operationId}` |
@@ -1490,7 +1490,7 @@ La actualización confirma que:
 10. `on_hand`, `reserved`, `blocked` y `available` pertenecen al saldo por `(sku, location_id)`.
 11. Taxonomía modela explícitamente la operación de baja maestra segura como concepto observable, sin compartir schema ni convertir el `202 Accepted` en resultado definitivo.
 12. La autorización humana del módulo se apoya en `GESTOR_COMERCIAL`; la granularidad adicional de auditoría o inventario se modela como capacidad interna, no como rol global independiente.
-13. Los contratos OpenAPI/AsyncAPI candidatos `0.6.0-rc.1` de la rama `nueva` reflejan B1–B4, mientras la documentación histórica `0.5.0` conserva el contexto previo. El cierre no acredita backend desplegado ni grants efectivos; quedan tareas documentales, de implementación y de validación sin redefinir ownership.
+13. OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` son contratos candidatos, mientras la documentación histórica `0.5.0` conserva el contexto previo. El cierre no acredita backend desplegado ni grants efectivos; quedan tareas documentales, de implementación y de validación sin redefinir ownership.
 14. D-INV-01 ya fija la proyección comercial por una sola fuente elegible de cumplimiento y el resultado `INDETERMINADO` ante falta o ambigüedad del mapeo, sin introducir entidades maestras adicionales.
 
 ---
@@ -1499,12 +1499,15 @@ La actualización confirma que:
 ## Alineación conceptual HTTP 0.5.0
 
 - SKU continúa siendo la identidad comercial compartida.
-- `codigo_barras` es un identificador de captura distinto; cada código resoluble identifica exactamente un SKU vendible.
-- No se fija todavía la cardinalidad inversa ni una tabla física para la asociación.
-- La elegibilidad comercial por canal es una regla de Catálogo; su persistencia/default siguen abiertos (`D-CAT-05/06`).
+- `codigo_barras` es texto de captura distinto; cada código único pertenece a un SKU vendible y un SKU admite cero o más códigos. La migración de asociación es candidata en backend `poma`, sin aplicación acreditada.
+- La política comunicada no usa asignaciones ni defaults por canal; D-CAT-05/06 aún requiere ratificación de Arquitectura y conformidad de consumidores.
 - Inventario conserva el saldo autoritativo por `(sku, location_id)`.
 - La disponibilidad comercial es una **proyección derivada** `sku + status`, no una segunda autoridad. **D-INV-01 está adoptada** en `arquitectura/decisiones/ADR-DEC-F-BLOQUEANTES.md`: una referencia de cumplimiento se resuelve a una sola ubicación elegible mediante mapeo interno; no se suman ubicaciones independientes. La ambigüedad o ausencia de un cumplimiento justificable produce `INDETERMINADO`, no una afirmación de agotamiento o disponibilidad. El contrato comercial continúa **provisional por implementación y conformidad pendientes**, no por decisión abierta.
 - La verificación comercial por líneas `{sku, quantity}` devuelve `SUFICIENTE`, `INSUFICIENTE` o `INDETERMINADO` sin exponer cantidades internas ni `location_id`, con `binding=false` y sin reservar stock. La agregación real de múltiples fuentes requeriría otra ADR.
 - Recomendaciones siguen siendo producto→producto. `current_price` y `availability` son enriquecimientos derivados; `D-REC-01/02` continúan abiertas.
 - No materializar automáticamente `CODIGO_BARRAS`, `PRODUCTO_CANAL`, `DISPONIBILIDAD_COMERCIAL` o `PRECIO_RECOMENDACION` como entidades maestras.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
+
+## Elegibilidad comercial y código de barras (alineación documental)
+
+No hay entidad conceptual ni habilitación independiente por canal. La política comunicada aplica los estados existentes: producto simple `ACTIVO` expone `sku_base`; producto con variantes expone el padre solo con al menos una variante `ACTIVA`, y cada variante exige padre y variante activos. D-CAT-05/06 continúa pendiente de ratificación de Arquitectura y conformidad de consumidores. Códigos de barras son asociaciones de texto opaco, único y no reutilizable a SKU vendibles, no una nueva identidad comercial; el diseño de persistencia y su estado candidato están en [modelo físico Catálogo](../datos/catalog-svc/physical-model.md). Estas reglas no garantizan precio, stock o promoción.

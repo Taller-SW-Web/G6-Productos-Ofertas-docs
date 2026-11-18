@@ -24,3 +24,7 @@
 | CA-08 | Una escritura obsoleta se rechaza por versión. |
 | CA-09 | No existen vigencias superpuestas para el mismo alcance. |
 | CA-10 | La carga masiva exclusiva de Pricing no promete atomicidad con Catálogo/Inventario. |
+
+### Aclaración H4 — importación multidominio
+
+En H4, los archivos multidominio usan Bulk v2 conforme a [SPEC-001](../specs/SPEC-001-carga-exportacion-masiva-productos.md). Las operaciones `prevalidarImportacionPrecios` y `crearImportacionPrecios` quedan fuera del gate H4: no se declaran implementadas ni aceptan 200/202 ficticios sin formato y worker propios. La escritura individual/programada de precios puede avanzar por separado.

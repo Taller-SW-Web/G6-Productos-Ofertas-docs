@@ -6,7 +6,7 @@
 - **Funcionalidad:** Asociación entre tipos de producto y características
 - **Relacionado con:** [HU-010](../hu/HU-010-asociacion-tipo-producto-caracteristica.md) / [SPEC-010](../specs/SPEC-010-asociacion-tipo-producto-caracteristica.md) / [WF-010](..\..\ux\wireframes\flows\WF-010-asociacion-tipo-producto-caracteristica.md)
 - **Responsable:** Leonardo Lopez
-- **Última actualización:** 2026-10-01
+- **Última actualización:** 2026-10-26
 
 ---
 
@@ -202,10 +202,9 @@ flowchart LR
     subgraph TAXONOMIA["Taxonomía"]
         direction TB
         T1["Registrar PENDING_DEACTIVATION y publicar taxonomy.master.deactivation.check.requested"]
-        T2["Instalar barrera de escritura y devolver 202 Accepted como admisión"]
+        T2["Devolver 202 Accepted como admisión"]
         T3["Publicar taxonomy.master.deactivated y pasar el tipo a INACTIVO conservando su ID"]
         T4["Publicar taxonomy.master.deactivation.rejected y conservar el tipo ACTIVO"]
-        T5["Liberar la barrera de escritura"]
         T6["Dejar de ofrecer el tipo para nuevas altas o activaciones"]
         T7["Volver a ACTIVO conservando ID y nombre"]
         T8["Volver a ofrecer el tipo para nuevas altas o activaciones"]
@@ -213,12 +212,15 @@ flowchart LR
 
     subgraph CATALOGO["Catálogo Core"]
         direction TB
-        C1["Verificar si existen productos activos que dependan del tipo"]
+        C1["Instalar barrera y verificar si existen productos activos que dependan del tipo"]
         C2["Publicar catalog.master.deactivation.checked con operation_id"]
+        C3["Recibir taxonomy.master.deactivated correlacionado y vigente;<br/>actualizar proyección y liberar barrera"]
+        C4["Recibir taxonomy.master.deactivation.rejected correlacionado y vigente;<br/>conservar tipo activo y liberar barrera"]
+        C5["Si falta el evento final: mantener barrera y alertar"]
     end
 
     FIN_INACTIVO(((Tipo inactivo con el mismo ID)))
-    FIN_ACTIVO(((Tipo conservado activo por uso o falta de confirmación)))
+    FIN_ACTIVO(((Baja rechazada; tipo conservado activo)))
     FIN_REACTIVO(((Tipo reactivado con el mismo ID)))
 
     INICIO --> D1
@@ -229,14 +231,16 @@ flowchart LR
     C1 --> C2
     C2 --> DS1{"¿Resultado CLEAR vigente?"}
     DS1 -->|"CLEAR"| T3
-    DS1 -->|"HAS_ACTIVE_PRODUCTS"| T4
-    T3 --> T5
-    T4 --> T5
-    T2 --> E1(("Time out o error en la verificación"))
-    E1 --> T5
-    T5 --> T6
+    DS1 -->|"IN_USE"| T4
+    T3 -->|"Evento final recibido"| C3
+    C3 --> T6
     T6 --> FIN_INACTIVO
-    T5 --> FIN_ACTIVO
+    T4 -->|"Evento final recibido"| C4
+    C4 --> FIN_ACTIVO
+    T2 --> E1(("Timeout, fallo técnico o conflicto de versión"))
+    E1 --> T4
+    T3 -.->|"Evento final no recibido"| C5
+    T4 -.->|"Evento final no recibido"| C5
     D1 -->|"No"| G2
     G2 --> T7
     T7 --> T8
@@ -244,6 +248,8 @@ flowchart LR
 ```
 
 > La desactivación de `PRODUCT_TYPE` utiliza el protocolo transversal publicado. El `202 Accepted` de `POST /api/v1/tipos-producto/{tipoProductoId}/desactivar` es únicamente admisión: si existen productos activos la verificación responde uso incompatible y el tipo permanece activo; ante error o falta de respuesta tampoco se desactiva. `POST /api/v1/tipos-producto/{tipoProductoId}/reactivar` conserva el `tipo_producto_id` y vuelve a habilitar el tipo para nuevas operaciones.
+
+`CLEAR` vigente habilita la confirmación de Taxonomía, pero no libera la barrera de Catálogo. `IN_USE`, timeout (60 s) o fallo técnico siguen exclusivamente el rechazo y conservan activo el tipo/asociación. En asociación, Taxonomy captura y proporciona al admitir `version`, el `schema_version` autoritativo del tipo; Catálogo lo conserva y verifica. El envelope `schema_version` identifica la versión del contrato de mensaje y es distinto de `version`. Taxonomy provee `tipo_producto_id` y `caracteristica_id`; el final exitoso incluye `schema_version_resultante`, distinto de ambos, que refleja evolución posterior válida. Catálogo libera la barrera solo al consumir el evento final correlacionado con entidad, IDs, operación y versión; duplicados, tardíos o incoherentes no liberan. Si falta un final verificable, mantiene bloqueo hasta entrega/reconciliación segura y alerta. Los mensajes tipados son contrato candidato pendiente de homologación; el diagrama no acredita compatibilidad runtime.
 
 ### 4.6 Consulta del esquema por tipo de producto
 
@@ -293,42 +299,38 @@ flowchart LR
 
     subgraph CATALOGO["Catálogo Core"]
         direction TB
-        C1["Verificar estado del producto: borrador, sin variantes y sin identidad publicada"]
+        C1["Verificar BORRADOR, tiene_variantes=false, cero filas variants,<br/>publicado_alguna_vez=false y catalogVersion"]
         D1{"¿El producto cumple las condiciones del CRUD ordinario?"}
-        C2["Rechazar la edición ordinaria y derivar a migración controlada"]
+        C2["Rechazar el PATCH ordinario; informar que requiere migración controlada"]
+        C3["Validar concurrencia y confirmar atómicamente el PATCH;<br/>conservar IDs, SKU y snapshots"]
     end
 
     subgraph TAXONOMIA["Taxonomía"]
         direction TB
         T1["Resolver el esquema efectivo y su schema_version del nuevo tipo"]
         D2{"¿El esquema del nuevo tipo es compatible con el producto?"}
-        T2["Exigir completar los campos obligatorios del nuevo esquema"]
-    end
-
-    subgraph MIGRACION["Migración controlada"]
-        direction TB
-        M1["Ejecutar fuera del CRUD ordinario"]
-        M2["No reescribir identidades SKU ni snapshots históricos"]
+        T2["Rechazar toda la edición si atributos no son compatibles;<br/>no borrar atributos automáticamente"]
     end
 
     FIN_ORDINARIO(((Tipo cambiado en borrador)))
-    FIN_MIGRACION(((Cambio derivado a migración controlada)))
+    FIN_RECHAZADO(((PATCH rechazado sin cambios)))
 
     INICIO --> G1
     G1 --> C1
     C1 --> D1
     D1 -->|"No"| C2
-    C2 --> M1
-    M1 --> T1
-    T1 --> D2
-    D2 -->|"Sí"| M2
-    M2 --> FIN_MIGRACION
-    D2 -->|"No"| T2
+    C2 --> FIN_RECHAZADO
     D1 -->|"Sí"| T1
-    T2 --> FIN_ORDINARIO
+    T1 --> D2
+    D2 -->|"Sí"| C3
+    C3 --> FIN_ORDINARIO
+    D2 -->|"No"| T2
+    T2 --> FIN_RECHAZADO
 ```
 
-> El cambio de `tipo_producto_id` solo pertenece al CRUD ordinario mientras el producto permanezca en borrador, sin variantes y sin identidad comercial publicada. En cuanto existen variantes o identidad publicada, el cambio se rechaza en la edición ordinaria y se deriva a una migración de modelo controlada.
+El diagrama representa únicamente el PATCH ordinario Q-06: un esquema compatible y las precondiciones vigentes permiten confirmar el cambio; un esquema incompatible rechaza toda la edición. La migración controlada es un proceso separado, fuera de este CRUD y de este diagrama: el rechazo no la ejecuta ni la autoriza. Un conflicto de `catalogVersion` también rechaza el PATCH sin cambios, según el contrato vigente.
+
+> Q-06: el PATCH existente admite `tipoProductoId` opcional. Solo se permite en `BORRADOR`, `tiene_variantes=false`, cero filas reales en `catalog.variants`, `publicado_alguna_vez=false`, tipo nuevo activo en Taxonomy, atributos compatibles con esquema efectivo/`schemaVersion` y concurrencia `catalogVersion`. Identidad publicada significa primera transición confirmada `BORRADOR → ACTIVO`; preparar, asignar SKU o una activación pendiente no cuenta. `publicado_alguna_vez` requiere una futura migración versionada: nuevos productos `false`, primera activación confirmada `true` atómico e irreversible; históricos `NULL` sin evidencia autoritativa y `NULL` bloquea. Atributos incompatibles rechazan toda la edición, sin borrado automático; faltantes obligatorios no bloquean guardar borrador, solo activar. Se conservan IDs, SKU, modelo de variantes y snapshots. Para error incompatible se reutiliza el código contractual vigente. La regla se comunica como definida; migración, implementación y validación siguen pendientes.
 
 ## 5. Contratos publicados
 

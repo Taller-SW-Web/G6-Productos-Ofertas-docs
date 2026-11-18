@@ -1,3 +1,5 @@
+> **Nota de transición:** las menciones a RabbitMQ en esta especificación describen H4/compatibilidad heredada. Para mensajería nueva H5 rigen Service Bus Basic adoptado y su topología; las reglas de negocio aquí no dependen del transporte.
+
 # SPEC-004 — Gestión de variantes y SKU
 
 **Responsable:** Gabriel Poma Gutierrez  
@@ -48,15 +50,15 @@ default_location_id opcional
 
 Reglas del ciclo de Inventario de variante:
 - `PENDING` ordinario: representa trabajo en curso o recuperación técnica automática; no muestra acción manual.
-- Errores técnicos transitorios: se recuperan automáticamente mediante la política RabbitMQ existente de Inventario (hasta 3 reintentos con 30 s de espera antes de DLQ).
+- Errores técnicos transitorios: se recuperan automáticamente mediante la política de reintentos de mensajería del servicio de Inventario.
 - Catálogo correlaciona resultados asíncronos mediante `causation_id = message_id` del comando requested activo, descartando/ignorando idempotentemente resultados tardíos de intentos anteriores como stale:
   - `inventory.sku.initialization.completed` → pasa a `COMPLETED`. La variante queda preparada para activación. Una preparación `COMPLETED` es terminal y nunca vuelve a ejecutarse ni reintentarse.
-  - `inventory.sku.initialization.rejected` → pasa a `REJECTED`. Mantiene la variante como no publicable y registra el código recibido en `code`. No se reintenta automáticamente por infraestructura. El indicador `manual_retry_allowed` es calculado y autoritativo en Catálogo (la UI nunca es la autoridad). Si el rechazo requiere corrección de datos o atributos/perfil, el gestor modifica la variante; Catálogo revalida las precondiciones locales de la preparación; si es nuevamente elegible: `manual_retry_allowed=true`, de lo contrario permanece en `false`.
-- Ausencia prolongada de resultado: tras un umbral operativo configurable sin confirmación, Catálogo puede habilitar `manual_retry_allowed=true` manteniendo `PENDING`. Catálogo no inspecciona directamente la DLQ del servicio consumidor ni la topología privada de RabbitMQ.
+  - `inventory.sku.initialization.rejected` → pasa a `REJECTED`. Mantiene la variante como no publicable y registra el código recibido en `code`. `manual_retry_allowed=false`; editar atributos/perfil no habilita retry. Solo un código específico podrá habilitarse tras acreditar causa real, operación correctiva publicada y replay idempotente probado.
+- Ausencia prolongada de resultado: Catálogo mantiene `PENDING`; timeout solo habilita evaluación si existe `published_at` de la publicación confirmada del intento vigente y transcurrieron 300000 ms. Además se requiere replay idempotente verificado, intención idéntica, admisión transaccional y un único reintento concurrente (ver §8). Sin `published_at` no se habilita por tiempo. Catálogo no inspecciona la DLQ.
 - Recuperación manual: cuando `manual_retry_allowed=true`, el Gestor Comercial puede solicitar `POST /api/v1/productos/{productoId}/variantes/{variantId}/preparacion/reintentar`.
   - La admisión es **atómica por preparación**: exactamente una solicitud concurrente pasa `manual_retry_allowed=true` a `PENDING / manual_retry_allowed=false` y devuelve HTTP `202 Accepted` (`OperationAccepted`) conservando la `operation_id` original.
-  - Las solicitudes concurrentes competidoras o las realizadas sobre preparaciones en curso técnico, ya completadas o sin precondiciones validadas devuelven HTTP `409 PREPARACION_NO_REINTENTABLE`. Nunca se producen dos publicaciones RabbitMQ ni dos efectos de negocio.
-  - El endpoint revalida autoritativamente las precondiciones antes de admitir (anti-TOCTOU), genera una nueva `message_id` para transporte RabbitMQ y construye el nuevo comando con el **estado actual validado de la variante** (perfil físico y atributos actualizados; no el payload antiguo).
+  - Las solicitudes concurrentes competidoras o las realizadas sobre preparaciones en curso técnico, ya completadas o sin precondiciones validadas devuelven HTTP `409 PREPARACION_NO_REINTENTABLE`. Nunca se producen dos publicaciones de mensajería ni dos efectos de negocio.
+  - El endpoint revalida autoritativamente las precondiciones antes de admitir (anti-TOCTOU), genera una nueva `message_id` para transporte de mensajería y construye el nuevo comando con el **estado actual validado de la variante** (perfil físico y atributos actualizados; no el payload antiguo).
   - La consulta `GET /api/v1/productos/{productoId}/preparacion` lee el estado de coordinación local de Catálogo sin realizar llamadas síncronas a Inventario.
 
 ## 5. Perfil físico
@@ -74,6 +76,18 @@ Unidades contractuales: kg y cm. No se utilizan campos planos `largoCm/anchoCm/a
 
 Una variante en `BORRADOR` puede tener perfil físico incompleto; los valores informados deben ser positivos. Activar o reactivar exige los cuatro valores completos. El padre no tiene peso ni dimensiones propios; el volumen de la variante se deriva de sus dimensiones y no se ingresa por separado.
 
+## 5.1. Consulta física por Despacho (homologación G2 H4)
+
+Las variantes son las unidades vendibles físicas y se consultan por su SKU mediante el endpoint por lote definido en [OpenAPI](../../contratos/http/openapi.yaml) y en el [acuerdo G2–G6 H4](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md). La solicitud admite de 1 a 100 SKU únicos, preservados literalmente como identificadores opacos. Una variante existente `ACTIVA`, `INACTIVA` o `BORRADOR` no se clasifica como inexistente por su estado; `noEncontrados[]` se reserva a ausencia de identidad. `BORRADOR` puede carecer de perfil completo.
+
+Una respuesta `200` clasifica cada SKU solicitado exactamente una vez entre `productos[]` y `noEncontrados[]`, sin omisiones, duplicados ni inesperados. Perfil ausente/incompleto o peso, dimensiones o `actualizadoEn` inválidos produce `422 DATOS_FISICOS_INCOMPLETOS` con `details.skusAfectados`, sin éxito parcial. Indisponibilidad técnica responde `503 SERVICIO_NO_DISPONIBLE` sin datos internos. G6 entrega estado y medidas; G2 aplica F-01 (cotización exacta solo para `ACTIVO` con perfil válido; otros estados: `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE`) y F-02 (el estado `INACTIVO`/`BORRADOR` no es rechazo automático para despacho solicitado por Ventas de pedido pagado, preparado y listo, si cumple perfil y validaciones). F-02 no modifica la activación comercial de G6.
+
+El estado propio de una variante y la elegibilidad comercial efectiva pueden divergir. La regla D-G2-01 homologada bilateralmente y reflejada en Backend PR #162 es: variante `ACTIVA` bajo padre `ACTIVO` → `ACTIVO`; bajo padre `INACTIVO` → `INACTIVO`; bajo padre `BORRADOR` → `BORRADOR`. Una variante `INACTIVA` o `BORRADOR` conserva su estado propio; un producto simple conserva su estado. La consulta no modifica estados persistidos ni reglas de activación/reactivación. Para F-01 solo `ACTIVO` con perfil válido permite cotización exacta; para F-02 `INACTIVO`/`BORRADOR` no es rechazo automático de un pedido de Ventas declarado pagado, preparado y listo, sujeto a perfil y demás validaciones.
+
+El SKU base del producto con variantes tiene identidad de catálogo pero no representa unidad física consultable ni crea perfil padre. D-G2-02 está homologada bilateralmente: G6 responde `422 SKU_INVALIDO` y rechaza el lote completo; `details.skusAfectados` es obligatorio para este caso y contiene todos y únicamente los SKU base no físicos, no vacío, sin duplicados, preservados literalmente y en orden de solicitud. G2 traduce a `422 DESP_ERROR_PRODUCTO_NO_ELEGIBLE` en F-01/F-02 conservando la lista; en F-02 se debe a identidad no física, no al estado comercial.
+
+La precedencia bilateral en lotes mixtos es: validaciones estructurales; fallo técnico observable `503`; SKU base no físico `422 SKU_INVALIDO`; si no existen bases no físicas, perfil incompleto `422 DATOS_FISICOS_INCOMPLETOS`; sin errores, `200` íntegro. Es independiente del orden de los SKU y no promete detección de fallos técnicos no observables. Los SKU afectados corresponden exclusivamente al código devuelto. Aceptación G2: [comentario #6632557247](https://github.com/Taller-SW-Web/G2-Despacho-Specs/issues/15#issuecomment-6632557247). Ver [acuerdo G2–G6](../../integraciones/ACUERDO_G2_G6_H4_2026-11-02.md).
+
 ## 6. Edición, activación, desactivación y reactivación
 
 La edición ordinaria permite actualizar atributos no identificadores, imagen y perfil físico válido. Conserva `variant_id`, el SKU comercial publicado y los atributos identificadores, conforme a `VarianteUpdateRequest` en OpenAPI vigente.
@@ -88,7 +102,7 @@ Reactivar una variante `INACTIVA` conserva `variant_id` y SKU, revalida las mism
 
 El padre no necesita estar `ACTIVO` para preparar, activar o reactivar una variante. Para activar o reactivar al padre se requiere al menos una variante activa y preparada; los hijos en `BORRADOR` o `INACTIVA` no bloquean al padre ni se ofrecen comercialmente. Reactivar al padre no reactiva variantes inactivas.
 
-Las rutas `POST /productos/{productoId}/variantes/{variantId}/reactivar`, `POST /productos/{productoId}/variantes/{variantId}/preparacion/reintentar` y `GET /productos/{productoId}/preparacion` están declaradas en [OpenAPI vigente](../../contratos/http/openapi.yaml), con estado `provisional-internal`. Los eventos de desactivación se publican mediante RabbitMQ y su fan-out corresponde a AsyncAPI 0.5.0.
+Las rutas `POST /productos/{productoId}/variantes/{variantId}/reactivar`, `POST /productos/{productoId}/variantes/{variantId}/preparacion/reintentar` y `GET /productos/{productoId}/preparacion` están declaradas en [OpenAPI vigente](../../contratos/http/openapi.yaml), con estado `provisional-internal`. Los eventos de desactivación se publican mediante RabbitMQ y su contrato candidato vigente corresponde a AsyncAPI 0.6.0-rc.4; la candidata no acredita despliegue ni operación real.
 
 ## 7. No pertenece a esta capacidad
 
@@ -97,6 +111,12 @@ Las rutas `POST /productos/{productoId}/variantes/{variantId}/reactivar`, `POST 
 - precio master;
 - empaque;
 - pedido.
+
+## 8. Alineación de SKU y recuperación
+
+Al crear una variante, `sku` es obligatorio, explícito, string no vacío y no nullable. Omitido, `null`, vacío o inválido produce `422 SKU_INVALIDO`; reservado produce `409 SKU_DUPLICADO`. El SKU es opaco, globalmente único e inmutable; conserva ceros iniciales y sigue reservado tras la baja. Catálogo no lo genera ni concatena atributos o identificadores. Esta regla reemplaza cualquier promesa previa de SKU opcional o autogenerado.
+
+Todo rechazo de preparación `REJECTED` conserva `manual_retry_allowed=false`. No se habilita por editar genéricamente atributos o perfil; solo tras acreditar causa, operación correctiva publicada y replay idempotente probado para el código específico. `COMPLETED` es terminal. `PENDING` solo admite recuperación por timeout con las condiciones de publicación confirmada, intención idéntica, replay verificado, admisión transaccional y exclusión concurrente de SPEC-003 §7. El umbral es `CATALOG_PREPARATION_TIMEOUT_MS=300000` desde `published_at` del intento vigente; sin esa marca no se habilita. La integración real continúa pendiente de prueba y homologación.
 
 ---
 
@@ -119,3 +139,5 @@ No se devuelve `variant_id` como identidad comercial.
 
 Una variante inactiva o con producto padre no comercialmente vendible no produce una resolución válida. La ausencia temporal de stock **no** cambia la identidad SKU; disponibilidad se consulta separadamente.
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
+
+> **Integración G1 Marketplace H4 (2026-10-20):** G6 aceptó y comunicó M-01–M-09 (`ACEPTADO_G6_COMUNICADO_G1`). Esta SPEC gobierna reglas funcionales de su dominio; operaciones HTTP se verifican en [OpenAPI](../../contratos/http/openapi.yaml), el reparto/estado operativo en [Acuerdo G1–G6 H4](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md) y [alineación](../../integraciones/ALINEACION_MARKETPLACE.md). No declarar runtime, grants G7, despliegue o E2E por esta referencia. Las dependencias de otros owners se limitan a la operación que les corresponde.

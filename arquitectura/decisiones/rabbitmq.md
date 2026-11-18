@@ -1,3 +1,5 @@
+> **Clasificación: `LEGADO_H4`.** Este documento conserva decisiones/procedimientos de RabbitMQ del Hito 4 y compatibilidad del runtime existente. No es una instrucción para implementar H5; consulte la ADR y topología Service Bus Basic.
+
 # Decisiones de RabbitMQ
 
 **Proyecto:** G6 — Productos y Ofertas  
@@ -143,3 +145,6 @@ El procedimiento y sus puntos de autorización están detallados en [Operación 
 **Internas:** [Arquitectura](../Arquitectura.md) · [AsyncAPI](../../contratos/eventos/asyncapi.yaml) · [Topología RabbitMQ](../../contratos/eventos/rabbitmq-topologia.md) · [Matriz intermodular](../../integraciones/MATRIZ_INTERMODULAR_BACKEND.md).
 
 **RabbitMQ oficial 4.2:** [Permisos y topic authorisation](https://www.rabbitmq.com/docs/4.2/access-control) · [Dead lettering](https://www.rabbitmq.com/docs/4.2/dlx) · [TTL](https://www.rabbitmq.com/docs/4.2/ttl) · [Colas quorum y dead-lettering at-least-once](https://www.rabbitmq.com/docs/4.2/quorum-queues). Otros: [Vhosts](https://www.rabbitmq.com/docs/vhosts) · [Respaldo y restauración](https://www.rabbitmq.com/docs/backup) · [Monitoreo](https://www.rabbitmq.com/docs/monitoring).
+# Estado H4 y transición propuesta H5
+
+Este documento conserva la decisión y evidencia históricas de RabbitMQ para Hito 4; sus auditorías, bloqueos, homologación parcial y estado runtime no se reescriben retrospectivamente. La propuesta [ADR-H5 Service Bus Basic](./ADR-H5-SERVICE-BUS-BASIC.md) plantea un destino interno de G6, pendiente de revisión/adopción. No autoriza retiro/corte de RabbitMQ, cambios a contratos canónicos, homologación externa ni implementación. El acceso de G5 por HTTP requiere acuerdo G5 y autorización G7 antes de retirar su integración AMQP histórica.

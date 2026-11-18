@@ -83,4 +83,6 @@ Categorías/características, asociación producto-marca y almacenamiento físic
 Definir mensajes propios de esta capacidad. No existen eventos genéricos de «actualización» ni de «estado» de marca en AsyncAPI 0.4.0.
 
 ## Criterio de completitud
-Unicidad global, tipos de logo, país ISO, baja segura —únicamente por el protocolo transversal—, reactivación y ausencia de mensajería inventada quedan alineados sin timeout ni rol inventado.
+Unicidad global, tipos de logo, país ISO, baja segura —únicamente por el protocolo transversal—, reactivación y ausencia de mensajería inventada quedan alineados con el timeout inicial de Taxonomy descrito en SPEC-008 y sin rol inventado.
+
+La baja `BRAND` aplica el protocolo transversal de SPEC-008: versión autoritativa capturada al admitir, respuesta `CLEAR | IN_USE` y confirmación/liberación solo tras el evento final verificable y correlacionado. El timeout inicial de Taxonomy es 60 s; no permite ignorar dependencias ni liberar barreras. Ante ausencia de confirmación, Taxonomy debe cerrar/rechazar durablemente y emitir el final; Catálogo conserva el bloqueo hasta entrega o reconciliación segura. Migraciones aditivas aprobadas como diseño requieren el proceso de BD compartida; AsyncAPI tipada continúa candidata a homologación.

@@ -93,8 +93,8 @@ Despacho consulta el SKU vendible mediante `POST /api/v1/productos/datos-fisicos
 ### Incluido
 
 - Listar por producto, filtrar estado y paginar; conservar el contexto del padre.
-- Crear una variante individual con combinación identificadora, imagen URI, SKU opcional solicitado y datos físicos opcionales en borrador.
-- Catálogo genera SKU si se omite; el gestor no recibe un SKU supuesto antes de `201`.
+- Crear una variante individual con combinación identificadora, imagen URI, SKU explícito obligatorio y datos físicos opcionales en borrador.
+- El gestor ingresa un SKU explícito; Catálogo no genera SKU automáticamente.
 - Editar datos no identificadores, imagen y físico de la misma variante; identidad y combinación en lectura.
 - Detalle administrativo; preparación por SKU con estados conocidos, ausentes o inconclusos claramente diferenciados.
 - Activar desde detalle, confirmar desactivación y confirmar reactivación desde lista/detalle.
@@ -108,7 +108,7 @@ Despacho consulta el SKU vendible mediante `POST /api/v1/productos/datos-fisicos
 - Precio base propio obligatorio en alta, duplicación de inicialización de Pricing o edición del override desde MK-004.
 - Saldo, reservas, stock inicial, ajuste de inventario, ubicaciones, empaque, pedido, checkout o fulfillment.
 - Cambio de modelo/estado del padre mediante controles de variante; reactivación automática del padre.
-- Administración de barcode o elegibilidad de canal pendiente de `D-CAT-01..06`; disponibilidad cero no cambia identidad SKU.
+- Administración de barcode queda fuera del mockup: D-CAT-01..04 define asociación inmutable de Catálogo y D-CAT-05/06 usa estados comunes por canal, con ratificación externa pendiente; disponibilidad cero no cambia identidad SKU.
 - Escritura de Taxonomía, configuración de qué atributos son obligatorios por categoría o nuevos permisos globales.
 - Lectura de preparación/reintento inventados; eventos internos como controles de usuario; mobile/tablet.
 
@@ -178,7 +178,7 @@ Errores de alta/edición permanecen en S02 con entradas. Fallo de inicializació
 |---|---|---|---|---|
 | DS-C01 `PO/Button` | S01–S06 | Guardar, activar, confirmar, cancelar y volver | filled primary / outline / subtle, md; destructive para baja | default, hover, focus, pressed, disabled con causa, loading |
 | DS-C02 `PO/ActionIcon`, DS-C29 `PO/Menu` | S01/S03 | Acciones por variante | Área 32/40 px; menú autorizado | focus, open, disabled |
-| DS-C03 `PO/TextInput` | S02 | SKU opcional, valores TEXTO y URL de imagen | md; read-only para identidad en edición | filled, error, focus, read-only |
+| DS-C03 `PO/TextInput` | S02 | SKU obligatorio, valores TEXTO y URL de imagen | md; read-only para identidad en edición | filled, error, focus, read-only |
 | DS-C04 `PO/NumberInput` | S02 | Valores NUMERO, peso y dimensiones | md con unidades | filled, error, focus |
 | DS-C06 `PO/Select` | S01/S02 | Estado, característica y valor LISTA | sm filtros / md formulario | loading, open, selected, error |
 | DS-C13 `PO/FilterBar` | S01 | Filtro de estado contractual | Estándar DS | applied, error |
@@ -228,7 +228,7 @@ No se añade Search porque no hay búsqueda publicada de variantes. Los componen
 
 | Propiedad | Tipo | Obligatoria | Regla / restricción |
 |---|---|---:|---|
-| sku | Texto/null | No en alta | Si se omite, lo genera Catálogo; único globalmente |
+| sku | Texto | Sí en alta | Explícito, no vacío, globalmente único e inmutable; Catálogo no lo genera |
 | atributosIdentificadores | Lista de `Atributo` | Sí en alta | Mínimo 1; combinación única dentro del padre |
 | atributosNoIdentificadores | Lista de `Atributo` | No | Editables conforme al esquema vigente |
 | esquemaTipo | `EsquemaTipoProducto` | Para validar valores | No se deriva de categoría ni convierte obligatoria en identificadora automáticamente |
@@ -238,7 +238,7 @@ No se añade Search porque no hay búsqueda publicada de variantes. Los componen
 
 | Estado | Disparador | Representación | Acción permitida |
 |---|---|---|---|
-| Default | Crear | SKU opcional y captura explícita de atributos | Completar y guardar |
+| Default | Crear | SKU obligatorio y captura explícita de atributos | Completar y guardar |
 | Read-only | Editar registro existente | SKU y combinación legibles/copiables | Editar solo no identificadores |
 | Loading | Consulta de esquema/valores | Loader del grupo | Esperar / reconsultar lectura |
 | Error | SKU/combinación/atributo inválido | Error junto al dato; combinación completa preservada | Corregir alta sin perder demás valores |
@@ -351,12 +351,12 @@ No buscar/ordenar variantes ni seleccionar filas para mutación masiva. Un padre
 
 **Acción primaria:** Guardar variante en alta; Guardar cambios en edición. **Secundarias:** Cancelar; continuar editando o descartar explícitamente ante salida.
 
-**Estados requeridos:** crear vacío; SKU omitido/generado o solicitado; atributos/esquema loading/error; físico incompleto válido; imagen faltante/inválida; medida no positiva; SKU/combinación duplicados; guardando; `201 BORRADOR`; editar cargado; activo inválido; `VERSION_CONFLICT`; `200` guardado; resultado desconocido. UXD-001/002/004/005/006/009/012; UXG-002–004/006–007/011/013/017/020–022.
+**Estados requeridos:** crear vacío; SKU explícito obligatorio omitido/inválido y SKU duplicado; atributos/esquema loading/error; físico incompleto válido; imagen faltante/inválida; medida no positiva; combinación duplicada; guardando; `201 BORRADOR`; editar cargado; activo inválido; `VERSION_CONFLICT`; `200` guardado; resultado desconocido. UXD-001/002/004/005/006/009/012; UXG-002–004/006–007/011/013/017/020–022.
 
 | Elemento | Texto / patrón | Fuente |
 |---|---|---|
 | H1 | «Crear variante» / «Editar variante» | WF-004 |
-| SKU alta | «SKU (opcional)»; «Si lo dejas vacío, Catálogo asignará uno al guardar» | `VarianteCreateRequest` |
+| SKU alta | «SKU (obligatorio)»; «Ingresa el SKU asignado a esta variante» | `VarianteCreateRequest` |
 | Identidad edición | «El SKU y los atributos identificadores se conservan» | SPEC-004 §6 |
 | Medidas | «Puedes completar las medidas antes de activar; los valores informados deben ser mayores que cero» | SPEC-004 §5 |
 | Precio | «Esta variante hereda el precio del producto salvo que exista un precio específico gestionado en Precios» | SPEC-004 §3 |

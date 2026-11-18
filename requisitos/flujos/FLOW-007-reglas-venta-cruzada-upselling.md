@@ -139,7 +139,7 @@ La ruta es `GET /api/v1/recomendaciones?productoId=...&canal=...`. La respuesta 
 
 La salida se mantiene a nivel `product_id`, sin seleccionar SKU/variante ni exponer saldos internos. Cada producto aparece una sola vez y conserva la prioridad y orden de su primera aparición. El precio es informativo, regular u oferta pública vigente de Pricing; no congela precio de pedido, no demuestra superioridad y no reserva stock. La resolución definitiva del SKU elegido corresponde al proceso posterior del canal.
 
-**Límites provisionales vigentes:** la consulta está publicada como `provisional` en OpenAPI 0.5.0. `D-REC-01` (disponibilidad por producto con múltiples SKU) y `D-REC-02` (significado de `current_price` con variantes/overrides) siguen abiertas en SPEC/HU-007. El FLOW representa el filtrado comercial requerido, sin definir una agregación nueva de stock ni seleccionar un precio de variante. Los enriquecimientos `availability` y `current_price` conservan ese carácter provisional. Si se expone disponibilidad, utiliza los estados contractuales `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`.
+**Límite de estado:** la aprobación interna H4 de D-REC-01/02 se registra en [acuerdos G6 H4](../../arquitectura/decisiones/ACUERDOS-INTEGRACION-INTERNA-G6-H4.md) y fija la agregación por SKU y el precio mínimo efectivo. La versión candidata OpenAPI y su runtime siguen provisionales hasta su adopción/publicación y evidencia de implementación. El DTO conserva `DISPONIBLE`, `STOCK_BAJO`, `AGOTADO`; `INDETERMINADO` sin positividad demostrada excluye el candidato y no se traduce a agotado. Fallo global de dependencia produce error técnico, no lista vacía.
 
 No existe simulador administrativo ni pantalla «Probar recomendaciones». La consulta de canal no incorpora IA/ML, personalización histórica o reemplazo automático de productos.
 
@@ -173,7 +173,7 @@ flowchart LR
 
 Los cuatro consumidores de `promotions-svc` existen en AsyncAPI/catálogo 0.4.0. Las proyecciones son locales y reconstruibles mediante los eventos publicados; Catálogo, Inventario y Pricing conservan ownership. No hay llamadas síncronas permanentes ni joins sobre sus schemas para estos datos proyectados.
 
-Un producto/SKU desactivado deja de ser elegible sin editar manualmente reglas históricas. Stock confirmado modifica la elegibilidad de salida, sin alterar la definición comercial. Precio confirmado actualiza la información mostrada, sin redefinir Cross-sell/Upsell ni su criterio. El efecto product-level de cambios por SKU sigue sujeto a `D-REC-01/02`; la recepción del evento no resuelve esas decisiones abiertas.
+Un producto/SKU desactivado deja de ser elegible sin editar manualmente reglas históricas. `inventory.stock.changed` invalida la proyección; Promotions debe consultar disponibilidad comercial autoritativa antes de decidir. `pricing.price.changed` invalida el precio del objetivo/canal y exige volver a consultar Pricing, sin reconstruirlo desde el evento ni redefinir Cross-sell/Upsell. Se aplica la agregación D-REC-01/02 aprobada; la recepción de mensajes no acredita ejecución integrada.
 
 Estos eventos actualizan proyecciones internas: no equivalen a crear/editar una regla por el gestor ni a comandos/resultados de consumo de cupón.
 

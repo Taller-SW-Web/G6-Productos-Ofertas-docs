@@ -149,7 +149,7 @@ flowchart LR
     C2 --> DS1
     DS1 -->|"CLEAR"| T3
     T3 --> FIN_CONFIRMADA
-    DS1 -->|"HAS_ACTIVE_PRODUCTS"| T4
+    DS1 -->|"IN_USE"| T4
     T4 --> FIN_RECHAZADA
     T2 --> E1(("Time out o error en la verificación"))
     E1 --> T5
@@ -202,3 +202,8 @@ flowchart LR
 ```
 
 > La desactivación de una característica completa es lógica: nunca se borra y su ID se conserva, por lo que la reactivación recupera exactamente la misma identidad junto con su tipo y sus valores. Una característica inactiva no se ofrece para nuevas asociaciones en FLOW-010, pero las asociaciones ya existentes y su histórico permanecen vigentes.
+
+
+### Alineación de baja de valores
+
+La comprobación de `CHARACTERISTIC_VALUE` considera uso activo; productos en borrador/inactivos no bloquean el check, pero con barrera no se permiten nuevas referencias ni reactivaciones incompatibles. `CHARACTERISTIC` no participa como `entity_type` en el protocolo. `CLEAR` no libera sin evento final; ausencia del evento final mantiene bloqueo y alerta. Ver SPEC-008/009; el payload compartido de AsyncAPI sigue pendiente de homologación.

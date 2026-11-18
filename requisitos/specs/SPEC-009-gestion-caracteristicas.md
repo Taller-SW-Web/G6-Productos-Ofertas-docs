@@ -59,7 +59,7 @@ Secuencia:
 3. Catálogo verifica uso;
 4. resultado seguro sin uso → baja confirmada;
 5. uso activo → rechazo y restauración del estado previo;
-6. error/timeout/falta de confirmación → no se confirma la baja y el valor vuelve al estado anterior.
+6. timeout, fallo técnico o conflicto de versión → Taxonomy rechaza la operación y restaura el estado; si Catálogo no recibe el evento final, conserva la barrera y alerta. La falta de respuesta nunca autoriza la baja ni liberar la barrera.
 
 La baja segura de valores **usa únicamente el protocolo transversal publicado**, sin mensajes propios de esta capacidad:
 
@@ -103,3 +103,5 @@ POST /api/v1/caracteristicas/{caracteristicaId}/reactivar
 
 ## Criterio de completitud
 Se cumplen tipos, límites, IDs estables, tipo inmutable, desactivación/reactivación lógica de la característica con ID conservado y baja segura asíncrona de valores por el protocolo transversal, sin tratar el `202 Accepted` como baja completada.
+
+La baja segura de `CHARACTERISTIC_VALUE` sigue la semántica común de SPEC-008: uso incompatible solo por referencias activas; borradores/inactivos no bloquean el check, aunque una barrera sí impide nuevas referencias/reactivaciones incompatibles. `CHARACTERISTIC` no es `entity_type` de este protocolo. La especialización de mensajes compartidos requiere homologación; no inferirla del contrato genérico vigente.
