@@ -42,6 +42,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Ejecutar pruebas aisladas de sincronización de workspaces
+        working-directory: .
+        run: python -m unittest discover -s tests/automation -p "test_sync_workspaces.py" -v
       - name: Instalar dependencias fijadas
         run: |
           npm ci --ignore-scripts
@@ -81,7 +84,14 @@ jobs:
     needs: [contrato]
     runs-on: ubuntu-latest
     steps:
+      - name: Obtener el código evaluado
+        uses: actions/checkout@v4
+      - name: Preparar Node.js para el verificador
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - name: Exigir validaciones documentales obligatorias
+        working-directory: .
         env:
           RESULTADOS: ${{ toJSON(needs) }}
         run: node scripts/ci/verify-docs-results.mjs "$RESULTADOS"
