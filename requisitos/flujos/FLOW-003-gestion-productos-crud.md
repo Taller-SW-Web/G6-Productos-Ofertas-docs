@@ -9,7 +9,7 @@
 - **Relacionado con:** [SPEC-003](../specs/SPEC-003-gestion-productos-crud.md) / [WF-003](../../ux/wireframes/flows/WF-003-gestion-productos-crud.md) / [índice WF-003](../../ux/wireframes/prototipos/WF-003-gestion-productos-crud/index.html) / [HU-003](../hu/HU-003-gestion-productos-crud.md).
 - **Responsable:** Gabriel Poma Gutierrez.
 - **Última actualización:** 2026-10-02.
-- **Contratos consultados:** [OpenAPI candidata vigente 0.6.0-rc.3](../../contratos/http/openapi.yaml) y [AsyncAPI candidata vigente 0.6.0-rc.4](../../contratos/eventos/asyncapi.yaml). Se conservan las extensiones vigentes de las fuentes.
+- **Contratos en el corte documental del flujo:** OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` eran candidatas; los flujos RabbitMQ descritos son antecedentes H4. Los contratos canónicos H5 actuales son OpenAPI y AsyncAPI `0.7.0-rc.1` (`SEMIFINAL_G6`).
 
 ## 2. Objetivo del flujo
 

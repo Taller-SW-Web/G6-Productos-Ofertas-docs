@@ -2,14 +2,19 @@
 
 # API Contract — Módulo de Productos y Ofertas
 
+> **Corte documental original (2026-10-12):** OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4`, versiones candidatas referidas al momento de redacción.
+> **Snapshots H4 conservados:** [OpenAPI H4](../historico/h4/http/openapi.yaml) `0.6.0-rc.5` y [AsyncAPI H4](../historico/h4/eventos/asyncapi.yaml) `0.6.0-rc.4`.
+> **Contratos canónicos H5 vigentes:** [OpenAPI](../http/openapi.yaml) y [AsyncAPI](../eventos/asyncapi.yaml), ambos `0.7.0-rc.1`, estado `SEMIFINAL_G6`. Esta identificación documental no acredita homologación externa, implementación, autorización G7 ni despliegue.
+
+
 **Fecha de actualización:** 2026-10-12  
 **Módulo propietario:** Productos y Ofertas  
 **Documento de integración:** `Contrato_Api.md`  
-**Contrato HTTP canónico:** `openapi.yaml` (`0.6.0-rc.3`, candidata; operación de Despacho homologada pero aún `provisional`)
-**Contrato asíncrono canónico:** `../eventos/asyncapi.yaml` (`0.6.0-rc.4`, candidato)
+**OpenAPI referido en el corte documental original:** `0.6.0-rc.3` (candidato del momento; no es la versión del snapshot H4).
+**AsyncAPI referida en el corte documental original:** `0.6.0-rc.4` (candidato del momento).
 **Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (referencia humana; base histórica `0.5.0`, candidato de 40 mensajes)
 **Catálogo de errores canónico:** `contratos/http/catalogo-errores.md` (vocabulario estable de códigos)
-**Estado:** `0.5.0` como línea base histórica/de compatibilidad; OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` como candidatas. La revisión `rc.3` reconcilia nombres físicos base observados en Oracle y conserva mensajes, operaciones y routing keys; no acredita despliegue, permisos de G7 ni pruebas de integración.
+**Estado en el corte documental original:** `0.5.0` como línea base histórica/de compatibilidad; OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` como candidatas. No reemplaza la identificación H5 vigente indicada arriba. La revisión `rc.3` reconcilia nombres físicos base observados en Oracle y conserva mensajes, operaciones y routing keys; no acredita despliegue, permisos de G7 ni pruebas de integración.
 
 ## Fuentes utilizadas
 

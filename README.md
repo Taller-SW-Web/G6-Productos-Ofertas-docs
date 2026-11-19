@@ -12,6 +12,12 @@ La documentación sigue un enfoque **contract-first**: las reglas funcionales, c
 
 ---
 
+## Hito 5 — objetivo vigente
+
+> CI/CD incluyendo revision Seguridad — Evidencia de Pruebas de integración — Evidencia de Pruebas de performance — Uso de API Management y Mecanismo asincrónico entre Microservicios
+
+Los cuatro criterios de aceptación y su seguimiento independiente están en [Hito 5](hitos/HITO_5.md). H4 es histórico; sus contratos se preservan bajo `contratos/historico/h4/`.
+
 ## 1. Alcance del módulo
 
 ### Seguimiento de mensajería H5
@@ -105,7 +111,7 @@ La [nota de retiro fusionado de CI/CD Oracle y de infraestructura VM/Compose](op
 | Modelo conceptual | [`Modelo_Conceptual.md`](arquitectura/Modelo_Conceptual.md) | Ownership y relaciones conceptuales de datos |
 | Contrato de integración | [`Contrato_Api.md`](contratos/http/Contrato_Api.md) | Responsabilidades e integración con otros módulos |
 | OpenAPI | [`contratos/http/openapi.yaml`](contratos/http/openapi.yaml) | Contrato HTTP ejecutable |
-| AsyncAPI | [`contratos/eventos/asyncapi.yaml`](contratos/eventos/asyncapi.yaml) | Contrato de mensajería asíncrona |
+| AsyncAPI H5 canónico | [`contratos/eventos/asyncapi.yaml`](contratos/eventos/asyncapi.yaml) | Contrato `0.7.0-rc.1`, `SEMIFINAL_G6` |
 | Catálogo de errores | [`contratos/http/catalogo-errores.md`](contratos/http/catalogo-errores.md) | Semántica estable de errores del módulo |
 | Catálogo de eventos | [`contratos/eventos/catalogo-eventos.md`](contratos/eventos/catalogo-eventos.md) | Eventos publicados y consumidos |
 | Arquitectura objetivo H5 | [`arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md`](arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md) | Azure Service Bus Basic interno G6, adoptado; piloto aislado #234 validado; implementación compartida y verificaciones globales pendientes |
@@ -116,7 +122,7 @@ La [nota de retiro fusionado de CI/CD Oracle y de infraestructura VM/Compose](op
 | Plan H5 y gates | [`integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md`](integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md), [`tests/contratos/PLAN-VERIFICACION-SERVICE-BUS-H5.md`](tests/contratos/PLAN-VERIFICACION-SERVICE-BUS-H5.md) | Migración, verificación y bloqueos separados por estado |
 | Índice de transición H4→H5 | [`integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md`](integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md) | Clasifica contrato H4, compatibilidad transitoria, legado y menciones funcionales |
 | Procedimientos RabbitMQ H4 | [`arquitectura/operacion-rabbitmq.md`](arquitectura/operacion-rabbitmq.md), [`ops/rabbitmq/`](ops/rabbitmq/), [`tests/rabbitmq-aislamiento/README.md`](tests/rabbitmq-aislamiento/README.md) | `LEGADO_H4`; consulta histórica/compatibilidad del runtime anterior, no guía de implementación H5 |
-| Contrato AsyncAPI H4 | [`contratos/eventos/asyncapi.yaml`](contratos/eventos/asyncapi.yaml) y [`contratos/eventos/rabbitmq-topologia.md`](contratos/eventos/rabbitmq-topologia.md) | Referencia funcional heredada; sus servidores/bindings físicos no autorizan implementación H5 |
+| Contrato AsyncAPI H4 | [`contratos/historico/h4/eventos/asyncapi.yaml`](contratos/historico/h4/eventos/asyncapi.yaml) | Snapshot histórico; bindings y topología física no autorizan implementación H5 |
 | Kit de integración | [`contratos/http/kit-integracion.md`](contratos/http/kit-integracion.md) | Guía práctica de integración para otros módulos |
 | Matriz de pruebas de contrato | [`contratos/pruebas/pruebas-contrato.md`](contratos/pruebas/pruebas-contrato.md) | Casos estáticos, provider, consumer/provider, seguridad e integración |
 | Acuerdos de integración | [`integraciones/`](integraciones/) | Documentación de alineaciones, acuerdos publicados y pendientes de homologación con otros módulos; los acuerdos G3–G6 A16/A17 están aceptados documentalmente en [ALINEACION_CHATBOT.md](integraciones/ALINEACION_CHATBOT.md). |
@@ -128,7 +134,7 @@ La [nota de retiro fusionado de CI/CD Oracle y de infraestructura VM/Compose](op
 | Matriz de trazabilidad DEC-F | [`arquitectura/decisiones/MATRIZ_TRAZABILIDAD_DEC_F.md`](arquitectura/decisiones/MATRIZ_TRAZABILIDAD_DEC_F.md) | Referencias, estados, contradicciones y validación pendiente |
 | Propuestas DEC-F backend (histórico) | [`arquitectura/decisiones/PROPUESTAS_DEC_F_BACKEND.md`](arquitectura/decisiones/PROPUESTAS_DEC_F_BACKEND.md) | Evidencia histórica; el registro es la fuente normativa vigente |
 | Matriz intermodular backend | [`integraciones/MATRIZ_INTERMODULAR_BACKEND.md`](integraciones/MATRIZ_INTERMODULAR_BACKEND.md) | Estado de integración, homologación y bloqueos por módulo |
-| Política de seguridad progresiva G6 | [`arquitectura/decisiones/POLITICA-SEGURIDAD-PROGRESIVA-G6.md`](arquitectura/decisiones/POLITICA-SEGURIDAD-PROGRESIVA-G6.md) | Decisión adoptada; documento en PR #114 draft, pendiente de merge; implementación separada |
+| Política de seguridad progresiva G6 | [`arquitectura/decisiones/POLITICA-SEGURIDAD-PROGRESIVA-G6.md`](arquitectura/decisiones/POLITICA-SEGURIDAD-PROGRESIVA-G6.md) | Decisión adoptada y publicada en Docs PR #114, fusionado el 2026-11-05; implementación y despliegue se evidencian por separado |
 | Matriz de operaciones de seguridad | [`arquitectura/decisiones/MATRIZ-OPERACIONES-SEGURIDAD-G6.md`](arquitectura/decisiones/MATRIZ-OPERACIONES-SEGURIDAD-G6.md) | Inventario OpenAPI por ocho servicios; lectura pública candidata o pendiente, no grant |
 | Persistencia por bounded context | [`bd/`](datos) | Modelo físico, migraciones y scripts de validación SQL por servicio |
 
@@ -147,7 +153,7 @@ No todos los documentos tienen la misma autoridad.
 | UX transversal y decisiones de mockups | `mockups/ux/propuesta-ux.md` y `mockups/ux/ux-decisions.md` |
 | Reglas operativas de mockups | `mockups/ux/ux-guidelines.md` |
 | Contrato HTTP | `contratos/http/openapi.yaml` |
-| Contrato funcional de eventos H4 | `contratos/eventos/asyncapi.yaml` (histórico; véase índice H4→H5) |
+| Contrato funcional de eventos H4 | `contratos/historico/h4/eventos/asyncapi.yaml` (snapshot histórico; véase índice H4→H5) |
 | Arquitectura objetivo de mensajería H5 | ADR H5 + topología Service Bus Basic |
 | Códigos de error | `contratos/http/catalogo-errores.md` |
 | Eventos | `contratos/eventos/catalogo-eventos.md` |

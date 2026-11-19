@@ -1607,7 +1607,7 @@ INDETERMINADO
 ```
 
 `D-INV-01` está **adoptada** en el ADR de bloqueantes (0.6.0-rc.1): la disponibilidad comercial se determina por una única ubicación elegible y un plan de cumplimiento realmente ejecutable, nunca sumando saldos independientes. Si el mapeo del contexto de cumplimiento falta, es ambiguo o no permite justificar un resultado, responder `INDETERMINADO`; **no** inferir `AGOTADO`. El contrato sigue `provisional` porque falta comprobar su implementación, no porque la decisión siga abierta.
-### Verificación comercial de cantidades — contrato 0.6.0-rc.1
+### Verificación comercial de cantidades — antecedente contractual histórico 0.6.0-rc.1
 
 ```http
 POST /api/v1/inventario/disponibilidad/comercial/verificar
@@ -1624,9 +1624,9 @@ No confundir `GET.status` (`DISPONIBLE/STOCK_BAJO/AGOTADO/INDETERMINADO`) con `P
 
 <!-- HOMOLOGACION-HTTP-0.5.0:END -->
 
-## Addendum contractual 0.6.0-rc.1 — Cuatro bloqueantes G6
+## Addendum contractual histórico 0.6.0-rc.1 — Cuatro bloqueantes G6
 
-**Decisión interna aprobada; objetivo 0.6.0-rc.1 (no desplegado).**
+**Decisión interna aprobada en el antecedente contractual `0.6.0-rc.1` (no desplegado); este addendum histórico no sustituye los contratos canónicos H5 `0.7.0-rc.1` (`SEMIFINAL_G6`).**
 
 - `order_id` es la referencia textual opaca de Ventas; `operation_id` y `reservation_id` son UUID. No convertir `PED-*` a UUID.
 - `POST /inventario/reservas`, `/confirmar` y `/liberar` responden `202` solamente cuando aceptan el comando. El éxito o rechazo se determina por resultado persistido y evento.
