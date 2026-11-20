@@ -19256,6 +19256,7 @@ paths:
       operationId: listarSaldosFisicosAdministracion
       tags: [Inventario]
       summary: Listar saldos físicos para administración
+      description: Lectura administrativa para navegador mediante Gateway/APIM y JWT humano validado; requiere rol GESTOR_COMERCIAL y capacidad autorizada. No es anónima ni M2M.
       x-owner: inventory-svc
       x-source-spec: [SPEC-015, SPEC-016]
       x-contract-status: SEMIFINAL_G6
@@ -19288,7 +19289,7 @@ paths:
       operationId: listarAlertasOperativasInventario
       tags: [Inventario]
       summary: Listar alertas operativas de stock
-      description: Lectura pura de snapshots; no envía notificaciones ni publica eventos. Excluye ubicaciones inactivas y SKU sin saldo observado. AGOTADO cuando available es cero; STOCK_BAJO cuando es positivo y menor o igual al umbral efectivo. No clasifica valores NULL como disponibles.
+      description: Lectura administrativa para navegador mediante Gateway/APIM y JWT humano validado; requiere rol GESTOR_COMERCIAL y capacidad autorizada. No es anónima ni M2M. Es lectura pura de snapshots; no envía notificaciones ni publica eventos. Excluye ubicaciones inactivas y SKU sin saldo observado. AGOTADO cuando available es cero; STOCK_BAJO cuando es positivo y menor o igual al umbral efectivo. No clasifica valores NULL como disponibles.
       x-owner: inventory-svc
       x-source-spec: [SPEC-016]
       x-contract-status: SEMIFINAL_G6
@@ -19322,7 +19323,7 @@ paths:
       operationId: listarUbicacionesInventario
       tags: [Inventario]
       summary: Listar ubicaciones de inventario
-      description: Incluye ubicaciones sin saldo. soloActivas=true filtra activas; false o ausente incluye todas. Orden code, name e id ascendente. La ruta no se expone por APIM pública.
+      description: Lectura administrativa para navegador mediante Gateway/APIM y JWT humano validado; requiere rol GESTOR_COMERCIAL y capacidad autorizada. No es anónima ni M2M. Incluye ubicaciones sin saldo. soloActivas=true filtra activas; false o ausente incluye todas. Orden code, name e id ascendente.
       x-owner: inventory-svc
       x-source-spec: [SPEC-015, SPEC-016]
       x-contract-status: SEMIFINAL_G6
@@ -22151,7 +22152,7 @@ paths:
       operationId: filtrarSkusVendiblesInterno
       tags: [Productos]
       summary: Filtrar población vendible de SKU para servicios G6
-      description: Consulta de solo lectura, orden estable por SKU y cursor opaco; no devuelve precio ni stock y no permite SQL cross-schema.
+      description: Ruta exclusivamente M2M entre servicios G6, fuera de la fachada pública Gateway/APIM. Consulta de solo lectura, orden estable por SKU y cursor opaco; no devuelve precio ni stock y no permite SQL cross-schema.
       x-owner: catalog-svc
       x-consumer: inventory-svc
       x-internal: true
@@ -22196,7 +22197,7 @@ paths:
       operationId: obtenerEvidenciaReservaCuponInterno
       tags: [Inventario]
       summary: Consultar evidencia de reserva para Promotions
-      description: Valida reserva persistida y coincidencia order_id sin mutación, expiración ni confianza en el body del cupón. Acredita reserva, no pago ni pedido completo; no exponer por APIM pública.
+      description: Ruta exclusivamente M2M entre servicios G6, fuera de la fachada pública Gateway/APIM. Valida reserva persistida y coincidencia order_id sin mutación, expiración ni confianza en el body del cupón. Acredita reserva, no pago ni pedido completo.
       x-owner: inventory-svc
       x-consumer: promotions-svc
       x-internal: true

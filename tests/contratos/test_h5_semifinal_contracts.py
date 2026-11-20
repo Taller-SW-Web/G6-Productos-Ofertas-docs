@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import copy
 import unittest
 from pathlib import Path
 
@@ -76,13 +77,12 @@ class H5SemifinalContractTests(unittest.TestCase):
         }
         for (path, method), historical_operation in historical_operations.items():
             if (path, method) == ("/inventario/dashboard", "get"):
-                # SPEC-016 runtime only supports these two filters; rc.2 narrows the contract accordingly.
-                dashboard = self.openapi["paths"][path][method]
-                names = {parameter.get("name") for parameter in dashboard.get("parameters", [])}
-                self.assertTrue({"sku", "locationId"}.issubset(names))
-                self.assertTrue({"productoId", "categoriaId", "marcaId"}.isdisjoint(names))
-                continue
-            self.assertEqual(self.openapi["paths"][path][method], historical_operation, f"H4 operation changed: {method.upper()} {path}")
+                # The only approved change is removing three filters unsupported by the current runtime.
+                expected = copy.deepcopy(historical_operation)
+                expected["parameters"] = [p for p in expected.get("parameters", []) if p.get("name") not in {"productoId", "categoriaId", "marcaId"}]
+                self.assertEqual(self.openapi["paths"][path][method], expected, "GET /inventario/dashboard changed beyond the three unsupported filters")
+            else:
+                self.assertEqual(self.openapi["paths"][path][method], historical_operation, f"H4 operation changed: {method.upper()} {path}")
         self.assertEqual(len(new_ops), 153)
         self.assertEqual(len(set(ids)), 153)
         added = [(p, m) for p, m, op in new_ops if op["operationId"] not in old_ids]

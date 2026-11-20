@@ -26,6 +26,19 @@ test('OpenAPI H5 completa lecturas Inventory y mantiene fronteras M2M privadas',
   assert.equal(spec.paths['/inventario/alertas'].get.parameters.find(p => p.name === 'estado').schema.enum.includes('DISPONIBLE'), false);
   assert.equal(spec.paths['/inventario/ubicaciones'].get.parameters.find(p => p.name === 'soloActivas').schema.default, false);
   assert.ok(!spec.paths['/inventario/dashboard'].get.parameters.some(p => ['productoId', 'categoriaId', 'marcaId'].includes(p.name)));
+  for (const path of ['/inventario/administracion/saldos', '/inventario/alertas', '/inventario/ubicaciones']) {
+    const operation = spec.paths[path].get;
+    assert.deepEqual(operation.security, [{ userBearer: [] }]);
+    assert.equal(operation['x-required-role'], 'GESTOR_COMERCIAL');
+    assert.match(operation.description, /Gateway\/APIM y JWT humano validado/);
+  }
+  for (const path of ['/interno/productos/skus/filtrar', '/interno/inventario/reservas/{reservaId}/evidencia-cupon']) {
+    const operation = spec.paths[path][path.endsWith('filtrar') ? 'post' : 'get'];
+    assert.equal(operation['x-internal'], true);
+    assert.deepEqual(operation.security, [{ serviceBearer: [] }]);
+    assert.match(operation.description, /exclusivamente M2M/);
+    assert.doesNotMatch(operation.description, /navegador/);
+  }
   assert.equal(operations(spec).length, new Set(operations(spec).map(op => op.operationId)).size);
   assert.equal(spec.paths['/inventario/administracion/saldos'].get.responses['200'].content['application/json'].examples.vacio.value.meta.total, 0);
 });
