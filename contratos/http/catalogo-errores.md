@@ -180,3 +180,7 @@ Para Bulk, se reutiliza `IDEMPOTENCY_CONFLICT` ante misma identidad de fila con 
 
 
 En `consultarDatosFisicos`, conexión, timeout, PostgreSQL o dependencia temporalmente indisponible corresponde a HTTP `503 SERVICIO_NO_DISPONIBLE`. No se exponen errores SQL, nombres de tablas, credenciales ni detalles internos. Un perfil físico incompleto no se presenta como respuesta `200` parcial.
+
+## Lecturas administrativas de inventario H5 (`0.7.0-rc.2`)
+
+Las rutas de saldos, alertas y ubicaciones responden `400 VALIDACION` ante filtros desconocidos, tipos inválidos o paginación fuera de rango; estado `DISPONIBLE` no es válido para `GET /inventario/alertas`. Un listado sin coincidencias devuelve `200` con `items: []` y `meta.total: 0`, nunca un `404`. Respuestas de autenticación conservan `401 TOKEN_INVALIDO` y `403 SCOPE_INSUFICIENTE`; limitación temporal usa `429 RATE_LIMIT_EXCEDIDO`; fallos internos/dependencia usan `500 ERROR_INTERNO` / `503 SERVICIO_NO_DISPONIBLE`. Estas rutas y permisos humanos aún requieren verificación de runtime/G7.

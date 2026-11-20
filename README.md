@@ -1,6 +1,6 @@
 # Productos y Ofertas
 
-API privada G6 Productos y Ofertas: [editor de Swagger Studio](https://app.swaggerhub.com/apis/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3) · [vista de documentación](https://app.swaggerhub.com/apis-docs/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3). Ambas son referencias históricas de SwaggerHub `0.6.0-rc.3`; requieren acceso autorizado y no representan la versión H5 `0.7.0-rc.1`, que aún no está publicada allí. Ver [integración, validaciones y límites de Try it out](swagger/README.md) y [hallazgos vigentes](swagger/HALLAZGOS.md). Docs conserva la fuente contractual.
+API privada G6 Productos y Ofertas: [editor de Swagger Studio](https://app.swaggerhub.com/apis/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3) · [vista de documentación](https://app.swaggerhub.com/apis-docs/sanmarcos-bb0/G6-Productos-y-Ofertas/0.6.0-rc.3). Ambas son referencias históricas de SwaggerHub `0.6.0-rc.3`; requieren acceso autorizado y no representan la versión H5 `0.7.0-rc.2`, que aún no está publicada allí. Ver [integración, validaciones y límites de Try it out](swagger/README.md) y [hallazgos vigentes](swagger/HALLAZGOS.md). Docs conserva la fuente contractual.
 
 Alternativa sin cuenta ni conexión a SmartBear: [Swagger UI local](swagger/LOCAL.md). Tras instalar dependencias, desde la raíz ejecuta `npm --prefix swagger run swagger:local` y abre `http://localhost:8080`. Solo consulta, con Try it out deshabilitado y escucha exclusiva en loopback.
 
@@ -111,14 +111,14 @@ La [nota de retiro fusionado de CI/CD Oracle y de infraestructura VM/Compose](op
 | Modelo conceptual | [`Modelo_Conceptual.md`](arquitectura/Modelo_Conceptual.md) | Ownership y relaciones conceptuales de datos |
 | Contrato de integración | [`Contrato_Api.md`](contratos/http/Contrato_Api.md) | Responsabilidades e integración con otros módulos |
 | OpenAPI | [`contratos/http/openapi.yaml`](contratos/http/openapi.yaml) | Contrato HTTP ejecutable |
-| AsyncAPI H5 canónico | [`contratos/eventos/asyncapi.yaml`](contratos/eventos/asyncapi.yaml) | Contrato `0.7.0-rc.1`, `SEMIFINAL_G6` |
+| AsyncAPI H5 canónico | [`contratos/eventos/asyncapi.yaml`](contratos/eventos/asyncapi.yaml) | Contrato `0.7.0-rc.2`, `SEMIFINAL_G6` |
 | Catálogo de errores | [`contratos/http/catalogo-errores.md`](contratos/http/catalogo-errores.md) | Semántica estable de errores del módulo |
 | Catálogo de eventos | [`contratos/eventos/catalogo-eventos.md`](contratos/eventos/catalogo-eventos.md) | Eventos publicados y consumidos |
 | Arquitectura objetivo H5 | [`arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md`](arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md) | Azure Service Bus Basic interno G6, adoptado; piloto aislado #234 validado; implementación compartida y verificaciones globales pendientes |
 | Topología y operación H5 | [`contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md`](contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md), [`arquitectura/operacion-service-bus-basic-h5.md`](arquitectura/operacion-service-bus-basic-h5.md) | Arquitectura adoptada; piloto aislado Pricing → Price Audit validado en Azure según #234; recursos y activación compartidos pendientes de verificar |
 
 | Inventario y frontera H5 | [`contratos/eventos/INVENTARIO-40-MENSAJES-H5.md`](contratos/eventos/INVENTARIO-40-MENSAJES-H5.md), [`integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md`](integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md) | 40 mensajes H4, 13 asignaciones a G5, 18 pares internos H4; transición externa HTTP bajo hipótesis G5 de planificación |
-| Baseline HTTP H5 y propuesta G5–G6 | [`contratos/http/PROPUESTA-OPERACIONES-CUPONES-H5.md`](contratos/http/PROPUESTA-OPERACIONES-CUPONES-H5.md), [`integraciones/REFERENCIA-G5-G6-H5-REVISION-01.md`](integraciones/REFERENCIA-G5-G6-H5-REVISION-01.md) | Cuatro rutas externas incluidas en OpenAPI `0.7.0-rc.1` `SEMIFINAL_G6`; hipótesis de aceptación G5 solo para planificación, homologación formal y grants G7 pendientes |
+| Baseline HTTP H5 y propuesta G5–G6 | [`contratos/http/PROPUESTA-OPERACIONES-CUPONES-H5.md`](contratos/http/PROPUESTA-OPERACIONES-CUPONES-H5.md), [`integraciones/REFERENCIA-G5-G6-H5-REVISION-01.md`](integraciones/REFERENCIA-G5-G6-H5-REVISION-01.md) | Cuatro rutas externas incluidas en OpenAPI `0.7.0-rc.2` `SEMIFINAL_G6`; homologación formal y grants G7 pendientes |
 | Plan H5 y gates | [`integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md`](integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md), [`tests/contratos/PLAN-VERIFICACION-SERVICE-BUS-H5.md`](tests/contratos/PLAN-VERIFICACION-SERVICE-BUS-H5.md) | Migración, verificación y bloqueos separados por estado |
 | Índice de transición H4→H5 | [`integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md`](integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md) | Clasifica contrato H4, compatibilidad transitoria, legado y menciones funcionales |
 | Procedimientos RabbitMQ H4 | [`arquitectura/operacion-rabbitmq.md`](arquitectura/operacion-rabbitmq.md), [`ops/rabbitmq/`](ops/rabbitmq/), [`tests/rabbitmq-aislamiento/README.md`](tests/rabbitmq-aislamiento/README.md) | `LEGADO_H4`; consulta histórica/compatibilidad del runtime anterior, no guía de implementación H5 |
@@ -303,15 +303,15 @@ La explicación humana de responsabilidades e integración se mantiene en:
 
 | Artefacto | Versión |
 |---|---|
-| OpenAPI 3.1.0 | `0.7.0-rc.1`, baseline semifinal H5 G6; 148 operaciones (143 H4 preservadas y 5 nuevas); pendiente de homologación externa e implementación/validación independientes |
-| AsyncAPI 3.0.0 | `0.7.0-rc.1`, baseline semifinal H5; 19 canales y 29 tipos de mensaje para Service Bus Basic interno; H4 íntegro en snapshots históricos |
+| OpenAPI 3.1.0 | `0.7.0-rc.2`, baseline semifinal H5 G6; 153 operaciones (148 anteriores y 5 nuevas); pendiente de homologación externa e implementación/validación independientes |
+| AsyncAPI 3.0.0 | `0.7.0-rc.2`, baseline semifinal H5; 19 canales y 29 tipos de mensaje para Service Bus Basic interno; H4 íntegro en snapshots históricos |
 | Línea base histórica OpenAPI/AsyncAPI | `0.5.0` (compatibilidad; no sustituida automáticamente en runtime) |
-| Catálogo de errores | Vocabulario humano alineado con OpenAPI H5 `0.7.0-rc.1` semifinal |
+| Catálogo de errores | Vocabulario humano alineado con OpenAPI H5 `0.7.0-rc.2` semifinal |
 | Catálogo de eventos | 40 mensajes históricos H4; AsyncAPI canónico H5 define 29 tipos, aún sin evidencia de publicación real |
 | Topología RabbitMQ H4 | Contrato histórico; no inferir aprovisionamiento actual ni usar como topología H5 |
 | Kit de integración | Guía documental derivada del contrato candidato |
 
-**Estado de publicación:** OpenAPI y AsyncAPI canónicos `0.7.0-rc.1` son `SEMIFINAL_G6`; la versión H4 se conserva byte por byte en `contratos/historico/h4/` con hashes en `SHA256SUMS`. Las interfaces compartidas siguen pendientes de homologación externa. Esto no acredita implementación, runtime, CI/CD, pruebas de integración/performance, grants, APIM habilitado, recursos Azure compartidos ni despliegue. La homologación G2 H4 documentada permanece histórica y no implica aceptación de la baseline H5.
+**Estado de publicación:** OpenAPI y AsyncAPI canónicos `0.7.0-rc.2` son `SEMIFINAL_G6`; la versión H4 se conserva byte por byte en `contratos/historico/h4/` con hashes en `SHA256SUMS`. Las interfaces compartidas siguen pendientes de homologación externa. Esto no acredita implementación, runtime, CI/CD, pruebas de integración/performance, grants, APIM habilitado, recursos Azure compartidos ni despliegue.
 
 ---
 

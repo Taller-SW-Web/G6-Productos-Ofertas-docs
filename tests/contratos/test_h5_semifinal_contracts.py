@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import copy
 import unittest
 from pathlib import Path
 
@@ -61,7 +62,7 @@ class H5SemifinalContractTests(unittest.TestCase):
 
     def test_openapi_semifinal_version_and_operation_baseline(self):
         self.assertEqual(self.openapi["openapi"], "3.1.0")
-        self.assertEqual(self.openapi["info"]["version"], "0.7.0-rc.1")
+        self.assertEqual(self.openapi["info"]["version"], "0.7.0-rc.2")
         old = yaml.safe_load((ROOT / "contratos/historico/h4/http/openapi.yaml").read_text(encoding="utf-8"))
         old_ids = {op["operationId"] for item in old["paths"].values() for method, op in item.items() if method in {"get", "post", "put", "patch", "delete"}}
         new_ops = [(path, method, op) for path, item in self.openapi["paths"].items() for method, op in item.items() if method in {"get", "post", "put", "patch", "delete"}]
@@ -75,11 +76,17 @@ class H5SemifinalContractTests(unittest.TestCase):
             if method in {"get", "post", "put", "patch", "delete"}
         }
         for (path, method), historical_operation in historical_operations.items():
-            self.assertEqual(self.openapi["paths"][path][method], historical_operation, f"H4 operation changed: {method.upper()} {path}")
-        self.assertEqual(len(new_ops), 148)
-        self.assertEqual(len(set(ids)), 148)
+            if (path, method) == ("/inventario/dashboard", "get"):
+                # The only approved change is removing three filters unsupported by the current runtime.
+                expected = copy.deepcopy(historical_operation)
+                expected["parameters"] = [p for p in expected.get("parameters", []) if p.get("name") not in {"productoId", "categoriaId", "marcaId"}]
+                self.assertEqual(self.openapi["paths"][path][method], expected, "GET /inventario/dashboard changed beyond the three unsupported filters")
+            else:
+                self.assertEqual(self.openapi["paths"][path][method], historical_operation, f"H4 operation changed: {method.upper()} {path}")
+        self.assertEqual(len(new_ops), 153)
+        self.assertEqual(len(set(ids)), 153)
         added = [(p, m) for p, m, op in new_ops if op["operationId"] not in old_ids]
-        self.assertEqual(set(added), {("/cupones/consumos", "post"), ("/cupones/restauraciones", "post"), ("/cupones/operaciones/{operationId}", "get"), ("/inventario/reservas/{reservaId}/estado", "get"), ("/interno/carga-masiva/contenidos/{contentId}", "get")})
+        self.assertEqual(set(added), {("/cupones/consumos", "post"), ("/cupones/restauraciones", "post"), ("/cupones/operaciones/{operationId}", "get"), ("/inventario/reservas/{reservaId}/estado", "get"), ("/interno/carga-masiva/contenidos/{contentId}", "get"), ("/inventario/administracion/saldos", "get"), ("/inventario/alertas", "get"), ("/inventario/ubicaciones", "get"), ("/interno/productos/skus/filtrar", "post"), ("/interno/inventario/reservas/{reservaId}/evidencia-cupon", "get")})
         for path in ("/inventario/reservas", "/inventario/reservas/{reservaId}/confirmar", "/inventario/reservas/{reservaId}/liberar", "/inventario/operaciones/{operationId}", "/inventario/disponibilidad", "/inventario/reintegros", "/inventario/conciliaciones-offline", "/cupones/validar"):
             for method in ("get", "post", "put", "patch", "delete"):
                 if method in old["paths"].get(path, {}) and method in self.openapi["paths"].get(path, {}):
@@ -275,20 +282,22 @@ class H5SemifinalContractTests(unittest.TestCase):
     def test_asyncapi_internal_basic_topology_and_claim_check(self):
         api = self.asyncapi
         self.assertEqual(api["asyncapi"], "3.0.0")
-        self.assertEqual(api["info"]["version"], "0.7.0-rc.1")
+        self.assertEqual(api["info"]["version"], "0.7.0-rc.2")
         self.assertEqual(len(api["channels"]), 19)
         self.assertEqual(len(api["components"]["messages"]), 29)
         self.assertNotIn("servers", api)
         self.assertNotIn("x-rabbitmq-topology", api)
         self.assertIn("g6.promotions.commands", [channel["address"] for channel in api["channels"].values()])
-        self.assertEqual(set(api["x-blocked-contracts"]), {"inventory.bulk.stock.adjust.requested", "pricing.bulk.price.apply.requested"})
+        self.assertEqual(set(api["x-blocked-contracts"]), {"pricing.bulk.price.apply.requested"})
         self.assertIn("message_id", api["x-delivery-model"]["inbox"]["deduplication_key"])
         self.assertFalse(api["x-delivery-model"]["exactly_once"])
         for blocked in api["x-blocked-contracts"]:
             message = next(m for m in api["components"]["messages"].values() if m["name"] == blocked)
-            self.assertEqual(message["x-runtime-status"], "BLOCKED_CONTRACT")
+            self.assertEqual(message["x-runtime-status"], "RESERVADO_NO_APLICA_BULK_V2")
             channel = next(c for c in api["channels"].values() if any(ref["$ref"].endswith("/" + next(k for k, v in api["components"]["messages"].items() if v is message)) for ref in c["messages"].values()))
-            self.assertEqual(channel["x-runtime-status"], "BLOCKED_CONTRACT")
+            self.assertEqual(channel["x-runtime-status"], "RESERVADO_NO_APLICA_BULK_V2")
+        self.assertEqual(api["components"]["messages"]["InventoryBulkStockAdjustRequested"]["x-runtime-status"], "PENDIENTE_IMPLEMENTACION")
+        self.assertEqual(api["components"]["messages"]["InventoryBulkStockAdjustRequested"]["payload"]["allOf"][1]["properties"]["data"]["$ref"], "#/components/schemas/InventoryBulkStockAdjustRequestedData")
         self.assertEqual(api["x-transport"]["max_complete_message_size_bytes"], 262144)
         bulk = api["components"]["schemas"]["CatalogBulkUpsertRequestedDataV3"]
         self.assertIn("content_ref", bulk["required"])

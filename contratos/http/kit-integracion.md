@@ -1,10 +1,10 @@
-> **Alcance de transporte:** este kit conserva pasos de integración H4 para trazabilidad. RabbitMQ/AsyncAPI no define el transporte H5. Consulte primero la [ADR Service Bus Basic adoptada](../../arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md), la [topología H5](../eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) y el [índice de transición](../../integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md). Los clientes externos usan HTTP autenticado. Para contratos H5, use el [OpenAPI canónico](openapi.yaml) y el [AsyncAPI canónico](../eventos/asyncapi.yaml), ambos `0.7.0-rc.1` (`SEMIFINAL_G6`); los pasos y ejemplos H4 de las secciones siguientes son históricos y no cambian rutas, scopes ni payloads.
+> **Alcance de transporte:** este kit conserva pasos de integración H4 para trazabilidad. RabbitMQ/AsyncAPI no define el transporte H5. Consulte primero la [ADR Service Bus Basic adoptada](../../arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md), la [topología H5](../eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) y el [índice de transición](../../integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md). Los clientes externos usan HTTP autenticado. Para contratos H5, use el [OpenAPI canónico](openapi.yaml) y el [AsyncAPI canónico](../eventos/asyncapi.yaml), ambos `0.7.0-rc.2` (`SEMIFINAL_G6`); los pasos y ejemplos H4 de las secciones siguientes son históricos y no cambian rutas, scopes ni payloads.
 
 # Kit de integración — Productos y Ofertas
 
 ## Propuesta H5 para consumidores externos
 
-H5 mantiene la integración externa por HTTP; G5 no obtiene credenciales ni acceso directo a Azure Service Bus. Las cuatro rutas siguientes están incluidas en OpenAPI H5 `0.7.0-rc.1` (`SEMIFINAL_G6`):
+H5 mantiene la integración externa por HTTP; G5 no obtiene credenciales ni acceso directo a Azure Service Bus. Las cuatro rutas siguientes están incluidas en OpenAPI H5 `0.7.0-rc.2` (`SEMIFINAL_G6`):
 
 - `POST /cupones/consumos`
 - `POST /cupones/restauraciones`

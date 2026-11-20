@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: API — Productos y Ofertas
-  version: 0.7.0-rc.1
+  version: 0.7.0-rc.2
   summary: Contrato HTTP de integración y administración del módulo Productos y Ofertas
   description: Baseline semifinal contractual H5 de G6. Estado SEMIFINAL_G6; las nuevas interfaces compartidas permanecen
     PENDIENTE_HOMOLOGACION_EXTERNA. La versión no acredita implementación, validación, habilitación, grants ni despliegue.
@@ -19251,6 +19251,105 @@ paths:
         '500': *id655
         '503': *id656
         '404': *id657
+  /inventario/administracion/saldos:
+    get:
+      operationId: listarSaldosFisicosAdministracion
+      tags: [Inventario]
+      summary: Listar saldos físicos para administración
+      description: Lectura administrativa para navegador mediante Gateway/APIM y JWT humano validado; requiere rol GESTOR_COMERCIAL y capacidad autorizada. No es anónima ni M2M.
+      x-owner: inventory-svc
+      x-source-spec: [SPEC-015, SPEC-016]
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: IMPLEMENTADO_BACKEND_PENDIENTE_VERIFICACION
+      x-required-role: GESTOR_COMERCIAL
+      security: [{ userBearer: [] }]
+      parameters:
+      - {name: sku, in: query, schema: {type: string, minLength: 1}}
+      - {name: locationId, in: query, schema: {type: string, format: uuid}}
+      - {name: estado, in: query, schema: {type: string, enum: [DISPONIBLE, STOCK_BAJO, AGOTADO]}}
+      - {name: pagina, in: query, schema: {type: integer, minimum: 1, default: 1}}
+      - {name: tamanio, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 20}}
+      - *id020
+      responses:
+        '200':
+          description: Saldos confirmados; una colección vacía se representa con items vacío y total cero.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ListadoSaldosFisicosAdministrativos'}
+              examples:
+                vacio: {value: {items: [], meta: {pagina: 1, tamanio: 20, total: 0, totalPaginas: 0}}}
+        '400': {description: VALIDACION, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '401': {description: TOKEN_INVALIDO, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '403': {description: SCOPE_INSUFICIENTE, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '429': {$ref: '#/components/responses/RateLimitExceeded'}
+        '500': {description: ERROR_INTERNO, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '503': {description: SERVICIO_NO_DISPONIBLE, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+  /inventario/alertas:
+    get:
+      operationId: listarAlertasOperativasInventario
+      tags: [Inventario]
+      summary: Listar alertas operativas de stock
+      description: Lectura administrativa para navegador mediante Gateway/APIM y JWT humano validado; requiere rol GESTOR_COMERCIAL y capacidad autorizada. No es anónima ni M2M. Es lectura pura de snapshots; no envía notificaciones ni publica eventos. Excluye ubicaciones inactivas y SKU sin saldo observado. AGOTADO cuando available es cero; STOCK_BAJO cuando es positivo y menor o igual al umbral efectivo. No clasifica valores NULL como disponibles.
+      x-owner: inventory-svc
+      x-source-spec: [SPEC-016]
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_ENDPOINT_HTTP
+      x-g7-grant-status: PENDIENTE_VERIFICACION
+      x-required-role: GESTOR_COMERCIAL
+      security: [{ userBearer: [] }]
+      parameters:
+      - {name: sku, in: query, schema: {type: string, minLength: 1}}
+      - {name: locationId, in: query, schema: {type: string, format: uuid}}
+      - {name: estado, in: query, schema: {type: string, enum: [AGOTADO, STOCK_BAJO]}}
+      - {name: pagina, in: query, schema: {type: integer, minimum: 1, default: 1}}
+      - {name: tamanio, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 20}}
+      - *id020
+      responses:
+        '200':
+          description: Snapshot paginado; lista vacía devuelve 200 con total cero.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ListadoAlertasOperativas'}
+              examples:
+                vacio: {value: {items: [], meta: {pagina: 1, tamanio: 20, total: 0, totalPaginas: 0}}}
+        '400': {description: VALIDACION, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '401': {description: TOKEN_INVALIDO, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '403': {description: SCOPE_INSUFICIENTE, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '429': {$ref: '#/components/responses/RateLimitExceeded'}
+        '500': {description: ERROR_INTERNO, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '503': {description: SERVICIO_NO_DISPONIBLE, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+  /inventario/ubicaciones:
+    get:
+      operationId: listarUbicacionesInventario
+      tags: [Inventario]
+      summary: Listar ubicaciones de inventario
+      description: Lectura administrativa para navegador mediante Gateway/APIM y JWT humano validado; requiere rol GESTOR_COMERCIAL y capacidad autorizada. No es anónima ni M2M. Incluye ubicaciones sin saldo. soloActivas=true filtra activas; false o ausente incluye todas. Orden code, name e id ascendente.
+      x-owner: inventory-svc
+      x-source-spec: [SPEC-015, SPEC-016]
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_ENDPOINT_HTTP
+      x-g7-grant-status: PENDIENTE_VERIFICACION
+      x-required-role: GESTOR_COMERCIAL
+      security: [{ userBearer: [] }]
+      parameters:
+      - {name: soloActivas, in: query, schema: {type: boolean, default: false}}
+      - {name: pagina, in: query, schema: {type: integer, minimum: 1, default: 1}}
+      - {name: tamanio, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 20}}
+      - *id020
+      responses:
+        '200':
+          description: Ubicaciones paginadas, incluidas las que aún no tienen saldos.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ListadoUbicacionesInventario'}
+              examples:
+                vacio: {value: {items: [], meta: {pagina: 1, tamanio: 20, total: 0, totalPaginas: 0}}}
+        '400': {description: VALIDACION, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '401': {description: TOKEN_INVALIDO, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '403': {description: SCOPE_INSUFICIENTE, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '429': {$ref: '#/components/responses/RateLimitExceeded'}
+        '500': {description: ERROR_INTERNO, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '503': {description: SERVICIO_NO_DISPONIBLE, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
   /inventario/dashboard:
     get:
       tags:
@@ -19264,18 +19363,6 @@ paths:
       security:
       - userBearer: []
       parameters:
-      - name: productoId
-        in: query
-        schema:
-          type: string
-      - name: categoriaId
-        in: query
-        schema:
-          type: string
-      - name: marcaId
-        in: query
-        schema:
-          type: string
       - name: sku
         in: query
         schema:
@@ -22060,6 +22147,86 @@ paths:
         - ERROR_INTERNO
         '503':
         - SERVICIO_NO_DISPONIBLE
+  /interno/productos/skus/filtrar:
+    post:
+      operationId: filtrarSkusVendiblesInterno
+      tags: [Productos]
+      summary: Filtrar población vendible de SKU para servicios G6
+      description: Ruta exclusivamente M2M entre servicios G6, fuera de la fachada pública Gateway/APIM. Consulta de solo lectura, orden estable por SKU y cursor opaco; no devuelve precio ni stock y no permite SQL cross-schema.
+      x-owner: catalog-svc
+      x-consumer: inventory-svc
+      x-internal: true
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
+      x-authorization-status: PENDIENTE_G7
+      x-required-scope: catalogo:leer
+      x-scope-registration-status: PENDIENTE_G7
+      security: [{serviceBearer: []}]
+      x-service-audience: api-productos
+      x-allowed-client-ids: [inventory-svc]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productoId: {type: string, minLength: 1}
+                categoriaId: {type: string, minLength: 1}
+                marcaId: {type: string, minLength: 1}
+                sku: {type: string, minLength: 1}
+                cursor: {type: string, minLength: 1}
+                tamanio: {type: integer, minimum: 1, maximum: 100, default: 20}
+              additionalProperties: false
+      responses:
+        '200':
+          description: Página de SKU vendibles ordenados por SKU.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SkusVendiblesFiltrados'}
+              examples:
+                pagina: {value: {items: [{sku: SKU-41-AZUL, productoId: 89ce7ad9-0359-40d0-8d2c-91174a04b96e, categoriaId: null, marcaId: null}], nextCursor: null}}
+        '400': {description: VALIDACION, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '401': {description: TOKEN_INVALIDO, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '403': {description: SCOPE_INSUFICIENTE, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '429': {$ref: '#/components/responses/RateLimitExceeded'}
+        '500': {description: ERROR_INTERNO, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '503': {description: SERVICIO_NO_DISPONIBLE, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+  /interno/inventario/reservas/{reservaId}/evidencia-cupon:
+    get:
+      operationId: obtenerEvidenciaReservaCuponInterno
+      tags: [Inventario]
+      summary: Consultar evidencia de reserva para Promotions
+      description: Ruta exclusivamente M2M entre servicios G6, fuera de la fachada pública Gateway/APIM. Valida reserva persistida y coincidencia order_id sin mutación, expiración ni confianza en el body del cupón. Acredita reserva, no pago ni pedido completo.
+      x-owner: inventory-svc
+      x-consumer: promotions-svc
+      x-internal: true
+      x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION_BACKEND
+      x-authorization-status: PENDIENTE_G7
+      security: [{serviceBearer: []}]
+      x-service-audience: api-productos
+      x-allowed-client-ids: [promotions-svc]
+      x-required-scope: inventario:reservas:estado:leer
+      x-scope-registration-status: PENDIENTE_G7
+      parameters:
+      - {name: reservaId, in: path, required: true, schema: {type: string, format: uuid}}
+      - {name: order_id, in: query, required: true, schema: {type: string, minLength: 1}}
+      responses:
+        '200':
+          description: Snapshot de reserva con order_id coincidente.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReservationStatusSnapshot'}
+              examples:
+                reservaVigente: {value: {reservation_id: 7aeb3e74-feb3-4703-b77f-08d9e9bf0342, order_id: pedido-opaque-41, estado_persistido: ACTIVA, observed_at: '2026-11-20T12:00:00Z', expires_at: '2026-11-20T12:10:00Z', vigencia_efectiva: VIGENTE, permite_pago: true, permite_consumo_cupon: true}}
+        '404': {description: 'Reserva ausente o ajena; respuesta uniforme.', content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '400': {description: VALIDACION, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '401': {description: TOKEN_INVALIDO, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '403': {description: SCOPE_INSUFICIENTE, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '429': {$ref: '#/components/responses/RateLimitExceeded'}
+        '500': {description: ERROR_INTERNO, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+        '503': {description: SERVICIO_NO_DISPONIBLE, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
   /interno/carga-masiva/contenidos/{contentId}:
     get:
       operationId: obtenerContenidoCargaMasivaInternoH5
@@ -22457,6 +22624,109 @@ components:
       - evaluated_at
       - binding
       - items
+      additionalProperties: false
+    MetaPaginacion:
+      type: object
+      properties:
+        pagina: {type: integer, minimum: 1}
+        tamanio: {type: integer, minimum: 1, maximum: 100}
+        total: {type: integer, minimum: 0}
+        totalPaginas: {type: integer, minimum: 0}
+      required: [pagina, tamanio, total, totalPaginas]
+      additionalProperties: false
+    SaldoFisicoAdministrativo:
+      type: object
+      properties:
+        sku: {type: string, minLength: 1}
+        ubicacion:
+          type: object
+          properties:
+            locationId: {type: string, format: uuid}
+            codigo: {type: string}
+            nombre: {type: string}
+            tipo: {type: string}
+            activa: {type: boolean}
+          required: [locationId, codigo, nombre, tipo, activa]
+          additionalProperties: false
+        skuActivo: {type: [boolean, 'null']}
+        onHand: {type: integer, minimum: 0}
+        reserved: {type: integer, minimum: 0}
+        blocked: {type: integer, minimum: 0}
+        available: {type: integer, minimum: 0}
+        umbralEfectivo: {type: integer, minimum: 0}
+        estado: {type: string, enum: [DISPONIBLE, STOCK_BAJO, AGOTADO]}
+        stockVersion: {type: integer, minimum: 0, maximum: 9007199254740991}
+        actualizadoEn: {type: string, format: date-time}
+      required: [sku, ubicacion, skuActivo, onHand, reserved, blocked, available, umbralEfectivo, estado, stockVersion, actualizadoEn]
+      additionalProperties: false
+    ListadoSaldosFisicosAdministrativos:
+      type: object
+      properties:
+        items: {type: array, items: {$ref: '#/components/schemas/SaldoFisicoAdministrativo'}}
+        meta: {$ref: '#/components/schemas/MetaPaginacion'}
+      required: [items, meta]
+      additionalProperties: false
+    AlertaStockAdministrativa:
+      type: object
+      properties:
+        alertaId: {type: string, pattern: '^.+:[0-9a-fA-F-]{36}:(AGOTADO|STOCK_BAJO)$'}
+        sku: {type: string, minLength: 1}
+        ubicacion:
+          type: object
+          properties:
+            locationId: {type: string, format: uuid}
+            codigo: {type: string}
+            nombre: {type: string}
+            tipo: {type: string}
+          required: [locationId, codigo, nombre, tipo]
+          additionalProperties: false
+        estado: {type: string, enum: [AGOTADO, STOCK_BAJO]}
+        available: {type: integer, minimum: 0}
+        umbralEfectivo: {type: integer, minimum: 0}
+        observadoEn: {type: string, format: date-time}
+        targetRoute: {type: string, pattern: '^/inventario\\?sku=.+&locationId=[0-9a-fA-F-]{36}$'}
+      required: [alertaId, sku, ubicacion, estado, available, umbralEfectivo, observadoEn, targetRoute]
+      additionalProperties: false
+    ListadoAlertasOperativas:
+      type: object
+      properties:
+        items: {type: array, items: {$ref: '#/components/schemas/AlertaStockAdministrativa'}}
+        meta: {$ref: '#/components/schemas/MetaPaginacion'}
+      required: [items, meta]
+      additionalProperties: false
+    UbicacionInventario:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        code: {type: string}
+        name: {type: string}
+        type: {type: string}
+        active: {type: boolean}
+      required: [id, code, name, type, active]
+      additionalProperties: false
+    ListadoUbicacionesInventario:
+      type: object
+      properties:
+        items: {type: array, items: {$ref: '#/components/schemas/UbicacionInventario'}}
+        meta: {$ref: '#/components/schemas/MetaPaginacion'}
+      required: [items, meta]
+      additionalProperties: false
+    SkusVendiblesFiltrados:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              sku: {type: string, minLength: 1}
+              productoId: {type: string, minLength: 1}
+              categoriaId: {type: [string, 'null']}
+              marcaId: {type: [string, 'null']}
+            required: [sku, productoId, categoriaId, marcaId]
+            additionalProperties: false
+        nextCursor: {type: [string, 'null']}
+      required: [items, nextCursor]
       additionalProperties: false
     Problem:
       type: object

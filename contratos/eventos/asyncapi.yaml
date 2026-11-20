@@ -2,7 +2,7 @@ asyncapi: 3.0.0
 id: urn:taller-sw-web:productos-y-ofertas:asyncapi
 info:
   title: Productos y Ofertas — Contrato asíncrono H5
-  version: 0.7.0-rc.1
+  version: 0.7.0-rc.2
   description: Baseline SEMIFINAL_G6 para mensajería interna exclusivamente mediante Azure Service Bus Basic. Pendiente
     de homologación externa en las fronteras HTTP correspondientes. No acredita aprovisionamiento, implementación,
     validación, grants, habilitación ni despliegue. RabbitMQ se conserva en el snapshot H4. Entrega at-least-once,
@@ -27,7 +27,8 @@ channels:
     x-producer: bulk-svc
     x-consumer: inventory-svc
     x-contract-status: SEMIFINAL_G6
-    x-runtime-status: BLOCKED_CONTRACT
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
+    x-contract-note: Contrato interno tipado de ajuste inicial; no habilita runtime hasta handler durable y evidencia.
   g6_pricing_from_bulk:
     address: g6.pricing.from.bulk
     messages:
@@ -36,7 +37,8 @@ channels:
     x-producer: bulk-svc
     x-consumer: pricing-svc
     x-contract-status: SEMIFINAL_G6
-    x-runtime-status: BLOCKED_CONTRACT
+    x-runtime-status: RESERVADO_NO_APLICA_BULK_V2
+    x-contract-note: SPEC-001 limita precio_regular a ALTA mediante pricing.product.initialization.requested; cambios masivos usan importador HTTP propio de Pricing.
   g6_bulk_from_catalog:
     address: g6.bulk.from.catalog
     messages:
@@ -238,7 +240,7 @@ operations:
     messages:
     - $ref: '#/channels/g6_inventory_from_bulk/messages/InventoryBulkStockAdjustRequested'
     x-producer: bulk
-    x-runtime-status: BLOCKED_CONTRACT
+    x-runtime-status: PENDIENTE_IMPLEMENTACION
   consume_g6_inventory_from_bulk:
     action: receive
     channel:
@@ -246,7 +248,7 @@ operations:
     messages:
     - $ref: '#/channels/g6_inventory_from_bulk/messages/InventoryBulkStockAdjustRequested'
     x-consumer: inventory
-    x-runtime-status: BLOCKED_CONTRACT
+    x-runtime-status: RESERVADO_NO_APLICA_BULK_V2
   publish_g6_pricing_from_bulk:
     action: send
     channel:
@@ -254,7 +256,7 @@ operations:
     messages:
     - $ref: '#/channels/g6_pricing_from_bulk/messages/PricingBulkPriceApplyRequested'
     x-producer: bulk
-    x-runtime-status: BLOCKED_CONTRACT
+    x-runtime-status: RESERVADO_NO_APLICA_BULK_V2
   consume_g6_pricing_from_bulk:
     action: receive
     channel:
@@ -262,7 +264,7 @@ operations:
     messages:
     - $ref: '#/channels/g6_pricing_from_bulk/messages/PricingBulkPriceApplyRequested'
     x-consumer: pricing
-    x-runtime-status: BLOCKED_CONTRACT
+    x-runtime-status: RESERVADO_NO_APLICA_BULK_V2
   publish_g6_bulk_from_catalog:
     action: send
     channel:
@@ -589,8 +591,8 @@ components:
         name:
           type: string
           minLength: 1
-        data:
-          type: object
+      data:
+        type: object
       required:
       - message_id
       - schema_version
@@ -604,6 +606,58 @@ components:
       type: object
       description: Payload específico del mensaje. Para mensajes P1 críticos se especializa mediante schemas dedicados.
       additionalProperties: true
+    InventoryBulkStockAdjustRequestedData:
+      type: object
+      properties:
+        operation_id: {type: string, format: uuid}
+        batch_id: {type: string, format: uuid}
+        row_operation_id: {type: string, format: uuid}
+        sku: {type: string, minLength: 1}
+        location_id: {type: string, format: uuid}
+        target_on_hand: {type: integer, minimum: 0}
+        expected_stock_version: {type: integer, minimum: 0}
+        reason: {type: string, const: BULK_INITIAL_STOCK}
+        requested_at: {type: string, format: date-time}
+      required: [operation_id, batch_id, row_operation_id, sku, location_id, target_on_hand, expected_stock_version, reason, requested_at]
+      additionalProperties: false
+    InventoryBulkStockAdjustCompletedData:
+      type: object
+      properties:
+        operation_id: {type: string, format: uuid}
+        batch_id: {type: string, format: uuid}
+        row_operation_id: {type: string, format: uuid}
+        sku: {type: string, minLength: 1}
+        location_id: {type: string, format: uuid}
+        applied_on_hand: {type: integer, minimum: 0}
+        stock_version: {type: integer, minimum: 0}
+        completed_at: {type: string, format: date-time}
+      required: [operation_id, batch_id, row_operation_id, sku, location_id, applied_on_hand, stock_version, completed_at]
+      additionalProperties: false
+    InventoryBulkStockAdjustRejectedData:
+      type: object
+      properties:
+        operation_id: {type: string, format: uuid}
+        batch_id: {type: string, format: uuid}
+        row_operation_id: {type: string, format: uuid}
+        sku: {type: string, minLength: 1}
+        location_id: {type: string, format: uuid}
+        code: {type: string, minLength: 1}
+        detail: {type: string}
+        rejected_at: {type: string, format: date-time}
+      required: [operation_id, batch_id, row_operation_id, sku, location_id, code, rejected_at]
+      additionalProperties: false
+    PricingBulkPriceApplyRequestedData:
+      type: object
+      description: Reservado; no aplica a Bulk v2 según SPEC-001.
+      additionalProperties: false
+    PricingBulkPriceApplyCompletedData:
+      type: object
+      description: Reservado; no aplica a Bulk v2 según SPEC-001.
+      additionalProperties: false
+    PricingBulkPriceApplyRejectedData:
+      type: object
+      description: Reservado; no aplica a Bulk v2 según SPEC-001.
+      additionalProperties: false
     CatalogProductDeactivatedData:
       type: object
       properties:
@@ -2446,7 +2500,7 @@ components:
               type: string
               const: pricing.bulk.price.apply.requested
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/PricingBulkPriceApplyRequestedData'
           required:
           - producer
           - kind
@@ -2454,7 +2508,7 @@ components:
           - data
       x-transport: azure-service-bus-basic
       x-contract-status: SEMIFINAL_G6
-      x-runtime-status: BLOCKED_CONTRACT
+      x-runtime-status: RESERVADO_NO_APLICA_BULK_V2
     PricingBulkPriceApplyCompleted:
       name: pricing.bulk.price.apply.completed
       title: pricing.bulk.price.apply.completed
@@ -2479,7 +2533,7 @@ components:
               type: string
               const: pricing.bulk.price.apply.completed
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/PricingBulkPriceApplyCompletedData'
           required:
           - producer
           - kind
@@ -2487,7 +2541,7 @@ components:
           - data
       x-transport: azure-service-bus-basic
       x-contract-status: SEMIFINAL_G6
-      x-runtime-status: PENDIENTE_IMPLEMENTACION
+      x-runtime-status: RESERVADO_NO_APLICA_BULK_V2
     PricingBulkPriceApplyRejected:
       name: pricing.bulk.price.apply.rejected
       title: pricing.bulk.price.apply.rejected
@@ -2512,7 +2566,7 @@ components:
               type: string
               const: pricing.bulk.price.apply.rejected
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/PricingBulkPriceApplyRejectedData'
           required:
           - producer
           - kind
@@ -2520,7 +2574,7 @@ components:
           - data
       x-transport: azure-service-bus-basic
       x-contract-status: SEMIFINAL_G6
-      x-runtime-status: PENDIENTE_IMPLEMENTACION
+      x-runtime-status: RESERVADO_NO_APLICA_BULK_V2
     InventoryBulkStockAdjustRequested:
       name: inventory.bulk.stock.adjust.requested
       title: inventory.bulk.stock.adjust.requested
@@ -2530,6 +2584,27 @@ components:
       - inventory-svc
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
+      examples:
+      - name: ajuste-inicial-absoluto
+        summary: Ajuste inicial tras inicialización de SKU y confirmación de ubicación
+        payload:
+          message_id: 3d1e865d-67e4-49b9-9b9a-2b5c96aa6ee1
+          schema_version: 1
+          occurred_at: '2026-11-20T12:00:00Z'
+          correlation_id: bulk-batch-71
+          producer: bulk-svc
+          kind: command
+          name: inventory.bulk.stock.adjust.requested
+          data:
+            operation_id: b87e9720-ebf9-41f7-babd-1926bb919010
+            batch_id: 526c4d3c-d88a-45f3-9b07-955e40bb7262
+            row_operation_id: 1180ca73-a94c-45a4-b037-2c2e13ac219f
+            sku: SKU-OPACO-41
+            location_id: 2342c41a-2cf4-4de4-b8ba-086ad1ec9ff9
+            target_on_hand: 12
+            expected_stock_version: 0
+            reason: BULK_INITIAL_STOCK
+            requested_at: '2026-11-20T12:00:00Z'
       payload:
         allOf:
         - $ref: '#/components/schemas/MessageEnvelope'
@@ -2545,7 +2620,7 @@ components:
               type: string
               const: inventory.bulk.stock.adjust.requested
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/InventoryBulkStockAdjustRequestedData'
           required:
           - producer
           - kind
@@ -2553,7 +2628,7 @@ components:
           - data
       x-transport: azure-service-bus-basic
       x-contract-status: SEMIFINAL_G6
-      x-runtime-status: BLOCKED_CONTRACT
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
     InventoryBulkStockAdjustCompleted:
       name: inventory.bulk.stock.adjust.completed
       title: inventory.bulk.stock.adjust.completed
@@ -2563,6 +2638,17 @@ components:
       - bulk-svc
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
+      examples:
+      - name: ajuste-confirmado
+        payload:
+          message_id: 0f1a27cd-dc6d-4a77-8371-70f3ea3a5b9e
+          schema_version: 1
+          occurred_at: '2026-11-20T12:00:01Z'
+          correlation_id: bulk-batch-71
+          producer: inventory-svc
+          kind: result
+          name: inventory.bulk.stock.adjust.completed
+          data: {operation_id: b87e9720-ebf9-41f7-babd-1926bb919010, batch_id: 526c4d3c-d88a-45f3-9b07-955e40bb7262, row_operation_id: 1180ca73-a94c-45a4-b037-2c2e13ac219f, sku: SKU-OPACO-41, location_id: 2342c41a-2cf4-4de4-b8ba-086ad1ec9ff9, applied_on_hand: 12, stock_version: 1, completed_at: '2026-11-20T12:00:01Z'}
       payload:
         allOf:
         - $ref: '#/components/schemas/MessageEnvelope'
@@ -2578,7 +2664,7 @@ components:
               type: string
               const: inventory.bulk.stock.adjust.completed
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/InventoryBulkStockAdjustCompletedData'
           required:
           - producer
           - kind
@@ -2596,6 +2682,17 @@ components:
       - bulk-svc
       x-deduplication-key: message_id
       x-business-idempotency-key: operation_id
+      examples:
+      - name: sku-no-inicializado
+        payload:
+          message_id: a3baa844-468a-4762-aa36-6f066cf807ee
+          schema_version: 1
+          occurred_at: '2026-11-20T12:00:01Z'
+          correlation_id: bulk-batch-71
+          producer: inventory-svc
+          kind: result
+          name: inventory.bulk.stock.adjust.rejected
+          data: {operation_id: b87e9720-ebf9-41f7-babd-1926bb919010, batch_id: 526c4d3c-d88a-45f3-9b07-955e40bb7262, row_operation_id: 1180ca73-a94c-45a4-b037-2c2e13ac219f, sku: SKU-OPACO-41, location_id: 2342c41a-2cf4-4de4-b8ba-086ad1ec9ff9, code: SKU_NO_INICIALIZADO, rejected_at: '2026-11-20T12:00:01Z'}
       payload:
         allOf:
         - $ref: '#/components/schemas/MessageEnvelope'
@@ -2611,7 +2708,7 @@ components:
               type: string
               const: inventory.bulk.stock.adjust.rejected
             data:
-              $ref: '#/components/schemas/GenericData'
+              $ref: '#/components/schemas/InventoryBulkStockAdjustRejectedData'
           required:
           - producer
           - kind
@@ -2974,7 +3071,6 @@ x-transport:
   sessions: false
   delivery_model: '#/x-delivery-model'
 x-blocked-contracts:
-- inventory.bulk.stock.adjust.requested
 - pricing.bulk.price.apply.requested
 x-delivery-model:
   delivery: at-least-once
