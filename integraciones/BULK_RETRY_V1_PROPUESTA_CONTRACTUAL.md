@@ -15,6 +15,8 @@ Solo Catalog es candidato inicial. La selección representa una familia SKU comp
 
 Una fila de otra familia, un paso completado, un efecto aplicado/desconocido, un resultado ausente/ambiguo, documento o payload diferente, o un recibo histórico V1 bloquea la familia completa. Solo se reabren los pasos Catalog `FAILED` y dependencias de esa familia con `FAILED/DEPENDENCY_REJECTED`; se conservan pasos completados, filas y operaciones de otras familias. Inventory permanece apagado y Pricing/R03/R14 se mantiene `RESERVADO_NO_APLICA_BULK_V2`.
 
+La respuesta de elegibilidad siempre contiene `motivo_bloqueo`. Con `elegible=true`, `pasos` no está vacío y `motivo_bloqueo=null`; con `elegible=false`, `pasos=[]` y el motivo público es uno de `LOTE_NO_TERMINAL`, `SIN_PASOS_REINTENTABLES`, `RESULTADO_INCIERTO` o `PROTOCOLO_DOMINIO_NO_HABILITADO`. Los diagnósticos internos específicos se mapean a esos valores y no se exponen como nuevos códigos.
+
 ## Idempotencia del POST
 
 El hash canónico de la intención comprende `{protocolo, batch_id, owner_sub, correlation_id, motivo}`. Se busca el recibo durable `(batch_job_id, correlation_id)` bajo lock antes de examinar el estado mutable. La misma identidad y motivo devuelve el JSON 202 originalmente persistido; motivo distinto devuelve `409 IDEMPOTENCY_CONFLICT`. La transacción crea recibo, nuevos intentos, comandos Outbox y transiciones antes del 202.
@@ -25,7 +27,7 @@ El hash canónico de la intención comprende `{protocolo, batch_id, owner_sub, c
 
 - Solicitudes Catalog V1–V3 y resultados V1 se preservan.
 - Catalog request V4 usa `catalog.bulk.upsert.requested`, conserva `batch_id`, `batch_operation_id`, `template_version=2`, `mode` y `content_ref` V3 verificado. `retry` contiene protocolo, intento de comando, número de intento, mensaje previo y las identidades de las filas de exactamente una familia; no transporta `rows` comerciales inline.
-- Resultados Catalog V2 mantienen los nombres completed/rejected. Los resultados por fila incluyen `attempt_id`, número, `status`, `effect_state`, `retriable`, código y las identidades históricas. Un resultado de V4 incluye `command_attempt_id`. Un rechazo de comando no es, por sí solo, evidencia de elegibilidad.
+- Resultados Catalog V2 mantienen los nombres completed/rejected. Los resultados por fila incluyen `attempt_id`, número, `status`, `effect_state`, `retriable`, código y las identidades históricas. `command_attempt_id` es requerido: `null` identifica resultado inicial V3 y un UUID identifica el comando V4; además `causation_id` del sobre debe igualar el `message_id` de ese comando. Un rechazo de comando no es, por sí solo, evidencia de elegibilidad.
 - El consumer de Catalog comprueba recibos terminales y ausencia de aplicación previa antes de mutar. Solo se permite `retriable=true` por indisponibilidad transitoria reconocida al adquirir identidad de servicio antes de cualquier mutación; validaciones, duplicados SKU, conflictos de versión, 401/403 y 5xx ambiguos nunca son reintentables.
 - Bulk asocia el resultado al mensaje Outbox causante, persiste Inbox/recibos/estados en una transacción y no deja que un resultado tardío de intento antiguo sobrescriba el vigente.
 

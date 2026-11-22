@@ -25991,10 +25991,30 @@ components:
             required: [row_id, dominio]
             additionalProperties: false
         motivo_bloqueo:
-          type: string
-      required: [protocolo, elegible, pasos]
+          oneOf:
+            - type: string
+              enum: [LOTE_NO_TERMINAL, SIN_PASOS_REINTENTABLES, RESULTADO_INCIERTO, PROTOCOLO_DOMINIO_NO_HABILITADO]
+            - type: 'null'
+      required: [protocolo, elegible, pasos, motivo_bloqueo]
       additionalProperties: false
-      description: Solo se informa elegible=true a partir de recibos PostgreSQL terminales V2 verificados para una familia completa.
+      allOf:
+        - if:
+            properties:
+              elegible: {const: true}
+          then:
+            properties:
+              pasos: {minItems: 1}
+              motivo_bloqueo: {type: 'null'}
+        - if:
+            properties:
+              elegible: {const: false}
+          then:
+            properties:
+              pasos: {maxItems: 0}
+              motivo_bloqueo:
+                type: string
+                enum: [LOTE_NO_TERMINAL, SIN_PASOS_REINTENTABLES, RESULTADO_INCIERTO, PROTOCOLO_DOMINIO_NO_HABILITADO]
+      description: Solo se informa elegible=true a partir de recibos PostgreSQL terminales V2 verificados para una familia completa. Con true, motivo_bloqueo es null y pasos no está vacío; con false, pasos está vacío y motivo_bloqueo usa uno de los cuatro motivos públicos.
     ImportacionGeneralConciliada:
       type: object
       properties:

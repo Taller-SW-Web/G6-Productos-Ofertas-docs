@@ -1948,7 +1948,8 @@ components:
           type: array
           minItems: 1
           items: {$ref: '#/components/schemas/CatalogBulkRetryRowResultV2'}
-      required: [batch_id, batch_operation_id, results]
+      required: [batch_id, batch_operation_id, command_attempt_id, results]
+      description: command_attempt_id es null para el resultado inicial V3 y contiene el UUID del comando V4 para un resultado de reintento; causation_id del sobre debe identificar el mensaje solicitado correspondiente.
     CatalogBulkUpsertRejectedDataV2:
       type: object
       additionalProperties: false
@@ -1958,7 +1959,8 @@ components:
         command_attempt_id: {type: [string, 'null'], format: uuid}
         code: {type: string, minLength: 1}
         detail: {type: string, minLength: 1}
-      required: [batch_id, batch_operation_id, code, detail]
+      required: [batch_id, batch_operation_id, command_attempt_id, code, detail]
+      description: command_attempt_id es null para el resultado inicial V3 y contiene el UUID del comando V4 para un resultado de reintento; causation_id del sobre debe identificar el mensaje solicitado correspondiente. Un rechazo a nivel de comando nunca es recibo elegible por fila.
   messages:
     TaxonomyCategoryUpdated:
       name: taxonomy.category.updated
