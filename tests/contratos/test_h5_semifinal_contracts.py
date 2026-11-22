@@ -77,10 +77,19 @@ class H5SemifinalContractTests(unittest.TestCase):
         }
         for (path, method), historical_operation in historical_operations.items():
             if (path, method) == ("/inventario/dashboard", "get"):
-                # The only approved change is removing three filters unsupported by the current runtime.
+                # Remove only the three filters unsupported by the current runtime.
                 expected = copy.deepcopy(historical_operation)
                 expected["parameters"] = [p for p in expected.get("parameters", []) if p.get("name") not in {"productoId", "categoriaId", "marcaId"}]
                 self.assertEqual(self.openapi["paths"][path][method], expected, "GET /inventario/dashboard changed beyond the three unsupported filters")
+            elif (path, method) == ("/precios/importaciones", "post"):
+                current = copy.deepcopy(self.openapi["paths"][path][method])
+                current["description"] = historical_operation["description"]
+                current["parameters"] = [p for p in current["parameters"] if p.get("name") != "Idempotency-Key"]
+                del current["responses"]["409"]
+                del current["x-error-codes"]["409"]
+                current["x-error-codes"]["400"] = historical_operation["x-error-codes"]["400"]
+                current["responses"]["400"]["content"]["application/problem+json"]["schema"]["allOf"][1]["properties"]["code"]["enum"] = historical_operation["x-error-codes"]["400"]
+                self.assertEqual(current, historical_operation)
             else:
                 self.assertEqual(self.openapi["paths"][path][method], historical_operation, f"H4 operation changed: {method.upper()} {path}")
         self.assertEqual(len(new_ops), 153)
@@ -92,6 +101,24 @@ class H5SemifinalContractTests(unittest.TestCase):
                 if method in old["paths"].get(path, {}) and method in self.openapi["paths"].get(path, {}):
                     self.assertEqual(old["paths"][path][method], self.openapi["paths"][path][method], f"{method.upper()} {path}")
         self.assertEqual(self.openapi["paths"]["/cupones/validar"]["post"]["x-allowed-client-ids"], old["paths"]["/cupones/validar"]["post"]["x-allowed-client-ids"])
+
+    def test_pricing_csv_admission_idempotency_contract(self):
+        operation = self.openapi["paths"]["/precios/importaciones"]["post"]
+        header, = [p for p in operation["parameters"] if p.get("name") == "Idempotency-Key"]
+        self.assertEqual(header["in"], "header")
+        self.assertTrue(header["required"])
+        self.assertEqual((header["schema"]["minLength"], header["schema"]["maxLength"]), (1, 128))
+        validator = Draft202012Validator(header["schema"])
+        for key in ("!", "A" * 128):
+            self.assertTrue(validator.is_valid(key))
+        for key in ("", "A" * 129, "a,b", "a b", "ñ"):
+            self.assertFalse(validator.is_valid(key))
+        statuses = operation["x-error-codes"]
+        self.assertEqual(statuses["400"], ["ARCHIVO_INVALIDO", "VALIDACION"])
+        self.assertEqual(statuses["409"], ["IDEMPOTENCY_CONFLICT"])
+        response = operation["responses"]["409"]["content"]["application/problem+json"]["schema"]["allOf"][1]
+        self.assertEqual(response["properties"]["status"]["const"], 409)
+        self.assertEqual(response["properties"]["code"]["enum"], statuses["409"])
 
     def test_coupon_idempotency_and_snapshot_constraints(self):
         consumption = self.openapi["components"]["schemas"]["CouponConsumptionRequest"]
