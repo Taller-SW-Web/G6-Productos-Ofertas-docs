@@ -226,7 +226,7 @@ Cada entrada deriva del OpenAPI `0.7.0-rc.2`; rutas son relativas a `/api/v1`. `
 | GET `/precios/skus/{sku}/programaciones` | `listarProgramacionesPrecioSku` | — | PaginaProgramacionesPrecio | 200,401,403,404,500,503 | provisional-internal |
 | POST `/precios/skus/{sku}/programaciones` | `programarPrecioSku` | — | ProgramacionPrecioRequest | 201,400,401,403,404,409,422,500,503 | provisional-internal |
 | POST `/precios/importaciones/prevalidar` | `prevalidarImportacionPrecios` | — | PrevalidacionPrecio | 200,400,401,403,413,422,500,503 | excluded-h4 |
-| POST `/precios/importaciones` | `crearImportacionPrecios` | — | — | 202,400,401,403,413,422,500,503 | excluded-h4 |
+| POST `/precios/importaciones` | `crearImportacionPrecios` | — | ImportacionPrecioAceptada | 202,400,401,403,409,413,422,500,503 | excluded-h4 |
 | GET `/precios/importaciones/{batchId}` | `obtenerImportacionPrecios` | — | EstadoImportacionPrecio | 200,401,403,404,500,503 | provisional-internal |
 | GET `/precios/importaciones/{batchId}/reporte` | `descargarReporteImportacionPrecios` | — | — | 200,401,403,404,500,503 | provisional-internal |
 | GET `/precios/productos/{productoId}` | `obtenerPrecioBaseProducto` | — | PrecioProducto | 200,401,403,404,500,503 | provisional-internal |

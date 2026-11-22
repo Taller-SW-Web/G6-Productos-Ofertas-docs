@@ -16406,8 +16406,10 @@ paths:
       x-required-role: GESTOR_COMERCIAL
       x-auth-validation: introspection
       summary: Crear importación asíncrona de precios
-      description: Fuera del gate funcional H4. No anunciar como implementada ni responder 202 ficticio sin formato
-        y worker específicos. La carga multidominio H4 usa Bulk v2 (SPEC-001).
+      description: >-
+        Admite un lote de Pricing de forma asíncrona. HTTP 202 acredita la admisión persistida.
+        El mismo actor y la misma clave con idénticos bytes de archivo y política reciben la misma referencia de lote.
+        Un cambio de archivo o política para esa clave produce 409. La operación quedó fuera del gate H4.
       x-status: excluded-h4
       x-source-spec:
       - SPEC-013
@@ -16416,6 +16418,15 @@ paths:
       - userBearer: []
       parameters:
       - *id020
+      - name: Idempotency-Key
+        in: header
+        required: true
+        description: Clave de la intención de importación. Conservarla al reintentar el mismo archivo y política.
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[!-+\x2D-~]{1,128}$'
       responses:
         '202':
           description: Importación aceptada
@@ -16515,6 +16526,26 @@ paths:
                       type: string
                       enum: &id556
                       - ARCHIVO_INVALIDO
+                      - VALIDACION
+                  required:
+                  - status
+                  - code
+        '409':
+          description: La clave ya corresponde a un archivo o política diferente para el mismo actor.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 409
+                    code:
+                      type: string
+                      enum: &pricingImportConflict
+                      - IDEMPOTENCY_CONFLICT
                   required:
                   - status
                   - code
@@ -16567,6 +16598,7 @@ paths:
         '500': *id554
         '503': *id555
         '400': *id556
+        '409': *pricingImportConflict
         '413': *id557
         '422': *id558
   /precios/importaciones/{batchId}:
