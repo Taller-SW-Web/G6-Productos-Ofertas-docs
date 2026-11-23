@@ -25846,7 +25846,8 @@ components:
           type: integer
         correlation_id:
           type: string
-          format: uuid`r`n          description: Correlación original de admisión del lote. La correlación del POST de reanudación solo identifica esa solicitud para idempotencia.
+          format: uuid
+          description: Correlación original de admisión del lote. La correlación del POST de reanudación solo identifica esa solicitud para idempotencia.
       additionalProperties: true
       required:
       - batch_id
