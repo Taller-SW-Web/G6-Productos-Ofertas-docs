@@ -4,6 +4,8 @@
 
 ## Contexto y estado
 
+Guía de trabajo y trazabilidad detallada: [índice integral del Hito 5](h5/README.md). La guía separa el plan documental de la ejecución y no cambia estos criterios oficiales.
+
 Hito 4 es el hito anterior y se conserva como referencia histórica, regresión y evidencia de la demo administrativa. La meta activa es Hito 5. Esta página registra criterios y evidencias; su publicación no acredita por sí misma ejecución, aprobación, homologación ni despliegue.
 
 Los cuatro criterios parten de `EVIDENCIA_PARCIAL`. No se declara completo el hito.
