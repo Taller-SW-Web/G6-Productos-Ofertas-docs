@@ -39,7 +39,7 @@ Casos mínimos: token ausente, firma/issuer/audience/expiración inválidos → 
 
 ## Protección contra abuso de solicitudes y ráfagas
 
-Este control es un criterio de seguridad propuesto para H5-01/H5-04A. **NO ESTÁ IMPLEMENTADO NI VALIDADO EN AZURE**. JWT valida identidad/autorización; CORS restringe orígenes del navegador; idempotencia evita repetir un efecto lógico con la misma clave. Ninguno sustituye el rate limiting, el control de concurrencia o la defensa DDoS.
+El profesor indicó expresamente que no deben permitirse múltiples llamadas instantáneas que faciliten ataques. Esta protección es una exigencia docente de seguridad del Hito 5. G6 define como criterios técnicos internos para satisfacerla el rate limiting, los límites de ráfagas y concurrencia, la prevención de bypass y las pruebas RL-01–RL-06. Estos controles **NO ESTÁN IMPLEMENTADOS NI VALIDADOS EN AZURE**. JWT valida identidad/autorización; CORS restringe orígenes del navegador; idempotencia evita repetir un efecto lógico con la misma clave. Ninguno sustituye el rate limiting, el control de concurrencia o la defensa DDoS.
 
 - Aplicar rate limiting de forma independiente por identidad autenticada validada por G7, `client_id` validado, ruta y tipo de operación. Definir perfiles por cliente/ruta y separar operaciones de lectura, escritura comercial y procesos costosos. No usar claims sin validar ni una clave global que permita que un cliente consuma el presupuesto de otro.
 - Para clientes públicos sin autenticación, derivar la IP solo de una cadena de proxies confiables configurada explícitamente. Ignorar `X-Forwarded-For` y encabezados equivalentes recibidos directamente del cliente; la dirección del peer o el salto de proxy debe permitir validar la cadena antes de usar su IP de origen.

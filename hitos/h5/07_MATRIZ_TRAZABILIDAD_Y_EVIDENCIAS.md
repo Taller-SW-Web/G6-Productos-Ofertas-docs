@@ -46,7 +46,7 @@ Perfiles: 1 VU/60 s, 5 VU/3 min, 20 VU/5 min; tres repeticiones baseline y candi
 
 ## RL-01–RL-06 — ráfagas, límites y concurrencia
 
-Las pruebas se relacionan con H5-01 (control de seguridad), H5-03 (medición de performance) y H5-04A (APIM); son diseño pendiente, no evidencia de ejecución. Correr k6 solo en entorno autorizado, datos sintéticos y sin afectar operaciones reales. Los umbrales numéricos se acuerdan por perfil/política/SKU; 5 solicitudes por segundo y 60 por minuto son solo un perfil de laboratorio ilustrativo, nunca una configuración productiva aprobada.
+RL-01–RL-06 son pruebas técnicas internas para demostrar la exigencia docente de seguridad de no permitir múltiples llamadas instantáneas que faciliten ataques. Se relacionan con H5-01 (seguridad), H5-03 (medición de performance) y H5-04A (APIM); están planificadas y **no se declaran ejecutadas**. Correr k6 solo en entorno autorizado, datos sintéticos y sin afectar operaciones reales. Los umbrales numéricos se acuerdan por perfil/política/SKU; 5 solicitudes por segundo y 60 por minuto son solo un perfil de laboratorio ilustrativo, nunca una configuración productiva aprobada.
 
 | ID | Prueba | Owner |
 |---|---|---|
