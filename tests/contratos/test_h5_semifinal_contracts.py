@@ -62,7 +62,7 @@ class H5SemifinalContractTests(unittest.TestCase):
 
     def test_openapi_semifinal_version_and_operation_baseline(self):
         self.assertEqual(self.openapi["openapi"], "3.1.0")
-        self.assertEqual(self.openapi["info"]["version"], "0.7.0-rc.2")
+        self.assertEqual(self.openapi["info"]["version"], "0.7.0-rc.3")
         old = yaml.safe_load((ROOT / "contratos/historico/h4/http/openapi.yaml").read_text(encoding="utf-8"))
         old_ids = {op["operationId"] for item in old["paths"].values() for method, op in item.items() if method in {"get", "post", "put", "patch", "delete"}}
         new_ops = [(path, method, op) for path, item in self.openapi["paths"].items() for method, op in item.items() if method in {"get", "post", "put", "patch", "delete"}]
@@ -81,12 +81,19 @@ class H5SemifinalContractTests(unittest.TestCase):
                 expected = copy.deepcopy(historical_operation)
                 expected["parameters"] = [p for p in expected.get("parameters", []) if p.get("name") not in {"productoId", "categoriaId", "marcaId"}]
                 self.assertEqual(self.openapi["paths"][path][method], expected, "GET /inventario/dashboard changed beyond the three unsupported filters")
+            elif (path, method) == ("/carga-masiva/productos/importaciones/{batchId}/reanudar", "post"):
+                # The rc.3 retry proposal gives this existing operation a distinct request identity.
+                operation = self.openapi["paths"][path][method]
+                correlation = next(p for p in operation["parameters"] if p.get("name") == "X-Correlation-Id")
+                self.assertTrue(correlation["required"])
+                self.assertEqual(correlation["schema"]["format"], "uuid")
+                self.assertIn("409", operation["responses"])
             else:
                 self.assertEqual(self.openapi["paths"][path][method], historical_operation, f"H4 operation changed: {method.upper()} {path}")
-        self.assertEqual(len(new_ops), 153)
-        self.assertEqual(len(set(ids)), 153)
+        self.assertEqual(len(new_ops), 154)
+        self.assertEqual(len(set(ids)), 154)
         added = [(p, m) for p, m, op in new_ops if op["operationId"] not in old_ids]
-        self.assertEqual(set(added), {("/cupones/consumos", "post"), ("/cupones/restauraciones", "post"), ("/cupones/operaciones/{operationId}", "get"), ("/inventario/reservas/{reservaId}/estado", "get"), ("/interno/carga-masiva/contenidos/{contentId}", "get"), ("/inventario/administracion/saldos", "get"), ("/inventario/alertas", "get"), ("/inventario/ubicaciones", "get"), ("/interno/productos/skus/filtrar", "post"), ("/interno/inventario/reservas/{reservaId}/evidencia-cupon", "get")})
+        self.assertEqual(set(added), {("/carga-masiva/productos/importaciones/por-correlacion/{correlationId}", "get"), ("/cupones/consumos", "post"), ("/cupones/restauraciones", "post"), ("/cupones/operaciones/{operationId}", "get"), ("/inventario/reservas/{reservaId}/estado", "get"), ("/interno/carga-masiva/contenidos/{contentId}", "get"), ("/inventario/administracion/saldos", "get"), ("/inventario/alertas", "get"), ("/inventario/ubicaciones", "get"), ("/interno/productos/skus/filtrar", "post"), ("/interno/inventario/reservas/{reservaId}/evidencia-cupon", "get")})
         for path in ("/inventario/reservas", "/inventario/reservas/{reservaId}/confirmar", "/inventario/reservas/{reservaId}/liberar", "/inventario/operaciones/{operationId}", "/inventario/disponibilidad", "/inventario/reintegros", "/inventario/conciliaciones-offline", "/cupones/validar"):
             for method in ("get", "post", "put", "patch", "delete"):
                 if method in old["paths"].get(path, {}) and method in self.openapi["paths"].get(path, {}):
@@ -282,9 +289,9 @@ class H5SemifinalContractTests(unittest.TestCase):
     def test_asyncapi_internal_basic_topology_and_claim_check(self):
         api = self.asyncapi
         self.assertEqual(api["asyncapi"], "3.0.0")
-        self.assertEqual(api["info"]["version"], "0.7.0-rc.2")
+        self.assertEqual(api["info"]["version"], "0.7.0-rc.3")
         self.assertEqual(len(api["channels"]), 19)
-        self.assertEqual(len(api["components"]["messages"]), 29)
+        self.assertEqual(len(api["components"]["messages"]), 32)
         self.assertNotIn("servers", api)
         self.assertNotIn("x-rabbitmq-topology", api)
         self.assertIn("g6.promotions.commands", [channel["address"] for channel in api["channels"].values()])
