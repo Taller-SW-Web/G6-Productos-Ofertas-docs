@@ -4,6 +4,7 @@
 
 - Último corte: 23/11/2026 (America/Lima).
 - [Checkpoint Azure G6 H5 al 23/11/2026](checkpoints/CHECKPOINT-AZURE-G6-H5-2026-11-23.md).
+- [Ejecución real N01 Azure del 23/11/2026](checkpoints/EJECUCION-N01-AZURE-2026-11-23.md).
 - [Checkpoint histórico al 22/11/2026](checkpoints/CHECKPOINT-AZURE-G6-H5-2026-11-22.md).
 - Estado: H5 PARTIAL; ninguno de los cuatro criterios académicos está certificado completo.
 
