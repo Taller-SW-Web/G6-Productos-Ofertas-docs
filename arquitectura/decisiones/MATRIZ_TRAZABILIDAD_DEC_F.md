@@ -1,6 +1,6 @@
 # Matriz de trazabilidad DEC-F
 
-> **Actualización de estado contractual:** las referencias `0.6.x` y la base `0.5.0` de esta matriz describen el corte documental antiguo y se conservan para la trazabilidad DEC-F. Los contratos canónicos H5 actuales son OpenAPI y AsyncAPI `0.7.0-rc.1` (`SEMIFINAL_G6`); esta nota no altera las trazas DEC-F originales ni acredita homologación, implementación o despliegue.
+> **Actualización de estado contractual:** las referencias `0.6.x` y la base `0.5.0` de esta matriz describen el corte documental antiguo y se conservan para la trazabilidad DEC-F. Los contratos canónicos H5 actuales son OpenAPI y AsyncAPI `0.7.0-rc.3`, con aprobación interna `APPROVED_G6`; esta nota no altera las trazas DEC-F originales ni acredita homologación, implementación o despliegue.
 
 > **Política transversal fuera de DEC-F:** véase [Política de seguridad progresiva G6](POLITICA-SEGURIDAD-PROGRESIVA-G6.md) y [Matriz de operaciones](MATRIZ-OPERACIONES-SEGURIDAD-G6.md). Esta decisión documenta tres fases operativas y una excepción anónima solo por lectura expresamente aprobada; no crea una DEC-F ni modifica contratos. Los operationIds se inventariaron desde OpenAPI `0.6.0-rc.3`; autorización pública, auditoría de implementación y permisos efectivos continúan pendientes por fila.
 

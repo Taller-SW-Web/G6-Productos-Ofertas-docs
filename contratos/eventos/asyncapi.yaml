@@ -7,6 +7,7 @@ info:
     de homologación externa en las fronteras HTTP correspondientes. No acredita aprovisionamiento, implementación,
     validación, grants, habilitación ni despliegue. RabbitMQ se conserva en el snapshot H4. Entrega at-least-once,
     Outbox por destinatario, Inbox antes de settlement y DLQ supervisada; no exactly-once.
+x-g6-approval-status: APPROVED_G6
 defaultContentType: application/json
 x-delivery-semantics: at-least-once
 channels:
@@ -2581,7 +2582,8 @@ components:
           required: [producer, schema_version, kind, name, operation_id, causation_id, data]
       description: Propuesta compatible con V1–V3; conserva claim-check privado y enumera identidades de intento de una familia.
       x-transport: azure-service-bus-basic
-      x-contract-status: PROPOSED_NOT_APPROVED
+      x-contract-status: APPROVED_G6
+      x-g6-approval-status: APPROVED_G6
       x-runtime-status: PENDIENTE_IMPLEMENTACION
     CatalogBulkUpsertCompletedV2:
       name: catalog.bulk.upsert.completed
@@ -2603,7 +2605,8 @@ components:
             data: {$ref: '#/components/schemas/CatalogBulkUpsertCompletedDataV2'}
           required: [producer, schema_version, kind, name, data]
       x-transport: azure-service-bus-basic
-      x-contract-status: PROPOSED_NOT_APPROVED
+      x-contract-status: APPROVED_G6
+      x-g6-approval-status: APPROVED_G6
       x-runtime-status: PENDIENTE_IMPLEMENTACION
     CatalogBulkUpsertRejectedV2:
       name: catalog.bulk.upsert.rejected
@@ -2625,7 +2628,8 @@ components:
             data: {$ref: '#/components/schemas/CatalogBulkUpsertRejectedDataV2'}
           required: [producer, schema_version, kind, name, data]
       x-transport: azure-service-bus-basic
-      x-contract-status: PROPOSED_NOT_APPROVED
+      x-contract-status: APPROVED_G6
+      x-g6-approval-status: APPROVED_G6
       x-runtime-status: PENDIENTE_IMPLEMENTACION
     PricingBulkPriceApplyRequested:
       name: pricing.bulk.price.apply.requested

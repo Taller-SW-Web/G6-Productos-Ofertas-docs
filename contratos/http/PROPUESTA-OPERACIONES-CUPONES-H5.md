@@ -1,8 +1,8 @@
 # Contrato HTTP candidato H5 — operaciones asíncronas de cupones y estado de reserva
 
-**Estado:** incluida en OpenAPI H5 `0.7.0-rc.1` como `SEMIFINAL_G6` en el Draft PR #126. La aceptación de G5 se asume solo para planificación (`ACEPTACION_G5_ASUMIDA_PARA_PLANIFICACION`); la homologación bilateral efectiva sigue pendiente de constancia. Grants G7 no comprobados, implementación/runtime por verificar y publicación externa/despliegue no realizados. No sustituye los snapshots OpenAPI/AsyncAPI H4 ni modifica sus fixtures.
+**Estado normativo G6:** operaciones incluidas en OpenAPI H5 `0.7.0-rc.3`, `APPROVED_G6` por el acta del 22/11/2026. La aceptación de G5 se asume solo para planificación (`ACEPTACION_G5_ASUMIDA_PARA_PLANIFICACION`); la homologación bilateral efectiva sigue pendiente de constancia. Grants G7 no comprobados, implementación/runtime por verificar y publicación externa/despliegue no realizados. No sustituye los snapshots OpenAPI/AsyncAPI H4 ni modifica sus fixtures.
 
-Este documento conserva esquemas JSON Schema y ejemplos contractuales derivados de `G5-G6-H5-REVISION-01` (17/11/2026). Las operaciones están incorporadas a OpenAPI H5 `0.7.0-rc.1` como baseline `SEMIFINAL_G6`. La hipótesis de aceptación G5 permite planificar y preparar implementación compatible, pero no equivale a aceptación formal ni homologación. Los grants G7 y la implementación/runtime siguen pendientes; los scopes y allowlists son propuestas contractuales, no concesiones.
+Este documento conserva esquemas JSON Schema y ejemplos contractuales derivados de `G5-G6-H5-REVISION-01` (17/11/2026). Las operaciones están incorporadas a OpenAPI H5 `0.7.0-rc.3` y aprobadas por G6. La hipótesis de aceptación G5 permite planificar y preparar implementación compatible, pero no equivale a aceptación formal ni homologación. Los grants G7 y la implementación/runtime siguen pendientes; los scopes y allowlists son contrato G6 aprobado, no concesiones.
 
 ## Operaciones candidatas
 
@@ -259,7 +259,7 @@ La tabla resume los errores incluidos en el OpenAPI semifinal y el catálogo. Su
 
 ## Estados y condiciones antes de homologar externamente y habilitar
 
-1. OpenAPI H5 ya incorpora las cuatro rutas en estado `SEMIFINAL_G6`; esto no acredita homologación formal G5 ni publicación externa.
+1. OpenAPI H5 incorpora las cuatro rutas como `APPROVED_G6`; esto no acredita homologación formal G5 ni publicación externa.
 2. G7 debe comprobar en tokens reales audiencia `api-productos`, `client_id`, scopes dedicados y allowlists; la hipótesis de aceptación no es grant.
 3. Cerrar la duración numérica de retención, frecuencia de conciliación y deadline comercial, preservando operaciones pendientes o ambiguas.
 4. Ejecutar pruebas provider/consumer, autorización positiva/negativa, carrera de vencimiento y pérdida/replay sin duplicación antes de activación o corte.

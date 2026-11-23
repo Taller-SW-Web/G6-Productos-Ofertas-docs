@@ -1,6 +1,6 @@
 # Topología candidata Service Bus Basic — G6 Hito 5
 
-**Contrato canónico asociado:** AsyncAPI `0.7.0-rc.1`, baseline `SEMIFINAL_G6`; homologación externa pendiente. El piloto aislado no prueba habilitación global.
+**Contrato canónico asociado:** AsyncAPI `0.7.0-rc.3`, con aprobación normativa interna `APPROVED_G6`; homologación externa pendiente donde aplique. El piloto aislado no prueba habilitación global.
 
 **Arquitectura:** Azure Service Bus Basic está adoptado por G6 para mensajería interna H5; esta topología define destinos candidatos, no aprobación automática de colas.
 

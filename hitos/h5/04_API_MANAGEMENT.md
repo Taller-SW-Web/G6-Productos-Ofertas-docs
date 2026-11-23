@@ -14,7 +14,7 @@ Owner de inventario/costo: Infra/autoridad presupuestaria; Castilla coordina evi
 
 ## Bicep, políticas y autenticación
 
-Plan futuro: Bicep versionado (módulo APIM, APIs/operaciones, policies, diagnostics), `az deployment group what-if`, revisión de diff, aprobación antes de aplicar y rollback a revisión anterior. Importación deriva del OpenAPI canónico, filtrada a rutas actualmente servidas y habilitadas; contrato `0.7.0-rc.2` es semifinal y no prueba operación desplegada. No editar YAML canónico ni inventar URL, ruta, scope, audience o hostname.
+Plan futuro: Bicep versionado (módulo APIM, APIs/operaciones, policies, diagnostics), `az deployment group what-if`, revisión de diff y autorización operativa antes de aplicar, con rollback a revisión anterior. Importación deriva del OpenAPI canónico `0.7.0-rc.3` (`APPROVED_G6`), filtrada a rutas actualmente servidas y habilitadas; la aprobación contractual no prueba operación desplegada. No inventar URL, ruta, scope, audience o hostname.
 
 Policies: validar JWT issuer/audience/firma/expiración si G7 autoriza JWKS; CORS con orígenes exactos; correlación `X-Correlation-Id`; redacción de logs; timeout mínimo; `rate-limit-by-key` en SKU que lo soporte y con identidad validada. El Gateway repite las comprobaciones de cliente/scope pertinentes; no habilitar bypass por URL interna. Guardar hash del policy y versión de Bicep.
 

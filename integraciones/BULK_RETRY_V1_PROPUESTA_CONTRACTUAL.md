@@ -1,6 +1,6 @@
 # Propuesta contractual BULK_RETRY_V1
 
-**Estado:** propuesta contractual publicada en Docs PR #133 para revisión centralizada; `0.7.0-rc.3` no está aprobada y no autoriza habilitación. Base normativa: OpenAPI/AsyncAPI `0.7.0-rc.2`.
+**Estado normativo:** `BULK_RETRY_V1` `0.7.0-rc.3` — `APPROVED_G6` por el acta interna de 22/11/2026. Docs #133 está fusionado en el SHA base `4404b7c7d3cd9254ddc6932532ab3a9ba1a52f78`; Backend #252 está fusionado en `9e4ac0af2a3ea882784413401bd5016ff611caa2`. La aprobación no habilita consumidores ni sustituye integración, grants, pruebas o release.
 
 ## Identidades y admisión
 
@@ -50,4 +50,4 @@ El hash canónico de la intención comprende `{protocolo, batch_id, owner_sub, c
 | Resultado de intento previo llega tarde | no cambia filas, pasos ni estado del intento actual |
 | Mensaje duplicado de intento actual | devuelve receipt previo sin mutación comercial adicional |
 
-La aprobación de esta propuesta requiere revisión centralizada de Docs y revisión de consumidores. No concede autorización de G7, habilitación de flags, integración Azure ni despliegue.
+La revisión técnica de owners y consumidores verifica compatibilidad e integración; no constituye ratificación jerárquica pendiente de G6. La homologación externa aplicable, autorización G7, flags, integración Azure y despliegue permanecen en sus estados independientes.

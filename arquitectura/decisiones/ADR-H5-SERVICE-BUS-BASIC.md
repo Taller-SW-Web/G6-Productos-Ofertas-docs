@@ -109,7 +109,7 @@ Homologación bilateral mínima: G5 y G6 acuerdan propietario y persistencia de 
 
 ## Referencias normativas históricas (no modificar destructivamente)
 
-- `contratos/historico/h4/eventos/asyncapi.yaml` — AsyncAPI H4 histórico 0.6.0-rc.4. El canónico H5 es `contratos/eventos/asyncapi.yaml` 0.7.0-rc.1, `SEMIFINAL_G6`, sin homologación externa presumida.
+- `contratos/historico/h4/eventos/asyncapi.yaml` — AsyncAPI H4 histórico 0.6.0-rc.4. El canónico H5 es `contratos/eventos/asyncapi.yaml` 0.7.0-rc.3, `APPROVED_G6`; no se presume homologación externa.
 - `contratos/eventos/rabbitmq-topologia.md` — topología observada H4.
 - `integraciones/ACUERDO_G5_G6_H4_2026-10-21.md` — decisiones D-01–D-04, homologación parcial de acceso AMQP.
 - `arquitectura/decisiones/ACUERDOS-INTEGRACION-INTERNA-G6-H4.md` — INT-01–13.

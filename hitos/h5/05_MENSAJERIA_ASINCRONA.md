@@ -32,7 +32,7 @@ Los R IDs corresponden a relaciones del inventario heredado y la matriz vigente;
 | R18 | Taxonomy→Catalog `g6.catalog.from.taxonomy` | Axel transporte; López/Poma dominio. Preferido como segundo flujo; reconciliar #247/fork y probar eventos, baja, replay y DLQ |
 | N01 | Promotions HTTP→worker Promotions; `g6.promotions.commands` candidata | Axel transporte; Axel dominio Promotions. Admitir durable, operación consultable y roles efectivos verificados |
 
-La matriz [MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md](../../integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md) es fuente única de seguimiento por flujo. Docs #131 sigue abierto Draft y trabaja esa matriz; PR #133 Draft también propone cambios en matriz y contratos. Este documento no reemplaza su contenido ni declara sus estados.
+La matriz [MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md](../../integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md) es fuente única de seguimiento por flujo. Docs #131 sigue abierto Draft y trabaja esa matriz; Docs #133 está fusionado en el SHA base `4404b7c7d3cd9254ddc6932532ab3a9ba1a52f78`. Este documento no reemplaza el seguimiento por flujo ni declara implementación por la aprobación G6.
 
 ## Outbox, Inbox y recuperación
 

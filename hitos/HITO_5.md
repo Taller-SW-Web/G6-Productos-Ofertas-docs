@@ -32,7 +32,7 @@ Los cuatro criterios parten de `EVIDENCIA_PARCIAL`. No se declara completo el hi
 - Performance: planes y reportes reproducibles de Backend y Frontend por flujo.
 - API Management: Gateway/APIM autenticado; registrar configuración y pruebas de frontera independientemente del estado de Service Bus.
 - Mensajería interna: [ADR Service Bus Basic](../arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md), [topología H5](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) y [matriz de implementación](../integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md).
-- Contratos canónicos H5: OpenAPI y AsyncAPI `0.7.0-rc.1`, `SEMIFINAL_G6`; H4 permanece en `contratos/historico/h4/`.
+- Contratos canónicos H5: OpenAPI y AsyncAPI `0.7.0-rc.3`, aprobación interna `APPROVED_G6`; H4 permanece en `contratos/historico/h4/`. Homologación, implementación y operación conservan sus estados separados.
 
 ## Condiciones de cierre
 
