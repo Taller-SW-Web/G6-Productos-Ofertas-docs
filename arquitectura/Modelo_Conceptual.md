@@ -1,6 +1,6 @@
 # Modelos conceptuales de datos — Módulo de Productos y Ofertas
 
-> **Actualización contextual H5:** las versiones `0.6.x` que aparecen en esta cabecera corresponden al corte documental histórico. Los contratos canónicos actuales son OpenAPI y AsyncAPI `0.7.0-rc.1` (`SEMIFINAL_G6`). Esta nota no altera entidades, atributos ni relaciones conceptuales.
+> **Actualización contextual H5:** las versiones `0.6.x` que aparecen en esta cabecera corresponden al corte documental histórico. Los contratos canónicos actuales son OpenAPI y AsyncAPI `0.7.0-rc.3`, aprobados internamente como `APPROVED_G6`. Esta nota no altera entidades, atributos ni relaciones conceptuales.
 
 
 **Fecha de actualización:** 2026-10-13
@@ -1513,4 +1513,4 @@ La actualización confirma que:
 
 ## Elegibilidad comercial y código de barras (alineación documental)
 
-No hay entidad conceptual ni habilitación independiente por canal. La política comunicada aplica los estados existentes: producto simple `ACTIVO` expone `sku_base`; producto con variantes expone el padre solo con al menos una variante `ACTIVA`, y cada variante exige padre y variante activos. D-CAT-05/06 continúa pendiente de ratificación de Arquitectura y conformidad de consumidores. Códigos de barras son asociaciones de texto opaco, único y no reutilizable a SKU vendibles, no una nueva identidad comercial; el diseño de persistencia y su estado candidato están en [modelo físico Catálogo](../datos/catalog-svc/physical-model.md). Estas reglas no garantizan precio, stock o promoción.
+No hay entidad conceptual ni habilitación independiente por canal. La política comunicada aplica los estados existentes: producto simple `ACTIVO` expone `sku_base`; producto con variantes expone el padre solo con al menos una variante `ACTIVA`, y cada variante exige padre y variante activos. D-CAT-05/06 está `APPROVED_G6` por el acta; la conformidad de consumidores sigue separada. Códigos de barras son asociaciones de texto opaco, único y no reutilizable a SKU vendibles, no una nueva identidad comercial; el diseño de persistencia y su estado candidato están en [modelo físico Catálogo](../datos/catalog-svc/physical-model.md). Estas reglas no garantizan precio, stock o promoción.

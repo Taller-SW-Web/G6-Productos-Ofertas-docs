@@ -4,7 +4,7 @@
 
 > CI/CD incluyendo revision Seguridad — Evidencia de Pruebas de integración — Evidencia de Pruebas de performance — Uso de API Management y Mecanismo asincrónico entre Microservicios
 
-Los cuatro criterios y sus evidencias se registran en [hitos/HITO_5.md](hitos/HITO_5.md). H4 es el hito anterior y su AsyncAPI se conserva en `contratos/historico/h4/`; los contratos canónicos H5 son `contratos/http/openapi.yaml` y `contratos/eventos/asyncapi.yaml` (`0.7.0-rc.2`, `SEMIFINAL_G6`). Mantén la norma vigente de Azure Service Bus Basic y no infieras implementación, homologación o despliegue desde la documentación.
+Los cuatro criterios y sus evidencias se registran en [hitos/HITO_5.md](hitos/HITO_5.md). H4 es el hito anterior y su AsyncAPI se conserva en `contratos/historico/h4/`; los contratos canónicos H5 son `contratos/http/openapi.yaml` y `contratos/eventos/asyncapi.yaml` (`0.7.0-rc.3`, aprobación G6 `APPROVED_G6`; baseline técnica `SEMIFINAL_G6`). Mantén la norma vigente de Azure Service Bus Basic y no infieras implementación, homologación o despliegue desde la documentación.
 
 Para tareas de mensajería H5, la matriz de implementación Service Bus es la fuente única del seguimiento por flujo: [MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md](integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md). Léela junto con la ADR, topología y plan H5 indicados abajo.
 
@@ -12,7 +12,7 @@ Para tareas de mensajería H5, la matriz de implementación Service Bus es la fu
 
 La arquitectura objetivo adoptada por G6 para Hito 5 es **Azure Service Bus Basic exclusivamente para mensajería interna entre bounded contexts G6**. Las integraciones externas usan HTTP autenticado a través de APIM/Gateway G6; contratos, homologación G5 y autorización G7 se verifican por separado. La adopción no demuestra recursos Azure aprovisionados, identidades/grants, implementación, pruebas runtime ni despliegue. Estados vigentes: `ADOPTADA_G6`, `PENDIENTE_APROVISIONAMIENTO_AZURE`, `PENDIENTE_IMPLEMENTACION`, `PENDIENTE_HOMOLOGACION_G5` y `PENDIENTE_AUTORIZACION_G7`. Un colaborador asumió la configuración de recursos Azure; esta asignación no es evidencia de provisión.
 
-RabbitMQ es arquitectura heredada H4, preservada en [`contratos/historico/h4/eventos/asyncapi.yaml`](contratos/historico/h4/eventos/asyncapi.yaml). El AsyncAPI canónico [`contratos/eventos/asyncapi.yaml`](contratos/eventos/asyncapi.yaml) es la baseline semifinal H5 `0.7.0-rc.2` (`SEMIFINAL_G6`), pendiente de homologación externa donde aplique; no acredita implementación ni recursos. Service Bus Basic aplica solo a mensajería interna G6; consumidores externos usan HTTP autenticado.
+RabbitMQ es arquitectura heredada H4, preservada en [`contratos/historico/h4/eventos/asyncapi.yaml`](contratos/historico/h4/eventos/asyncapi.yaml). El AsyncAPI canónico [`contratos/eventos/asyncapi.yaml`](contratos/eventos/asyncapi.yaml) es H5 `0.7.0-rc.3`, con aprobación interna `APPROVED_G6` y baseline técnica `SEMIFINAL_G6`; la homologación externa sigue pendiente donde aplique y no se acredita implementación ni recursos. Service Bus Basic aplica solo a mensajería interna G6; consumidores externos usan HTTP autenticado.
 
 La matriz de ajustes de implementación Backend se mantiene en [`COMPATIBILIDAD-BACKEND-CONTRATOS-H5.md`](integraciones/COMPATIBILIDAD-BACKEND-CONTRATOS-H5.md); sus registros son incompatibilidades a corregir, no correcciones ya aplicadas.
 

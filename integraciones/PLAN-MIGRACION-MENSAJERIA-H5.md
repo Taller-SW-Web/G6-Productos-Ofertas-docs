@@ -28,7 +28,7 @@ No mezclar el cierre académico con homologación externa no obtenida. Evidencia
 
 | Flujo | Limitación conocida | Decisión provisional |
 |---|---|---|
-| Bulk→Inventory | Handler `inventory.bulk.stock.adjust.requested` marca `BLOCKED_CONTRACT` | No anunciar procesamiento masivo funcional |
+| Bulk→Inventory | Contrato tipado `inventory.bulk.stock.adjust.requested` aprobado por G6; handler durable aún no acreditado | Mantener sin emisor/receiver activo hasta implementación, idempotencia y pruebas |
 | Bulk→Pricing | Consumidor registra/bloquea comando masivo; no equivale a aplicación | Implementar cuando se apruebe negocio |
 | Inventory→Promotions | Runtime de cupones requiere identidad y elegibilidad aún bloqueadas | No desbloquear solo por cambiar broker |
 | Catalog→Pricing/Inventory | Flujos de inicialización reales sujetos a versión/correlación | Pruebas por contrato antes de habilitar |
@@ -41,7 +41,7 @@ No mezclar el cierre académico con homologación externa no obtenida. Evidencia
 
 - No modificar snapshots ni evidencia H4; los contratos canónicos H5 se versionan como baseline semifinal independiente y los snapshots conservan referencias relativas.
 - La versión futura de AsyncAPI debe conservar nombres, schemas e IDs internos de negocio aprobados. Cambios de transporte son versionados; eliminar destinatario externo sin aprobación explícita rompe integración.
-- El OpenAPI canónico `0.7.0-rc.1` incorpora las cinco operaciones H5 como baseline semifinal G6; siguen pendientes la homologación externa aplicable, grants G7, implementación y pruebas antes de habilitar.
+- Los contratos canónicos OpenAPI/AsyncAPI `0.7.0-rc.3` están `APPROVED_G6` por el acta. Siguen pendientes la homologación externa aplicable, grants G7, implementación y pruebas antes de habilitar.
 - `g6.promotions.commands` es una cola nueva ligada a operaciones HTTP H5, no una sustitución ni parte del conteo de 18 relaciones internas heredadas de H4. Otras colas de flujos HTTP se inventarían al aprobar cada operación y handler.
 - TTL Basic: `DefaultMessageTimeToLive` no configurable y TTL máximo/default 14 días. Operaciones/Outbox SQL se conservan más allá del TTL; recuperar tras la indisponibilidad requiere cotejar Inbox, resultado y efectos del dominio, y replay autorizado con la misma clave idempotente solo si no hay efecto terminal confirmado.
 - El estado efectivo de reserva compara `expires_at` con reloj de Inventory. Si el estado persistido sigue `ACTIVA` pero el vencimiento se alcanzó, G5 no paga ni consume cupón. `ReservationExpirationService` existente materializa la transición; el endpoint de consulta no inicia un segundo worker.

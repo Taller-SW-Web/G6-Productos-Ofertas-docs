@@ -1,6 +1,6 @@
 # Índice de transición de mensajería H4→H5
 
-**Estado contractual actual:** OpenAPI/AsyncAPI canónicos `0.7.0-rc.1`, `SEMIFINAL_G6`; la propuesta G5 se asume solo para planificación (`ACEPTACION_G5_ASUMIDA_PARA_PLANIFICACION`), con homologación bilateral y grants G7 efectivos pendientes. H4 se verifica desde `contratos/historico/h4/` y sus hashes SHA-256. El inventario de 40 mensajes es trazabilidad H4, no conteo de H5.
+**Estado contractual actual:** OpenAPI/AsyncAPI canónicos `0.7.0-rc.3`, `APPROVED_G6`; la propuesta G5 se asume solo para planificación (`ACEPTACION_G5_ASUMIDA_PARA_PLANIFICACION`), con homologación bilateral y grants G7 efectivos pendientes. H4 se verifica desde `contratos/historico/h4/` y sus hashes SHA-256. El inventario de 40 mensajes es trazabilidad H4, no conteo de H5.
 
 **Estado:** inventario documental realizado sobre `origin/master` `f77c442`; PR #119 fusionado (`a53ed842`). La búsqueda cubre menciones textuales, variables y herramientas, colas/exchanges, túneles y fixtures en Markdown, YAML, JSON, scripts y documentación UX. AsyncAPI H4 y fixtures se preservan íntegros. Snapshots byte por byte: `contratos/historico/h4/http/openapi.yaml`, `contratos/historico/h4/eventos/asyncapi.yaml`; hashes en `contratos/historico/h4/SHA256SUMS`.
 
@@ -118,7 +118,7 @@ Clasificar individualmente; no borrar evidencia técnica histórica ni coinciden
 
 ## Contrato H4 que sigue como referencia funcional
 
-- `contratos/historico/h4/eventos/asyncapi.yaml` y fixtures Oracle preservan semántica de eventos, mensajes, payloads, schemas e invariantes contractuales H4. El AsyncAPI canónico `contratos/eventos/asyncapi.yaml` es H5 (`0.7.0-rc.1`, `SEMIFINAL_G6`); el índice de mensajes H5 mapea qué relaciones siguen internas y qué frontera externa requiere HTTP.
+- `contratos/historico/h4/eventos/asyncapi.yaml` y fixtures Oracle preservan semántica de eventos, mensajes, payloads, schemas e invariantes contractuales H4. El AsyncAPI canónico `contratos/eventos/asyncapi.yaml` es H5 (`0.7.0-rc.3`, `APPROVED_G6`); el índice de mensajes H5 mapea qué relaciones siguen internas y qué frontera externa requiere HTTP.
 - Los `servers`, bindings, `RABBITMQ_*`, `amqplib`, exchanges, routing keys físicas, nombres de colas, túneles y comandos Docker describen H4; no autorizan implementación H5.
 - El AsyncAPI canónico H5 `contratos/eventos/asyncapi.yaml` está en estado `SEMIFINAL_G6`, no homologado externamente. Consultar [inventario H5](../contratos/eventos/INVENTARIO-40-MENSAJES-H5.md), [frontera externa](MATRIZ-EXTERNOS-ASYNCAPI-H5.md) y [topología Service Bus](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md).
 - Preservar acuerdos H4, semántica de negocio, ownership externo y fixtures inmutables.
@@ -130,4 +130,4 @@ La regresión H5 carga `tests/contratos/rabbitmq-h4-excepciones.txt`. Cada excep
 
 ## Baseline semifinal H5
 
-OpenAPI y AsyncAPI canónicos son `0.7.0-rc.1` (`SEMIFINAL_G6`), pendientes de homologación externa según cada interfaz. El snapshot H4 conserva las versiones `0.6.0-rc.5` y `0.6.0-rc.4`, referencias relativas y las pruebas RabbitMQ correspondientes. La suite H5 se ejecuta en `tests/contratos/test_h5_semifinal_contracts.py`; no acredita implementación, grants, performance, CI de despliegue ni habilitación.
+OpenAPI y AsyncAPI canónicos son `0.7.0-rc.3` (`APPROVED_G6`); la homologación externa sigue pendiente según cada interfaz. El snapshot H4 conserva las versiones `0.6.0-rc.5` y `0.6.0-rc.4`, referencias relativas y las pruebas RabbitMQ correspondientes. La suite H5 se ejecuta en `tests/contratos/test_h5_semifinal_contracts.py`; no acredita implementación, grants, performance, CI de despliegue ni habilitación.

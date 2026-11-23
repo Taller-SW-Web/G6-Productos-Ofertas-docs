@@ -6,6 +6,7 @@ info:
   description: Baseline semifinal contractual H5 de G6. Estado SEMIFINAL_G6; las nuevas interfaces compartidas permanecen
     PENDIENTE_HOMOLOGACION_EXTERNA. La versión no acredita implementación, validación, habilitación, grants ni despliegue.
     Azure Service Bus Basic se reserva a mensajería interna G6; externos usan HTTP autenticado.
+x-g6-approval-status: APPROVED_G6
 servers:
 - url: /api/v1
   description: Base relativa del módulo
@@ -18012,9 +18013,11 @@ paths:
       tags:
       - Carga masiva
       operationId: conciliarImportacionGeneralPorCorrelacion
+      x-contract-status: APPROVED_G6
+      x-g6-approval-status: APPROVED_G6
       summary: Conciliar una admisión por propietario y correlación
       description: Solo lectura; el propietario procede del JWT humano validado. La respuesta no se almacena en caché.
-      x-status: propuesta-contractual-no-aprobada
+      x-status: approved-g6
       security:
       - userBearer: []
       parameters:

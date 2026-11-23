@@ -18,7 +18,7 @@
 
 ## Propuesta de posición G6 — lote 3
 
-La respuesta de G1 se conserva literalmente y con sus estados originales en este registro. La propuesta de posición de G6 sobre M-01–M-09, incluidas discrepancias y dependencias abiertas, está en [G6-G1-03 — Propuesta de cierre](ACUERDO_G1_G6_H4_2026-10-20.md). **Pendiente de aprobación de G6; no enviada y no constituye homologación bilateral.**
+La respuesta de G1 se conserva literalmente y con sus estados originales en este registro. La posición propuesta de G6 sobre M-01–M-09, incluidas discrepancias y dependencias abiertas, queda aprobada dentro de G6 por el acta del 22/11/2026. Su envío al equipo G1 sigue pendiente; esta aprobación interna no constituye homologación bilateral ni resuelve las respuestas externas.
 
 ## 2. Versiones y commits contrastados
 

@@ -1,10 +1,10 @@
 # Cobertura contractual MK-001 a MK-016 (H5)
 
-Propuesta contractual centralizada publicada en Docs PR #133 para revisión; OpenAPI/AsyncAPI `0.7.0-rc.2` es la base y `0.7.0-rc.3` la revisión candidata. Las extensiones BULK_RETRY_V1, Catalog request V4 y resultados V2 conservan `PROPOSED_NOT_APPROVED`: están propuestas, no aprobadas ni habilitadas. La existencia de contrato no acredita autorización de habilitación.
+Estado contractual según Docs `master` `4404b7c7d3cd9254ddc6932532ab3a9ba1a52f78`: OpenAPI/AsyncAPI `0.7.0-rc.3`. `BULK_RETRY_V1`, Catalog request V4 y resultados V2 están `APPROVED_G6`; su estado de implementación, integración, homologación externa y habilitación se registra por separado. Docs #133 y Backend #252 están fusionados. La aprobación no habilita consumidores.
 
 | MK | Servicio / owner | Cobertura contractual y consumidor | Estado y trabajo requerido |
 |---|---|---|---|
-| MK-001 | Bulk / Castilla | Plantilla, importación, estado, reporte, reanudación selectiva y exportación; claim-check V3 único se reutiliza desde #243. | Backend #252 `MERGED` (merge commit `9e4ac0af2a3ea882784413401bd5016ff611caa2`); extensiones BULK_RETRY_V1 siguen `PROPOSED_NOT_APPROVED`. Catalog #243/#254 y aprobación contractual pendientes; no habilitar. |
+| MK-001 | Bulk / Castilla | Plantilla, importación, estado, reporte, reanudación selectiva y exportación; claim-check V3 único se reutiliza desde #243. | Backend #252 `MERGED` (merge commit `9e4ac0af2a3ea882784413401bd5016ff611caa2`); `BULK_RETRY_V1` `0.7.0-rc.3` `APPROVED_G6`. Catalog #243/#254 e integración del consumidor pendientes; no habilitar hasta evidencia operativa. |
 | MK-002 | Combos / Castilla | CRUD y disponibilidad existentes; canales consultan disponibilidad. | `CONTRATO_EXISTENTE`; revisar implementación según controller y pruebas vigentes, sin añadir checkout. |
 | MK-003 | Catalog / Poma | Administración, ciclo de vida, filtros y contexto SKU existentes. | `CONTRATO_EXISTENTE`; batch de SKU existente no resuelve población por producto/categoría/marca. |
 | MK-004 | Catalog / Poma | Variantes, preparación diferida y ciclo de SKU cubiertos. | `CONTRATO_EXISTENTE`; conservar política de SKU simple y no crear REST de mensajería. |
@@ -19,11 +19,11 @@ Propuesta contractual centralizada publicada en Docs PR #133 para revisión; Ope
 | MK-013 | Pricing / Vera | Precio, programación, prevalidación e importación HTTP existentes. | `CONTRATO_EXISTENTE`; #233 se mantiene como única vía de importación masiva de precios. |
 | MK-014 | Price Audit / Vera | Historial, detalle y exportación append-only existentes. | `CONTRATO_EXISTENTE`; no añadir asientos ni comandos. |
 | MK-015 | Inventory / Taco | Disponibilidad, reservas, incidencias, reintegros, traslados y umbrales existentes; agrega saldos de administración. | `CONTRATO_EXISTENTE` + `listarSaldosFisicosAdministracion`; GET de estado de reserva conserva allowlist `modulo-ventas`. |
-| MK-016 | Inventory / Taco | Dashboard solo acepta `sku` y `locationId`; agrega alertas y ubicaciones administrativas. | Alertas/ubicaciones `CONTRATO_PROPUESTO`, backend `PENDIENTE_ENDPOINT_HTTP`. Filtros Catalog ampliados pendientes de adaptador. |
+| MK-016 | Inventory / Taco | Dashboard solo acepta `sku` y `locationId`; OpenAPI `0.7.0-rc.3` incluye alertas y ubicaciones administrativas. | Contrato interno `APPROVED_G6`; backend `PENDIENTE_ENDPOINT_HTTP`. Filtros Catalog ampliados pendientes de adaptador. |
 
 ### Evidencia de integración Bulk Retry
 
-Backend PR #252 fue fusionado mediante el commit `9e4ac0af2a3ea882784413401bd5016ff611caa2`. La CI general [#45103235690](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45103235690) y la integración Bulk↔Catalog [#45103231056](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45103231056) finalizaron `SUCCESS`. La evidencia conjunta ejecutó 144/144 pruebas `PASS` sobre PostgreSQL descartable. Esto acredita esa integración de prueba; Catalog #243/#254 siguen pendientes de integración en la rama principal y el contrato rc.3 continúa sin aprobación formal.
+Backend PR #252 fue fusionado mediante el commit `9e4ac0af2a3ea882784413401bd5016ff611caa2`. La CI general [#45103235690](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45103235690) y la integración Bulk↔Catalog [#45103231056](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45103231056) finalizaron `SUCCESS`. La evidencia conjunta ejecutó 144/144 pruebas `PASS` sobre PostgreSQL descartable. Esto acredita esa integración de prueba; Catalog #243/#254 siguen pendientes de integración en la rama principal. La aprobación `APPROVED_G6` del contrato rc.3 no declara esa integración completa.
 
 ## Anexo de compatibilidad R01–R18 / N01
 
@@ -47,7 +47,7 @@ Rutas en OpenAPI son relativas a `/api/v1`. Identidad de evidencia: baseline de 
 
 ## Anexo A — inventario ejecutable por operación
 
-Cada entrada deriva de la propuesta OpenAPI `0.7.0-rc.3`, basada en master `0.7.0-rc.2`; rutas son relativas a `/api/v1`. `-` indica que OpenAPI no declara consumidores o schema directo. Los estados de implementación no se deducen de la documentación.
+Cada entrada deriva de OpenAPI `0.7.0-rc.3`; las rutas son relativas a `/api/v1`. `-` indica que OpenAPI no declara consumidores o schema directo. Los estados de implementación no se deducen de la documentación.
 
 ### MK-001 — Bulk
 

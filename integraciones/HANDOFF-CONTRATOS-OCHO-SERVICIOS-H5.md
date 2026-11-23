@@ -1,6 +1,6 @@
 # Handoff contractual H5 — ocho servicios
 
-Los contratos de este PR son `SEMIFINAL_G6`. Merge documental no implementa, habilita, homologa ni despliega las rutas o mensajes.
+Los contratos de este PR están `APPROVED_G6` dentro de G6 por el acta del 22/11/2026. `SEMIFINAL_G6` describe su baseline técnica, no una aprobación jerárquica pendiente. La aprobación o merge documental no implementa, habilita, homologa ni despliega rutas o mensajes.
 
 | Owner | Siguiente trabajo luego del merge Docs | Gateway / G7 / externo pendiente |
 |---|---|---|

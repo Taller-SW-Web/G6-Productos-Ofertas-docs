@@ -106,7 +106,7 @@ Para Despacho existe `POST /api/v1/productos/datos-fisicos/consulta`, con `sub=m
 - Cambio ordinario de `sku_base` o `tiene_variantes`; sustitución comercial del producto y migración de tipo fuera de las condiciones de SPEC-010 §4, Requisito 10. El PATCH incluye la corrección; la persistencia de publicado_alguna_vez y su implementación siguen pendientes.
 - Alta/edición de variantes dentro del formulario del padre; se navega a MK-004.
 - Edición de precio vigente/override, saldo, stock inicial, reservas, empaque, pedido o checkout.
-- Administración de códigos: definición D-CAT-01..04 comunicada, con migración candidata aún no aplicada; elegibilidad por canal D-CAT-05/06 pendiente de ratificación externa.
+- Administración de códigos: definición D-CAT-01..04 `APPROVED_G6`; migración candidata aún no aplicada. Elegibilidad por canal D-CAT-05/06 `APPROVED_G6`; conformidad de consumidores sigue pendiente cuando aplique.
 - Edición de SEO/slug desde esta capacidad; gestión de maestros o importación masiva.
 - Eliminación física, selección/acciones masivas no publicadas, notificaciones externas o rollback distribuido.
 - Reintento HTTP inventado, polling con duración fija, avance porcentual ficticio y variantes mobile/tablet.

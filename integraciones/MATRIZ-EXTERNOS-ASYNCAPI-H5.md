@@ -1,7 +1,7 @@
 # Matriz de frontera externa H5 — AsyncAPI de G6 a HTTP
 
-**Estado:** cuatro rutas externas incorporadas en OpenAPI H5 `0.7.0-rc.1` (`SEMIFINAL_G6`). La hipótesis `ACEPTACION_G5_ASUMIDA_PARA_PLANIFICACION` permite planificar trabajo interno compatible; homologación bilateral efectiva y grants G7 comprobados siguen pendientes.
-**Trazabilidad de origen:** snapshot H4 `contratos/historico/h4/eventos/asyncapi.yaml` (`0.6.0-rc.4`, 40 mensajes). Frontera destino: OpenAPI H5 canónico `0.7.0-rc.1`, `SEMIFINAL_G6`, homologación G5/G7 pendiente; la mensajería externa directa por Service Bus queda excluida.
+**Estado:** cuatro rutas externas incorporadas en OpenAPI H5 `0.7.0-rc.3`, `APPROVED_G6` para el alcance interno. La hipótesis `ACEPTACION_G5_ASUMIDA_PARA_PLANIFICACION` permite planificar trabajo interno compatible; homologación bilateral efectiva y grants G7 comprobados siguen pendientes.
+**Trazabilidad de origen:** snapshot H4 `contratos/historico/h4/eventos/asyncapi.yaml` (`0.6.0-rc.4`, 40 mensajes). Frontera destino: OpenAPI H5 canónico `0.7.0-rc.3`, aprobado por G6; homologación G5 y grants G7 pendientes. La mensajería externa directa por Service Bus queda excluida.
 
 ## Qué grupos realmente aparecen como productores/consumidores externos
 

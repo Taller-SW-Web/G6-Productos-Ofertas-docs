@@ -1,16 +1,16 @@
 # Arquitectura del Módulo de Productos y Ofertas
 
-**Fecha de actualización:** 2026-11-17
+**Fecha de actualización:** 2026-11-22
 **Repositorio de documentación:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
 **Archivo:** `arquitectura/Arquitectura.md`  
-**Contrato HTTP canónico H5:** `contratos/http/openapi.yaml` (`0.7.0-rc.1`, `SEMIFINAL_G6`; corte `0.6.x` histórico)
-**Contrato asíncrono canónico H5:** `contratos/eventos/asyncapi.yaml` (`0.7.0-rc.1`, `SEMIFINAL_G6`; corte `0.6.x` histórico)
+**Contrato HTTP canónico H5:** `contratos/http/openapi.yaml` (`0.7.0-rc.3`, `APPROVED_G6`; corte `0.6.x` histórico)
+**Contrato asíncrono canónico H5:** `contratos/eventos/asyncapi.yaml` (`0.7.0-rc.3`, `APPROVED_G6`; corte `0.6.x` histórico)
 **Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (referencia humana; base histórica `0.5.0`)
 **Catálogo canónico de errores:** `contratos/http/catalogo-errores.md` (códigos autoritativos para el contrato candidato)
 **Contrato humano de integración:** `contratos/http/Contrato_Api.md`  
 **Modelo conceptual:** `Modelo_Conceptual.md`  
 **Estado de mensajería:** H5 adoptado por G6: Azure Service Bus Basic exclusivamente interno; HTTP autenticado vía APIM/Gateway para externos. Aprovisionamiento, implementación, autorización G7, homologación G5, pruebas runtime y despliegue siguen pendientes por separado. H4 RabbitMQ queda heredado.
-**Estado contractual H5:** OpenAPI y AsyncAPI canónicos `0.7.0-rc.1`, `SEMIFINAL_G6`; los cortes `0.6.x` y la línea base `0.5.0` se conservan como antecedentes históricos/compatibilidad. AsyncAPI `rc.3` reconcilia nombres físicos de infraestructura base con una observación histórica de Oracle; conserva los 40 mensajes y canales, operaciones, productores, consumidores, payloads, esquemas y routing keys comerciales. No acredita homologación, despliegue ni ejecución. Las decisiones internas están adoptadas, pero su implementación, despliegue y conformidad E2E no se acreditan mediante este documento.
+**Estado contractual H5:** OpenAPI y AsyncAPI canónicos `0.7.0-rc.3`, aprobados internamente `APPROVED_G6`; los cortes `0.6.x` y la línea base `0.5.0` se conservan como antecedentes históricos/compatibilidad. AsyncAPI `rc.3` reconcilia nombres físicos de infraestructura base con una observación histórica de Oracle; conserva sus contratos definidos. No acredita homologación, despliegue ni ejecución. La implementación, despliegue y conformidad E2E no se acreditan mediante este documento.
 
 > Esta arquitectura describe conceptos y antecedentes. Para implementar mensajería H5, prevalecen la ADR y topología Service Bus Basic enlazadas abajo; los detalles RabbitMQ de esta página son exclusivamente H4.
 > Las SPEC son la fuente de verdad para reglas funcionales; `contratos/http/openapi.yaml` gobierna HTTP; `contratos/eventos/asyncapi.yaml` gobierna mensajería; `contratos/http/catalogo-errores.md` gobierna la semántica estable de `code`.
