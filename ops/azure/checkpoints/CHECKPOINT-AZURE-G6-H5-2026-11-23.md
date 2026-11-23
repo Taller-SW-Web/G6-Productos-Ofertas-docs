@@ -6,7 +6,7 @@ Corte: **23/11/2026, America/Lima**. Azure CLI consultó el contexto activo **Az
 
 Alcance de solo lectura: nueve Azure Container Apps, sus revisiones, tráfico configurado, imágenes referenciadas, escala, publicación GHCR y workflows de Backend. No se hizo GET/HTTP contra ACA, ni cambio de configuración, tráfico, escala, imagen, secreto o recurso. El inventario refleja estado de control plane; peso de tráfico es configuración de enrutamiento, no contador de solicitudes.
 
-Los checks de GH Actions y los digests de publicación se contrastaron con las imágenes referenciadas por Azure. La asociación SHA→digest procede de los logs verificadores del workflow (14/11 para ocho imágenes y 23/11 para Catalog y Pricing). El daemon Docker local no estaba disponible; no se hizo pull/inspección local de labels. Los digests exactos de ACA acreditan qué artefactos están configurados en Azure.
+Los checks de GH Actions y los digests de publicación se contrastaron con las imágenes referenciadas por Azure. La asociación SHA→digest procede de los logs verificadores del workflow (14/11 para siete imágenes y 23/11 para Catalog y Pricing). El daemon Docker local no estaba disponible; no se hizo pull/inspección local de labels. Los digests exactos de ACA acreditan qué artefactos están configurados en Azure.
 
 Estados usados:
 
@@ -53,43 +53,52 @@ La punta de Backend `master` al corte es `9e4ac0af2a3ea882784413401bd5016ff611ca
 | promotions-svc | [run 43605626624](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43605626624), SHA `4c40…` | Digest del run coincide con la referencia en ACA | DESPLEGADO_VERIFICADO |
 | taxonomy-svc | [run 43605615901](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/43605615901), SHA `4c40…` | Digest del run coincide con la referencia en ACA | DESPLEGADO_VERIFICADO |
 
-Los ocho runs antiguos publicaron artefactos el 14/11; los de Catalog y Pricing el 23/11. El workflow es de publicación y declara no desplegar. La observación ACA del digest exacto es la evidencia independiente de que esos artefactos sí están configurados en el runtime. No se halló run del workflow **CD Azure Container Apps H5** en la lista consultada; el cambio de revisión de Gateway no demuestra build ni código nuevo.
+Los siete runs antiguos publicaron artefactos el 14/11; los de Catalog y Pricing el 23/11. El workflow es de publicación y declara no desplegar. La observación ACA del digest exacto es la evidencia independiente de que esos artefactos sí están configurados en el runtime. No se halló run del workflow **CD Azure Container Apps H5** en la lista consultada; el cambio de revisión de Gateway no demuestra build ni código nuevo.
 
 ## 5. Diferencias frente al checkpoint del 22/11
 
 - Catalog cambió de `catalog-svc--http-4c40b31b-mwgil3mw`, digest `063344…`, a `catalog-svc--b80jpbt`, digest `7bdb66…`, publicado para SHA `9e4ac0…`.
 - Pricing cambió de `pricing-svc--http-4c40b31b-mwgil3mw`, digest `a56ab6…`, a `pricing-svc--0000002`, digest `788526…`, publicado para SHA `9e4ac0…`.
-- Gateway creó `api-gateway--warmrestore` el 23/11. Recibe 100%; las revisiones anteriores quedan activas con 0%. El digest app `2ec4f28…` y sidecar `d44355…` son idénticos a los históricos. No hay evidencia de código nuevo por renombrar/recrear la revisión. La conservación de referencias G7 fue comunicada para el ensayo, pero no se inspeccionaron ni imprimieron referencias de secretos en este corte.
+- Gateway creó `api-gateway--warmrestore` el 23/11. Recibe 100%; las revisiones anteriores quedan activas con 0%. El digest app `2ec4f28…` y sidecar `d44355…` son idénticos a los históricos. No hay evidencia de código nuevo por renombrar/recrear la revisión. La conservación de la configuración G7 fue comunicada para el ensayo, pero no se verificó la autorización del token técnico en Gateway.
 - Los otros seis servicios mantienen el digest y SHA `4c40…` que figuraban en el snapshot anterior.
 - Estado Healthy y pesos ACA actuales se volvieron a consultar. Las réplicas observadas variaron: Gateway 0, Pricing 0 y Promotions 0 al corte; las seis apps restantes tienen 1. El checkpoint anterior contenía lecturas anteriores y no se deben interpretar como estado simultáneo actual.
 
 ## 6. Historial de revisiones nuevas
 
-| App | Revisión nueva | Creación (UTC) | Imagen comparada con previa | Tráfico actual |
-|---|---|---|---|---:|
-| Catalog | `catalog-svc--b80jpbt` | 23/11 06:14:21 | Cambió digest al publicado para SHA `9e4ac0…` | 100% |
-| Pricing | `pricing-svc--0000002` | 23/11 09:27:22 | Cambió digest al publicado para SHA `9e4ac0…` | 100% |
-| Gateway | `api-gateway--warmrestore` | 23/11 09:25:58 | Imagen app y sidecar sin cambio frente a revisión anterior | 100% |
+Las revisiones actuales `catalog-svc--b80jpbt` (creada 23/11 06:14:21 UTC), `api-gateway--warmrestore` (09:25:58 UTC) y `pricing-svc--0000002` (09:27:22 UTC) tienen esas fechas porque Azure las confirmó en la consulta de revisiones. En el ensayo autenticado caliente se comunicaron `api-gateway--warmdiag2` y `pricing-svc--0000001` aproximadamente a las 09:24 UTC; esa hora identifica el ensayo reportado, no una fecha de creación confirmada por Azure para esas revisiones.
 
-En las tres apps las revisiones anteriores siguen activas pero con peso 0. Las nuevas revisiones Healthy en ACA no prueban por sí solas disponibilidad HTTP.
+| App | Revisión del ensayo comunicado (~09:24 UTC) | Revisión actual observada en Azure | Creación actual confirmada por Azure (UTC) | Imagen/digest y tráfico actual |
+|---|---|---|---|---|
+| Catalog | No indicada en evidencia del ensayo | `catalog-svc--b80jpbt` | 23/11 06:14:21 | Digest `7bdb66…`, nuevo para SHA `9e4ac0…`; 100% |
+| Pricing | `pricing-svc--0000001` | `pricing-svc--0000002` | 23/11 09:27:22 | Ambas revisiones conservaron el digest `78852699924a1410382d0dd7fff83ae0ae09601aa10c8ca22f9442fd27293048`; `0000002` no representa publicación de código diferente. Tráfico actual 100% |
+| Gateway | `api-gateway--warmdiag2` | `api-gateway--warmrestore` | 23/11 09:25:58 | Imagen app `2ec4f28…` y sidecar `d44355…` sin cambio. Tráfico actual 100% |
+
+En las tres apps las revisiones anteriores siguen activas pero con peso 0. `warmrestore` y `0000002` son revisiones posteriores al ensayo y corresponden a la restauración de escala comunicada. La observación de ACA confirma como revisiones actuales las listadas, sus pesos, digest y estado Healthy; no convierte en verificación independiente los resultados del ensayo comunicado.
 
 ## 7. Evidencia de filtros autenticados (ensayo comunicado del 23/11)
 
-Los siguientes resultados fueron comunicados para el ensayo, pero no se conservaron en esta auditoría logs consultables, artefactos ni una nueva ejecución. Se registran como **EVIDENCIA_REPORTADA / SOLO_HISTORICO para este checkpoint**, no como prueba reproducida:
+Los siguientes resultados fueron comunicados para el ensayo caliente de aproximadamente las **09:24 UTC**, con Gateway `api-gateway--warmdiag2` y Pricing `pricing-svc--0000001`. Los resultados mantienen nivel **EVIDENCIA_REPORTADA**; no se conservaron en esta auditoría logs consultables, artifacts ni una nueva ejecución. Las revisiones actuales observadas por Azure son posteriores (`api-gateway--warmrestore` y `pricing-svc--0000002`) y se registran separadamente como **DESPLEGADO_VERIFICADO**. Según la evidencia comunicada, Pricing `0000002` conservó el mismo digest que `0000001`, por lo que no representa publicación de código diferente.
 
 - Consultas de filtros de precio con JWT G7 de identidad humana `GESTOR_COMERCIAL`; HTTP 200 reportado para S/ 0–100 y S/ 0–60. Catalog participó satisfactoriamente. Se reportó configuración de referencias G7 conservada para Pricing y Gateway; no se leyeron valores ni referencias de secretos en este corte.
 - En dataset anterior a la nueva carga QA, A (S/ 0–100) devolvió 12 productos y B (S/ 0–60) 2; B fue subconjunto de A.
 - Correlation IDs reportados: `faaca62f-a901-4453-b951-0706190f1e6a` y `1c337e91-c3b4-4733-a9b5-74324164f009`.
 - Con Gateway frío, 39.852 s para S/ 0–100. Con Gateway caliente: 3.527 s para S/ 0–100 y 1.080 s para S/ 0–60. La primera comparación corresponde a aproximadamente 91.1% menos latencia para S/ 0–100; es una observación de una corrida, no benchmark estadístico.
-- Se comunicó reversión de escala para Gateway y Pricing. Azure actualmente reporta ambos 0/1 réplicas min/max y revisión Healthy; ello es consistente con escala a cero, pero el historial de actividad que probaría cada acción de reversión no se obtuvo.
+- Tras el ensayo se comunicó la restauración de escala para Gateway y Pricing. Las revisiones posteriores actuales `warmrestore` y `0000002` constan en Azure con 0/1 réplicas min/max y Healthy; la cronología de esas revisiones y el estado observado son consistentes con la restauración. No se obtuvo historial de actividad que acredite independientemente la acción operativa de reversión.
 
 No se enviaron solicitudes HTTP durante la auditoría porque podrían activar réplicas con minReplicas=0 y alterar el estado observado. Los logs de aplicación/telemetría que permitirían corroborar retrospectivamente las llamadas y latencias no quedaron disponibles para este corte.
 
 ## 8. Autenticación G7 y Marketplace
 
-La evidencia comunicada de JWT corresponde a una identidad humana `GESTOR_COMERCIAL` contra el ensayo autenticado de filtros. **No es E2E del BFF Marketplace** y no prueba el client/module `modulo-marketplace`, su grant, scopes, mapeo BFF, ni homologación del consumidor G1. No se atribuye autorización a partir de una prueba de otra identidad.
+La guía de G7 [Clientes técnicos de Hito 5](https://github.com/Taller-SW-Web/Modulo-de-Seguridad/blob/main/docs/integracion/hito-5-clientes-tecnicos.md) documenta `modulo-marketplace`, sus concesiones `catalogo:leer`, `precios:leer` e `inventario:disponibilidad:leer` para audiencia `api-productos`, y la emisión HTTP 200 de un token técnico. Se clasifican por separado:
 
-Pendiente específico: owner de Seguridad/G7 debe confirmar grant/scopes de `modulo-marketplace` para las operaciones de filtros que invoque Marketplace; owner de integración G1/G6 debe aportar ejecución E2E autenticada BFF→Gateway→servicios con JWT de módulo, respuesta contractual y correlation ID. Desbloqueo verificable: evidencia reproducible ligada a SHA del BFF y a digest/revisión ACA, con casos válido/ausente/expirado/scope insuficiente y aceptación/homologación registrada por los módulos concernidos. Ninguna autorización o aceptación externa se infiere aquí.
+| Evidencia | Estado | Alcance acreditado |
+|---|---|---|
+| Grants de `modulo-marketplace` | **DOCUMENTADOS_G7** | La guía G7 documenta los tres scopes y audiencia `api-productos`; no implica autorización efectiva por G6. |
+| Emisión de token técnico | **DOCUMENTADA_G7** | G7 documenta respuesta HTTP 200 al emitir el token; no equivale a que Gateway G6 lo acepte. |
+| Autorización del token técnico en Gateway G6 | **NO_VERIFICADA** | No se obtuvo evidencia de aceptación del token técnico contra Gateway. La prueba autenticada comunicada de filtros usó identidad humana `GESTOR_COMERCIAL`, alcance distinto. |
+| E2E del BFF G1→G6 | **PENDIENTE** | No hay ejecución autenticada documentada del BFF Marketplace hacia Gateway/servicios G6 con respuesta contractual y correlación verificable. |
+
+No se solicita otra concesión ni se afirma que Gateway G6 haya aceptado el token. El desbloqueo del E2E requiere una ejecución reproducible del BFF ligado a su SHA y a digest/revisión ACA, con autorización G6 comprobada para el token técnico y aceptación/homologación de los módulos concernidos.
 
 ## 9. Estado final de réplicas y escala
 
@@ -99,14 +108,14 @@ Resumen al momento de las consultas: `api-gateway` 0/1 (min/max), `bulk-svc` 1/1
 
 | Hallazgo | Evidencia disponible | Falta / estado |
 |---|---|---|
-| Procedencia de las imágenes | Runs exitosos de publicación con SHA y digest para las nueve; digest idéntico observado en ACA | Sin inspección local de OCI labels porque Docker Engine no estaba disponible; provenance/SBOM fuera del alcance de los logs consultados |
+| Procedencia de las imágenes | Siete runs exitosos antiguos y dos publicaciones del 23/11 con SHA y digest para las nueve; digest idéntico observado en ACA | Sin inspección local de OCI labels porque Docker Engine no estaba disponible; provenance/SBOM fuera del alcance de los logs consultados |
 | Despliegue | Azure enumera revisión activa, tráfico configurado y digest por contenedor | No se localizó run CD; no se acredita qué actor/operación creó las revisiones del 23/11 |
 | Salud | `healthState=Healthy`, provisioning Succeeded y réplicas actuales | No hubo health/smoke HTTP independiente en esta auditoría |
 | Filtros | Resultados y correlation IDs comunicados; imágenes/revisiones actuales verificadas | Logs/artifacts del ensayo no disponibles para reproducción retrospectiva; resultados quedan reportados |
-| G7/Marketplace | Ensayo comunicado con JWT humano `GESTOR_COMERCIAL` | E2E con `modulo-marketplace`, grant G7 y homologación externa NO_VERIFICADO |
+| G7/Marketplace | Grants y emisión HTTP 200 del token técnico `modulo-marketplace` DOCUMENTADOS_G7; ensayo de filtros adicional con JWT humano `GESTOR_COMERCIAL` reportado | Autorización del token técnico contra Gateway G6 NO_VERIFICADA; E2E BFF G1→G6 PENDIENTE |
 | H5 global | Piloto R16 y antecedentes del checkpoint 22/11 | No certifica habilitación general, todos los flujos, APIM, G5 Marketplace, CI/CD deploy ni retiro del runtime heredado |
 
-`PUBLICADO_NO_DESPLEGADO`: una publicación nueva de candidato sin digest observado en ACA quedaría en este estado; no se observó tal caso entre las nueve referencias actuales. Las pruebas humanas reportadas se clasifican `SOLO_HISTORICO` respecto a esta auditoría, no como ausencia de despliegue.
+`PUBLICADO_NO_DESPLEGADO`: una publicación nueva de candidato sin digest observado en ACA quedaría en este estado; no se observó tal caso entre las nueve referencias actuales. Los resultados del ensayo de filtros conservan estado `EVIDENCIA_REPORTADA`; no se reprodujeron durante este corte. Esto es independiente de las revisiones actuales observadas como `DESPLEGADO_VERIFICADO`.
 
 ## 11. Comandos de solo lectura utilizados (saneados)
 
