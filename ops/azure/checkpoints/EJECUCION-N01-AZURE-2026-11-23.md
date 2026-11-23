@@ -60,8 +60,43 @@ El resumen sanitizado y los logs originales recuperados de Azure quedaron localm
 
 ## Correcciones locales posteriores (sin nueva ejecución Azure)
 
-- Backend rama `trabajo/castilla/h5-g5-azure-despliegue-integral`, commit `51f8441a2adb2e0484b2a2d3072617908f9672dc`: validador de configuración efectiva por servicio, SHA exacto, digests OCI y credenciales de lectura GHCR; prueba las etiquetas OCI contra el SHA y verifica el SHA actual de `master` junto con el workflow oficial `ci.yml` exitoso en `push` a `master` antes del `what-if`.
+- Backend rama `trabajo/castilla/h5-g5-azure-despliegue-integral`: implementación aprobada inicialmente en `51f8441a2adb2e0484b2a2d3072617908f9672dc` y sincronizada con `origin/master` (incluye PR #267) en HEAD `bf5904c2d100db2f87a098e0386d1eb5e305ba86`. El validador exige configuración efectiva por servicio, SHA exacto, digests OCI y credenciales de lectura GHCR; verifica las etiquetas OCI contra el SHA y exige el SHA actual de `master` más el workflow oficial `ci.yml` exitoso en `push` a `master` antes del `what-if`.
 - El `what-if` ACA y N01 ahora consumen JSON de Azure y validan `resourceId`/`changeType`; la plantilla deriva dominio del Environment y recibe su región desde el preflight de Azure. El runner N01 recibe SHA por ejecución, lo contrasta con `master` y CI `push`, y conserva la vinculación SQL/resultado terminal junto con la limpieza que informa errores sin ocultar el error principal.
 - Pruebas locales con respuestas simuladas: seis pruebas Node del validador (incluidos GitHub y GHCR privados), pruebas PowerShell de procedencia y JSON what-if (incluidos alcance y región), pruebas de cleanup N01, compilación de ambas plantillas Bicep, análisis sintáctico PowerShell y `git diff --check`: PASS.
 - No se repitió N01, no se ejecutó `what-if` ACA, no se publicaron imágenes y no se crearon ACA. El `PASS` de N01 documentado arriba permanece evidencia histórica de la ejecución real original; estas correcciones no lo amplían ni acreditan ACA, G5, G7, APIM o CD.
 - Inspección Azure CLI posterior: el RG `rg-g6-sb-h5-int-fork` informa `chilecentral`; el Environment `env-g6-h5-int` informa `Brazil South`, `publicNetworkAccess=Disabled`, sin subnet VNet configurada y `internal` sin valor. No hay ACA en el grupo. El runner/cliente externo no tiene una ruta privada acreditada hacia el Environment; Gateway y los cuatro servicios permanecen con ingress interno. No se habilita `external: true`; se requiere conectividad privada aprobada antes de una prueba HTTP desde fuera del Environment.
+
+## Instrucciones para Chat 6 — what-if y bootstrap pendiente
+
+`PENDING`: usar esta secuencia solo después de que los cinco paquetes oficiales para el SHA actual de `master` estén publicados con digest OCI verificado y se entreguen la configuración runtime y credenciales por el canal seguro. La prueba N01 histórica no satisface esos prerrequisitos ni autoriza crear las ACA.
+
+### Prerrequisitos
+
+- Estar en el repositorio Backend oficial, rama de infraestructura integrada y con el HEAD revisado; confirmar el SHA exacto de `origin/master` y su workflow `.github/workflows/ci.yml` exitoso por evento `push` a `master`.
+- Azure CLI autenticado en la suscripción autorizada, con permisos de lectura del grupo/Environment y permiso de despliegue en `rg-g6-sb-h5-int-fork`. Verificar el Environment existente `env-g6-h5-int`, región Brazil South, su `defaultDomain` y el estado actual de las cinco ACA. El grupo puede informar otra región; la plantilla deriva su ubicación del Environment.
+- GH CLI autenticado para consultar el SHA/CI y acceso de lectura autorizado a los cinco paquetes privados GHCR. Reunir por servicio el digest `sha256:<64 hex>` del mismo SHA y metadatos OCI `org.opencontainers.image.revision`, `org.opencontainers.image.source` (`https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend`) y `org.opencontainers.image.title` (nombre exacto del servicio).
+- Preparar el archivo privado de parámetros con el esquema exacto `sourceSha`, `environmentName`, `environmentLocation`, `promotionsIdentityResourceId`, `promotionsIdentityClientId`, `registryUsername`, `imageDigests` y `appConfiguration`. `imageDigests` y `appConfiguration` deben contener exactamente `api-gateway`, `catalog-svc`, `inventory-svc`, `pricing-svc` y `promotions-svc`; cada configuración incluye `env` y `secrets`, referencias de secretos válidas, puertos/variables protegidos sin redefinir y CA PostgreSQL válida. Los valores secretos, credenciales GHCR, certificados y configuración G7 se obtienen por canal seguro y no se imprimen ni se versionan.
+- Mantener ingress interno/TLS, flags comerciales G5 cerrados y la UAMI de Promotions limitada a la cola `g6.promotions.commands`. Los roles Service Bus Data Sender y Data Receiver deben verificarse en el scope ARM de esa cola: `/subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.ServiceBus/namespaces/g6-sb-h5-int-32cdqgbnlk7ow/queues/g6.promotions.commands`, sin heredar permisos de ámbito más amplio como sustituto de esa comprobación.
+
+### Comando de revisión
+
+Desde la raíz del Backend, con el archivo de parámetros privado fuera de Git y disponible solo para el operador:
+
+```powershell
+$sha = (git rev-parse origin/master).Trim()
+pwsh -NoProfile -File .\ops\azure\container-apps\run-h5-five-apps-whatif.ps1 `
+  -ParametersFile 'C:\ruta-segura\h5-five-apps.private.json' `
+  -AuthorizedSha $sha
+```
+
+El runner consulta el SHA y CI oficiales, valida acceso a GHCR y metadatos OCI, compila Bicep y ejecuta `az deployment group what-if --no-pretty-print --output json`; emite solo un resultado de alcance, no el JSON ni los parámetros. Este comando **no ejecuta** `az deployment group create`.
+
+### Criterios de aceptación del what-if
+
+- SHA y CI corresponden al HEAD exacto vigente de `master`; los cinco digests, etiquetas OCI y autorización GHCR corresponden al mismo SHA y servicio.
+- Azure confirma que Environment y aplicaciones objetivo están en Brazil South; las cinco ACA apuntan al Environment existente, derivan FQDN de su dominio real y mantienen `external=false` y `allowInsecure=false`.
+- El JSON de Azure es válido y solo muestra las cinco creaciones autorizadas en el primer bootstrap, o cambios idempotentes explícitamente permitidos en una revisión posterior. Rechazar recursos ajenos, `Delete`, `Unsupported` y cualquier cambio que no certifique el alcance.
+- Gateway, Caddy, puertos y probes compilan; configuración y secretos efectivos pasan el validador; los flags comerciales permanecen desactivados y Promotions conserva la identidad aprobada.
+- Cualquier precondición ausente, discrepancia de ubicación, digests faltantes/obsoletos, CI no exitosa, falta de permisos GHCR, manifiesto incompleto, configuración insegura o alcance JSON inesperado bloquea antes de crear recursos.
+
+Un `what-if` aceptado no equivale a despliegue ni autoriza `create`. El siguiente paso requiere revisión de su salida, configuración real y aprobación explícita. La conectividad de G5 desde fuera del Container Apps Environment sigue sin estar acreditada.
