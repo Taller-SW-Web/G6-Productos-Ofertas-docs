@@ -19,7 +19,7 @@
 | INT-01 | H5-02; L1+L2 | Poma | producto/variante/offer/stock, JUnit+JSON+corr ID |
 | INT-02 | H5-02; L1+L2 condicional | Taco | consulta/reserva/release/idempotencia, DB y SQL de test |
 | INT-03 | H5-02; L1+L2 tras grants | Axel | cupones y doble solicitud; permiso G7/runtime |
-| INT-04 | H5-02; L1, L2 si R01 | Castilla | Bulk→Catalog, digest/receipt/result |
+| INT-04 | H5-02; L1, L2 si R01 | Castilla (Poma coejecuta validación Catalog) | Bulk→Catalog, digest/receipt/result |
 | INT-05 | H5-02; L2 | Vera | R16, redelivery/restart/DLQ, bundle y SQL |
 | INT-06 | H5-02; L1, L2 si activo | López | Taxonomy↔Catalog; R18 si seleccionado |
 | INT-07 | H5-02; L2 | Castilla | APIM/Gateway/G7, 200/401/403/404/429/CORS |
@@ -27,7 +27,7 @@
 | INT-09 | H5-02; L3 si se proclama homologado | Axel | G5/G6 bilateral, token/grant y alcance |
 | INT-10 | H5-02; L1+L2 | Vera | caída/recovery/replay/no doble efecto |
 
-INT-02/03/04/06/09 son condicionales al manifest de release; la selección R18 activa INT-06 y R01 activa INT-04. E2E G5 requiere L3, no toda la aceptación académica.
+INT-02/03/04/06/09 son condicionales al manifest de release; la selección R18 activa INT-06 y R01 activa INT-04. Poma es owner de INT-01/08; Castilla de INT-04/07, con Poma coejecutor de INT-04. E2E G5 requiere L3, no toda la aceptación académica.
 
 ## PERF-01–PERF-08
 
@@ -36,13 +36,13 @@ INT-02/03/04/06/09 son condicionales al manifest de release; la selección R18 a
 | PERF-01 | H5-03 catálogo paginado | Poma | dataset fijo, k6 percentiles/RPS |
 | PERF-02 | detalle SKU/precio | Vera | DB/downstream y trazas |
 | PERF-03 | disponibilidad comercial | Taco | SKUs/ubicaciones sintéticos, errores/429 |
-| PERF-04 | admisión idempotente | Axel | 202, outbox/backlog, entorno descartable |
+| PERF-04 | admisión idempotente; obligatorio solo con N01 en manifest | Axel | 202, outbox/backlog, entorno descartable; si N01 no está habilitado, `scope=OUT_OF_SCOPE` |
 | PERF-05 | Service Bus | Axel | latency, backlog, redelivery/DLQ |
 | PERF-06 | UI admin | Poma | Playwright/browser, duración/bytes |
 | PERF-07 | importación Bulk | Castilla | dataset/checksum, filas/s y recuperación |
 | PERF-08 | APIM vs control privado | Castilla | host/APIM SKU y control comparable |
 
-Perfiles: 1 VU/60 s, 5 VU/3 min, 20 VU/5 min; tres repeticiones baseline y candidato. Gate interno: mediana p95 candidato ≤1.10×baseline, RPS ≥0.90×baseline y errores inesperados <1% únicamente donde el escenario espera 2xx. Menos datos o ambiente dispar = `INCONCLUSIVE`.
+Perfiles: 1 VU/60 s, 5 VU/3 min, 20 VU/5 min; tres repeticiones baseline y candidato. Gate interno: mediana p95 candidato ≤1.10×baseline, RPS ≥0.90×baseline y errores inesperados <1% únicamente donde el escenario espera 2xx. Si N01 no está en el manifest, PERF-04 se registra con `scope=OUT_OF_SCOPE` y se excluye del denominador del scorecard; no recibe resultado de ejecución `PASS` ni `NOT_RUN`. Métricas incompletas o ambiente dispar = `INCONCLUSIVE` para escenarios dentro de alcance.
 
 ## R01–R18/N01, owner y aceptación
 
@@ -72,7 +72,7 @@ Los nombres de mensajes y colas los rige [matriz de implementación](../../integ
 
 ## Esquema de evidencia y procedencia planeados
 
-Cada registro futuro separa `execution_result` (`PASS/FAIL/INCONCLUSIVE/NOT_RUN`), `evidence_level` (`STATIC/ISOLATED/LAB_AZURE/STAGING_REAL/INTERGROUP`), `deployment_state`, `verification_state` y `blocker_code`. Incluir case/criterion, repositorio y SHA completo por sujeto Backend/Frontend/Docs, entorno, comando saneado, run/workflow/job/artifact IDs, digest SHA-256, timestamps, fixture, versiones/dataset y owner. Verification independiente coteja API GitHub de solo lectura, SHA realmente probado, conclusión del job, artifact ID/hash y estado de expiración. `workflow_dispatch` registra SHA del runner y del código bajo prueba. L1 simulado no se etiqueta L2; artifact expirado sin copia verificable es `INCONCLUSIVE`.
+Cada registro futuro separa la dimensión `scope` (`IN_SCOPE` o `OUT_OF_SCOPE`, con motivo y condición de manifest) del `execution_result` (`PASS/FAIL/INCONCLUSIVE/NOT_RUN`), `evidence_level` (`STATIC/ISOLATED/LAB_AZURE/STAGING_REAL/INTERGROUP`), `deployment_state`, `verification_state` y `blocker_code`. `OUT_OF_SCOPE` no es resultado de ejecución y no suma al denominador del scorecard. Incluir case/criterion, repositorio y SHA completo por sujeto Backend/Frontend/Docs, entorno, comando saneado, run/workflow/job/artifact IDs, digest SHA-256, timestamps, fixture, versiones/dataset y owner. Verification independiente coteja API GitHub de solo lectura, SHA realmente probado, conclusión del job, artifact ID/hash y estado de expiración. `workflow_dispatch` registra SHA del runner y del código bajo prueba. L1 simulado no se etiqueta L2; artifact expirado sin copia verificable es `INCONCLUSIVE`.
 
 ## Scorecard y cierre
 

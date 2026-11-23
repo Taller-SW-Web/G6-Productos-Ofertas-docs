@@ -30,7 +30,7 @@ Los checks de #247 son propios de su SHA y no constituyen verificación de Azure
 | ID / owner único | Coejecutores | Repo / archivos futuros | Entrada y acción concreta | Salida / prueba / gate | PR existente y propuesta |
 |---|---|---|---|---|---|
 | DOC-01 / Castilla | todos | Docs `hitos/h5/`, futuro `scripts/ci` | requisitos, runs/artefactos → scorecard y evidencia por SHA | validador offline, fixtures negativos; ningún PASS manual | Este PR documental; P1 futuro separado. #131 no tocar matriz |
-| APIM-01/02 / Castilla | Axel, Infra, G7 | Backend `infra/azure/h5/apim/` | inventario SKU/red/costo y rutas servidas → Bicep/policies | what-if, hash policies, pruebas APIM 200/401/403/404/429 | No PR APIM identificado; futuro draft condicionado a presupuesto |
+| APIM-01/02 / Castilla | Axel, Infra, G7 | Backend `ops/azure/apim/` (crear durante la implementación futura) | inventario SKU/red/costo y rutas servidas → Bicep/policies | what-if, hash policies, pruebas APIM 200/401/403/404/429 | No PR APIM identificado; futuro draft condicionado a presupuesto |
 | CLOSE-01 / Castilla | todos | Docs guion/scorecard | evidencias verificadas por dueño → scorecard/demo | reporte calculado y demo reproducible | futuro separado; no Issues asignados |
 | SB-01 / Axel Cueva | López, Poma, Vera, Taco, Castilla | fork backend `trabajo/cueva/integracion-service-bus-h5`, Bicep/relay | reconciliar fork y PRs activos → transporte único por destino, mantenido por Axel | CI en HEAD final, RBAC, Inbox/Outbox, replay/DLQ y no doble relay | Fork existente `22667994…`; Backend #243 abierto Draft, #247 abierto; no duplicar PR |
 | CD-01 / Axel Cueva | Vera | Backend `.github/workflows/cd-services-azure.yml`, `ops/azure` | SHA/digest, OIDC y run protegido → CD/smoke/rollback | mismo SHA y digest, aprobación y smoke HTTPS | #250 merged; ajustes futuros en PR separado si brecha verificada |
@@ -45,7 +45,7 @@ Los checks de #247 son propios de su SHA y no constituyen verificación de Azure
 | INV-02 / Miguel Taco | Axel | Frontend Inventory/Backend tests | R06/R11/R12/R13 y UI → integrar estados reales | smoke, replay y no duplicar relay | #90 abierto, SHA `3ea4a38…` |
 | INV-03 / Miguel Taco | Vera | fixtures Inventory | parámetros y esquema dataset → datos sintéticos PERF-03 | checksum, semilla, perfil reproducible | No PR específico; futuro por gap comprobado |
 | BESEC-01 / Leonardo Vera | Axel | Backend CI/security | workflow actual y conflictos → CodeQL/Gitleaks/SCA/Trivy/SBOM/IaC | reportes reales por SHA; revisar #250 merged primero | #250 merged; PR seguridad separado futuro |
-| PERF-01 / Leonardo Vera | Poma, Taco, Axel, Castilla | Backend scripts/k6; Docs reportes | benchmark existente → PERF-01–08 y 3 pares | JSON/CSV, mediana p95/RPS, configuración comparable | PR futuro independiente de #233 |
+| PERF-PLAT-01 / Leonardo Vera | Poma, Taco, Axel, Castilla | Backend scripts/k6; Docs reportes | benchmarks existentes → plataforma k6 común, comparación de los escenarios PERF en alcance y reporte H5-03 | JSON/CSV, mediana p95/RPS, configuración comparable | PR futuro independiente de #233; PERF-01 sigue siendo la prueba Catalog de Poma |
 | PRIC-01 / Leonardo Vera | Axel | Backend Pricing/Price Audit | piloto R16 y #235 → validar outbox/audit/DLQ | corrida Azure actual y no doble efecto por SHA | #235 merged; #233 CSV se mantiene separado |
 
 ## Fichas por integrante y criterios de salida
@@ -60,7 +60,7 @@ Los checks de #247 son propios de su SHA y no constituyen verificación de Azure
 
 **Miguel Taco — Inventory, integración y resiliencia.** Entrada: #248 merged, #90 abierto, contratos y dataset. Salida: pruebas Inventory/reservas y fixtures PERF-03. Gate: DB descartable, idempotencia/replay y negativos auth; sin duplicar transporte Axel.
 
-**Leonardo Vera — seguridad Backend, k6, Pricing/Audit.** Entrada: workflows existentes, piloto #235, #233 separado, SHAs y datos de corrida. Salida: reportes SAST/SCA/imagen/IaC y k6/R16. Gate: coordinación de workflow/backend y baselines pareadas; no inferir de piloto previo.
+**Leonardo Vera — seguridad Backend, consolidación k6, Pricing/Audit.** Entrada: workflows existentes, piloto #235, #233 separado, SHAs y datos de corrida. Salida: reportes SAST/SCA/imagen/IaC, plataforma/reporte H5-03 y prueba PERF-02/R16. Gate: coordinación de workflow/backend y baselines pareadas; no inferir de piloto previo.
 
 ## Olas de trabajo y PRs
 

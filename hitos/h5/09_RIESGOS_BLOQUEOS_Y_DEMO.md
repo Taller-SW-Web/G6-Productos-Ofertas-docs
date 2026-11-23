@@ -29,7 +29,7 @@ Si falta Azure, presentar L0/L1 como estáticos/aislados y marcar L2 `BLOCKED_IN
 | 6–10 | H5-02 | ejecutar/reproducir INT-01/05/07/08/10 según manifest; mostrar nivel L0/L1/L2, correlación, logs y artefactos |
 | 10–13 | H5-03 | abrir comparación baseline/candidato de tres runs, 1/5/20 VU, p95/RPS/error y ambiente; declarar inconclusión si no comparable |
 | 13–16 | H5-04A | mostrar hostname APIM real, policy hash, ruta y 200/401/403/404/429/CORS; Gateway sola no cuenta |
-| 16–19 | H5-04B | demostrar una ruta interna real, Outbox→Basic→Inbox/resultado, redelivery/DLQ/recovery y no doble efecto; explicar límites Basic |
+| 16–19 | H5-04B | acreditar R16 y un segundo flujo R18 o R07: ejecutar uno en directo y mostrar para el otro evidencia verificable por SHA/artefacto. Cubrir Outbox→Basic→Inbox/resultado, redelivery/DLQ/recovery y ausencia de doble efecto; explicar límites Basic. Una sola ruta no satisface el criterio interno de dos flujos. |
 | 19–20 | Cierre | scorecard calculado, SHAs/digests, homologación y bloqueos con owners; no declarar H5 completo si algún gate falta |
 
 Si cualquiera de esas evidencias no existe, usar captura de plan/artefacto histórico etiquetada como tal, no recrear resultados ni afirmar PASS. El piloto #234 puede ilustrar R16 histórico, claramente como laboratorio/alcance parcial.
