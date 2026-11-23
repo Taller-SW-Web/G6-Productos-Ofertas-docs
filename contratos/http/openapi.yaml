@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: API — Productos y Ofertas
-  version: 0.7.0-rc.2
+  version: 0.7.0-rc.3
   summary: Contrato HTTP de integración y administración del módulo Productos y Ofertas
   description: Baseline semifinal contractual H5 de G6. Estado SEMIFINAL_G6; las nuevas interfaces compartidas permanecen
     PENDIENTE_HOMOLOGACION_EXTERNA. La versión no acredita implementación, validación, habilitación, grants ni despliegue.
@@ -18007,6 +18007,72 @@ paths:
         '400': *id604
         '413': *id605
         '422': *id606
+  /carga-masiva/productos/importaciones/por-correlacion/{correlationId}:
+    get:
+      tags:
+      - Carga masiva
+      operationId: conciliarImportacionGeneralPorCorrelacion
+      summary: Conciliar una admisión por propietario y correlación
+      description: Solo lectura; el propietario procede del JWT humano validado. La respuesta no se almacena en caché.
+      x-status: propuesta-contractual-no-aprobada
+      security:
+      - userBearer: []
+      parameters:
+      - name: correlationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - *id020
+      responses:
+        '200':
+          description: Admisión durable recuperada
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportacionGeneralConciliada'
+        '400':
+          description: UUID inválido
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Token humano inválido
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Rol o scope insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: No existe una admisión propia con esa correlación
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: Persistencia no disponible
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      x-error-codes:
+        '400': [VALIDACION]
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '404': [LOTE_NO_ENCONTRADO]
+        '503': [SERVICIO_NO_DISPONIBLE]
   /carga-masiva/productos/importaciones/{batchId}:
     get:
       tags:
@@ -18268,7 +18334,13 @@ paths:
       - userBearer: []
       parameters:
       - $ref: '#/components/parameters/BatchId'
-      - *id020
+      - name: X-Correlation-Id
+        in: header
+        required: true
+        description: UUID propio y estable de esta solicitud de reanudación; distinto de la correlación de admisión.
+        schema:
+          type: string
+          format: uuid
       responses:
         '202':
           description: Reanudación aceptada
@@ -18387,9 +18459,17 @@ paths:
                       type: string
                       enum: &id622
                       - IDEMPOTENCY_CONFLICT
+                      - RETRY_PROTOCOL_NOT_APPROVED
+                      - RETRY_NOT_ELIGIBLE
                   required:
                   - status
                   - code
+        '400':
+          description: Correlación o body inválido
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
       requestBody:
         required: false
         content:
@@ -18403,6 +18483,7 @@ paths:
         '503': *id620
         '404': *id621
         '409': *id622
+        '400': [VALIDACION]
   /carga-masiva/productos/exportaciones:
     post:
       tags:
@@ -25798,6 +25879,7 @@ components:
         correlation_id:
           type: string
           format: uuid
+          description: Correlación original de admisión del lote. La correlación del POST de reanudación solo identifica esa solicitud para idempotencia.
       additionalProperties: true
       required:
       - batch_id
@@ -25896,6 +25978,8 @@ components:
           minimum: 0
         needs_reconciliation:
           type: boolean
+        reanudacion:
+          $ref: '#/components/schemas/ElegibilidadReanudacionBulk'
         rows:
           type: array
           items:
@@ -25914,8 +25998,73 @@ components:
         motivo:
           oneOf:
           - type: string
+            minLength: 1
+            maxLength: 256
           - type: 'null'
-      additionalProperties: true
+      additionalProperties: false
+    ElegibilidadReanudacionBulk:
+      type: object
+      properties:
+        protocolo:
+          type: string
+          const: BULK_RETRY_V1
+        elegible:
+          type: boolean
+        pasos:
+          type: array
+          items:
+            type: object
+            properties:
+              row_id:
+                type: string
+                format: uuid
+              dominio:
+                type: string
+                const: CATALOGO
+            required: [row_id, dominio]
+            additionalProperties: false
+        motivo_bloqueo:
+          oneOf:
+            - type: string
+              enum: [LOTE_NO_TERMINAL, SIN_PASOS_REINTENTABLES, RESULTADO_INCIERTO, PROTOCOLO_DOMINIO_NO_HABILITADO]
+            - type: 'null'
+      required: [protocolo, elegible, pasos, motivo_bloqueo]
+      additionalProperties: false
+      allOf:
+        - if:
+            properties:
+              elegible: {const: true}
+          then:
+            properties:
+              pasos: {minItems: 1}
+              motivo_bloqueo: {type: 'null'}
+        - if:
+            properties:
+              elegible: {const: false}
+          then:
+            properties:
+              pasos: {maxItems: 0}
+              motivo_bloqueo:
+                type: string
+                enum: [LOTE_NO_TERMINAL, SIN_PASOS_REINTENTABLES, RESULTADO_INCIERTO, PROTOCOLO_DOMINIO_NO_HABILITADO]
+      description: Solo se informa elegible=true a partir de recibos PostgreSQL terminales V2 verificados para una familia completa. Con true, motivo_bloqueo es null y pasos no está vacío; con false, pasos está vacío y motivo_bloqueo usa uno de los cuatro motivos públicos.
+    ImportacionGeneralConciliada:
+      type: object
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+        correlation_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [QUEUED, PROCESSING, COMPLETED, FAILED_GENERAL]
+        template_version:
+          type: integer
+          const: 2
+      required: [batch_id, correlation_id, status, template_version]
+      additionalProperties: false
     CrearExportacionProductosRequest:
       type: object
       properties:

@@ -2,7 +2,7 @@ asyncapi: 3.0.0
 id: urn:taller-sw-web:productos-y-ofertas:asyncapi
 info:
   title: Productos y Ofertas — Contrato asíncrono H5
-  version: 0.7.0-rc.2
+  version: 0.7.0-rc.3
   description: Baseline SEMIFINAL_G6 para mensajería interna exclusivamente mediante Azure Service Bus Basic. Pendiente
     de homologación externa en las fronteras HTTP correspondientes. No acredita aprovisionamiento, implementación,
     validación, grants, habilitación ni despliegue. RabbitMQ se conserva en el snapshot H4. Entrega at-least-once,
@@ -15,6 +15,8 @@ channels:
     messages:
       CatalogBulkUpsertRequested:
         $ref: '#/components/messages/CatalogBulkUpsertRequested'
+      CatalogBulkUpsertRequestedV4:
+        $ref: '#/components/messages/CatalogBulkUpsertRequestedV4'
     x-producer: bulk-svc
     x-consumer: catalog-svc
     x-contract-status: SEMIFINAL_G6
@@ -46,6 +48,10 @@ channels:
         $ref: '#/components/messages/CatalogBulkUpsertCompleted'
       CatalogBulkUpsertRejected:
         $ref: '#/components/messages/CatalogBulkUpsertRejected'
+      CatalogBulkUpsertCompletedV2:
+        $ref: '#/components/messages/CatalogBulkUpsertCompletedV2'
+      CatalogBulkUpsertRejectedV2:
+        $ref: '#/components/messages/CatalogBulkUpsertRejectedV2'
     x-producer: catalog-svc
     x-consumer: bulk-svc
     x-contract-status: SEMIFINAL_G6
@@ -223,6 +229,7 @@ operations:
       $ref: '#/channels/g6_catalog_from_bulk'
     messages:
     - $ref: '#/channels/g6_catalog_from_bulk/messages/CatalogBulkUpsertRequested'
+    - $ref: '#/channels/g6_catalog_from_bulk/messages/CatalogBulkUpsertRequestedV4'
     x-producer: bulk
     x-runtime-status: PENDIENTE_IMPLEMENTACION
   consume_g6_catalog_from_bulk:
@@ -231,6 +238,7 @@ operations:
       $ref: '#/channels/g6_catalog_from_bulk'
     messages:
     - $ref: '#/channels/g6_catalog_from_bulk/messages/CatalogBulkUpsertRequested'
+    - $ref: '#/channels/g6_catalog_from_bulk/messages/CatalogBulkUpsertRequestedV4'
     x-consumer: catalog
     x-runtime-status: PENDIENTE_IMPLEMENTACION
   publish_g6_inventory_from_bulk:
@@ -272,6 +280,8 @@ operations:
     messages:
     - $ref: '#/channels/g6_bulk_from_catalog/messages/CatalogBulkUpsertCompleted'
     - $ref: '#/channels/g6_bulk_from_catalog/messages/CatalogBulkUpsertRejected'
+    - $ref: '#/channels/g6_bulk_from_catalog/messages/CatalogBulkUpsertCompletedV2'
+    - $ref: '#/channels/g6_bulk_from_catalog/messages/CatalogBulkUpsertRejectedV2'
     x-producer: catalog
     x-runtime-status: PENDIENTE_IMPLEMENTACION
   consume_g6_bulk_from_catalog:
@@ -281,6 +291,8 @@ operations:
     messages:
     - $ref: '#/channels/g6_bulk_from_catalog/messages/CatalogBulkUpsertCompleted'
     - $ref: '#/channels/g6_bulk_from_catalog/messages/CatalogBulkUpsertRejected'
+    - $ref: '#/channels/g6_bulk_from_catalog/messages/CatalogBulkUpsertCompletedV2'
+    - $ref: '#/channels/g6_bulk_from_catalog/messages/CatalogBulkUpsertRejectedV2'
     x-consumer: bulk
     x-runtime-status: PENDIENTE_IMPLEMENTACION
   publish_g6_combos_from_catalog:
@@ -1879,6 +1891,76 @@ components:
       - content_ref
       description: Variante claim-check schema_version 3; el documento JSON referenciado conserva el esquema funcional
         de filas. No combina rows y content_ref.
+    CatalogBulkRetryRequestedDataV4:
+      type: object
+      additionalProperties: false
+      properties:
+        batch_id: {type: string, format: uuid}
+        batch_operation_id: {type: string, format: uuid}
+        template_version: {type: integer, const: 2}
+        mode: {type: string, enum: [ALTA, ACTUALIZACION]}
+        content_ref: {$ref: '#/components/schemas/BulkContentReference'}
+        retry:
+          type: object
+          additionalProperties: false
+          properties:
+            protocol: {type: string, const: BULK_RETRY_V1}
+            command_attempt_id: {type: string, format: uuid}
+            attempt_number: {type: integer, minimum: 2}
+            previous_command_message_id: {type: string, format: uuid}
+            rows:
+              type: array
+              minItems: 1
+              items:
+                type: object
+                additionalProperties: false
+                properties:
+                  row_operation_id: {type: string, format: uuid}
+                  attempt_id: {type: string, format: uuid}
+                  previous_attempt_id: {type: string, format: uuid}
+                required: [row_operation_id, attempt_id, previous_attempt_id]
+          required: [protocol, command_attempt_id, attempt_number, previous_command_message_id, rows]
+      required: [batch_id, batch_operation_id, template_version, mode, content_ref, retry]
+      description: Reintento de una familia completa del documento claim-check V3; no transporta datos comerciales en el mensaje.
+    CatalogBulkRetryRowResultV2:
+      type: object
+      additionalProperties: false
+      properties:
+        row_number: {type: integer, minimum: 2}
+        row_operation_id: {type: string, format: uuid}
+        product_id: {type: [string, 'null']}
+        sku_base: {type: string, minLength: 1}
+        attempt_id: {type: string, format: uuid}
+        attempt_number: {type: integer, minimum: 1}
+        status: {type: string, enum: [COMPLETED, REJECTED]}
+        effect_state: {type: string, enum: [NONE, APPLIED, UNKNOWN]}
+        retriable: {type: boolean}
+        code: {type: [string, 'null']}
+      required: [row_number, row_operation_id, product_id, sku_base, attempt_id, attempt_number, status, effect_state, retriable, code]
+    CatalogBulkUpsertCompletedDataV2:
+      type: object
+      additionalProperties: false
+      properties:
+        batch_id: {type: string, format: uuid}
+        batch_operation_id: {type: string, format: uuid}
+        command_attempt_id: {type: [string, 'null'], format: uuid}
+        results:
+          type: array
+          minItems: 1
+          items: {$ref: '#/components/schemas/CatalogBulkRetryRowResultV2'}
+      required: [batch_id, batch_operation_id, command_attempt_id, results]
+      description: command_attempt_id es null para el resultado inicial V3 y contiene el UUID del comando V4 para un resultado de reintento; causation_id del sobre debe identificar el mensaje solicitado correspondiente.
+    CatalogBulkUpsertRejectedDataV2:
+      type: object
+      additionalProperties: false
+      properties:
+        batch_id: {type: string, format: uuid}
+        batch_operation_id: {type: string, format: uuid}
+        command_attempt_id: {type: [string, 'null'], format: uuid}
+        code: {type: string, minLength: 1}
+        detail: {type: string, minLength: 1}
+      required: [batch_id, batch_operation_id, command_attempt_id, code, detail]
+      description: command_attempt_id es null para el resultado inicial V3 y contiene el UUID del comando V4 para un resultado de reintento; causation_id del sobre debe identificar el mensaje solicitado correspondiente. Un rechazo a nivel de comando nunca es recibo elegible por fila.
   messages:
     TaxonomyCategoryUpdated:
       name: taxonomy.category.updated
@@ -2475,6 +2557,75 @@ components:
           - data
       x-transport: azure-service-bus-basic
       x-contract-status: SEMIFINAL_G6
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
+    CatalogBulkUpsertRequestedV4:
+      name: catalog.bulk.upsert.requested
+      title: catalog.bulk.upsert.requested schema_version 4
+      contentType: application/json
+      x-producer: bulk-svc
+      x-consumers: [catalog-svc]
+      x-deduplication-key: message_id
+      x-business-idempotency-key: batch_operation_id + retry.command_attempt_id
+      payload:
+        allOf:
+        - $ref: '#/components/schemas/MessageEnvelope'
+        - type: object
+          properties:
+            producer: {type: string, const: bulk-svc}
+            schema_version: {type: integer, const: 4}
+            kind: {type: string, const: command}
+            name: {type: string, const: catalog.bulk.upsert.requested}
+            operation_id: {type: string, format: uuid}
+            causation_id: {type: string, format: uuid}
+            data: {$ref: '#/components/schemas/CatalogBulkRetryRequestedDataV4'}
+          required: [producer, schema_version, kind, name, operation_id, causation_id, data]
+      description: Propuesta compatible con V1–V3; conserva claim-check privado y enumera identidades de intento de una familia.
+      x-transport: azure-service-bus-basic
+      x-contract-status: PROPOSED_NOT_APPROVED
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
+    CatalogBulkUpsertCompletedV2:
+      name: catalog.bulk.upsert.completed
+      title: catalog.bulk.upsert.completed schema_version 2
+      contentType: application/json
+      x-producer: catalog-svc
+      x-consumers: [bulk-svc]
+      x-deduplication-key: message_id
+      x-business-idempotency-key: batch_operation_id
+      payload:
+        allOf:
+        - $ref: '#/components/schemas/MessageEnvelope'
+        - type: object
+          properties:
+            producer: {type: string, const: catalog-svc}
+            schema_version: {type: integer, const: 2}
+            kind: {type: string, const: result}
+            name: {type: string, const: catalog.bulk.upsert.completed}
+            data: {$ref: '#/components/schemas/CatalogBulkUpsertCompletedDataV2'}
+          required: [producer, schema_version, kind, name, data]
+      x-transport: azure-service-bus-basic
+      x-contract-status: PROPOSED_NOT_APPROVED
+      x-runtime-status: PENDIENTE_IMPLEMENTACION
+    CatalogBulkUpsertRejectedV2:
+      name: catalog.bulk.upsert.rejected
+      title: catalog.bulk.upsert.rejected schema_version 2
+      contentType: application/json
+      x-producer: catalog-svc
+      x-consumers: [bulk-svc]
+      x-deduplication-key: message_id
+      x-business-idempotency-key: batch_operation_id
+      payload:
+        allOf:
+        - $ref: '#/components/schemas/MessageEnvelope'
+        - type: object
+          properties:
+            producer: {type: string, const: catalog-svc}
+            schema_version: {type: integer, const: 2}
+            kind: {type: string, const: result}
+            name: {type: string, const: catalog.bulk.upsert.rejected}
+            data: {$ref: '#/components/schemas/CatalogBulkUpsertRejectedDataV2'}
+          required: [producer, schema_version, kind, name, data]
+      x-transport: azure-service-bus-basic
+      x-contract-status: PROPOSED_NOT_APPROVED
       x-runtime-status: PENDIENTE_IMPLEMENTACION
     PricingBulkPriceApplyRequested:
       name: pricing.bulk.price.apply.requested

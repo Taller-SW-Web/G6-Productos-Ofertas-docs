@@ -1,10 +1,10 @@
 # Cobertura contractual MK-001 a MK-016 (H5)
 
-Baseline auditada: `master` Docs `8355815eec26825edf7f5adac85b98638551b86e`, OpenAPI/AsyncAPI `0.7.0-rc.1`. El snapshot de controllers de Backend y los PR abiertos se consultaron en lectura; la existencia de contrato no acredita implementación o habilitación. La rama de este PR agrega 5 operaciones HTTP: 3 rutas administrativas Inventory ya implementadas según la fuente de tarea y 2 fronteras M2M pendientes.
+Propuesta contractual centralizada publicada en Docs PR #133 para revisión; OpenAPI/AsyncAPI `0.7.0-rc.2` es la base y `0.7.0-rc.3` la revisión candidata. Las extensiones BULK_RETRY_V1, Catalog request V4 y resultados V2 conservan `PROPOSED_NOT_APPROVED`: están propuestas, no aprobadas ni habilitadas. La existencia de contrato no acredita autorización de habilitación.
 
 | MK | Servicio / owner | Cobertura contractual y consumidor | Estado y trabajo requerido |
 |---|---|---|---|
-| MK-001 | Bulk / Castilla | Plantilla, importación, estado, reporte, reanudación, exportación y claim-check privado existentes; Catalog consume preparación. | `CONTRATO_EXISTENTE`; R02 queda tipado y `PENDIENTE_IMPLEMENTACION`; no duplicar claim-check de #243. R03 reservado para SPEC-001. |
+| MK-001 | Bulk / Castilla | Plantilla, importación, estado, reporte, reanudación selectiva y exportación; claim-check V3 único se reutiliza desde #243. | Backend #252 `MERGED` (merge commit `9e4ac0af2a3ea882784413401bd5016ff611caa2`); extensiones BULK_RETRY_V1 siguen `PROPOSED_NOT_APPROVED`. Catalog #243/#254 y aprobación contractual pendientes; no habilitar. |
 | MK-002 | Combos / Castilla | CRUD y disponibilidad existentes; canales consultan disponibilidad. | `CONTRATO_EXISTENTE`; revisar implementación según controller y pruebas vigentes, sin añadir checkout. |
 | MK-003 | Catalog / Poma | Administración, ciclo de vida, filtros y contexto SKU existentes. | `CONTRATO_EXISTENTE`; batch de SKU existente no resuelve población por producto/categoría/marca. |
 | MK-004 | Catalog / Poma | Variantes, preparación diferida y ciclo de SKU cubiertos. | `CONTRATO_EXISTENTE`; conservar política de SKU simple y no crear REST de mensajería. |
@@ -21,15 +21,19 @@ Baseline auditada: `master` Docs `8355815eec26825edf7f5adac85b98638551b86e`, Ope
 | MK-015 | Inventory / Taco | Disponibilidad, reservas, incidencias, reintegros, traslados y umbrales existentes; agrega saldos de administración. | `CONTRATO_EXISTENTE` + `listarSaldosFisicosAdministracion`; GET de estado de reserva conserva allowlist `modulo-ventas`. |
 | MK-016 | Inventory / Taco | Dashboard solo acepta `sku` y `locationId`; agrega alertas y ubicaciones administrativas. | Alertas/ubicaciones `CONTRATO_PROPUESTO`, backend `PENDIENTE_ENDPOINT_HTTP`. Filtros Catalog ampliados pendientes de adaptador. |
 
+### Evidencia de integración Bulk Retry
+
+Backend PR #252 fue fusionado mediante el commit `9e4ac0af2a3ea882784413401bd5016ff611caa2`. La CI general [#45103235690](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45103235690) y la integración Bulk↔Catalog [#45103231056](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45103231056) finalizaron `SUCCESS`. La evidencia conjunta ejecutó 144/144 pruebas `PASS` sobre PostgreSQL descartable. Esto acredita esa integración de prueba; Catalog #243/#254 siguen pendientes de integración en la rama principal y el contrato rc.3 continúa sin aprobación formal.
+
 ## Anexo de compatibilidad R01–R18 / N01
 
 | ID | Compatibilidad y estado |
 |---|---|
 | R01 | Se conserva el flujo Catalog → Inventory de inicialización de SKU; estado runtime debe verificarse por SHA. |
-| R02 | `inventory.bulk.stock.adjust.requested` pasa a schema tipado de ajuste absoluto inicial, `SEMIFINAL_G6`; runtime pendiente de handler durable, ubicación real, Inbox/Outbox y pruebas. |
-| R03 / R14 | `pricing.bulk.price.apply.*` queda `RESERVADO_NO_APLICA_BULK_V2`; precio regular solo en ALTA por inicialización Catalog → Pricing; cambios masivos siguen el importador HTTP Pricing. |
+| R02 | `inventory.bulk.stock.adjust.requested` tiene contrato tipado para ajuste absoluto inicial; runtime Inventory pendiente de handler durable, ubicación real, Inbox/Outbox y pruebas. |
+| R03 / R14 | `pricing.bulk.price.apply.*` queda `RESERVADO_NO_APLICA_BULK_V2`; no implementar ni activar. Precio regular solo en ALTA por inicialización Catalog → Pricing; cambios masivos siguen el importador HTTP Pricing. |
 | R04–R09 | Se preservan contratos y ownership existentes; no se habilita ningún flujo por existir en YAML. |
-| R10 | Resultados R02 tipados completed/rejected. `inventory.stock.adjusted` permanece con semántica previa y no se duplica `inventory.stock.changed`. |
+| R10 | Resultados tipados completed/rejected; integración de emisión y recepción permanece pendiente. `inventory.stock.adjusted` conserva su semántica previa y no se duplica `inventory.stock.changed`. |
 | R11–R18 | Se preservan identificadores/canales existentes sin cambiar runtime, producer/consumer o transporte. |
 | N01 | Se conserva mensaje y envelope actual; `causation_id` continúa opcional donde ya es opcional. |
 
@@ -43,7 +47,7 @@ Rutas en OpenAPI son relativas a `/api/v1`. Identidad de evidencia: baseline de 
 
 ## Anexo A — inventario ejecutable por operación
 
-Cada entrada deriva del OpenAPI `0.7.0-rc.2`; rutas son relativas a `/api/v1`. `-` indica que OpenAPI no declara consumidores o schema directo. Los estados de implementación no se deducen de la documentación.
+Cada entrada deriva de la propuesta OpenAPI `0.7.0-rc.3`, basada en master `0.7.0-rc.2`; rutas son relativas a `/api/v1`. `-` indica que OpenAPI no declara consumidores o schema directo. Los estados de implementación no se deducen de la documentación.
 
 ### MK-001 — Bulk
 
@@ -52,6 +56,7 @@ Cada entrada deriva del OpenAPI `0.7.0-rc.2`; rutas son relativas a `/api/v1`. `
 | GET `/carga-masiva/productos/plantilla` | `descargarPlantillaProductos` | — | — | 200,400,401,403,500,503 | provisional-internal |
 | POST `/carga-masiva/productos/importaciones` | `crearImportacionGeneralProductos` | — | — | 202,400,401,403,413,422,500,503 | provisional-internal |
 | GET `/carga-masiva/productos/importaciones/{batchId}` | `obtenerImportacionGeneralProductos` | — | EstadoImportacionGeneral | 200,401,403,404,500,503 | provisional-internal |
+| GET `/carga-masiva/productos/importaciones/por-correlacion/{correlationId}` | `conciliarImportacionGeneralPorCorrelacion` | — | ImportacionGeneralConciliada | 200,400,401,403,404,503 | propuesta no aprobada; solo lectura `(owner_sub, correlation_id)` |
 | GET `/carga-masiva/productos/importaciones/{batchId}/reporte` | `descargarReporteImportacionGeneral` | — | — | 200,401,403,404,500,503 | provisional-internal |
 | POST `/carga-masiva/productos/importaciones/{batchId}/reanudar` | `reanudarImportacionGeneral` | — | ReanudarImportacionRequest | 202,401,403,404,409,500,503 | provisional-internal |
 | POST `/carga-masiva/productos/exportaciones` | `crearExportacionGeneralProductos` | — | CrearExportacionProductosRequest | 202,400,401,403,500,503 | provisional-internal |

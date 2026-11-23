@@ -45,7 +45,7 @@ test('OpenAPI H5 completa lecturas Inventory y mantiene fronteras M2M privadas',
 
 test('AsyncAPI R02 y R10 tipados; R03/R14 reservados para no duplicar importador Pricing', async () => {
   const spec = await readAsync();
-  assert.equal(spec.info.version, '0.7.0-rc.2');
+  assert.equal(spec.info.version, '0.7.0-rc.3');
   const schemas = spec.components.schemas;
   const request = schemas.InventoryBulkStockAdjustRequestedData;
   assert.equal(request.additionalProperties, false);
