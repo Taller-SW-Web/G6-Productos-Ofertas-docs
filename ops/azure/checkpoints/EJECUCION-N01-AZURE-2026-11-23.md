@@ -60,7 +60,7 @@ El resumen sanitizado y los logs originales recuperados de Azure quedaron localm
 
 ## Correcciones locales posteriores (sin nueva ejecución Azure)
 
-- Backend rama `trabajo/castilla/h5-g5-azure-despliegue-integral`, commit `0d20e3b83dc561bd13f8a4a4d46a730b3cd95666`: validador de parámetros SHA/servicios/digests/configuración y gate que ejecuta pruebas y validación antes de Bicep/`what-if`.
-- El runner N01 contrasta SHA, MessageId, CorrelationId y OperationId del evento SQL con el settlement terminal. La limpieza intenta eliminar ACI y archivos temporales; informa fallos de limpieza sin reemplazar el error principal.
-- Pruebas locales con Azure simulado: siete pruebas del validador PASS; gate de `what-if` con parámetros inválidos PASS (Azure no fue invocado); pruebas PowerShell N01 de vinculación y fallos de limpieza PASS. Compilación Bicep y análisis sintáctico PowerShell PASS.
-- No se repitió N01, no se ejecutó `what-if` ACA, no se publicaron imágenes y no se crearon ACA. El `PASS` de N01 documentado arriba permanece evidencia histórica de la ejecución real original, no resultado de estas correcciones.
+- Backend rama `trabajo/castilla/h5-g5-azure-despliegue-integral`, commit `76a6dac590246f1fed444f9238ee75452f80fb40`: validador de configuración efectiva por servicio, SHA exacto, digests OCI y credenciales de lectura GHCR; prueba las etiquetas OCI contra el SHA y verifica el SHA actual de `master` y CI `push` exitosa antes del `what-if`.
+- El `what-if` ACA y N01 ahora consumen JSON de Azure y validan `resourceId`/`changeType`; la plantilla deriva dominio del Environment y recibe su región desde el preflight de Azure. El runner N01 recibe SHA por ejecución, lo contrasta con `master` y CI `push`, y conserva la vinculación SQL/resultado terminal junto con la limpieza que informa errores sin ocultar el error principal.
+- Pruebas locales con respuestas simuladas: seis pruebas Node del validador (incluidos GitHub y GHCR privados), pruebas PowerShell de JSON what-if y cleanup N01, compilación de ambas plantillas Bicep, análisis sintáctico PowerShell y `git diff --check`: PASS.
+- No se repitió N01, no se ejecutó `what-if` ACA, no se publicaron imágenes y no se crearon ACA. El `PASS` de N01 documentado arriba permanece evidencia histórica de la ejecución real original; estas correcciones no lo amplían ni acreditan ACA, G5, G7, APIM o CD.
