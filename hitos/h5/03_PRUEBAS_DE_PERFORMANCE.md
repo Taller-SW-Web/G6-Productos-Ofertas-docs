@@ -43,3 +43,26 @@ Umbrales no son SLA productivo ni exigencia docente. Cambio requiere aprobación
 ## Responsables, reportes y aceptación
 
 Vera es owner transversal de consolidación k6 y del reporte H5-03, además de owner de PERF-02. Los owners de prueba son Poma PERF-01/06, Taco PERF-03, Axel PERF-04/05 y Castilla PERF-07/08. Salidas previstas: `performance-plan.yaml`, `baseline.json`, `candidate.json`, `comparison.json`, CSV, `performance-report.md` con dispersión y rótulo `ISOLATED`, `STAGING_APIM`, `STAGING_DIRECT` o `FRONTEND_BROWSER`. Verificar SHA, artifact digest, fecha, entorno, versión herramientas y config. Véanse [H5-04A](04_API_MANAGEMENT.md), [mensajería](05_MENSAJERIA_ASINCRONA.md) y [matriz de trazabilidad](07_MATRIZ_TRAZABILIDAD_Y_EVIDENCIAS.md).
+
+## Pruebas de ráfagas, límites y concurrencia (RL-01–RL-06)
+
+Añadir estos escenarios al harness k6 existente, sin alterar ni renumerar PERF-01–PERF-08. Son pruebas futuras, no resultados. Ejecutarlas solo en entorno autorizado, aislado y con datos sintéticos; las escrituras requieren almacenamiento desechable y no pueden afectar operaciones reales. Generar concurrencia y ráfagas controladas, con perfil, duración, tasa y número de clientes fijados antes de cada corrida.
+
+Medir solicitudes ofrecidas, admitidas y rechazadas; clasificar los `429` previstos por separado de errores inesperados (timeouts, 5xx, fallos de conexión o respuestas incorrectas). Validar `Retry-After`, que el cliente espera según la indicación y que las solicitudes se recuperan después de la ventana. Repetir con identidades/clientes distintos para comprobar aislamiento, y observar si una solicitud rechazada llegó a producir efectos. Para escrituras, contrastar claves de idempotencia y estado final para confirmar ausencia de efectos comerciales duplicados.
+
+En cada escenario capturar p95, throughput, tasas de error y saturación del backend (CPU/memoria, conexiones/pool DB, colas o concurrencia activa disponibles). Comparar solicitudes ofrecidas/admitidas/rechazadas y su relación con telemetría de Gateway, APIM y servicio. Registrar configuración exacta de límites, SKU/política autorizados y cualquier desviación observada.
+
+`5 solicitudes por segundo` y `60 por minuto` pueden usarse únicamente como **perfil ilustrativo de laboratorio**, sujeto a autorización del entorno; no son límites productivos aprobados ni valores que este documento atribuya a una SKU. Los contadores distribuidos de APIM pueden presentar desviaciones entre instancias/ventanas. Los criterios deben contrastarse con las garantías de la política y SKU realmente elegidos; no prometer exactitud absoluta.
+
+| ID | Caso k6 | Criterio de aceptación futuro |
+|---|---|---|
+| RL-01 | Ráfaga por segundo, generación controlada de solicitudes simultáneas | El exceso esperado se rechaza con 429 dentro de la tolerancia documentada para la política/SKU; no hay errores inesperados ni efectos de solicitudes rechazadas. |
+| RL-02 | Límite acumulado por ventana corta y larga (segundos/minutos) | Se separa el límite de ráfaga del volumen acumulado; admitidas/rechazadas concuerdan con la configuración dentro de su garantía documentada. |
+| RL-03 | `Retry-After` y recuperación | Valor/formato de espera conforme a la política; al esperar y reintentar con backoff, cliente recupera servicio sin avalancha ni errores inesperados. |
+| RL-04 | Aislamiento entre clientes autorizados | Agotar el perfil sintético de un cliente no consume el cupo de otro; cada clave corresponde a identidad validada y perfil esperado. |
+| RL-05 | Solicitudes bloqueadas no llegan al backend | Conteos/trazas correlacionados demuestran que solicitudes rechazadas en el borde no invocan el microservicio y no alteran estado. |
+| RL-06 | Concurrencia e idempotencia en operación crítica | Concurrencia se mantiene dentro de la capacidad acordada; reintentos de la misma operación no duplican efectos y la idempotencia sigue siendo independiente del rate limiting. |
+
+Por cada ejecución conservar SHA completo de Docs/Backend/Frontend aplicables, run y versión del harness k6, revisión Azure atendiendo tráfico, configuración/hash de política, SKU, límites, entorno, timestamps UTC y zona local, semilla/dataset sintético, logs redactados, métricas y artefactos con hash. Una corrida sin sujeto identificable, configuración, revisión Azure o artefactos verificables es `INCONCLUSIVE`, no PASS. Véanse casos y dependencias en la [matriz de trazabilidad](07_MATRIZ_TRAZABILIDAD_Y_EVIDENCIAS.md).
+
+**Coordinación H5 sin duplicar responsabilidades:** Castilla es owner del diseño APIM, perfiles cliente/ruta y coordinación; Axel valida compatibilidad Gateway/CD, controles contra bypass y la revisión Azure que atiende tráfico, sin reasignar ni duplicar su transporte Service Bus; Vera mantiene el harness k6 y consolida ráfagas/concurrencia y resultados de performance. Poma valida lecturas Catalog y manejo Frontend de `429`/`Retry-After`; López valida seguridad Frontend, reintentos seguros y Taxonomy; Taco valida protección de Inventory, idempotencia y concurrencia de reservas/stock. Las pruebas RL de esta sección tienen los owners indicados en la matriz RL.
