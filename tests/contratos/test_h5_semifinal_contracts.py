@@ -12,6 +12,15 @@ from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
 
 ROOT = Path(__file__).resolve().parents[2]
+GATEWAY_ERROR_METADATA_ONLY_IDS = {
+    "listarSaldosFisicosAdministracion",
+    "listarAlertasOperativasInventario",
+    "listarUbicacionesInventario",
+    "listarTrasladosInventario",
+    "obtenerTrasladoInventario",
+    "obtenerOperacionCuponH5",
+    "obtenerEstadoReservaH5",
+}
 
 
 def verify_claim_check_bytes(received_bytes, expected_reference, document_validator):
@@ -96,6 +105,27 @@ class H5SemifinalContractTests(unittest.TestCase):
                 del current["x-error-codes"]["409"]
                 current["x-error-codes"]["400"] = historical_operation["x-error-codes"]["400"]
                 current["responses"]["400"]["content"]["application/problem+json"]["schema"]["allOf"][1]["properties"]["code"]["enum"] = historical_operation["x-error-codes"]["400"]
+                self.assertEqual(current, historical_operation)
+            elif (path, method) == ("/combos/administracion", "post"):
+                # Preserve the H4 operation and permit only the evidenced 422 business errors.
+                current = copy.deepcopy(self.openapi["paths"][path][method])
+                added_codes = current["x-error-codes"].pop("422")
+                del current["responses"]["422"]
+                self.assertEqual(current, historical_operation)
+                expected_codes = [
+                    "COMBO_ANIDADO_NO_PERMITIDO",
+                    "COMBO_COMPONENTES_INSUFICIENTES",
+                    "COMBO_COMPONENTE_DUPLICADO",
+                    "COMBO_PRECIO_INVALIDO",
+                ]
+                self.assertEqual(added_codes, expected_codes)
+                response_codes = self.openapi["paths"][path][method]["responses"]["422"]["content"]["application/problem+json"]["schema"]["allOf"][1]["properties"]["code"]["enum"]
+                self.assertEqual(response_codes, expected_codes)
+            elif historical_operation.get("operationId") in GATEWAY_ERROR_METADATA_ONLY_IDS:
+                # The approved Gateway reconciliation adds only its error-code extension.
+                current = copy.deepcopy(self.openapi["paths"][path][method])
+                self.assertIn("x-error-codes", current)
+                del current["x-error-codes"]
                 self.assertEqual(current, historical_operation)
             else:
                 self.assertEqual(self.openapi["paths"][path][method], historical_operation, f"H4 operation changed: {method.upper()} {path}")

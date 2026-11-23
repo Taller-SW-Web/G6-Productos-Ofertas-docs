@@ -8346,6 +8346,28 @@ paths:
                   required:
                   - status
                   - code
+        '422':
+          description: Componentes insuficientes, duplicados, anidados o precio inválido del combo.
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 422
+                    code:
+                      type: string
+                      enum:
+                      - COMBO_ANIDADO_NO_PERMITIDO
+                      - COMBO_COMPONENTES_INSUFICIENTES
+                      - COMBO_COMPONENTE_DUPLICADO
+                      - COMBO_PRECIO_INVALIDO
+                  required:
+                  - status
+                  - code
         '500':
           description: Error interno; resultado puede ser incierto si ocurrió durante persistencia
           content:
@@ -8373,6 +8395,11 @@ paths:
         - ERROR_INTERNO
         '503':
         - SERVICIO_NO_DISPONIBLE
+        '422':
+        - COMBO_ANIDADO_NO_PERMITIDO
+        - COMBO_COMPONENTES_INSUFICIENTES
+        - COMBO_COMPONENTE_DUPLICADO
+        - COMBO_PRECIO_INVALIDO
   /combos:
     get:
       tags:
@@ -19400,6 +19427,19 @@ paths:
         '429': {$ref: '#/components/responses/RateLimitExceeded'}
         '500': {description: ERROR_INTERNO, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
         '503': {description: SERVICIO_NO_DISPONIBLE, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+      x-error-codes:
+        '400':
+        - VALIDACION
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
+        '429':
+        - RATE_LIMIT_EXCEDIDO
+        '500':
+        - ERROR_INTERNO
+        '503':
+        - SERVICIO_NO_DISPONIBLE
   /inventario/alertas:
     get:
       operationId: listarAlertasOperativasInventario
@@ -19434,6 +19474,19 @@ paths:
         '429': {$ref: '#/components/responses/RateLimitExceeded'}
         '500': {description: ERROR_INTERNO, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
         '503': {description: SERVICIO_NO_DISPONIBLE, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+      x-error-codes:
+        '400':
+        - VALIDACION
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
+        '429':
+        - RATE_LIMIT_EXCEDIDO
+        '500':
+        - ERROR_INTERNO
+        '503':
+        - SERVICIO_NO_DISPONIBLE
   /inventario/ubicaciones:
     get:
       operationId: listarUbicacionesInventario
@@ -19466,6 +19519,19 @@ paths:
         '429': {$ref: '#/components/responses/RateLimitExceeded'}
         '500': {description: ERROR_INTERNO, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
         '503': {description: SERVICIO_NO_DISPONIBLE, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+      x-error-codes:
+        '400':
+        - VALIDACION
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
+        '429':
+        - RATE_LIMIT_EXCEDIDO
+        '500':
+        - ERROR_INTERNO
+        '503':
+        - SERVICIO_NO_DISPONIBLE
   /inventario/dashboard:
     get:
       tags:
@@ -21207,6 +21273,15 @@ paths:
                   required:
                   - status
                   - code
+      x-error-codes:
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
+        '500':
+        - ERROR_INTERNO
+        '503':
+        - SERVICIO_NO_DISPONIBLE
   /inventario/traslados/{trasladoId}:
     get:
       tags:
@@ -21252,6 +21327,17 @@ paths:
         '403': *id709
         '500': *id710
         '503': *id711
+      x-error-codes:
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
+        '404':
+        - TRASLADO_NO_ENCONTRADO
+        '500':
+        - ERROR_INTERNO
+        '503':
+        - SERVICIO_NO_DISPONIBLE
   /inventario/traslados/{trasladoId}/recepciones:
     post:
       tags:
@@ -22191,6 +22277,8 @@ paths:
         - ERROR_INTERNO
         '503':
         - SERVICIO_NO_DISPONIBLE
+        '400':
+        - VALIDACION
   /inventario/reservas/{reservaId}/estado:
     get:
       operationId: obtenerEstadoReservaH5
@@ -22263,6 +22351,8 @@ paths:
         - ERROR_INTERNO
         '503':
         - SERVICIO_NO_DISPONIBLE
+        '400':
+        - VALIDACION
   /interno/productos/skus/filtrar:
     post:
       operationId: filtrarSkusVendiblesInterno
