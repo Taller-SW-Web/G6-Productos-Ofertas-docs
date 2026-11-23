@@ -57,3 +57,10 @@ El resumen sanitizado y los logs originales recuperados de Azure quedaron localm
 - `BLOCKED_G7_RUNTIME_CONFIG`: no hay configuración G7 autorizada suministrada para los servicios; responsable: Seguridad G7 / responsable de configuración del entorno; desbloqueo: issuer, JWKS, audiencia y concesiones oficiales probados sin exponer secretos.
 - `BLOCKED_RUNNER_OFFLINE`: runner GitHub `azure-h5-smoke` figura `offline`; responsable: administrador del runner; desbloqueo: registrar y dejar online el runner privado con acceso a ACA, sin revelar token.
 - `BLOCKED_PR_CREATE`: la creación del Draft PR mediante integración GitHub respondió HTTP 403 `Resource not accessible by integration`; el inicio de `gh pr create` fue bloqueado por política local antes de llegar a GitHub. No se hizo merge ni se alteró una protección.
+
+## Correcciones locales posteriores (sin nueva ejecución Azure)
+
+- Backend rama `trabajo/castilla/h5-g5-azure-despliegue-integral`, commit `0d20e3b83dc561bd13f8a4a4d46a730b3cd95666`: validador de parámetros SHA/servicios/digests/configuración y gate que ejecuta pruebas y validación antes de Bicep/`what-if`.
+- El runner N01 contrasta SHA, MessageId, CorrelationId y OperationId del evento SQL con el settlement terminal. La limpieza intenta eliminar ACI y archivos temporales; informa fallos de limpieza sin reemplazar el error principal.
+- Pruebas locales con Azure simulado: siete pruebas del validador PASS; gate de `what-if` con parámetros inválidos PASS (Azure no fue invocado); pruebas PowerShell N01 de vinculación y fallos de limpieza PASS. Compilación Bicep y análisis sintáctico PowerShell PASS.
+- No se repitió N01, no se ejecutó `what-if` ACA, no se publicaron imágenes y no se crearon ACA. El `PASS` de N01 documentado arriba permanece evidencia histórica de la ejecución real original, no resultado de estas correcciones.
