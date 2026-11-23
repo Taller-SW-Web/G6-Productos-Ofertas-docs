@@ -44,6 +44,30 @@ INT-02/03/04/06/09 son condicionales al manifest de release; la selección R18 a
 
 Perfiles: 1 VU/60 s, 5 VU/3 min, 20 VU/5 min; tres repeticiones baseline y candidato. Gate interno: mediana p95 candidato ≤1.10×baseline, RPS ≥0.90×baseline y errores inesperados <1% únicamente donde el escenario espera 2xx. Si N01 no está en el manifest, PERF-04 se registra con `scope=OUT_OF_SCOPE` y se excluye del denominador del scorecard; no recibe resultado de ejecución `PASS` ni `NOT_RUN`. Métricas incompletas o ambiente dispar = `INCONCLUSIVE` para escenarios dentro de alcance.
 
+## RL-01–RL-06 — ráfagas, límites y concurrencia
+
+Las pruebas se relacionan con H5-01 (control de seguridad), H5-03 (medición de performance) y H5-04A (APIM); son diseño pendiente, no evidencia de ejecución. Correr k6 solo en entorno autorizado, datos sintéticos y sin afectar operaciones reales. Los umbrales numéricos se acuerdan por perfil/política/SKU; 5 solicitudes por segundo y 60 por minuto son solo un perfil de laboratorio ilustrativo, nunca una configuración productiva aprobada.
+
+| ID | Prueba | Owner |
+|---|---|---|
+| RL-01 | Rechazo de ráfagas por segundo | Castilla |
+| RL-02 | Límite acumulado por ventana temporal | Castilla |
+| RL-03 | `Retry-After` y recuperación | Vera |
+| RL-04 | Aislamiento entre clientes autorizados | Castilla |
+| RL-05 | Solicitudes bloqueadas no llegan al backend | Axel |
+| RL-06 | Concurrencia e idempotencia de operaciones críticas | Vera |
+
+| ID | Precondiciones | Procedimiento | Resultado esperado / aceptación | Evidencia verificable | Responsable | Dependencia / desbloqueo |
+|---|---|---|---|---|---|---|
+| RL-01 | Política y SKU autorizados; perfil de ruta; entorno aislado; k6 y datos sintéticos listos. | Emitir ráfaga controlada que cruza el límite por segundo; contar solicitudes ofrecidas, admitidas y rechazadas. | Exceso produce 429 dentro de la tolerancia documentada; separar 429 esperados de errores inesperados; ningún efecto de solicitud rechazada. | SHA de sujetos, revisión Azure/SKU, hash de política, config k6, timestamps, respuestas, métricas y logs redactados. | Castilla | Infra/Azure y autoridad de presupuesto: instancia APIM/ruta aprobada y accesible; desbloqueo con inventario y configuración habilitada en entorno de pruebas. |
+| RL-02 | Ventanas corta/larga definidas en política autorizada; dataset sintético y límites registrados. | Mantener carga controlada por ventanas de segundos y minutos; variar la tasa para distinguir ráfaga de acumulado. | Admisión/rechazo concuerda con límites y garantías documentadas, sin prometer exactitud absoluta de contadores distribuidos. | Perfil, versión/SKU/policy hash, curva ofrecida/admitida/rechazada, p95, throughput y artefactos k6 con SHA. | Castilla | Infra/APIM: política compatible con SKU y ventana configurada; desbloqueo al observar revisión atendiendo tráfico y parámetros verificables. |
+| RL-03 | `Retry-After` definido por la política; cliente k6 implementa backoff; entorno sintético. | Provocar 429, verificar cabecera, esperar según instrucción y reintentar con backoff/jitter; observar recuperación. | `Retry-After` se interpreta correctamente y servicio recupera después de ventana sin reintentos masivos ni errores inesperados. | Request/response redactada, timestamps, espera aplicada, conteos de 429/2xx/errores, reporte k6 y SHA. | Vera | Castilla/APIM y Frontend dueño del cliente: definir semántica de respuesta; desbloqueo con cabecera observable y cliente compatible en staging. |
+| RL-04 | Dos o más identidades/clientes de prueba autorizados; claves derivadas de identidad validada y perfiles separados. | Saturar límite de un cliente mientras otro envía carga dentro de su propio perfil. | El exceso de un cliente no consume el cupo de otro; claves no se basan en claims no validados ni IP falsificable. | IDs sintéticos seudonimizados, política/hash, secuencia y status por cliente, trazas y configuración k6. | Castilla | G7: grants de prueba; Infra/APIM: política activa. Desbloqueo con grants autorizados y claves observables por política. |
+| RL-05 | Ruta pública por APIM y telemetría correlacionable de Gateway/backend; acceso directo al Gateway incluido en el plan negativo. | Exceder límite por APIM y comparar solicitudes 429 con invocaciones en Gateway/backend; intentar acceso alternativo directo al Gateway. | Solicitudes rechazadas no alcanzan microservicios y acceso directo es denegado; no se crea un bypass de APIM. | Trazas/correlación, conteos de borde y backend, status de ruta alternativa, revisión Azure y logs redactados con SHA/timestamps. | Axel | Axel/Infra: revisión Gateway/CD y controles de red/origen; desbloqueo con configuración de ruta autorizada y telemetría de ambos saltos. |
+| RL-06 | Operación crítica sintética, almacenamiento desechable, clave de idempotencia según flujo y capacidad concurrente acordada. | Lanzar solicitudes simultáneas controladas, incluyendo repeticiones con la misma clave; observar admitidas/rechazadas y estado final. | Concurrencia se mantiene en capacidad acordada; `429` esperados separados de errores; no hay efectos comerciales duplicados; idempotencia no depende del rate limit. | Config k6, estado antes/después, conteo de efectos, claves seudonimizadas, p95, throughput, saturación, SHA y timestamps. | Vera | Owner de operación/G7 y ambiente autorizado: operación sintética y grant disponibles; desbloqueo con entorno desechable, capacidad definida y estado auditable. |
+
+Las ejecuciones futuras deben conservar timestamps, configuración, revisión Azure, límites, SKU/política, SHA de cada sujeto, artefactos k6 y métricas de p95, throughput, errores y saturación del backend. Contadores APIM distribuidos pueden desviarse: evaluar contra la garantía de la política/SKU elegidos. APIM/WAF no están declarados desplegados; el estado permanece `NO_VERIFICADO` hasta evidencia asociada a revisión que atienda tráfico.
+
 ## R01–R18/N01, owner y aceptación
 
 | Flujo | Owner transporte / dominio | Prueba mínima específica antes de habilitar |

@@ -16,7 +16,15 @@ Owner de inventario/costo: Infra/autoridad presupuestaria; Castilla coordina evi
 
 Plan futuro: Bicep versionado (módulo APIM, APIs/operaciones, policies, diagnostics), `az deployment group what-if`, revisión de diff, aprobación antes de aplicar y rollback a revisión anterior. Importación deriva del OpenAPI canónico, filtrada a rutas actualmente servidas y habilitadas; contrato `0.7.0-rc.2` es semifinal y no prueba operación desplegada. No editar YAML canónico ni inventar URL, ruta, scope, audience o hostname.
 
-Policies: validar JWT issuer/audience/firma/expiración si G7 autoriza JWKS; CORS con orígenes exactos; correlación `X-Correlation-Id`; redacción de logs; timeout mínimo; `rate-limit-by-key` en SKU que lo soporte y con identidad validada. El Gateway repite las comprobaciones de cliente/scope pertinentes; no habilitar bypass por URL interna. Guardar hash del policy y versión de Bicep.
+Policies: validar JWT issuer/audience/firma/expiración si G7 autoriza JWKS; CORS con orígenes exactos; correlación `X-Correlation-Id`; redacción de logs; timeout mínimo. `rate-limit-by-key` es una opción prevista solo si está soportada y autorizada por el SKU realmente elegido; si no, evaluar una política compatible disponible en ese SKU. No asumir soporte universal entre SKUs. La clave debe basarse en identidad confiable: identidad validada/client_id para autenticados, y una IP extraída solo de la cadena de proxies confiables para públicos sin autenticación. El Gateway repite comprobaciones de cliente/scope pertinentes; no habilitar bypass por URL interna. Guardar hash del policy y versión de Bicep.
+
+### Protección contra exceso de solicitudes
+
+APIM-T05 es una comprobación integral: perfil por cliente, ruta y tipo de operación; rechazo de exceso; aislamiento; llegada al Gateway/backend; y convivencia con autenticación/autorización de G7 y Gateway. Configurar de forma separada el rate limiting de ráfagas, el límite acumulado/cuota por ventana y los controles de concurrencia/procesos costosos. Son controles distintos: rate limiting limita frecuencia, cuota limita volumen agregado, concurrencia limita trabajo simultáneo y WAF filtra/mitiga clases de tráfico malicioso o DDoS. Ninguno sustituye a los otros ni a JWT/grants o idempotencia.
+
+Validar respuesta HTTP `429`, `Retry-After` cuando aplique, recuperación y backoff del cliente. Usar clientes sintéticos distintos y probar que superar el perfil de uno no bloquea a otro. Correlacionar los rechazos del borde con telemetría de Gateway/servicio para demostrar que las solicitudes rechazadas no alcanzan los microservicios. Verificar además que una ruta directa al Gateway no elude APIM: bloquear el origen alternativo mediante controles de red o autenticación de origen compatibles con la arquitectura aprobada y confirmar la denegación en prueba. APIM autentica/limita el borde según política; G7 mantiene autoridad de identidad/grants y Gateway su autorización por cliente/ruta.
+
+`rate-limit-by-key` o política compatible se selecciona según SKU y capacidades documentadas para la instancia autorizada; no se infiere soporte universal ni se fija una configuración productiva aquí. Los contadores distribuidos pueden desviarse; documentar la garantía/tolerancia de esa política y SKU. La auditoría Azure del 22/11/2026 no encontró APIM en la suscripción revisada: H5-04A permanece `NO_VERIFICADO`/bloqueado por infraestructura. No afirmar que APIM, WAF o rate limiting están desplegados.
 
 ## Escenarios positivos, negativos y 429
 
@@ -26,7 +34,7 @@ Policies: validar JWT issuer/audience/firma/expiración si G7 autoriza JWKS; COR
 | APIM-T02 | Token válido autorizado alcanza Gateway; sin token/firma/iss/aud/exp inválido denegado | solicitud redactada, status y logs correlacionados |
 | APIM-T03 | scope/client_id no permitido recibe 403 | política hash y resultado, con grant de prueba |
 | APIM-T04 | origen CORS permitido y no permitido | headers exactos y respuesta |
-| APIM-T05 | exceder tasa autorizada produce 429 y recuperación | identidad sintética, ventana y límites aplicados |
+| APIM-T05 | Protección integral contra exceso: límites de ráfaga y ventana por ruta/perfil; 429/`Retry-After` y recuperación; aislamiento de clientes; solicitudes rechazadas no llegan a backend; Gateway directo bloqueado; convivencia G7/Gateway | identidad/cliente sintético, operación, política y SKU/revisión Azure, ventanas y límites, respuestas y `Retry-After`, trazas correlacionadas de Gateway/backend, verificación de ruta directa, métricas de concurrencia y registro redactado |
 | APIM-T06 | ruta desconocida devuelve 404, sin proxy genérico ni fuga a backend | request/response sin secreto y trazas |
 | APIM-T07 | encabezado de correlación llega a Gateway/servicio sin filtrar datos | logs redactados y corr ID |
 | APIM-T08 | comparación de acceso privado equivalente y rollback de config | dos rutas en entorno aislado y versión restaurada |
