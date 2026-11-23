@@ -1,6 +1,6 @@
 # Propuesta contractual BULK_RETRY_V1
 
-**Estado:** propuesta en PR Draft; no aprobada ni habilitada. Baseline: Docs master `937b7deb4bde25a282ebb52bbfd16195ad684195`, OpenAPI/AsyncAPI `0.7.0-rc.2`; propuesta `0.7.0-rc.3`.
+**Estado:** propuesta contractual publicada en Docs PR #133 para revisión centralizada; `0.7.0-rc.3` no está aprobada y no autoriza habilitación. Base normativa: OpenAPI/AsyncAPI `0.7.0-rc.2`.
 
 ## Identidades y admisión
 
