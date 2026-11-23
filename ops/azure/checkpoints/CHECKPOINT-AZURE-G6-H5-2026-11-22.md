@@ -128,7 +128,9 @@ Colas de integración observadas: g6.bulk.from.catalog, g6.bulk.from.inventory, 
 | R17 | Pricing→Promotions | Candidata |
 | R18 | Taxonomy→Catalog | Candidata |
 
-Cola no prueba handler. Se requiere Outbox por destinatario, Inbox/idempotencia, correlación, redelivery, recuperación y DLQ. G5 integra HTTP autenticado, no colas. Mantener piloto para R16 y fork para pruebas aisladas; no crear tercer namespace ni consolidar sin validar RBAC/aislamiento/consumidores. RabbitMQ solo regresión H4.
+Cola no prueba handler. Se requiere Outbox por destinatario, Inbox/idempotencia, correlación, redelivery, recuperación y DLQ. G5 integra HTTP autenticado, no colas. Mantener piloto para R16 y fork para pruebas aisladas; no crear tercer namespace ni consolidar sin validar RBAC/aislamiento/consumidores.
+
+RabbitMQ corresponde a referencia histórica H4.
 
 ## 8. G5–G6 y 20 casos
 
