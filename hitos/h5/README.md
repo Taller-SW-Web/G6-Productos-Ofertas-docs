@@ -43,3 +43,7 @@ No hay `PASS` global ni `COMPLETADO`. El estado de implementación, resultado de
 **L0** contrato estático; **L1** servicios reales en entorno aislado; **L2** Azure/Gateway real de pruebas; **L3** integración intergrupal homologada. **Outbox** registra entrega dentro de la transacción del servicio; **Inbox** registra consumo/idempotencia antes de completar el mensaje. **Baseline/candidato** son versiones comparables bajo configuración emparejada. **`INCONCLUSIVE`** significa que falta comparabilidad o procedencia; **`BLOCKED_*`** identifica una dependencia operativa concreta.
 
 Enlace normativo principal: [ADR Service Bus Basic](../../arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md), [topología](../../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md), [matriz de implementación](../../integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md), [plan de migración](../../integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md), [matriz externa](../../integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md), [OpenAPI](../../contratos/http/openapi.yaml) y [AsyncAPI](../../contratos/eventos/asyncapi.yaml).
+
+## Snapshot de infraestructura Azure
+
+Consulta el [índice Azure G6](../../ops/azure/README.md) y el [checkpoint al 22/11/2026](../../ops/azure/checkpoints/CHECKPOINT-AZURE-G6-H5-2026-11-22.md). Es evidencia histórica; revalida antes de operar. No modifica criterios ni fuentes normativas.

@@ -116,3 +116,7 @@ La aceptación G6 del 2026-10-20 está documentada en el [Acuerdo G1–G6 H4](in
 - No ejecutes suites locales completas de manera rutinaria; usa pruebas focalizadas para depurar. Las validaciones integrales se ejecutan en GitHub Actions al pasar el PR a Ready for Review. El PR no se considera validado hasta que todos los checks obligatorios pasen para la revisión actual.
 - Si CI requiere cambios de código, vuelve a Draft durante las correcciones y solicita nueva revisión cuando corresponda. Cada commit en Ready invalida la validación anterior y genera una nueva ejecución; volver a Draft difiere nuevas suites pesadas. Toda evidencia debe corresponder al código y SHA probados.
 - Una revisión técnica favorable no autoriza el merge. El merge requiere checks obligatorios satisfactorios, cumplimiento de las protecciones de GitHub y la autorización correspondiente. No se hace merge con checks pendientes o fallidos. Marcar un PR Ready no autoriza despliegues de producción.
+
+## Checkpoint operativo Azure
+
+Antes de tareas de Azure, CD, APIM, Service Bus o integración G5, consulta el [índice Azure G6](ops/azure/README.md) y el checkpoint que enlaza. Trata snapshots como históricos y revalida Azure/GitHub antes de operar. No sustituyen contratos/ADR ni autorizan cambios.
