@@ -105,6 +105,33 @@ class GatewayErrorMetadataContract(unittest.TestCase):
                 self.assertTrue(operation.get('x-runtime-status', '').startswith('PENDIENTE'))
                 self.assertNotIn('x-error-codes', operation)
 
+
+    def test_problem_responses_are_classified_except_the_exact_pending_internal_set(self):
+        allowed = {
+            'filtrarSkusVendiblesInterno': {'400', '401', '403', '429', '500', '503'},
+            'obtenerEvidenciaReservaCuponInterno': {
+                '400', '401', '403', '404', '429', '500', '503'
+            },
+            'obtenerContenidoCargaMasivaInternoH5': {'400'},
+        }
+        missing = {}
+        for operation_id, operation in self.operations.items():
+            for status, response in operation['responses'].items():
+                while '$ref' in response:
+                    target = response['$ref'].removeprefix('#/').split('/')
+                    response = self.openapi
+                    for part in target:
+                        response = response[part]
+                if (
+                    'application/problem+json' in response.get('content', {})
+                    and status not in operation.get('x-error-codes', {})
+                ):
+                    self.assertTrue(operation.get('x-internal'))
+                    self.assertTrue(operation.get('x-runtime-status', '').startswith('PENDIENTE'))
+                    self.assertTrue(operation['_path'].startswith('/interno/'))
+                    missing.setdefault(operation_id, set()).add(status)
+        self.assertEqual(missing, allowed)
+
     def test_no_other_operation_is_missing_error_code_metadata(self):
         excluded = {
             'filtrarSkusVendiblesInterno',
