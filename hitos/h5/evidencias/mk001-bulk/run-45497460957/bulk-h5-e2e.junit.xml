@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="8" failures="0" errors="0" time="5.141522038">
+    <testsuite name="apps/api-gateway/test/bulk-postgres.gateway.e2e-spec.ts" timestamp="2026-11-24T22:07:00.006Z" hostname="runnervm0hi8g" tests="7" failures="0" errors="0" skipped="0" time="4.383316136">
+        <testcase classname="apps/api-gateway/test/bulk-postgres.gateway.e2e-spec.ts" name="Gateway → Bulk real → PostgreSQL 17 descartable (conciliación por correlación) &gt; autentica a A, concilia su lote persistido y conserva no-store sin mutaciones" time="0.195977929">
+        </testcase>
+        <testcase classname="apps/api-gateway/test/bulk-postgres.gateway.e2e-spec.ts" name="Gateway → Bulk real → PostgreSQL 17 descartable (conciliación por correlación) &gt; oculta el lote de A a B con 404 y sin datos privados" time="0.130751425">
+        </testcase>
+        <testcase classname="apps/api-gateway/test/bulk-postgres.gateway.e2e-spec.ts" name="Gateway → Bulk real → PostgreSQL 17 descartable (conciliación por correlación) &gt; devuelve 404 para correlación inexistente y 400 para UUID inválido" time="0.135987943">
+        </testcase>
+        <testcase classname="apps/api-gateway/test/bulk-postgres.gateway.e2e-spec.ts" name="Gateway → Bulk real → PostgreSQL 17 descartable (conciliación por correlación) &gt; rechaza ausencia de JWT y JWT humano sin rol con 401/403 sin filtrar datos" time="0.128923151">
+        </testcase>
+        <testcase classname="apps/api-gateway/test/bulk-postgres.gateway.e2e-spec.ts" name="Gateway → Bulk real → PostgreSQL 17 descartable (conciliación por correlación) &gt; rechaza JWT mal formado, firma inválida, expirado, issuer y audience incorrectos" time="0.139481576">
+        </testcase>
+        <testcase classname="apps/api-gateway/test/bulk-postgres.gateway.e2e-spec.ts" name="Gateway → Bulk real → PostgreSQL 17 descartable (conciliación por correlación) &gt; bloquea retry y reporte de un lote ajeno sin cambiar persistencia" time="0.149331424">
+        </testcase>
+        <testcase classname="apps/api-gateway/test/bulk-postgres.gateway.e2e-spec.ts" name="Gateway → Bulk real → PostgreSQL 17 descartable (conciliación por correlación) &gt; devuelve 503 no-store cuando el proveedor real se detiene" time="0.010004367">
+        </testcase>
+    </testsuite>
+    <testsuite name="apps/bulk-svc/test/bulk-catalog-retry.e2e-spec.ts" timestamp="2026-11-24T22:07:00.008Z" hostname="runnervm0hi8g" tests="1" failures="0" errors="0" skipped="0" time="0.758205902">
+        <testcase classname="apps/bulk-svc/test/bulk-catalog-retry.e2e-spec.ts" name="Bulk ↔ Catalog BULK_RETRY_V1 with direct local test delivery, PostgreSQL 17, no Azure transport &gt; admits, rejects without commercial effects, retries through V4, and closes without duplicate effects" time="0.713784594">
+        </testcase>
+    </testsuite>
+</testsuites>
