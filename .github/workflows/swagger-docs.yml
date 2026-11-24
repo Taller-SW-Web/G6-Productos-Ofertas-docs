@@ -10,7 +10,7 @@ on:
 
 concurrency:
   group: swagger-docs-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/master') }}
 
 permissions:
   contents: read
@@ -59,13 +59,25 @@ jobs:
         run: npm run export
       - name: Construir visor local desde contrato oficial
         run: npm run build:local
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
       - name: Comprobar equivalencia y referencias
         run: npm test
       - name: Probar visor local sin conexiones externas en Chromium
         run: npm run test:browser
+        env:
+          SWAGGER_BASE_PATH: g6-productos-ofertas-docs
       - name: Ejecutar regresión contractual existente
         working-directory: .
         run: python -m unittest discover -s tests/contratos -v
+      - name: Conservar candidato exacto para GitHub Pages
+        uses: actions/upload-artifact@v4
+        with:
+          name: swagger-pages-candidate
+          path: swagger/dist
+          if-no-files-found: error
+          retention-days: 7
       - name: Adjuntar artefacto y evidencias para auditoría
         if: always()
         uses: actions/upload-artifact@v4
@@ -95,3 +107,49 @@ jobs:
         env:
           RESULTADOS: ${{ toJSON(needs) }}
         run: node scripts/ci/verify-docs-results.mjs "$RESULTADOS"
+
+  publish_pages:
+    name: Publicar Swagger en GitHub Pages
+    if: >-
+      needs.contrato.result == 'success' && needs.validate_docs.result == 'success' &&
+      vars.SWAGGER_PAGES_PUBLICATION_APPROVED == 'true' &&
+      github.ref == 'refs/heads/master' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: [contrato, validate_docs]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: swagger-pages-production
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Descargar exactamente el candidato validado
+        uses: actions/download-artifact@v4
+        with:
+          name: swagger-pages-candidate
+          path: _pages_candidate
+      - name: Confirmar que master sigue en el commit validado
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          persist-credentials: false
+      - name: Verificar SHA y metadatos
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA" || { echo "master avanzó; se omite el despliegue de un candidato obsoleto."; exit 1; }
+          node -e "const v=require('./_pages_candidate/version.json'); if(v.commit_sha !== process.env.EXPECTED_SHA) process.exit(1)"
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v6
+      - name: Preparar artefacto de Pages
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _pages_candidate
+      - name: Desplegar versión validada
+        id: deployment
+        uses: actions/deploy-pages@v5

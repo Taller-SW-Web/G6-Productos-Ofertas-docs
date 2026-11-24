@@ -27,9 +27,10 @@ test('Swagger docs ejecuta en Draft/Ready y posmerge con agregador estable', () 
   assert.match(wf, /draft == false/);
 });
 
-test('la concurrencia agrupa por PR/ref y manuales no se cancelan', () => {
+test('la concurrencia separa PR de master y despacho manual no cancela', () => {
   assert.match(wf, /group: swagger-docs-\$\{\{ github\.event\.pull_request\.number \|\| github\.ref \}\}/);
-  assert.match(wf, /cancel-in-progress: \$\{\{ github\.event_name != 'workflow_dispatch' \}\}/);
+  assert.match(wf, /cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \|\| \(github\.event_name == 'push' && github\.ref == 'refs\/heads\/master'\) \}\}/);
+  assert.match(wf, /group: swagger-pages-production[\s\S]*?cancel-in-progress: false/);
 });
 
 test('sin paths filter, conserva despacho y pruebas contractuales/Playwright', () => {
