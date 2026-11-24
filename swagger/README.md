@@ -1,5 +1,7 @@
 # APIs G6: Swagger Studio privado y Swagger UI local
 
+La política de generación, publicación futura, trazabilidad y recuperación en GitHub Pages está en [PUBLICACION-PAGES.md](PUBLICACION-PAGES.md). El sitio Pages aún no tiene URL operativa: requiere autorización de exposición y configuración administrativa.
+
 Ambas alternativas parten de [contratos/http/openapi.yaml](../contratos/http/openapi.yaml):
 
 | Alternativa | Acceso y ejecución |
