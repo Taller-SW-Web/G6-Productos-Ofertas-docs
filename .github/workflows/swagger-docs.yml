@@ -176,8 +176,10 @@ jobs:
             echo 'publish=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          changed_files="$RUNNER_TEMP/swagger-changed-files.txt"
+          git diff --name-only --no-renames "$BEFORE_SHA" "$AFTER_SHA" > "$changed_files"
           node scripts/ci/should-publish-pages.mjs \
-            --changed-files <(git diff --name-only "$BEFORE_SHA" "$AFTER_SHA") \
+            --changed-files "$changed_files" \
             >> "$GITHUB_OUTPUT"
 
   publish_pages:
