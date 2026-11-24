@@ -2,12 +2,12 @@
 
 **Corte:** 24/11/2026 (America/Lima)
 **Alcance:** Bulk B01–B08 y F01–F06, integración requerida de Catalog H5, pruebas locales/CI y documentación.
-**Estado del corte:** `PARTIAL`; no se declara `CODE_COMPLETE` mientras #273 no se fusione, la CI obligatoria no concluya y resten criterios de UI/performance/integración sin evidencia integral.
+**Estado del corte:** `PARTIAL`; #273 está fusionado y sus gates de PR pasaron; la CI posterior al merge aún corre y quedan criterios UI/E2E integrales sin evidencia suficiente.
 **Despliegue:** NO REALIZADO.
 
 ## 1. Resumen ejecutivo
 
-Se cerraron mediante merge normal Frontend #93, Catalog H5 #262 y Backend Bulk V3/H5 #271. Catalog Retry V4 / resultado V2 se presenta como PR sustituto #273, desde `master`, para trasladar selectivamente la contribución histórica #254 sin fusionar su base obsoleta. Al corte, #273 está Ready for Review, HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204`, integración focalizada verde; los restantes checks requeridos todavía se ejecutan. #254 permanece Draft y abierto hasta la fusión del sustituto.
+Se cerraron mediante merge normal Frontend #93, Catalog H5 #262 y Backend Bulk V3/H5 #271. Catalog Retry V4 / resultado V2 se integró mediante PR sustituto #273 desde `master`, trasladando selectivamente la contribución histórica #254 sin fusionar su base obsoleta. #273 mergeó en `49bab9e2075819d922c63b06fcc6fc6ac16ce703` con HEAD probado `b19f2dffdd1101b179abf5f1c5011d4de0948204`; todos los checks ejecutados aplicables del PR pasaron. #254 se cerró tras verificar la fusión sustitutiva.
 
 La evidencia cubre PostgreSQL 17 descartable, servicios Bulk/Catalog reales, HTTP loopback, JWT RS256 de prueba y roles aislados. Storage es un doble de borde externo; Azure Service Bus y el emisor/grants G7 reales no participaron. La prueba no acredita Azure, APIM, homologación externa ni despliegue.
 
@@ -18,11 +18,11 @@ La evidencia cubre PostgreSQL 17 descartable, servicios Bulk/Catalog reales, HTT
 | Frontend | [#93](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/93) | merge `e322808d868bb89e2c645a1b069eb12728296d9f`; HEAD `8665ce65086bb456573f82e8146f941bb50eb617` | MERGED normal; unitarias, smoke, API y build local reportados PASS |
 | Backend Catalog H5 | [#262](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/262) | merge `c73ed61c533a21787d1dab22aa79cd83ff77da14` | MERGED normal; rama reconciliada en el master utilizado para #271 |
 | Backend Bulk V3/H5 | [#271](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/271) | merge `133a051acf187e0a75c074e38aa284a8ea226250`; HEAD origen `af5a6b4e0e7f4cc7a5d32fcf3694d19cb6db9660` | MERGED normal; flags apagados |
-| Backend Catalog Retry V4/V2 | [#273](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/273) | rama `trabajo/castilla/catalog-bulk-retry-integracion-final`; HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204` | OPEN, Ready; integration E2E pass, resto de gates pendiente al corte |
-| Backend legado | [#254](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/254) | HEAD histórico `f259df772c4f3f5473449cbe2f69eb0dde40b79e` | OPEN Draft, no fusionar sobre base `poma`; mantener hasta #273 mergeado y trazado |
+| Backend Catalog Retry V4/V2 | [#273](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/273) | merge `49bab9e2075819d922c63b06fcc6fc6ac16ce703`; HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204` | MERGED normal; checks ejecutados del PR satisfactoriamente; CI posterior al merge en curso |
+| Backend legado | [#254](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/254) | HEAD histórico `f259df772c4f3f5473449cbe2f69eb0dde40b79e` | CLOSED tras fusión normal de #273; contribution trasladada selectivamente, no se fusionó base `poma` |
 | Backend antiguo | #243 | — | CLOSED sin merge; no se recuperó completo |
 
-Los merge SHAs se consultaron en GitHub. La prueba explícita de ancestralidad del master posterior a la fusión de #273 queda pendiente hasta que exista ese merge. No hubo force push ni bypass.
+Los merge SHAs se consultaron en GitHub. `compare` confirma que el merge `49bab9e2075819d922c63b06fcc6fc6ac16ce703` es descendiente de `133a051acf187e0a75c074e38aa284a8ea226250` (`ahead 14`, `behind 0`). No hubo force push ni bypass.
 
 ## 3. Matriz de guía MK-001
 
@@ -35,8 +35,8 @@ Los estados expresan evidencia de este corte; `PARTIAL` no implica que todo el c
 | B01 Plantilla/roundtrip | PARTIAL | Contratos y frontend cubiertos por pruebas Bulk; falta reportar una matriz completa CSV/XLSX por contrato y roundtrip de extremo a extremo asociado al SHA fusionado. |
 | B02 Admisión durable/atomicidad | PARTIAL | Backend #271 y E2E focalizado ejecutan Bulk/PostgreSQL; job #273 `integration` confirma el esquema y flujo de integración. La admisión vía Gateway y todos los escenarios de fallo aún requieren sus checks/escenarios completos. |
 | B03 Idempotencia/owner/correlación | PARTIAL | Persistencia e idempotencia existentes más pruebas focalizadas. La matriz integral de concurrencia, owner ajeno, conflicto de correlación y timeouts aún no se ha ejecutado completa en un solo E2E. |
-| B04 Estado por fila/dominio y resultados | PARTIAL | Durabilidad de Inbox/snapshot y resultados ejercitada en pruebas Bulk/Catalog; resultado Catalog V2 depende del merge de #273. |
-| B05 Retry selectivo Catalog | PARTIAL | Implementación Catalog V4/result V2 en #273; pruebas PostgreSQL completas Catalog 103/103 en revisión corregida (HEAD previo `dec595f995046f7f1ce17c789a2ebfd92e931e64`), y E2E permanente 1/1 en HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204`. Falta merge y CI obligatoria verde; Azure ASB no probado. |
+| B04 Estado por fila/dominio y resultados | PARTIAL | Durabilidad de Inbox/snapshot y resultados ejercitada en pruebas Bulk/Catalog; Catalog V2 está fusionado, aunque no se completó el escenario operativo integral en Azure. |
+| B05 Retry selectivo Catalog | PARTIAL | Implementación Catalog V4/result V2 fusionada en #273; pruebas PostgreSQL completas Catalog 103/103 en revisión corregida (HEAD `dec595f995046f7f1ce17c789a2ebfd92e931e64`), E2E permanente 1/1 en HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204` y CI PR ejecutada PASS. Azure ASB real no probado. |
 | B06 Reportes/exportaciones auténticos | PARTIAL | Frontend usa Blob real y build/API suites pasan; no se completó la auditoría navegador integral ni el E2E real de exportación con Storage. |
 | B07 Claim-check V3 privado | PARTIAL | #271 integra contenido privado/autenticado; prueba #273 usa HTTP loopback y guard real con JWT de prueba. Storage sigue siendo un doble externo y faltan escenarios negativos completos del inventario contractual. |
 | B08 R02/R10 / R03/R14 | PARTIAL | Flags V3 OFF y estados no habilitados se preservan; no hay autorización/homologación para declarar operativo ningún flujo externo pendiente. |
@@ -48,7 +48,7 @@ Los estados expresan evidencia de este corte; `PARTIAL` no implica que todo el c
 | F01 Selección/validación/resumen | PARTIAL | Suite unitaria Bulk 98/98; Playwright smoke 4/4 y API 7/7. No se hizo auditoría manual de navegador de todos los estados CSV/XLSX/accesibilidad. |
 | F02 Confirmación/admisión/recuperación | PARTIAL | Implementación fusionada; falta ejecutar el conjunto completo de doble clic, refresh, cambio de usuario y timeout antes/después de commit en un entorno conjunto. |
 | F03 Seguimiento/errores | PARTIAL | Tests smoke/API y polling disponibles; no se trazaron todos los estados, cancelación/backoff y snapshot histórico bajo fallos en una auditoría completa. |
-| F04 Reanudación | PARTIAL | Catalog se presenta a #273; elegibilidad UI limitada a Catalog y excluye Inventory según implementación, pero requiere CI final y E2E conjunto autenticado. |
+| F04 Reanudación | PARTIAL | Retry Catalog está fusionado; elegibilidad UI limitada a Catalog y excluye Inventory según implementación, pero falta E2E conjunto Frontend–Gateway autenticado. |
 | F05 Reportes/descargas | PARTIAL | Descarga Blob está implementada; la prueba integral de exportación autorizada, fallos de Storage, nombres saneados y accesibilidad sigue pendiente. |
 | F06 Seguridad/usabilidad/accesibilidad | PARTIAL | Sin fallback silencioso a mock; builds `VITE_DATA_MODE=mock` y `api` pasan. Falta matriz de navegación/accesibilidad y auditoría de propietario/JWT en UI. |
 
@@ -87,7 +87,7 @@ Supabase compartido: solo lectura/no se ejecutó DDL/DML en esta intervención. 
 | Frontend build con `VITE_DATA_MODE=mock` y `api` | mismo HEAD | ambos PASS; modo no se infiere si falta la variable |
 | Prettier, `git diff --check`, YAML y `bash -n` workflow | Backend #273 HEAD | PASS |
 
-Los checks obligatorios de GitHub para #273 seguían en ejecución al preparar esta revisión. Los checks que reportan `skipped` no se cuentan como PASS. Seguridad automatizada final y aprobación de revisión por SHA se registrarán tras el resultado de los checks/review.
+En HEAD de PR `b19f2dff...`, los checks ejecutados incluyen el workflow E2E integración, `Lint, Typecheck, Test, Build & Smoke Test`, validación integral CI, Dependency audit High/Critical, imágenes/contenedores, Catalog/Taxonomy, APIM estático y `bulk_mensajeria`: PASS. Los jobs con path filter muestran `skipped` y no se contabilizan como PASS; checks aplicables completaron con éxito. Runs de CI `push` post-merge al SHA `49bab9e...` estaban aún en curso al corte. No había solicitudes/reviews registradas en #273 ni branch protection activa en master al momento de integración; se usó merge normal con coincidencia exacta de HEAD, sin bypass.
 
 ## 7. Performance
 
@@ -105,9 +105,9 @@ Baseline SHA `c73ed61c533a21787d1dab22aa79cd83ff77da14`; candidato SHA `af5a6b4e
 
 | Condición | Estado |
 |---|---|
-| Código completo Bulk MK-001 | NO certificado en este corte; #273 pendiente de merge y la matriz B/F conserva PARTIAL |
-| Merge | Parcial: #93, #262, #271 fusionados; #273 abierto |
-| CI completa | NO al corte; run focalizado #273 PASS, checks restantes pendientes |
+| Código completo Bulk MK-001 | NO certificado en este corte; #273 ya está fusionado, pero la matriz B/F conserva PARTIAL |
+| Merge | Backend/Frontend integrados: #93, #262, #271 y #273 fusionados; #254 cerrado como sustituido |
+| CI completa | Checks aplicables al PR #273 PASS; CI post-merge de master pendiente al corte; jobs path-filtered skipped se conservan como no ejecutados |
 | Compatibilidad contractual | Implementación alineada con `0.7.0-rc.3` en alcance inspeccionado; no se declara homologación externa |
 | PostgreSQL 17 descartable | PASS para secuencia del workflow y E2E de alcance descrito |
 | Despliegue | NO REALIZADO |
@@ -129,10 +129,10 @@ La habilitación posterior requiere además preparar APIM/Gateway, Azure Service
 
 ## 10. Artefactos y seguimiento
 
-- Backend E2E CI: [run 45469317255](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45469317255), HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204`.
+- Backend E2E CI PR: [run 45469317255](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45469317255), HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204`. CI post-merge iniciada: [run 45470786170](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470786170) y [Bulk messaging run 45470785787](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470785787), SHA `49bab9e2075819d922c63b06fcc6fc6ac16ce703`.
 - Backend PR #273: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/273.
 - Frontend PR #93: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/93.
 - Catálogo H5 #262 y Bulk V3/H5 #271: enlaces en tabla de estado Git.
 - Performance: copiar y versionar en el repositorio Docs los artefactos de medición raw asociados a los SHAs antes de cerrar la evidencia PERF; este corte conserva métricas resumidas.
 
-Este documento es una evidencia de cierre por bounded context MK-001, no certifica que Hito 5 G6 esté completo. Se actualizará el estado tras el resultado de #273 y los demás checks, sin convertir `skipped` en PASS ni pruebas locales en despliegue.
+Este documento es una evidencia de cierre por bounded context MK-001, no certifica que Hito 5 G6 esté completo. Se actualizará el estado tras el resultado de CI post-merge y evidencias restantes, sin convertir `skipped` en PASS ni pruebas locales en despliegue.
