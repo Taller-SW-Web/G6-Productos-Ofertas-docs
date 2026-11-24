@@ -91,7 +91,7 @@ Los checks obligatorios de GitHub para #273 seguían en ejecución al preparar e
 
 ## 7. Performance
 
-Benchmark local comparable, 1000 solicitudes por combinación de concurrencia en baseline y 3000 muestras por combinación en candidato; el candidato se midió finalmente sin 503/timeouts. No es tráfico compartido ni una prueba Azure/APIM. Hardware, proceso local y método se mantuvieron comparables según los artefactos del trabajo.
+Benchmark local comparable, 1000 solicitudes por combinación de concurrencia (3,000 por variante), después de 10 warmups en cada combinación; el candidato final se midió sin 503/timeouts. No es tráfico compartido ni una prueba Azure/APIM. Hardware, proceso local y método se mantuvieron comparables según los artefactos del trabajo.
 
 | Concurrencia | Baseline p50 / p95 / p99 ms | Baseline req/s | Candidato p50 / p95 / p99 ms | Candidato req/s |
 |---:|---:|---:|---:|---:|
@@ -99,7 +99,7 @@ Benchmark local comparable, 1000 solicitudes por combinación de concurrencia en
 | 8 | 107.22 / 234.90 / 596.48 | 59.99 | 125.16 / 367.63 / 642.74 | 51.28 |
 | 32 | 669.04 / 1446.83 / 1977.64 | 41.00 | 476.38 / 1093.87 / 1245.81 | 58.30 |
 
-Baseline SHA `c73ed61c533a21787d1dab22aa79cd83ff77da14`; candidato SHA `af5a6b4e0e7f4cc7a5d32fcf3694d19cb6db9660`. Resultado mixto: c1 p95 mejora ~13%, c8 empeora ~56%, c32 mejora ~24%; throughput c32 mejora ~42% y c8 cae ~14.5%. Por ello no se declara mejora general. Carga fue de endpoint local y no acredita tamaños XLSX máximos, memoria, ASB redelivery, APIM ni umbral acordado. Incorporar CSVs/JSON exactos de resultados al paquete de evidencia antes de promover este benchmark como evidencia plenamente reproducible.
+Baseline SHA `c73ed61c533a21787d1dab22aa79cd83ff77da14`; candidato SHA `af5a6b4e0e7f4cc7a5d32fcf3694d19cb6db9660`. Resultado mixto: c1 p95 mejora ~13%, c8 empeora ~56%, c32 mejora ~24%; throughput c32 mejora ~42% y c8 cae ~14.5%. Por ello no se declara mejora general. Carga fue de endpoint local y no acredita tamaños XLSX máximos, memoria, ASB redelivery, APIM ni umbral acordado. Los CSV/JSON originales están adjuntos en [evidencias de performance](evidencias/mk001-bulk/performance/README.md).
 
 ## 8. Estado operativo y bloqueos concretos
 
