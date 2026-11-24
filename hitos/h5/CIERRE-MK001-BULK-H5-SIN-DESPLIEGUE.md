@@ -45,11 +45,11 @@ Los estados expresan evidencia de este corte; `PARTIAL` no implica que todo el c
 
 | ID | Estado | Evidencia y límite |
 |---|---|---|
-| F01 Selección/validación/resumen | PARTIAL | Suite unitaria Bulk 98/98; Playwright smoke 4/4 y API 7/7. No se hizo auditoría manual de navegador de todos los estados CSV/XLSX/accesibilidad. |
-| F02 Confirmación/admisión/recuperación | PARTIAL | Implementación fusionada; falta ejecutar el conjunto completo de doble clic, refresh, cambio de usuario y timeout antes/después de commit en un entorno conjunto. |
-| F03 Seguimiento/errores | PARTIAL | Tests smoke/API y polling disponibles; no se trazaron todos los estados, cancelación/backoff y snapshot histórico bajo fallos en una auditoría completa. |
+| F01 Selección/validación/resumen | PARTIAL | Suite unitaria Bulk 98/98; Playwright smoke 4/4 y API 7/7. Auditoría manual en modo mock seleccionó CSV, verificó resumen y columnas; XLSX/accesibilidad no se verificaron manualmente. |
+| F02 Confirmación/admisión/recuperación | PARTIAL | Auditoría manual mock confirmó el lote, observó `PROCESSING` y duplicado indicado como `Archivo ya admitido`; faltan doble clic, refresh, cambio de usuario y timeouts en entorno API conjunto. |
+| F03 Seguimiento/errores | PARTIAL | En navegador mock se siguió `PROCESSING` a `Completado con observaciones`, se vio el fallo por fila/dominio y resultado final. Cancelación/backoff, owner y snapshot bajo fallo GET no se auditaron de punta a punta. |
 | F04 Reanudación | PARTIAL | Retry Catalog está fusionado; elegibilidad UI limitada a Catalog y excluye Inventory según implementación, pero falta E2E conjunto Frontend–Gateway autenticado. |
-| F05 Reportes/descargas | PARTIAL | Descarga Blob está implementada; la prueba integral de exportación autorizada, fallos de Storage, nombres saneados y accesibilidad sigue pendiente. |
+| F05 Reportes/descargas | PARTIAL | Se descargó un CSV de errores mediante Blob desde el lote mock; Playwright/API tests pasan. Falta prueba autorizada con Backend/Storage reales, fallos de Storage, nombres saneados y XLSX. |
 | F06 Seguridad/usabilidad/accesibilidad | PARTIAL | Sin fallback silencioso a mock; builds `VITE_DATA_MODE=mock` y `api` pasan. Falta matriz de navegación/accesibilidad y auditoría de propietario/JWT en UI. |
 
 ## 4. Implementación y contratos
@@ -87,7 +87,7 @@ Supabase compartido: solo lectura/no se ejecutó DDL/DML en esta intervención. 
 | Frontend build con `VITE_DATA_MODE=mock` y `api` | mismo HEAD | ambos PASS; modo no se infiere si falta la variable |
 | Prettier, `git diff --check`, YAML y `bash -n` workflow | Backend #273 HEAD | PASS |
 
-En HEAD de PR `b19f2dff...`, los checks ejecutados incluyen el workflow E2E integración, `Lint, Typecheck, Test, Build & Smoke Test`, validación integral CI, Dependency audit High/Critical, imágenes/contenedores, Catalog/Taxonomy, APIM estático y `bulk_mensajeria`: PASS. Los jobs con path filter muestran `skipped` y no se contabilizan como PASS; checks aplicables completaron con éxito. Runs de CI `push` post-merge al SHA `49bab9e...` estaban aún en curso al corte. No había solicitudes/reviews registradas en #273 ni branch protection activa en master al momento de integración; se usó merge normal con coincidencia exacta de HEAD, sin bypass.
+En HEAD de PR `b19f2dff...`, los checks ejecutados incluyen el workflow E2E integración, `Lint, Typecheck, Test, Build & Smoke Test`, validación integral CI, Dependency audit High/Critical, imágenes/contenedores, Catalog/Taxonomy, APIM estático y `bulk_mensajeria`: PASS. Los jobs con path filter muestran `skipped` y no se contabilizan como PASS; checks aplicables completaron con éxito. Los runs de CI `push` post-merge finalizaron `success` para `49bab9e2075819d922c63b06fcc6fc6ac16ce703`: [CI run 45470786170](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470786170) y [Bulk messaging run 45470785787](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470785787). No había solicitudes/reviews registradas en #273 ni branch protection activa en master al momento de integración; se usó merge normal con coincidencia exacta de HEAD, sin bypass.
 
 ## 7. Performance
 
@@ -107,7 +107,7 @@ Baseline SHA `c73ed61c533a21787d1dab22aa79cd83ff77da14`; candidato SHA `af5a6b4e
 |---|---|
 | Código completo Bulk MK-001 | NO certificado en este corte; #273 ya está fusionado, pero la matriz B/F conserva PARTIAL |
 | Merge | Backend/Frontend integrados: #93, #262, #271 y #273 fusionados; #254 cerrado como sustituido |
-| CI completa | Checks aplicables al PR #273 PASS; CI post-merge de master pendiente al corte; jobs path-filtered skipped se conservan como no ejecutados |
+| CI completa | Checks aplicables del PR y CI `push` post-merge `success`; jobs path-filtered `skipped` se conservan como no ejecutados |
 | Compatibilidad contractual | Implementación alineada con `0.7.0-rc.3` en alcance inspeccionado; no se declara homologación externa |
 | PostgreSQL 17 descartable | PASS para secuencia del workflow y E2E de alcance descrito |
 | Despliegue | NO REALIZADO |
@@ -129,10 +129,10 @@ La habilitación posterior requiere además preparar APIM/Gateway, Azure Service
 
 ## 10. Artefactos y seguimiento
 
-- Backend E2E CI PR: [run 45469317255](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45469317255), HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204`. CI post-merge iniciada: [run 45470786170](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470786170) y [Bulk messaging run 45470785787](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470785787), SHA `49bab9e2075819d922c63b06fcc6fc6ac16ce703`.
+- Backend E2E CI PR: [run 45469317255](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45469317255), HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204`. CI post-merge completada: [run 45470786170](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470786170) y [Bulk messaging run 45470785787](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470785787), SHA `49bab9e2075819d922c63b06fcc6fc6ac16ce703`.
 - Backend PR #273: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/273.
 - Frontend PR #93: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/93.
 - Catálogo H5 #262 y Bulk V3/H5 #271: enlaces en tabla de estado Git.
 - Performance: copiar y versionar en el repositorio Docs los artefactos de medición raw asociados a los SHAs antes de cerrar la evidencia PERF; este corte conserva métricas resumidas.
 
-Este documento es una evidencia de cierre por bounded context MK-001, no certifica que Hito 5 G6 esté completo. Se actualizará el estado tras el resultado de CI post-merge y evidencias restantes, sin convertir `skipped` en PASS ni pruebas locales en despliegue.
+Este documento es una evidencia de cierre por bounded context MK-001, no certifica que Hito 5 G6 esté completo. La matriz sigue en `PARTIAL` donde faltan escenarios y fronteras de entorno; los jobs `skipped` no son PASS y las pruebas locales no son despliegue.
