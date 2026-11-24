@@ -41,6 +41,34 @@ test('sin paths filter, conserva despacho y pruebas contractuales/Playwright', (
   }
 });
 
+test('un push documental fuera de Swagger no publica Pages', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const { mkdtemp, writeFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const directory = await mkdtemp(join(tmpdir(), 'pages-scope-'));
+  try {
+    const changedFiles = join(directory, 'changed-files.txt');
+    const decide = async (files) => {
+      await writeFile(changedFiles, files.join('\n'));
+      return spawnSync('node', [
+        'scripts/ci/should-publish-pages.mjs',
+        '--changed-files',
+        changedFiles,
+      ], { encoding: 'utf8' });
+    };
+    const docsOnly = await decide(['hitos/h5/CIERRE-MK001-BULK-H5-SIN-DESPLIEGUE.md']);
+    assert.equal(docsOnly.status, 0);
+    assert.match(docsOnly.stdout, /publish=false/);
+    const contract = await decide(['contratos/http/openapi.yaml']);
+    assert.equal(contract.status, 0);
+    assert.match(contract.stdout, /publish=true/);
+    assert.match(wf, /needs\.publication_scope\.outputs\.publish == 'true'/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('sincronización sigue manual, dry-run por defecto y apunta al repo canónico', () => {
   assert.match(sync, /workflow_dispatch:/);
   assert.match(sync, /default: true/);

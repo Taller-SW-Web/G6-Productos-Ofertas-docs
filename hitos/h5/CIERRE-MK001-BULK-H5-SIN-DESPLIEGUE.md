@@ -2,14 +2,14 @@
 
 **Corte:** 24/11/2026 (America/Lima)
 **Alcance:** Bulk B01–B08 y F01–F06, integración requerida de Catalog H5, pruebas locales/CI y documentación.
-**Estado del corte:** `PARTIAL`; #273 está fusionado y sus gates de PR pasaron; la CI posterior al merge aún corre y quedan criterios UI/E2E integrales sin evidencia suficiente.
+**Estado del corte:** Backend PR [#274](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/274) permanece Draft en HEAD `0cc83cfe1e928214f08581cb62aaa06599b53578`. Workflow de integración `45482639358`: 8/8 PASS, cero omitidos; PostgreSQL 17, Gateway/JWKS local, Bulk/Catalog, y Storage Supabase local CLI 3.4.0 con bucket privado real. No es merge ni CI general validada: la política Draft dejó otros checks en `skipped`. Frontend real E2E, matriz completa de archivos, reinicios/fallos, migraciones de rollback y performance final siguen pendientes. Despliegue: NO REALIZADO.
 **Despliegue:** NO REALIZADO.
 
 ## 1. Resumen ejecutivo
 
 Se cerraron mediante merge normal Frontend #93, Catalog H5 #262 y Backend Bulk V3/H5 #271. Catalog Retry V4 / resultado V2 se integró mediante PR sustituto #273 desde `master`, trasladando selectivamente la contribución histórica #254 sin fusionar su base obsoleta. #273 mergeó en `49bab9e2075819d922c63b06fcc6fc6ac16ce703` con HEAD probado `b19f2dffdd1101b179abf5f1c5011d4de0948204`; todos los checks ejecutados aplicables del PR pasaron. #254 se cerró tras verificar la fusión sustitutiva.
 
-La evidencia cubre PostgreSQL 17 descartable, servicios Bulk/Catalog reales, HTTP loopback, JWT RS256 de prueba y roles aislados. Storage es un doble de borde externo; Azure Service Bus y el emisor/grants G7 reales no participaron. La prueba no acredita Azure, APIM, homologación externa ni despliegue.
+La evidencia de PR #274 cubre PostgreSQL 17 descartable, servicios Bulk/Catalog y Gateway reales, HTTP loopback, JWT RS256/JWKS de prueba, roles aislados y adaptador BulkStorageService contra Supabase Storage local con bucket privado. El transporte asíncrono entrega al consumidor real dentro del E2E y no homologa Service Bus. Azure, APIM, emisor/grants G7 institucionales, homologación externa y despliegue no participaron.
 
 ## 2. Estado Git y PRs
 
@@ -18,7 +18,7 @@ La evidencia cubre PostgreSQL 17 descartable, servicios Bulk/Catalog reales, HTT
 | Frontend | [#93](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/93) | merge `e322808d868bb89e2c645a1b069eb12728296d9f`; HEAD `8665ce65086bb456573f82e8146f941bb50eb617` | MERGED normal; unitarias, smoke, API y build local reportados PASS |
 | Backend Catalog H5 | [#262](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/262) | merge `c73ed61c533a21787d1dab22aa79cd83ff77da14` | MERGED normal; rama reconciliada en el master utilizado para #271 |
 | Backend Bulk V3/H5 | [#271](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/271) | merge `133a051acf187e0a75c074e38aa284a8ea226250`; HEAD origen `af5a6b4e0e7f4cc7a5d32fcf3694d19cb6db9660` | MERGED normal; flags apagados |
-| Backend Catalog Retry V4/V2 | [#273](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/273) | merge `49bab9e2075819d922c63b06fcc6fc6ac16ce703`; HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204` | MERGED normal; checks ejecutados del PR satisfactoriamente; CI posterior al merge en curso |
+| Backend Catalog Retry V4/V2 | [#273](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/273) | merge `49bab9e2075819d922c63b06fcc6fc6ac16ce703`; HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204` | MERGED normal; CI posterior confirmada por runs `45470786170` y `45470785787` |
 | Backend legado | [#254](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/254) | HEAD histórico `f259df772c4f3f5473449cbe2f69eb0dde40b79e` | CLOSED tras fusión normal de #273; contribution trasladada selectivamente, no se fusionó base `poma` |
 | Backend antiguo | #243 | — | CLOSED sin merge; no se recuperó completo |
 
@@ -26,31 +26,31 @@ Los merge SHAs se consultaron en GitHub. `compare` confirma que el merge `49bab9
 
 ## 3. Matriz de guía MK-001
 
-Los estados expresan evidencia de este corte; `PARTIAL` no implica que todo el criterio contractual esté cerrado.
+Las columnas separan implementación, prueba y operación. `NO EJECUTADO` no es PASS. La guía original adjunta define los identificadores BUL-B01–B08 y BUL-F01–F06.
 
-### Bulk Backend B01–B08
+### Bulk Backend BUL-B01–B08
 
-| ID | Estado | Evidencia y límite |
-|---|---|---|
-| B01 Plantilla/roundtrip | PARTIAL | Contratos y frontend cubiertos por pruebas Bulk; falta reportar una matriz completa CSV/XLSX por contrato y roundtrip de extremo a extremo asociado al SHA fusionado. |
-| B02 Admisión durable/atomicidad | PARTIAL | Backend #271 y E2E focalizado ejecutan Bulk/PostgreSQL; job #273 `integration` confirma el esquema y flujo de integración. La admisión vía Gateway y todos los escenarios de fallo aún requieren sus checks/escenarios completos. |
-| B03 Idempotencia/owner/correlación | PARTIAL | Persistencia e idempotencia existentes más pruebas focalizadas. La matriz integral de concurrencia, owner ajeno, conflicto de correlación y timeouts aún no se ha ejecutado completa en un solo E2E. |
-| B04 Estado por fila/dominio y resultados | PARTIAL | Durabilidad de Inbox/snapshot y resultados ejercitada en pruebas Bulk/Catalog; Catalog V2 está fusionado, aunque no se completó el escenario operativo integral en Azure. |
-| B05 Retry selectivo Catalog | PARTIAL | Implementación Catalog V4/result V2 fusionada en #273; pruebas PostgreSQL completas Catalog 103/103 en revisión corregida (HEAD `dec595f995046f7f1ce17c789a2ebfd92e931e64`), E2E permanente 1/1 en HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204` y CI PR ejecutada PASS. Azure ASB real no probado. |
-| B06 Reportes/exportaciones auténticos | PARTIAL | Frontend usa Blob real y build/API suites pasan; no se completó la auditoría navegador integral ni el E2E real de exportación con Storage. |
-| B07 Claim-check V3 privado | PARTIAL | #271 integra contenido privado/autenticado; prueba #273 usa HTTP loopback y guard real con JWT de prueba. Storage sigue siendo un doble externo y faltan escenarios negativos completos del inventario contractual. |
-| B08 R02/R10 / R03/R14 | PARTIAL | Flags V3 OFF y estados no habilitados se preservan; no hay autorización/homologación para declarar operativo ningún flujo externo pendiente. |
+| ID original de guía | Requisito | Código | Prueba local/CI | Evidencia | Estado operativo |
+|---|---|---|---|---|---|
+| BUL-B01 | Plantillas CSV/XLSX y roundtrip contractual | Handler CSV/XLSX y plantillas existentes | Matriz integral CSV/XLSX: NO EJECUTADA en esta continuación | Suites previas Frontend; falta roundtrip asociado a SHA final | Implementado; validación integral pendiente |
+| BUL-B02 | Admisión durable y atomicidad | Persistencia transaccional existente | Admisión HTTP PostgreSQL real; no se indujo fallo intermedio | E2E ampliado, HEAD base `49bab9e2075819d922c63b06fcc6fc6ac16ce703`; PR pendiente | Implementado; rollback por fallo no verificado |
+| BUL-B03 | Idempotencia, propietario, correlación y replay | Idempotencia por owner/correlación existente | 2 POST de admisión simultáneos devuelven el mismo lote; bytes distintos con correlación igual reciben 409; una fila batch y una salida V3 | E2E oficial CI 8/8 en PostgreSQL 17; artifact JSON del HEAD `0cc83cfe...` | Idempotencia concurrente verificada local; timeout/reinicio pendientes |
+| BUL-B04 | Estado por fila/dominio y aplicación de resultado del owner | Bulk concilia resultado V2 en persistencia propia | Catalog real aplica/rechaza; se comprueba estado terminal y efecto único | E2E Bulk-Catalog local; producto permanece propiedad de Catalog | Implementado y probado en recorrido local limitado |
+| BUL-B05 | Retry selectivo, concurrencia y causación | Retry Catalog V4/resultado V2 y receipts durables existentes | Dos POST retry simultáneos, replay tras resultado V2, dos entregas simultáneas V4 y V2 | E2E Bulk-Catalog local: PASS en la ejecución combinada anterior; comandos/receipts reales en PostgreSQL 17 | Concurrencia local verificada para Catalog; no equivale a Azure |
+| BUL-B06 | Reportes/exportaciones reales y permisos | Rutas HTTP y adaptador de Storage existentes | Descarga con Storage real: NO EJECUTADA; Gateway 401/403/404/503 parcial | Test de Gateway cubre seguridad de lectura/correlación, no exportación | Implementado; cobertura de artefactos pendiente |
+| BUL-B07 | Claim-check V3 privado, hash/tamaño y auth Catalog | Contenido V3, guard y cliente privado presentes | Adaptador real contra Supabase Storage local; faltan casos negativos independientes V3/V4 | E2E CI oficial `45482639358`, JWT firmado de prueba, Storage Supabase local y Catalog real; [JSON](evidencias/mk001-bulk/bulk-catalog-gateway-supabase-ci-pr274-2026-11-24.json) | Implementado; Storage local real probado, matriz negativa completa pendiente |
+| BUL-B08 | Mantener flujos no autorizados bloqueados | R02/R03/R10/R14 no se habilitan por este cierre | CI/Runtime Azure no habilitados; flags productivos no cambiados | Código conserva gates; homologación y permisos no probados | Bloqueado correctamente; no es brecha de código demostrada |
 
-### Bulk Frontend F01–F06
+### Bulk Frontend BUL-F01–F06
 
-| ID | Estado | Evidencia y límite |
-|---|---|---|
-| F01 Selección/validación/resumen | PARTIAL | Suite unitaria Bulk 98/98; Playwright smoke 4/4 y API 7/7. Auditoría manual en modo mock seleccionó CSV, verificó resumen y columnas; XLSX/accesibilidad no se verificaron manualmente. |
-| F02 Confirmación/admisión/recuperación | PARTIAL | Auditoría manual mock confirmó el lote, observó `PROCESSING` y duplicado indicado como `Archivo ya admitido`; faltan doble clic, refresh, cambio de usuario y timeouts en entorno API conjunto. |
-| F03 Seguimiento/errores | PARTIAL | En navegador mock se siguió `PROCESSING` a `Completado con observaciones`, se vio el fallo por fila/dominio y resultado final. Cancelación/backoff, owner y snapshot bajo fallo GET no se auditaron de punta a punta. |
-| F04 Reanudación | PARTIAL | Retry Catalog está fusionado; elegibilidad UI limitada a Catalog y excluye Inventory según implementación, pero falta E2E conjunto Frontend–Gateway autenticado. |
-| F05 Reportes/descargas | PARTIAL | Se descargó un CSV de errores mediante Blob desde el lote mock; Playwright/API tests pasan. Falta prueba autorizada con Backend/Storage reales, fallos de Storage, nombres saneados y XLSX. |
-| F06 Seguridad/usabilidad/accesibilidad | PARTIAL | Sin fallback silencioso a mock; builds `VITE_DATA_MODE=mock` y `api` pasan. Falta matriz de navegación/accesibilidad y auditoría de propietario/JWT en UI. |
+| ID original de guía | Requisito | Código | Prueba local/CI | Evidencia | Estado operativo |
+|---|---|---|---|---|---|
+| BUL-F01 | Adaptador HTTP real sin fallback silencioso | `httpBulkRepository` y selector API/mock existentes | Playwright API usa servidor HTTP fixture, no Backend/Gateway real | #93 y HEAD `e322808d868bb89e2c645a1b069eb12728296d9f` | Implementado; integración real no demostrada |
+| BUL-F02 | Validación UX de archivo y accesibilidad | Validaciones locales de selección existentes | Suite previa; escenario real Gateway no ejecutado | Playwright mock/API previo | Implementado; criterios integrales pendientes |
+| BUL-F03 | Una intención, bloqueo de doble click y recuperación | Control de admisión/idempotencia UI existente | Doble clic probado en harness/fixture, no contra Backend real | Evidencia Playwright previa de #93 | Implementado; E2E real pendiente |
+| BUL-F04 | Polling, estados, recarga y snapshots | Seguimiento Bulk por batchId existente | Polling probado con respuestas fixture; reload contra backend no ejecutado | Evidencia Playwright previa | Implementado; recuperación E2E real pendiente |
+| BUL-F05 | Retry solo con elegibilidad backend | Botón depende de elegibilidad y retry de Catalog | Flujo usa fixture; no se conecta a Backend/Gateway real desde navegador | Evidencia Playwright previa | Implementado; integración real pendiente |
+| BUL-F06 | Blob real, seguridad y accesibilidad | Descargas Blob y sesión autenticada existentes | Descargas y seguridad con backend real: NO EJECUTADAS | Sin trace/captura de flujo Frontend→Gateway→Bulk | Implementado; verificación integral pendiente |
 
 ## 4. Implementación y contratos
 
@@ -58,7 +58,10 @@ Los estados expresan evidencia de este corte; `PARTIAL` no implica que todo el c
 - #271 conserva Outbox/Inbox durable, Service Bus Basic target, claim-check V3 y flags apagados.
 - #273 porta receipts durables de Catalog por comando/fila, replay de resultado V2 y V4 con correlación raíz; mantiene autenticación legacy para flujo V1/V3.
 - El workflow de integración anterior armaba PR históricos mediante merges/parches temporales. Se sustituyó por `.github/workflows/bulk-catalog-retry-integration.yml` en #273, ejecutando HEAD actual en PostgreSQL 17 y aplicando migraciones con orden explícito.
-- El E2E permanente `apps/bulk-svc/test/bulk-catalog-retry.e2e-spec.ts` utiliza consumidores/servicios/guard Bulk y Catalog reales, HTTP loopback, JWT RS256 firmado de prueba y PostgreSQL. Storage (`put/get`) y emisión del token de prueba están aislados como bordes; no se suplanta el handler del consumidor.
+- El E2E permanente `apps/bulk-svc/test/bulk-catalog-retry.e2e-spec.ts` utiliza servicios/guard Bulk y consumidor Catalog reales, HTTP loopback, JWT RS256 firmado de prueba y PostgreSQL. La continuación en `trabajo/castilla/bulk-h5-cierre-e2e`, HEAD `0cc83cfe1e928214f08581cb62aaa06599b53578`, añade admisión y retry HTTP concurrentes, conflicto 409, redelivery simultánea V4/V2, replay tras V2 y el adaptador real BulkStorageService contra Supabase Storage local. Workflow `45482639358`: 8/8, cero omitidos. La entrega de comandos sigue siendo transporte local directo y no homologa Azure Service Bus.
+- `apps/api-gateway/test/bulk-postgres.gateway.e2e-spec.ts` se ejecutó con el Gateway real, JWKS local y PostgreSQL 17 en su forma previa de cinco casos. Esta continuación agrega dos casos para JWT inválido y retry/reporte ajenos; ambos se ejecutaron en el workflow oficial `45482639358`, junto con los casos Bulk-Catalog: resultado conjunto 8/8, cero omitidos. La falla local por indisponibilidad de Docker se conserva como limitación del host, no como resultado de la suite oficial.
+- La entrega de comandos y resultados invoca el consumidor real directamente desde el E2E; no atraviesa Azure Service Bus ni acredita su transporte, ACK o topología. CI publica JSON, y falla si faltan pruebas o hay omitidas; el run oficial `45482639358` del HEAD exacto pasó 8/8.
+- En el host local, `supabase@3.4.0 start` quedó bloqueado porque Docker Engine devolvió HTTP 500; no se limpió el contenedor local parcial porque daemon no respondió. En GitHub Actions el mismo CLI inició Storage, ejecutó el adaptador real y limpió el stack con `stop --no-backup`. No se enlazó ni modificó Supabase hospedado.
 
 ## 5. Migraciones y datos
 
@@ -81,13 +84,16 @@ Supabase compartido: solo lectura/no se ejecutó DDL/DML en esta intervención. 
 | `npm test -- apps/bulk-svc/src` | Backend #271 | 174 PASS, 38 SKIPPED, 1 suite skipped |
 | E2E Bulk messaging/outage/app | Backend #271 | 6 PASS, 18 SKIPPED, 1 suite skipped |
 | E2E conjunto en PR #273 | `b19f2dffdd1101b179abf5f1c5011d4de0948204` | 1/1 PASS; workflow run `45469317255`, integration success |
+| E2E local combinado de Gateway + Bulk/Catalog | Backend base `49bab9e2075819d922c63b06fcc6fc6ac16ce703` | 6/6 PASS, cero omitidos; [JSON preservado](evidencias/mk001-bulk/bulk-catalog-retry-local-2026-11-24-base-49bab9e.json) |
+| E2E local posterior a cambios adicionales | PR #274 HEAD `0cc83cfe1e928214f08581cb62aaa06599b53578` | NO PASS local: hook agotó 30 s tras HTTP 500 de Docker Engine. La validación oficial pasó; la ejecución local fallida no se presenta como PASS. |
+| Workflow integración oficial PR #274 | Backend PR #274 HEAD `0cc83cfe1e928214f08581cb62aaa06599b53578` | 8/8 PASS, cero omitidos, run `45482639358`; artifact oficial [JSON preservado](evidencias/mk001-bulk/bulk-catalog-gateway-supabase-ci-pr274-2026-11-24.json) |
 | Frontend `npm run test:unit:bulk` | Frontend #93 HEAD `8665ce65086bb456573f82e8146f941bb50eb617` | 98/98 PASS |
 | Frontend `npm run test:e2e:smoke:bulk` | mismo HEAD | 4/4 PASS |
 | Frontend `npm run test:e2e:bulk:api` | mismo HEAD | 7/7 PASS |
 | Frontend build con `VITE_DATA_MODE=mock` y `api` | mismo HEAD | ambos PASS; modo no se infiere si falta la variable |
 | Prettier, `git diff --check`, YAML y `bash -n` workflow | Backend #273 HEAD | PASS |
 
-En HEAD de PR `b19f2dff...`, los checks ejecutados incluyen el workflow E2E integración, `Lint, Typecheck, Test, Build & Smoke Test`, validación integral CI, Dependency audit High/Critical, imágenes/contenedores, Catalog/Taxonomy, APIM estático y `bulk_mensajeria`: PASS. Los jobs con path filter muestran `skipped` y no se contabilizan como PASS; checks aplicables completaron con éxito. Los runs de CI `push` post-merge finalizaron `success` para `49bab9e2075819d922c63b06fcc6fc6ac16ce703`: [CI run 45470786170](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470786170) y [Bulk messaging run 45470785787](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470785787). No había solicitudes/reviews registradas en #273 ni branch protection activa en master al momento de integración; se usó merge normal con coincidencia exacta de HEAD, sin bypass.
+En HEAD de PR `b19f2dff...`, los checks ejecutados incluyen el workflow E2E integración, `Lint, Typecheck, Test, Build & Smoke Test`, validación integral CI, Dependency audit High/Critical, imágenes/contenedores, Catalog/Taxonomy, APIM estático y `bulk_mensajeria`: PASS. Los jobs con path filter muestran `skipped` y no se contabilizan como PASS; checks aplicables completaron con éxito. Los runs de CI `push` post-merge finalizaron `success` para `49bab9e2075819d922c63b06fcc6fc6ac16ce703`: [CI run 45470786170](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470786170) y [Bulk messaging run 45470785787](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470785787). En PR #274, el workflow general dejó los jobs pesados en `skipped` por ser Draft y la integración dedicada `45482639358` pasó con 8/8, cero omitidos y Storage local real; artifact publicado. CD Azure solo admite `workflow_dispatch`; no hay despliegue activado por este PR. #274 sigue Draft y no se fusionó.
 
 ## 7. Performance
 
@@ -105,9 +111,9 @@ Baseline SHA `c73ed61c533a21787d1dab22aa79cd83ff77da14`; candidato SHA `af5a6b4e
 
 | Condición | Estado |
 |---|---|
-| Código completo Bulk MK-001 | NO certificado en este corte; #273 ya está fusionado, pero la matriz B/F conserva PARTIAL |
-| Merge | Backend/Frontend integrados: #93, #262, #271 y #273 fusionados; #254 cerrado como sustituido |
-| CI completa | Checks aplicables del PR y CI `push` post-merge `success`; jobs path-filtered `skipped` se conservan como no ejecutados |
+| Código completo Bulk MK-001 | NO certificado todavía; permanecen brechas enumeradas en B01/B02/B06/B07 y Frontend |
+| Merge | Backend/Frontend integrados: #93, #262, #271 y #273; continuación Backend #274 y certificación Docs siguen Draft/sin merge |
+| CI completa | HEAD #274 tiene integración dedicada 8/8 PASS; el CI general está `skipped` en Draft. Checks de los merges previos se reportan por SHA/run en §6 |
 | Compatibilidad contractual | Implementación alineada con `0.7.0-rc.3` en alcance inspeccionado; no se declara homologación externa |
 | PostgreSQL 17 descartable | PASS para secuencia del workflow y E2E de alcance descrito |
 | Despliegue | NO REALIZADO |
@@ -115,11 +121,12 @@ Baseline SHA `c73ed61c533a21787d1dab22aa79cd83ff77da14`; candidato SHA `af5a6b4e
 | Flags compartidos/productivos activados | NO |
 | Azure Service Bus compartido/real | NO probado ni modificado |
 
-- **GitHub reviewers/branch protection | fusión de #273 | requiere revisión/aprobación aplicable y todos los checks obligatorios verdes sobre HEAD final.** No se omiten protecciones.
+- **GitHub reviewers/branch protection | PR #274 y PR Docs de certificación | requieren revisión/aprobación aplicable y todos los checks obligatorios verdes sobre HEAD final.** No se omiten protecciones.
 - **Owner Azure/arquitectura | operación Service Bus en runtime Azure | desbloquea aprovisionamiento y credenciales/identidad de prueba autorizadas, con evidencia por ambiente.** No solicitado ni ejecutado bajo la prohibición de tocar recursos.
 - **Owner G7 | emitir JWT/grants reales | desbloquea E2E autenticado con identidad institucional aprobada.** La prueba actual solo valida JWT firmado de prueba.
 - **G5/consumidores externos | homologación del contrato/operación que les aplique | requiere aceptación verificable; no se atribuye por silencio.**
 - **Owner de release/DB | aplicar migraciones a Supabase compartido | requiere inventario vigente, procedimiento aprobado y ventana de release.** No ejecutar aquí.
+- **Docker Desktop/host local | repetir E2E local y verificar el stack parcial local | desbloquear cuando Docker Engine responda a `docker ps` sin HTTP 500.** El CI sí inició y limpió Supabase Storage local; el host local permaneció sin respuesta, y no se tocaron contenedores fuera del stack conocido.
 
 ## 9. Guía de aplicación futura (no ejecutada)
 
@@ -131,8 +138,9 @@ La habilitación posterior requiere además preparar APIM/Gateway, Azure Service
 
 - Backend E2E CI PR: [run 45469317255](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45469317255), HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204`. CI post-merge completada: [run 45470786170](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470786170) y [Bulk messaging run 45470785787](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470785787), SHA `49bab9e2075819d922c63b06fcc6fc6ac16ce703`.
 - Backend PR #273: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/273.
+- Backend continuación Draft #274, HEAD `0cc83cfe1e928214f08581cb62aaa06599b53578`, CI E2E 8/8 con Storage local real: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/274.
 - Frontend PR #93: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/93.
 - Catálogo H5 #262 y Bulk V3/H5 #271: enlaces en tabla de estado Git.
-- Performance: copiar y versionar en el repositorio Docs los artefactos de medición raw asociados a los SHAs antes de cerrar la evidencia PERF; este corte conserva métricas resumidas.
+- Performance: los JSON/CSV históricos siguen en `evidencias/mk001-bulk/performance`; no se generó matriz nueva contra un baseline de operaciones equivalentes en este corte.
 
-Este documento es una evidencia de cierre por bounded context MK-001, no certifica que Hito 5 G6 esté completo. La matriz sigue en `PARTIAL` donde faltan escenarios y fronteras de entorno; los jobs `skipped` no son PASS y las pruebas locales no son despliegue.
+Este documento separa código, validación local/CI y operación. El alcance todavía no es CODE_COMPLETE ni MERGED: faltan escenarios de archivos/storage, fallos y reinicios, suite Browser→servicios reales, matriz de performance y revisión/checks generales. El estado externo permanece NOT_DEPLOYED y NOT_HOMOLOGATED_EXTERNALLY por la restricción explícita; no es un defecto de código. Los checks `skipped` no son PASS.
