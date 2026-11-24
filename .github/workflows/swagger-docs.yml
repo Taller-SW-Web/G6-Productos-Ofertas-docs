@@ -93,7 +93,7 @@ jobs:
   validate_docs:
     name: validate-docs
     if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
-    needs: [contrato]
+    needs: [contrato, prepare_pages]
     runs-on: ubuntu-latest
     steps:
       - name: Obtener el código evaluado
@@ -108,14 +108,54 @@ jobs:
           RESULTADOS: ${{ toJSON(needs) }}
         run: node scripts/ci/verify-docs-results.mjs "$RESULTADOS"
 
+  prepare_pages:
+    name: Verificar y empaquetar candidato Pages
+    if: needs.contrato.result == 'success'
+    needs: [contrato]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout del SHA evaluado
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: swagger/package-lock.json
+      - name: Instalar dependencias fijadas del verificador
+        working-directory: swagger
+        run: npm ci --ignore-scripts
+      - name: Descargar candidato fuera del workspace
+        uses: actions/download-artifact@v4
+        with:
+          name: swagger-pages-candidate
+          path: ${{ runner.temp }}/swagger-pages-candidate
+      - name: Validar candidato y verificar su supervivencia al checkout
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+          CANDIDATE_DIR: ${{ runner.temp }}/swagger-pages-candidate
+        run: |
+          test -f "$CANDIDATE_DIR/index.html" || { echo "No sobrevive el candidato descargado después del checkout."; exit 1; }
+          node swagger/scripts/verify-pages-candidate.mjs "$CANDIDATE_DIR" "$EXPECTED_SHA" contratos/http/openapi.yaml
+      - name: Empaquetar sin publicar para probar la preparación
+        uses: actions/upload-pages-artifact@v5
+        with:
+          name: swagger-pages-prepare-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/swagger-pages-candidate
+
   publish_pages:
     name: Publicar Swagger en GitHub Pages
     if: >-
-      needs.contrato.result == 'success' && needs.validate_docs.result == 'success' &&
+      needs.contrato.result == 'success' && needs.prepare_pages.result == 'success' && needs.validate_docs.result == 'success' &&
       vars.SWAGGER_PAGES_PUBLICATION_APPROVED == 'true' &&
       github.ref == 'refs/heads/master' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    needs: [contrato, validate_docs]
+    needs: [contrato, prepare_pages, validate_docs]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -128,28 +168,53 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Descargar exactamente el candidato validado
-        uses: actions/download-artifact@v4
-        with:
-          name: swagger-pages-candidate
-          path: _pages_candidate
-      - name: Confirmar que master sigue en el commit validado
+      - name: Checkout de master para validar el candidato
         uses: actions/checkout@v4
         with:
           ref: master
           persist-credentials: false
-      - name: Verificar SHA y metadatos
+      - name: Preparar Node.js para la validación integral
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: swagger/package-lock.json
+      - name: Instalar dependencias fijadas del verificador
+        working-directory: swagger
+        run: npm ci --ignore-scripts
+      - name: Confirmar checkout inicial del SHA evaluado
         env:
           EXPECTED_SHA: ${{ github.sha }}
-        run: |
-          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA" || { echo "master avanzó; se omite el despliegue de un candidato obsoleto."; exit 1; }
-          node -e "const v=require('./_pages_candidate/version.json'); if(v.commit_sha !== process.env.EXPECTED_SHA) process.exit(1)"
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA" || { echo "Checkout de master no corresponde al SHA evaluado."; exit 1; }
+      - name: Descargar candidato fuera del workspace
+        uses: actions/download-artifact@v4
+        with:
+          name: swagger-pages-candidate
+          path: ${{ runner.temp }}/swagger-pages-candidate
+      - name: Validar integralmente el candidato descargado
+        id: validate_candidate
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+          CANDIDATE_DIR: ${{ runner.temp }}/swagger-pages-candidate
+        run: node swagger/scripts/verify-pages-candidate.mjs "$CANDIDATE_DIR" "$EXPECTED_SHA" contratos/http/openapi.yaml
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v6
       - name: Preparar artefacto de Pages
         uses: actions/upload-pages-artifact@v5
         with:
-          path: _pages_candidate
+          path: ${{ runner.temp }}/swagger-pages-candidate
+      - name: Confirmar que HEAD remoto de master sigue vigente
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          REMOTE_HEAD="$(git ls-remote "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" refs/heads/master | cut -f1)"
+          test "$REMOTE_HEAD" = "$EXPECTED_SHA" || { echo "master avanzó durante la preparación; se cancela la publicación obsoleta."; exit 1; }
       - name: Desplegar versión validada
         id: deployment
         uses: actions/deploy-pages@v5
+      - name: Verificar disponibilidad y contenido publicado
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          EXPECTED_SHA: ${{ github.sha }}
+          EXPECTED_CONTRACT_SHA256: ${{ steps.validate_candidate.outputs.contract_sha256 }}
+        run: node swagger/scripts/verify-pages-site.mjs "$PAGE_URL" "$EXPECTED_SHA" "$EXPECTED_CONTRACT_SHA256"

@@ -49,6 +49,7 @@ test('sincronización sigue manual, dry-run por defecto y apunta al repo canóni
 
 test('validate-docs usa checkout y Node sin npm ci; contrato ejecuta pruebas sync locales', () => {
   const aggregate = extractJobBlock(wf, 'validate_docs');
+  assert.match(aggregate, /needs: \[contrato, prepare_pages\]/);
   const checkout = aggregate.indexOf('actions/checkout@v4');
   const setup = aggregate.indexOf('actions/setup-node@v4');
   const run = aggregate.indexOf('scripts/ci/verify-docs-results.mjs');
@@ -63,4 +64,9 @@ test('validate-docs usa checkout y Node sin npm ci; contrato ejecuta pruebas syn
   assert.match(contract, /working-directory: \./);
   assert.match(syncTests, /self\.remote = self\.root \/ "remote\.git"/);
   assert.match(syncTests, /init", "--bare"/);
+
+  const preparation = extractJobBlock(wf, 'prepare_pages');
+  assert.match(preparation, /permissions:\s*\n\s+contents: read/);
+  assert.doesNotMatch(preparation, /pages:\s*write|id-token:\s*write|actions\/deploy-pages|environment:/);
+  assert.match(preparation, /actions\/upload-pages-artifact@v5/);
 });
