@@ -1,8 +1,8 @@
 # Cierre MK-001 Bulk H5 sin despliegue
 
-**Corte:** 24/11/2026 (America/Lima)  
-**Alcance:** Bulk B01–B08 y F01–F06, integración requerida de Catalog H5, pruebas locales/CI y documentación.  
-**Estado del corte:** `PARTIAL`; no se declara `CODE_COMPLETE` mientras #273 no se fusione, la CI obligatoria no concluya y resten criterios de UI/performance/integración sin evidencia integral.  
+**Corte:** 24/11/2026 (America/Lima)
+**Alcance:** Bulk B01–B08 y F01–F06, integración requerida de Catalog H5, pruebas locales/CI y documentación.
+**Estado del corte:** `PARTIAL`; no se declara `CODE_COMPLETE` mientras #273 no se fusione, la CI obligatoria no concluya y resten criterios de UI/performance/integración sin evidencia integral.
 **Despliegue:** NO REALIZADO.
 
 ## 1. Resumen ejecutivo
@@ -136,4 +136,3 @@ La habilitación posterior requiere además preparar APIM/Gateway, Azure Service
 - Performance: copiar y versionar en el repositorio Docs los artefactos de medición raw asociados a los SHAs antes de cerrar la evidencia PERF; este corte conserva métricas resumidas.
 
 Este documento es una evidencia de cierre por bounded context MK-001, no certifica que Hito 5 G6 esté completo. Se actualizará el estado tras el resultado de #273 y los demás checks, sin convertir `skipped` en PASS ni pruebas locales en despliegue.
-
