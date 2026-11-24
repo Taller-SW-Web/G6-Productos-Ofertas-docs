@@ -81,6 +81,11 @@ test('un push documental fuera de Swagger no publica Pages', async () => {
     assert.notEqual((await import('node:child_process')).spawnSync('node', [
       'scripts/ci/should-publish-pages.mjs', '--changed-files', changedFiles,
     ], { encoding: 'utf8' }).status, 0);
+    assert.notEqual((await import('node:child_process')).spawnSync('node', [
+      'scripts/ci/should-publish-pages.mjs',
+      '--changed-files',
+      join(directory, 'missing-diff.txt'),
+    ], { encoding: 'utf8' }).status, 0);
     assert.match(wf, /git diff --name-only --no-renames/);
     assert.match(wf, /needs\.publication_scope\.outputs\.publish == 'true'/);
   } finally {
