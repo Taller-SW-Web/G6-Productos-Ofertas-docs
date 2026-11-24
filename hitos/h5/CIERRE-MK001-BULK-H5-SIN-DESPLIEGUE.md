@@ -139,7 +139,7 @@ La habilitación posterior requiere además preparar APIM/Gateway, Azure Service
 - Backend E2E CI PR: [run 45469317255](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45469317255), HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204`. CI post-merge completada: [run 45470786170](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470786170) y [Bulk messaging run 45470785787](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470785787), SHA `49bab9e2075819d922c63b06fcc6fc6ac16ce703`.
 - Backend PR #273: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/273.
 - Backend continuación Draft #274, HEAD `e3ae66ebebcaa6aed78340a6cc003dbaaf09b3bb`, run `45497460957` 8/8 y matriz 14/14, artifact `14969326318`: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/274.
-- Docs PR #144, HEAD `8eeadabf350b41479e7a46ef027d58fab25df81d`, Draft; guard Pages ampliado, informe/artefactos actualizados y pruebas locales 15/15: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/pull/144.
+- Docs PR #144, HEAD `45c6621ec93f14ff870ea21e7c7915f8b3fa6174`, Draft; guard Pages ampliado, informe/artefactos actualizados y pruebas locales 15/15: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/pull/144.
 - Evidencia íntegra de los runs `45495393575` y `45497460957`: JSON, JUnit, escenarios, versiones y tres SHAs en `evidencias/mk001-bulk/run-45495393575/` y `run-45497460957/`.
 - Frontend rama `trabajo/castilla/bulk-h5-integracion-real`, HEAD base `e322808d868bb89e2c645a1b069eb12728296d9f`; no existe aún PR ni E2E navegador contra Gateway/Bulk/Catalog reales.
 - Frontend PR #93: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/93.
