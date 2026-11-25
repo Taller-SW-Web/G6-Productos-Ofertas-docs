@@ -1,0 +1,18 @@
+{
+  "scenarios": [
+    "admission.concurrent-identical-intent",
+    "admission.conflicting-bytes-409",
+    "catalog.rejection-has-no-commercial-mutation",
+    "claim-check.missing-reference-no-mutation",
+    "claim-check.wrong-length-no-mutation",
+    "claim-check.wrong-sha256-no-mutation",
+    "content.private-service-authz-and-integrity-headers",
+    "effects.catalog-only-no-pricing-inventory",
+    "result.tardy-contradictory-result-is-stale",
+    "retry.distinct-correlations-single-effective-attempt",
+    "retry.same-correlation-concurrent-replay",
+    "retry.same-correlation-different-reason-409",
+    "retry.v2-concurrent-result-redelivery-once",
+    "retry.v4-concurrent-redelivery-once"
+  ]
+}

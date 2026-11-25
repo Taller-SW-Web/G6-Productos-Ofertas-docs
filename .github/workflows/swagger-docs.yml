@@ -148,14 +148,49 @@ jobs:
           name: swagger-pages-prepare-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/swagger-pages-candidate
 
+  publication_scope:
+    name: Determinar si el cambio publica Swagger
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.scope.outputs.publish }}
+    steps:
+      - name: Obtener el diff exacto del push
+        if: github.event_name == 'push'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Evaluar alcance contractual
+        id: scope
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo 'publish=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
+            echo 'publish=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed_files="$RUNNER_TEMP/swagger-changed-files.txt"
+          git diff --name-only --no-renames "$BEFORE_SHA" "$AFTER_SHA" > "$changed_files"
+          node scripts/ci/should-publish-pages.mjs \
+            --changed-files "$changed_files" \
+            >> "$GITHUB_OUTPUT"
+
   publish_pages:
     name: Publicar Swagger en GitHub Pages
     if: >-
       needs.contrato.result == 'success' && needs.prepare_pages.result == 'success' && needs.validate_docs.result == 'success' &&
+      needs.publication_scope.result == 'success' && needs.publication_scope.outputs.publish == 'true' &&
       vars.SWAGGER_PAGES_PUBLICATION_APPROVED == 'true' &&
       github.ref == 'refs/heads/master' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    needs: [contrato, prepare_pages, validate_docs]
+    needs: [contrato, prepare_pages, validate_docs, publication_scope]
     runs-on: ubuntu-latest
     permissions:
       contents: read

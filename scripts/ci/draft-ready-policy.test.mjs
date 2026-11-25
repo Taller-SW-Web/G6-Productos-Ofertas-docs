@@ -41,6 +41,58 @@ test('sin paths filter, conserva despacho y pruebas contractuales/Playwright', (
   }
 });
 
+test('un push documental fuera de Swagger no publica Pages', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const { mkdtemp, writeFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const directory = await mkdtemp(join(tmpdir(), 'pages-scope-'));
+  try {
+    const changedFiles = join(directory, 'changed-files.txt');
+    const decide = async (files) => {
+      await writeFile(changedFiles, files.join('\n'));
+      return spawnSync('node', [
+        'scripts/ci/should-publish-pages.mjs',
+        '--changed-files',
+        changedFiles,
+      ], { encoding: 'utf8' });
+    };
+    for (const files of [
+      ['hitos/h5/CIERRE-MK001-BULK-H5-SIN-DESPLIEGUE.md'],
+      ['scripts/ci/should-publish-pages.mjs'],
+    ]) {
+      const docsOnly = await decide(files);
+      assert.equal(docsOnly.status, 0);
+      assert.match(docsOnly.stdout, /publish=false/);
+    }
+    for (const files of [
+      ['contratos/http/openapi.yaml'],
+      ['swagger/index.html'],
+      ['swagger/scripts/build.mjs'],
+      ['hitos/h5/report.md', 'contratos/http/openapi.yaml'],
+      ['contratos/http/openapi.yaml'], // Ruta antigua de un rename emitido con --no-renames.
+      ['contratos/http/openapi.yaml', 'contratos/http/openapi-v2.yaml'],
+    ]) {
+      const contract = await decide(files);
+      assert.equal(contract.status, 0);
+      assert.match(contract.stdout, /publish=true/);
+    }
+    await writeFile(changedFiles, '\0invalid');
+    assert.notEqual((await import('node:child_process')).spawnSync('node', [
+      'scripts/ci/should-publish-pages.mjs', '--changed-files', changedFiles,
+    ], { encoding: 'utf8' }).status, 0);
+    assert.notEqual((await import('node:child_process')).spawnSync('node', [
+      'scripts/ci/should-publish-pages.mjs',
+      '--changed-files',
+      join(directory, 'missing-diff.txt'),
+    ], { encoding: 'utf8' }).status, 0);
+    assert.match(wf, /git diff --name-only --no-renames/);
+    assert.match(wf, /needs\.publication_scope\.outputs\.publish == 'true'/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('sincronización sigue manual, dry-run por defecto y apunta al repo canónico', () => {
   assert.match(sync, /workflow_dispatch:/);
   assert.match(sync, /default: true/);
