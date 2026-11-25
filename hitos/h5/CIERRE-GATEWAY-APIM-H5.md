@@ -1,6 +1,6 @@
 # Cierre técnico Gateway y Azure API Management — Hito 5
 
-> **Estado:** `CODE_CORRECTED_R7_PENDING_EXTERNAL_AUDIT` (correcciones R7 implementadas; **ninguna prueba ejecutada ni recurso Azure mutado**).
+> **Estado:** `CODE_CORRECTED_R8_PENDING_EXTERNAL_AUDIT` (correcciones R8 implementadas; **ninguna prueba ejecutada ni recurso Azure mutado**).
 
 ## 1. Procedencia y dependencias
 
@@ -10,20 +10,24 @@
 - **PR #286 (`trabajo/castilla/h5-g5-prueba-conjunta`):** fusionado en `24b0586c2a14787e5d6039ffe497dcdc9cc62d59`.
 - **PR #255 (`vera`, Pricing CSV):** abierto en Draft (`1215c4df4b6c1595b550d24f7ef599ffbbb14795`), conservado como dependencia externa pendiente sin modificar ni simular.
 
-## 2. Importación OpenAPI, alias ARM y verificación (R5-01..06, R6-03)
+## 2. Modalidades de red ACA Allow-only (R7-01)
 
-- `gateway-filtered.json` (`1 373 231` chars) y `gateway-filtered.compact.json` (`531 461` chars <= `1 048 576` límite de `loadJsonContent()`) comparten SHA256 canónico `2393ebc7625a84300d23f556cb31eeccfd19ee5b39d5ee3fb8ab2e72abd07101`.
-- `verify-arm-template.py` implementa `resolve_arm_variable()` para resolver de forma segura objetos literales y cadenas de alias `[variables('...')]` (como `$fxv#0`) tanto en `operationsManifest` como en `fixedFilteredOpenApiObject`, detectando ciclos, variables inexistentes y expresiones no permitidas (`parameters(...)`).
+`validate-parameters.py` y `apim-live-acceptance.mjs` rechazan reglas mixtas `Allow`/`Deny` en `ipSecurityRestrictions` de Azure Container Apps y admiten únicamente:
+- **Modalidad A (Gateway interno):** `external=false`, `vnetConfiguration != null`, DNS/subred/conectividad privada y `directRoutesBlocked=true`.
+- **Modalidad B (Gateway externo con allowlist):** `external=true`, reglas **exclusivamente `Allow`** (sin `0.0.0.0/0`, `*` ni `::/0`), restringidas a `expectedApimOriginCidrs`, denegación implícita del resto y `directRoutesBlocked=true`.
 
-## 3. Cierre focalizado RL-05, k6 VERIFIED, APIM-T05 y rollback (R6-01, R6-02, R6-04, R6-05)
+## 3. Evidencia real de rollback APIM-T08 (R7-02)
 
-- **RL-05 (`apim-rl-k6.js`):** reemplazada la ruta inexistente `/auditoria-precios/exportar` por la operación real `descargarExportacionAuditoriaPrecios` (`GET /auditoria-precios/exportaciones/{exportId}/archivo`, perfil `expensive_export`), validando al inicio contra `operation-security.json` que la ruta resuelta exista sin placeholders y tenga concurrencia habilitada, y rechazando `404/401/403` mediante `apim_rl_concurrency_unexpected_status == 0`.
-- **Dictamen `VERIFIED` (`apim-rl-k6.js` + `apim-live-acceptance.mjs`):** `handleSummary()` exige `burst429 > 0`, `burstRetryAfter > 0`, `recovery200 > 0`, `quota403 > 0`, `quotaBurstCollision == 0`, `concurrency429 > 0`, `concurrencyUnexpectedStatus == 0`, `clientB200 > 0`, `clientBFailRate == 0`, `authzFalsePositive == 0` y `checksRate == 1`. `APIM-T05` exige `k6Summary.verificationStatus === 'VERIFIED'` y coincidencia de `region`, `revision` y `policyHash`.
-- **Rollback `APIM-T08` (`apim-live-acceptance.mjs`):** exige `azSnapshots` independientes (`before`, `during`, `after`) con comandos `az apim ...`, orden temporal estricto y coincidencia de revisión y hashes de política.
+`apim-live-acceptance.mjs` (`validateRollbackEvidence`) exige snapshots independientes (`azSnapshots.before`, `during`, `after`) obtenidos con `az apim ...` o `az rest --method get` contra `management.azure.com`, vinculados a `resourceId`, `subscriptionId`, `resourceGroup`, `apiName` y revisión, calculando el SHA256 real sobre `policyXml` en lugar de confiar en hashes autodeclarados.
 
-## 4. Estado de pruebas (NO EJECUTADAS)
+## 4. Manifiesto efectivo en k6 RL-05 (R7-03)
+
+`ops/azure/apim/tests/apim-rl-k6.js` rechaza manifiestos `candidate` y exige `APIM_EFFECTIVE_MANIFEST_PATH` con `publicationMode="effective"`, `effectivePublication.authorized=true`, coincidencia de `APIM_OPERATION_SET_SHA256` / `APIM_FILTERED_OPENAPI_SHA256`, operación `GET /auditoria-precios/exportaciones/{exportId}/archivo` en `publishedOperationIds` con `environmentEnabled=true` y `APIM_RL_EXPORT_ID` autorizado.
+
+## 5. Estado de pruebas (NO EJECUTADAS)
 
 - `apps/api-gateway/test/*`: `NOT_RUN`.
 - `ops/azure/apim/tests/test_apim_artifacts.py`: `NOT_RUN`.
+- `ops/azure/apim/tests/apim-live-acceptance.test.mjs`: `NOT_RUN`.
 - `ops/azure/apim/tests/apim-live-acceptance.mjs` (`APIM-T01`..`APIM-T08`): `NOT_RUN` / `BLOCKED_INFRA`.
 - `ops/azure/apim/tests/apim-rl-k6.js` (`RL-01`..`RL-06`): `NOT_RUN` / `BLOCKED_INFRA`.
