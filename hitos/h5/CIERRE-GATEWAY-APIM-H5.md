@@ -1,6 +1,6 @@
 # Cierre técnico Gateway y Azure API Management — Hito 5
 
-> **Estado:** `CODE_CORRECTED_R5_PENDING_EXTERNAL_AUDIT` (correcciones R5 implementadas; **ninguna prueba ejecutada ni recurso Azure mutado**).
+> **Estado:** `CODE_CORRECTED_R6_PENDING_EXTERNAL_AUDIT` (correcciones R6 implementadas; **ninguna prueba ejecutada ni recurso Azure mutado**).
 
 ## 1. Procedencia y dependencias
 
@@ -10,20 +10,25 @@
 - **PR #286 (`trabajo/castilla/h5-g5-prueba-conjunta`):** fusionado en `24b0586c2a14787e5d6039ffe497dcdc9cc62d59`.
 - **PR #255 (`vera`, Pricing CSV):** abierto en Draft (`1215c4df4b6c1595b550d24f7ef599ffbbb14795`), conservado como dependencia externa pendiente sin modificar ni simular.
 
-## 2. Coherencia OpenAPI efectivo, roles humanos y modos `candidate`/`effective`
+## 2. Importación OpenAPI compatible con límites Bicep (R5-01, R5-06)
 
-- **Proyección OpenAPI efectivo (`filter-openapi.py`, `APIM-R4-01`):** cuando `--allow-human-only-when-m2m-pending` excluye la alternativa M2M de operaciones mixtas, se proyecta una copia independiente con `security: [{ userBearer: [] }]` y sin extensiones M2M (`x-service-audience`, `x-required-scope`, `x-allowed-client-ids`). `validate_artifact_pair()` exige correspondencia exacta entre `security` del OpenAPI filtrado y `securityAlternatives` del manifiesto.
-- **Paridad de roles humanos (`APIM-R4-03`):** operaciones `userBearer` conservan su rol contractual explícito o aplican el predeterminado efectivo del Gateway (`GESTOR_COMERCIAL`) cuando no es explícito; discrepancias explícitas entre Docs y Gateway bloquean la generación.
-- **Modos `candidate` / `effective` y G5 opt-in (`verify-arm-template.py`, `APIM-R4-02`, `APIM-R4-04`, `APIM-R4-07`):** separación explícita entre `--mode candidate` y `--mode effective` (incluyendo `--allow-human-only-when-m2m-pending` y `--enable-g5` + `--g5-authorized`). Sin autorización G5 ninguna ruta G5 se publica; con autorización G5 se validan scopes, clientes y `g5EnabledByDefault=false`.
-- **OpenAPI fijado en Bicep (`main.bicep`, `APIM-R4-08`):** eliminado `param filteredOpenApi`; `main.bicep` carga directamente `loadTextContent('./openapi/gateway-filtered.json')` (`fixedFilteredOpenApi`) vinculado a `operation-security.json` y los SHA esperados bajo `publicationGatePassed`.
+- El artefacto legible `ops/azure/apim/openapi/gateway-filtered.json` tiene `1 373 231` caracteres (supera el límite de `131 072` de `loadTextContent()` y `1 048 576` de `loadJsonContent()`).
+- `filter-openapi.py` genera en paralelo el artefacto compacto reproducible `ops/azure/apim/openapi/gateway-filtered.compact.json` (`531 461` caracteres, dentro de `1 048 576` caracteres de `loadJsonContent()`), con SHA256 canónico idéntico: `2393ebc7625a84300d23f556cb31eeccfd19ee5b39d5ee3fb8ab2e72abd07101`.
+- `main.bicep` carga `loadJsonContent('./openapi/gateway-filtered.compact.json')` (`fixedFilteredOpenApiObject`) y serializa `string(fixedFilteredOpenApiObject)` hacia APIM bajo `publicationGatePassed`.
+- `verify-arm-template.py` verifica el contenido real embebido en `variables('fixedFilteredOpenApiObject')` del ARM compilado contra `filteredOpenApiCanonicalSha256` y `gateway-filtered.json`, y `validate-parameters.py` verifica también `gateway-filtered.compact.json`.
 
-## 3. Evidencia Azure, red privada y aislamiento de 429
+## 3. Parser, verificador G5 y tests estáticos (R5-02, R5-03, R5-04)
 
-- **Evidencia Azure (`validate-parameters.py`, `apim-live-acceptance.mjs`, `APIM-R4-05`):** exige `expectedSubscriptionId`, `expectedResourceGroup`, `expectedEnvironment`, `expectedGatewayResourceId`, `expectedApimOriginCidrs`, `sourceCommand` (`az ...`), `capturedAtUtc` <= 24h y `directRoutesBlocked=true`. El JSON de evidencia no es prueba criptográfica por sí solo y queda vinculado a consultas Azure CLI de solo lectura en el procedimiento autorizado.
-- **Aislamiento de 429 en k6 (`apim-rl-k6.js`, `APIM-R4-06`):** `rl05_concurrency_expensive` ejecuta `concurrencyVus < APIM_LAB_EXPENSIVE_BURST_CALLS` (1 iteración por VU) para aislar `limit-concurrency` de `rate-limit-by-key`, manteniendo identidades separadas y resumen causal (`burst_rate_limit_by_key_429`, `quota_by_key_403`, `limit_concurrency_429`, `authz_false_positive`).
-- **Inventario Azure (solo lectura, 25/11/2026):** sin instancia APIM (`Microsoft.ApiManagement: NotRegistered`), sin Application Insights ni Private DNS zones; `env-g6-phase1-chile` con `vnetConfiguration=null`; `api-gateway` con `external=true` e `ipSecurityRestrictions=null`; los 8 microservicios con `external=false`; `AZURE_CHILE_DEPLOY_ENABLED=false`.
+- **Parser de registros (`filter-openapi.py`):** `_scan_route_blocks()` escanea objetos `{ ... }` con balanceo de llaves y cadenas después de `= [` (o `[` raíz en fixtures inline), evitando falsos cortes en anotaciones `ContractRoute[]` o capturas cruzadas entre rutas.
+- **Verificador G5 (`verify-arm-template.py`):** `main()` propaga `g5_authorized=args.g5_authorized` hacia `validate()`, exigiendo `g5EnabledByDefault=false`, rechazando `g5OptIn` sin autorización y validando scopes/clientes cuando G5 está autorizado.
+- **Suite estática (`test_apim_artifacts.py`):** `test_generated_policy_ids_match_exact_imported_operation_set` verifica `var publicationGatePassed` y `[for operation in authorizedOperations` en `main.bicep`.
 
-## 4. Estado de pruebas (NO EJECUTADAS)
+## 4. Criterios RL-04 / RL-05 en k6 (R5-05)
+
+- `ops/azure/apim/tests/apim-rl-k6.js` separa cuota y ráfaga en `rl04_quota_exhaustion` mediante `constant-arrival-rate` con `rate = max(1, APIM_LAB_QUOTA_BURST_CALLS - 1)` por `APIM_LAB_QUOTA_BURST_WINDOW_SEC`, con contador de colisión `apim_rl_quota_burst_collision == 0`.
+- `rl05_concurrency_expensive` ejecuta `concurrencyVus < APIM_LAB_EXPENSIVE_BURST_CALLS` (1 iteración por VU) para aislar `limit-concurrency` de `rate-limit-by-key`, reportando `verificationStatus` (`VERIFIED` vs `NOT_VERIFIED`).
+
+## 5. Estado de pruebas (NO EJECUTADAS)
 
 - `apps/api-gateway/test/*`: `NOT_RUN`.
 - `ops/azure/apim/tests/test_apim_artifacts.py`: `NOT_RUN`.
