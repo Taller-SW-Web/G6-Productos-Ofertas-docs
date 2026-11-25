@@ -1,149 +1,101 @@
 # Cierre MK-001 Bulk H5 sin despliegue
 
-**Corte:** 24/11/2026 (America/Lima)
-**Alcance:** Bulk B01–B08 y F01–F06, integración requerida de Catalog H5, pruebas locales/CI y documentación.
-**Estado del corte:** Backend PR [#274](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/274) permanece Draft en HEAD `e3ae66ebebcaa6aed78340a6cc003dbaaf09b3bb`. La integración dedicada [run `45497460957`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45497460957) pasó 8/8, cero omitidos y 14/14 escenarios, en PostgreSQL 17 y Supabase Storage local CLI 3.4.0; SHA de integración `4054837eaa6c89043889ae0889e2ad6451a45521`, base `49bab9e2075819d922c63b06fcc6fc6ac16ce703`. Artefacto `14969326318`. CI general sigue `skipped` por Draft. Persisten brechas de Frontend real, recuperación/reinicios, migraciones rollback, matriz de archivos y performance final. Despliegue: NO REALIZADO.
+**Corte:** 25/11/2026 (America/Lima)
+**Alcance:** Bulk B01–B08 y F01–F06, integración requerida de Catalog H5, E2E en navegador real (Chromium), recuperación P1, matriz de archivos/exportaciones, migraciones, performance reproducible y documentación.
+**Estado del corte:** `CODE_COMPLETE / TESTED_DISPOSABLE_CI / NOT_DEPLOYED`.
+- Backend PR [#274](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/274) quedó fusionado en `master` (`daf4882b7dc6895c6601a1f4af209ec92c8215b0`, HEAD `e3ae66ebebcaa6aed78340a6cc003dbaaf09b3bb`), y `master` avanzó hasta `33b206c7c7dbee9ccb5401c20b7536e40e0d43d3`.
+- Backend PR [#283](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/283) (HEAD `91dbf0a7733b9a7f16f6004db426a89c69412051`) pasó el workflow integral `MK-001 Bulk E2E Integral` ([run `45555080185`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45555080185), 2m32s, **PASS**) contra PostgreSQL 17 descartable, Supabase Storage local (CLI 3.4.0), API Gateway real, Bulk real, Catalog real y Chromium sobre Frontend `c7ddd7ed0f2379e25028dd8a8c5875c5f3027b84`.
+- Frontend PR [#97](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/97) (HEAD `c7ddd7ed0f2379e25028dd8a8c5875c5f3027b84`) fue publicado bajo protección `vercel.json` (`deploymentEnabled: { "**": false, "master": true }`, verificado con `vercel ls`: cero despliegues Preview) y marcado Ready for Review sin fusionar a `master` para evitar despliegue automático de producción (`FRONTEND_READY_NOT_MERGED`).
 **Despliegue:** NO REALIZADO.
 
 ## 1. Resumen ejecutivo
 
-Se cerraron mediante merge normal Frontend #93, Catalog H5 #262 y Backend Bulk V3/H5 #271. Catalog Retry V4 / resultado V2 se integró mediante PR sustituto #273 desde `master`, trasladando selectivamente la contribución histórica #254 sin fusionar su base obsoleta. #273 mergeó en `49bab9e2075819d922c63b06fcc6fc6ac16ce703` con HEAD probado `b19f2dffdd1101b179abf5f1c5011d4de0948204`; todos los checks ejecutados aplicables del PR pasaron. #254 se cerró tras verificar la fusión sustitutiva.
+Se completó el cierre integral de **MK-001 Bulk H5** sin ejecutar despliegues ni modificar entornos compartidos:
 
-La evidencia de PR #274 cubre PostgreSQL 17 descartable, servicios Bulk/Catalog y Gateway reales, HTTP loopback, JWT RS256/JWKS de prueba, roles aislados y adaptador BulkStorageService contra Supabase Storage local con bucket privado. El transporte asíncrono entrega al consumidor real dentro del E2E y no homologa Service Bus. Azure, APIM, emisor/grants G7 institucionales, homologación externa y despliegue no participaron.
+1. **Recuperación Frontend (`494c88c` → `c7ddd7ed`):** se recuperó el commit local no publicado en `trabajo/castilla/bulk-h5-integracion-real`, se verificó la protección de `vercel.json` y `vercel ls`, y se amplió el harness aislado (`tests/harness/bulk-http-real.tsx`) con verificación de manifiesto de capacidades (`verifyBulkHomologationManifest`) y los 21 escenarios obligatorios de navegador en `tests/bulk-http-real.spec.ts`.
+2. **Orquestador E2E en navegador real (`apps/bulk-svc/test/bulk-browser-real.e2e-spec.ts`):** conecta Chromium → React Bulk (`VITE_DATA_MODE=api`) → API Gateway real (JWKS local + JWT RS256) → Bulk real → PostgreSQL 17 descartable / Supabase Storage local → Catalog real → resultado V2 → UI, incluyendo fault injection de admisión ambigua (respuesta perdida tras commit), conciliación por correlación sin segundo `POST`, rechazo transitorio de Catalog, elegibilidad calculada por Backend, reanudación exclusiva de Catalog, persistencia de retry en recarga, descarga de reporte y exportaciones reales CSV/XLSX, aislamiento 401/403/404 y accesibilidad a 1440 px.
+3. **Recuperación P1, archivos y migraciones (`apps/bulk-svc/test/bulk-recovery-files-migrations.e2e-spec.ts`):** acredita reinicio real de instancia Nest (`app1.close()` → `app2.init()`) con Outbox pendiente, reinicio de consumidor Catalog sin duplicación comercial, indisponibilidad temporal y recuperación de Storage (503 → 200), claim-check malformado, identidad contradictoria, plantillas CSV/XLSX y roundtrip, protección contra inyección de fórmulas CSV (`'=CMD`, `'+SUM`), aislamiento por propietario (404), upgrade `0001–0008` con datos preexistentes y rollback DDL transaccional.
+4. **Performance reproducible (`apps/bulk-svc/test/bulk-performance-suite.e2e-spec.ts`):** ejecutó 11 benchmarks (admisión CSV c=1/8/32, XLSX c=1/8, CSV 500 filas, GET lote, GET correlación, replay idempotente, retry `reanudar` y exportación CSV) con cero fallos.
+
+El transporte asíncrono utilizado en CI entrega mensajes en proceso al consumidor real de Catalog; no homologa Azure Service Bus, APIM real, G7 institucional ni G5/Marketplace.
 
 ## 2. Estado Git y PRs
 
 | Repo | PR | Resultado / SHA | Estado comprobado |
 |---|---|---|---|
-| Frontend | [#93](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/93) | merge `e322808d868bb89e2c645a1b069eb12728296d9f`; HEAD `8665ce65086bb456573f82e8146f941bb50eb617` | MERGED normal; unitarias, smoke, API y build local reportados PASS |
-| Backend Catalog H5 | [#262](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/262) | merge `c73ed61c533a21787d1dab22aa79cd83ff77da14` | MERGED normal; rama reconciliada en el master utilizado para #271 |
-| Backend Bulk V3/H5 | [#271](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/271) | merge `133a051acf187e0a75c074e38aa284a8ea226250`; HEAD origen `af5a6b4e0e7f4cc7a5d32fcf3694d19cb6db9660` | MERGED normal; flags apagados |
-| Backend Catalog Retry V4/V2 | [#273](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/273) | merge `49bab9e2075819d922c63b06fcc6fc6ac16ce703`; HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204` | MERGED normal; CI posterior confirmada por runs `45470786170` y `45470785787` |
-| Backend legado | [#254](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/254) | HEAD histórico `f259df772c4f3f5473449cbe2f69eb0dde40b79e` | CLOSED tras fusión normal de #273; contribution trasladada selectivamente, no se fusionó base `poma` |
-| Backend antiguo | #243 | — | CLOSED sin merge; no se recuperó completo |
+| Frontend | [#93](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/93) | merge `e322808d868bb89e2c645a1b069eb12728296d9f`; HEAD `8665ce65086bb456573f82e8146f941bb50eb617` | MERGED normal |
+| Frontend | [#97](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/97) | HEAD `c7ddd7ed0f2379e25028dd8a8c5875c5f3027b84` | OPEN Ready for Review (`FRONTEND_READY_NOT_MERGED` por política de no despliegue en `master`) |
+| Backend Catalog H5 | [#262](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/262) | merge `c73ed61c533a21787d1dab22aa79cd83ff77da14` | MERGED normal |
+| Backend Bulk V3/H5 | [#271](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/271) | merge `133a051acf187e0a75c074e38aa284a8ea226250`; HEAD `af5a6b4e0e7f4cc7a5d32fcf3694d19cb6db9660` | MERGED normal; flags apagados |
+| Backend Catalog Retry V4/V2 | [#273](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/273) | merge `49bab9e2075819d922c63b06fcc6fc6ac16ce703`; HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204` | MERGED normal |
+| Backend E2E/Storage/Seguridad | [#274](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/274) | merge `daf4882b7dc6895c6601a1f4af209ec92c8215b0`; HEAD `e3ae66ebebcaa6aed78340a6cc003dbaaf09b3bb` | MERGED normal; CI runs `45501578837` y `45501578656` SUCCESS |
+| Backend Cierre Integral | [#283](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/283) | HEAD `91dbf0a7733b9a7f16f6004db426a89c69412051` (desde `master` `33b206c7c7dbee9ccb5401c20b7536e40e0d43d3`) | Ready for Review; `bulk_integral_e2e` run `45555080185` PASS |
+| Docs | [#144](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/pull/144) | rama `trabajo/castilla/bulk-h5-certificacion-final` | Actualizado con evidencia integral |
 
-Los merge SHAs se consultaron en GitHub. `compare` confirma que el merge `49bab9e2075819d922c63b06fcc6fc6ac16ce703` es descendiente de `133a051acf187e0a75c074e38aa284a8ea226250` (`ahead 14`, `behind 0`). No hubo force push ni bypass.
-
-## 3. Matriz de guía MK-001
-
-Las columnas separan implementación, prueba y operación. `NO EJECUTADO` no es PASS. La guía original adjunta define los identificadores BUL-B01–B08 y BUL-F01–F06.
+## 3. Matriz de guía MK-001 (BUL-B01–B08 y BUL-F01–F06)
 
 ### Bulk Backend BUL-B01–B08
 
-| ID original de guía | Requisito | Código | Prueba local/CI | Evidencia | Estado operativo |
-|---|---|---|---|---|---|
-| BUL-B01 | Plantillas CSV/XLSX y roundtrip contractual | Handler CSV/XLSX y plantillas existentes | Matriz integral CSV/XLSX: NO EJECUTADA en esta continuación | Suites previas Frontend; falta roundtrip asociado a SHA final | Implementado; validación integral pendiente |
-| BUL-B02 | Admisión durable y atomicidad | Persistencia transaccional existente | Admisión HTTP PostgreSQL real; no se indujo fallo intermedio | E2E ampliado, HEAD base `49bab9e2075819d922c63b06fcc6fc6ac16ce703`; PR pendiente | Implementado; rollback por fallo no verificado |
-| BUL-B03 | Idempotencia, propietario, correlación y replay | Idempotencia por owner/correlación existente | 2 POST simultáneos devuelven el mismo lote; bytes distintos con correlación igual reciben 409; retry concurrente mismo/distinto correlation, replay e Inbox/Outbox cubiertos | E2E CI `45497460957`, HEAD `e3ae66ebebcaa6aed78340a6cc003dbaaf09b3bb`, integración `4054837eaa6c89043889ae0889e2ad6451a45521`; artifact `14969326318` | Idempotencia/retry/redelivery probados en CI; timeout/reinicio pendientes |
-| BUL-B04 | Estado por fila/dominio y aplicación de resultado del owner | Bulk concilia resultado V2 en persistencia propia | Catalog real aplica/rechaza; se comprueba estado terminal y efecto único | E2E Bulk-Catalog local; producto permanece propiedad de Catalog | Implementado y probado en recorrido local limitado |
-| BUL-B05 | Retry selectivo, concurrencia y causación | Retry Catalog V4/resultado V2 y receipts durables existentes | Dos POST retry simultáneos, replay tras resultado V2, dos entregas simultáneas V4 y V2 | E2E Bulk-Catalog local: PASS en la ejecución combinada anterior; comandos/receipts reales en PostgreSQL 17 | Concurrencia local verificada para Catalog; no equivale a Azure |
-| BUL-B06 | Reportes/exportaciones reales y permisos | Rutas HTTP y adaptador de Storage existentes | Descarga con Storage real: NO EJECUTADA; Gateway 401/403/404/503 parcial | Test de Gateway cubre seguridad de lectura/correlación, no exportación | Implementado; cobertura de artefactos pendiente |
-| BUL-B07 | Claim-check V3 privado, hash/tamaño y auth Catalog | Contenido V3, guard y cliente privado presentes | Storage real Supabase local y headers de integridad/autorización; referencia inexistente, longitud incorrecta y SHA-256 incorrecto rechazan sin mutación comercial | E2E CI `45497460957`, artifact `14969326318`, Storage CLI 3.4.0 | Tres negativos probados; documento inválido/outage pendientes |
-| BUL-B08 | Mantener flujos no autorizados bloqueados | R02/R03/R10/R14 no se habilitan por este cierre | CI/Runtime Azure no habilitados; flags productivos no cambiados | Código conserva gates; homologación y permisos no probados | Bloqueado correctamente; no es brecha de código demostrada |
+| ID | Requisito exacto | Implementación | Prueba | SHA probado | Resultado | Estado de integración / Pendiente operativo |
+|---|---|---|---|---|---|---|
+| BUL-B01 | Plantillas CSV/XLSX contractuales, MIME/headers y roundtrip | `apps/bulk-svc/src/bulk-svc.controller.ts`, `apps/bulk-svc/src/domain/bulk-template-v2.ts` | `bulk-recovery-files-migrations.e2e-spec.ts` + `bulk-browser-real.e2e-spec.ts` | `91dbf0a7` / `c7ddd7ed` | PASS (CSV/XLSX/roundtrip/400 PDF) | Implementado y probado en CI descartable; pendiente despliegue |
+| BUL-B02 | Admisión durable, persistencia transaccional y rollback ante error | `apps/bulk-svc/src/bulk-import.service.ts`, `apps/bulk-svc/src/persistence/bulk.repository.ts` | `bulk-recovery-files-migrations.e2e-spec.ts` (upgrade + rollback DDL + Storage 503) | `91dbf0a7` | PASS | Implementado y probado en PostgreSQL 17; pendiente despliegue |
+| BUL-B03 | Idempotencia, propietario, correlación y replay sin duplicar | `apps/bulk-svc/src/persistence/bulk.repository.ts` | `bulk-catalog-retry.e2e-spec.ts` + `bulk-postgres.gateway.e2e-spec.ts` + `bulk-browser-real.e2e-spec.ts` | `e3ae66eb` / `91dbf0a7` | PASS (14/14 + 7/7 + browser) | Implementado y probado en CI; pendiente G7/APIM real |
+| BUL-B04 | Estado por fila/dominio y aplicación de resultado del owner | `apps/bulk-svc/src/persistence/bulk.repository.ts` | `bulk-catalog-retry.e2e-spec.ts` + `bulk-browser-real.e2e-spec.ts` | `91dbf0a7` / `c7ddd7ed` | PASS | Probado en entrega local Catalog; no homologa Service Bus real |
+| BUL-B05 | Reanudación selectiva (`BULK_RETRY_V1`), concurrencia y causación | `apps/bulk-svc/src/bulk-svc.controller.ts`, `bulk.repository.ts` | `bulk-catalog-retry.e2e-spec.ts` + `bulk-browser-real.e2e-spec.ts` | `91dbf0a7` / `c7ddd7ed` | PASS (V4/V2 + STALE + UI) | Probado localmente para Catalog; falta Azure Service Bus real |
+| BUL-B06 | Reportes y exportaciones durables CSV/XLSX, bytes, fórmula CSV y auth | `apps/bulk-svc/src/bulk-export.service.ts`, `bulk-export-format.ts`, `bulk-storage.service.ts` | `bulk-recovery-files-migrations.e2e-spec.ts` + `bulk-browser-real.e2e-spec.ts` | `91dbf0a7` / `c7ddd7ed` | PASS (bytes, `'=CMD`, 404 ajeno/ausente, 503) | Implementado y probado con Storage local CLI 3.4.0; pendiente Storage/despliegue |
+| BUL-B07 | Claim-check V3 privado, SHA-256, tamaño y auth `catalog-svc` | `apps/bulk-svc/src/bulk-content.service.ts`, `bulk-service-bearer.guard.ts` | `bulk-catalog-retry.e2e-spec.ts` + `bulk-recovery-files-migrations.e2e-spec.ts` | `e3ae66eb` / `91dbf0a7` | PASS (401/403/404, corrupto, malformado) | Probado con JWT local; pendiente grants G7 e ingress privado real |
+| BUL-B08 | Mantener R02/R03/R10/R14 bloqueados sin consumidores inventados | `apps/bulk-svc/src/*` (gates y flags preservados) | Verificación de contrato y flags desactivados | `91dbf0a7` | PASS | Bloqueado correctamente por contrato H5; no es brecha de código |
 
 ### Bulk Frontend BUL-F01–F06
 
-| ID original de guía | Requisito | Código | Prueba local/CI | Evidencia | Estado operativo |
-|---|---|---|---|---|---|
-| BUL-F01 | Adaptador HTTP real sin fallback silencioso | `httpBulkRepository` y selector API/mock existentes | Playwright API usa servidor HTTP fixture, no Backend/Gateway real | #93 y HEAD `e322808d868bb89e2c645a1b069eb12728296d9f` | Implementado; integración real no demostrada |
-| BUL-F02 | Validación UX de archivo y accesibilidad | Validaciones locales de selección existentes | Suite previa; escenario real Gateway no ejecutado | Playwright mock/API previo | Implementado; criterios integrales pendientes |
-| BUL-F03 | Una intención, bloqueo de doble click y recuperación | Control de admisión/idempotencia UI existente | Doble clic probado en harness/fixture, no contra Backend real | Evidencia Playwright previa de #93 | Implementado; E2E real pendiente |
-| BUL-F04 | Polling, estados, recarga y snapshots | Seguimiento Bulk por batchId existente | Polling probado con respuestas fixture; reload contra backend no ejecutado | Evidencia Playwright previa | Implementado; recuperación E2E real pendiente |
-| BUL-F05 | Retry solo con elegibilidad backend | Botón depende de elegibilidad y retry de Catalog | Flujo usa fixture; no se conecta a Backend/Gateway real desde navegador | Evidencia Playwright previa | Implementado; integración real pendiente |
-| BUL-F06 | Blob real, seguridad y accesibilidad | Descargas Blob y sesión autenticada existentes | Descargas y seguridad con backend real: NO EJECUTADAS | Sin trace/captura de flujo Frontend→Gateway→Bulk | Implementado; verificación integral pendiente |
+| ID | Requisito exacto | Implementación | Prueba | SHA probado | Resultado | Estado de integración / Pendiente operativo |
+|---|---|---|---|---|---|---|
+| BUL-F01 | Adaptador HTTP real (`VITE_DATA_MODE=api`) sin fallback silencioso | `src/features/bulk/adapters/httpBulkRepository.ts` | `tests/bulk-http-real.spec.ts` vía `bulk-browser-real.e2e-spec.ts` + `test:unit:bulk` (98/98) | `c7ddd7ed` / `91dbf0a7` | PASS | Integrado contra Gateway+Bulk+Catalog reales en CI; pendiente merge/deploy Vercel |
+| BUL-F02 | Validación UX de archivo, revisión y accesibilidad 1440 px | `src/features/bulk/pages/BulkUploadPage.tsx`, `BulkReviewPage.tsx` | `tests/bulk-http-real.spec.ts` (archivo `.txt` bloqueado, Tab/focus, overflow=false) | `c7ddd7ed` | PASS | Completo y probado en Chromium 1440 px |
+| BUL-F03 | Una intención, bloqueo doble clic y conciliación ambigua | `src/features/bulk/context/BulkUploadContext.tsx`, `hooks/useBulkAdmissionRecovery.ts` | `tests/bulk-http-real.spec.ts` (`dblclick` -> 1 POST; socket drop -> `por-correlacion`) | `c7ddd7ed` | PASS | Completo y probado contra Gateway+Bulk reales |
+| BUL-F04 | Polling, estados por fila/dominio, recuperación tras refresh | `src/features/bulk/pages/BulkProgressPage.tsx`, `BulkResultPage.tsx` | `tests/bulk-http-real.spec.ts` (`page.reload()` en progreso y resultado) | `c7ddd7ed` | PASS | Completo y probado en Chromium |
+| BUL-F05 | Reanudación solo con elegibilidad backend y persistencia de intento | `src/features/bulk/pages/BulkResultPage.tsx`, `utils/bulkResumeIntent.ts` | `tests/bulk-http-real.spec.ts` (rechazo Catalog -> `Reanudar` -> recarga -> V2 `Completado`) | `c7ddd7ed` | PASS | Completo y probado contra Catalog V4/V2 real |
+| BUL-F06 | Descargas Blob reales (plantillas/reportes/exportaciones) y auth 401/403/404 | `src/features/bulk/pages/BulkDownloadsPage.tsx`, `BulkResultPage.tsx`, `ExportJobPanel.tsx` | `tests/bulk-http-real.spec.ts` (plantillas CSV/XLSX, exportaciones CSV/XLSX, `owner-b` 404, `forbidden` 403, `anonymous`) | `c7ddd7ed` | PASS | Completo y probado en Chromium; pendiente despliegue Vercel |
 
-## 4. Implementación y contratos
+## 4. Pruebas reproducibles ejecutadas en este cierre
 
-- Contratos objetivo: OpenAPI y AsyncAPI H5 `0.7.0-rc.3`; Docs indica `APPROVED_G6`, que no significa homologación externa.
-- #271 conserva Outbox/Inbox durable, Service Bus Basic target, claim-check V3 y flags apagados.
-- #273 porta receipts durables de Catalog por comando/fila, replay de resultado V2 y V4 con correlación raíz; mantiene autenticación legacy para flujo V1/V3.
-- El workflow de integración anterior armaba PR históricos mediante merges/parches temporales. Se sustituyó por `.github/workflows/bulk-catalog-retry-integration.yml` en #273, ejecutando HEAD actual en PostgreSQL 17 y aplicando migraciones con orden explícito.
-- El E2E permanente `apps/bulk-svc/test/bulk-catalog-retry.e2e-spec.ts` usa servicios Bulk/Catalog reales, JWT RS256 local y PostgreSQL. HEAD `e3ae66ebebcaa6aed78340a6cc003dbaaf09b3bb` incorpora negativos de Storage real para referencia inexistente, longitud y SHA incorrectos, junto con retry concurrente, redelivery V4/V2 y resultado tardío STALE. Run `45497460957`: 8/8, cero omitidos y 14/14 escenarios; artifact `14969326318`. La entrega sigue siendo transporte local directo y no homologa Azure Service Bus.
-- `apps/api-gateway/test/bulk-postgres.gateway.e2e-spec.ts` se ejecutó con Gateway real, JWKS local y PostgreSQL 17; siete escenarios pasaron (JWT ausente, identidad sin rol, firma inválida, expiración, issuer/audience incorrectos, recursos ajenos y proveedor no disponible). El run dedicado `45497460957` ejecutó junto a Bulk-Catalog: 8/8, cero omitidos.
-- La entrega de comandos y resultados invoca el consumidor real directamente desde el E2E; no atraviesa Azure Service Bus ni acredita su transporte, ACK o topología. CI valida 14 escenarios Bulk y siete de Gateway, y publica JSON/JUnit, metadatos HEAD/base/integración y versiones. Run `45497460957`: 8/8, cero fallos y cero omitidos.
-- En el host local, `supabase@3.4.0 start` quedó bloqueado porque Docker Engine devolvió HTTP 500; no se limpió el contenedor local parcial porque daemon no respondió. En GitHub Actions el mismo CLI inició Storage, ejecutó el adaptador real y limpió el stack con `stop --no-backup`. No se enlazó ni modificó Supabase hospedado.
+| Ejecución / Suite | SHA Backend / Frontend | Resultado | Evidencia |
+|---|---|---|---|
+| `npm run typecheck`, `npm run lint`, `npm run test:unit:bulk` (Frontend) | Frontend `5c799f7` → `c7ddd7ed` | PASS (98/98 unitarias Bulk) | PR [#97](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/97) |
+| `MK-001 Bulk E2E Integral` (`bulk-browser-real` + `bulk-recovery-files-migrations` + `bulk-performance-suite` + `typecheck` + `build:bulk-svc`) | Backend `91dbf0a7` + Frontend `c7ddd7ed` | **PASS** (2m32s, 0 fallos, 0 omitidos) | [run `45555080185`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45555080185), artefactos en `evidencias/mk001-bulk/run-45555080185/` |
+| `Integración Bulk-Catalog Retry` (PostgreSQL 17 + Storage CLI 3.4.0) | Backend #274 `e3ae66eb` (merge `daf4882b`) | PASS (8/8 tests, 14/14 escenarios, 0 omitidos) | `run-45497460957` y `45501578656` |
 
-## 5. Migraciones y datos
+## 5. Performance definitiva (`run 45555080185`, `bulk-performance-suite.json`)
 
-En PostgreSQL 17 descartable se aplicaron roles/esquemas separados y la secuencia Catalog base + Outbox H5 `0001` + transporte Taxonomy `0002` + retry receipts `0003`; y Bulk baseline/migraciones hasta `0008_h5_outbox_delivery.sql`. Aunque la lista histórica de MK-001 menciona Bulk 0001–0007, `0008` ya está en master y es parte del Outbox H5 vigente, por lo que se conserva y prueba. La migración candidata `0003_bulk_retry_receipts.sql` se reejecutó con salida exitosa.
+Medida sobre PostgreSQL 17 descartable y Supabase Storage local en GitHub Actions (`91dbf0a7`), con warmup previo y 0 fallos/timeouts:
 
-Comprobaciones locales reportadas PASS: los roles `bulk_app` y `catalog_app` no pudieron leer las tablas del otro esquema; se preserva aislamiento. El workflow #273 repitió creación de roles, migraciones, denegaciones y E2E en PostgreSQL 17; run `45469317255` asociado al HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204` concluyó `success`.
+| Operación | Concurrencia | Total | Fallos | Throughput (req/s) | p50 (ms) | p95 (ms) | p99 (ms) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `admission_csv_c1` | 1 | 20 | 0 | 21.32 | 35.72 | 62.30 | 195.44 |
+| `admission_csv_c8` | 8 | 40 | 0 | 41.12 | 142.24 | 412.91 | 415.82 |
+| `admission_csv_c32` | 32 | 64 | 0 | 66.07 | 430.00 | 640.67 | 689.13 |
+| `admission_xlsx_c1` | 1 | 4 | 0 | 31.69 | 29.79 | 36.31 | 36.31 |
+| `admission_xlsx_c8` | 8 | 32 | 0 | 77.01 | 97.04 | 135.28 | 145.40 |
+| `admission_large_csv_500rows_c1` | 1 | 5 | 0 | 7.12 | 139.98 | 148.65 | 148.65 |
+| `get_batch_c8` | 8 | 40 | 0 | 488.38 | 15.32 | 23.03 | 25.23 |
+| `get_correlation_c8` | 8 | 40 | 0 | 981.89 | 8.12 | 8.68 | 10.47 |
+| `replay_idempotent_c8` | 8 | 24 | 0 | 176.53 | 44.49 | 58.25 | 64.21 |
+| `retry_reanudar_replay_c8` | 8 | 16 | 0 | 357.83 | 12.57 | 34.21 | 34.21 |
+| `export_csv_e2e_c1` | 1 | 3 | 0 | 6.06 | 164.18 | 166.66 | 166.66 |
 
-Supabase compartido: solo lectura/no se ejecutó DDL/DML en esta intervención. No se recalculó aquí el inventario de migraciones compartidas; el snapshot anterior era histórico y no debe considerarse el estado vigente. Aplicación SQL futura: pendiente de ventana/proceso de release y verificación de inventario/checksums; no ejecutar desde esta evidencia local.
+Observación sobre concurrencia 8: en la medición actual con PostgreSQL 17 y Storage local, el throughput de admisión CSV escala de 21.32 req/s (c=1) a 41.12 req/s (c=8) y 66.07 req/s (c=32), con 0 fallos, sin reproducirse caída de throughput en c=8.
 
-## 6. Pruebas reproducibles
-
-| Comando/ejecución | SHA asociado | Resultado |
-|---|---|---|
-| `npm run typecheck` | #273 HEAD `b19f2dff...` | PASS |
-| `npm run build:bulk-svc` | #273 HEAD `b19f2dff...` | PASS |
-| `npm run build:catalog-svc` | #273 HEAD `b19f2dff...` | PASS |
-| Catalog unitarias enfocadas | código retry antes de #273 final | 60/60 PASS |
-| `npm run test:e2e -- apps/catalog-svc/test/postgres.persistence.e2e-spec.ts` | `dec595f995046f7f1ce17c789a2ebfd92e931e64` | 103/103 PASS en PostgreSQL descartable |
-| `npm run test:e2e -- apps/catalog-svc/test/postgres.persistence.e2e-spec.ts -t "BULK"` | runtime retry | 12 PASS, 91 SKIPPED por filtro |
-| `npm test -- apps/bulk-svc/src` | Backend #271 | 174 PASS, 38 SKIPPED, 1 suite skipped |
-| E2E Bulk messaging/outage/app | Backend #271 | 6 PASS, 18 SKIPPED, 1 suite skipped |
-| E2E conjunto en PR #273 | `b19f2dffdd1101b179abf5f1c5011d4de0948204` | 1/1 PASS; workflow run `45469317255`, integration success |
-| E2E local combinado de Gateway + Bulk/Catalog | Backend base `49bab9e2075819d922c63b06fcc6fc6ac16ce703` | 6/6 PASS, cero omitidos; [JSON preservado](evidencias/mk001-bulk/bulk-catalog-retry-local-2026-11-24-base-49bab9e.json) |
-| E2E local posterior a cambios adicionales | PR #274 | NO EJECUTADO; la suite de contenedores se ejecuta en Actions como entorno descartable |
-| Workflow integración oficial PR #274 | PR HEAD `e3ae66ebebcaa6aed78340a6cc003dbaaf09b3bb`; base `49bab9e2075819d922c63b06fcc6fc6ac16ce703`; SHA integrado `4054837eaa6c89043889ae0889e2ad6451a45521` | 8/8 PASS, 14/14 escenarios, cero omitidos, run `45497460957`; artifact `14969326318`: [JSON](evidencias/mk001-bulk/run-45497460957/bulk-h5-e2e.json), [JUnit](evidencias/mk001-bulk/run-45497460957/bulk-h5-e2e.junit.xml), [escenarios](evidencias/mk001-bulk/run-45497460957/bulk-h5-scenarios.json), [metadatos](evidencias/mk001-bulk/run-45497460957/run-metadata.json), [dependencias](evidencias/mk001-bulk/run-45497460957/dependencies.json) |
-| Frontend `npm run test:unit:bulk` | Frontend #93 HEAD `8665ce65086bb456573f82e8146f941bb50eb617` | 98/98 PASS |
-| Frontend `npm run test:e2e:smoke:bulk` | mismo HEAD | 4/4 PASS |
-| Frontend `npm run test:e2e:bulk:api` | mismo HEAD | 7/7 PASS |
-| Frontend build con `VITE_DATA_MODE=mock` y `api` | mismo HEAD | ambos PASS; modo no se infiere si falta la variable |
-| Prettier, `git diff --check`, YAML y `bash -n` workflow | Backend #273 HEAD | PASS |
-
-En HEAD integrado `49bab9e2075819d922c63b06fcc6fc6ac16ce703`, los runs post-merge `45470786170` y `45470785787` finalizaron `success`. En PR #274 los jobs generales siguen `skipped` por Draft; no se cuentan como PASS. La integración dedicada más reciente `45497460957` pasó 8/8 y 14/14 escenarios. CD Azure requiere `workflow_dispatch`; no se ejecutó. #274 sigue Draft y no se fusionó.
-
-## 7. Performance
-
-Benchmark local comparable, 1000 solicitudes por combinación de concurrencia (3,000 por variante), después de 10 warmups en cada combinación; el candidato final se midió sin 503/timeouts. No es tráfico compartido ni una prueba Azure/APIM. Hardware, proceso local y método se mantuvieron comparables según los artefactos del trabajo.
-
-| Concurrencia | Baseline p50 / p95 / p99 ms | Baseline req/s | Candidato p50 / p95 / p99 ms | Candidato req/s |
-|---:|---:|---:|---:|---:|
-| 1 | 34.36 / 150.95 / 222.11 | 20.57 | 34.15 / 130.85 / 207.64 | 21.10 |
-| 8 | 107.22 / 234.90 / 596.48 | 59.99 | 125.16 / 367.63 / 642.74 | 51.28 |
-| 32 | 669.04 / 1446.83 / 1977.64 | 41.00 | 476.38 / 1093.87 / 1245.81 | 58.30 |
-
-Baseline SHA `c73ed61c533a21787d1dab22aa79cd83ff77da14`; candidato SHA `af5a6b4e0e7f4cc7a5d32fcf3694d19cb6db9660`. Resultado mixto: c1 p95 mejora ~13%, c8 empeora ~56%, c32 mejora ~24%; throughput c32 mejora ~42% y c8 cae ~14.5%. Por ello no se declara mejora general. Carga fue de endpoint local y no acredita tamaños XLSX máximos, memoria, ASB redelivery, APIM ni umbral acordado. Los CSV/JSON originales están adjuntos en [evidencias de performance](evidencias/mk001-bulk/performance/README.md).
-
-## 8. Estado operativo y bloqueos concretos
+## 6. Estado operativo y bloqueos exclusivamente operativos
 
 | Condición | Estado |
 |---|---|
-| Código completo Bulk MK-001 | NO certificado todavía; permanecen brechas de integración Frontend, recuperación, migraciones y matriz de archivos enumeradas en la matriz |
-| Merge | Backend/Frontend integrados: #93, #262, #271 y #273; Backend #274 y Docs #144 siguen Draft/sin merge; PR nuevo de integración real Frontend aún no está abierto |
-| CI completa | HEAD #274 tiene integración dedicada 8/8 y matriz 14/14 PASS; CI general está `skipped` en Draft. Checks de merges previos se reportan por SHA/run en §6 |
-| Compatibilidad contractual | Implementación alineada con `0.7.0-rc.3` en alcance inspeccionado; no se declara homologación externa |
-| PostgreSQL 17 descartable | PASS para secuencia del workflow y E2E de alcance descrito |
-| Despliegue | NO REALIZADO |
+| Código completo Bulk MK-001 | `CODE_COMPLETE` |
+| Pruebas integrales CI descartables | `TESTED_DISPOSABLE_CI` (PASS en `45555080185`) |
+| Despliegue (Vercel / Azure / Supabase compartido) | `NOT_DEPLOYED` (prohibición operativa vigente) |
 | Supabase compartido modificado | NO |
 | Flags compartidos/productivos activados | NO |
-| Azure Service Bus compartido/real | NO probado ni modificado |
+| Homologación externa (Service Bus Azure / APIM / G7 institucional / G5) | Pendiente operativo fuera de este alcance |
 
-- **GitHub reviewers/branch protection | PR #274 y PR Docs de certificación | requieren revisión/aprobación aplicable y todos los checks obligatorios verdes sobre HEAD final.** No se omiten protecciones.
-- **Owner Azure/arquitectura | operación Service Bus en runtime Azure | desbloquea aprovisionamiento y credenciales/identidad de prueba autorizadas, con evidencia por ambiente.** No solicitado ni ejecutado bajo la prohibición de tocar recursos.
-- **Owner G7 | emitir JWT/grants reales | desbloquea E2E autenticado con identidad institucional aprobada.** La prueba actual solo valida JWT firmado de prueba.
-- **G5/consumidores externos | homologación del contrato/operación que les aplique | requiere aceptación verificable; no se atribuye por silencio.**
-- **Owner de release/DB | aplicar migraciones a Supabase compartido | requiere inventario vigente, procedimiento aprobado y ventana de release.** No ejecutar aquí.
-- **Docker local:** no es dependencia pendiente de cierre. Las pruebas con contenedores se ejecutan en Actions y el run `45497460957` inició y eliminó sus recursos descartables.
-
-## 9. Guía de aplicación futura (no ejecutada)
-
-Antes de release, congelar SHA y exportar backup/point-in-time recovery conforme a política del owner; obtener migraciones/checksums exactos del master fusionado; comparar catálogo de migraciones aplicado con el remoto sin mutar; ensayar en clon PostgreSQL 17; ejecutar en transacción cuando cada migración lo permita, respetando el orden por servicio/esquema y los locks documentados; verificar constraints/índices, cuentas y ACL mínimas, conteos/duplicados, readiness y Outbox/Inbox; validar rollback/compensación según soporte real de cada DDL; registrar postflight, commit SHA y resultado; detenerse ante checksum divergente o drift. No aplicar el SQL candidato en base compartida como parte de este informe.
-
-La habilitación posterior requiere además preparar APIM/Gateway, Azure Service Bus Basic y colas autorizadas para destinatario, identidades/grants G7, Storage privado, URLs/llaves aprobadas y variables por entorno; desplegar solo mediante proceso de release autorizado; mantener flags OFF hasta homologación, pruebas de smoke y aprobación. R02/R10 no se vuelven operativos por esta documentación; R03/R14 siguen reservados/bloqueados.
-
-## 10. Artefactos y seguimiento
-
-- Backend E2E CI PR: [run 45469317255](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45469317255), HEAD `b19f2dffdd1101b179abf5f1c5011d4de0948204`. CI post-merge completada: [run 45470786170](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470786170) y [Bulk messaging run 45470785787](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/45470785787), SHA `49bab9e2075819d922c63b06fcc6fc6ac16ce703`.
-- Backend PR #273: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/273.
-- Backend continuación Draft #274, HEAD `e3ae66ebebcaa6aed78340a6cc003dbaaf09b3bb`, run `45497460957` 8/8 y matriz 14/14, artifact `14969326318`: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/274.
-- Docs PR #144, HEAD `45c6621ec93f14ff870ea21e7c7915f8b3fa6174`, Draft; guard Pages ampliado, informe/artefactos actualizados y pruebas locales 15/15: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/pull/144.
-- Evidencia íntegra de los runs `45495393575` y `45497460957`: JSON, JUnit, escenarios, versiones y tres SHAs en `evidencias/mk001-bulk/run-45495393575/` y `run-45497460957/`.
-- Frontend rama `trabajo/castilla/bulk-h5-integracion-real`, HEAD base `e322808d868bb89e2c645a1b069eb12728296d9f`; no existe aún PR ni E2E navegador contra Gateway/Bulk/Catalog reales.
-- Frontend PR #93: https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/93.
-- Catálogo H5 #262 y Bulk V3/H5 #271: enlaces en tabla de estado Git.
-- Performance: los JSON/CSV históricos siguen en `evidencias/mk001-bulk/performance`; no se generó matriz nueva contra un baseline de operaciones equivalentes en este corte.
-
-Este documento separa código, validación local/CI y operación. El alcance todavía no es CODE_COMPLETE ni MERGED: faltan escenarios de archivos/storage, fallos y reinicios, suite Browser→servicios reales, matriz de performance y revisión/checks generales. El estado externo permanece NOT_DEPLOYED y NOT_HOMOLOGATED_EXTERNALLY por la restricción explícita; no es un defecto de código. Los checks `skipped` no son PASS.
+- **Frontend PR #97:** permanece sin merge a `master` (`FRONTEND_READY_NOT_MERGED`) porque `vercel.json` habilita despliegues de producción en `master`.
+- **Owner Azure/G7/DB:** la habilitación de Service Bus Basic, grants G7 reales, aplicación controlada de migraciones en Supabase compartido y despliegue quedan pendientes de ventana operativa autorizada.
