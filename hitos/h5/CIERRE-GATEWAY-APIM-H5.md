@@ -1,6 +1,6 @@
 # Cierre técnico Gateway y Azure API Management — Hito 5
 
-> **Estado:** `APIM_T08_FINAL_CORRECTED` (CI oficial Gateway Bulk-Catalog Retry en `PASS` con 7/7 pruebas Gateway y 14/14 escenarios Bulk; APIM-T08 blindado sin shell, con revisión exacta, JSON sin `trim()` y verificación de transiciones; pruebas reales contra Azure/APIM pendientes por bloqueo de infraestructura).
+> **Estado:** `COMPATIBILIDAD_PR294_VERIFICADA` (PR #294 integrado en `origin/master` `7a25fc88fa04627332032f60841b65fa17eb45d9`; Gateway #291 compatibilizado con `Multiple`/escala `1/1` y bloqueo de reaplicación insegura; APIM #292 compatible sin cambios; `APIM-T08` en `NOT_VERIFIED`; pruebas en vivo Azure/APIM en `NOT_RUN_BLOCKED_INFRA`).
 
 ## 1. Procedencia y dependencias
 
@@ -66,3 +66,18 @@
 | Compilación Bicep | `az bicep build --file ops/azure/apim/main.bicep --outfile $env:TEMP\apim-h5-final.json` | **PASS local** (exit 0; 6 warnings de linter) |
 | Verificación ARM candidate | `python ops/azure/apim/verify-arm-template.py --template $env:TEMP\apim-h5-final.json ... --mode candidate` | **PASS local** (`145` políticas; `5` rutas privadas excluidas; G5 deshabilitado por defecto) |
 | Ejecución en vivo contra Azure APIM | Sin instancia APIM en suscripción Azure (`NotRegistered`) | `NOT_RUN_BLOCKED_INFRA` |
+
+## 6. Compatibilidad con PR #294 (Azure Chile CD — `7a25fc88fa04627332032f60841b65fa17eb45d9`)
+
+- **Gateway #291 (`03e29fb371c10e8f568c6e20c2cb81ae1bd94959`):** fusionó `origin/master` (`#294`, `0da1f8cf6454908787e3c35f75de900b9b92dca0`) sin conflictos.
+  - `ops/azure/container-apps/render-deployment.mjs` emite `activeRevisionsMode: 'Multiple'` para `api-gateway`, conserva `Single` para `promotions-svc` y los demás microservicios, y mantiene `minReplicas=1, maxReplicas=1` obligatorios para `api-gateway` y `promotions-svc` (y `[0, 1]` para los demás servicios sin identidad gestionada).
+  - **Regla operativa de bootstrap:** `render-deployment.mjs` es únicamente la ruta de bootstrap inicial (`gatewayDeploymentMode: 'bootstrap-only'`). **No debe reutilizarse para modificar tráfico de un Gateway existente**; las actualizaciones de Gateway existente en Chile se ejecutan exclusivamente mediante el CD seguro de `#294` (`ops/azure/container-apps/deploy.sh`, con corte controlado por revisión explícita, verificación de salud/escala `1/1`, concurrencia y rollback), y toda reaplicación declarativa sobre Gateway existente sin `authorizedGatewayRevision` queda bloqueada (`UNSAFE_GATEWAY_REAPPLY_REQUIRES_CD_OR_AUTHORIZED_REVISION`).
+- **APIM #292 (`4509249b4bb27853fa53d3586691cc653343589d`):** compatible sin cambios con `#294` (`contract-routes.ts`, rutas `/api/v1`, OpenAPI filtrado, manifiesto y modalidades de ingress ACA sin afectación); `APIM-T08` permanece en `NOT_VERIFIED` sin captura en vivo y las pruebas reales contra Azure APIM permanecen en `NOT_RUN_BLOCKED_INFRA`.
+
+| Validación local post-merge #294 (`03e29fb3`) | Resultado real |
+|---|---|
+| `node --test ops/azure/container-apps/render-deployment.test.mjs` | **PASS local** (`7/7` OK) |
+| `bash -n ops/azure/container-apps/deploy.sh` | **PASS local** (exit `0`) |
+| `bash ops/azure/container-apps/tests/deploy.test.sh` | **PASS local** (`16/16` OK) |
+| `npm run typecheck` | **PASS local** (exit `0`) |
+| `npm test -- apps/api-gateway --maxWorkers=1` | **PASS local** (`12` archivos, `131/131` OK) |
