@@ -1,6 +1,6 @@
 # Cierre técnico Gateway y Azure API Management — Hito 5
 
-> **Estado:** `CI_GATEWAY_APIM_R10_VALIDATED` (CI oficial Gateway Bulk-Catalog Retry en `PASS` con 7/7 pruebas Gateway y 14/14 escenarios Bulk; validaciones locales Gateway y APIM en `PASS`; pruebas reales contra Azure/APIM pendientes por bloqueo de infraestructura).
+> **Estado:** `APIM_T08_FINAL_CORRECTED` (CI oficial Gateway Bulk-Catalog Retry en `PASS` con 7/7 pruebas Gateway y 14/14 escenarios Bulk; APIM-T08 blindado sin shell, con revisión exacta, JSON sin `trim()` y verificación de transiciones; pruebas reales contra Azure/APIM pendientes por bloqueo de infraestructura).
 
 ## 1. Procedencia y dependencias
 
@@ -50,3 +50,19 @@
 | Pruebas unitarias Node APIM (`apim-live-acceptance.test.mjs`) | Local (`ae32f0c0`) | **PASS local** (2/2 pruebas OK) |
 | Verificación ARM (`verify-arm-template.py --mode candidate`) | Local (`ae32f0c0`) | **PASS local** (`145` políticas; `5` rutas privadas excluidas; G5 deshabilitado por defecto) |
 | `APIM-T01`..`APIM-T08` / `RL-01`..`RL-06` en vivo | Sin instancia APIM en suscripción Azure (`NotRegistered`) | `NOT_RUN_BLOCKED_INFRA` |
+
+## 5. Corrección final focalizada APIM-T08 (`64179efba52bcf1f6f3da27cd73cbf237348c677`)
+
+- **Sin interpolación shell (`apim-live-acceptance.mjs`):** reemplazado `execSync()` por `execFileSync('az', args)` en consultas de solo lectura (`rest --method get -o json`).
+- **Validación estricta de identificadores:** `assertSafeApimApiId`, `assertSafeApimRevision` y `assertSafeApimResourceId` rechazan cualquier identificador peligroso antes de invocar `az`.
+- **Revisión exacta y XML sin alterar:** consulta `/apis/{apiName};rev={revision}/policies/policy?...` e interpreta `properties.value` desde JSON sin `trim()` ni conversiones de salida.
+- **Evidencia independiente de transiciones:** `verifyLiveRollback()` exige corroboración de revisiones y secuencia `before -> during -> after`; si falta, devuelve `NOT_VERIFIED` sin emitir `PASS`.
+- **Pruebas unitarias negativas añadidas (`apim-live-acceptance.test.mjs`):** identificadores peligrosos, revisión incorrecta, hash distinto (incluyendo diferencia de fin de línea) y ausencia de evidencia de transición (`NOT_VERIFIED`).
+
+| Validación final APIM | Comando / Alcance | Resultado real |
+|---|---|---|
+| Pruebas unitarias Node APIM | `node --test ops/azure/apim/tests/apim-live-acceptance.test.mjs` | **PASS local** (`3/3` pruebas OK) |
+| Pruebas unitarias Python APIM | `python -m unittest discover -s ops/azure/apim/tests -p test_apim_artifacts.py -v` (`APIM_ARM_TEMPLATE=$env:TEMP\apim-h5-final.json`) | **PASS local** (`28/28` pruebas OK) |
+| Compilación Bicep | `az bicep build --file ops/azure/apim/main.bicep --outfile $env:TEMP\apim-h5-final.json` | **PASS local** (exit 0; 6 warnings de linter) |
+| Verificación ARM candidate | `python ops/azure/apim/verify-arm-template.py --template $env:TEMP\apim-h5-final.json ... --mode candidate` | **PASS local** (`145` políticas; `5` rutas privadas excluidas; G5 deshabilitado por defecto) |
+| Ejecución en vivo contra Azure APIM | Sin instancia APIM en suscripción Azure (`NotRegistered`) | `NOT_RUN_BLOCKED_INFRA` |
