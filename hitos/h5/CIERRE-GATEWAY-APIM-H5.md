@@ -1,6 +1,6 @@
 # Cierre técnico Gateway y Azure API Management — Hito 5
 
-> **Estado:** `CODE_CORRECTED_R8_PENDING_EXTERNAL_AUDIT` (correcciones R8 implementadas; **ninguna prueba ejecutada ni recurso Azure mutado**).
+> **Estado:** `LOCAL_VALIDATION_R9_COMPLETE` (validaciones locales APIM ejecutadas y en `PASS`; pruebas Gateway locales y pruebas reales contra Azure/APIM pendientes por bloqueo de infraestructura).
 
 ## 1. Procedencia y dependencias
 
@@ -10,24 +10,20 @@
 - **PR #286 (`trabajo/castilla/h5-g5-prueba-conjunta`):** fusionado en `24b0586c2a14787e5d6039ffe497dcdc9cc62d59`.
 - **PR #255 (`vera`, Pricing CSV):** abierto en Draft (`1215c4df4b6c1595b550d24f7ef599ffbbb14795`), conservado como dependencia externa pendiente sin modificar ni simular.
 
-## 2. Modalidades de red ACA Allow-only (R7-01)
+## 2. Correcciones R9 aplicadas
 
-`validate-parameters.py` y `apim-live-acceptance.mjs` rechazan reglas mixtas `Allow`/`Deny` en `ipSecurityRestrictions` de Azure Container Apps y admiten únicamente:
-- **Modalidad A (Gateway interno):** `external=false`, `vnetConfiguration != null`, DNS/subred/conectividad privada y `directRoutesBlocked=true`.
-- **Modalidad B (Gateway externo con allowlist):** `external=true`, reglas **exclusivamente `Allow`** (sin `0.0.0.0/0`, `*` ni `::/0`), restringidas a `expectedApimOriginCidrs`, denegación implícita del resto y `directRoutesBlocked=true`.
+- **Preflight ACA Modalidad B (`validate-parameters.py`):** eliminada la validación incondicional `vnetConfiguration != null` previa a `validate_aca_network_evidence()`, habilitando Modalidad A (`external=false` + `vnetConfiguration`) y Modalidad B (`external=true` + reglas `Allow` exclusivas dentro de `expectedApimOriginCidrs` sin wildcard) con prueba integral en `test_apim_artifacts.py`.
+- **XML de política segura (`operation-secured.xml`):** escapadas las comillas internas (`&quot;`) dentro de `condition="@{ ... }"` para validez estricta XML.
+- **Separación de adquisición real en `APIM-T08` (`apim-live-acceptance.mjs`):** `validateRollbackEvidence` distingue `EVIDENCE_PREPARED` (integridad local válida sin adquisición Azure) de `PASS` (`azAcquisitionVerified=true` + `independentQueryDigest`).
+- **Parámetros efectivos en `RL-05` (`apim-rl-k6.js`):** exige `APIM_EFFECTIVE_PARAMETERS_PATH` y valida `rateProfiles[rateProfile].maxConcurrency > 0` y coincidencia exacta de `maxConcurrency`, `burstCalls` y SHA256.
 
-## 3. Evidencia real de rollback APIM-T08 (R7-02)
+## 3. Resultados reales de validación local (R9)
 
-`apim-live-acceptance.mjs` (`validateRollbackEvidence`) exige snapshots independientes (`azSnapshots.before`, `during`, `after`) obtenidos con `az apim ...` o `az rest --method get` contra `management.azure.com`, vinculados a `resourceId`, `subscriptionId`, `resourceGroup`, `apiName` y revisión, calculando el SHA256 real sobre `policyXml` en lugar de confiar en hashes autodeclarados.
-
-## 4. Manifiesto efectivo en k6 RL-05 (R7-03)
-
-`ops/azure/apim/tests/apim-rl-k6.js` rechaza manifiestos `candidate` y exige `APIM_EFFECTIVE_MANIFEST_PATH` con `publicationMode="effective"`, `effectivePublication.authorized=true`, coincidencia de `APIM_OPERATION_SET_SHA256` / `APIM_FILTERED_OPENAPI_SHA256`, operación `GET /auditoria-precios/exportaciones/{exportId}/archivo` en `publishedOperationIds` con `environmentEnabled=true` y `APIM_RL_EXPORT_ID` autorizado.
-
-## 5. Estado de pruebas (NO EJECUTADAS)
-
-- `apps/api-gateway/test/*`: `NOT_RUN`.
-- `ops/azure/apim/tests/test_apim_artifacts.py`: `NOT_RUN`.
-- `ops/azure/apim/tests/apim-live-acceptance.test.mjs`: `NOT_RUN`.
-- `ops/azure/apim/tests/apim-live-acceptance.mjs` (`APIM-T01`..`APIM-T08`): `NOT_RUN` / `BLOCKED_INFRA`.
-- `ops/azure/apim/tests/apim-rl-k6.js` (`RL-01`..`RL-06`): `NOT_RUN` / `BLOCKED_INFRA`.
+| Validación | Comando | Resultado real |
+|---|---|---|
+| Compilación Bicep | `az bicep build --file ops/azure/apim/main.bicep --outfile $env:TEMP\apim-h5-r9.json` | **PASS** (exit 0; sin errores) |
+| Pruebas unitarias Python APIM | `python -m unittest discover -s ops/azure/apim/tests -p test_apim_artifacts.py -v` | **PASS** (28/28 pruebas OK) |
+| Pruebas unitarias Node APIM | `node --test ops/azure/apim/tests/apim-live-acceptance.test.mjs` | **PASS** (2/2 pruebas OK) |
+| Verificación ARM + OpenAPI + Manifiesto | `python ops/azure/apim/verify-arm-template.py ... --mode candidate` | **PASS** (145 políticas, 5 internas excluidas, G5 deshabilitado por defecto) |
+| Pruebas Gateway (`apps/api-gateway`) | No ejecutadas en esta ronda focalizada | `NOT_RUN` |
+| `APIM-T01`..`APIM-T08` / `RL-01`..`RL-06` en vivo | Sin instancia APIM en suscripción Azure (`NotRegistered`) | `NOT_RUN_BLOCKED_INFRA` |
