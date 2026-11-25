@@ -47,4 +47,4 @@ Paquete de aceptación futuro: salida `az` de lectura, recurso/SKU/host/revisió
 
 ## Responsable, PRs y referencias
 
-Castilla owner APIM, catálogo de rutas y consolidación; Axel coejecuta compatibilidad de red/CD, Infra aprueba recursos/costo; G7 aprueba grants/issuer. PR futuro separado en Backend/infra; esta rama escribe solo Docs. Véanse [OpenAPI](../../contratos/http/openapi.yaml), [HITO_5](../HITO_5.md), [CI/CD](01_CI_CD_Y_SEGURIDAD.md), [automatización](08_AUTOMATIZACION_Y_PUERTAS.md) y [scorecard](07_MATRIZ_TRAZABILIDAD_Y_EVIDENCIAS.md).
+Castilla owner APIM, catálogo de rutas y consolidación; Axel coejecuta compatibilidad de red/CD, Infra aprueba recursos/costo; G7 aprueba grants/issuer. PR futuro separado en Backend/infra; esta rama escribe solo Docs. Véanse [OpenAPI](../../contratos/http/openapi.yaml), [HITO_5](../HITO_5.md), [CI/CD](01_CI_CD_Y_SEGURIDAD.md), [automatización](08_AUTOMATIZACION_Y_PUERTAS.md), [scorecard](07_MATRIZ_TRAZABILIDAD_Y_EVIDENCIAS.md) y [cierre Gateway/APIM H5](CIERRE-GATEWAY-APIM-H5.md).
