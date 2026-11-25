@@ -14,7 +14,7 @@
 
 - **Preflight ACA Modalidad B (`validate-parameters.py`):** eliminada la validación incondicional `vnetConfiguration != null` previa a `validate_aca_network_evidence()`, habilitando Modalidad A (`external=false` + `vnetConfiguration`) y Modalidad B (`external=true` + reglas `Allow` exclusivas dentro de `expectedApimOriginCidrs` sin wildcard) con prueba integral en `test_apim_artifacts.py`.
 - **XML de política segura (`operation-secured.xml`):** escapadas las comillas internas (`&quot;`) dentro de `condition="@{ ... }"` para validez estricta XML.
-- **Separación de adquisición real en `APIM-T08` (`apim-live-acceptance.mjs`):** `validateRollbackEvidence` distingue `EVIDENCE_PREPARED` (integridad local válida sin adquisición Azure) de `PASS` (`azAcquisitionVerified=true` + `independentQueryDigest`).
+- **Separación de adquisición real en `APIM-T08` (`apim-live-acceptance.mjs`):** `validateRollbackEvidence` distingue `EVIDENCE_PREPARED` (integridad local válida sin adquisición Azure) y ningún JSON suministrado por el operador puede activar `PASS`.
 - **Parámetros efectivos en `RL-05` (`apim-rl-k6.js`):** exige `APIM_EFFECTIVE_PARAMETERS_PATH` y valida `rateProfiles[rateProfile].maxConcurrency > 0` y coincidencia exacta de `maxConcurrency`, `burstCalls` y SHA256.
 
 ## 3. Resultados reales de validación local (R9)
@@ -51,13 +51,13 @@
 | Verificación ARM (`verify-arm-template.py --mode candidate`) | Local (`ae32f0c0`) | **PASS local** (`145` políticas; `5` rutas privadas excluidas; G5 deshabilitado por defecto) |
 | `APIM-T01`..`APIM-T08` / `RL-01`..`RL-06` en vivo | Sin instancia APIM en suscripción Azure (`NotRegistered`) | `NOT_RUN_BLOCKED_INFRA` |
 
-## 5. Corrección final focalizada APIM-T08 (`64179efba52bcf1f6f3da27cd73cbf237348c677`)
+## 5. Corrección final focalizada APIM-T08 (`4509249b4bb27853fa53d3586691cc653343589d`)
 
 - **Sin interpolación shell (`apim-live-acceptance.mjs`):** reemplazado `execSync()` por `execFileSync('az', args)` en consultas de solo lectura (`rest --method get -o json`).
 - **Validación estricta de identificadores:** `assertSafeApimApiId`, `assertSafeApimRevision` y `assertSafeApimResourceId` rechazan cualquier identificador peligroso antes de invocar `az`.
 - **Revisión exacta y XML sin alterar:** consulta `/apis/{apiName};rev={revision}/policies/policy?...` e interpreta `properties.value` desde JSON sin `trim()` ni conversiones de salida.
-- **Evidencia independiente de transiciones:** `verifyLiveRollback()` exige corroboración de revisiones y secuencia `before -> during -> after`; si falta, devuelve `NOT_VERIFIED` sin emitir `PASS`.
-- **Pruebas unitarias negativas añadidas (`apim-live-acceptance.test.mjs`):** identificadores peligrosos, revisión incorrecta, hash distinto (incluyendo diferencia de fin de línea) y ausencia de evidencia de transición (`NOT_VERIFIED`).
+- **Bloqueo explícito contra JSON de operador (`NOT_VERIFIED`):** ningún JSON suministrado por el operador (ni siquiera con tres estados `before -> during -> after` coherentes y hash final coincidente) puede activar `PASS` de `APIM-T08` por sí solo; sin procedencia verificable de captura real en vivo durante la operación autorizada, `verifyLiveRollback()` devuelve `NOT_VERIFIED`.
+- **Pruebas unitarias negativas añadidas (`apim-live-acceptance.test.mjs`):** identificadores peligrosos, revisión incorrecta, hash distinto (incluyendo diferencia de fin de línea), ausencia de evidencia de transición y JSON coherente de operador sin procedencia independiente (`NOT_VERIFIED`).
 
 | Validación final APIM | Comando / Alcance | Resultado real |
 |---|---|---|
