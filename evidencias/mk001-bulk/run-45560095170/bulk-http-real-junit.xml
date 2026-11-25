@@ -1,0 +1,8 @@
+<testsuites id="" name="" tests="2" failures="0" skipped="0" errors="0" time="12.435696">
+<testsuite name="bulk-http-real.spec.ts" timestamp="2026-11-25T06:24:19.040Z" hostname="" tests="2" failures="0" skipped="0" time="10.256" errors="0">
+<testcase name="MK-001 Bulk E2E navegador real (Gateway + Bulk + Catalog + PostgreSQL 17 + Storage) › plantillas CSV/XLSX, validación, admisión sin doble clic, refresh, polling, resultado y exportaciones reales" classname="bulk-http-real.spec.ts" time="5.756">
+</testcase>
+<testcase name="MK-001 Bulk E2E navegador real (Gateway + Bulk + Catalog + PostgreSQL 17 + Storage) › conciliación de admisión ambigua, rechazo transitorio Catalog, reanudación selectiva, recarga, reporte real y aislamiento 401/403/404" classname="bulk-http-real.spec.ts" time="4.5">
+</testcase>
+</testsuite>
+</testsuites>
