@@ -1,0 +1,7 @@
+{
+  "schema_version":"h5-evidence/v1","case_id":"INVALID-PASS","h5_criterion":"H5-04A","owner":"Castilla","scope":"IN_SCOPE",
+  "source_repo":"backend","source_sha":"e72b4f88877a560d04d47f29912f0638e257d692","docs_sha":"c9e1e5c217616d28229fccf5315fb97a1ae061a9",
+  "test_command":"not executed","environment":"unknown","evidence_level":"L2","execution_result":"PASS","test_result":"PASS","implementation_state":"DONE_LOCAL",
+  "deployment_state":"UNKNOWN","homologation_state":"PENDING","verification_state":"VERIFIED","started_at":"2026-11-24T10:00:00Z","finished_at":"2026-11-24T09:59:00Z",
+  "artifact_uri":"sandbox:missing","artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source":{},"config":{},"dataset":{},"dependencies":[],"blocking_dependency":null,"manual_review":"PENDING"
+}

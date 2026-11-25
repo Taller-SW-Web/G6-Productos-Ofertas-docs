@@ -1,0 +1,10 @@
+{
+  "schema_version":"h5-approval/v1",
+  "release_id":"",
+  "g6_approval":{"approver":"","record_uri":"","approved_at":""},
+  "external_homologations":[
+    {"group":"G5","owner":"","scope":"","contract_version":"","backend_sha":"","external_repo_sha":"","record_uri":"","approved_at":"","signature_or_verifiable_record":""},
+    {"group":"G7","owner":"","client_id_reference":"","audience":"","scopes":[],"environment":"","record_uri":"","approved_at":"","signature_or_verifiable_record":""}
+  ],
+  "note":"SYNTHETIC_NOT_RELEASE_EVIDENCE. Campos vacíos intencionalmente; no pegar tokens ni secretos aquí."
+}

@@ -1,0 +1,341 @@
+{
+  "cases": [
+    {
+      "id": "INT-01",
+      "condition": "always",
+      "owner": "Poma",
+      "criterion": "H5-02"
+    },
+    {
+      "id": "INT-02",
+      "condition": "always",
+      "owner": "Taco",
+      "criterion": "H5-02"
+    },
+    {
+      "id": "INT-03",
+      "condition": "release flow",
+      "owner": "Axel",
+      "criterion": "H5-02"
+    },
+    {
+      "id": "INT-04",
+      "condition": "R01 enabled",
+      "owner": "Castilla",
+      "criterion": "H5-02"
+    },
+    {
+      "id": "INT-05",
+      "condition": "always",
+      "owner": "Vera",
+      "criterion": "H5-02"
+    },
+    {
+      "id": "INT-06",
+      "condition": "R18 enabled",
+      "owner": "López",
+      "criterion": "H5-02"
+    },
+    {
+      "id": "INT-07",
+      "condition": "always; L2 requires APIM/G7",
+      "owner": "Castilla",
+      "criterion": "H5-02"
+    },
+    {
+      "id": "INT-08",
+      "condition": "always",
+      "owner": "Poma",
+      "criterion": "H5-02"
+    },
+    {
+      "id": "INT-09",
+      "condition": "external homologation",
+      "owner": "Axel",
+      "criterion": "H5-02"
+    },
+    {
+      "id": "INT-10",
+      "condition": "R16 + second SB flow",
+      "owner": "Vera",
+      "criterion": "H5-02"
+    },
+    {
+      "id": "PERF-01",
+      "condition": "release",
+      "owner": "Poma",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "PERF-02",
+      "condition": "release",
+      "owner": "Vera",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "PERF-03",
+      "condition": "release",
+      "owner": "Taco",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "PERF-04",
+      "condition": "N01 enabled",
+      "owner": "Axel",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "PERF-05",
+      "condition": "release",
+      "owner": "Axel",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "PERF-06",
+      "condition": "release",
+      "owner": "Poma",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "PERF-07",
+      "condition": "always",
+      "owner": "Castilla",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "PERF-08",
+      "condition": "APIM + equivalent private control",
+      "owner": "Castilla",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "RL-01",
+      "condition": "real APIM for L2",
+      "owner": "Castilla",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "RL-02",
+      "condition": "real APIM for L2",
+      "owner": "Castilla",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "RL-03",
+      "condition": "real APIM for L2",
+      "owner": "Vera",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "RL-04",
+      "condition": "two authorized identities",
+      "owner": "Castilla",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "RL-05",
+      "condition": "Gateway telemetry/network gate",
+      "owner": "Axel",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "RL-06",
+      "condition": "synthetic durable operation",
+      "owner": "Vera",
+      "criterion": "H5-03"
+    },
+    {
+      "id": "APIM-T01",
+      "condition": "APIM real",
+      "owner": "Castilla",
+      "criterion": "H5-04A"
+    },
+    {
+      "id": "APIM-T02",
+      "condition": "G7 test grant",
+      "owner": "Castilla",
+      "criterion": "H5-04A"
+    },
+    {
+      "id": "APIM-T03",
+      "condition": "G7 test grant",
+      "owner": "Castilla",
+      "criterion": "H5-04A"
+    },
+    {
+      "id": "APIM-T04",
+      "condition": "APIM CORS policy",
+      "owner": "Castilla",
+      "criterion": "H5-04A"
+    },
+    {
+      "id": "APIM-T05",
+      "condition": "burst/quota/identity/isolation/upstream/bypass",
+      "owner": "Castilla",
+      "criterion": "H5-04A"
+    },
+    {
+      "id": "APIM-T06",
+      "condition": "APIM real",
+      "owner": "Castilla",
+      "criterion": "H5-04A"
+    },
+    {
+      "id": "APIM-T07",
+      "condition": "trace access",
+      "owner": "Castilla",
+      "criterion": "H5-04A"
+    },
+    {
+      "id": "APIM-T08",
+      "condition": "equivalent control + rollback",
+      "owner": "Castilla",
+      "criterion": "H5-04A"
+    },
+    {
+      "id": "DOC-01",
+      "condition": "all owner artifacts",
+      "owner": "Castilla",
+      "criterion": "H5-01"
+    },
+    {
+      "id": "SEC-DOC-01",
+      "condition": "security runs + human review",
+      "owner": "Castilla",
+      "criterion": "H5-01"
+    },
+    {
+      "id": "CLOSE-01",
+      "condition": "approved release manifest",
+      "owner": "Castilla",
+      "criterion": "H5-01"
+    },
+    {
+      "id": "R01",
+      "condition": "release flow",
+      "owner": "Castilla",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R02",
+      "condition": "release flow",
+      "owner": "Castilla",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R03",
+      "condition": "reserved no aplica",
+      "owner": "Axel",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R04",
+      "condition": "release flow",
+      "owner": "Castilla",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R05",
+      "condition": "release flow",
+      "owner": "Castilla",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R06",
+      "condition": "release flow",
+      "owner": "Taco",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R07",
+      "condition": "explicit fallback decision",
+      "owner": "Poma",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R08",
+      "condition": "release flow",
+      "owner": "Axel",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R09",
+      "condition": "release flow",
+      "owner": "Poma",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R10",
+      "condition": "release flow",
+      "owner": "Taco",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R11",
+      "condition": "release flow",
+      "owner": "Taco",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R12",
+      "condition": "release flow",
+      "owner": "Taco",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R13",
+      "condition": "release flow",
+      "owner": "Axel",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R14",
+      "condition": "reserved no aplica",
+      "owner": "Axel",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R15",
+      "condition": "release flow",
+      "owner": "Vera",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R16",
+      "condition": "required first flow",
+      "owner": "Vera",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R17",
+      "condition": "release flow",
+      "owner": "Vera",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "R18",
+      "condition": "preferred second flow",
+      "owner": "López",
+      "criterion": "H5-04B"
+    },
+    {
+      "id": "N01",
+      "condition": "release flow",
+      "owner": "Axel",
+      "criterion": "H5-04B"
+    }
+  ],
+  "flow_rules": {
+    "fallback": "R07 requires explicit release decision; never silently substitutes R18",
+    "reserved": [
+      "R03",
+      "R14"
+    ],
+    "minimum_service_bus": [
+      "R16",
+      "R18"
+    ]
+  },
+  "consolidation_owner": "Castilla",
+  "schema_version": "h5-preflight/v1"
+}

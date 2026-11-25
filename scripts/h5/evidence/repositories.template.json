@@ -1,0 +1,8 @@
+{
+  "repositories": [
+    {"name":"Backend","root":"../backend","label":"Backend checkout","capabilities":["INT-04","INT-07","PERF-07","PERF-08","APIM-01"]},
+    {"name":"Frontend","root":"../frontend","label":"Frontend checkout","capabilities":["INT-08","PERF-06"]},
+    {"name":"Docs","root":".","label":"Docs checkout","capabilities":["DOC-01","SEC-DOC-01","CLOSE-01"]}
+  ],
+  "note":"Edit local roots for operator machine; inventory excludes secrets and never runs build/test commands. This is a template, not a verified scan."
+}

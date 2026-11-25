@@ -1,0 +1,7 @@
+{
+  "schema_version":"h5-evidence/v1","case_id":"PRE-FLIGHT-STATIC","h5_criterion":"DOC-01","owner":"Castilla","scope":"IN_SCOPE",
+  "source_repo":"docs","source_sha":"c9e1e5c217616d28229fccf5315fb97a1ae061a9","docs_sha":"c9e1e5c217616d28229fccf5315fb97a1ae061a9",
+  "test_command":"node scripts/h5/evidence/validate-evidence.mjs <fixture>","environment":"local-fixture","evidence_level":"L0","execution_result":"NOT_RUN","test_result":"NOT_RUN",
+  "implementation_state":"DONE_LOCAL","deployment_state":"NOT_DEPLOYED","homologation_state":"NOT_REQUIRED","verification_state":"NOT_VERIFIED",
+  "started_at":null,"finished_at":null,"artifact_uri":null,"artifact_sha256":null,"source":{},"config":{},"dataset":{"synthetic":true},"dependencies":[],"blocking_dependency":null,"manual_review":"NOT_REQUIRED"
+}

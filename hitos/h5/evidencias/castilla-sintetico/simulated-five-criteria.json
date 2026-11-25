@@ -1,0 +1,12 @@
+{
+  "bundle_marker":"SYNTHETIC_NOT_RELEASE_EVIDENCE",
+  "release_id":"fixture-only",
+  "cases":[
+    {"h5_criterion":"H5-01","result":"FAIL","case_id":"SEC-DOC-01"},
+    {"h5_criterion":"H5-02","result":"BLOCKED_G7","case_id":"INT-07"},
+    {"h5_criterion":"H5-03","result":"INCONCLUSIVE","case_id":"PERF-07"},
+    {"h5_criterion":"H5-04A","result":"NOT_RUN","case_id":"APIM-T05"},
+    {"h5_criterion":"H5-04B","result":"BLOCKED_SB","case_id":"R18"}
+  ],
+  "note":"Datos pedagógicos inventados para probar el renderer. No deben importarse como resultados de release."
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version":"h5-release/v1",
+  "release_id":"",
+  "approved":false,
+  "approval":null,
+  "created_at":"",
+  "repos":{"Backend":{"sha":""},"Frontend":{"sha":""},"Docs":{"sha":""}},
+  "required_criteria":["H5-01","H5-02","H5-03","H5-04A","H5-04B"],
+  "flows":["R16","R18"],
+  "flow_decision":null,
+  "evidence_files":[],
+  "policy_hashes":{},
+  "environment":null,
+  "dataset":null,
+  "note":"SYNTHETIC_NOT_RELEASE_EVIDENCE; completar con fuentes verificables y aprobar antes de uso. R03/R14 reservados; R07 requiere decisión explícita."
+}

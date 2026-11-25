@@ -1,0 +1,32 @@
+{
+  "schema_version": "h5-diagnostic-inventory/v1",
+  "observed_at": "2026-11-25T03:17:57Z",
+  "timezone": "America/Lima",
+  "commands": [
+    "az account show (campos de identidad redactados)",
+    "az resource list --resource-type Microsoft.ApiManagement/service",
+    "az resource list --resource-type Microsoft.App/containerApps",
+    "az resource list --resource-type Microsoft.ServiceBus/namespaces",
+    "az resource list --resource-type Microsoft.Network/virtualNetworks",
+    "az network private-dns zone list",
+    "az role assignment list (identificadores redactados)"
+  ],
+  "azure": {
+    "account_readable": true,
+    "apim_resources": {"count": 0, "state": "NOT_FOUND"},
+    "container_apps": {"count": 9, "region": "Chile Central", "state": "INVENTORY_ONLY"},
+    "service_bus_namespaces": {"count": 2, "sku": "Basic", "state": "INVENTORY_ONLY"},
+    "virtual_networks": {"count": 1, "state": "INVENTORY_ONLY"},
+    "private_dns_zones": {"count": 0, "state": "NOT_FOUND"},
+    "role_assignments": {"count": 53, "state": "INVENTORY_ONLY"}
+  },
+  "evidence_sources": [
+    {"repo":"Backend","sha":"e72b4f88877a560d04d47f29912f0638e257d692","artifact":"CI run artifacts","status":"NOT_ACCESSIBLE","checksum":null},
+    {"repo":"Frontend","sha":"e322808d868bb89e2c645a1b069eb12728296d9f","artifact":"CI run artifacts","status":"NOT_ACCESSIBLE","checksum":null},
+    {"repo":"Docs","sha":"c9e1e5c217616d28229fccf5315fb97a1ae061a9","artifact":"CI run artifacts","status":"NOT_ACCESSIBLE","checksum":null}
+  ],
+  "case_execution": "NOT_RUN",
+  "deployment_state": "UNKNOWN",
+  "homologation_state": "PENDING",
+  "note": "Inventario redactado; no es evidencia de pruebas, despliegue ni certificación."
+}
