@@ -1,6 +1,6 @@
 # Cierre técnico Gateway y Azure API Management — Hito 5
 
-> **Estado:** `LOCAL_VALIDATION_R9_COMPLETE` (validaciones locales APIM ejecutadas y en `PASS`; pruebas Gateway locales y pruebas reales contra Azure/APIM pendientes por bloqueo de infraestructura).
+> **Estado:** `CI_GATEWAY_APIM_R10_VALIDATED` (CI oficial Gateway Bulk-Catalog Retry en `PASS` con 7/7 pruebas Gateway y 14/14 escenarios Bulk; validaciones locales Gateway y APIM en `PASS`; pruebas reales contra Azure/APIM pendientes por bloqueo de infraestructura).
 
 ## 1. Procedencia y dependencias
 
@@ -26,4 +26,27 @@
 | Pruebas unitarias Node APIM | `node --test ops/azure/apim/tests/apim-live-acceptance.test.mjs` | **PASS** (2/2 pruebas OK) |
 | Verificación ARM + OpenAPI + Manifiesto | `python ops/azure/apim/verify-arm-template.py ... --mode candidate` | **PASS** (145 políticas, 5 internas excluidas, G5 deshabilitado por defecto) |
 | Pruebas Gateway (`apps/api-gateway`) | No ejecutadas en esta ronda focalizada | `NOT_RUN` |
+| `APIM-T01`..`APIM-T08` / `RL-01`..`RL-06` en vivo | Sin instancia APIM en suscripción Azure (`NotRegistered`) | `NOT_RUN_BLOCKED_INFRA` |
+
+## 4. Correcciones y resultados verificados (R10)
+
+- **CI Gateway #291 (`48028433dfd2a3c051e85d65dcafef18ce7b06f2`):**
+  - `.github/workflows/bulk-catalog-retry-integration.yml`: declara `G6_BULK_GATEWAY_POSTGRES_E2E: '1'` en el job E2E y compila `bulk-svc` (`npm run build:bulk-svc`) antes de ejecutar la suite.
+  - `apps/api-gateway/test/bulk-postgres.gateway.e2e-spec.ts`: implementa las 7 pruebas exactas de `requiredGatewayTests` (`scripts/ci/bulk-h5-required-scenarios.json`) sin omisiones en CI, usando PostgreSQL 17 y Storage local aislado en CI (o Docker descartable en ejecución local), cabeceras CSV v2 alineadas con `BULK_TEMPLATE_HEADERS` y `template_version=2`.
+  - `apps/api-gateway/test/observability-and-resilience.e2e-spec.ts`: actualizada la ruta de exportación CSV a `/api/v1/auditoria-precios/exportaciones/{exportId}/archivo` (`descargarExportacionAuditoriaPrecios`).
+- **APIM #292 (`ae32f0c0e4eace2bc6a75ff304c1756c7a6666fc`):**
+  - `ops/azure/apim/tests/apim-live-acceptance.mjs`: `validateRollbackEvidence()` valida únicamente la integridad documental local y devuelve siempre `EVIDENCE_PREPARED` (`verified: false`), ignorando `azAcquisitionVerified` o `independentQueryDigest` del JSON; `APIM-T08` solo puede obtener `PASS` cuando `main()` ejecuta directamente `az rest --method get` en una corrida en vivo autorizada.
+  - `ops/azure/apim/tests/apim-live-acceptance.test.mjs`: prueba negativa que verifica `EVIDENCE_PREPARED` (`verified: false`) aun cuando el JSON declare `azAcquisitionVerified: true`.
+
+| Validación | Alcance / Referencia | Resultado real |
+|---|---|---|
+| Gateway unit (`npm test -- apps/api-gateway --maxWorkers=1`) | Local (`48028433` equivalente en suite Gateway) | **PASS local** (12 archivos, 131/131 pruebas) |
+| Gateway E2E (`observability-and-resilience`, `routing`, `contract-parity`) | Local | **PASS local** (2 archivos, 516/516 pruebas) |
+| Gateway `typecheck` (`npm run typecheck`) | Local (`48028433`) | **PASS local** (exit 0) |
+| Verificador escenarios (`node --test scripts/ci/verify-bulk-h5-e2e.test.mjs`) | Local | **PASS local** (1/1 prueba) |
+| Workflow CI `Integración Bulk-Catalog Retry (PostgreSQL 17 descartable)` | GitHub Actions run `45701252836` (`48028433`) | **PASS CI** (`verify-bulk-h5-e2e.mjs`: `PASS`, 8/8 pruebas Vitest, 0 fallidas, 0 omitidas; `7/7` Gateway + `14/14` Bulk) |
+| Compilación Bicep (`az bicep build`) | Local (`ae32f0c0`) | **PASS local** (exit 0; 6 warnings de linter) |
+| Pruebas unitarias Python APIM (`test_apim_artifacts.py`) | Local (`ae32f0c0`) | **PASS local** (28/28 pruebas OK) |
+| Pruebas unitarias Node APIM (`apim-live-acceptance.test.mjs`) | Local (`ae32f0c0`) | **PASS local** (2/2 pruebas OK) |
+| Verificación ARM (`verify-arm-template.py --mode candidate`) | Local (`ae32f0c0`) | **PASS local** (`145` políticas; `5` rutas privadas excluidas; G5 deshabilitado por defecto) |
 | `APIM-T01`..`APIM-T08` / `RL-01`..`RL-06` en vivo | Sin instancia APIM en suscripción Azure (`NotRegistered`) | `NOT_RUN_BLOCKED_INFRA` |
