@@ -71,8 +71,12 @@
 
 - **Gateway #291 (`03e29fb371c10e8f568c6e20c2cb81ae1bd94959`):** fusionó `origin/master` (`#294`, `0da1f8cf6454908787e3c35f75de900b9b92dca0`) sin conflictos.
   - `ops/azure/container-apps/render-deployment.mjs` emite `activeRevisionsMode: 'Multiple'` para `api-gateway`, conserva `Single` para `promotions-svc` y los demás microservicios, y mantiene `minReplicas=1, maxReplicas=1` obligatorios para `api-gateway` y `promotions-svc` (y `[0, 1]` para los demás servicios sin identidad gestionada).
-  - **Regla operativa de bootstrap:** `render-deployment.mjs` es únicamente la ruta de bootstrap inicial (`gatewayDeploymentMode: 'bootstrap-only'`). **No debe reutilizarse para modificar tráfico de un Gateway existente**; las actualizaciones de Gateway existente en Chile se ejecutan exclusivamente mediante el CD seguro de `#294` (`ops/azure/container-apps/deploy.sh`, con corte controlado por revisión explícita, verificación de salud/escala `1/1`, concurrencia y rollback), y toda reaplicación declarativa sobre Gateway existente sin `authorizedGatewayRevision` queda bloqueada (`UNSAFE_GATEWAY_REAPPLY_REQUIRES_CD_OR_AUTHORIZED_REVISION`).
-- **APIM #292 (`4509249b4bb27853fa53d3586691cc653343589d`):** compatible sin cambios con `#294` (`contract-routes.ts`, rutas `/api/v1`, OpenAPI filtrado, manifiesto y modalidades de ingress ACA sin afectación); `APIM-T08` permanece en `NOT_VERIFIED` sin captura en vivo y las pruebas reales contra Azure APIM permanecen en `NOT_RUN_BLOCKED_INFRA`.
+  - **Restricción del renderer de bootstrap (`render-deployment.mjs`):**
+    - El renderer se utiliza **únicamente para bootstrap inicial** (`gatewayDeploymentMode: 'bootstrap-only'`), donde genera `latestRevision=true` sin comprobar en Azure que el Gateway no exista; por ello, una reaplicación declarativa arbitraria **no** es segura.
+    - **Está prohibido** aplicar una plantilla de bootstrap sobre un Gateway ya existente.
+    - Las actualizaciones de Gateway existente en Chile deben realizarse exclusivamente con el CD oficial `ops/azure/container-apps/deploy.sh` (corte controlado por revisión explícita, salud/escala `1/1`, control de concurrencia y rollback).
+    - Cualquier futura ruta de aplicación declarativa necesitará un **preflight real de solo lectura** en Azure que compruebe la inexistencia del Gateway antes del bootstrap.
+- **APIM #292 (`4509249b4bb27853fa53d3586691cc653343589d`):** compatible sin cambios con `#294` (`contract-routes.ts`, rutas `/api/v1`, OpenAPI filtrado, manifiesto y modalidades de ingress ACA sin afectación); pendiente de sincronización con `origin/master` tras el merge de `#291`. `APIM-T08` permanece en `NOT_VERIFIED` sin captura en vivo, `APIM-T01`..`APIM-T08` y `RL-01`..`RL-06` permanecen en `NOT_RUN_BLOCKED_INFRA`, y APIM no se declara desplegado ni aceptado en vivo.
 
 | Validación local post-merge #294 (`03e29fb3`) | Resultado real |
 |---|---|
