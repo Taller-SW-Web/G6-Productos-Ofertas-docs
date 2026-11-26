@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-11-26T20:45:52Z",
+  "topologyStaticTest": {
+    "file": "tests/h5/service-bus-19-queues.e2e-spec.ts",
+    "status": "PASS",
+    "passed": 3,
+    "failed": 0
+  },
+  "functional19FlowsRunner": {
+    "file": "tests/h5/certify-19-messaging-flows.mjs",
+    "status": "FAIL",
+    "error": "PG_QUERY_FAILED status=500 invalid input syntax for type uuid: undefined (admProdId undefined tras POST /api/v1/productos en paso 2)"
+  },
+  "azureRealServiceBus": "NOT_RUN"
+}
