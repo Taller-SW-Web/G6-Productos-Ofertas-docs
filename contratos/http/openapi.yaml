@@ -19847,6 +19847,22 @@ paths:
       - $ref: '#/components/parameters/EstadoEntidadQuery'
       - $ref: '#/components/parameters/CorrelationId'
       responses:
+        '400':
+          description: Parámetros de consulta inválidos
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      const: VALIDACION
+                  required: [status, code]
         '200':
           description: Listado administrativo
           content:
@@ -19930,6 +19946,7 @@ paths:
                   - status
                   - code
       x-error-codes: &id667
+        '400': [VALIDACION]
         '401': *id663
         '403': *id664
         '500': *id665
@@ -19964,6 +19981,22 @@ paths:
       - $ref: '#/components/parameters/EstadoEntidadQuery'
       - $ref: '#/components/parameters/CorrelationId'
       responses:
+        '400':
+          description: Parámetros de consulta inválidos
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      const: VALIDACION
+                  required: [status, code]
         '200':
           description: Listado administrativo
           content:
@@ -20066,6 +20099,22 @@ paths:
           $ref: '#/components/schemas/ModalidadPromocion'
       - $ref: '#/components/parameters/CorrelationId'
       responses:
+        '400':
+          description: Parámetros de consulta inválidos
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      const: VALIDACION
+                  required: [status, code]
         '200':
           description: Promociones administrativas
           content:
@@ -20149,6 +20198,7 @@ paths:
                   - status
                   - code
       x-error-codes:
+        '400': [VALIDACION]
         '401': *id668
         '403': *id669
         '500': *id670
@@ -21459,6 +21509,22 @@ paths:
           maximum: 100
           default: 20
       responses:
+        '400':
+          description: Parámetros de consulta inválidos
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      const: VALIDACION
+                  required: [status, code]
         '200':
           description: Traslados visibles para el operador
           content:
@@ -21542,6 +21608,7 @@ paths:
                   - status
                   - code
       x-error-codes:
+        '400': [VALIDACION]
         '401':
         - TOKEN_INVALIDO
         '403':
