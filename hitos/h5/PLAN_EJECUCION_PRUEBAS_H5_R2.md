@@ -4,38 +4,64 @@
 
 ## 1. Requisitos previos y aislamiento
 
-- **PostgreSQL descartable local / CI:** Docker PostgreSQL 17 aislado por suite (`Phase1Postgres` / contenedores efímeros). **Prohibido** apuntar `DATABASE_URL` al proyecto Supabase compartido `slzglmtiyrzygpkiuthf`.
-- **Identidad G7:** las suites locales usan emisores RS256 criptográficos de prueba (`createSignedIdentity`, `createCryptographicJwt`); nunca equivalen a emisión real de G7 ni a homologación G1/G3/G5.
-- **Azure Service Bus real:** desactivado por defecto (`G6_AZURE_SERVICE_BUS_REAL_TESTS` ausente). Solo ejecutar contra namespace de laboratorio con Managed Identity autorizada.
+- **PostgreSQL descartable local / CI:** Docker PostgreSQL 17 aislado por suite (`IsolatedPostgres` / contenedores efímeros). **Prohibido** apuntar `DATABASE_URL` o `G6_REAL_PG_URL` al proyecto Supabase compartido `slzglmtiyrzygpkiuthf`.
+- **Identidad G7:** las suites locales usan emisores RS256 criptográficos de prueba con JWKS local (`createSignedIdentity`, `createLocalG7TokenFactory`); nunca equivalen a emisión real de G7 ni a homologación G1/G3/G5.
+- **Azure Service Bus real:** desactivado por defecto (`G6_AZURE_SERVICE_BUS_REAL_TESTS` ausente). Solo ejecutar contra namespace de laboratorio (`G6_AZURE_SERVICE_BUS_LAB_NAMESPACE`) con `ManagedIdentityCredential` (`AZURE_CLIENT_ID`).
+- **Frontend real (`playwright.real.config.ts`):** exige `VITE_DATA_MODE=api` y variables `G6_REAL_GATEWAY_URL`, `G6_REAL_PG_URL`, `G6_REAL_G7_ISSUER`, `G6_REAL_G7_JWKS_URL`. Falla en preflight si falta alguna dependencia; no existe fallback a mock.
 
-## 2. Orden de ejecución recomendado (PowerShell)
+## 2. Orden obligatorio de ejecución futura (PowerShell)
 
-### Fase A — Unitarias y contratos sin BD ni red
+### Fase 1 — Pruebas unitarias y contratos (sin BD ni red)
 ```powershell
 cd c:\Users\marec\Desktop\G6-Productos-Ofertas\_worktrees\r2-integral\backend
 npm test -- apps/api-gateway/src/routing/gateway-g7-only.spec.ts apps/api-gateway/src/routing/gateway-public-reads.spec.ts apps/api-gateway/src/routing/gateway-identity.spec.ts
 npm test -- apps/*/src/phase1-public-reads.spec.ts apps/catalog-svc/src/catalog-public-reads.spec.ts apps/taxonomy-svc/src/taxonomy-public-reads.spec.ts apps/taxonomy-svc/src/category-seo-auth.spec.ts apps/combos-svc/test/combos-readiness.spec.ts
-npm test -- tests/h5/service-bus-19-queues.e2e-spec.ts apps/pricing-svc/src/messaging/r03-r14-r15-r17-r07.spec.ts
-```
-
-### Fase B — Frontend unitario/contratos
-```powershell
+npm test -- apps/inventory-svc/src/inbox/inventory-command.spec.ts apps/pricing-svc/src/messaging/r03-r14-r15-r17-r07.spec.ts
 cd c:\Users\marec\Desktop\G6-Productos-Ofertas\_worktrees\r2-integral\frontend
 npx vitest run src/features/auth/g7OnlyTransport.spec.ts src/features/combos/adapters/httpCombosRepositoryH4.test.ts
 ```
 
-### Fase C — E2E con PostgreSQL descartable y HTTP real local
+### Fase 2 — Integraciones PostgreSQL por microservicio
 ```powershell
 cd c:\Users\marec\Desktop\G6-Productos-Ofertas\_worktrees\r2-integral\backend
-npm run test:e2e -- apps/api-gateway/test/public-read-only.e2e-spec.ts apps/api-gateway/test/g7-transversal-r2.e2e-spec.ts apps/api-gateway/test/routing.e2e-spec.ts
-$env:PRICING_TEST_POSTGRES='1'; npm run test:e2e -- apps/pricing-svc/test/import-prices.postgres.e2e-spec.ts
+$env:PRICING_TEST_POSTGRES='1'; npm run test:e2e -- apps/pricing-svc/test/import-prices.postgres.e2e-spec.ts apps/pricing-svc/test/r03-r14-r16-r17.postgres.e2e-spec.ts
 $env:G6_TAXONOMY_H5_POSTGRES_TESTS='1'; npm run test:e2e -- tests/h5/taxonomy-service-bus.postgres.e2e-spec.ts
 ```
 
-### Fase D — Azure Service Bus SDK real (laboratorio 19 colas, opcional bajo autorización)
+### Fase 3 — Integraciones Service Bus con handlers reales y topología 19/19
 ```powershell
+cd c:\Users\marec\Desktop\G6-Productos-Ofertas\_worktrees\r2-integral\backend
+npm test -- tests/h5/service-bus-19-queues.e2e-spec.ts
+```
+
+### Fase 4 — Autenticación y autorización G7 simuladas (JWKS local RS256)
+```powershell
+cd c:\Users\marec\Desktop\G6-Productos-Ofertas\_worktrees\r2-integral\backend
+npm run test:e2e -- apps/api-gateway/test/public-read-only.e2e-spec.ts apps/api-gateway/test/g7-transversal-r2.e2e-spec.ts apps/api-gateway/test/g5-h5-routes.e2e-spec.ts apps/api-gateway/test/routing.e2e-spec.ts
+```
+
+### Fase 5 — Integración HTTP Frontend ↔ Gateway ↔ Backend
+```powershell
+cd c:\Users\marec\Desktop\G6-Productos-Ofertas\_worktrees\r2-integral\frontend
+$env:VITE_DATA_MODE='api'
+npx playwright test --config=playwright.real.config.ts tests/e2e-real/http-contracts.real.spec.ts
+```
+
+### Fase 6 — E2E navegador React real, ocho módulos y flujos transversales
+```powershell
+cd c:\Users\marec\Desktop\G6-Productos-Ofertas\_worktrees\r2-integral\frontend
+$env:VITE_DATA_MODE='api'
+npx playwright test --config=playwright.real.config.ts tests/e2e-real/eight-modules.real.spec.ts tests/e2e-real/transversal-flows.real.spec.ts
+```
+
+### Fase 7 — Pruebas Azure Service Bus SDK real aisladas (laboratorio 19 colas)
+```powershell
+cd c:\Users\marec\Desktop\G6-Productos-Ofertas\_worktrees\r2-integral\backend
 $env:G6_AZURE_SERVICE_BUS_REAL_TESTS='1'
 $env:G6_AZURE_SERVICE_BUS_LAB_NAMESPACE='<lab-namespace>.servicebus.windows.net'
 $env:AZURE_CLIENT_ID='<managed-identity-client-id>'
 npm run test:e2e -- tests/h5/azure-service-bus.real.e2e-spec.ts
 ```
+
+### Fase 8 — Homologación externa G7/G1/G3/G5 (cuando se autorice)
+- Validación de tokens emitidos por G7 real y tráfico homologado G1 Marketplace, G3 Chatbot y G5 Ventas sin alterar el tráfico productivo por defecto hasta autorización expresa.
