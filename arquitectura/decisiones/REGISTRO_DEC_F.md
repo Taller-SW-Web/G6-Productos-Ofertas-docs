@@ -1,5 +1,11 @@
 # Registro de decisiones DEC-F — G6 Productos y Ofertas
 
+> **Aprobación integral vigente:** las decisiones existentes en el corte de `master` `4404b7c7d3cd9254ddc6932532ab3a9ba1a52f78` quedan ratificadas como `APPROVED_G6` por el [Acta de aprobación interna G6 H5](ACTA-APROBACION-INTERNA-G6-H5-2026-11-22.md). Los estados históricos más abajo describen el estado al redactarse cada adenda; no reabren aprobación interna. Implementación, homologación externa, grants, infraestructura, pruebas y despliegue siguen independientes.
+
+## Adenda de estado vigente — aprobación integral 2026-11-22
+
+Las entradas históricas de las adendas siguientes que indicaban «ratificación pendiente», «decisión comunicada» o «pendiente de aprobación interna» describían el estado previo al acta. Las decisiones funcionales existentes enumeradas allí —incluidos D-CAT-01..06, Q-06, reglas de filtro/precio, retry, SKU de variante, barreras Taxonomy, canales Pricing y validaciones de variantes— están `APPROVED_G6` en el alcance del acta. Esta actualización no afirma que cada regla esté implementada, migrada, homologada o probada; esos estados se mantienen por owner en la [matriz de aprobaciones y dependencias](MATRIZ-APROBACIONES-Y-DEPENDENCIAS-G6-H5.md).
+
 > **Índice de política transversal fuera de DEC-F:** la [Política de seguridad progresiva y reversible de G6](POLITICA-SEGURIDAD-PROGRESIVA-G6.md) documenta las fases `PUBLIC_READ_ONLY`, `SIMULATED_AUTH` y `G7_AUTHENTICATED`, junto con su [matriz por operación](MATRIZ-OPERACIONES-SEGURIDAD-G6.md). Esta referencia no crea DEC-F-016 ni modifica DEC-F-001–015; los estados de implementación, homologación y despliegue siguen independientes.
 
 - **Corte de contraste:** `origin/master` `78a923bbc6bada31b39b3d386331f90a4f812b31` (merge de PR #86).

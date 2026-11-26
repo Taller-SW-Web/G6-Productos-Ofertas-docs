@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+const checker=fileURLToPath(new URL('./verify-docs-results.mjs',import.meta.url));
+const run=(value)=>spawnSync(process.execPath,[checker,JSON.stringify(value)],{encoding:'utf8'});
+const success={contrato:{result:'success'},prepare_pages:{result:'success'}};
+test('validate-docs aprueba solo contrato y preparación Pages exitosos',()=>assert.equal(run(success).status,0));
+for(const result of ['failure','skipped','cancelled']) test(`validate-docs rechaza contrato ${result}`,()=>assert.equal(run({...success,contrato:{result}}).status,1));
+for(const result of ['failure','skipped','cancelled']) test(`validate-docs rechaza preparación Pages ${result}`,()=>assert.equal(run({...success,prepare_pages:{result}}).status,1));
+test('validate-docs rechaza resultados ausentes',()=>assert.equal(run({}).status,1));
+test('validate-docs rechaza preparación Pages ausente',()=>assert.equal(run({contrato:{result:'success'}}).status,1));

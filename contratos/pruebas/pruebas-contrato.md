@@ -1,9 +1,9 @@
-> **Estado:** los casos de bindings, grants AMQP y топología RabbitMQ de este archivo son regresiones/antecedentes contractuales H4. Los gates H5 se especifican en `PLAN-VERIFICACION-SERVICE-BUS-H5.md`; no se reinterpreta una prueba H4 como homologación o runtime H5.
+> **Estado:** los casos que verifican contratos `0.6.x`, bindings, grants AMQP y topología RabbitMQ de este archivo son regresiones/antecedentes contractuales H4. El plan H5 de Service Bus en `PLAN-VERIFICACION-SERVICE-BUS-H5.md` es verificación nueva; los resultados históricos no equivalen a PASS, homologación ni runtime H5.
 
 # Matriz de pruebas de contrato e integración — Productos y Ofertas
 
-**Contrato HTTP objetivo:** OpenAPI `0.6.0-rc.4` (candidata; no prueba publicación/runtime).
-**Contrato asíncrono objetivo:** AsyncAPI `0.6.0-rc.4` (candidato; no prueba publicación/runtime).
+**Corte documental histórico de esta matriz H4:** OpenAPI `0.6.0-rc.4` y AsyncAPI `0.6.0-rc.4`; estas versiones describen las expectativas originales de los casos históricos.
+**Contratos canónicos H5 vigentes:** OpenAPI y AsyncAPI `0.7.0-rc.3`, aprobación interna `APPROVED_G6`; sus interfaces compartidas mantienen homologación externa según cada operación. La identificación contractual no acredita runtime, despliegue ni homologación externa.
 **Referencia histórica auditada:** PR #86, rama `nueva`, commit `c1769607f30e2cabf1449e33c877fa4ef41defe5`; esta matriz conserva los estados pendientes y actualiza la expectativa del vhost en `CT-STATIC-18`.
 **Estado:** definición documental de casos; no asignar `PASS` a pruebas de API, eventos, seguridad o integración sin ejecución reproducible.
 

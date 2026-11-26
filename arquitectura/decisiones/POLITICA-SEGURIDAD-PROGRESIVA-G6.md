@@ -1,6 +1,6 @@
 # Política de seguridad progresiva y reversible de G6
 
-**Estado de la decisión:** adoptada; la arquitectura de tres fases está aprobada. **Estado de publicación:** este documento sigue en el PR Docs #114, abierto como draft y pendiente de merge/publicación. **Implementación:** pendiente. No se acredita homologación G7/G1–G5, grants efectivos, release ni despliegue.
+**Estado de la decisión:** adoptada; la arquitectura de tres fases está aprobada. **Estado de publicación al corte actual:** este documento fue publicado mediante Docs PR #114, fusionado el 2026-11-05. La implementación, grants efectivos y despliegue se evidencian por separado. **Implementación:** pendiente. No se acredita homologación G7/G1–G5, grants efectivos, release ni despliegue.
 **Alcance:** API Gateway, ocho microservicios G6 y sus fronteras de integración HTTP y asíncronas.
 **Contratos de referencia al corte:** OpenAPI `0.6.0-rc.3`, AsyncAPI `0.6.0-rc.4` (candidatos documentales).
 **Decisión transversal:** Backend #144, complementada por esta política. No crea DEC-F-016 ni altera DEC-F-001–015.
@@ -165,5 +165,5 @@ La sustitución es precisa: **solo** desaparece la exigencia de perímetro priva
 ## 13. Fuentes canónicas
 
 - [Matriz de operaciones de seguridad](MATRIZ-OPERACIONES-SEGURIDAD-G6.md).
-- [Backend: política H4 previa y reversible](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/ops/oracle/H4-MODO-DEMO-AUTH-REVERSIBLE.md) y [Backend #144](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/issues/144).
+- [Backend: política H4 previa y reversible](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/30f5820dadf0ac9c3368dab37e4cb90d1493322d/ops/oracle/H4-MODO-DEMO-AUTH-REVERSIBLE.md) y [Backend #144](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/issues/144).
 - [OpenAPI](../../contratos/http/openapi.yaml), [AsyncAPI](../../contratos/eventos/asyncapi.yaml), [Registro DEC-F](REGISTRO_DEC_F.md), [Matriz de trazabilidad DEC-F](MATRIZ_TRAZABILIDAD_DEC_F.md), [Acuerdo G1–G6 H4](../../integraciones/ACUERDO_G1_G6_H4_2026-10-20.md), [alineación Marketplace](../../integraciones/ALINEACION_MARKETPLACE.md) y [pruebas de contrato](../../contratos/pruebas/pruebas-contrato.md).

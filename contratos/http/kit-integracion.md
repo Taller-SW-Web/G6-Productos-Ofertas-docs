@@ -1,10 +1,17 @@
-> **Alcance de transporte:** este kit conserva pasos de integración H4 para trazabilidad. RabbitMQ/AsyncAPI no define el transporte H5. Consulte primero la [ADR Service Bus Basic adoptada](../../arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md), la [topología H5](../eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) y el [índice de transición](../../integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md). Los clientes externos usan HTTP autenticado.
+> **Alcance de transporte:** este kit conserva pasos de integración H4 para trazabilidad. RabbitMQ/AsyncAPI no define el transporte H5. Consulte primero la [ADR Service Bus Basic adoptada](../../arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md), la [topología H5](../eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) y el [índice de transición](../../integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md). Los clientes externos usan HTTP autenticado. Para contratos H5, use el [OpenAPI canónico](openapi.yaml) y el [AsyncAPI canónico](../eventos/asyncapi.yaml), ambos `0.7.0-rc.3`, `APPROVED_G6`; los pasos y ejemplos H4 de las secciones siguientes son históricos y no cambian rutas, scopes ni payloads.
 
 # Kit de integración — Productos y Ofertas
 
 ## Propuesta H5 para consumidores externos
 
-H5 mantiene la integración externa por HTTP; G5 no obtiene credenciales ni acceso directo a Azure Service Bus. Las rutas propuestas de consumo/restauración de cupón y consulta de operación están en [PROPUESTA-OPERACIONES-CUPONES-H5.md](./PROPUESTA-OPERACIONES-CUPONES-H5.md) y aún no forman parte de OpenAPI ni son endpoints disponibles. Promotions usaría la cola interna `g6.promotions.commands`; adaptador HTTP vía Outbox, worker exclusivo, Inbox/idempotencia y resultado durable son una propuesta de implementación. `202 Accepted` solo confirma admisión y persistencia durable; el consumidor recupera el resultado con GET. G5 debe leer el estado actual de reserva: `ACTIVA` con `expires_at` cumplido no habilita pago/consumo. La ruta GET de reserva y su autorización siguen pendientes de homologación G5/G7; el vencimiento lo maneja el `ReservationExpirationService` existente.
+H5 mantiene la integración externa por HTTP; G5 no obtiene credenciales ni acceso directo a Azure Service Bus. Las cuatro rutas siguientes están incluidas en OpenAPI H5 `0.7.0-rc.3` (`APPROVED_G6`):
+
+- `POST /cupones/consumos`
+- `POST /cupones/restauraciones`
+- `GET /cupones/operaciones/{operationId}`
+- `GET /inventario/reservas/{reservaId}/estado`
+
+La inclusión contractual no acredita implementación, despliegue, autorización G7 ni homologación efectiva G5; esas evidencias se registran por separado. La descripción de la propuesta de consumo/restauración está en [PROPUESTA-OPERACIONES-CUPONES-H5.md](./PROPUESTA-OPERACIONES-CUPONES-H5.md). Promotions usaría la cola interna `g6.promotions.commands`; el adaptador HTTP vía Outbox, worker exclusivo, Inbox/idempotencia y resultado durable describen la implementación propuesta. `202 Accepted` solo confirma admisión y persistencia durable; el consumidor recupera el resultado con GET. G5 debe leer el estado actual de reserva: `ACTIVA` con `expires_at` cumplido no habilita pago/consumo. El vencimiento lo maneja el `ReservationExpirationService` existente.
 
 **Fecha de actualización:** 2026-11-02
 

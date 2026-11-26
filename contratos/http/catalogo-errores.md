@@ -55,6 +55,7 @@ Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail
 | `STOCK_INSUFICIENTE` | No existe disponibilidad suficiente para completar la operación. |
 | `RESERVA_NO_ENCONTRADA` | Reserva no encontrada. |
 | `OPERACION_INVENTARIO_NO_ENCONTRADA` | Operación de inventario inexistente o no visible para el consumidor. |
+| `OPERACION_CUPON_NO_ENCONTRADA` | Operación de cupón inexistente o no visible para la identidad y pedido consultados. |
 | `CONTEXTO_ABASTECIMIENTO_INVALIDO` | Contexto o referencia de cumplimiento comercial inválido. |
 | `RESERVA_NO_ACTIVA` | Reserva no activa. |
 | `RESERVA_EXPIRADA` | Reserva expirada. |
@@ -106,6 +107,7 @@ Los consumidores deben ramificar por `Problem.code`, nunca por `title` o `detail
 | `SLUG_DUPLICADO` | Slug duplicado. |
 | `METADATOS_SEO_INVALIDOS` | Metadatos SEO inválidos. |
 | `ARCHIVO_INVALIDO` | Archivo inválido. |
+| `ARCHIVO_NO_ENCONTRADO` | Contenido interno de claim-check inexistente o no visible para el cliente autenticado; respuesta uniforme. |
 | `ARCHIVO_EXCEDE_LIMITE` | Archivo excede el límite. |
 | `PLANTILLA_INCOMPATIBLE` | Plantilla incompatible. |
 | `CONTENIDO_ACTIVO_NO_PERMITIDO` | Contenido activo no permitido. |
@@ -178,3 +180,7 @@ Para Bulk, se reutiliza `IDEMPOTENCY_CONFLICT` ante misma identidad de fila con 
 
 
 En `consultarDatosFisicos`, conexión, timeout, PostgreSQL o dependencia temporalmente indisponible corresponde a HTTP `503 SERVICIO_NO_DISPONIBLE`. No se exponen errores SQL, nombres de tablas, credenciales ni detalles internos. Un perfil físico incompleto no se presenta como respuesta `200` parcial.
+
+## Lecturas administrativas de inventario H5 (`0.7.0-rc.3`, `APPROVED_G6`)
+
+Las rutas de saldos, alertas y ubicaciones responden `400 VALIDACION` ante filtros desconocidos, tipos inválidos o paginación fuera de rango; estado `DISPONIBLE` no es válido para `GET /inventario/alertas`. Un listado sin coincidencias devuelve `200` con `items: []` y `meta.total: 0`, nunca un `404`. Respuestas de autenticación conservan `401 TOKEN_INVALIDO` y `403 SCOPE_INSUFICIENTE`; limitación temporal usa `429 RATE_LIMIT_EXCEDIDO`; fallos internos/dependencia usan `500 ERROR_INTERNO` / `503 SERVICIO_NO_DISPONIBLE`. Estas rutas y permisos humanos aún requieren verificación de runtime/G7.

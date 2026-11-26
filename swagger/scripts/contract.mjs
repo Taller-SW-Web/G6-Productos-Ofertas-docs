@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { parseDocument } from 'yaml';
 
 export const source = fileURLToPath(new URL('../../contratos/http/openapi.yaml', import.meta.url));
-export async function loadContract() {
-  const raw = await readFile(source, 'utf8');
+export async function loadContract(file = source) {
+  const raw = await readFile(file, 'utf8');
   const doc = parseDocument(raw);
   if (doc.errors.length) throw new Error(doc.errors.map(e => e.message).join('\n'));
   return { raw, spec: doc.toJS({ maxAliasCount: 10000 }), strictErrors: [], redundantKeys: [] };

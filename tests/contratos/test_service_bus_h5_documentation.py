@@ -46,7 +46,8 @@ class TestServiceBusH5Documentation(unittest.TestCase):
         )
         for text in (adr, proposal, matrix, migration):
             self.assertRegex(text, r"periódic[oa]")
-            self.assertIn("no está implementado ni aceptado por G5", text)
+            self.assertIn("no está implementado", text)
+            self.assertRegex(text, r"(?:homologación|homologado)")
             self.assertIn("G6 no administra estados de pedido", text)
         for text in (adr, proposal, matrix, migration):
             self.assertIn("inventory.reservation.created", text)
@@ -122,7 +123,7 @@ class TestServiceBusH5Documentation(unittest.TestCase):
                 "channel_id": "MARKETPLACE",
                 "effective_at": "2026-11-14T10:00:00Z",
                 "reservation_id": "22222222-2222-4222-8222-222222222222",
-                "commercial_snapshot_ref": "snapshot-order-01",
+                "commercial_snapshot_ref": "PED-opaque-01",
             }
         )
         invalid_consume = {
@@ -131,7 +132,7 @@ class TestServiceBusH5Documentation(unittest.TestCase):
             "coupon_code": "SALE10",
             "channel_id": "MARKETPLACE",
             "effective_at": "2026-11-14T10:00:00Z",
-            "commercial_snapshot_ref": "snapshot-order-01",
+            "commercial_snapshot_ref": "PED-opaque-01",
         }
         self.assertFalse(consume.is_valid(invalid_consume))
 
@@ -178,7 +179,7 @@ class TestServiceBusH5Documentation(unittest.TestCase):
                 "order_id": "PED-opaque-01",
                 "result_code": "CUPON_NO_ELEGIBLE",
                 "reservation_id": "22222222-2222-4222-8222-222222222222",
-                "commercial_snapshot_ref": "snapshot-order-01",
+                "commercial_snapshot_ref": "PED-opaque-01",
                 "coupon_code": "SALE10",
                 "decided_at": "2026-11-14T10:00:02Z",
             },
@@ -214,7 +215,7 @@ class TestServiceBusH5Documentation(unittest.TestCase):
             }
         )
         text = PROPOSAL.read_text(encoding="utf-8")
-        self.assertIn("requiere aprobación y alta en catálogo", text)
+        self.assertIn("ya está incorporado al catálogo y al OpenAPI semifinal", text)
 
     def test_http_idempotency_and_replay_policy_are_explicit(self):
         text = PROPOSAL.read_text(encoding="utf-8")

@@ -10,7 +10,7 @@ import sys
 import tempfile
 
 OWNERS = ("castilla", "poma", "cueva", "lopez", "taco", "vera")
-REPOSITORY = "Taller-SW-Web/Productos-y-Ofertas-docs"
+REPOSITORY = "Taller-SW-Web/G6-Productos-Ofertas-docs"
 REMOTE = "https://github.com/" + REPOSITORY + ".git"
 CONFIG_KEYS = {"schema_version", "repository", "enabled_sources", "pairs",
                "operational_readme", "local_ignore_line"}

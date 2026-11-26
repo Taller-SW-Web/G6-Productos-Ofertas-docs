@@ -1,19 +1,27 @@
 # Instrucciones para agentes de G6 Productos y Ofertas
 
+## Objetivo vigente — Hito 5
+
+> CI/CD incluyendo revision Seguridad — Evidencia de Pruebas de integración — Evidencia de Pruebas de performance — Uso de API Management y Mecanismo asincrónico entre Microservicios
+
+Los cuatro criterios y sus evidencias se registran en [hitos/HITO_5.md](hitos/HITO_5.md). H4 es el hito anterior y su AsyncAPI se conserva en `contratos/historico/h4/`; los contratos canónicos H5 son `contratos/http/openapi.yaml` y `contratos/eventos/asyncapi.yaml` (`0.7.0-rc.3`, aprobación G6 `APPROVED_G6`; baseline técnica `SEMIFINAL_G6`). Mantén la norma vigente de Azure Service Bus Basic y no infieras implementación, homologación o despliegue desde la documentación.
+
 Para tareas de mensajería H5, la matriz de implementación Service Bus es la fuente única del seguimiento por flujo: [MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md](integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md). Léela junto con la ADR, topología y plan H5 indicados abajo.
 
 ## Norma de mensajería H5 (obligatoria)
 
 La arquitectura objetivo adoptada por G6 para Hito 5 es **Azure Service Bus Basic exclusivamente para mensajería interna entre bounded contexts G6**. Las integraciones externas usan HTTP autenticado a través de APIM/Gateway G6; contratos, homologación G5 y autorización G7 se verifican por separado. La adopción no demuestra recursos Azure aprovisionados, identidades/grants, implementación, pruebas runtime ni despliegue. Estados vigentes: `ADOPTADA_G6`, `PENDIENTE_APROVISIONAMIENTO_AZURE`, `PENDIENTE_IMPLEMENTACION`, `PENDIENTE_HOMOLOGACION_G5` y `PENDIENTE_AUTORIZACION_G7`. Un colaborador asumió la configuración de recursos Azure; esta asignación no es evidencia de provisión.
 
-RabbitMQ es arquitectura heredada H4. Su AsyncAPI/topología describen el contrato y la infraestructura H4 y pueden consultarse para preservar semántica de negocio e invariantes; **no derivar de allí colas, bindings, routing keys físicos, variables ni comandos para una implementación H5**. La compatibilidad transitoria aplica solo al runtime H4 existente y no autoriza desarrollar una infraestructura RabbitMQ nueva para H5. No inventar un AsyncAPI H5 definitivo ni declarar homologación externa.
+RabbitMQ es arquitectura heredada H4, preservada en [`contratos/historico/h4/eventos/asyncapi.yaml`](contratos/historico/h4/eventos/asyncapi.yaml). El AsyncAPI canónico [`contratos/eventos/asyncapi.yaml`](contratos/eventos/asyncapi.yaml) es H5 `0.7.0-rc.3`, con aprobación interna `APPROVED_G6` y baseline técnica `SEMIFINAL_G6`; la homologación externa sigue pendiente donde aplique y no se acredita implementación ni recursos. Service Bus Basic aplica solo a mensajería interna G6; consumidores externos usan HTTP autenticado.
+
+La matriz de ajustes de implementación Backend se mantiene en [`COMPATIBILIDAD-BACKEND-CONTRATOS-H5.md`](integraciones/COMPATIBILIDAD-BACKEND-CONTRATOS-H5.md); sus registros son incompatibilidades a corregir, no correcciones ya aplicadas.
 
 ### Orden de lectura para mensajería H5
 
 1. Este archivo y [`README.md`](README.md).
 2. [`ADR-H5-SERVICE-BUS-BASIC.md`](arquitectura/decisiones/ADR-H5-SERVICE-BUS-BASIC.md) y [`TOPOLOGIA-SERVICE-BUS-BASIC-H5.md`](contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md).
 3. [`PLAN-MIGRACION-MENSAJERIA-H5.md`](integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md), [`MATRIZ-EXTERNOS-ASYNCAPI-H5.md`](integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md) y [`INVENTARIO-40-MENSAJES-H5.md`](contratos/eventos/INVENTARIO-40-MENSAJES-H5.md).
-4. Contrato funcional AsyncAPI H4 solo como origen semántico, junto con el [índice de transición H4→H5](integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md); sus `servers`, bindings y topología RabbitMQ no definen H5.
+4. Use el AsyncAPI H4 histórico solo como fuente de semántica y regresión; `servers`, bindings y topología RabbitMQ no definen el transporte H5.
 5. SPEC/HU/FLOW y contratos HTTP aplicables; revisar homologación externa y seguridad antes de alterar fronteras.
 
 ## Orden obligatorio de lectura
@@ -97,3 +105,18 @@ Detén el cambio que dependa de la contradicción. Conserva ambas referencias, r
 Antes de implementar una integración G1, leer [`integraciones/ACUERDO_G1_G6_H4_2026-10-20.md`](integraciones/ACUERDO_G1_G6_H4_2026-10-20.md), [`integraciones/ALINEACION_MARKETPLACE.md`](integraciones/ALINEACION_MARKETPLACE.md), `contratos/http/openapi.yaml` y [`kit-integracion.md`](contratos/http/kit-integracion.md). Para ejecución Backend, también leer el [paquete operativo obligatorio](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/tree/castilla/integraciones/g1-marketplace). Acuerdo/guía no reemplazan SPEC, DEC-F/ADR ni contrato ejecutable.
 
 La aceptación G6 del 2026-10-20 está documentada en el [Acuerdo G1–G6 H4](integraciones/ACUERDO_G1_G6_H4_2026-10-20.md); debe leerse antes de editar integración Marketplace, junto con el OpenAPI y la guía Backend. No utilices documentos históricos de preparación para afirmar aceptación pendiente, ni atribuyas ratificación G1 o grant G7 no acreditados.
+
+
+## Flujo de CI para PR: Draft → Ready
+
+- Abre los PR en Draft y mantenlos así durante la implementación, las pruebas focalizadas y las correcciones. Al completar la implementación, comunica el enlace del PR, el HEAD SHA, el resumen de cambios y las pruebas realizadas para dejarlo disponible para revisión.
+- Mientras haya observaciones obligatorias del auditor, el PR permanece en Draft. Corrige en el mismo PR, publica los cambios y comunica que están listos para nueva revisión. Repite hasta que no queden observaciones bloqueantes. Las recomendaciones opcionales o clasificadas expresamente como no bloqueantes no impiden avanzar.
+- Terminar el desarrollo o superar pruebas locales no equivale a aprobar la implementación propia. Solo pasa el PR a Ready for Review cuando se haya comunicado que la revisión terminó satisfactoriamente y exista autorización para continuar. No se exige formato, documento ni registro adicional para comunicar observaciones o autorización.
+- Si después de una revisión favorable haces una corrección sustancial, comunícala antes de avanzar para determinar si requiere otra revisión. No repitas auditorías completas por cambios menores que no alteren los aspectos técnicos evaluados, salvo indicación expresa.
+- No ejecutes suites locales completas de manera rutinaria; usa pruebas focalizadas para depurar. Las validaciones integrales se ejecutan en GitHub Actions al pasar el PR a Ready for Review. El PR no se considera validado hasta que todos los checks obligatorios pasen para la revisión actual.
+- Si CI requiere cambios de código, vuelve a Draft durante las correcciones y solicita nueva revisión cuando corresponda. Cada commit en Ready invalida la validación anterior y genera una nueva ejecución; volver a Draft difiere nuevas suites pesadas. Toda evidencia debe corresponder al código y SHA probados.
+- Una revisión técnica favorable no autoriza el merge. El merge requiere checks obligatorios satisfactorios, cumplimiento de las protecciones de GitHub y la autorización correspondiente. No se hace merge con checks pendientes o fallidos. Marcar un PR Ready no autoriza despliegues de producción.
+
+## Checkpoint operativo Azure
+
+Antes de tareas de Azure, CD, APIM, Service Bus o integración G5, consulta el [índice Azure G6](ops/azure/README.md) y el checkpoint que enlaza. Trata snapshots como históricos y revalida Azure/GitHub antes de operar. No sustituyen contratos/ADR ni autorizan cambios.

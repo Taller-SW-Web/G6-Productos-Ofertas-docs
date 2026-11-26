@@ -20,7 +20,7 @@ permissions:
 jobs:
   plan:
     if: >-
-      github.repository == 'Taller-SW-Web/Productos-y-Ofertas-docs' &&
+      github.repository == 'Taller-SW-Web/G6-Productos-Ofertas-docs' &&
       (github.event_name == 'workflow_dispatch' || vars.SYNC_WORKSPACES_ENABLED == 'true') &&
       (github.event_name != 'workflow_run' ||
        github.event.workflow_run.head_repository.full_name == github.repository)

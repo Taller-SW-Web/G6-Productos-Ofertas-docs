@@ -71,7 +71,7 @@ G5 ──HTTPS GET /operaciones/{operationId}───────────�
 - `order_id` de G5 es texto opaco, nunca un UUID inferido.
 - No consumir cupón antes de una reserva **confirmada efectivamente**. No confundir reserva con su admisión HTTP.
 - Distinguir creación efectiva de reserva (`inventory.reservation.created` o resultado durable `COMPLETED`) de consumo definitivo del stock (`POST /api/v1/inventario/reservas/{reservaId}/confirmar`). Para Marketplace con cupón: reserva creada → verificar vigencia actual → consumir cupón y esperar `COMPLETED` → procesar pago → confirmar consumo definitivo de stock y esperar su resultado. No confirmar stock antes del cupón ni del pago.
-- Como la expiración puede ocurrir sin notificación posterior a la creación, se propone que G5 mantenga una conciliación periódica y durable de pedidos y órdenes de reemplazo con reserva asociada y activa. El GET de estado es la observación autoritativa; G5 conserva el ownership de sus estados de pedido y aplica sus transiciones existentes. G6 no administra estados de pedido. El mecanismo de conciliación no está implementado ni aceptado por G5.
+- Como la expiración puede ocurrir sin notificación posterior a la creación, se propone que G5 mantenga una conciliación periódica y durable de pedidos y órdenes de reemplazo con reserva asociada y activa. El GET de estado es la observación autoritativa; G5 conserva el ownership de sus estados de pedido y aplica sus transiciones existentes. G6 no administra estados de pedido. Según `G5-G6-H5-REVISION-01`, la aceptación G5 se asume únicamente para planificación; el mecanismo de conciliación no está implementado ni homologado formalmente.
 - Restauración de cupón vinculada al consumo confirmado original mediante `consumption_operation_id`; `cancelled_at` original no cambia al reintentar.
 - Proteger los datos sensibles, logs y DLQ; accesos solo para identidades autorizadas.
 - No cambiar el contrato de Retail offline, Despacho, Marketplace o Chatbot por el mero reemplazo de broker.
@@ -109,7 +109,7 @@ Homologación bilateral mínima: G5 y G6 acuerdan propietario y persistencia de 
 
 ## Referencias normativas históricas (no modificar destructivamente)
 
-- `contratos/eventos/asyncapi.yaml` — candidata 0.6.0-rc.4 H4.
+- `contratos/historico/h4/eventos/asyncapi.yaml` — AsyncAPI H4 histórico 0.6.0-rc.4. El canónico H5 es `contratos/eventos/asyncapi.yaml` 0.7.0-rc.3, `APPROVED_G6`; no se presume homologación externa.
 - `contratos/eventos/rabbitmq-topologia.md` — topología observada H4.
 - `integraciones/ACUERDO_G5_G6_H4_2026-10-21.md` — decisiones D-01–D-04, homologación parcial de acceso AMQP.
 - `arquitectura/decisiones/ACUERDOS-INTEGRACION-INTERNA-G6-H4.md` — INT-01–13.

@@ -2,14 +2,19 @@
 
 # API Contract — Módulo de Productos y Ofertas
 
+> **Corte documental original (2026-10-12):** OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4`, versiones candidatas referidas al momento de redacción.
+> **Snapshots H4 conservados:** [OpenAPI H4](../historico/h4/http/openapi.yaml) `0.6.0-rc.5` y [AsyncAPI H4](../historico/h4/eventos/asyncapi.yaml) `0.6.0-rc.4`.
+> **Contratos canónicos H5 vigentes:** [OpenAPI](../http/openapi.yaml) y [AsyncAPI](../eventos/asyncapi.yaml), ambos `0.7.0-rc.3`, aprobados internamente como `APPROVED_G6`. Esta identificación documental no acredita homologación externa, implementación, autorización G7 ni despliegue.
+
+
 **Fecha de actualización:** 2026-10-12  
 **Módulo propietario:** Productos y Ofertas  
 **Documento de integración:** `Contrato_Api.md`  
-**Contrato HTTP canónico:** `openapi.yaml` (`0.6.0-rc.3`, candidata; operación de Despacho homologada pero aún `provisional`)
-**Contrato asíncrono canónico:** `../eventos/asyncapi.yaml` (`0.6.0-rc.4`, candidato)
+**OpenAPI referido en el corte documental original:** `0.6.0-rc.3` (candidato del momento; no es la versión del snapshot H4).
+**AsyncAPI referida en el corte documental original:** `0.6.0-rc.4` (candidato del momento).
 **Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (referencia humana; base histórica `0.5.0`, candidato de 40 mensajes)
 **Catálogo de errores canónico:** `contratos/http/catalogo-errores.md` (vocabulario estable de códigos)
-**Estado:** `0.5.0` como línea base histórica/de compatibilidad; OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` como candidatas. La revisión `rc.3` reconcilia nombres físicos base observados en Oracle y conserva mensajes, operaciones y routing keys; no acredita despliegue, permisos de G7 ni pruebas de integración.
+**Estado en el corte documental original:** `0.5.0` como línea base histórica/de compatibilidad; OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` como candidatas. No reemplaza la identificación H5 vigente indicada arriba. La revisión `rc.3` reconcilia nombres físicos base observados en Oracle y conserva mensajes, operaciones y routing keys; no acredita despliegue, permisos de G7 ni pruebas de integración.
 
 ## Fuentes utilizadas
 
@@ -2663,7 +2668,7 @@ Estos ajustes documentan reglas administrativas y no acreditan implementación o
 
 ## Elegibilidad comercial por canal
 
-La política funcional comunicada aplica de igual forma a `MARKETPLACE`, `CHATBOT`, `RETAIL` y `VENTAS`: producto simple activo expone `sku_base`; producto con variantes requiere padre activo y al menos una variante activa, y solo son visibles variantes activas con padre activo. No existen asignaciones, defaults ni tablas independientes por canal. El parámetro `canal` conserva el contexto de la consulta y no otorga scopes. Elegibilidad se evalúa antes del total y la paginación; visibilidad no garantiza precio, stock ni promociones. D-CAT-05/06: decisión comunicada; pendiente de ratificación de Arquitectura y conformidad de consumidores. Para regla detallada consultar [SPEC-003 §7](../../requisitos/specs/SPEC-003-gestion-productos-crud.md).
+La política funcional comunicada aplica de igual forma a `MARKETPLACE`, `CHATBOT`, `RETAIL` y `VENTAS`: producto simple activo expone `sku_base`; producto con variantes requiere padre activo y al menos una variante activa, y solo son visibles variantes activas con padre activo. No existen asignaciones, defaults ni tablas independientes por canal. El parámetro `canal` conserva el contexto de la consulta y no otorga scopes. Elegibilidad se evalúa antes del total y la paginación; visibilidad no garantiza precio, stock ni promociones. D-CAT-05/06: `APPROVED_G6` por el acta; la conformidad de consumidores sigue pendiente cuando aplique. Para regla detallada consultar [SPEC-003 §7](../../requisitos/specs/SPEC-003-gestion-productos-crud.md).
 # Nota H5 — propuesta HTTP externa
 
 Este contrato narrativo conserva los flujos RabbitMQ/AsyncAPI H4 como histórico. La propuesta H5 de HTTP para sustituir los mensajes de G5 se mantiene separada y no altera OpenAPI `0.6.0-rc.4`: [operaciones candidatas de cupones y estado de reserva](./PROPUESTA-OPERACIONES-CUPONES-H5.md), [matriz de mensajes externos](../../integraciones/MATRIZ-EXTERNOS-ASYNCAPI-H5.md). Incluye la ruta propuesta `GET /api/v1/inventario/reservas/{reservaId}/estado`; los endpoints son candidatos, no implementados. Las operaciones HTTP de cupones encolarían internamente en `g6.promotions.commands`, sin dar credenciales de broker a G5. `202` significa admisión durable. Un `ACTIVA` con `expires_at` cumplido se informa con vigencia efectiva vencida y no habilita pago/consumo. G5 requiere confirmación final de la reserva antes del consumo de cupón. Homologación G5, scopes G7, implementación y E2E siguen pendientes.

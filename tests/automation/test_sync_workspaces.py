@@ -29,9 +29,10 @@ class ConfigurationTests(unittest.TestCase):
             with self.assertRaises(SyncError):
                 load_config(path)
 
-    def test_pilot_and_six_mappings(self):
-        self.assertEqual(self.config["enabled_sources"], ["cueva"])
+    def test_six_enabled_sources_and_mappings(self):
+        self.assertEqual(self.config["enabled_sources"], ["castilla", "poma", "cueva", "lopez", "taco", "vera"])
         self.assertEqual(len(self.config["pairs"]), 6)
+        self.assertEqual(self.config["repository"], "Taller-SW-Web/G6-Productos-Ofertas-docs")
 
     def test_inverse_unknown_duplicate_and_operational_path_rejected(self):
         for key, value in [("repository", "other/repo"), ("schema_version", True),
@@ -50,22 +51,23 @@ class ConfigurationTests(unittest.TestCase):
         config["unexpected"] = True
         self.invalid(config)
 
-    def test_push_to_lab_or_disabled_owner_does_not_run(self):
-        for ref in ("lab/cueva", "master", "poma", "untrusted"):
+    def test_push_to_lab_or_unknown_owner_does_not_run(self):
+        for ref in ("lab/cueva", "master", "untrusted"):
             self.assertEqual(select_pairs(self.config, "push", ref), [])
-        self.assertEqual(select_pairs(self.config, "push", "cueva"), [self.config["pairs"][2]])
+        for owner, pair in zip(self.config["enabled_sources"], self.config["pairs"]):
+            self.assertEqual(select_pairs(self.config, "push", owner), [pair])
 
     def test_schedule_and_completed_master_select_enabled_only(self):
         for event in ("schedule", "workflow_run"):
-            self.assertEqual(select_pairs(self.config, event), [self.config["pairs"][2]])
+            self.assertEqual(select_pairs(self.config, event), self.config["pairs"])
 
-    def test_manual_disabled_pair_and_unknown_event_rejected(self):
+    def test_manual_unknown_pair_and_unknown_event_rejected(self):
         with self.assertRaises(SyncError):
-            select_pairs(self.config, "workflow_dispatch", selection="poma")
+            select_pairs(self.config, "workflow_dispatch", selection="unknown")
         with self.assertRaises(SyncError):
             select_pairs(self.config, "pull_request")
         self.assertEqual(select_pairs(self.config, "workflow_dispatch", selection="todos"),
-                         [self.config["pairs"][2]])
+                         self.config["pairs"])
 
     def test_non_object_config_rejected(self):
         self.invalid([])

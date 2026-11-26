@@ -6,7 +6,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-OPENAPI = yaml.safe_load((ROOT / "contratos/http/openapi.yaml").read_text(encoding="utf-8"))
+OPENAPI = yaml.safe_load((ROOT / "contratos/historico/h4/http/openapi.yaml").read_text(encoding="utf-8"))
 
 
 class G6OptimizationContractTests(unittest.TestCase):

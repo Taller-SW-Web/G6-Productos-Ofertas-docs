@@ -9,9 +9,16 @@ test('Contrato completo sin acceso externo ni ejecución de APIs', async ({ page
     if (url.origin !== 'http://localhost:8080') { external.push(url.origin); return route.abort(); }
     return route.continue();
   });
-  const manifest = await (await page.request.get('/manifest.json')).json();
-  const expected = await (await page.request.get('/openapi.json')).json();
-  await page.goto('/?url=https://example.invalid/hostile.yaml&configUrl=https://example.invalid/config');
+  const manifest = await (await page.request.get('manifest.json')).json();
+  const version = await (await page.request.get('version.json')).json();
+  const expected = await (await page.request.get('openapi.json')).json();
+  await page.goto('./?url=https://example.invalid/hostile.yaml&configUrl=https://example.invalid/config');
+  await expect(page.locator('#source-sha')).toHaveText(version.commit_sha);
+  await expect(page.locator('#source-short-sha')).toHaveText(version.commit_sha_short);
+  if (version.commit_url) await expect(page.locator('#source-commit')).toHaveAttribute('href', version.commit_url);
+  else await expect(page.locator('#source-commit')).not.toHaveAttribute('href');
+  await expect(page.locator('#generated-at')).toHaveText(version.generated_at_utc);
+  await expect(page.locator('#openapi-version')).toHaveText(version.openapi_version);
   await expect(page.locator('.opblock-tag')).toHaveCount(manifest.tags);
   await expect(page.locator('#status')).toContainText(`${manifest.operations} operaciones`);
   await page.locator('#security-reference summary').click();
@@ -51,8 +58,9 @@ test('Contrato completo sin acceso externo ni ejecución de APIs', async ({ page
 });
 
 test('Servidor local solo sirve documentación por GET/HEAD', async ({ request }) => {
-  expect((await request.get('/manifest.json')).status()).toBe(200);
-  expect((await request.head('/openapi.yaml')).status()).toBe(200);
+  expect((await request.get('manifest.json')).status()).toBe(200);
+  expect((await request.get('version.json')).status()).toBe(200);
+  expect((await request.head('openapi.yaml')).status()).toBe(200);
   expect((await request.get('/api/v1/productos')).status()).toBe(404);
   expect((await request.get('/..%2Fpackage.json')).status()).toBe(404);
   expect((await request.post('/openapi.json', { data: {} })).status()).toBe(405);

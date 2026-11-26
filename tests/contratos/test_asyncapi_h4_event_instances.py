@@ -18,8 +18,8 @@ from referencing.jsonschema import DRAFT202012
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-ASYNCAPI_FILE = ROOT / "contratos/eventos/asyncapi.yaml"
-OPENAPI_FILE = ROOT / "contratos/http/openapi.yaml"
+ASYNCAPI_FILE = ROOT / "contratos/historico/h4/eventos/asyncapi.yaml"
+OPENAPI_FILE = ROOT / "contratos/historico/h4/http/openapi.yaml"
 FIXTURE_FILE = ROOT / "tests/contratos/fixtures/asyncapi-0.6.0-rc.4-h4-events.json"
 
 

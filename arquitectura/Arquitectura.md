@@ -1,16 +1,16 @@
 # Arquitectura del Módulo de Productos y Ofertas
 
-**Fecha de actualización:** 2026-11-17
+**Fecha de actualización:** 2026-11-22
 **Repositorio de documentación:** `Taller-SW-Web/G6-Productos-Ofertas-docs`  
 **Archivo:** `arquitectura/Arquitectura.md`  
-**Contrato HTTP canónico:** `contratos/http/openapi.yaml` (candidato `0.6.0-rc.4`; referencia histórica `0.5.0`)
-**Contrato asíncrono canónico:** `contratos/eventos/asyncapi.yaml` (candidato `0.6.0-rc.4`; referencia histórica `0.5.0`)
+**Contrato HTTP canónico H5:** `contratos/http/openapi.yaml` (`0.7.0-rc.3`, `APPROVED_G6`; corte `0.6.x` histórico)
+**Contrato asíncrono canónico H5:** `contratos/eventos/asyncapi.yaml` (`0.7.0-rc.3`, `APPROVED_G6`; corte `0.6.x` histórico)
 **Catálogo de eventos:** `contratos/eventos/catalogo-eventos.md` (referencia humana; base histórica `0.5.0`)
 **Catálogo canónico de errores:** `contratos/http/catalogo-errores.md` (códigos autoritativos para el contrato candidato)
 **Contrato humano de integración:** `contratos/http/Contrato_Api.md`  
 **Modelo conceptual:** `Modelo_Conceptual.md`  
 **Estado de mensajería:** H5 adoptado por G6: Azure Service Bus Basic exclusivamente interno; HTTP autenticado vía APIM/Gateway para externos. Aprovisionamiento, implementación, autorización G7, homologación G5, pruebas runtime y despliegue siguen pendientes por separado. H4 RabbitMQ queda heredado.
-**Estado contractual:** línea base `0.5.0` conservada para compatibilidad; OpenAPI `0.6.0-rc.3` y AsyncAPI `0.6.0-rc.4` son contratos **candidatos**. AsyncAPI `rc.3` reconcilia nombres físicos de infraestructura base con una observación histórica de Oracle; conserva los 40 mensajes y canales, operaciones, productores, consumidores, payloads, esquemas y routing keys comerciales. No acredita homologación, despliegue ni ejecución. Las decisiones internas están adoptadas, pero su implementación, despliegue y conformidad E2E no se acreditan mediante este documento.
+**Estado contractual H5:** OpenAPI y AsyncAPI canónicos `0.7.0-rc.3`, aprobados internamente `APPROVED_G6`; los cortes `0.6.x` y la línea base `0.5.0` se conservan como antecedentes históricos/compatibilidad. AsyncAPI `rc.3` reconcilia nombres físicos de infraestructura base con una observación histórica de Oracle; conserva sus contratos definidos. No acredita homologación, despliegue ni ejecución. La implementación, despliegue y conformidad E2E no se acreditan mediante este documento.
 
 > Esta arquitectura describe conceptos y antecedentes. Para implementar mensajería H5, prevalecen la ADR y topología Service Bus Basic enlazadas abajo; los detalles RabbitMQ de esta página son exclusivamente H4.
 > Las SPEC son la fuente de verdad para reglas funcionales; `contratos/http/openapi.yaml` gobierna HTTP; `contratos/eventos/asyncapi.yaml` gobierna mensajería; `contratos/http/catalogo-errores.md` gobierna la semántica estable de `code`.
@@ -23,7 +23,7 @@
 
 G6 adoptó **Azure Service Bus Basic** como broker exclusivamente interno para Hito 5. Las integraciones externas se realizan por HTTP autenticado a través de APIM/Gateway G6. La adopción no acredita recursos aprovisionados, identidades o grants, código, pruebas runtime ni despliegue. Un integrante asumió la configuración Azure, aún pendiente de evidencia verificable. G5 no homologó el cambio de sus integraciones; G7 aún debe autorizar identidades/grants aplicables.
 
-Orden normativo de implementación H5: [ADR H5](decisiones/ADR-H5-SERVICE-BUS-BASIC.md) → [topología Service Bus](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) → [plan de migración](../integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md) → contratos HTTP/homologaciones aplicables. El [AsyncAPI H4](../contratos/eventos/asyncapi.yaml) preserva semántica y payloads funcionales; sus servidores, bindings, routing keys y topología RabbitMQ no autorizan diseñar colas o infraestructura H5. Véase el [índice H4→H5](../integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md).
+Orden normativo de implementación H5: [ADR H5](decisiones/ADR-H5-SERVICE-BUS-BASIC.md) → [topología Service Bus](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md) → [plan de migración](../integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md) → contratos HTTP/homologaciones aplicables. El [snapshot AsyncAPI H4](../contratos/historico/h4/eventos/asyncapi.yaml) preserva semántica y payloads funcionales; sus servidores, bindings, routing keys y topología RabbitMQ no autorizan diseñar colas o infraestructura H5. Véase el [índice H4→H5](../integraciones/INDICE-TRANSICION-MENSAJERIA-H4-H5.md).
 
 ## 0.1. Antecedentes H4
 
@@ -745,7 +745,7 @@ La coordinación se implementa con:
 
 ### 10.0. H5 adoptado (objetivo; implementación pendiente)
 
-La [ADR-H5 adoptada](decisiones/ADR-H5-SERVICE-BUS-BASIC.md) plantea Azure Service Bus Basic exclusivamente para comunicación interna entre bounded contexts G6. Los consumidores externos G1–G5 conservan HTTP autenticado; G7 mantiene identidad y grants. Sustituir los 13 mensajes que AsyncAPI H4 asigna a G5 requiere homologación G5 y autorización G7. No se modifica en esta propuesta el AsyncAPI canónico `0.6.0-rc.4`, el OpenAPI `0.6.0-rc.4` ni sus fixtures. Véanse [topología candidata](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md), [inventario de 40 mensajes](../contratos/eventos/INVENTARIO-40-MENSAJES-H5.md) y [plan de migración](../integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md).
+La [ADR-H5 adoptada](decisiones/ADR-H5-SERVICE-BUS-BASIC.md) plantea Azure Service Bus Basic exclusivamente para comunicación interna entre bounded contexts G6. Los consumidores externos G1–G5 conservan HTTP autenticado; G7 mantiene identidad y grants. Sustituir los 13 mensajes que AsyncAPI H4 asigna a G5 requiere homologación G5 y autorización G7. No se modifica en esta propuesta el snapshot AsyncAPI H4 `../contratos/historico/h4/eventos/asyncapi.yaml`, el OpenAPI `0.6.0-rc.4` ni sus fixtures. Véanse [topología candidata](../contratos/eventos/TOPOLOGIA-SERVICE-BUS-BASIC-H5.md), [inventario de 40 mensajes](../contratos/eventos/INVENTARIO-40-MENSAJES-H5.md) y [plan de migración](../integraciones/PLAN-MIGRACION-MENSAJERIA-H5.md).
 
 La expiración de reservas sigue siendo una regla de negocio de Inventory basada en su persistencia y `expires_at`; no depende del TTL del mensaje. Basic no permite configurar `DefaultMessageTimeToLive` y su máximo/default de mensajes es 14 días. Inventory conserva el mecanismo existente `ReservationExpirationService`; H5 no propone un worker de expiración paralelo. El GET candidato de estado devuelve por separado `estado_persistido` y vigencia efectiva, y cualquier pago/consumo vuelve a validar `expires_at` dentro de la operación atómica. Véase la [propuesta HTTP de estado de reserva](../contratos/http/PROPUESTA-OPERACIONES-CUPONES-H5.md).
 
@@ -1795,7 +1795,7 @@ continúa siendo obligatorio.
 
 ## 21.6. Fases operativas de seguridad (política transversal)
 
-La decisión arquitectónica de tres fases está adoptada. Su formalización documental se encuentra en el [PR Docs #114](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/pull/114), aún draft y pendiente de merge/publicación: [Política de seguridad progresiva y reversible G6](decisiones/POLITICA-SEGURIDAD-PROGRESIVA-G6.md) y [matriz de operaciones](decisiones/MATRIZ-OPERACIONES-SEGURIDAD-G6.md). No crea DEC-F ni modifica los scopes, clientes, JWT o permisos contractuales descritos arriba.
+La decisión arquitectónica de tres fases está adoptada. Su formalización documental se publicó mediante el [PR Docs #114](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/pull/114), fusionado el 2026-11-05: [Política de seguridad progresiva y reversible G6](decisiones/POLITICA-SEGURIDAD-PROGRESIVA-G6.md) y [matriz de operaciones](decisiones/MATRIZ-OPERACIONES-SEGURIDAD-G6.md). No crea DEC-F ni modifica los scopes, clientes, JWT o permisos contractuales descritos arriba.
 
 La meta es `G7_AUTHENTICATED`. `SIMULATED_AUTH` usa un issuer de demo independiente. El objetivo de `PUBLIC_READ_ONLY` es acceso anónimo público a todas las operaciones funcionalmente de lectura de los ocho servicios, sean GET, POST u otro método; la matriz aún no acredita esa cobertura. Cada lectura se clasifica `PUBLICA_APROBADA`, `PENDIENTE_VERIFICACION` o `EXCEPCION_JUSTIFICADA`. Solo las aprobadas se exponen por Internet, sin exigir VPN, Tailscale ni allowlist IP. Ningún GET/POST queda habilitado por el método o prefijo.
 

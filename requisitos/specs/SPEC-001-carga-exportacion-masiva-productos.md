@@ -304,3 +304,6 @@ v1/v2 está implementado en Backend PR #162 (merge `eeaf39ad666d7bc5a11c0b2a80d9
 jobs. BULK-CONSUMER-v2 usó productor explícito de fixture, por lo que no acredita el
 productor Bulk v2 real ni integración desplegada. Ambos siguen pendientes de verificación.
 La aprobación documental no acredita homologación externa.
+# Aclaración contractual H5 de carga inicial
+
+Para Bulk v2, `precio_regular` se aplica únicamente en ALTA mediante inicialización de producto en Pricing. En ACTUALIZACION, si viene informado, se rechaza como `PLANTILLA_INCOMPATIBLE`. Los cambios de precio desde archivo usan el importador HTTP de Pricing. `stock_inicial > 0` requiere SKU inicializado y ubicación autoritativa; Bulk solicita entonces el ajuste absoluto inicial R02. El request y los resultados R10 se tipan en AsyncAPI `0.7.0-rc.3`, `APPROVED_G6`; el contrato no implica handler ni habilitación runtime.

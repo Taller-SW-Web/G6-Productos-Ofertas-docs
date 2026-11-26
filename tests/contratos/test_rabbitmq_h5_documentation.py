@@ -74,7 +74,7 @@ class TestRabbitMqH5Documentation(unittest.TestCase):
 
     def test_catalog_describes_rc4_typed_payload_compatibility(self):
         catalog = (ROOT / "contratos/eventos/catalogo-eventos.md").read_text(encoding="utf-8")
-        asyncapi = (ROOT / "contratos/eventos/asyncapi.yaml").read_text(encoding="utf-8")
+        asyncapi = (ROOT / "contratos/historico/h4/eventos/asyncapi.yaml").read_text(encoding="utf-8")
         self.assertIn("0.6.0-rc.4", asyncapi)
         self.assertIn("siete payloads antes representados con GenericData", asyncapi)
         self.assertIn("incompatible con consumidores antiguos", asyncapi)
@@ -90,7 +90,7 @@ class TestRabbitMqH5Documentation(unittest.TestCase):
         paths = scan_paths()
         inventory = INDEX.read_text(encoding="utf-8")
         inventory_paths = set(re.findall(r"^- `([^`]+)`$", inventory, re.M))
-        self.assertEqual(len(inventory_paths), 75, "El inventario base auditado debe conservar sus 75 rutas")
+        self.assertEqual(len(inventory_paths), 76, "El inventario transicional debe incluir las 76 rutas normativas")
         scanner_source = "tests/contratos/test_rabbitmq_h5_documentation.py"
         # The scanner implementation is inventoried but its literal negative fixtures are tested separately below.
         scanned_inventory = inventory_paths - {scanner_source}
@@ -142,8 +142,10 @@ class TestRabbitMqH5Documentation(unittest.TestCase):
     def test_historical_h4_and_contract_invariants_remain_referenced(self):
         index = INDEX.read_text(encoding="utf-8")
         asyncapi = (ROOT / "contratos/eventos/asyncapi.yaml").read_text(encoding="utf-8")
+        h4_asyncapi = (ROOT / "contratos/historico/h4/eventos/asyncapi.yaml").read_text(encoding="utf-8")
         self.assertIn("no autorizan implementación H5", index)
-        self.assertIn("rabbitmq:", asyncapi)
+        self.assertIn("rabbitmq:", h4_asyncapi)
+        self.assertNotIn("rabbitmq:", asyncapi)
         self.assertTrue((ROOT / "tests/contratos/test_asyncapi_oracle_topology.py").is_file())
 
 if __name__ == "__main__":

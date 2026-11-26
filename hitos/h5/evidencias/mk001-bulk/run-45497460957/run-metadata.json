@@ -1,0 +1,10 @@
+{
+  "pullRequestHeadSha": "e3ae66ebebcaa6aed78340a6cc003dbaaf09b3bb",
+  "pullRequestBaseSha": "49bab9e2075819d922c63b06fcc6fc6ac16ce703",
+  "eventSha": "4054837eaa6c89043889ae0889e2ad6451a45521",
+  "effectiveCheckoutSha": "4054837eaa6c89043889ae0889e2ad6451a45521",
+  "nodeVersion": "v24.15.0",
+  "npmVersion": "11.12.1",
+  "supabaseCliVersion": "3.4.0",
+  "postgresVersion": "17.12"
+}

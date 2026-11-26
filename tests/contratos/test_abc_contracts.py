@@ -5,8 +5,8 @@ ROOT=Path(__file__).resolve().parents[2]
 class ContractChecks(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.o=yaml.safe_load((ROOT/'contratos/http/openapi.yaml').read_text(encoding='utf-8'))
-        cls.a=yaml.safe_load((ROOT/'contratos/eventos/asyncapi.yaml').read_text(encoding='utf-8'))
+        cls.o=yaml.safe_load((ROOT/'contratos/historico/h4/http/openapi.yaml').read_text(encoding='utf-8'))
+        cls.a=yaml.safe_load((ROOT/'contratos/historico/h4/eventos/asyncapi.yaml').read_text(encoding='utf-8'))
     def test_references(self):
         for d in (self.o,self.a):
             def walk(v):

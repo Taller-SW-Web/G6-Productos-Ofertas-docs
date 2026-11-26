@@ -18,7 +18,7 @@ Incluye: ocho servicios backend G6, Gateway/APIM, productores/consumidores del A
 | I3 Comandos y resultados | Catalog, Pricing, Inventory | Inicializaciones, resultados, idempotencia | Contratos y correlaciones E2E por servicio |
 | I4 Fan-out | Catalog, Inventory, Combos, Promotions | Distribución a múltiples colas; bloqueos funcionales aislados | Cada destino recibe una copia y se recupera por separado |
 | I5 Bulk y Taxonomy | Bulk, Catalog, Taxonomy | Bulk 256 KB/claim-check y baja maestros | Volumen, correlación, orden por agregado y recuperación |
-| I6 Frontera HTTP G5 | Promotions, Inventory, Gateway, G5 | Cupones POST/GET; GET `/api/v1/inventario/reservas/{reservaId}/estado`; conciliador durable periódico en G5 para pedidos y reemplazos elegibles | Seguimiento inicia con HTTP `COMPLETED` de creación (sin depender del evento RabbitMQ H4 post-corte); cubre `ACTIVA`+`VENCIDA` y `EXPIRADA` persistida. Cerrar solo al persistir decisión G5. G5/G6 homologan elegibilidad, lease/checkpoint, backoff, idempotencia, concurrencia y transiciones existentes; G7 autoriza identidad/allowlist. `ReservationExpirationService` actual, sin worker paralelo. No implementado ni aceptado por G5 |
+| I6 Frontera HTTP G5 | Promotions, Inventory, Gateway, G5 | Cupones POST/GET; GET `/api/v1/inventario/reservas/{reservaId}/estado`; conciliador durable periódico en G5 para pedidos y reemplazos elegibles | Seguimiento inicia con HTTP `COMPLETED` de creación (sin depender del evento RabbitMQ H4 post-corte); cubre `ACTIVA`+`VENCIDA` y `EXPIRADA` persistida. Cerrar solo al persistir decisión G5. G5/G6 homologan elegibilidad, lease/checkpoint, backoff, idempotencia, concurrencia y transiciones existentes; G7 autoriza identidad/allowlist. `ReservationExpirationService` actual, sin worker paralelo. Aceptación G5 asumida solo para planificación según `G5-G6-H5-REVISION-01`; conciliación no implementada ni homologada formalmente |
 | I7 Retiro de RabbitMQ | Coordinación G6 y owners | Inventario cero dependencias, rollback/drenaje, docs finales | Solo después de autorizar corte y validar datos pendientes |
 | Cierre H5 | QA + DevOps | CI/CD con revisión seguridad, integración, performance, APIM y mensajería | Evidencia reproducible de los cuatro requisitos del Hito 5 |
 
@@ -28,7 +28,7 @@ No mezclar el cierre académico con homologación externa no obtenida. Evidencia
 
 | Flujo | Limitación conocida | Decisión provisional |
 |---|---|---|
-| Bulk→Inventory | Handler `inventory.bulk.stock.adjust.requested` marca `BLOCKED_CONTRACT` | No anunciar procesamiento masivo funcional |
+| Bulk→Inventory | Contrato tipado `inventory.bulk.stock.adjust.requested` aprobado por G6; handler durable aún no acreditado | Mantener sin emisor/receiver activo hasta implementación, idempotencia y pruebas |
 | Bulk→Pricing | Consumidor registra/bloquea comando masivo; no equivale a aplicación | Implementar cuando se apruebe negocio |
 | Inventory→Promotions | Runtime de cupones requiere identidad y elegibilidad aún bloqueadas | No desbloquear solo por cambiar broker |
 | Catalog→Pricing/Inventory | Flujos de inicialización reales sujetos a versión/correlación | Pruebas por contrato antes de habilitar |
@@ -39,9 +39,9 @@ No mezclar el cierre académico con homologación externa no obtenida. Evidencia
 
 ## Estrategia de compatibilidad
 
-- No modificar destructivamente H4 AsyncAPI/OpenAPI ni documentación Oracle: crear candidatos H5 y registrar notas de transición.
+- No modificar snapshots ni evidencia H4; los contratos canónicos H5 se versionan como baseline semifinal independiente y los snapshots conservan referencias relativas.
 - La versión futura de AsyncAPI debe conservar nombres, schemas e IDs internos de negocio aprobados. Cambios de transporte son versionados; eliminar destinatario externo sin aprobación explícita rompe integración.
-- El OpenAPI futuro incluye nuevos endpoints asíncronos de promociones solo después de cerrar estados, seguridad, DTO y owner.
+- Los contratos canónicos OpenAPI/AsyncAPI `0.7.0-rc.3` están `APPROVED_G6` por el acta. Siguen pendientes la homologación externa aplicable, grants G7, implementación y pruebas antes de habilitar.
 - `g6.promotions.commands` es una cola nueva ligada a operaciones HTTP H5, no una sustitución ni parte del conteo de 18 relaciones internas heredadas de H4. Otras colas de flujos HTTP se inventarían al aprobar cada operación y handler.
 - TTL Basic: `DefaultMessageTimeToLive` no configurable y TTL máximo/default 14 días. Operaciones/Outbox SQL se conservan más allá del TTL; recuperar tras la indisponibilidad requiere cotejar Inbox, resultado y efectos del dominio, y replay autorizado con la misma clave idempotente solo si no hay efecto terminal confirmado.
 - El estado efectivo de reserva compara `expires_at` con reloj de Inventory. Si el estado persistido sigue `ACTIVA` pero el vencimiento se alcanzó, G5 no paga ni consume cupón. `ReservationExpirationService` existente materializa la transición; el endpoint de consulta no inicia un segundo worker.

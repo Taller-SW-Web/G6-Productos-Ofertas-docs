@@ -97,3 +97,6 @@ Producto, categoría, marca, SKU, ubicación y estado.
 - creación de reservas;
 - recepción desde el dashboard;
 - decisiones de empaque/despacho.
+# Trazabilidad de contrato H5 (propuesta SEMIFINAL_G6)
+
+El endpoint operativo `GET /inventario/dashboard` acepta únicamente `sku` y `locationId`; no se deben enviar ni tratar como aplicados los filtros `productoId`, `categoriaId` o `marcaId`. La evolución de esos filtros depende de un adaptador backend a la población vendible de Catalog mediante `POST /interno/productos/skus/filtrar`, pendiente de implementación y autorización G7. Mientras tanto, parámetros desconocidos responden `400 VALIDACION`. Alertas y ubicaciones están especificadas en OpenAPI `0.7.0-rc.3`, `APPROVED_G6`, pero siguen `PENDIENTE_ENDPOINT_HTTP`.

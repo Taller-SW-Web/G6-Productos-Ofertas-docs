@@ -1,0 +1,7 @@
+{
+  "backend_sha": "63d23eb81abdeddd047eac993077ea77189c9458",
+  "frontend_sha": "f26864bb2b20c5abd693fb415f392ed6110e317b",
+  "workflow": "MK-001 Bulk E2E Integral (Navegador Real + Recuperación + Performance)",
+  "run_id": "45563675826",
+  "event": "pull_request"
+}
