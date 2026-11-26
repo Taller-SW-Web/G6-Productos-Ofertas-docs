@@ -661,15 +661,75 @@ components:
       additionalProperties: false
     PricingBulkPriceApplyRequestedData:
       type: object
-      description: Reservado; no aplica a Bulk v2 según SPEC-001.
+      description: Comando batch desde bulk-svc hacia pricing-svc para aplicar precios regulares y de oferta por fila (R03).
+      properties:
+        batch_id: {type: string, format: uuid}
+        batch_operation_id: {type: string, format: uuid}
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            properties:
+              row_number: {type: integer, minimum: 1}
+              row_operation_id: {type: string, format: uuid}
+              sku: {type: string, minLength: 1}
+              channel_id: {type: ['string', 'null']}
+              precio_regular: {type: string, pattern: '^\d{1,10}\.\d{2}$'}
+              precio_oferta: {type: ['string', 'null'], pattern: '^\d{1,10}\.\d{2}$'}
+              currency: {type: string, pattern: '^[A-Z]{3}$'}
+              valid_from: {type: ['string', 'null'], format: date-time}
+              valid_until: {type: ['string', 'null'], format: date-time}
+              motivo_cambio: {type: ['string', 'null']}
+            required: [row_operation_id, sku, precio_regular, currency]
+            additionalProperties: false
+      required: [batch_id, batch_operation_id, items]
       additionalProperties: false
     PricingBulkPriceApplyCompletedData:
       type: object
-      description: Reservado; no aplica a Bulk v2 según SPEC-001.
+      description: Resultado positivo o parcial de aplicación masiva de precios desde pricing-svc hacia bulk-svc (R14).
+      properties:
+        batch_id: {type: ['string', 'null'], format: uuid}
+        batch_operation_id: {type: ['string', 'null'], format: uuid}
+        applied_count: {type: integer, minimum: 0}
+        total_count: {type: integer, minimum: 0}
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              row_number: {type: integer, minimum: 1}
+              row_operation_id: {type: ['string', 'null'], format: uuid}
+              sku: {type: ['string', 'null']}
+              status: {type: string, enum: [COMPLETED, REJECTED]}
+              code: {type: ['string', 'null']}
+              price_version: {type: ['integer', 'null'], minimum: 1}
+            required: [row_number, status]
+            additionalProperties: false
+      required: [batch_id, batch_operation_id, applied_count, total_count, results]
       additionalProperties: false
     PricingBulkPriceApplyRejectedData:
       type: object
-      description: Reservado; no aplica a Bulk v2 según SPEC-001.
+      description: Resultado de rechazo total o conflicto de idempotencia de aplicación masiva de precios (R14).
+      properties:
+        batch_id: {type: ['string', 'null'], format: uuid}
+        batch_operation_id: {type: ['string', 'null'], format: uuid}
+        code: {type: ['string', 'null']}
+        applied_count: {type: integer, minimum: 0}
+        total_count: {type: integer, minimum: 0}
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              row_number: {type: integer, minimum: 1}
+              row_operation_id: {type: ['string', 'null'], format: uuid}
+              sku: {type: ['string', 'null']}
+              status: {type: string, enum: [REJECTED]}
+              code: {type: ['string', 'null']}
+            required: [row_number, status]
+            additionalProperties: false
+      required: [results]
       additionalProperties: false
     CatalogProductDeactivatedData:
       type: object
@@ -2782,8 +2842,8 @@ components:
           - name
           - data
       x-transport: azure-service-bus-basic
-      x-contract-status: SEMIFINAL_G6
-      x-runtime-status: PENDIENTE_IMPLEMENTACION
+      x-contract-status: APPROVED_G6
+      x-runtime-status: IMPLEMENTADO_H5_R2
     InventoryBulkStockAdjustCompleted:
       name: inventory.bulk.stock.adjust.completed
       title: inventory.bulk.stock.adjust.completed
@@ -2826,8 +2886,8 @@ components:
           - name
           - data
       x-transport: azure-service-bus-basic
-      x-contract-status: SEMIFINAL_G6
-      x-runtime-status: PENDIENTE_IMPLEMENTACION
+      x-contract-status: APPROVED_G6
+      x-runtime-status: IMPLEMENTADO_H5_R2
     InventoryBulkStockAdjustRejected:
       name: inventory.bulk.stock.adjust.rejected
       title: inventory.bulk.stock.adjust.rejected
@@ -2870,8 +2930,8 @@ components:
           - name
           - data
       x-transport: azure-service-bus-basic
-      x-contract-status: SEMIFINAL_G6
-      x-runtime-status: PENDIENTE_IMPLEMENTACION
+      x-contract-status: APPROVED_G6
+      x-runtime-status: IMPLEMENTADO_H5_R2
     PricingProductInitializationRequested:
       name: pricing.product.initialization.requested
       title: pricing.product.initialization.requested

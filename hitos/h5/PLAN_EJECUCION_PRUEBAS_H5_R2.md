@@ -15,7 +15,7 @@
 cd c:\Users\marec\Desktop\G6-Productos-Ofertas\_worktrees\r2-integral\backend
 npm test -- apps/api-gateway/src/routing/gateway-g7-only.spec.ts apps/api-gateway/src/routing/gateway-public-reads.spec.ts apps/api-gateway/src/routing/gateway-identity.spec.ts
 npm test -- apps/*/src/phase1-public-reads.spec.ts apps/catalog-svc/src/catalog-public-reads.spec.ts apps/taxonomy-svc/src/taxonomy-public-reads.spec.ts apps/taxonomy-svc/src/category-seo-auth.spec.ts apps/combos-svc/test/combos-readiness.spec.ts
-npm test -- tests/h5/service-bus-19-queues.e2e-spec.ts
+npm test -- tests/h5/service-bus-19-queues.e2e-spec.ts apps/pricing-svc/src/messaging/r03-r14-r15-r17-r07.spec.ts
 ```
 
 ### Fase B — Frontend unitario/contratos
@@ -32,9 +32,10 @@ $env:PRICING_TEST_POSTGRES='1'; npm run test:e2e -- apps/pricing-svc/test/import
 $env:G6_TAXONOMY_H5_POSTGRES_TESTS='1'; npm run test:e2e -- tests/h5/taxonomy-service-bus.postgres.e2e-spec.ts
 ```
 
-### Fase D — Azure Service Bus SDK real (laboratorio, opcional bajo autorización)
+### Fase D — Azure Service Bus SDK real (laboratorio 19 colas, opcional bajo autorización)
 ```powershell
 $env:G6_AZURE_SERVICE_BUS_REAL_TESTS='1'
-$env:SERVICE_BUS_NAMESPACE_FQDN='<lab-namespace>.servicebus.windows.net'
+$env:G6_AZURE_SERVICE_BUS_LAB_NAMESPACE='<lab-namespace>.servicebus.windows.net'
+$env:AZURE_CLIENT_ID='<managed-identity-client-id>'
 npm run test:e2e -- tests/h5/azure-service-bus.real.e2e-spec.ts
 ```
