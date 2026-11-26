@@ -39,9 +39,9 @@ channels:
         $ref: '#/components/messages/PricingBulkPriceApplyRequested'
     x-producer: bulk-svc
     x-consumer: pricing-svc
-    x-contract-status: SEMIFINAL_G6
-    x-runtime-status: RESERVADO_NO_APLICA_BULK_V2
-    x-contract-note: SPEC-001 limita precio_regular a ALTA mediante pricing.product.initialization.requested; cambios masivos usan importador HTTP propio de Pricing.
+    x-contract-status: APPROVED_G6
+    x-runtime-status: IMPLEMENTADO_H5_R2
+    x-contract-note: Decisión del líder R2 revoca reserva de R03; relación interna obligatoria Bulk -> Pricing sobre Azure Service Bus Basic.
   g6_bulk_from_catalog:
     address: g6.bulk.from.catalog
     messages:
@@ -2662,8 +2662,8 @@ components:
           - name
           - data
       x-transport: azure-service-bus-basic
-      x-contract-status: SEMIFINAL_G6
-      x-runtime-status: RESERVADO_NO_APLICA_BULK_V2
+      x-contract-status: APPROVED_G6
+      x-runtime-status: IMPLEMENTADO_H5_R2
     PricingBulkPriceApplyCompleted:
       name: pricing.bulk.price.apply.completed
       title: pricing.bulk.price.apply.completed
@@ -2695,8 +2695,8 @@ components:
           - name
           - data
       x-transport: azure-service-bus-basic
-      x-contract-status: SEMIFINAL_G6
-      x-runtime-status: RESERVADO_NO_APLICA_BULK_V2
+      x-contract-status: APPROVED_G6
+      x-runtime-status: IMPLEMENTADO_H5_R2
     PricingBulkPriceApplyRejected:
       name: pricing.bulk.price.apply.rejected
       title: pricing.bulk.price.apply.rejected
@@ -2728,8 +2728,8 @@ components:
           - name
           - data
       x-transport: azure-service-bus-basic
-      x-contract-status: SEMIFINAL_G6
-      x-runtime-status: RESERVADO_NO_APLICA_BULK_V2
+      x-contract-status: APPROVED_G6
+      x-runtime-status: IMPLEMENTADO_H5_R2
     InventoryBulkStockAdjustRequested:
       name: inventory.bulk.stock.adjust.requested
       title: inventory.bulk.stock.adjust.requested
