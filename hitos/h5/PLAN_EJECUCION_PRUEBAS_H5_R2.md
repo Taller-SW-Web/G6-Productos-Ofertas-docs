@@ -4,10 +4,10 @@
 
 ## 1. Requisitos previos y aislamiento
 
-- **PostgreSQL descartable local / CI:** Docker PostgreSQL 17 aislado por suite (`IsolatedPostgres` / contenedores efímeros). **Prohibido** apuntar `DATABASE_URL` o `G6_REAL_PG_URL` al proyecto Supabase compartido `slzglmtiyrzygpkiuthf`.
-- **Identidad G7:** las suites locales usan emisores RS256 criptográficos de prueba con JWKS local (`createSignedIdentity`, `createLocalG7TokenFactory`); nunca equivalen a emisión real de G7 ni a homologación G1/G3/G5.
-- **Azure Service Bus real:** desactivado por defecto (`G6_AZURE_SERVICE_BUS_REAL_TESTS` ausente). Solo ejecutar contra namespace de laboratorio (`G6_AZURE_SERVICE_BUS_LAB_NAMESPACE`) con `ManagedIdentityCredential` (`AZURE_CLIENT_ID`).
-- **Frontend real (`playwright.real.config.ts`):** exige `VITE_DATA_MODE=api` y variables `G6_REAL_GATEWAY_URL`, `G6_REAL_PG_URL`, `G6_REAL_G7_ISSUER`, `G6_REAL_G7_JWKS_URL`. Falla en preflight si falta alguna dependencia; no existe fallback a mock.
+- **PostgreSQL descartable local / CI:** contenedores Docker PostgreSQL 16 efímeros creados por cada suite (`IsolatedPostgres` en Pricing, `IsolatedBulkPostgres` en Bulk) en `127.0.0.1`. **Prohibido** apuntar `DATABASE_URL` o `G6_REAL_PG_URL` al proyecto Supabase compartido `slzglmtiyrzygpkiuthf`.
+- **Identidad G7:** las suites locales usan emisores RS256 criptográficos con servidor HTTP JWKS local (`startLocalG7Server` / `createSignedIdentity`, `tipo: 'acceso'`, `sub` UUID v4); nunca equivalen a emisión real de G7 ni a homologación G1/G3/G5.
+- **Azure Service Bus real:** desactivado por defecto (`G6_AZURE_SERVICE_BUS_REAL_TESTS` ausente). `tests/h5/azure-service-bus.real.e2e-spec.ts` envía `g6.lab.probe` como sonda genérica de transporte SDK (no acredita 19 recorridos de negocio).
+- **Frontend real (`playwright.real.config.ts`):** ejecuta `tests/e2e-real/startRealStackAndVite.ts`, el cual invoca `startIsolatedRealStack()` **antes** de arrancar Vite para levantar G7/JWKS local, los 8 microservicios, Gateway y capturar `VITE_DATA_MODE=api`, `VITE_G6_ADMIN_API_ENABLED=true`, `VITE_GATEWAY_ORIGIN` y `VITE_G7_API_BASE`. Falla en preflight si falta `G6_REAL_PG_URL` o si apunta a Supabase, Azure Chile o Vercel productivo.
 
 ## 2. Orden obligatorio de ejecución futura (PowerShell)
 
