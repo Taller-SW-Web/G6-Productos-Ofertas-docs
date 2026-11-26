@@ -1,12 +1,12 @@
 # Cierre técnico Gateway y Azure API Management — Hito 5
 
-> **Estado:** `COMPATIBILIDAD_PR294_VERIFICADA` (PR #294 integrado en `origin/master` `7a25fc88fa04627332032f60841b65fa17eb45d9`; Gateway #291 compatibilizado con `Multiple`/escala `1/1` y bloqueo de reaplicación insegura; APIM #292 compatible sin cambios; `APIM-T08` en `NOT_VERIFIED`; pruebas en vivo Azure/APIM en `NOT_RUN_BLOCKED_INFRA`).
+> **Estado:** `CIERRE_CODIGO_GATEWAY_APIM_H5_INTEGRADO` (PRs `#294`, `#291`, `#292` y `#98` integrados en `master`; compatibilidad Chile `Multiple`/`Single`/escala `1/1` y E2E Bulk navegador real verificados; `APIM-T08` en `NOT_VERIFIED`; pruebas en vivo Azure/APIM `APIM-T01`..`T08` y `RL-01`..`RL-06` en `NOT_RUN_BLOCKED_INFRA`).
 
 ## 1. Procedencia y dependencias
 
-- **Backend `master`:** `1b90543dc39a8919fd94f0e059d10e1002b3b2a9`
-- **Docs `master`:** `18c3502f539ffc9b24947f87968223f086eea0ac` (OpenAPI `0.7.0-rc.3` fijado en `490172c11cb4b83ddd1996f8d5834d0402184cf8`)
-- **Frontend `master` (solo lectura):** `5cf7b0f506833436e3e97bb0804513349099519e`
+- **Backend `master`:** `352bfef5167363b11c8bc52bc61c0faa5ab0611f` (merge commit de `#292`; procedencia contractual histórica previa de Gateway/APIM: `1b90543dc39a8919fd94f0e059d10e1002b3b2a9`).
+- **Docs `master`:** `18c3502f539ffc9b24947f87968223f086eea0ac` (OpenAPI `0.7.0-rc.3` fijado en `490172c11cb4b83ddd1996f8d5834d0402184cf8` como procedencia contractual histórica).
+- **Frontend `master` (solo lectura):** `9a784366497408c934d20f95fff30ab2952c6468` (merge commit de `#98`; histórico previo: `5cf7b0f506833436e3e97bb0804513349099519e`).
 - **PR #286 (`trabajo/castilla/h5-g5-prueba-conjunta`):** fusionado en `24b0586c2a14787e5d6039ffe497dcdc9cc62d59`.
 - **PR #255 (`vera`, Pricing CSV):** abierto en Draft (`1215c4df4b6c1595b550d24f7ef599ffbbb14795`), conservado como dependencia externa pendiente sin modificar ni simular.
 
@@ -76,12 +76,26 @@
     - **Está prohibido** aplicar una plantilla de bootstrap sobre un Gateway ya existente.
     - Las actualizaciones de Gateway existente en Chile deben realizarse exclusivamente con el CD oficial `ops/azure/container-apps/deploy.sh` (corte controlado por revisión explícita, salud/escala `1/1`, control de concurrencia y rollback).
     - Cualquier futura ruta de aplicación declarativa necesitará un **preflight real de solo lectura** en Azure que compruebe la inexistencia del Gateway antes del bootstrap.
-- **APIM #292 (`4509249b4bb27853fa53d3586691cc653343589d`):** compatible sin cambios con `#294` (`contract-routes.ts`, rutas `/api/v1`, OpenAPI filtrado, manifiesto y modalidades de ingress ACA sin afectación); pendiente de sincronización con `origin/master` tras el merge de `#291`. `APIM-T08` permanece en `NOT_VERIFIED` sin captura en vivo, `APIM-T01`..`APIM-T08` y `RL-01`..`RL-06` permanecen en `NOT_RUN_BLOCKED_INFRA`, y APIM no se declara desplegado ni aceptado en vivo.
+- **APIM #292 (histórico R10/T08 `4509249b4bb27853fa53d3586691cc653343589d`, integrado finalmente en `352bfef5167363b11c8bc52bc61c0faa5ab0611f`):** compatible sin cambios con `#294` (`contract-routes.ts`, rutas `/api/v1`, OpenAPI filtrado, manifiesto y modalidades de ingress ACA sin afectación). `APIM-T08` permanece en `NOT_VERIFIED` sin captura en vivo, `APIM-T01`..`APIM-T08` y `RL-01`..`RL-06` permanecen en `NOT_RUN_BLOCKED_INFRA`, y APIM no se declara desplegado ni aceptado en vivo.
 
-| Validación local post-merge #294 (`03e29fb3`) | Resultado real |
+| Validación local post-merge #294 (`03e29fb3`, evidencia histórica) | Resultado real |
 |---|---|
 | `node --test ops/azure/container-apps/render-deployment.test.mjs` | **PASS local** (`7/7` OK) |
 | `bash -n ops/azure/container-apps/deploy.sh` | **PASS local** (exit `0`) |
 | `bash ops/azure/container-apps/tests/deploy.test.sh` | **PASS local** (`16/16` OK) |
 | `npm run typecheck` | **PASS local** (exit `0`) |
 | `npm test -- apps/api-gateway --maxWorkers=1` | **PASS local** (`12` archivos, `131/131` OK) |
+
+## 7. Cierre definitivo e integración en `master`
+
+| Componente | PR | HEAD final del PR | Merge commit en `master` | Estado |
+|---|---|---|---|---|
+| Azure Chile | Backend `#294` | `0da1f8cf6454908787e3c35f75de900b9b92dca0` | `7a25fc88fa04627332032f60841b65fa17eb45d9` | `MERGED` |
+| Gateway H5 | Backend `#291` | `f7f0e9322e3fcadd3a93ccaf23acfb8a6ad3e2b6` | `1b655237c144b93dd4ab5adb506630d002403f7a` | `MERGED` |
+| APIM H5 | Backend `#292` | `6d1f5aa9edd9e18e4f39e99e9c8e061209c47fc0` | `352bfef5167363b11c8bc52bc61c0faa5ab0611f` | `MERGED` |
+| E2E Bulk | Frontend `#98` | `4624a1800d84611107785b8b3aa793ed44285f50` | `9a784366497408c934d20f95fff30ab2952c6468` | `MERGED` |
+
+- **CI de APIM #292 (`6d1f5aa9edd9e18e4f39e99e9c8e061209c47fc0`):** workflow `Integración continua (CI)` run `45726372221` con resultado `SUCCESS`; el verificador ARM de CI (`verify-arm-template.py`) ejecuta `--mode candidate` conservando el bloqueo fail-closed de publicación efectiva (`--mode effective` sigue rechazando sin autorización).
+- **E2E Bulk en navegador real (`MK-001 Bulk E2E Integral`):** pasó tras incorporar la corrección de sincronización de identidades en Frontend `#98` (`4624a1800d84611107785b8b3aa793ed44285f50`).
+- **Compatibilidad Chile y regla bootstrap:** se conserva Gateway en `Multiple`, Promotions en `Single`, escala `1/1`, tráfico controlado por revisión explícita mediante `deploy.sh`, y la prohibición estricta de reaplicar bootstrap declarativo sobre un Gateway existente.
+- **Estado APIM en vivo:** artefactos y código listos e integrados en `master`, pero sin instancia APIM desplegada; `APIM-T01`..`APIM-T08` y `RL-01`..`RL-06` en vivo permanecen en `NOT_RUN_BLOCKED_INFRA` y `APIM-T08` en `NOT_VERIFIED`.

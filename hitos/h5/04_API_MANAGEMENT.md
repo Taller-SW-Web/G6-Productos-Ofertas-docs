@@ -1,6 +1,6 @@
 # H5-04A — Azure API Management verificable
 
-**Estado:** planificado, APIM actual `NO_VERIFICADO`; no hay despliegue ni acceso Portal en esta tarea. La exigencia docente H5-04 incluye API Management. El inventario, SKU, políticas y casos siguientes son criterios internos G6.
+**Estado:** código y artefactos APIM implementados e integrados en Backend (`#292`, merge commit `352bfef5167363b11c8bc52bc61c0faa5ab0611f`); infraestructura en vivo `NOT_RUN_BLOCKED_INFRA` y `APIM-T08` en `NOT_VERIFIED`; no existe instancia APIM operativa desplegada ni acceso Portal en esta tarea. La exigencia docente H5-04 incluye API Management. El inventario, SKU, políticas y casos siguientes son criterios internos G6.
 
 ## APIM y Gateway G6
 
@@ -14,7 +14,7 @@ Owner de inventario/costo: Infra/autoridad presupuestaria; Castilla coordina evi
 
 ## Bicep, políticas y autenticación
 
-Plan futuro: Bicep versionado (módulo APIM, APIs/operaciones, policies, diagnostics), `az deployment group what-if`, revisión de diff y autorización operativa antes de aplicar, con rollback a revisión anterior. Importación deriva del OpenAPI canónico `0.7.0-rc.3` (`APPROVED_G6`), filtrada a rutas actualmente servidas y habilitadas; la aprobación contractual no prueba operación desplegada. No inventar URL, ruta, scope, audience o hostname.
+Artefactos versionados e integrados en Backend (`#292`): Bicep versionado (módulo APIM, APIs/operaciones, policies, diagnostics), `az deployment group what-if`, revisión de diff y autorización operativa antes de aplicar, con rollback a revisión anterior. Importación deriva del OpenAPI canónico `0.7.0-rc.3` (`APPROVED_G6`, procedencia `490172c11cb4b83ddd1996f8d5834d0402184cf8`), filtrada a rutas actualmente servidas y habilitadas; los artefactos listos y la aprobación contractual no prueban infraestructura desplegada ni operación en vivo. No inventar URL, ruta, scope, audience o hostname.
 
 Policies: validar JWT issuer/audience/firma/expiración si G7 autoriza JWKS; CORS con orígenes exactos; correlación `X-Correlation-Id`; redacción de logs; timeout mínimo. `rate-limit-by-key` es una opción prevista solo si está soportada y autorizada por el SKU realmente elegido; si no, evaluar una política compatible disponible en ese SKU. No asumir soporte universal entre SKUs. La clave debe basarse en identidad confiable: identidad validada/client_id para autenticados, y una IP extraída solo de la cadena de proxies confiables para públicos sin autenticación. El Gateway repite comprobaciones de cliente/scope pertinentes; no habilitar bypass por URL interna. Guardar hash del policy y versión de Bicep.
 
@@ -47,4 +47,4 @@ Paquete de aceptación futuro: salida `az` de lectura, recurso/SKU/host/revisió
 
 ## Responsable, PRs y referencias
 
-Castilla owner APIM, catálogo de rutas y consolidación; Axel coejecuta compatibilidad de red/CD, Infra aprueba recursos/costo; G7 aprueba grants/issuer. PR futuro separado en Backend/infra; esta rama escribe solo Docs. Véanse [OpenAPI](../../contratos/http/openapi.yaml), [HITO_5](../HITO_5.md), [CI/CD](01_CI_CD_Y_SEGURIDAD.md), [automatización](08_AUTOMATIZACION_Y_PUERTAS.md), [scorecard](07_MATRIZ_TRAZABILIDAD_Y_EVIDENCIAS.md) y [cierre Gateway/APIM H5](CIERRE-GATEWAY-APIM-H5.md).
+Castilla owner APIM, catálogo de rutas y consolidación; Axel coejecuta compatibilidad de red/CD, Infra aprueba recursos/costo; G7 aprueba grants/issuer. Código y artefactos APIM integrados en Backend `#292` (`352bfef5167363b11c8bc52bc61c0faa5ab0611f`); las pruebas en vivo `APIM-T01`..`APIM-T08` y `RL-01`..`RL-06` permanecen en `NOT_RUN_BLOCKED_INFRA` y `APIM-T08` en `NOT_VERIFIED` hasta contar con instancia APIM aprovisionada en Azure. Véanse [OpenAPI](../../contratos/http/openapi.yaml), [HITO_5](../HITO_5.md), [CI/CD](01_CI_CD_Y_SEGURIDAD.md), [automatización](08_AUTOMATIZACION_Y_PUERTAS.md), [scorecard](07_MATRIZ_TRAZABILIDAD_Y_EVIDENCIAS.md) y [cierre Gateway/APIM H5](CIERRE-GATEWAY-APIM-H5.md).
