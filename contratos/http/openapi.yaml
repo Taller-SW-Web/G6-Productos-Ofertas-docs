@@ -4132,7 +4132,6 @@ paths:
         '500': *id105
         '503': *id106
       x-route-basis: existing-contract
-      x-allowed-client-ids: &id248 []
     patch:
       tags:
       - Combos
@@ -9106,7 +9105,6 @@ paths:
         '500': *id245
         '503': *id246
         '404': *id247
-      x-allowed-client-ids: *id248
   /cupones:
     get:
       tags:
@@ -28139,7 +28137,10 @@ x-security-contract:
       clients:
       - modulo-chatbot
     combos:leer:
-      clients: *id248
+      clients:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
     inventario:disponibilidad:leer:
       clients:
       - modulo-marketplace
