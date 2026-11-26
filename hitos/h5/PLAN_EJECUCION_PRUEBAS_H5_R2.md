@@ -25,6 +25,7 @@ npx vitest run src/features/auth/g7OnlyTransport.spec.ts src/features/combos/ada
 ```powershell
 cd c:\Users\marec\Desktop\G6-Productos-Ofertas\_worktrees\r2-integral\backend
 $env:PRICING_TEST_POSTGRES='1'; npm run test:e2e -- apps/pricing-svc/test/import-prices.postgres.e2e-spec.ts apps/pricing-svc/test/r03-r14-r16-r17.postgres.e2e-spec.ts
+$env:BULK_TEST_POSTGRES='1'; npm run test:e2e -- apps/bulk-svc/test/r03-pricing-r14-bulk.postgres.e2e-spec.ts
 $env:G6_TAXONOMY_H5_POSTGRES_TESTS='1'; npm run test:e2e -- tests/h5/taxonomy-service-bus.postgres.e2e-spec.ts
 ```
 
