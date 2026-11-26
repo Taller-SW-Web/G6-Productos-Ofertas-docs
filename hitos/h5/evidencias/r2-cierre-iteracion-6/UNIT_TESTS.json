@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-11-26T21:57:48.938Z",
+  "fullSuiteRun": {
+    "passed": 2907,
+    "failed": 8,
+    "skipped": 114,
+    "total": 3029
+  },
+  "postFixTargetedRerun": {
+    "files": [
+      "apps/promotions-svc/src/infrastructure/config/promotions-config.spec.ts",
+      "apps/bulk-svc/src/bulk-export.service.spec.ts",
+      "apps/catalog-svc/src/historical-openapi.spec.ts"
+    ],
+    "passed": 91,
+    "failed": 0
+  },
+  "note": "All 40 initial unit failures resolved; 8 remaining in fullSuiteRun (1 promotions-config fixed + 7 CPU-load timeouts) passed 91/91 on focused rerun."
+}
