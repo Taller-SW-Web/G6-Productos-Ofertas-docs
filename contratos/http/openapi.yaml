@@ -3934,6 +3934,10 @@ paths:
       - SPEC-002
       x-service-audience: api-productos
       x-required-scope: combos:leer
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
       x-scope-registration-status: pending-security-registration
       security:
       - userBearer: []
@@ -7082,8 +7086,15 @@ paths:
       x-source-spec:
       - SPEC-004
       x-route-basis: derived-from-capability
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
       security:
       - userBearer: []
+      - serviceBearer: []
       parameters:
       - $ref: '#/components/parameters/ProductoId'
       - &id224
@@ -8976,6 +8987,10 @@ paths:
       x-route-basis: derived-from-capability
       x-service-audience: api-productos
       x-required-scope: combos:leer
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
       x-scope-registration-status: pending-security-registration
       security:
       - userBearer: []
@@ -20140,6 +20155,119 @@ paths:
         '403': *id669
         '500': *id670
         '503': *id671
+  /precios/administracion/productos/{productoId}:
+    get:
+      tags:
+      - Precios
+      operationId: obtenerDefinicionPrecioProductoAdministracion
+      summary: Obtener definición administrativa de precio de producto
+      x-status: provisional-internal
+      x-source-spec:
+      - SPEC-013
+      x-route-basis: derived-from-capability
+      security:
+      - userBearer: []
+      parameters:
+      - name: productoId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: channelId
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [MARKETPLACE, CHATBOT, RETAIL, VENTAS]
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Definición administrativa de precio del producto
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: VALIDACION
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: TOKEN_INVALIDO
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: SCOPE_INSUFICIENTE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: PRECIO_NO_ENCONTRADO
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /precios/administracion/skus/{sku}:
+    get:
+      tags:
+      - Precios
+      operationId: obtenerDefinicionPrecioSkuAdministracion
+      summary: Obtener definición administrativa de precio de SKU
+      x-status: provisional-internal
+      x-source-spec:
+      - SPEC-013
+      x-route-basis: derived-from-capability
+      security:
+      - userBearer: []
+      parameters:
+      - name: sku
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: channelId
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [MARKETPLACE, CHATBOT, RETAIL, VENTAS]
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Definición administrativa de precio del SKU
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: VALIDACION
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: TOKEN_INVALIDO
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: SCOPE_INSUFICIENTE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: PRECIO_NO_ENCONTRADO
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /precios/productos/{productoId}:
     get:
       tags:
