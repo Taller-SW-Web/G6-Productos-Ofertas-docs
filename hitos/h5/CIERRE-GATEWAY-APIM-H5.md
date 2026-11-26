@@ -99,3 +99,8 @@
 - **E2E Bulk en navegador real (`MK-001 Bulk E2E Integral`):** pasó tras incorporar la corrección de sincronización de identidades en Frontend `#98` (`4624a1800d84611107785b8b3aa793ed44285f50`).
 - **Compatibilidad Chile y regla bootstrap:** se conserva Gateway en `Multiple`, Promotions en `Single`, escala `1/1`, tráfico controlado por revisión explícita mediante `deploy.sh`, y la prohibición estricta de reaplicar bootstrap declarativo sobre un Gateway existente.
 - **Estado APIM en vivo:** artefactos y código listos e integrados en `master`, pero sin instancia APIM desplegada; `APIM-T01`..`APIM-T08` y `RL-01`..`RL-06` en vivo permanecen en `NOT_RUN_BLOCKED_INFRA` y `APIM-T08` en `NOT_VERIFIED`.
+
+## 8. Actualización R2 — Política universal G7 sin rutas de negocio públicas
+
+- **Contrato OpenAPI (`contratos/http/openapi.yaml`):** `obtenerSeoPorSlug` (`GET /seo/{slug}`) y `resolverSlugAnterior` (`GET /seo/resoluciones/{slugAnterior}`) dejan de declarar `security: []` y exigen `serviceBearer` (`catalogo:leer`, audiencia `api-productos`, clientes `modulo-marketplace`, `modulo-chatbot`, `modulo-retail`) o `userBearer` (`GESTOR_COMERCIAL`), con respuestas contractuales `401 TOKEN_INVALIDO`, `403 SCOPE_INSUFICIENTE` y `503 SERVICIO_NO_DISPONIBLE`.
+- **Gateway y APIM:** se conserva el diseño `#291`/`#292` y sus barreras fail-closed (`APIM-T08` en `NOT_VERIFIED`; pruebas en vivo `NOT_RUN_BLOCKED_INFRA`), eliminando el modo productivo `PUBLIC_READ_ONLY` y toda operación de negocio anónima.

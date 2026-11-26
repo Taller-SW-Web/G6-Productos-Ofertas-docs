@@ -5740,7 +5740,15 @@ paths:
       x-status: stable
       x-source-spec:
       - SPEC-012
-      security: []
+      security:
+      - serviceBearer: []
+      - userBearer: []
+      x-required-scope: catalogo:leer
+      x-service-audience: api-productos
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
       parameters:
       - name: slug
         in: path
@@ -5754,6 +5762,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SeoMetadata'
+        '401':
+          description: Token ausente o inválido
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 401
+                    code:
+                      type: string
+                      enum:
+                      - TOKEN_INVALIDO
+                  required:
+                  - status
+                  - code
+        '403':
+          description: Sin rol, scope o cliente autorizado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 403
+                    code:
+                      type: string
+                      enum:
+                      - SCOPE_INSUFICIENTE
+                  required:
+                  - status
+                  - code
         '404':
           description: Slug no publicado o inexistente
           content:
@@ -5810,9 +5856,34 @@ paths:
                     status: 500
                     code: ERROR_INTERNO
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+        '503':
+          description: Servicio de identidad no disponible
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 503
+                    code:
+                      type: string
+                      enum:
+                      - SERVICIO_NO_DISPONIBLE
+                  required:
+                  - status
+                  - code
       x-error-codes:
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
         '404': *id146
         '500': *id147
+        '503':
+        - SERVICIO_NO_DISPONIBLE
       x-route-basis: existing-contract
   /seo/resoluciones/{slugAnterior}:
     get:
@@ -5823,7 +5894,15 @@ paths:
       x-status: stable
       x-source-spec:
       - SPEC-012
-      security: []
+      security:
+      - serviceBearer: []
+      - userBearer: []
+      x-required-scope: catalogo:leer
+      x-service-audience: api-productos
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
       parameters:
       - name: slugAnterior
         in: path
@@ -5837,6 +5916,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SlugResolution'
+        '401':
+          description: Token ausente o inválido
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 401
+                    code:
+                      type: string
+                      enum:
+                      - TOKEN_INVALIDO
+                  required:
+                  - status
+                  - code
+        '403':
+          description: Sin rol, scope o cliente autorizado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 403
+                    code:
+                      type: string
+                      enum:
+                      - SCOPE_INSUFICIENTE
+                  required:
+                  - status
+                  - code
         '404':
           description: Slug anterior no reconocido
           content:
@@ -5893,9 +6010,34 @@ paths:
                     status: 500
                     code: ERROR_INTERNO
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+        '503':
+          description: Servicio de identidad no disponible
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 503
+                    code:
+                      type: string
+                      enum:
+                      - SERVICIO_NO_DISPONIBLE
+                  required:
+                  - status
+                  - code
       x-error-codes:
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
         '404': *id148
         '500': *id149
+        '503':
+        - SERVICIO_NO_DISPONIBLE
       x-route-basis: existing-contract
   /productos/{productoId}/activar:
     post:
