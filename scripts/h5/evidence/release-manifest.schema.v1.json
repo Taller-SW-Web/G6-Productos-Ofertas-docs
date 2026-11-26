@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://g6.example.invalid/h5-evidence/v1/release-manifest.schema.v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "release_id", "approved", "created_at", "repos", "required_criteria", "flows", "evidence_files"],
+  "properties": {
+    "schema_version": {"const": "h5-release/v1"}, "release_id": {"type": "string", "minLength": 1},
+    "approved": {"type": "boolean"}, "approval": {"type": ["object", "null"]}, "created_at": {"type": "string", "format": "date-time"},
+    "repos": {"type": "object", "additionalProperties": {"type": "object", "required": ["sha"], "properties": {"sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}, "digest": {"type": ["string", "null"]}, "revision": {"type": ["string", "null"]}, "environment": {"type": ["string", "null"]}, "dataset_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}}}},
+    "required_criteria": {"type": "array", "uniqueItems": true, "items": {"enum": ["H5-01", "H5-02", "H5-03", "H5-04A", "H5-04B"]}},
+    "flows": {"type": "array", "items": {"type": "string"}}, "evidence_files": {"type": "array", "items": {"type": "string"}},
+    "policy_hashes": {"type": "object"}, "environment": {"type": ["string", "null"]}, "dataset": {"type": ["object", "null"]},
+    "flow_decision": {"type": ["string", "null"]}
+  }
+}

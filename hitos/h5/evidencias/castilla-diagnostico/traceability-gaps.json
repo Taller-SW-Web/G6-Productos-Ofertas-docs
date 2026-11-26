@@ -1,0 +1,14 @@
+{
+  "schema_version":"h5-traceability-gaps/v1",
+  "base_shas":{"Backend":"e72b4f88877a560d04d47f29912f0638e257d692","Frontend":"e322808d868bb89e2c645a1b069eb12728296d9f","Docs":"c9e1e5c217616d28229fccf5315fb97a1ae061a9"},
+  "cases":[
+    {"id":"DOC-01","owner":"Castilla","implementation_state":"READY_FOR_INTEGRATION","execution_result":"NOT_RUN","dependency":"Owners must supply SHA-scoped artifacts; no CI bytes were downloaded in this preflight."},
+    {"id":"SEC-DOC-01","owner":"Castilla","implementation_state":"READY_FOR_INTEGRATION","execution_result":"NOT_RUN","dependency":"Vera/López/Axel scanner artifacts and human security review are not attached."},
+    {"id":"INT-04","owner":"Castilla","implementation_state":"READY_FOR_INTEGRATION","execution_result":"NOT_RUN","dependency":"B1 transport/provider gates are tracked independently in Backend harness PR."},
+    {"id":"PERF-07","owner":"Castilla","implementation_state":"READY_FOR_INTEGRATION","execution_result":"NOT_RUN","dependency":"No load runner invocation or matched baseline/candidate artifacts."},
+    {"id":"PERF-08","owner":"Castilla","implementation_state":"READY_FOR_INTEGRATION","execution_result":"BLOCKED_APIM","dependency":"Infra/APIM owner: provide authorized APIM instance plus equivalent private control, same revision and documented network equivalence."},
+    {"id":"APIM-01/02","owner":"Castilla","implementation_state":"READY_FOR_INTEGRATION","execution_result":"BLOCKED_APIM","dependency":"Infra/Azure: APIM resource, SKU, private routing and approved cost; zero APIM resources appeared in read-only inventory."},
+    {"id":"H5-04B","owner":"Axel","implementation_state":"READY_FOR_INTEGRATION","execution_result":"BLOCKED_SB","dependency":"Axel + domain owners: reconcile one transport/runtime and verify R16 plus R18, or choose R07 in a recorded release decision; no namespace count is flow evidence."}
+  ],
+  "limitations":["CI artifacts not downloaded; no artifact bytes or checksum are claimed.","No PR or run state is inferred from historical snapshots.","This file is a diagnostic index, not a test result." ]
+}

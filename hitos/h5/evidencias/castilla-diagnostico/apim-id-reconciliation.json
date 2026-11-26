@@ -1,0 +1,11 @@
+{
+  "schema_version": "h5-apim-id-reconciliation/v1",
+  "authority": "Docs hitos/h5/04_API_MANAGEMENT.md",
+  "observations": [
+    {"document":"Docs hitos/h5/04_API_MANAGEMENT.md","id":"APIM-T05","meaning":"Comprobación integral: burst y cuota/ventana por identidad/ruta, 429 y Retry-After, aislamiento, telemetría de upstream, bypass y convivencia con G7/Gateway."},
+    {"document":"Backend ops/azure/apim/README.md","id":"T05","meaning":"CORS permite orígenes explícitos y rechaza wildcard/orígenes ajenos."}
+  ],
+  "proposed_action": "Mantener IDs internos APIM-T01..T08 de Docs para scorecard. Referenciar casos Backend por ruta+method y un identificador interno cualificado (backend-readme:T05), nunca por T05 aislado. Solicitar conciliación documental a los owners antes de cambiar el README Backend.",
+  "status": "RECONCILIATION_PROPOSED",
+  "no_source_was_modified": true
+}

@@ -1,0 +1,15 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://g6.example.invalid/h5-evidence/v1/coverage.schema.v1.json",
+  "title":"G6 H5 coverage by case",
+  "type":"object","additionalProperties":false,
+  "required":["schema_version","case_id","owner","total_cases","implemented_cases","executed_local_cases","passed_local_cases","blocked_external_cases","failed_cases","unimplemented_cases","blocking","rerun_command"],
+  "properties":{
+    "schema_version":{"const":"h5-coverage/v1"},"case_id":{"type":"string"},"owner":{"type":"string"},
+    "total_cases":{"type":"integer","minimum":0},"implemented_cases":{"type":"integer","minimum":0},
+    "executed_local_cases":{"type":"integer","minimum":0},"passed_local_cases":{"type":"integer","minimum":0},
+    "blocked_external_cases":{"type":"integer","minimum":0},"failed_cases":{"type":"integer","minimum":0},
+    "unimplemented_cases":{"type":"integer","minimum":0},"blocking":{"type":"boolean"},"rerun_command":{"type":["string","null"]},
+    "condition":{"type":["string","null"]},"consolidation_owner":{"type":"string"}
+  }
+}
