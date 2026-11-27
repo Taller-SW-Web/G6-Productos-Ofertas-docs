@@ -21,7 +21,7 @@
 | ID | Cola Service Bus Basic | Productor | Consumidor | Evidencia L1 (HEAD `18413ac`, PG17 / `HTTP_IN_MEMORY_NOT_AZURE`) | Inventario Azure (read-only) | Corrida Azure L2 vigente |
 |---|---|---|---|---|---|---|
 | **R01** | `g6.catalog.from.bulk` | `bulk-svc` | `catalog-svc` | **PASS** (19-flows + `run-bulk-postgres17` 38/38 + FE real-stack 8b `COMPLETED`) | Active (0/0), RBAC 2/2 | `PENDING_AZURE_L2` |
-| **R02** | `g6.inventory.from.bulk` | `bulk-svc` | `inventory-svc` | **PASS** (19-flows + `inventory-h5.postgres` 26/26 rollback técnico + FE real-stack 8b) | Active (0/0), RBAC 2/2 | `BLOCKED_DB_MIGRATION` (espera `0002` R10 + deploy + L2) |
+| **R02** | `g6.inventory.from.bulk` | `bulk-svc` | `inventory-svc` | **PASS** (19-flows + `inventory-h5.postgres` 26/26 rollback técnico + FE real-stack 8b) | Active (0/0), RBAC 2/2 | `PENDING_AZURE_L2` (el recorrido R02→R10 requiere el candidato desplegado) |
 | **R03** | `g6.pricing.from.bulk` | `bulk-svc` | `pricing-svc` | **PASS** (19-flows incl. **reinicio proceso real `pricing-svc`** + `r03-pricing-r14-bulk` 3/3 + `r03-r14-r16-r17` 3/3) | Active (0/0), RBAC 2/2 | `PENDING_AZURE_L2` |
 | **R04** | `g6.bulk.from.catalog` | `catalog-svc` | `bulk-svc` | **PASS** (19-flows + #106/#109 158-cert + FE real-stack 8b) | Active (0/0), RBAC 2/2 | `PENDING_AZURE_L2` |
 | **R05** | `g6.combos.from.catalog` | `catalog-svc` | `combos-svc` | **PASS** (19-flows + CI `combos_postgres_h5` `#46044277201`) | Active (0/0), RBAC 2/2 | `PENDING_AZURE_L2` |
@@ -29,7 +29,7 @@
 | **R07** | `g6.pricing.from.catalog` | `catalog-svc` | `pricing-svc` | **PASS** (19-flows + `r03-r14-r16-r17` 3/3; reservado solo como fallback condicionado de R18) | Active (0/0), RBAC 2/2 | `PENDING_AZURE_L2` |
 | **R08** | `g6.promotions.from.catalog` | `catalog-svc` | `promotions-svc` | **PASS** (19-flows + CI `promotions`) | Active (0/0), RBAC 2/2 | `PENDING_AZURE_L2` |
 | **R09** | `g6.taxonomy.from.catalog` | `catalog-svc` | `taxonomy-svc` | **PASS** (19-flows + `run-taxonomy-catalog-postgres` 23/23 + CI `taxonomy_catalog`) | Active (0/0), RBAC 2/2 | `PENDING_AZURE_L2` (esquema Taxonomy equivalente ya existe en Supabase; falta deploy candidato + ensayo L2) |
-| **R10** | `g6.bulk.from.inventory` | `inventory-svc` | `bulk-svc` | **PASS** (19-flows + `0002` PG17 up×2/`inventory_app`/rollback + #106/#109 + FE real-stack 8b) | Active (0/0), RBAC 2/2 | `BLOCKED_DB_MIGRATION` (`ck_inventory_delivery_route` en Supabase solo admite 3 destinos) |
+| **R10** | `g6.bulk.from.inventory` | `inventory-svc` | `bulk-svc` | **PASS** (19-flows + `0002` PG17 up×2/`inventory_app`/rollback + #106/#109 + FE real-stack 8b) | Active (0/0), RBAC 2/2 | `PENDING_AZURE_L2` (cuatro destinos verificados en Supabase tras 20261127200858) |
 | **R11** | `g6.catalog.from.inventory` | `inventory-svc` | `catalog-svc` | **PASS** (19-flows + `inventory-h5.postgres` 26/26) | Active (0/0), RBAC 2/2 | `PENDING_AZURE_L2` |
 | **R12** | `g6.combos.from.inventory` | `inventory-svc` | `combos-svc` | **PASS** (19-flows + CI `combos_postgres_h5`) | Active (0/0), RBAC 2/2 | `PENDING_AZURE_L2` |
 | **R13** | `g6.promotions.from.inventory` | `inventory-svc` | `promotions-svc` | **PASS** (19-flows + `inventory-h5.postgres` 26/26) | Active (0/0), RBAC 2/2 | `PENDING_AZURE_L2` |

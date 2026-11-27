@@ -6,7 +6,7 @@
   "evidenceLevel": "ISOLATED",
   "verificationState": "VERIFIED_LOCAL_AND_CI_GREEN_GAPS_DOCUMENTED",
   "deploymentState": "NOT_DEPLOYED",
-  "blocker": "CodeQL y Secret Scanning nativos devuelven 404 en GitHub (requiere org admin); Trivy NOT_RUN localmente; Rulesets de master faltantes en Frontend y Docs",
+  "blocker": "CodeQL sin configurar y Secret Scanning deshabilitado en Backend. Las reglas efectivas no devuelven entradas en Frontend y Docs. Aceptación formal del control alternativo pendiente.",
   "owner": "Axel Cueva",
   "testedAtUtc": "2026-11-27T18:10:53.671Z",
   "subjects": {
@@ -40,5 +40,5 @@
     "dlqDelta": 0,
     "idempotent": true
   },
-  "notes": "0 vulnerabilidades moderate/high/critical en npm audit Backend y Frontend; SBOM CycloneDX 1.5 (444 BE / 282 FE); 38/38 RBAC minimo por cola en g6-sb-h5-chile-261127."
+  "notes": "0 vulnerabilidades moderate/high/critical en npm audit Backend y Frontend; SBOM CycloneDX 1.5 (444 BE / 282 FE); 38/38 RBAC mínimo por cola. Resultados posteriores de Trivy y Semgrep documentados en artefactos/SECURIDAD_DRAFT_2026-11-27.json."
 }

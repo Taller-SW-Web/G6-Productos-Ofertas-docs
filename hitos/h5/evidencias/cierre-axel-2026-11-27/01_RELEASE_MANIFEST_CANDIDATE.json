@@ -16,7 +16,7 @@
       "candidatePrDraft": true,
       "candidateSha": "d7a3bf07880a83727acf83788790241c36adc0b5",
       "candidateCiRunId": 46061782995,
-      "candidateCiConclusion": "SEE_CI_RUN",
+      "candidateCiConclusion": "success",
       "incorporatedSources": [
         {
           "pr": 305,
