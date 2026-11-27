@@ -364,7 +364,8 @@ class MarketplaceCatalogContract(unittest.TestCase):
             self.assertEqual(op['x-required-scope'],'catalogo:leer',path)
             self.assertEqual(op['x-service-audience'],'api-productos',path)
             self.assertEqual(op['x-scope-registration-status'],'pending-security-registration',path)
-            self.assertEqual(set(op['x-allowed-client-ids']),allowed,path)
+            expected_clients = allowed | {'modulo-ventas'} if path == '/productos' else allowed
+            self.assertEqual(set(op['x-allowed-client-ids']),expected_clients,path)
         self.assertEqual(set(self.o['x-security-contract']['service_scopes_pending_registration']['catalogo:leer']['clients']),allowed|{'modulo-productos'})
 
         schemes=self.o['components']['securitySchemes']

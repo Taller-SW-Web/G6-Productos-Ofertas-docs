@@ -698,7 +698,7 @@ paths:
       - Marketplace
       - Chatbot
       - Retail
-      - Ventas/Postventa
+      - Ventas
       x-service-audience: api-productos
       x-required-scope: catalogo:leer
       x-scope-registration-status: pending-security-registration
@@ -986,10 +986,11 @@ paths:
         '429':
         - RATE_LIMIT_EXCEDIDO
       x-route-basis: existing-contract
-      x-allowed-client-ids: &id034
+      x-allowed-client-ids:
       - modulo-marketplace
       - modulo-chatbot
       - modulo-retail
+      - modulo-ventas
       description: Lectura comercial. Los consumidores de servicio deben informar canal y solo reciben productos
         ACTIVO y comercialmente elegibles para ese canal. El parámetro estado no habilita a un canal a consultar
         BORRADOR/INACTIVO. La respuesta usa una proyección comercial sin flags administrativos.
@@ -1767,7 +1768,10 @@ paths:
       x-route-basis: existing-contract
       description: Consulta consumible por Catálogo Core/canales. Expone únicamente categorías activas. El backoffice
         usa /categorias/administracion o /categorias/arbol.
-      x-allowed-client-ids: *id034
+      x-allowed-client-ids: &id034
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
     post:
       tags:
       - Taxonomía
