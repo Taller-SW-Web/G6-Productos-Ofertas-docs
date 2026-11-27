@@ -1,0 +1,8 @@
+{
+  "artifact": "C:\\Users\\axel.cueva\\.gemini\\antigravity\\brain\\f8a9d18c-b8c9-47a0-afb1-a52ac857aa6f\\scratch\\h5-recert-18413ac\\R16_PRICE_AUDIT_CONSUMER_RESTART.json",
+  "sha256": "9dab432eda3e2c0b79623e66bced8b639b0958bf3f7f44cd6e0cb9ab547367eb",
+  "generatedAtUtc": "2026-11-27T17:44:38.465Z",
+  "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+  "transport": "HTTP_IN_MEMORY_NOT_AZURE",
+  "evidenceLevel": "L1_ISOLATED"
+}

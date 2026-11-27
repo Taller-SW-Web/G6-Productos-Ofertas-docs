@@ -1,0 +1,105 @@
+﻿<policies>
+	<inbound>
+		<base />
+		<choose>
+			<when condition="@(context.Request.Headers.TryGetValue(&amp;quot;x-correlation-id&amp;quot;, out var rawCorrelationHeaders) &amp;amp;&amp;amp; rawCorrelationHeaders.Length &amp;gt; 1)">
+				<set-variable name="correlationId" value="@(Guid.NewGuid().ToString())" />
+				<return-response>
+					<set-status code="400" reason="Bad Request" />
+					<set-header name="Content-Type" exists-action="override">
+						<value>application/problem+json</value>
+					</set-header>
+					<set-header name="x-correlation-id" exists-action="override">
+						<value>@((string)context.Variables[&amp;quot;correlationId&amp;quot;])</value>
+					</set-header>
+					<set-body>@{
+            return new JObject(
+              new JProperty("type", "about:blank"),
+              new JProperty("title", "Datos de entrada inválidos"),
+              new JProperty("status", 400),
+              new JProperty("code", "VALIDACION"),
+              new JProperty("correlationId", (string)context.Variables["correlationId"])
+            ).ToString();
+          }</set-body>
+				</return-response>
+			</when>
+			<when condition="@(context.Request.Headers.ContainsKey(&amp;quot;x-correlation-id&amp;quot;))">
+				<set-variable name="incomingCorrelationId" value="@(context.Request.Headers.GetValueOrDefault(&amp;quot;x-correlation-id&amp;quot;, string.Empty).Trim())" />
+				<choose>
+					<when condition="@(!System.Text.RegularExpressions.Regex.IsMatch((string)context.Variables[&amp;quot;incomingCorrelationId&amp;quot;], &amp;quot;^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$&amp;quot;))">
+						<set-variable name="correlationId" value="@(Guid.NewGuid().ToString())" />
+						<return-response>
+							<set-status code="400" reason="Bad Request" />
+							<set-header name="Content-Type" exists-action="override">
+								<value>application/problem+json</value>
+							</set-header>
+							<set-header name="x-correlation-id" exists-action="override">
+								<value>@((string)context.Variables[&amp;quot;correlationId&amp;quot;])</value>
+							</set-header>
+							<set-body>@{
+                return new JObject(
+                  new JProperty("type", "about:blank"),
+                  new JProperty("title", "Datos de entrada inválidos"),
+                  new JProperty("status", 400),
+                  new JProperty("code", "VALIDACION"),
+                  new JProperty("correlationId", (string)context.Variables["correlationId"])
+                ).ToString();
+              }</set-body>
+						</return-response>
+					</when>
+					<otherwise>
+						<set-variable name="correlationId" value="@((string)context.Variables[&amp;quot;incomingCorrelationId&amp;quot;])" />
+					</otherwise>
+				</choose>
+			</when>
+			<otherwise>
+				<set-variable name="correlationId" value="@(Guid.NewGuid().ToString())" />
+			</otherwise>
+		</choose>
+		<set-header name="x-correlation-id" exists-action="override">
+			<value>@((string)context.Variables[&amp;quot;correlationId&amp;quot;])</value>
+		</set-header>
+		<cors allow-credentials="false" terminate-unmatched-request="true">
+			<allowed-origins>
+				<origin>https://apim-g6-productos-chile.azure-api.net</origin>
+			</allowed-origins>
+			<allowed-methods>
+				<method>GET</method>
+				<method>POST</method>
+				<method>PUT</method>
+				<method>PATCH</method>
+				<method>DELETE</method>
+				<method>OPTIONS</method>
+			</allowed-methods>
+			<allowed-headers>
+				<header>Authorization</header>
+				<header>Content-Type</header>
+				<header>Idempotency-Key</header>
+				<header>X-Correlation-Id</header>
+			</allowed-headers>
+			<expose-headers>
+				<header>Content-Disposition</header>
+				<header>Location</header>
+				<header>Retry-After</header>
+				<header>X-Correlation-Id</header>
+			</expose-headers>
+		</cors>
+	</inbound>
+	<backend>
+		<forward-request buffer-request-body="false" buffer-response="false" />
+	</backend>
+	<outbound>
+		<base />
+		<set-header name="Server" exists-action="delete" />
+		<set-header name="X-Powered-By" exists-action="delete" />
+		<set-header name="x-correlation-id" exists-action="override">
+			<value>@((string)context.Variables.GetValueOrDefault&amp;lt;string&amp;gt;(&amp;quot;correlationId&amp;quot;, Guid.NewGuid().ToString()))</value>
+		</set-header>
+	</outbound>
+	<on-error>
+		<base />
+		<set-header name="x-correlation-id" exists-action="override">
+			<value>@((string)context.Variables.GetValueOrDefault&amp;lt;string&amp;gt;(&amp;quot;correlationId&amp;quot;, Guid.NewGuid().ToString()))</value>
+		</set-header>
+	</on-error>
+</policies>

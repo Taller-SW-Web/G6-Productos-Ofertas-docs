@@ -1,0 +1,39 @@
+{
+  "evidenceType": "R16_PRICE_AUDIT_CONSUMER_PROCESS_RESTART",
+  "criterion": "H5-04B",
+  "flow": "R16",
+  "queue": "g6.price-audit.from.pricing",
+  "service": "price-audit-svc",
+  "evidenceLevel": "L1_ISOLATED",
+  "transport": "HTTP_IN_MEMORY_NOT_AZURE",
+  "database": "postgres17-disposable",
+  "generatedAtUtc": "2026-11-27T17:44:38.465Z",
+  "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+  "contractVersion": "0.7.0-rc.3",
+  "processRestart": {
+    "kind": "ACTUAL_LOCAL_PRICE_AUDIT_PROCESS_KILL_AND_RESTART",
+    "stoppedPid": 30476,
+    "restartedPid": 29712,
+    "queuedWhileStopped": 2,
+    "limitation": "Broker HTTP en memoria local; demuestra reinicio real del proceso consumidor price-audit-svc, drenaje tras arranque, redelivery y efecto único en PG17, sin sustituir corrida L2 en Azure Service Bus."
+  },
+  "deliveries": {
+    "beforeStop": {
+      "messageId": "d0998719-ba36-4e3a-a289-a53cf4239f12",
+      "correlationId": "d39b293f-24e3-42f1-9bcc-b6907650a498",
+      "sku": "SKU-R16-A-256758AA",
+      "completedCount": 2,
+      "auditRowsPersisted": 1
+    },
+    "queuedDuringOutage": {
+      "messageId": "563af74f-e3cc-41e3-88c7-08711f0d7cff",
+      "correlationId": "387cfbcc-7384-47e6-9bfc-1ed08c07dd50",
+      "sku": "SKU-R16-B-9F2C6838",
+      "completedCount": 2,
+      "auditRowsPersisted": 1
+    }
+  },
+  "deadLetterCount": 0,
+  "uniqueEffectsVerified": true,
+  "status": "PASS"
+}

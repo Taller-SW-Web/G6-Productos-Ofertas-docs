@@ -4,13 +4,13 @@
   "scope": "IN_SCOPE",
   "result": "PASS",
   "evidenceLevel": "ISOLATED",
-  "verificationState": "VERIFIED_L1_PENDING_DB_MIGRATION_AND_AZURE_L2",
+  "verificationState": "VERIFIED_L1_AND_DUAL_LEDGER_EQUIVALENCE_PENDING_AZURE_L2",
   "deploymentState": "NOT_DEPLOYED",
-  "blocker": "Requiere aplicar 0006_service_bus_outbox_delivery.sql (SHA256 ab68c32c...) en Supabase compartido + deploy candidato + corrida L2 Azure autorizada",
+  "blocker": "Esquema H5 ya existe en Supabase (g6_h5_taxonomy_outbox_delivery_20261125 + restrict_runtime_acl) y es funcionalmente equivalente; NO ejecutar 0006 integra. Pendiente: deploy candidato + corrida L2 autorizada con los 6 eventos R18",
   "owner": "Lopez / Poma / Axel Cueva",
-  "testedAtUtc": "2026-11-27T15:54:00Z",
+  "testedAtUtc": "2026-11-27T18:10:53.671Z",
   "subjects": {
-    "backendSha": "16d373aeb63cb2386b0e174c76517d8bf3381fb5",
+    "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
     "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
     "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
     "contractVersion": "0.7.0-rc.3",
@@ -20,19 +20,19 @@
   "environment": {
     "name": "local-isolated-pg17-sb",
     "db": "postgres17-disposable",
-    "serviceBus": "isolated (Azure queue Active 0/0 readonly)",
+    "serviceBus": "HTTP_IN_MEMORY_NOT_AZURE (Azure queue Active 0/0 readonly)",
     "apim": null
   },
   "execution": {
-    "command": "node tests/h5/run-taxonomy-catalog-postgres.mjs + vitest tests/h5/int06-harness.e2e-spec.ts + certify-19-messaging-flows.mjs",
+    "command": "node tests/h5/run-taxonomy-catalog-postgres.mjs + verify-taxonomy-observed-ddl.mjs + certify-19-messaging-flows.mjs",
     "exitCode": 0,
-    "runId": null,
+    "runId": "46044277201",
     "artifactPath": "artefactos/MENSAJERIA_19_RECORRIDOS.json",
-    "artifactSha256": "9ece99015560e536cd8a503e8826c8599df0eff3a7b804fb3a855068ee4bfdc8"
+    "artifactSha256": "13cb3ac2ae7e2900604c2263beb13744b50e8f310547940f1fc6650ad985067d"
   },
   "assertions": {
-    "httpExpected": "6 eventos contractuales R18 + R09 con correlacion, barreras, DLQ e idempotencia",
-    "httpActual": "23/23 run-taxonomy-catalog-postgres PASS + 2/2 int06-harness PASS + R09/R18 19-flows PASS",
+    "httpExpected": "6 eventos contractuales R18 + R09 + reproduccion equivalencia DDL Supabase vs 0006",
+    "httpActual": "23/23 run-taxonomy-catalog-postgres PASS + verify-taxonomy-observed-ddl PASS (6/6 R18 como taxonomy_app, guard 0006 aborta seguro, H4 RABBITMQ aislado) + 19-flows PASS",
     "eventId": null,
     "correlationIdSanitized": "verified",
     "inboxState": "APPLIED_IDEMPOTENT",
@@ -40,5 +40,5 @@
     "dlqDelta": 0,
     "idempotent": true
   },
-  "notes": "R18 mantenido como segundo flujo H5-04B preferente; R07 no invocado como sustituto."
+  "notes": "R18 mantenido como segundo flujo H5-04B preferente; R07 no invocado."
 }

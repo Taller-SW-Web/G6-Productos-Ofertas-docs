@@ -4,13 +4,13 @@
   "scope": "IN_SCOPE",
   "result": "PASS",
   "evidenceLevel": "ISOLATED",
-  "verificationState": "VERIFIED_L1",
+  "verificationState": "VERIFIED_L1_HEAD_PINNED",
   "deploymentState": "NOT_DEPLOYED",
   "blocker": null,
   "owner": "Axel Cueva",
-  "testedAtUtc": "2026-11-27T15:54:00Z",
+  "testedAtUtc": "2026-11-27T18:10:53.671Z",
   "subjects": {
-    "backendSha": "16d373aeb63cb2386b0e174c76517d8bf3381fb5",
+    "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
     "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
     "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
     "contractVersion": "0.7.0-rc.3",
@@ -20,7 +20,7 @@
   "environment": {
     "name": "local-isolated-full-stack",
     "db": "postgres17-disposable",
-    "serviceBus": "isolated",
+    "serviceBus": "HTTP_IN_MEMORY_NOT_AZURE",
     "apim": null
   },
   "execution": {
@@ -28,11 +28,11 @@
     "exitCode": 0,
     "runId": null,
     "artifactPath": "artefactos/158_ENDPOINTS_CERTIFICATION_REPORT.json",
-    "artifactSha256": "88079efb420ffe3b6481c0b317d8e354c4a7af919dd4f80a61df9f530a7d4165"
+    "artifactSha256": "2631cd8adb7c7d4195fbc182571e2a5e76e53e15dbc1c83346a88510e23f1933"
   },
   "assertions": {
-    "httpExpected": "158/158 PASS (incl. 9 fallos historicos R2: #106, #109, #114, #128, #148, #149, #152, #153, #158)",
-    "httpActual": "158/158 PASS, 0 FAIL, 73 PERSISTENCE_PASS, 151 NEGATIVE_CONTRACT_PASS, 6/6 authChecks PASS",
+    "httpExpected": "158/158 PASS en HEAD final limpio 18413ac con metadata SHA generada",
+    "httpActual": "158/158 PASS, 0 FAIL, 73 PERSISTENCE_PASS, 151 NEGATIVE_CONTRACT_PASS, 6/6 authChecks PASS (backendSha=18413ac459b24793f4f09ea07104d5281c0be3c7)",
     "eventId": null,
     "correlationIdSanitized": "verified",
     "inboxState": "verified",
@@ -40,5 +40,5 @@
     "dlqDelta": 0,
     "idempotent": true
   },
-  "notes": "Catalog #152/#153 probadas en superficie interna con identidad de servicio y confirmadas rechazadas 404 en APIM publico live."
+  "notes": "Universos reconciliados: 158 R2 = 156 OpenAPI 0.7.0-rc.3 + 2 Gateway health; 145 APIM live = 156 OpenAPI - 11 excluidas (5 internas 404 + 4 G5 + 2 pricing admin)."
 }

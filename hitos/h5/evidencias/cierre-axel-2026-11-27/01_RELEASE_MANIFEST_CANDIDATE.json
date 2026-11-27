@@ -14,7 +14,9 @@
       "candidateBranch": "trabajo/cueva/h5-cierre-integral",
       "candidatePr": 307,
       "candidatePrDraft": true,
-      "candidateSha": "16d373aeb63cb2386b0e174c76517d8bf3381fb5",
+      "candidateSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+      "candidateCiRunId": 46044277201,
+      "candidateCiConclusion": "success",
       "incorporatedSources": [
         {
           "pr": 305,
@@ -71,8 +73,15 @@
       "service": "taxonomy-svc",
       "file": "apps/taxonomy-svc/migrations/0006_service_bus_outbox_delivery.sql",
       "sha256": "ab68c32c188ddbc6b75a07dfe7c5a6a3123d42711ed8bd344277e56b4f3f7f63",
-      "pg17DisposableStatus": "PASS",
-      "sharedSupabaseStatus": "NOT_APPLIED"
+      "appliedEquivalentFile": "apps/taxonomy-svc/migrations-candidate/h5/0001_outbox_delivery.sql",
+      "appliedEquivalentSha256": "fc838e563fbd8594bbb04ad9b0afaebbe41b0e9315fc73762561968a4caf0035",
+      "pg17DisposableStatus": "PASS_FUNCTIONAL_EQUIVALENCE_VERIFIED",
+      "sharedSupabaseStatus": "EXISTING_OBJECTS_FUNCTIONALLY_EQUIVALENT_DO_NOT_RUN_FULL_0006",
+      "globalLedgerEntries": [
+        "g6_h5_taxonomy_outbox_delivery_20261125",
+        "g6_h5_taxonomy_outbox_restrict_runtime_acl_20261125"
+      ],
+      "serviceLedgerMaxVersion": "0005"
     }
   ],
   "liveAzureReadOnlyBaseline20261127": {

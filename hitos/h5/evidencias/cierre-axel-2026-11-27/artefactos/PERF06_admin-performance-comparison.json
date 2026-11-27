@@ -1,0 +1,435 @@
+{
+  "schemaVersion": 1,
+  "baselineRun": "baseline-master",
+  "optimizedRun": "optimized-ccfc21ba0e821f33c0debf09389879e55df0539b",
+  "sameRunnerJob": true,
+  "browser": "Chromium via Playwright",
+  "measurementScope": "controlled browser/Gateway fixtures; no microservice/provider latency or production data",
+  "routeCoverage": {
+    "baseline": 81,
+    "optimized": 81,
+    "baselineFamilies": 14,
+    "optimizedFamilies": 14
+  },
+  "familyComparison": [
+    {
+      "family": "Combos",
+      "baseline": {
+        "p50Ms": 15,
+        "p95Ms": 32.29999999998836,
+        "p99Ms": 71.5,
+        "requests": 108,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 66678
+      },
+      "optimized": {
+        "p50Ms": 14,
+        "p95Ms": 27.70000000001164,
+        "p99Ms": 49.100000000034925,
+        "requests": 188,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 118552
+      },
+      "deltaPercent": {
+        "p50": -6.67,
+        "p95": -14.24,
+        "p99": -31.33
+      }
+    },
+    {
+      "family": "Catalog",
+      "baseline": {
+        "p50Ms": 13.89999999999418,
+        "p95Ms": 31.89999999999418,
+        "p99Ms": 36.39999999999418,
+        "requests": 168,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 120708
+      },
+      "optimized": {
+        "p50Ms": 11.799999999988358,
+        "p95Ms": 31,
+        "p99Ms": 37.79999999998836,
+        "requests": 192,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 137952
+      },
+      "deltaPercent": {
+        "p50": -15.11,
+        "p95": -2.82,
+        "p99": 3.85
+      }
+    },
+    {
+      "family": "Pricing",
+      "baseline": {
+        "p50Ms": 15.5,
+        "p95Ms": 17.199999999982538,
+        "p99Ms": 17.29999999998836,
+        "requests": 48,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 2808
+      },
+      "optimized": {
+        "p50Ms": 14.899999999965075,
+        "p95Ms": 17.400000000023283,
+        "p99Ms": 20.5,
+        "requests": 24,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 1333
+      },
+      "deltaPercent": {
+        "p50": -3.87,
+        "p95": 1.16,
+        "p99": 18.5
+      }
+    },
+    {
+      "family": "Price Audit",
+      "baseline": {
+        "p50Ms": 15.5,
+        "p95Ms": 19.39999999999418,
+        "p99Ms": 21.800000000017462,
+        "requests": 30,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 2655
+      },
+      "optimized": {
+        "p50Ms": 14.200000000011642,
+        "p95Ms": 23.300000000046566,
+        "p99Ms": 31,
+        "requests": 64,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 5664
+      },
+      "deltaPercent": {
+        "p50": -8.39,
+        "p95": 20.1,
+        "p99": 42.2
+      }
+    },
+    {
+      "family": "Categories",
+      "baseline": {
+        "p50Ms": 15.39999999999418,
+        "p95Ms": 18,
+        "p99Ms": 29.5,
+        "requests": 70,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 6405
+      },
+      "optimized": {
+        "p50Ms": 14.099999999976717,
+        "p95Ms": 15.899999999965075,
+        "p99Ms": 19,
+        "requests": 12,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 1098
+      },
+      "deltaPercent": {
+        "p50": -8.44,
+        "p95": -11.67,
+        "p99": -35.59
+      }
+    },
+    {
+      "family": "Characteristics",
+      "baseline": {
+        "p50Ms": 16,
+        "p95Ms": 20.79999999998836,
+        "p99Ms": 30.599999999976717,
+        "requests": 68,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 4896
+      },
+      "optimized": {
+        "p50Ms": 14.299999999988358,
+        "p95Ms": 16,
+        "p99Ms": 19.20000000001164,
+        "requests": 8,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 576
+      },
+      "deltaPercent": {
+        "p50": -10.63,
+        "p95": -23.08,
+        "p99": -37.25
+      }
+    },
+    {
+      "family": "Product Types",
+      "baseline": {
+        "p50Ms": 14.10000000000582,
+        "p95Ms": 17.599999999976717,
+        "p99Ms": 30.699999999982538,
+        "requests": 38,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 2736
+      },
+      "optimized": {
+        "p50Ms": 13.600000000034925,
+        "p95Ms": 18.20000000001164,
+        "p99Ms": 35.899999999965075,
+        "requests": 34,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 2448
+      },
+      "deltaPercent": {
+        "p50": -3.55,
+        "p95": 3.41,
+        "p99": 16.94
+      }
+    },
+    {
+      "family": "Brands",
+      "baseline": {
+        "p50Ms": 15.60000000000582,
+        "p95Ms": 17.5,
+        "p99Ms": 20.5,
+        "requests": 48,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 3314
+      },
+      "optimized": {
+        "p50Ms": 14.600000000034925,
+        "p95Ms": 18.099999999976717,
+        "p99Ms": 26.900000000023283,
+        "requests": 36,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 2592
+      },
+      "deltaPercent": {
+        "p50": -6.41,
+        "p95": 3.43,
+        "p99": 31.22
+      }
+    },
+    {
+      "family": "SEO",
+      "baseline": {
+        "p50Ms": 15.599999999976717,
+        "p95Ms": 18,
+        "p99Ms": 19,
+        "requests": 54,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 3888
+      },
+      "optimized": {
+        "p50Ms": 15,
+        "p95Ms": 16.5,
+        "p99Ms": 17.099999999976717,
+        "requests": 12,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 864
+      },
+      "deltaPercent": {
+        "p50": -3.85,
+        "p95": -8.33,
+        "p99": -10
+      }
+    },
+    {
+      "family": "Recommendations",
+      "baseline": {
+        "p50Ms": 15.799999999988358,
+        "p95Ms": 23.099999999976717,
+        "p99Ms": 27.300000000046566,
+        "requests": 84,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 6143
+      },
+      "optimized": {
+        "p50Ms": 14.5,
+        "p95Ms": 24.800000000046566,
+        "p99Ms": 27.100000000034925,
+        "requests": 36,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 2591
+      },
+      "deltaPercent": {
+        "p50": -8.23,
+        "p95": 7.36,
+        "p99": -0.73
+      }
+    },
+    {
+      "family": "Campaigns",
+      "baseline": {
+        "p50Ms": 15.400000000023283,
+        "p95Ms": 27.79999999998836,
+        "p99Ms": 28.400000000023283,
+        "requests": 60,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 5310
+      },
+      "optimized": {
+        "p50Ms": 15.099999999976717,
+        "p95Ms": 25.29999999998836,
+        "p99Ms": 29.70000000001164,
+        "requests": 46,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 4071
+      },
+      "deltaPercent": {
+        "p50": -1.95,
+        "p95": -8.99,
+        "p99": 4.58
+      }
+    },
+    {
+      "family": "Coupons",
+      "baseline": {
+        "p50Ms": 14.099999999976717,
+        "p95Ms": 21,
+        "p99Ms": 29.099999999976717,
+        "requests": 70,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 6053
+      },
+      "optimized": {
+        "p50Ms": 13.800000000046566,
+        "p95Ms": 20.29999999998836,
+        "p99Ms": 22.900000000023283,
+        "requests": 56,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 4885
+      },
+      "deltaPercent": {
+        "p50": -2.13,
+        "p95": -3.33,
+        "p99": -21.31
+      }
+    },
+    {
+      "family": "Inventory",
+      "baseline": {
+        "p50Ms": 16.70000000001164,
+        "p95Ms": 31.79999999998836,
+        "p99Ms": 40,
+        "requests": 616,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 52674
+      },
+      "optimized": {
+        "p50Ms": 16,
+        "p95Ms": 30.400000000023283,
+        "p99Ms": 35.09999999997672,
+        "requests": 592,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 50690
+      },
+      "deltaPercent": {
+        "p50": -4.19,
+        "p95": -4.4,
+        "p99": -12.25
+      }
+    },
+    {
+      "family": "Bulk",
+      "baseline": {
+        "p50Ms": 11.799999999988358,
+        "p95Ms": 15.5,
+        "p99Ms": 17.099999999976717,
+        "requests": 2,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 142
+      },
+      "optimized": {
+        "p50Ms": 13.800000000046566,
+        "p95Ms": 19.400000000023283,
+        "p99Ms": 26.599999999976717,
+        "requests": 23,
+        "requestBodyBytes": 0,
+        "responseBodyBytes": 1562
+      },
+      "deltaPercent": {
+        "p50": 16.95,
+        "p95": 25.16,
+        "p99": 55.56
+      }
+    }
+  ],
+  "catalogListDatasetComparison": [
+    {
+      "totalRows": 20,
+      "baseline": {
+        "elapsedMs": 1731,
+        "requests": 4,
+        "responseBodyBytes": 5727,
+        "traversedPages": [
+          1
+        ]
+      },
+      "optimized": {
+        "elapsedMs": 1745,
+        "requests": 4,
+        "responseBodyBytes": 5727,
+        "traversedPages": [
+          1
+        ]
+      },
+      "elapsedDeltaPercent": 0.81,
+      "responseBytesDeltaPercent": 0
+    },
+    {
+      "totalRows": 100,
+      "baseline": {
+        "elapsedMs": 1974,
+        "requests": 4,
+        "responseBodyBytes": 26612,
+        "traversedPages": [
+          1
+        ]
+      },
+      "optimized": {
+        "elapsedMs": 1924,
+        "requests": 4,
+        "responseBodyBytes": 26612,
+        "traversedPages": [
+          1
+        ]
+      },
+      "elapsedDeltaPercent": -2.53,
+      "responseBytesDeltaPercent": 0
+    },
+    {
+      "totalRows": 1000,
+      "baseline": {
+        "elapsedMs": 4507,
+        "requests": 13,
+        "responseBodyBytes": 264902,
+        "traversedPages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      "optimized": {
+        "elapsedMs": 5133,
+        "requests": 13,
+        "responseBodyBytes": 264902,
+        "traversedPages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      "elapsedDeltaPercent": 13.89,
+      "responseBytesDeltaPercent": 0
+    }
+  ]
+}

@@ -1,6 +1,17 @@
 {
+  "metadata": {
+    "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "evidenceLevel": "L1_ISOLATED",
+    "transport": "HTTP_IN_MEMORY_NOT_AZURE",
+    "command": "node tests/h5/certify-158-endpoints.mjs",
+    "generatedAtUtc": "2026-11-27T18:00:31.394Z",
+    "exitCode": 0
+  },
   "status": "PASS",
-  "timestamp": "2026-11-27T15:34:56.868Z",
+  "timestamp": "2026-11-27T18:00:31.394Z",
   "total": 158,
   "executed": 158,
   "notExecuted": 0,
@@ -48,7 +59,7 @@
   "n01ConsumeStatus": "COMPLETED",
   "bulkTerminal": "COMPLETED",
   "bulkSnap": {
-    "batch_id": "15833baf-ceea-44b9-82d6-932a6146b4de",
+    "batch_id": "da8e061a-4a21-4e30-8458-9d64e5674d39",
     "status": "COMPLETED",
     "total_rows": 1,
     "completed_rows": 1,
@@ -56,7 +67,7 @@
     "needs_reconciliation": false,
     "rows": [
       {
-        "row_id": "dc34c232-900a-5517-8941-68ca9b4d2f6c",
+        "row_id": "b0f8b643-06d6-58e4-b8bc-d9960ea6ec9d",
         "status": "COMPLETED",
         "applied_domains": [
           "CATALOGO",

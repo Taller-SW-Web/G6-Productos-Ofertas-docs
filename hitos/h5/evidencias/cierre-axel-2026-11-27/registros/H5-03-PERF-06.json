@@ -1,0 +1,44 @@
+{
+  "criterion": "H5-03",
+  "caseId": "PERF-06",
+  "scope": "IN_SCOPE",
+  "result": "INCONCLUSIVE",
+  "evidenceLevel": "ISOLATED",
+  "verificationState": "EXECUTED_SINGLE_PAIRED_RUN_L1_FRONTEND_BROWSER",
+  "deploymentState": "NOT_DEPLOYED",
+  "blocker": "Una sola corrida pareada sobre fixtures controlados (requiere 3 repeticiones y contraste en staging real para aplicar gate <=1.10x de mediana)",
+  "owner": "Poma / Axel Cueva",
+  "testedAtUtc": "2026-11-27T18:10:53.671Z",
+  "subjects": {
+    "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "azureImageDigest": null,
+    "azureRevision": null
+  },
+  "environment": {
+    "name": "github-actions-ubuntu-latest-same-runner",
+    "db": "controlled-browser-gateway-fixtures",
+    "serviceBus": "not-applicable",
+    "apim": null
+  },
+  "execution": {
+    "command": "gh workflow run frontend.yml --ref trabajo/castilla/h5-cierre-post-r2-frontend -f performance_harness=true -f baseline_ref=master -f performance_family=all",
+    "exitCode": 0,
+    "runId": "46043178034",
+    "artifactPath": "artefactos/PERF06_admin-performance-comparison.json",
+    "artifactSha256": "6c0a95b3efd70981a16622b15bb8e678b130f58b8add87ae7f0736eac9689ba6"
+  },
+  "assertions": {
+    "httpExpected": "Comparacion pareada baseline master (2c6ad931) vs candidato #102 (ccfc21ba) en 81 rutas / 14 familias SPA",
+    "httpActual": "81/81 rutas y 14/14 familias medidas; Combos p95 -14.2%, Campaigns -8.99%, Coupons -3.33%, Inventory -4.4%; Bulk p95 +25.16% (2->23 reqs), Catalog 1000 filas +13.89%",
+    "eventId": null,
+    "correlationIdSanitized": null,
+    "inboxState": null,
+    "outboxState": null,
+    "dlqDelta": null,
+    "idempotent": null
+  },
+  "notes": "Etiquetado L1_FRONTEND_BROWSER; sin latencia de microservicios reales ni datos productivos."
+}

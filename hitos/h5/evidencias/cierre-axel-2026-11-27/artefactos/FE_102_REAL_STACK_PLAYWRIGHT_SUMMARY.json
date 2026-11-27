@@ -1,0 +1,133 @@
+{
+  "evidenceType": "FE_102_PLAYWRIGHT_REAL_ISOLATED_BACKEND_STACK",
+  "evidenceLevel": "L1_ISOLATED",
+  "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+  "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+  "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+  "contractVersion": "0.7.0-rc.3",
+  "dataMode": "api",
+  "g7Dependency": "SIMULATED_DEPENDENCY_LOCAL_RS256",
+  "transport": "HTTP_IN_MEMORY_NOT_AZURE",
+  "stats": {
+    "startTime": "2026-11-27T18:00:58.252Z",
+    "duration": 156245.063,
+    "expected": 16,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "file": "eight-modules.real.spec.ts",
+      "title": "1. Catalog: preparar maestros en Taxonomy, crear producto BORRADOR completo via SPA, recargar, reautenticar y verificar lectura administrativa y preparación",
+      "ok": true,
+      "durationMs": 11557,
+      "status": "passed"
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "title": "2. Taxonomy: crear categoría via SPA, recargar, reautenticar y consultar por categoriaId",
+      "ok": true,
+      "durationMs": 5637,
+      "status": "passed"
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "title": "3. Pricing: preprovisionar producto ACTIVO y definición vigente, editar vía PriceEditForm + ConfirmDialog (PATCH) y verificar persistencia tras recarga",
+      "ok": true,
+      "durationMs": 5679,
+      "status": "passed"
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "title": "4. Price Audit: cambio causal en Pricing -> Service Bus aislado -> Price Audit, exportar CSV hasta COMPLETED y verificar contenido",
+      "ok": true,
+      "durationMs": 4751,
+      "status": "passed"
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "title": "5. Promotions: crear promoción CUPON vigente y luego cupón asociado via CouponForm (estado, promoción exacta y radio restitución)",
+      "ok": true,
+      "durationMs": 5140,
+      "status": "passed"
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "title": "6. Inventory: navegar a /inventario y subpágina /inventario/umbrales, mutar umbral, recargar, reautenticar y verificar valor persistido",
+      "ok": true,
+      "durationMs": 5569,
+      "status": "passed"
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "title": "7. Combos: preprovisionar dos SKU activos con precios, crear combo via SPA con componentes y precioCombo, recargar y verificar composición",
+      "ok": true,
+      "durationMs": 8389,
+      "status": "passed"
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "title": "8a. Bulk (admisión HTTP): descargar plantilla CSV V2, preparar maestros reales de Taxonomy, subir lote válido y verificar 202 QUEUED y persistencia inicial",
+      "ok": true,
+      "durationMs": 3874,
+      "status": "passed"
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "title": "8b. Bulk (procesamiento integral con mensajería): exige COMPLETED, conteo íntegro de filas, cero errores y sin conciliación pendiente",
+      "ok": true,
+      "durationMs": 13177,
+      "status": "passed"
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "title": "8c. Bulk (CSV inválido): falla de forma explícita (400/422 o FAILED_GENERAL separado del caso positivo)",
+      "ok": true,
+      "durationMs": 4512,
+      "status": "passed"
+    },
+    {
+      "file": "http-contracts.real.spec.ts",
+      "title": "UI inicia sesión con G7 local RS256 en memoria, envía Authorization Bearer y X-Correlation-Id sin tokens técnicos en bundle",
+      "ok": true,
+      "durationMs": 2759,
+      "status": "passed"
+    },
+    {
+      "file": "http-contracts.real.spec.ts",
+      "title": "usuario sin GESTOR_COMERCIAL ve AccessDenied en React sin emitir peticiones administrativas; Gateway devuelve 401 sin firma válida y 403 con JWT válido sin permisos",
+      "ok": true,
+      "durationMs": 3134,
+      "status": "passed"
+    },
+    {
+      "file": "http-contracts.real.spec.ts",
+      "title": "G7 local estricto: rechaza credenciales inválidas, usuarios inactivos/bloqueados, rotación refresh y revocación logout",
+      "ok": true,
+      "durationMs": 227,
+      "status": "passed"
+    },
+    {
+      "file": "http-contracts.real.spec.ts",
+      "title": "navegación SPA conserva sesión, verifica 429 Retry-After y no reintenta mutaciones ambiguas 503",
+      "ok": true,
+      "durationMs": 6661,
+      "status": "passed"
+    },
+    {
+      "file": "http-contracts.real.spec.ts",
+      "title": "P0-AUTH-09: matriz positiva y negativa independiente contra Gateway y los 8 proveedores reales",
+      "ok": true,
+      "durationMs": 691,
+      "status": "passed"
+    },
+    {
+      "file": "transversal-flows.real.spec.ts",
+      "title": "causalidad real: Taxonomy -> Catalog -> Pricing/Inventory -> Audit -> Combos -> Coupons + N01 técnico separado",
+      "ok": true,
+      "durationMs": 15076,
+      "status": "passed"
+    }
+  ]
+}

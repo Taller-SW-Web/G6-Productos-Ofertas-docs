@@ -2,9 +2,10 @@
 
 > **Nivel de evidencia:** `ISOLATED` (stack completo G6 + API Gateway + 8 microservicios + PostgreSQL 17 descartable + transporte aislado Service Bus H5 + emisor G7 de prueba). No equivale a corrida L2 sobre Azure/G7 real.
 
-- **Fecha de ejecución UTC:** `2026-11-27T15:34:56.868Z`
+- **Fecha de ejecución UTC:** `2026-11-27T18:00:31.394Z`
+- **Sujetos fijados (metadata):** Backend `18413ac459b24793f4f09ea07104d5281c0be3c7` | Frontend `ccfc21ba0e821f33c0debf09389879e55df0539b` | Docs `5f30802129ba4bbc0674dcc5878f10065f443118`
 - **Contrato normativo:** OpenAPI `0.7.0-rc.3` (Docs `5f30802129ba4bbc0674dcc5878f10065f443118`)
-- **Artefacto JSON fuente:** `artefactos/158_ENDPOINTS_CERTIFICATION_REPORT.json` (SHA-256: `88079efb420ffe3b6481c0b317d8e354c4a7af919dd4f80a61df9f530a7d4165`)
+- **Artefacto JSON fuente:** `artefactos/158_ENDPOINTS_CERTIFICATION_REPORT.json` (SHA-256: `2631cd8adb7c7d4195fbc182571e2a5e76e53e15dbc1c83346a88510e23f1933`) + `artefactos/158_ENDPOINTS_CERTIFICATION_REPORT.meta.json`
 - **Resultado global:** **158/158 PASS, 0 FAIL, 0 BLOCKED** (histórico R2: 149 PASS / 9 FAIL)
 - **Persistencia real en PostgreSQL 17:** `PERSISTENCE_PASS=73`, `NOT_APPLICABLE=85`, `NOT_VERIFIED=0`, `FAIL=0`
 - **Contratos negativos (400/404/409/422):** `NEGATIVE_CONTRACT_PASS=151`, `NOT_APPLICABLE=7`, `FAIL=0`

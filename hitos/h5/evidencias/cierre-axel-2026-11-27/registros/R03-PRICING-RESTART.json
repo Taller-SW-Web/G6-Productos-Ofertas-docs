@@ -1,0 +1,44 @@
+{
+  "criterion": "H5-04B",
+  "caseId": "R03-PRICING-CONSUMER-RESTART",
+  "scope": "IN_SCOPE",
+  "result": "PASS",
+  "evidenceLevel": "ISOLATED",
+  "verificationState": "VERIFIED_L1_PROCESS_RESTART",
+  "deploymentState": "NOT_DEPLOYED",
+  "blocker": "L2 requiere despliegue candidato y ventana autorizada en Azure",
+  "owner": "Vera / Axel Cueva",
+  "testedAtUtc": "2026-11-27T18:10:53.671Z",
+  "subjects": {
+    "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "azureImageDigest": null,
+    "azureRevision": null
+  },
+  "environment": {
+    "name": "local-isolated-stack",
+    "db": "postgres17-disposable",
+    "serviceBus": "HTTP_IN_MEMORY_NOT_AZURE",
+    "apim": null
+  },
+  "execution": {
+    "command": "node tests/h5/certify-19-messaging-flows.mjs",
+    "exitCode": 0,
+    "runId": null,
+    "artifactPath": "artefactos/MENSAJERIA_19_RECORRIDOS.json",
+    "artifactSha256": "13cb3ac2ae7e2900604c2263beb13744b50e8f310547940f1fc6650ad985067d"
+  },
+  "assertions": {
+    "httpExpected": "Reinicio real de proceso pricing-svc consumiendo g6.pricing.from.bulk (R03) con redelivery sin mutar 12 tablas de negocio",
+    "httpActual": "processRecovery (flow=R03, service=pricing-svc, queue=g6.pricing.from.bulk): queuedWhileStopped=true, settled=true, businessUnchanged=true",
+    "eventId": null,
+    "correlationIdSanitized": "verified",
+    "inboxState": "APPLIED_ONCE",
+    "outboxState": "COMPLETED",
+    "dlqDelta": 0,
+    "idempotent": true
+  },
+  "notes": "Atribucion corregida: este reinicio pertenece a R03 (pricing-svc), no a R16."
+}

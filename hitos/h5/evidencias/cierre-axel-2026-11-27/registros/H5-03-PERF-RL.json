@@ -1,16 +1,16 @@
 {
   "criterion": "H5-03",
-  "caseId": "PERF-01..PERF-08-AND-RL-01..RL-06",
+  "caseId": "PERF-01..05,07,08-AND-RL-01..06",
   "scope": "IN_SCOPE",
   "result": "NOT_RUN",
   "evidenceLevel": "STATIC",
   "verificationState": "BLOCKED_ENV",
   "deploymentState": "NOT_DEPLOYED",
-  "blocker": "k6 no instalado localmente y prohibido ejecutar carga contra ACA/APIM/Supabase compartidos; requiere entorno staging autorizado + dataset sintetico + tokens G7",
+  "blocker": "k6 no instalado localmente y prohibido ejecutar carga contra ACA/APIM/Supabase compartidos; requiere entorno staging autorizado + dataset sintetico + 2 tokens G7",
   "owner": "Vera / Axel Cueva",
-  "testedAtUtc": "2026-11-27T15:54:00Z",
+  "testedAtUtc": "2026-11-27T18:10:53.671Z",
   "subjects": {
-    "backendSha": "16d373aeb63cb2386b0e174c76517d8bf3381fb5",
+    "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
     "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
     "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
     "contractVersion": "0.7.0-rc.3",
@@ -40,5 +40,5 @@
     "dlqDelta": null,
     "idempotent": null
   },
-  "notes": "No se fabricaron metricas p50/p95/p99 ni RPS. PERF-04 queda condicionado a habilitacion de N01 en el manifest de release."
+  "notes": "No se fabricaron metricas k6. PERF-06 se registra separadamente en H5-03-PERF-06.json. PERF-04 depende de habilitacion N01 en manifest."
 }
