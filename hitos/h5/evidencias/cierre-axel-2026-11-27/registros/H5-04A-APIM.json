@@ -4,9 +4,9 @@
   "scope": "IN_SCOPE",
   "result": "INCONCLUSIVE",
   "evidenceLevel": "LAB_AZURE",
-  "verificationState": "PARTIAL_READONLY_NEGATIVES_AND_L0_STATIC",
-  "deploymentState": "LIVE_PREEXISTING_APIM_NEEDS_CORS_FIX",
-  "blocker": "Positivos T01/T02/T03/T07 bloqueados por falta de token real G7 (BLOCKED_AUTH); T04 falla para origen Vercel https://g6-productos-ofertas.vercel.app (falta autorizacion escrita de Castilla para actualizar politica live); T05 429 y T08 rollback requieren ventana autorizada",
+  "verificationState": "LIVE_NEGATIVES_AND_CORS_PREFLIGHT_PASS",
+  "deploymentState": "LIVE_APIM_API_POLICY_UPDATED",
+  "blocker": "Faltan positivos con G7 real, alcance de cuotas/RL y ensayo de rollback.",
   "owner": "Marco Castilla / Axel Cueva",
   "testedAtUtc": "2026-11-27T18:10:53.671Z",
   "subjects": {
@@ -18,21 +18,21 @@
     "azureRevision": "api-gateway--0000003"
   },
   "environment": {
-    "name": "rg-g6-aca-chile (read-only audit)",
+    "name": "Azure G6 integración, política de API existente",
     "db": "none",
     "serviceBus": "none",
     "apim": "apim-g6-productos-chile (Developer, api/v1, 145 ops = 156 OpenAPI - 11 excluidas)"
   },
   "execution": {
-    "command": "az apim / az containerapp readonly + live probes 5 internal routes & Vercel OPTIONS + az bicep build + 29 Python tests + verify-arm-template.py",
+    "command": "Azure ARM what-if + PUT de policy con ETag + verificación HTTP",
     "exitCode": 0,
-    "runId": "46044277201",
-    "artifactPath": "artefactos/azure-aca-readonly-snapshot-2026-11-27.json;artefactos/apim-api-policy-backup-2026-11-27.xml",
-    "artifactSha256": "56b0ff781ef1226dce6a2822311b0b7f1588c3b04db0923de485daa81a0ab3b2"
+    "runId": null,
+    "artifactPath": "artefactos/APIM_CORS_POST_CAMBIO_2026-11-27.json",
+    "artifactSha256": "791851ff023dd47a1576a379a4ffe525858e13b19c4bcc1c12f97dcc771c115f"
   },
   "assertions": {
     "httpExpected": "Direct GW=403, APIM no-auth=401, bad-jwt=401, 5 internal=404, bad-corr=400, Vercel OPTIONS=ACAO",
-    "httpActual": "Direct GW=403 (Modalidad B), APIM no-auth=401, bad-jwt=401, 5/5 internal routes=404, bad-corr=400 VALIDACION, Vercel OPTIONS acao=null (hallazgo operativo CORS)",
+    "httpActual": "OPTIONS Vercel 200 con ACAO, otro origen sin ACAO, no JWT 401 con correlación, 5 internas 404, Gateway directo 403.",
     "eventId": null,
     "correlationIdSanitized": "echoed-on-401-rejected-on-invalid-400",
     "inboxState": null,
@@ -40,5 +40,5 @@
     "dlqDelta": null,
     "idempotent": null
   },
-  "notes": "Respaldo XML live guardado antes de cualquier cambio; delta minimo CORS preparado para https://g6-productos-ofertas.vercel.app."
+  "notes": "Respaldo previo por hash y lectura posterior normalizada. Navegador G7 real pendiente."
 }

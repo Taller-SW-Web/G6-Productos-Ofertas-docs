@@ -1,0 +1,53 @@
+{
+  "http": {
+    "backendSha": "7ecee3fb9c38f5c8d4b3521e1e7f88e8badca337",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "evidenceLevel": "L1_ISOLATED",
+    "transport": "HTTP_IN_MEMORY_NOT_AZURE",
+    "command": "node tests/h5/certify-158-endpoints.mjs",
+    "generatedAtUtc": "2026-11-27T19:47:42.186Z",
+    "exitCode": 0,
+    "status": "PASS",
+    "total": 158,
+    "passed": 158,
+    "failed": 0,
+    "blocked": 0,
+    "reportJsonSha256": "ba013d1ad3f2f162be2f3b683aae04dcb706b0aa77daad485a7a659d2e6977b9",
+    "reportMdSha256": "49ec8e6addef171ae32662bf0305fb10db5078f2efd0f8a7801f2ae172946c39"
+  },
+  "messaging": {
+    "backendSha": "7ecee3fb9c38f5c8d4b3521e1e7f88e8badca337",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "evidenceLevel": "L1_ISOLATED",
+    "transport": "HTTP_IN_MEMORY_NOT_AZURE",
+    "command": "node tests/h5/certify-19-messaging-flows.mjs",
+    "generatedAtUtc": "2026-11-27T19:49:01.263Z",
+    "exitCode": 0,
+    "total": 19,
+    "passed": 19,
+    "failed": 0,
+    "reportJsonSha256": "854d8e6e2238077fa741a5d80e104223dccc33af335b8aa2ec4319fc5787bfd1",
+    "reportCsvSha256": "7247219c122835993e86b7061b14861c48203985d9f6f0a223de4f217ca5c5d9"
+  },
+  "inventoryR10": {
+    "invalidDestinationRejected": true,
+    "applyTwice": "PASS",
+    "rollbackWithBulkRows": "ABORTED_AS_EXPECTED",
+    "rollbackWithOnlyThreeOriginalRoutes": "PASS",
+    "level": "ISOLATED_POSTGRES_17_11",
+    "fourDestinationsAsInventoryApp": "PASS",
+    "sharedSupabase": "SCOPED_BACKUP_RESTORED_IN_LAB_AWAITING_ACCEPTANCE",
+    "scopedBackupRestore": {
+      "restoredRows": 0,
+      "ddlSha256": "dbba818351a33861d91e632b50ca2da8b1e6c373d831514b09b0d17bb22aff12",
+      "originalRouteDefinitionMatches": true,
+      "indexes": 2,
+      "metadataSha256": "291445ba37fa965a3e59ca6b4e4d0a1ce9d57e92cf62836ccbf851ad080c052e",
+      "constraints": 5
+    }
+  }
+}

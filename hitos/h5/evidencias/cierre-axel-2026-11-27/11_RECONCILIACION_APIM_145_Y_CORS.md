@@ -1,6 +1,6 @@
 # Reconciliación APIM 145 vs OpenAPI 156 vs Matriz 158, RBAC Service Bus y Plan CORS — 2026-11-27
 
-> **Fuente:** auditoría Azure read-only del 2026-11-27 sobre suscripción `fef42188-accd-4470-ae88-78f583eb4906`, RG `rg-g6-aca-chile` (`chilecentral`). **No se aplicó ninguna mutación a APIM ni a ACA** porque el documento de auditoría con autorización expresa escrita de Marco Castilla para modificar la política live de `apim-g6-productos-chile` no fue adjuntado en esta sesión.
+> **Fuente:** corte inicial de solo lectura. Actualización del 27/11/2026 en la [evidencia del cambio](artefactos/APIM_CORS_POST_CAMBIO_2026-11-27.json).
 
 ## 1. Reconciliación matemática exacta de universos HTTP (`145` vs `156` vs `158`)
 
@@ -21,8 +21,8 @@
 | 7 | `admitirRestauracionCuponH5` | `POST /cupones/restauraciones` | **Ruta G5 H5 (`enableG5=false` por defecto)** | Excluida de APIM hasta opt-in/homologación G5; L1 #149 PASS |
 | 8 | `obtenerOperacionCuponH5` | `GET /cupones/operaciones/{operationId}` | **Ruta G5 H5 (`enableG5=false` por defecto)** | Excluida de APIM hasta opt-in/homologación G5; L1 PASS |
 | 9 | `obtenerEstadoReservaH5` | `GET /inventario/reservas/{reservaId}/estado` | **Ruta G5 H5 (`enableG5=false` por defecto)** | Excluida de APIM hasta opt-in/homologación G5; L1 PASS |
-| 10 | `obtenerDefinicionPrecioProductoAdministracion` | `GET /precios/administracion/productos/{productoId}` | **No mapeada aún en catálogo APIM/Gateway (`contract-routes.ts`)** | Validada en L1 158-endpoints; pendiente de conciliación si se requiere exponer por APIM |
-| 11 | `obtenerDefinicionPrecioSkuAdministracion` | `GET /precios/administracion/skus/{sku}` | **No mapeada aún en catálogo APIM/Gateway (`contract-routes.ts`)** | Validada en L1 158-endpoints; pendiente de conciliación si se requiere exponer por APIM |
+| 10 | `obtenerDefinicionPrecioProductoAdministracion` | `GET /precios/administracion/productos/{productoId}` | **Registrada en Gateway y excluida expresamente por el filtro APIM** | Validada en L1 158-endpoints; pendiente de conciliación si se requiere exponer por APIM |
+| 11 | `obtenerDefinicionPrecioSkuAdministracion` | `GET /precios/administracion/skus/{sku}` | **Registrada en Gateway y excluida expresamente por el filtro APIM** | Validada en L1 158-endpoints; pendiente de conciliación si se requiere exponer por APIM |
 
 ---
 
@@ -42,7 +42,7 @@
 - **Origen HTTPS exacto confirmado del despliegue Vercel (sin wildcard):**
   - **`https://g6-productos-ofertas.vercel.app`** (deployment `vercel-produccion` ID `8101258936`, alias promovido `g6-productos-ofertas.vercel.app`).
 
-### 2.2 Delta mínimo propuesto de CORS (listo para aplicar tras autorización expresa de Marco Castilla)
+### 2.2 Propuesta y procedimiento previos al cambio
 
 Cambio único en parámetro `corsAllowedOrigins` de `ops/azure/apim/main.bicep` (que renderiza `{{cors-origin-elements}}` en `ops/azure/apim/policies/api.xml`):
 
@@ -60,9 +60,15 @@ Cambio único en parámetro `corsAllowedOrigins` de `ops/azure/apim/main.bicep` 
   3. Aplicar únicamente la política aprobada.
   4. Validar post-cambio: `OPTIONS` desde `https://g6-productos-ofertas.vercel.app` -> `200` + `Access-Control-Allow-Origin: https://g6-productos-ofertas.vercel.app`; `OPTIONS` desde `https://evil.example` -> sin ACAO; 5 rutas internas -> `404`; sin token -> `401`; llamada real de navegador con sesión G7.
   5. **Rollback inmediato:** reaplicar el XML de respaldo `SHA256 aa9b8c12...` vía ARM/Bicep y confirmar `acao=null`.
-- **Único elemento faltante para ejecutar:** autorización expresa de **Marco Castilla** que identifique explícitamente `apim-g6-productos-chile` / API `g6-productos-ofertas` (`/api/v1`) y el origen `https://g6-productos-ofertas.vercel.app` (la auditoría no fue adjuntada al prompt).
+- **Requisito del plan previo:** autorización expresa de **Marco Castilla** que identifique explícitamente `apim-g6-productos-chile` / API `g6-productos-ofertas` (`/api/v1`) y el origen `https://g6-productos-ofertas.vercel.app` (la auditoría no fue adjuntada al prompt).
 
 ---
+
+### 2.3 Cambio CORS y decisiones de publicación
+
+El `what-if` confirmó un único cambio a `properties.value` en la política de API. Se conservó respaldo y se aplicó mediante escritura condicional con ETag. El preflight Vercel pasó y el origen alternativo quedó sin ACAO. Se verificaron JWT ausente 401, correlación, cinco internas 404 y Gateway directo 403. El rollback queda preparado, con ensayo pendiente.
+
+Mantener excluidas las cuatro operaciones G5 hasta opt-in, homologación y grants. Las dos consultas Pricing están en Gateway y las utiliza el Frontend para lectura administrativa exacta. Su estado contractual es `provisional-internal`; mantener la exclusión en APIM hasta acordar alcance con Pricing, Docs y Seguridad.
 
 ## 3. Auditoría read-only de Identidades Administradas, Flags ACA y RBAC Service Bus (`38/38`)
 

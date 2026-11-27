@@ -33,3 +33,7 @@
 | **IaC (APIM Bicep)** | **PASS (`L0_STATIC`)** | `az bicep build` + `29/29` pruebas Python + `verify-arm-template.py --mode candidate` en local y en CI `#46044277201` (145 políticas, 5 rutas internas excluidas, G5 OFF) |
 | **JWT negativos y separación de identidades** | **PASS (L1 completo + L2 negativos live)** | L1: 158/158 `auth401`/`auth403` + 6/6 authChecks + 16/16 Playwright real-stack (`P0-AUTH-09`). L2 live APIM: `401` sin token/mal JWT, `400` mala correlación, `404` 5/5 rutas internas, `403` anti-bypass directo Gateway |
 | **Protecciones de rama / permisos** | **PARCIAL** | Backend `master` tiene Ruleset `24961806` + Environments `azure-h5*` con `required_reviewers`; 38/38 RBAC mínimo por cola en Service Bus. **Brecha:** Frontend y Docs tienen `rulesets=[]` en `master` |
+
+## Seguridad verificada en el candidato de la auditoría
+
+Trivy 0.76.2 escaneó las nueve imágenes de CI de `f3cc10d` con **0 críticos y 0 altos** después de actualizar Node LTS y retirar el npm global de ejecución. Semgrep 1.187.0 ejecutó 74 reglas sobre 446 archivos Backend y 463 Frontend, con 0 hallazgos y dos advertencias por repositorio. Se registra como alternativa SAST de alcance acotado, pendiente de aceptación formal. La API de GitHub informó CodeQL `not-configured` y Secret Scanning deshabilitado en Backend. El required check de Backend existe; la API de reglas efectivas no devolvió reglas para `master` de Frontend/Docs. El [artefacto de auditoría](artefactos/SECURIDAD_DRAFT_2026-11-27.json) incluye IDs de imágenes y hashes de reportes.

@@ -1,0 +1,29 @@
+{
+  "caseId": "APIM-T04",
+  "service": "apim-g6-productos-chile",
+  "api": "g6-productos-ofertas",
+  "revision": "1",
+  "date": "2026-11-27",
+  "whatIf": "Modify only API policy properties.value",
+  "origin": "https://g6-productos-ofertas.vercel.app",
+  "allowedStatus": 200,
+  "allowedOrigin": "https://g6-productos-ofertas.vercel.app",
+  "unlistedStatus": 200,
+  "unlistedAllowOrigin": null,
+  "withoutJwtStatus": 401,
+  "correlationMatches": true,
+  "privateStatus": [
+    404,
+    404,
+    404,
+    404,
+    404
+  ],
+  "gatewayDirectStatus": 403,
+  "operationCount": 145,
+  "backupSha256": "68046cf92da772212661d80aff689630173d6308b47c702f8b4461165b73ff31",
+  "readbackSha256": "6b86d34a718c6d51f670869dbd36038ff72956d03b3120293be43630e6a9bb42",
+  "normalizedReadbackMatches": true,
+  "authenticatedBrowser": "PENDING_G7_SESSION",
+  "rollback": "Backup preserved; restore not needed or exercised in shared environment"
+}

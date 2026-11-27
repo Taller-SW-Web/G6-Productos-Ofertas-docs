@@ -1,6 +1,6 @@
 # Plan Accionable de Release, Cutover y Rollback — G6 Hito 5 (2026-11-27)
 
-> **Estado:** Plan preparado y listo para ejecución bajo **autorización expresa de Marco Castilla** y los owners de cada componente. **Ninguno de los pasos mutantes de Azure, Supabase, GHCR o `master` se ha ejecutado en este corte.**
+> **Estado:** Plan preparado y listo para ejecución bajo **autorización expresa de Marco Castilla** y los owners de cada componente. **La política CORS de APIM ya fue corregida. El despliegue del candidato y la migración R10 siguen pendientes.**
 
 ## 1. Escalación operativa previa al cutover (hallazgo Azure 2026-11-27)
 
@@ -10,9 +10,9 @@ Antes de desplegar nuevas imágenes o abrir tráfico, **Marco Castilla** debe co
    - **Propuesta de recuperación / continuidad (si algún consumidor externo G1/G3/G5 aún apunta al FQDN directo de Gateway):**
      - **Opción A (recomendada si todos los consumidores migran a APIM):** comunicar formalmente la URL canónica `https://apim-g6-productos-chile.azure-api.net/api/v1` y mantener Modalidad B activa (cumple anti-bypass `APIM-T05`).
      - **Opción B (contingencia temporal reversible):** remover temporalmente la regla `allow-apim-1` en `api-gateway` solo durante ventana de migración de clientes, preservando la URL activa del Gateway, y reactivarla una vez confirmada la migración de G1/G3/G5/Frontend.
-2. **Política CORS live en `apim-g6-productos-chile`:** solo permite `https://apim-g6-productos-chile.azure-api.net`.
-   - **Acción requerida previa a pruebas Frontend L2:** actualizar política API de `g6-productos-ofertas` vía Bicep (`ops/azure/apim/main.bicep`) añadiendo explícitamente el origen exacto de Vercel de G6 (sin wildcard `*`), tras `az deployment group what-if` aprobado.
-3. **Delta APIM pendiente en PR #305 (`a26965a0` y `8af53c24`):** conciliar con Castilla si esos 2 commits (16 archivos de scripts/Bicep/evidencia APIM) se fusionan junto al candidato o en PR independiente de infraestructura.
+2. **Política CORS live en `apim-g6-productos-chile`:** Vercel ya está permitido. [Evidencia](artefactos/APIM_CORS_POST_CAMBIO_2026-11-27.json).
+- **Previo a Frontend L2:** revalidar CORS y usar una sesión G7 autorizada para el recorrido completo.
+3. **Delta APIM de #305:** incorporado en Backend Draft #307 `7ecee3f` una sola vez.
 
 ---
 
@@ -50,7 +50,7 @@ Desplegar por digest `sha256` exacto en orden de dependencias de dominio (manten
 2. **Nivel núcleo comercial:** `catalog-svc`, `pricing-svc`, `inventory-svc`.
 3. **Nivel agregadores y orquestación:** `combos-svc`, `promotions-svc`, `bulk-svc`.
 4. **Borde interno:** `api-gateway` (verificando `/health/ready` = `200` y propagación `X-Correlation-Id`).
-5. **Borde externo APIM (tras `what-if` aprobado):** actualizar política CORS de `apim-g6-productos-chile` añadiendo el origen exacto de Vercel; verificar que las 5 rutas internas siguen devolviendo `404`.
+5. **Borde externo APIM:** conservar la política CORS verificada. Repetir preflight y las cinco exclusiones `404` al certificar el release.
 6. **Frontend:** fusionar PR #102 (`ccfc21ba`) y validar despliegue Vercel con `VITE_DATA_MODE=api` apuntando a APIM (una vez corregido CORS).
 
 ### Wave 3 — Activación Progresiva de Flags Service Bus y Certificación L2 (H5-04B)

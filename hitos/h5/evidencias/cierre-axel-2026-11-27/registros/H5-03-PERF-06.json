@@ -4,11 +4,11 @@
   "scope": "IN_SCOPE",
   "result": "INCONCLUSIVE",
   "evidenceLevel": "ISOLATED",
-  "verificationState": "EXECUTED_SINGLE_PAIRED_RUN_L1_FRONTEND_BROWSER",
+  "verificationState": "THREE_PAIRED_RUNS_L1_BROWSER_FIXTURES",
   "deploymentState": "NOT_DEPLOYED",
-  "blocker": "Una sola corrida pareada sobre fixtures controlados (requiere 3 repeticiones y contraste en staging real para aplicar gate <=1.10x de mediana)",
+  "blocker": "Conteos no equivalentes por familia. Catálogo 1000 filas comparable; el gate transversal sigue inconcluso.",
   "owner": "Poma / Axel Cueva",
-  "testedAtUtc": "2026-11-27T18:10:53.671Z",
+  "testedAtUtc": null,
   "subjects": {
     "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
     "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
@@ -26,13 +26,13 @@
   "execution": {
     "command": "gh workflow run frontend.yml --ref trabajo/castilla/h5-cierre-post-r2-frontend -f performance_harness=true -f baseline_ref=master -f performance_family=all",
     "exitCode": 0,
-    "runId": "46043178034",
-    "artifactPath": "artefactos/PERF06_admin-performance-comparison.json",
-    "artifactSha256": "6c0a95b3efd70981a16622b15bb8e678b130f58b8add87ae7f0736eac9689ba6"
+    "runId": "46057273692,46057278283,46057282878",
+    "artifactPath": "artefactos/PERF06_3_PARES_2026-11-27.json",
+    "artifactSha256": "5ccd4850aefc502bee4db3e1a42d870249ff7165ae172693bf527bfea7b3beb5"
   },
   "assertions": {
     "httpExpected": "Comparacion pareada baseline master (2c6ad931) vs candidato #102 (ccfc21ba) en 81 rutas / 14 familias SPA",
-    "httpActual": "81/81 rutas y 14/14 familias medidas; Combos p95 -14.2%, Campaigns -8.99%, Coupons -3.33%, Inventory -4.4%; Bulk p95 +25.16% (2->23 reqs), Catalog 1000 filas +13.89%",
+    "httpActual": "81 rutas y 14 familias por versión. Catálogo 1000 filas 4950 a 4874 ms de mediana.",
     "eventId": null,
     "correlationIdSanitized": null,
     "inboxState": null,
