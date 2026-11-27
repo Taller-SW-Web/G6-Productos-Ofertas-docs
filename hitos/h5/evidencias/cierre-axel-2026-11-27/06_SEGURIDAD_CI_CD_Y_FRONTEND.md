@@ -1,15 +1,15 @@
 # Seguridad H5-01, CI/CD Multi-Repositorio y Frontend #102 — 2026-11-27
 
-## 1. Corridas reales de CI en GitHub Actions (`workflow_dispatch`, sin deploy ni publicación)
+## 1. Corridas de CI en GitHub Actions, sin despliegue ni publicación
 
-| Repositorio | PR Draft / SHA final | Run ID (`workflow_dispatch`) | Veredicto | Jobs clave verificados |
+| Repositorio | PR / SHA | Run ID | Veredicto | Jobs clave verificados |
 |---|---|---|---|---|
-| **Backend** | `#307` (`18413ac459b24793f4f09ea07104d5281c0be3c7`) | [`#46044277201`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46044277201) | **PASS (22/22 ejecutados; 1 opt-in skipped)** | `Lint, Typecheck, Test, Build & Smoke Test`, `Validación integral`, unitarias, E2E, `Validar imágenes y pruebas funcionales de contenedores` (9 Docker + PG TLS + Marketplace), `APIM H5 — artefactos y ARM estáticos`, `Dependency audit High/Critical`, `Probar el ejecutor de CD Azure H5 sin credenciales`, integraciones PG17/RMQ de Inventory, Taxonomy, Promotions, Pricing/Price Audit y Combos |
+| **Backend** | Ready for Review `#307`, `de4a54ba0615836462901133169c4b0f19c0c9c9` | [#46081541712, intento 2](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46081541712) | **22 PASS, 0 fallos, 1 benchmark opt-in omitido** | Evento `pull_request`. Check requerido y ejecutor CD sin credenciales en verde. Incluye fixtures de Gateway, R16 y recuperación. |
 | **Frontend** | `#102` (`ccfc21ba0e821f33c0debf09389879e55df0539b`) | [`#46028914883`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/46028914883) | **PASS (21/21 ejecutados; 1 opt-in skipped)** | `validate`, **`Seguridad H5 (fixtures, bundles y diff)` (Gitleaks 8.30.1 por checksum SHA-256)**, `Auditoría de dependencias High/Critical` (SCA H5), `Compilación - Integración con API`, `E2E Pricing`, `@smoke`, 4/4 shards Playwright, unitarias y política de release |
 | **Frontend PERF-06** | `#102` (`ccfc21ba...`) vs `master` (`2c6ad931...`) | [`#46043178034`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/46043178034) | **PASS (benchmark pareado en mismo runner)** | `Benchmark administrativo base y optimizado (opt-in)`: 81 rutas / 14 familias SPA + datasets 20/100/1000 filas (`artefactos/PERF06_admin-performance-comparison.json`) |
 | **Docs** | `#152` (validación previa `#46031816661` + re-validación tras corte actualizado) | [`#46031816661`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/actions/runs/46031816661) | **PASS (4/4; Pages publish skipped)** | `Validar contrato y ambas alternativas Swagger`, `Verificar y empaquetar candidato Pages`, `validate-docs` |
 
-- **Diferencia entre CI aprobado y check requerido pendiente:** mientras los PRs permanecen en **Draft**, los triggers de `pull_request` omiten la ejecución (`skipped` por política `draft == false`). Las corridas `workflow_dispatch` acreditan los mismos jobs exactos en los SHAs finales; al promover los PRs a `Ready for review` (con autorización de Marco Castilla), GitHub adjuntará el check requerido (`Lint, Typecheck, Test, Build & Smoke Test` / `validate` / `validate-docs`) al contexto del PR antes de habilitar merge.
+- El check requerido de Backend consta en el PR sobre el SHA auditado. La publicación y el CD oficiales exigirán el CI exitoso de push sobre el SHA posterior al merge en master. Frontend #102 y Docs #152 conservan su estado Draft.
 
 ## 2. Frontend #102 — Playwright contra Backend candidato real (`18413ac`) y separación de runs
 

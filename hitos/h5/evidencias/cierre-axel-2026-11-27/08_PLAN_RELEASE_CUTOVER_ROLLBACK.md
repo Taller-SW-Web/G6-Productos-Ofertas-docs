@@ -2,76 +2,69 @@
 
 > **Estado:** CORS de APIM e Inventory R10 aplicados y verificados. El despliegue del candidato y las pruebas L2 siguen pendientes del gate de release.
 
-## 1. Escalación operativa previa al cutover (hallazgo Azure 2026-11-27)
+## 1. Estado auditado y preflight operativo
 
-Antes de desplegar nuevas imágenes o abrir tráfico, **Marco Castilla** debe confirmar la decisión operativa sobre el estado actual observado en vivo (`rg-g6-aca-chile`):
+- **Backend #307** está Ready for Review en `de4a54ba0615836462901133169c4b0f19c0c9c9`. El CI de PR tuvo 22 jobs aprobados y un benchmark opt-in omitido. La aprobación técnica, la conformidad final de merge y la autorización de cada ejecución CD son hitos independientes. [CI exacto](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46081541712)
+- **Gateway, release general.** Usar `gateway_route_profile=standard`. Mantener Modalidad B, las restricciones IP y el destino existente de `g5-h5`. El smoke del CD valida el recibo de revisión y digest, health por origen privado autorizado, rechazo anónimo en APIM con correlación y rechazo directo HTTP 403. La ejecución privada `azure-h5-smoke-chile-8hxsolc` verificó HTTP en las revisiones vigentes. El cambio de tráfico está cubierto con fixtures. La prueba autenticada hasta el Gateway candidato se registra después del despliegue.
+- **G5 específico.** El caso `g5-labelled` queda reservado a una prueba separada. Antes de usarlo, probar el health de la URL etiquetada desde el runner autorizado con Modalidad B y las restricciones IP activas. Si devuelve 403, corregir el método de smoke dentro del acceso autorizado antes de realizar la prueba etiquetada.
+- **Bulk, Combos y Taxonomy.** Las seis variables del Environment quedaron verificadas. La ejecución privada `azure-h5-smoke-chile-8hxsolc` validó DNS, TLS, health y readiness HTTP 200, y rutas protegidas HTTP 401 con las revisiones vigentes.
+- **Price Audit, bloqueo de su oleada.** El principal OIDC de `azure-h5-chile` carece de `Microsoft.App/containerApps/revisions/activate/action` y `Microsoft.App/containerApps/revisions/deactivate/action` sobre `price-audit-svc`. Acreditar ambos permisos antes del CD. El CI cubre corte y rollback con fixtures. La revisión vigente `price-audit-svc--0000001` recibe el 100 % y la app conserva modo Multiple y escala 1/1.
+- **APIM.** El delta de #305 está incorporado una vez en `7ecee3f`. CORS permite el origen exacto de Vercel. [Evidencia](artefactos/APIM_CORS_POST_CAMBIO_2026-11-27.json).
 
-1. **`api-gateway--0000003` tiene Modalidad B activa (`allow-apim-1: 57.156.40.55/32`)** y bloquea con HTTP `403` toda llamada directa a `https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io`.
-   - **Propuesta de recuperación / continuidad (si algún consumidor externo G1/G3/G5 aún apunta al FQDN directo de Gateway):**
-     - **Opción A (recomendada si todos los consumidores migran a APIM):** comunicar formalmente la URL canónica `https://apim-g6-productos-chile.azure-api.net/api/v1` y mantener Modalidad B activa (cumple anti-bypass `APIM-T05`).
-     - **Opción B (contingencia temporal reversible):** remover temporalmente la regla `allow-apim-1` en `api-gateway` solo durante ventana de migración de clientes, preservando la URL activa del Gateway, y reactivarla una vez confirmada la migración de G1/G3/G5/Frontend.
-2. **Política CORS live en `apim-g6-productos-chile`:** Vercel ya está permitido. [Evidencia](artefactos/APIM_CORS_POST_CAMBIO_2026-11-27.json).
-- **Previo a Frontend L2:** revalidar CORS y usar una sesión G7 autorizada para el recorrido completo.
-3. **Delta APIM de #305:** incorporado en Backend Draft #307 `7ecee3f` una sola vez.
-
----
-
-## 2. Checklist de autorizaciones expresas previas
+## 2. Checklist de autorizaciones y condiciones
 
 | Gate | Autoridad requerida | Criterio verificable antes de avanzar |
 |---|---|---|
-| Merge a `master` (Backend, Frontend, Docs) | Marco Castilla | PRs salen de Draft, CI `Lint, Typecheck, Test, Build & Smoke Test` / `validate` / `validate-docs` en verde en SHA final |
-| Backup / PITR Supabase (`slzglmtiyrzygpkiuthf`) | Owner BD + Marco Castilla | Confirmación de punto de restauración PITR y ejecución previa de `BD_PREDEPLOY_CHECKS.sql` (solo SELECT) |
-| Migración BD Inventory R10 (`0002`) | Taco + Owner BD + Castilla | Revisión de `po_inventory_owner`, 0 filas previas en `inventory.outbox_delivery`, checksum `7ac74f99...` y registro acordado sin alterar `0001`/`0002` históricos |
-| Verificación BD Taxonomy (R09/R18) | López + Owner BD | Confirmar en solo lectura la equivalencia con los objetos instalados y los dos historiales. Una desviación funcional requiere una migración diferencial aprobada |
-| Publicación GHCR + Despliegue ACA | Marco Castilla (Environment approval `azure-h5-chile`) | Workflow `publish-only-images.yml` + `cd-services-azure.yml` sobre commit de `master`, capturando digest `sha256` por servicio |
-| Grants / Tokens G7 reales | Owner G7 + Castilla | Verificación de `client_id`, `audience`, `scopes` y usuarios/clientes de prueba en ambiente autorizado |
-| Ventana L2 Service Bus + APIM / k6 | Marco Castilla + Owners | Autorización explícita para tráfico sintético y pruebas de fallo/recuperación en staging/lab |
-
----
+| Merge de Backend #307 | Marco Castilla | Conformidad sobre el SHA auditado y check requerido verde. Integrar solo #307. |
+| Publicación de imágenes | Flujo oficial Backend | CI de evento push en el SHA exacto resultante en master. Registrar los nueve digests resultantes. |
+| CD individual de Chile | Marco Castilla, Environment `azure-h5-chile` | Verificar protecciones, permisos y ventana de CD. Compartir enlace y run ID antes de cada aprobación humana. Una ejecución por servicio. |
+| Price Audit | Responsable Azure RBAC / Marco Castilla | Acreditar activación y desactivación de revisiones para el principal en el recurso exacto. Verificar modo, tráfico, escala y reversión antes de la oleada. |
+| Base de datos | Owners de BD y dominios | Verificar los dos historiales de R10 y los objetos equivalentes de Taxonomy en solo lectura. Usar el respaldo lógico acotado ya ensayado como evidencia del cambio R10. |
+| Pruebas en integración | G6 / responsables del entorno | Usar datos sintéticos y carga gradual. Coordinar pruebas que impliquen reinicio, rollback o afectación a consumidores. |
+| Revisión Frontend y Docs | Responsables de #102 y #152 | Incorporar evidencia autenticada de #102 y digests, recibos y certificación en #152 antes de su integración. |
 
 ## 3. Orden de despliegue por dependencias (Wave 0 → Wave 4)
 
 ### Wave 0 — Preflight de BD, Snapshot y Conciliación (solo lectura)
 1. Ejecutar `hitos/h5/cierre-post-r2/BD_PREDEPLOY_CHECKS.sql` + las 4 consultas `READ ONLY` de diagnóstico de `catalog.outbox` (`05_MIGRACIONES_Y_DIAGNOSTICO_CATALOG_LEGACY.md`).
-2. Confirmar PITR/snapshot activo en Supabase `slzglmtiyrzygpkiuthf`.
+2. Corroborar el respaldo lógico acotado ya verificado y el readback de R10. Cualquier cambio adicional de BD requiere un punto de recuperación adecuado y aprobación específica.
 3. Guardar snapshot JSON de revisiones ACA actuales (`artefactos/azure-aca-readonly-snapshot-2026-11-27.json`) y XML de políticas APIM actuales como línea base de rollback.
 4. Confirmar que las 19 colas en `g6-sb-h5-chile-261127` están `Active` con `active=0, dlq=0` y que las Managed Identities ACA tienen RBAC mínimo (`Azure Service Bus Data Sender` / `Data Receiver` por cola según matriz).
 
-### Wave 1 — Migración R10 y verificación de esquemas (flags H5 nuevos en `false`)
+### Wave 1 — Verificación en solo lectura de esquemas ya aplicados
 1. **Inventory R10 (`Taco` / Owner BD):** cambio incremental aplicado como `po_inventory_owner`. Verificar los cuatro destinos y el historial `20261127200858` en [el readback](artefactos/SUPABASE_R10_Y_CATALOG_PREFLIGHT_2026-11-27.json).
 2. **Taxonomy R09/R18 (`López` / Owner BD):** verificar en solo lectura la equivalencia de `outbox_delivery`, función, trigger, eventos y ACL con [la reconciliación de esquema e historiales](05_MIGRACIONES_Y_DIAGNOSTICO_CATALOG_LEGACY.md). Conservar los dos registros H5 globales y el ledger del servicio hasta `0005`. **Queda excluida la ejecución o el registro de `0006` completa.** Ante una desviación funcional demostrada, ensayar un diferencial versionado y reversible en una transacción completa. R18 requiere el despliegue y la corrida L2.
 3. **Pricing (`Vera` / Owner BD):** confirmar vía `SELECT` la entrada global `g6_h5_pricing_0003_service_bus_routes_r2` y los cuatro destinos compatibles. Si aparece una desviación, reconciliarla antes del release.
 4. **Regla inmutable:** NO tocar `catalog.outbox` legacy (`RABBITMQ`) ni alterar filas de `schema_migrations` aplicadas.
 
-### Wave 2 — Publicación de Imágenes OCI y Despliegue de Microservicios (flags nuevos OFF)
-Desplegar por digest `sha256` exacto en orden de dependencias de dominio (manteniendo flags de transporte nuevos `OFF` en el arranque inicial para aislar regresiones HTTP):
-1. **Nivel base (maestros y auditoría):** `taxonomy-svc`, `price-audit-svc`.
-2. **Nivel núcleo comercial:** `catalog-svc`, `pricing-svc`, `inventory-svc`.
-3. **Nivel agregadores y orquestación:** `combos-svc`, `promotions-svc`, `bulk-svc`.
-4. **Borde interno:** `api-gateway` (verificando `/health/ready` = `200` y propagación `X-Correlation-Id`).
-5. **Borde externo APIM:** conservar la política CORS verificada. Repetir preflight y las cinco exclusiones `404` al certificar el release.
-6. **Frontend:** fusionar PR #102 (`ccfc21ba`) y validar despliegue Vercel con `VITE_DATA_MODE=api` apuntando a APIM (una vez corregido CORS).
+### Wave 2 — Publicación y CD por digest
+
+Tras la aprobación, integrar #307, esperar CI de push en el SHA exacto de master y publicar las nueve imágenes con `publish-only-images.yml`. Usar `cd-services-azure.yml` con `destination=chile-shared`, un servicio por run. La selección `all` queda excluida en Chile. Capturar revisión y digest previos, configuración, reglas de tráfico, baseline de colas, aprobación del Environment, recibo del run y smoke de cada servicio. Conservar flags y el tráfico pactados al desplegar.
+
+1. Desplegar primero los servicios que superen su preflight y cuyas dependencias estén verificadas. La oleada de Price Audit permanece bloqueada hasta acreditar sus dos acciones RBAC. Mantener modo Multiple y escala 1/1. Verificar salud y digest con el tráfico fijado a la revisión previa y comprobar el consumidor único al terminar el corte.
+2. Desplegar Gateway con perfil `standard` y verificar el smoke privado más los controles APIM y anti-bypass. Conservar la etiqueta y Modalidad B.
+3. Con el candidato desplegado, validar Frontend #102 desde Vercel por APIM usando la sesión existente con rol `GESTOR_COMERCIAL`. Conservar los resultados Playwright previos como L1 y registrar la revisión y digest del candidato junto con el identificador de correlación de la solicitud autorizada.
 
 ### Wave 3 — Activación Progresiva de Flags Service Bus y Certificación L2 (H5-04B)
-Activar flags `SEND`/`RECEIVE` de forma incremental con verificación de colas y DLQ = 0 entre cada paso:
+Comprobar los flags y el alcance de cada flujo contra el release. Registrar baseline y deltas de Backlog y DLQ entre pasos.
 1. **Paso 3.1 — H5-04B Flujo #1 (`R16: Pricing → Price Audit`, owner Vera):**
    - Verificar `SEND` en `pricing-svc` y `RECEIVE` en `price-audit-svc` para `g6.price-audit.from.pricing`.
-   - Ejecutar smoke L2 sintético: cambio de precio SKU sintético → `price_audit.price_audit_log` persistido → reinicio controlado de `price-audit-svc` → duplicado idempotente → mensaje malformado aislado en DLQ sin bloquear la cola.
+   - Con datos sintéticos y ventana coordinada, observar entregas antes, durante y después del corte. Durante el calentamiento dos revisiones podrían recibir aunque la candidata tenga peso HTTP 0. Conservar el mismo `message_id` para contrastar redelivery, Inbox, ACK, DLQ y un único efecto en `price_audit.price_audit_log`.
+   - Verificar que la revisión anterior queda desactivada y con cero réplicas. En el ensayo supervisado de recuperación, verificar que retoma el consumo y que el candidato se retira. Conservar revisión, digest, hora, correlación y recibo del run.
 2. **Paso 3.2 — H5-04B Flujo #2 (`R18: Taxonomy → Catalog`, owner López/Poma):**
-   - Habilitar `SEND` en `taxonomy-svc` y `RECEIVE` en `catalog-svc` para `g6.catalog.from.taxonomy` (y `R09` si aplica en manifest).
+   - Verificar `SEND` en Taxonomy y `RECEIVE` en Catalog para `g6.catalog.from.taxonomy`. Comprobar R09 si corresponde al release.
    - Ejecutar smoke L2 con los 6 eventos contractuales de R18 + verificación de barrera, correlación, recuperación y DLQ = 0.
    - *(Contingencia solo bajo bloqueo objetivo documentado de R18 y aprobación expresa del owner: activar `R07 Catalog → Pricing` manteniendo R18 visible en matriz.)*
 3. **Paso 3.3 — Flujo Bulk (`R02 → R10`, owners Castilla/Taco):**
-   - Habilitar `RECEIVE` R02 y `SEND` R10 en `inventory-svc`, y `RECEIVE` R10 en `bulk-svc`.
+   - Verificar `RECEIVE` R02 y `SEND` R10 en Inventory y `RECEIVE` R10 en Bulk.
    - Ejecutar lote sintético Bulk → Inventory → Bulk confirmando estado terminal `COMPLETED`, stock aplicado una sola vez y DLQ = 0.
 4. **Paso 3.4 — `N01 Promotions` (owner Cueva, si el manifest lo habilita):**
    - Confirmar grants G7/G5 y ejecutar admisión `202` → `COMPLETED` + restauración + idempotencia.
 
 ### Wave 4 — Smoke Post-Cutover, APIM-T / INT L2 y Performance Autorizada
-1. Ejecutar `APIM-T01..T08` con tokens reales G7 verificando `200`/`401`/`403`/`404`/`429`, CORS Frontend y `X-Correlation-Id` hasta logs de microservicios.
+1. Ejecutar `APIM-T01..T08` con `GESTOR_COMERCIAL` para operaciones autorizadas, `401` con identidad ausente o inválida y `403` donde el contrato permita probar una denegación legítima. Correlacionar la operación positiva hasta Gateway. Casos que requieran otros clientes o roles quedan `BLOCKED_AUTH` en L2, con cobertura sintética en L1.
 2. Ejecutar `INT-01..INT-10` L2 (y L3 bilateral con G5/G1 cuando haya ventana).
-3. Ejecutar `PERF-01..PERF-08` y `RL-01..RL-06` en staging autorizado (3 repeticiones baseline/candidato con `k6`).
+3. Ejecutar los casos disponibles de `PERF-01..PERF-08` y `RL-01..RL-06` en integración autorizada, con 1, 5 y 20 usuarios virtuales, tres repeticiones comparables, cargas progresivas y detención ante degradación.
 
 ---
 
@@ -79,17 +72,16 @@ Activar flags `SEND`/`RECEIVE` de forma incremental con verificación de colas y
 
 ### 4.1 Criterios de aborto inmediato
 Abortar avance de ola si ocurre cualquiera de las siguientes condiciones:
-- `/health/ready` de `api-gateway` o cualquier microservicio devuelve `503` sostenido > 60 s.
+- Falla el health interno del Gateway o la sonda de readiness contractual de un microservicio, o se mantiene un 503 durante más de 60 s.
 - Aumento no esperado de errores `5xx` (> 1%) o fugas de rutas internas en APIM (`!= 404`).
 - Crecimiento de `deadLetterMessageCount > 0` en pruebas sintéticas válidas o evidencia de efecto comercial duplicado en Inbox/Kardex/Price Audit.
 - Fallo de validación JWT contra JWKS de G7 (`500`/`401` con token válido confirmado).
 
-### 4.2 Rollback por plano (independiente y reversible)
+### 4.2 Recuperación supervisada
 
-| Plano | Acción de rollback | Condición de seguridad |
-|---|---|---|
-| **1. Flags de mensajería (primer nivel, < 2 min)** | Cambiar flags `*_SERVICE_BUS_SEND_ENABLED=false` y `*_SERVICE_BUS_RECEIVE_ENABLED=false` en la Container App afectada | Detiene consumo/envío sin perder filas en `*.outbox_delivery`; no purgar colas ni DLQ |
-| **2. Aplicación (ACA)** | Redirigir 100% del tráfico a la revisión previa inmutable documentada en `azure-aca-readonly-snapshot-2026-11-27.json` (ej. `catalog-svc--0000004`, `inventory-svc--0000002`, `taxonomy-svc--0000005`, `promotions-svc--0000007`, `api-gateway--0000003`) | Revisiones anteriores permanecen disponibles y pinneadas por digest `sha256` |
-| **3. APIM / Modalidad B** | Restaurar política XML anterior (`SHA256 AA9B8C...` / `CD17FD...`) o revisión APIM previa; si se requiere restablecer acceso directo de emergencia al Gateway, retirar regla `allow-apim-1` en `api-gateway` bajo aprobación de Castilla | Conservar respaldo XML antes de toda modificación |
-| **4. Base de datos (Inventory R10)** | Ejecutar `apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.rollback.sql` (`SHA256 22e6a461...`) | **Solo procede si hay 0 filas `g6.bulk.from.inventory`**; si existen entregas Bulk, el script aborta por diseño para evitar corrupción y exige conciliación previa |
-| **5. Base de datos (Taxonomy / general)** | Conservar la infraestructura H5 instalada y desactivar por flags el tramo afectado. Para un diferencial aprobado, usar su rollback ensayado. PITR queda reservado a incidentes severos aprobados por Owner BD y Castilla | Preservar ambos ledgers y los objetos existentes |
+1. Detener el avance de la oleada y la carga sintética. Preservar los recibos, Outbox, Inbox, colas y DLQ. Mantener el orden de recuperación del CD y su hash estricto de configuración. Cualquier contención de flags que cambie ese hash debe conciliarse expresamente antes de recuperar.
+2. Usar `recover` del run correspondiente y la aprobación humana del Environment. Verificar el digest y la configuración según el recibo. Para Price Audit, confirmar reactivación sana de la revisión anterior cuando proceda, recuperación de HTTP y R16, y retiro del candidato. Conservar Modalidad B y la etiqueta G5 durante la recuperación del Gateway.
+3. Ejecutar el smoke posterior y registrar revisión, digest, tráfico, resultado y estado de colas. Si el mecanismo detecta drift o falta evidencia del estado, conservar el recibo y escalar al responsable operativo.
+4. Tratar cualquier restauración de APIM o de BD como cambio separado. En Inventory, el rollback de R10 requiere autorización específica y aborta si existen entregas hacia `g6.bulk.from.inventory`. Conservar los dos historiales de Taxonomy.
+
+[Runbook de CD del candidato](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/de4a54ba0615836462901133169c4b0f19c0c9c9/ops/azure/container-apps/CHILE_SHARED_DEPLOYMENT.md)

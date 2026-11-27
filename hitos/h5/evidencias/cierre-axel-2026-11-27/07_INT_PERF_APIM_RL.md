@@ -12,8 +12,8 @@
 | **INT-04** (Castilla / Poma) | PASS L1. Bulk y flujos relacionados en el stack aislado. | `PENDING_DEPLOY` | N/A | Esquema R10 verificado. Pendiente probar el lote y estado terminal por el candidato en Azure. |
 | **INT-05** (Vera) | **PASS (`ISOLATED`)** — `pilot.postgres.e2e-spec.ts` (8/8 transaccional PG17) + `r16-price-audit-restart.postgres.e2e-spec.ts` (**1/1 reinicio real proceso `price-audit-svc`**, PID `30476 -> 29712`, `auditRowsPersisted=1`) + `r03-r14-r16-r17` (3/3) + R16 19-flows | **`PENDING_AZURE_L2`** (obligatorio H5-04B) | N/A | Piloto #234 es antecedente histórico; requiere corrida Azure vigente con SHA/digest candidato y reinicio controlado de `price-audit-svc` en `g6-sb-h5-chile-261127` |
 | **INT-06** (López) | **PASS (`ISOLATED`)** — `run-taxonomy-catalog-postgres.mjs` (23/23: R09 + 6 eventos R18) + `verify-taxonomy-observed-ddl` (equivalencia PG17 de objetos ya presentes en Supabase) + `int06-harness.e2e-spec.ts` (2/2) + R09/R18 19-flows | **`PENDING_AZURE_L2`** (esquema H5 equivalente ya existe en Supabase; falta deploy candidato + ensayo L2 R18) | N/A | Requiere deploy candidato + corrida L2 R18 autorizada con los 6 eventos contractuales |
-| **INT-07** (Castilla) | PASS L1 con G7 local y validación estática | PARCIAL. CORS y negativas APIM comprobadas | `NOT_RUN` | Pendientes identidad G7 real autorizada y traza hasta el servicio candidato. |
-| **INT-08** (Poma) | PASS 16/16 Chromium con Frontend `ccfc21ba`, Backend `18413ac4` y G7 local | `BLOCKED_AUTH` | N/A | CORS Vercel comprobado. Falta sesión G7 real y el recorrido navegador → APIM → Gateway. |
+| **INT-07** (Castilla) | PASS L1 con G7 local y validación estática | PARCIAL. CORS y negativas APIM comprobadas | `NOT_RUN` | Tras desplegar, capturar desde APIM la operación de Catálogo permitida a GESTOR_COMERCIAL y correlacionar su respuesta con la revisión y el digest de Gateway. |
+| **INT-08** (Poma) | PASS 16/16 Chromium con Frontend `ccfc21ba`, Backend `18413ac4` y G7 local | `PENDING_DEPLOY` | N/A | CORS Vercel comprobado. Ejecutar el recorrido con la sesión GESTOR_COMERCIAL existente tras desplegar el candidato. |
 | **INT-09** (Axel) | **PASS (`ISOLATED`, stub G7)** — 158-endpoints operaciones G5 (`reservar`/`confirmar`/`liberar`/`conciliar-offline`/cupones) con `g5Token` sintético y rechazo `403` con cliente ajeno | `BLOCKED_AUTH` | **`PENDIENTE_HOMOLOGACION_G5`** | Requiere ventana bilateral G5–G6, client/scopes G7 verificados y artefacto conjunto |
 | **INT-10** (Vera) | **PASS (`ISOLATED`)** — **evidencia separada**: reinicio real de proceso **R03 (`pricing-svc`)** en 19-flows + reinicio real de proceso **R16 (`price-audit-svc`)** (`R16_PRICE_AUDIT_CONSUMER_RESTART.json`) + recuperación transaccional PG17 (`pilot.postgres` 8/8) + replay 19 colas sin efecto doble + DLQ | **`PENDING_AZURE_L2`** | N/A | Requiere prueba de caída/recuperación en ACA/Service Bus autorizada sobre R16 (reinicio de `price-audit-svc`) y R18 |
 
@@ -21,7 +21,7 @@
 
 ## 2. Matriz de Performance `PERF-01` a `PERF-08` (H5-03)
 
-- **Herramienta local:** `k6` no está instalado en la estación Windows; **y aunque lo estuviera, está prohibido ejecutar carga contra ACA/APIM/Supabase compartidos sin entorno staging autorizado**.
+- Las pruebas Azure se hacen en el entorno de integración autorizado con datos sintéticos y carga gradual. Usar 1, 5 y 20 VU, tres repeticiones comparables y detención ante degradación. Los escenarios de varios clientes se ejecutan en L1 con identidades sintéticas y quedan BLOCKED_AUTH en L2.
 - **Harness versionado verificado (L0/L1):** `test-performance-workflow.mjs` (**PASS**), `inventory-perf03-k6` y `inventory-fixture-generator` (#297 vía #306, **26/26 PASS**), y workflow `performance-g6.yml` listo para ejecución opt-in.
 
 | ID (Owner) | Escenario | Estado actual | Motivo / Criterio exacto de desbloqueo |

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "manifestType": "h5_release_candidate_not_deployed",
-  "generatedAtUtc": "2026-11-27T15:54:00Z",
+  "generatedAtUtc": "2026-11-27T23:46:18Z",
   "preparedBy": "Axel Cueva",
   "contractVersion": "0.7.0-rc.3",
   "deploymentState": "NOT_DEPLOYED",
@@ -13,9 +13,9 @@
       "baseSha": "097dac1bf4a8dcf5c6e799742d2df340f6d893d5",
       "candidateBranch": "trabajo/cueva/h5-cierre-integral",
       "candidatePr": 307,
-      "candidatePrDraft": true,
-      "candidateSha": "d7a3bf07880a83727acf83788790241c36adc0b5",
-      "candidateCiRunId": 46061782995,
+      "candidatePrDraft": false,
+      "candidateSha": "de4a54ba0615836462901133169c4b0f19c0c9c9",
+      "candidateCiRunId": 46081541712,
       "candidateCiConclusion": "success",
       "incorporatedSources": [
         {
@@ -39,7 +39,18 @@
         }
       ],
       "lastL1CertifiedSha": "7ecee3fb9c38f5c8d4b3521e1e7f88e8badca337",
-      "lastL1CertifiedCiRunId": 46058242392
+      "lastL1CertifiedCiRunId": 46058242392,
+      "candidateReview": {
+        "mergeable": true,
+        "humanMergeApproval": "PENDING_EXPLICIT_APPROVAL_MARCO_CASTILLA"
+      },
+      "candidateCi": {
+        "event": "pull_request",
+        "attempt": 2,
+        "passedJobs": 22,
+        "failedJobs": 0,
+        "skippedOptInJobs": 1
+      }
     },
     "frontend": {
       "repo": "Taller-SW-Web/G6-Productos-Ofertas-frontend",
@@ -57,8 +68,8 @@
       "baseEvidencePr": 151,
       "baseEvidenceSha": "5969a0ed831b43c5ed398c8a925ffbd7bd3340cc",
       "complementaryEvidenceBranch": "trabajo/cueva/h5-cierre-evidencias-axel",
-      "lastEvidenceShaWithRecordedCi": "0381255b23d8f7ae9cb746a1259a100a5ec6382c",
-      "lastEvidenceCiRunId": 46061408317
+      "lastEvidenceShaWithRecordedCi": "e11c02d9c5e89d77d960461a8a15d5249506d312",
+      "lastEvidenceCiRunId": 46062970354
     }
   },
   "pendingDatabaseMigrations": [],
@@ -102,7 +113,7 @@
       "internalRoutesExposed": 0,
       "apiPolicySha256": "aa9b8c125af0c7d29bd514133cefd9fe9f17b71c254a2c8add32d52b3bd99bc3",
       "listarProductosPolicySha256": "cd17fd1a21f9b46b31bbacda17976c5fb6c314951d9c11e1b4b1ea03e29d3ee0",
-      "operationalFinding": "CORS allowlist in live API policy omits Frontend Vercel origin; api-gateway enforces Modalidad B (403 direct)"
+      "operationalFinding": "Historical snapshot before CORS update: Frontend Vercel origin was absent. See apimCorsPostChangeEvidence for verification after change."
     },
     "containerAppsCurrentNotCandidate": [
       {
@@ -183,9 +194,48 @@
       "pg17DisposableStatus": "PASS",
       "sharedSupabaseStatus": "APPLIED_VERIFIED",
       "globalLedgerVersion": "20261127200858",
-      "appliedAtUtc": "2026-11-27T15:08:58.031237-05:00"
+      "appliedAtUtc": "2026-11-27T20:08:58.031237Z"
     }
   ],
   "databaseVerificationEvidence": "artefactos/SUPABASE_R10_Y_CATALOG_PREFLIGHT_2026-11-27.json",
-  "perf03AndPerf07IsolatedEvidence": "artefactos/PERF03_PERF07_L1_2026-11-27.json"
+  "perf03AndPerf07IsolatedEvidence": "artefactos/PERF03_PERF07_L1_2026-11-27.json",
+  "publicationState": "NOT_PUBLISHED",
+  "certificationL2State": "NOT_RUN_ON_CANDIDATE",
+  "deploymentPreflight": {
+    "scope": "chile-shared",
+    "gateway": {
+      "releaseRouteProfile": "standard",
+      "modalidadB": true,
+      "preserveG5Label": true,
+      "restrictedLabelSmoke": "NOT_RUN",
+      "authenticatedApimToGateway": "NOT_RUN_ON_CANDIDATE"
+    },
+    "privateSmoke": {
+      "execution": "azure-h5-smoke-chile-8hxsolc",
+      "result": "Succeeded",
+      "scope": "LIVE_PRE_CANDIDATE_REVISIONS",
+      "internalServices": [
+        "bulk-svc",
+        "combos-svc",
+        "taxonomy-svc"
+      ],
+      "healthAndReadinessStatus": 200,
+      "anonymousProtectedStatus": 401
+    },
+    "priceAudit": {
+      "service": "price-audit-svc",
+      "githubEnvironment": "azure-h5-chile",
+      "revisionMode": "Multiple",
+      "baselineRevision": "price-audit-svc--0000001",
+      "deploymentGate": "BLOCKED_RBAC",
+      "observedMissingActions": [
+        "Microsoft.App/containerApps/revisions/activate/action",
+        "Microsoft.App/containerApps/revisions/deactivate/action"
+      ],
+      "r16CandidateCutoverAndRollback": "PASS_FIXTURES_CI",
+      "r16AzureCandidateCutoverAndRollback": "NOT_RUN"
+    },
+    "g7RoleAvailable": "GESTOR_COMERCIAL",
+    "otherRolesOrClientsAzureL2": "BLOCKED_AUTH"
+  }
 }

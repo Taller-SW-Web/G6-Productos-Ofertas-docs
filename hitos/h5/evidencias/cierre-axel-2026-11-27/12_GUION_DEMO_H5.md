@@ -4,8 +4,8 @@
 
 ## Bloque 1 — Gobernanza, Contratos y CI/CD Multi-Repositorio (`H5-01`, 2 min)
 1. Mostrar contratos normativos `0.7.0-rc.3` en `G6-Productos-Ofertas-docs` (`5f308021`, 156 operaciones OpenAPI, 19 canales AsyncAPI) y corrida verde Docs CI (`#46031816661`).
-2. Mostrar los tres PRs Draft consolidados y sus corridas CI en verde sin despliegue prematuro:
-   - Backend Draft #307 (d7a3bf0) con 22 jobs PASS. [CI final](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46061782995)
+2. Mostrar Backend #307 en Ready for Review y los Drafts Frontend #102 y Docs #152, con sus corridas CI.
+   - Backend #307 en Ready for Review, `de4a54ba`. CI de PR con 22 jobs PASS. [CI exacto](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46081541712)
    - Frontend Draft `#102` (`ccfc21ba...`) — CI [`#46028914883`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/46028914883): **21/21 jobs PASS** (incl. **Gitleaks 8.30.1** + SCA H5 + build `VITE_DATA_MODE=api` + 4 shards Playwright + Pricing E2E).
    - Evidencias SBOM CycloneDX 1.5 (`artefactos/sbom-backend.cdx.json` y `artefactos/sbom-frontend.cdx.json`) y brechas documentadas de GitHub Advanced Security (CodeQL/Secret Scanning `404`).
 

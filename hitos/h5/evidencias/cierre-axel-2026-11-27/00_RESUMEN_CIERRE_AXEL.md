@@ -2,11 +2,11 @@
 
 > El corte acredita código, pruebas aisladas L1, CI remoto, cambios verificados en APIM y Supabase, y el inventario de ACA y Service Bus. La certificación L2 del candidato y la homologación intergrupo L3 siguen pendientes.
 
-## 1. Repositorios, PRs Draft y SHAs fijados
+## 1. Repositorios, PRs y SHAs fijados
 
-| Repositorio | Rama / PR | SHA final limpio | Estado PR | CI GitHub Actions (`workflow_dispatch`, sin deploy) | Despliegue |
+| Repositorio | Rama / PR | SHA final limpio | Estado PR | CI GitHub Actions, sin despliegue | Despliegue |
 |---|---|---|---|---|---|
-| Backend | [Draft #307](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/307). Candidato único con #305, #306 y el delta APIM | d7a3bf07880a83727acf83788790241c36adc0b5 | Draft (OPEN) | [CI #46061782995](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46061782995). 22 jobs PASS, uno opt-in omitido | NOT_DEPLOYED |
+| Backend | [#307](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/307). Candidato único con #305, #306 y el delta APIM | `de4a54ba0615836462901133169c4b0f19c0c9c9` | Ready for Review. Aprobación de merge pendiente | [CI #46081541712](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46081541712). `pull_request`, 22 PASS, 1 benchmark opt-in omitido | NOT_DEPLOYED |
 | `G6-Productos-Ofertas-frontend` | `trabajo/castilla/h5-cierre-post-r2-frontend` — **PR Draft #102** | `ccfc21ba0e821f33c0debf09389879e55df0539b` | **Draft (OPEN)** | [`#46028914883`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/46028914883) — **PASS (21/21 jobs, Gitleaks 8.30.1)** + `PERF-06` [`#46043178034`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/46043178034) **PASS** | `NOT_DEPLOYED` |
 | `G6-Productos-Ofertas-docs` (contratos) | `origin/master` (`OpenAPI 3.1.0` + `AsyncAPI 3.0.0`, **`0.7.0-rc.3`**) | `5f30802129ba4bbc0674dcc5878f10065f443118` | Base vigente | `swagger/npm run validate` **PASS** (156 ops, 0 issues) | N/A |
 | Docs (evidencias) | [Draft #152](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/pull/152). Incluye #151 con su historial | Ver HEAD del Draft | Draft (OPEN) | [Corridas Docs](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/actions/workflows/swagger-docs.yml) | N/A |
@@ -26,12 +26,12 @@
 
 ## Verificación del corte actualizado
 
-- **Backend candidato #307** `d7a3bf07880a83727acf83788790241c36adc0b5`. Incorpora el delta APIM de #305 en `7ecee3f` y actualiza las bases de ambas Dockerfiles a Node 24.22.3 / Alpine 3.24.4. [CI y reescaneo del candidato](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46060439353).
+- **Backend #307** incorpora `7cc40bd` y `de4a54b`. El CI probó el smoke Modalidad B y la conservación de etiquetas en fixtures, además del corte y la recuperación del consumidor R16. En Azure se comprobó el smoke privado sobre las revisiones vigentes. [CI del candidato](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46081541712) · [Preflight y alcance](08_PLAN_RELEASE_CUTOVER_ROLLBACK.md).
 - **Pruebas aisladas del código en `7ecee3f`** 158/158 operaciones y 19/19 recorridos `HTTP_IN_MEMORY_NOT_AZURE`. [Metadata y hashes](artefactos/RECERT_AUDITORIA_2026-11-27.json). La base OCI, el fixture Bulk y la documentación de R10 tienen CI por SHA.
 - **Trivy 0.76.2** [corrida sobre `7ecee3f`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46058242392). El escaneo se ejecutó para 9/9 imágenes; cada una tenía 1 crítico y 18 altos. El crítico de `tar` corresponde al árbol incluido con npm. La actualización de base y la eliminación de npm del runtime dejaron cero críticos y cero altos en 9/9 imágenes de CI de `f3cc10d`. [Resumen](artefactos/SECURIDAD_DRAFT_2026-11-27.json).
 - **Supabase** preflight de solo lectura confirmado. Antes de aplicar R10, Inventory admitía tres destinos, `inventory_app` tiene SELECT/INSERT/UPDATE y carece de DELETE. El script incremental y su rollback se probaron en PG17.11 descartable. El panel Supabase Free no ofrece respaldos programados. Se restauró y verificó un respaldo lógico de la tabla afectada en PG17 aislado; se aplicó R10 con este respaldo autorizado. Ledger global `20261127200858` y los cuatro destinos verificados. Taxonomy conserva los objetos H5 y ACL por columna. Pricing ya admite sus cuatro destinos.
-- **Publicación/CD** ambos workflows exigen la punta de `master` con CI de evento `push`. El Draft #307 tiene CI de `workflow_dispatch`. La aprobación de revisión y los controles existentes determinan cuándo se puede publicar/desplegar el digest.
-- **L2** la infraestructura de integración actual quedó identificada para pruebas autorizadas, con una sola identidad humana `GESTOR_COMERCIAL`. Quedan por acreditar el acceso seguro a esa cuenta, los vínculos a los digests del release y la separación multi-cliente con identidades diferentes. CORS ya pasó el preflight.
+- **Publicación y CD.** El candidato está en Ready for Review con CI del PR aprobado. Siguen pendientes la aprobación de merge y el CI de push en master. La identidad OIDC todavía carece de las dos acciones de revisión para la oleada de Price Audit. [Gates vigentes](09_BLOQUEOS_EXACTOS.md).
+- **L2** la infraestructura de integración actual quedó identificada para pruebas autorizadas, con una sola identidad humana `GESTOR_COMERCIAL`. Los positivos usan esa sesión exclusivamente en operaciones autorizadas. Los casos multi-cliente se acreditan en L1 y quedan BLOCKED_AUTH en L2. CORS ya pasó el preflight.
 - **Rendimiento** `PERF-06` tiene tres pares L1. Se ejecutó un par aislado de [Inventory](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46059874608) y se corrigió el fixture de Bulk para aplicar la migración 0009 al esquema de prueba. La corrida local pasó 3000 solicitudes, cero fallos. [Comparación pareada](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46061662575).
 
 ## 3. Veredicto por criterio Hito 5 (Académico vs Integral)
@@ -42,7 +42,7 @@
 | **H5-02 (INT-01 a INT-10)** | 10/10 PASS L1, 158/158 operaciones, 16/16 Playwright integrado con G7 local. | R10 y CORS verificados. Pendientes despliegue, acceso G7 real y homologación de G5/G1 según caso. | Publicar y desplegar por el gate oficial, ejecutar L2 con G7 y coordinar L3 por dominio. |
 | **H5-03** | `PERF-06` con tres pares L1. Catálogo de 1000 filas comparable, comparación transversal `INCONCLUSIVE` | Casos Azure restantes pendientes | Coordinar datos sintéticos y validar candidatos por digest. |
 | **H5-04A (APIM)** | Bicep y 30 pruebas estáticas PASS | CORS Vercel, 401 sin JWT, correlación, 5×404 y 403 directo verificados | Pendientes positivos con G7, RL y ensayo de rollback. |
-| **H5-04B (Service Bus)** | **PASS (`L1_ISOLATED`)**: 19/19 flujos, R03 restart, R16 transaccional 8/8 + R16 `price-audit-svc` restart 1/1, R18 23/23 + equivalencia PG17, R02→R10 PG17, N01 12/12 | Inventario Azure: 19/19 colas `Active` (0/0) + 38/38 RBAC mínimo; corrida L2 vigente sobre candidato **`PENDING_AZURE_L2`** | Desplegar candidato y ejecutar L2 para R02→R10, R16 con reinicio del consumidor y los seis eventos de R18. |
+| **H5-04B (Service Bus)** | 19/19 en L1. R16 transaccional 8/8 y reinicio aislado 1/1. R18 23/23 y R02→R10 en PG17. | 19 colas activas y RBAC de mensajería observado. Azure L2 del candidato pendiente. | Acreditar RBAC de revisiones para Price Audit y certificar R16 durante corte y recuperación, los seis eventos R18 y el ciclo R02→R10. |
 
 ## 4. Índice de documentos del corte
 
