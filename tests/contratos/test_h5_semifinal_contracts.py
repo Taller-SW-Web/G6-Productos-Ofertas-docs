@@ -85,7 +85,17 @@ class H5SemifinalContractTests(unittest.TestCase):
             if method in {"get", "post", "put", "patch", "delete"}
         }
         for (path, method), historical_operation in historical_operations.items():
-            if (path, method) == ("/inventario/dashboard", "get"):
+            if (path, method) == ("/productos", "get"):
+                current = copy.deepcopy(self.openapi["paths"][path][method])
+                self.assertEqual(
+                    current["x-allowed-client-ids"],
+                    ["modulo-marketplace", "modulo-chatbot", "modulo-retail", "modulo-ventas"],
+                )
+                self.assertEqual(current["x-consumers"], ["Marketplace", "Chatbot", "Retail", "Ventas"])
+                current["x-allowed-client-ids"] = historical_operation["x-allowed-client-ids"]
+                current["x-consumers"] = historical_operation["x-consumers"]
+                self.assertEqual(current, historical_operation, "GET /productos changed beyond modulo-ventas allowlist")
+            elif (path, method) == ("/inventario/dashboard", "get"):
                 # Remove only the three filters unsupported by the current runtime.
                 expected = copy.deepcopy(historical_operation)
                 expected["parameters"] = [p for p in expected.get("parameters", []) if p.get("name") not in {"productoId", "categoriaId", "marcaId"}]
