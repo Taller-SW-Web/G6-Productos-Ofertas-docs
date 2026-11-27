@@ -30,3 +30,33 @@ Este ejemplo aplica a service principal/managed identity. Un usuario ejecutor ne
 ## Pendiente antes de entregar como listo
 
 Completar auditoría HTTP, frontend real y dos regresiones limpias; matriz de permisos por19colas y variables exactas de código; migraciones, digests, readiness, smoke y rollback. No ejecutar deploy ni merge. Las instrucciones finales de despliegue se derivarán del pipeline y recursos comprobados, sin inventar variables.
+
+## Permisos mínimos por entrega
+
+Fuente: matriz ejecutable de19relaciones; contrastar nuevamente antes de conceder. Sender al productor y Receiver al consumidor de cada fila, con scope de queue, no de suscripción. Para N01, mismo promotions-svc con ambos roles. El ejecutor local requiere autorización específica separada; su rol Owner no es una concesión de datos.
+
+**La identidad compartida `g6-h5-qa-acr-pull` observada en varias apps no debe recibir permisos de negocio como atajo.** Axel debe identificar/aprovisionar y asociar identidades propias autorizadas por servicio; solo promotions-svc muestra además g6-h5-int-promotions. No se modificó ninguna identidad. Consulta de todas las asignaciones en suscripción, filtrada por principal y scope namespace/colas, no encontró roles efectivos de datos para las identidades de esas apps.
+
+| Flujo | Cola | Sender: productor | Receiver: consumidor |
+|---|---|---|---|
+| R01 | `g6.catalog.from.bulk` | bulk-svc | catalog-svc |
+| R02 | `g6.inventory.from.bulk` | bulk-svc | inventory-svc |
+| R03 | `g6.pricing.from.bulk` | bulk-svc | pricing-svc |
+| R04 | `g6.bulk.from.catalog` | catalog-svc | bulk-svc |
+| R05 | `g6.combos.from.catalog` | catalog-svc | combos-svc |
+| R06 | `g6.inventory.from.catalog` | catalog-svc | inventory-svc |
+| R07 | `g6.pricing.from.catalog` | catalog-svc | pricing-svc |
+| R08 | `g6.promotions.from.catalog` | catalog-svc | promotions-svc |
+| R09 | `g6.taxonomy.from.catalog` | catalog-svc | taxonomy-svc |
+| R10 | `g6.bulk.from.inventory` | inventory-svc | bulk-svc |
+| R11 | `g6.catalog.from.inventory` | inventory-svc | catalog-svc |
+| R12 | `g6.combos.from.inventory` | inventory-svc | combos-svc |
+| R13 | `g6.promotions.from.inventory` | inventory-svc | promotions-svc |
+| R14 | `g6.bulk.from.pricing` | pricing-svc | bulk-svc |
+| R15 | `g6.catalog.from.pricing` | pricing-svc | catalog-svc |
+| R16 | `g6.price-audit.from.pricing` | pricing-svc | price-audit-svc |
+| R17 | `g6.promotions.from.pricing` | pricing-svc | promotions-svc |
+| R18 | `g6.catalog.from.taxonomy` | taxonomy-svc | catalog-svc |
+| N01 | `g6.promotions.commands` | promotions-svc (HTTP) | promotions-svc (Worker/isolatedCouponH5Bus en test) |
+
+Azure MI/RBAC autentica el transporte. Los JWT G7 de las llamadas HTTP son identidades y scopes distintos; no colocar secretos M2M ni credenciales Azure en React.

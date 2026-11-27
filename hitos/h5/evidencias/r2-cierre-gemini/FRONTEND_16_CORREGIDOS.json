@@ -1,0 +1,241 @@
+{
+  "command": "npx playwright test --config playwright.real.config.ts",
+  "environment": "Laboratorio aislado: Chromium, Gateway y ocho proveedores reales, PostgreSQL Docker TLS, G7 RS256/JWKS local, G5 contractual HTTPS y broker HTTP in-memory; no Azure real",
+  "stats": {
+    "startTime": "2026-11-27T00:15:42.408Z",
+    "duration": 129378.52500000001,
+    "expected": 16,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "rawReportSha256": "9386a8e694064e651ff3044ffd402bc061bfa95b643a3f51392649a1976780ad",
+  "frontendBaseHead": "eeb06397d026128500595f045d3ed2abd23c9b7f",
+  "frontendDiffSha256": "21272928065a4a83adb0457e49d75143f45792087a0304b26fefe509efbefcf6",
+  "tests": [
+    {
+      "file": "eight-modules.real.spec.ts",
+      "line": 32,
+      "title": "1. Catalog: preparar maestros en Taxonomy, crear producto BORRADOR completo via SPA, recargar, reautenticar y verificar lectura administrativa y preparación",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 13477,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "line": 178,
+      "title": "2. Taxonomy: crear categoría via SPA, recargar, reautenticar y consultar por categoriaId",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 5323,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "line": 222,
+      "title": "3. Pricing: preprovisionar producto ACTIVO y definición vigente, editar vía PriceEditForm + ConfirmDialog (PATCH) y verificar persistencia tras recarga",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 6557,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "line": 351,
+      "title": "4. Price Audit: cambio causal en Pricing -> Service Bus aislado -> Price Audit, exportar CSV hasta COMPLETED y verificar contenido",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 4384,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "line": 493,
+      "title": "5. Promotions: crear promoción CUPON vigente y luego cupón asociado via CouponForm (estado, promoción exacta y radio restitución)",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 6713,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "line": 619,
+      "title": "6. Inventory: navegar a /inventario y subpágina /inventario/umbrales, mutar umbral, recargar, reautenticar y verificar valor persistido",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 6946,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "line": 672,
+      "title": "7. Combos: preprovisionar dos SKU activos con precios, crear combo via SPA con componentes y precioCombo, recargar y verificar composición",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 8090,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "line": 816,
+      "title": "8a. Bulk (admisión HTTP): descargar plantilla CSV V2, preparar maestros reales de Taxonomy, subir lote válido y verificar 202 QUEUED y persistencia inicial",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 4903,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "line": 936,
+      "title": "8b. Bulk (procesamiento integral con mensajería): exige COMPLETED, conteo íntegro de filas, cero errores y sin conciliación pendiente",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 10746,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "eight-modules.real.spec.ts",
+      "line": 1069,
+      "title": "8c. Bulk (CSV inválido): falla de forma explícita (400/422 o FAILED_GENERAL separado del caso positivo)",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3247,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "http-contracts.real.spec.ts",
+      "line": 12,
+      "title": "UI inicia sesión con G7 local RS256 en memoria, envía Authorization Bearer y X-Correlation-Id sin tokens técnicos en bundle",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2608,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "http-contracts.real.spec.ts",
+      "line": 69,
+      "title": "usuario sin GESTOR_COMERCIAL ve AccessDenied en React sin emitir peticiones administrativas; Gateway devuelve 401 sin firma válida y 403 con JWT válido sin permisos",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 1623,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "http-contracts.real.spec.ts",
+      "line": 141,
+      "title": "G7 local estricto: rechaza credenciales inválidas, usuarios inactivos/bloqueados, rotación refresh y revocación logout",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 91,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "http-contracts.real.spec.ts",
+      "line": 206,
+      "title": "navegación SPA conserva sesión, verifica 429 Retry-After y no reintenta mutaciones ambiguas 503",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 4364,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "http-contracts.real.spec.ts",
+      "line": 298,
+      "title": "P0-AUTH-09: matriz positiva y negativa independiente contra Gateway y los 8 proveedores reales",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 516,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "transversal-flows.real.spec.ts",
+      "line": 37,
+      "title": "causalidad real: Taxonomy -> Catalog -> Pricing/Inventory -> Audit -> Combos -> Coupons + N01 técnico separado",
+      "status": "expected",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 11692,
+          "retry": 0
+        }
+      ]
+    }
+  ]
+}
