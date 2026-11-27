@@ -23,7 +23,7 @@ Antes de desplegar nuevas imágenes o abrir tráfico, **Marco Castilla** debe co
 | Merge a `master` (Backend, Frontend, Docs) | Marco Castilla | PRs salen de Draft, CI `Lint, Typecheck, Test, Build & Smoke Test` / `validate` / `validate-docs` en verde en SHA final |
 | Backup / PITR Supabase (`slzglmtiyrzygpkiuthf`) | Owner BD + Marco Castilla | Confirmación de punto de restauración PITR y ejecución previa de `BD_PREDEPLOY_CHECKS.sql` (solo SELECT) |
 | Migración BD Inventory R10 (`0002`) | Taco + Owner BD + Castilla | Revisión de `po_inventory_owner`, 0 filas previas en `inventory.outbox_delivery`, checksum `7ac74f99...` y registro acordado sin alterar `0001`/`0002` históricos |
-| Migración BD Taxonomy (`0006`) | López + Owner BD + Castilla | Conciliación de DDL/checksum `ab68c32c...` contra ledger real de `taxonomy` |
+| Verificación BD Taxonomy (R09/R18) | López + Owner BD | Confirmar en solo lectura la equivalencia con los objetos instalados y los dos historiales. Una desviación funcional requiere una migración diferencial aprobada |
 | Publicación GHCR + Despliegue ACA | Marco Castilla (Environment approval `azure-h5-chile`) | Workflow `publish-only-images.yml` + `cd-services-azure.yml` sobre commit de `master`, capturando digest `sha256` por servicio |
 | Grants / Tokens G7 reales | Owner G7 + Castilla | Verificación de `client_id`, `audience`, `scopes` y usuarios/clientes de prueba en ambiente autorizado |
 | Ventana L2 Service Bus + APIM / k6 | Marco Castilla + Owners | Autorización explícita para tráfico sintético y pruebas de fallo/recuperación en staging/lab |
@@ -38,10 +38,10 @@ Antes de desplegar nuevas imágenes o abrir tráfico, **Marco Castilla** debe co
 3. Guardar snapshot JSON de revisiones ACA actuales (`artefactos/azure-aca-readonly-snapshot-2026-11-27.json`) y XML de políticas APIM actuales como línea base de rollback.
 4. Confirmar que las 19 colas en `g6-sb-h5-chile-261127` están `Active` con `active=0, dlq=0` y que las Managed Identities ACA tienen RBAC mínimo (`Azure Service Bus Data Sender` / `Data Receiver` por cola según matriz).
 
-### Wave 1 — Migraciones de Esquema Aditivas (con flags H5 nuevos aún en `false`)
-1. **Inventory R10 (`Taco` / Owner BD):** aplicar `apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.sql` (`SHA256 7ac74f99...`). Verificar `ck_inventory_delivery_route` con 4 destinos y permisos `inventory_app`.
-2. **Taxonomy R09/R18 (`López` / Owner BD):** aplicar `apps/taxonomy-svc/migrations/0006_service_bus_outbox_delivery.sql` (`SHA256 ab68c32c...`) tras conciliación de ledger.
-3. **Pricing (`Vera` / Owner BD):** confirmar vía `SELECT` que `0003_service_bus_h5_routes_r2.sql` (`SHA256 9a059889...`) ya está aplicada o aplicarla en la misma ventana.
+### Wave 1 — Migración R10 y verificación de esquemas (flags H5 nuevos en `false`)
+1. **Inventory R10 (`Taco` / Owner BD):** con autorización expresa, respaldo verificable y ventana confirmada, aplicar `apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.sql` (`SHA256 7ac74f99...`) como `po_inventory_owner`. Registrar el artefacto aplicado con su checksum sin modificar las entradas históricas. Verificar `ck_inventory_delivery_route` con cuatro destinos y los permisos de `inventory_app`.
+2. **Taxonomy R09/R18 (`López` / Owner BD):** verificar en solo lectura la equivalencia de `outbox_delivery`, función, trigger, eventos y ACL con [la reconciliación de esquema e historiales](05_MIGRACIONES_Y_DIAGNOSTICO_CATALOG_LEGACY.md). Conservar los dos registros H5 globales y el ledger del servicio hasta `0005`. **Queda excluida la ejecución o el registro de `0006` completa.** Ante una desviación funcional demostrada, ensayar un diferencial versionado y reversible en una transacción completa. R18 requiere el despliegue y la corrida L2.
+3. **Pricing (`Vera` / Owner BD):** confirmar vía `SELECT` la entrada global `g6_h5_pricing_0003_service_bus_routes_r2` y los cuatro destinos compatibles. Si aparece una desviación, reconciliarla antes del release.
 4. **Regla inmutable:** NO tocar `catalog.outbox` legacy (`RABBITMQ`) ni alterar filas de `schema_migrations` aplicadas.
 
 ### Wave 2 — Publicación de Imágenes OCI y Despliegue de Microservicios (flags nuevos OFF)
@@ -92,4 +92,4 @@ Abortar avance de ola si ocurre cualquiera de las siguientes condiciones:
 | **2. Aplicación (ACA)** | Redirigir 100% del tráfico a la revisión previa inmutable documentada en `azure-aca-readonly-snapshot-2026-11-27.json` (ej. `catalog-svc--0000004`, `inventory-svc--0000002`, `taxonomy-svc--0000005`, `promotions-svc--0000007`, `api-gateway--0000003`) | Revisiones anteriores permanecen disponibles y pinneadas por digest `sha256` |
 | **3. APIM / Modalidad B** | Restaurar política XML anterior (`SHA256 AA9B8C...` / `CD17FD...`) o revisión APIM previa; si se requiere restablecer acceso directo de emergencia al Gateway, retirar regla `allow-apim-1` en `api-gateway` bajo aprobación de Castilla | Conservar respaldo XML antes de toda modificación |
 | **4. Base de datos (Inventory R10)** | Ejecutar `apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.rollback.sql` (`SHA256 22e6a461...`) | **Solo procede si hay 0 filas `g6.bulk.from.inventory`**; si existen entregas Bulk, el script aborta por diseño para evitar corrupción y exige conciliación previa |
-| **5. Base de datos (Taxonomy `0006` / general)** | Mantener tablas aditivas `outbox_delivery` inactivas (flags OFF) sin `DROP TABLE` destructivo; recurrir a PITR de Supabase únicamente ante incidente severo aprobado por Owner BD y Castilla | Nunca mutar ledgers históricos |
+| **5. Base de datos (Taxonomy / general)** | Conservar la infraestructura H5 instalada y desactivar por flags el tramo afectado. Para un diferencial aprobado, usar su rollback ensayado. PITR queda reservado a incidentes severos aprobados por Owner BD y Castilla | Preservar ambos ledgers y los objetos existentes |

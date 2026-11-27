@@ -56,7 +56,9 @@
       "normativeContractsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
       "baseEvidencePr": 151,
       "baseEvidenceSha": "5969a0ed831b43c5ed398c8a925ffbd7bd3340cc",
-      "complementaryEvidenceBranch": "trabajo/cueva/h5-cierre-evidencias-axel"
+      "complementaryEvidenceBranch": "trabajo/cueva/h5-cierre-evidencias-axel",
+      "lastEvidenceShaWithRecordedCi": "87c24341686fd275eeb3e4ac6963b11ffb174dd4",
+      "lastEvidenceCiRunId": 46047588608
     }
   },
   "pendingDatabaseMigrations": [
@@ -68,7 +70,9 @@
       "rollbackSha256": "22e6a461b166a7fabfdee4236fb024fee8b456e166020af76ea9be630ee402b2",
       "pg17DisposableStatus": "PASS",
       "sharedSupabaseStatus": "NOT_APPLIED"
-    },
+    }
+  ],
+  "databaseSchemaReconciliations": [
     {
       "service": "taxonomy-svc",
       "file": "apps/taxonomy-svc/migrations/0006_service_bus_outbox_delivery.sql",
