@@ -8,7 +8,7 @@
   "candidateHeadShas": {
     "backend": "fabf2c4316d17d488b7aa73d442b705089d88135",
     "frontend": "NO_RUNTIME_DELTA",
-    "docs": "PENDING_COMMIT"
+    "docs": "6ffcade24694e9cb2a349f31a97c404333362b4d"
   },
   "migrationStatus": "NO_APLICADO",
   "apimStatus": "BLOCKED_APIM_BUDGET_NETWORK_CONFIG",

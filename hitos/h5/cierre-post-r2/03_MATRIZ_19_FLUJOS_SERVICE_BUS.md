@@ -5,7 +5,7 @@ Fuente normativa: `integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md` y Asyn
 | Flujo | Cola | Evidencia en esta sesión |
 |---|---|---|
 | R01 | g6.catalog.from.bulk | Cola Active; loop/E2E NOT_RUN |
-| R02 | g6.inventory.from.bulk | Cola Active; handler Inventory bloqueado por contrato en HEAD; E2E NOT_RUN |
+| R02 | g6.inventory.from.bulk | Cola Active; receptor y handler reales en Backend base. E2E Inventory PostgreSQL 17: recepción, stock, Inbox, Outbox, ACK/replay/recovery PASS; entrega desde Bulk no probada en esta corrida. |
 | R03 | g6.pricing.from.bulk | Cola Active; implementación R2 documentada; replay actual NOT_RUN |
 | R04 | g6.bulk.from.catalog | Cola Active; E2E NOT_RUN |
 | R05 | g6.combos.from.catalog | Cola Active; E2E NOT_RUN |
@@ -13,7 +13,7 @@ Fuente normativa: `integraciones/MATRIZ-IMPLEMENTACION-SERVICE-BUS-H5.md` y Asyn
 | R07 | g6.pricing.from.catalog | Cola Active; E2E NOT_RUN |
 | R08 | g6.promotions.from.catalog | Cola Active; E2E NOT_RUN |
 | R09 | g6.taxonomy.from.catalog | Cola Active; PR #300 Draft; E2E NOT_RUN |
-| R10 | g6.bulk.from.inventory | Cola Active; SQL candidato preparado, producer Inventory ausente; E2E NOT_RUN |
+| R10 | g6.bulk.from.inventory | Cola Active; producer/relay Inventory y consumidor Bulk existen. Check físico anterior rechaza entrega; migración candidata permite registrarla en PG17. Entrega terminal al consumidor Bulk aún sin E2E conjunto. |
 | R11 | g6.catalog.from.inventory | Cola Active; E2E NOT_RUN |
 | R12 | g6.combos.from.inventory | Cola Active; E2E NOT_RUN |
 | R13 | g6.promotions.from.inventory | Cola Active; E2E NOT_RUN |
