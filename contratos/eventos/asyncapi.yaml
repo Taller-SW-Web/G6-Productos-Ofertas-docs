@@ -3285,8 +3285,7 @@ x-transport:
   message_size_includes_properties_and_encoding: true
   sessions: false
   delivery_model: '#/x-delivery-model'
-x-blocked-contracts:
-- pricing.bulk.price.apply.requested
+x-blocked-contracts: []
 x-delivery-model:
   delivery: at-least-once
   exactly_once: false
