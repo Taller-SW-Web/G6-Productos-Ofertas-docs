@@ -1,0 +1,44 @@
+{
+  "criterion": "H5-03",
+  "caseId": "PERF-01..PERF-08-AND-RL-01..RL-06",
+  "scope": "IN_SCOPE",
+  "result": "NOT_RUN",
+  "evidenceLevel": "STATIC",
+  "verificationState": "BLOCKED_ENV",
+  "deploymentState": "NOT_DEPLOYED",
+  "blocker": "k6 no instalado localmente y prohibido ejecutar carga contra ACA/APIM/Supabase compartidos; requiere entorno staging autorizado + dataset sintetico + tokens G7",
+  "owner": "Vera / Axel Cueva",
+  "testedAtUtc": "2026-11-27T15:54:00Z",
+  "subjects": {
+    "backendSha": "16d373aeb63cb2386b0e174c76517d8bf3381fb5",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "azureImageDigest": null,
+    "azureRevision": null
+  },
+  "environment": {
+    "name": "none-staging-not-authorized",
+    "db": "none",
+    "serviceBus": "none",
+    "apim": "apim-g6-productos-chile (no load authorized)"
+  },
+  "execution": {
+    "command": "node test-performance-workflow.mjs + inventory-perf03-k6 unit specs (harness validation only)",
+    "exitCode": 0,
+    "runId": null,
+    "artifactPath": "07_INT_PERF_APIM_RL.md",
+    "artifactSha256": null
+  },
+  "assertions": {
+    "httpExpected": null,
+    "httpActual": null,
+    "eventId": null,
+    "correlationIdSanitized": null,
+    "inboxState": null,
+    "outboxState": null,
+    "dlqDelta": null,
+    "idempotent": null
+  },
+  "notes": "No se fabricaron metricas p50/p95/p99 ni RPS. PERF-04 queda condicionado a habilitacion de N01 en el manifest de release."
+}

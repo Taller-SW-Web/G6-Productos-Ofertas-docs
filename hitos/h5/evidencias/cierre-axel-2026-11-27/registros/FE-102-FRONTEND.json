@@ -1,0 +1,44 @@
+{
+  "criterion": "H5-02",
+  "caseId": "FE-102-PLAYWRIGHT-API-BUILD",
+  "scope": "IN_SCOPE",
+  "result": "PASS",
+  "evidenceLevel": "ISOLATED",
+  "verificationState": "VERIFIED_L1_CI_DISPATCHED",
+  "deploymentState": "NOT_DEPLOYED",
+  "blocker": "Flujo real Frontend->APIM->Gateway->servicio bloqueado en L2 por politica CORS live de APIM (omite origen Vercel) y falta de token real G7",
+  "owner": "Castilla / Poma / Axel Cueva",
+  "testedAtUtc": "2026-11-27T15:54:00Z",
+  "subjects": {
+    "backendSha": "16d373aeb63cb2386b0e174c76517d8bf3381fb5",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "azureImageDigest": null,
+    "azureRevision": null
+  },
+  "environment": {
+    "name": "local-playwright-isolated",
+    "db": "isolated-mock-and-api-build",
+    "serviceBus": "not-applicable",
+    "apim": "apim-g6-productos-chile (CORS missing FE origin)"
+  },
+  "execution": {
+    "command": "npm run typecheck + lint + test + VITE_DATA_MODE=api npm run build + test:e2e:pricing + security-playwright + test:e2e + gh workflow run frontend.yml",
+    "exitCode": 0,
+    "runId": "46028914883",
+    "artifactPath": "artefactos/sbom-frontend.cdx.json",
+    "artifactSha256": "2e68ba5fc321a130479af226073dd5f13fd49b4ac04e93a5a9c3c63f49d870ee"
+  },
+  "assertions": {
+    "httpExpected": "typecheck/lint/unit/build-api PASS; Pricing 12/12; Security 7/7; E2E 0 FAIL",
+    "httpActual": "typecheck/lint/unit/build-api PASS; Pricing 12/12 PASS; Security 7/7 PASS; E2E 664+2 PASS (8 skipped; 2 fallos transitorios por contencion CPU pasaron 2/2 en re-ejecucion aislada)",
+    "eventId": null,
+    "correlationIdSanitized": "verified",
+    "inboxState": null,
+    "outboxState": null,
+    "dlqDelta": null,
+    "idempotent": null
+  },
+  "notes": "Stubs de G7 declarados en pruebas Playwright L1; validacion CI completa con Gitleaks 8.30.1 despachada en run 46028914883."
+}

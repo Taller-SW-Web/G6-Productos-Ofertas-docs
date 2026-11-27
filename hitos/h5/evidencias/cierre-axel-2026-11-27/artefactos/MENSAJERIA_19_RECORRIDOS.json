@@ -1,0 +1,4582 @@
+{
+  "timestamp": "2026-11-27T15:32:28.561Z",
+  "environment": "local-isolated-service-bus-and-postgres",
+  "transport": "HTTP_IN_MEMORY_NOT_AZURE",
+  "total": 19,
+  "passed": 19,
+  "failed": 0,
+  "fixture": {
+    "batchId": "9a91585e-d880-4351-8d18-82aa1414c611",
+    "bulkProdId": "71ee0e0d-9274-425c-b9d0-aad083396048",
+    "bulkSku": "BULK-MSG-5DB691",
+    "admProdId": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+    "admSku": "ADM-MSG-82A60B",
+    "comboId": "d142e5e9-3898-49f7-9442-99466aa909d8",
+    "catDeactId": "87087d87-935c-485e-9ed6-9622a7ae0db6",
+    "n01Order": "d4287099-3ea9-4619-8aa1-2987e738417f",
+    "n01ConsumeOp": "6ad853a2-8ea7-49b9-9fcc-46a7df27a710",
+    "n01RestoreOp": "57c13f57-c32c-4538-915c-da93ca5b1baa"
+  },
+  "flows": [
+    {
+      "id": "R01",
+      "cola": "g6.catalog.from.bulk",
+      "productor": "bulk-svc",
+      "consumidor": "catalog-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "ee3b2650-4267-5c1c-90b3-53936513611d",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "catalog.bulk.upsert.requested",
+          "schemaVersion": 3,
+          "publishedAt": "2026-11-27T15:31:57.877Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "ee3b2650-4267-5c1c-90b3-53936513611d",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "catalog.bulk.upsert.requested",
+          "schemaVersion": 3,
+          "publishedAt": "2026-11-27T15:32:20.817Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R02",
+      "cola": "g6.inventory.from.bulk",
+      "productor": "bulk-svc",
+      "consumidor": "inventory-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "inventory.bulk.stock.adjust.requested",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:01.901Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "inventory.bulk.stock.adjust.requested",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:20.821Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R03",
+      "cola": "g6.pricing.from.bulk",
+      "productor": "bulk-svc",
+      "consumidor": "pricing-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "pricing.bulk.price.apply.requested",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:01.907Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "pricing.bulk.price.apply.requested",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:20.824Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "pricing.bulk.price.apply.requested",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:23.249Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R04",
+      "cola": "g6.bulk.from.catalog",
+      "productor": "catalog-svc",
+      "consumidor": "bulk-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "3c7febc4-911c-4997-ba4e-a6431ec93d0b",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "catalog.bulk.upsert.completed",
+          "schemaVersion": 2,
+          "publishedAt": "2026-11-27T15:31:59.888Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "3c7febc4-911c-4997-ba4e-a6431ec93d0b",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "catalog.bulk.upsert.completed",
+          "schemaVersion": 2,
+          "publishedAt": "2026-11-27T15:32:20.826Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R05",
+      "cola": "g6.combos.from.catalog",
+      "productor": "catalog-svc",
+      "consumidor": "combos-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+          "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "name": "catalog.product.deactivated",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:10.052Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+          "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "name": "catalog.sku.deactivated",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:12.019Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+          "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "name": "catalog.product.deactivated",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:20.828Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R06",
+      "cola": "g6.inventory.from.catalog",
+      "productor": "catalog-svc",
+      "consumidor": "inventory-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "61ac9190-283d-4f7e-a1d4-9781f1d76a7e",
+          "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+          "name": "inventory.sku.initialization.requested",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:05.969Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+          "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "name": "catalog.sku.deactivated",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:09.986Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R07",
+      "cola": "g6.pricing.from.catalog",
+      "productor": "catalog-svc",
+      "consumidor": "pricing-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "13b35a55-a3aa-49fb-a830-70a7198307b8",
+          "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+          "name": "pricing.product.initialization.requested",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:05.949Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+          "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "name": "catalog.sku.deactivated",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:09.964Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R08",
+      "cola": "g6.promotions.from.catalog",
+      "productor": "catalog-svc",
+      "consumidor": "promotions-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+          "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "name": "catalog.product.deactivated",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:10.031Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+          "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "name": "catalog.sku.deactivated",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:11.998Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+          "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "name": "catalog.product.deactivated",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:20.835Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R09",
+      "cola": "g6.taxonomy.from.catalog",
+      "productor": "catalog-svc",
+      "consumidor": "taxonomy-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "84960237-eab6-4b90-8a8e-e5213c7d6bca",
+          "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+          "name": "catalog.master.deactivation.checked",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:10.009Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "84960237-eab6-4b90-8a8e-e5213c7d6bca",
+          "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+          "name": "catalog.master.deactivation.checked",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:20.837Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R10",
+      "cola": "g6.bulk.from.inventory",
+      "productor": "inventory-svc",
+      "consumidor": "bulk-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "0e932550-50d2-4b97-a6a6-ad4778ad4227",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "inventory.bulk.stock.adjust.completed",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:02.253Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "0e932550-50d2-4b97-a6a6-ad4778ad4227",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "inventory.bulk.stock.adjust.completed",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:20.840Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R11",
+      "cola": "g6.catalog.from.inventory",
+      "productor": "inventory-svc",
+      "consumidor": "catalog-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "33cd0e2f-69e4-48a9-b08c-d56c8b62407b",
+          "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+          "name": "inventory.sku.initialization.completed",
+          "schemaVersion": 2,
+          "publishedAt": "2026-11-27T15:32:06.375Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R12",
+      "cola": "g6.combos.from.inventory",
+      "productor": "inventory-svc",
+      "consumidor": "combos-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "d1bab698-b31f-4a81-afe7-3463cd406c55",
+          "correlationId": "bfa4df2d-7f6c-4fc6-b7ac-85b3129bc053",
+          "name": "inventory.stock.changed",
+          "schemaVersion": 2,
+          "publishedAt": "2026-11-27T15:32:08.420Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R13",
+      "cola": "g6.promotions.from.inventory",
+      "productor": "inventory-svc",
+      "consumidor": "promotions-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "d1bab698-b31f-4a81-afe7-3463cd406c55",
+          "correlationId": "bfa4df2d-7f6c-4fc6-b7ac-85b3129bc053",
+          "name": "inventory.stock.changed",
+          "schemaVersion": 2,
+          "publishedAt": "2026-11-27T15:32:09.463Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R14",
+      "cola": "g6.bulk.from.pricing",
+      "productor": "pricing-svc",
+      "consumidor": "bulk-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "1878f8ca-5036-494f-822e-c32f4edb94db",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "pricing.bulk.price.apply.completed",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:04.012Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "1878f8ca-5036-494f-822e-c32f4edb94db",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "pricing.bulk.price.apply.completed",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:20.848Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R15",
+      "cola": "g6.catalog.from.pricing",
+      "productor": "pricing-svc",
+      "consumidor": "catalog-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "4606d87f-7af5-5218-aec7-c0e6da07574d",
+          "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+          "name": "pricing.product.initialization.completed",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:07.126Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R16",
+      "cola": "g6.price-audit.from.pricing",
+      "productor": "pricing-svc",
+      "consumidor": "price-audit-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "40d2f7d1-4c03-4f10-936e-7d387eafae1e",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "pricing.price.changed",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:05.053Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "52613a89-45d0-5764-a586-ef1f97f93be0",
+          "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+          "name": "pricing.price.changed",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:08.154Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "8c7f0b22-9238-4b20-b23b-02aec4544106",
+          "correlationId": "f46078ac-e439-4f2a-ba6b-1c9d031beb29",
+          "name": "pricing.price.changed",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:10.221Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R17",
+      "cola": "g6.promotions.from.pricing",
+      "productor": "pricing-svc",
+      "consumidor": "promotions-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "40d2f7d1-4c03-4f10-936e-7d387eafae1e",
+          "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "name": "pricing.price.changed",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:06.095Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "52613a89-45d0-5764-a586-ef1f97f93be0",
+          "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+          "name": "pricing.price.changed",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:09.191Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "8c7f0b22-9238-4b20-b23b-02aec4544106",
+          "correlationId": "f46078ac-e439-4f2a-ba6b-1c9d031beb29",
+          "name": "pricing.price.changed",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:11.265Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "R18",
+      "cola": "g6.catalog.from.taxonomy",
+      "productor": "taxonomy-svc",
+      "consumidor": "catalog-svc",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "c27872c2-184b-40c1-840e-8c991f5f76d1",
+          "correlationId": "7d94b828-fc76-4703-9844-86d4159424ae",
+          "name": "taxonomy.category.updated",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:08.504Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "2efbb96f-27d4-4b6a-a223-69fa385e1917",
+          "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+          "name": "taxonomy.master.deactivation.check.requested",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:09.558Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "045b2c38-9b16-44c2-869a-d32adb045eb0",
+          "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+          "name": "taxonomy.master.deactivated",
+          "schemaVersion": 1,
+          "publishedAt": "2026-11-27T15:32:10.603Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    },
+    {
+      "id": "N01",
+      "cola": "g6.promotions.commands",
+      "productor": "promotions-svc(http)",
+      "consumidor": "promotions-svc(worker)",
+      "ok": true,
+      "messages": [
+        {
+          "messageId": "d35da2c1-c3a4-4e06-b6e8-485f87fb7c34",
+          "correlationId": "b41a08ea-251c-4373-bec1-67f5b55e6484",
+          "name": "promotions.coupon.consumption.requested",
+          "schemaVersion": 2,
+          "publishedAt": "2026-11-27T15:32:11.356Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "00d2f7a3-d679-46d4-a31c-30f4cbd47a24",
+          "correlationId": "39a70e8a-8dd0-4aa7-80a3-4695072ade31",
+          "name": "promotions.coupon.restoration.requested",
+          "schemaVersion": 2,
+          "publishedAt": "2026-11-27T15:32:12.629Z",
+          "received": true,
+          "completed": true
+        },
+        {
+          "messageId": "d35da2c1-c3a4-4e06-b6e8-485f87fb7c34",
+          "correlationId": "b41a08ea-251c-4373-bec1-67f5b55e6484",
+          "name": "promotions.coupon.consumption.requested",
+          "schemaVersion": 2,
+          "publishedAt": "2026-11-27T15:32:20.861Z",
+          "received": true,
+          "completed": true
+        }
+      ],
+      "chainPass": true,
+      "invalidMessages": []
+    }
+  ],
+  "queryEvidence": [
+    {
+      "sql": "SELECT count(*)::int AS c FROM catalog.outbox WHERE event_name = 'catalog.bulk.upsert.completed' AND payload::text LIKE '%9a91585e-d880-4351-8d18-82aa1414c611%'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM inventory.inbox WHERE message_type = 'inventory.bulk.stock.adjust.requested' AND payload::text LIKE '%BULK-MSG-5DB691%'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM pricing.inbox WHERE event_name = 'pricing.bulk.price.apply.requested' AND payload->'data'->>'batch_id' = '9a91585e-d880-4351-8d18-82aa1414c611'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM pricing.prices p JOIN pricing.price_validities v ON v.price_id = p.id WHERE p.sku = 'BULK-MSG-5DB691' AND v.precio_regular = 75 AND v.is_cancelled = false",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM catalog.outbox o JOIN catalog.outbox_delivery d USING (message_id) WHERE o.event_name = 'catalog.bulk.upsert.completed' AND d.destination = 'g6.bulk.from.catalog' AND d.published_at IS NOT NULL AND o.payload::text LIKE '%9a91585e-d880-4351-8d18-82aa1414c611%'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM combos.inbox WHERE payload::text LIKE '%b2ae8fdd-7fb6-462e-b061-affaa35445bb%' AND result = 'PROCESSED'",
+      "rows": [
+        {
+          "c": 2
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM combos.component_projection p JOIN combos.combo_items i ON i.id = p.combo_item_id WHERE i.combo_id = 'd142e5e9-3898-49f7-9442-99466aa909d8'::uuid AND i.sku = 'ADM-MSG-82A60B' AND p.catalog_deactivated = true",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM inventory.inbox WHERE message_type = 'inventory.sku.initialization.requested' AND payload::text LIKE '%ADM-MSG-82A60B%'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM pricing.inbox WHERE event_name = 'pricing.product.initialization.requested' AND payload::text LIKE '%b2ae8fdd-7fb6-462e-b061-affaa35445bb%' AND result = 'APPLIED'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM pricing.prices WHERE product_id = 'b2ae8fdd-7fb6-462e-b061-affaa35445bb' AND sku IS NULL",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM promotions.inbox WHERE envelope::text LIKE '%b2ae8fdd-7fb6-462e-b061-affaa35445bb%' AND completed_at IS NOT NULL",
+      "rows": [
+        {
+          "c": 4
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM promotions.catalog_projection WHERE reference_type = 'PRODUCTO' AND reference_id = 'b2ae8fdd-7fb6-462e-b061-affaa35445bb' AND active = false",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM catalog.outbox WHERE event_name = 'catalog.master.deactivation.checked' AND payload::text LIKE '%87087d87-935c-485e-9ed6-9622a7ae0db6%'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM taxonomy.inbox WHERE payload::text LIKE '%87087d87-935c-485e-9ed6-9622a7ae0db6%'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM inventory.outbox WHERE event_type = 'inventory.bulk.stock.adjust.completed' AND payload::text LIKE '%9a91585e-d880-4351-8d18-82aa1414c611%'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM catalog.activation_checks WHERE product_id = 'b2ae8fdd-7fb6-462e-b061-affaa35445bb'::uuid AND dependency = 'INVENTORY' AND state = 'COMPLETED'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM combos.inbox WHERE event_name = 'inventory.stock.changed' AND payload::text LIKE '%ADM-MSG-82A60B%' AND result = 'PROCESSED'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM combos.component_projection p JOIN combos.combo_items i ON i.id = p.combo_item_id WHERE i.combo_id = 'd142e5e9-3898-49f7-9442-99466aa909d8'::uuid AND i.sku = 'ADM-MSG-82A60B' AND p.inventory_observed_at IS NOT NULL",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM promotions.inbox WHERE envelope->>'name' = 'inventory.stock.changed' AND envelope->'data'->>'sku' = 'ADM-MSG-82A60B' AND completed_at IS NOT NULL AND result->>'handled' = 'true' AND result->'invalidation'->>'domain' = 'stock' AND result->'invalidation'->>'targetId' = 'ADM-MSG-82A60B' AND result->'invalidation'->>'sourceVersion' = envelope->'data'->>'stock_version' AND result->'invalidation'->>'locationId' = envelope->'data'->>'location_id'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM pricing.outbox o JOIN pricing.outbox_delivery d USING (message_id) WHERE o.payload::text LIKE '%9a91585e-d880-4351-8d18-82aa1414c611%' AND d.destination = 'g6.bulk.from.pricing' AND d.sent_at IS NOT NULL",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM catalog.activation_checks WHERE product_id = 'b2ae8fdd-7fb6-462e-b061-affaa35445bb'::uuid AND dependency = 'PRICING' AND state = 'COMPLETED'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM price_audit.price_audit_log WHERE sku = 'ADM-MSG-82A60B'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM promotions.inbox WHERE envelope->>'name' = 'pricing.price.changed' AND envelope->'data'->>'sku' = 'ADM-MSG-82A60B' AND envelope->'data'->>'new_price' = '95.00' AND completed_at IS NOT NULL AND result->>'handled' = 'true' AND result->'invalidation'->>'domain' = 'price' AND result->'invalidation'->>'targetId' = 'ADM-MSG-82A60B' AND result->'invalidation'->>'sourceVersion' = envelope->'data'->>'price_version'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM taxonomy.outbox WHERE event_name = 'taxonomy.master.deactivation.check.requested' AND payload::text LIKE '%87087d87-935c-485e-9ed6-9622a7ae0db6%'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM catalog.inbox WHERE payload::text LIKE '%87087d87-935c-485e-9ed6-9622a7ae0db6%'",
+      "rows": [
+        {
+          "c": 3
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM promotions.coupon_uses WHERE order_id = 'd4287099-3ea9-4619-8aa1-2987e738417f'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS c FROM promotions.coupon_command_receipts WHERE operation_id = '57c13f57-c32c-4538-915c-da93ca5b1baa'::uuid AND status = 'COMPLETED'",
+      "rows": [
+        {
+          "c": 1
+        }
+      ]
+    }
+  ],
+  "duplicateEvidence": {
+    "replays": [
+      {
+        "flow": "R01",
+        "queue": "g6.catalog.from.bulk",
+        "messageId": "ee3b2650-4267-5c1c-90b3-53936513611d",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R02",
+        "queue": "g6.inventory.from.bulk",
+        "messageId": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R03",
+        "queue": "g6.pricing.from.bulk",
+        "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R04",
+        "queue": "g6.bulk.from.catalog",
+        "messageId": "3c7febc4-911c-4997-ba4e-a6431ec93d0b",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R05",
+        "queue": "g6.combos.from.catalog",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R06",
+        "queue": "g6.inventory.from.catalog",
+        "messageId": "bfceb33b-1961-47a9-9c9f-6ecc1ec61681",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R07",
+        "queue": "g6.pricing.from.catalog",
+        "messageId": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R08",
+        "queue": "g6.promotions.from.catalog",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R09",
+        "queue": "g6.taxonomy.from.catalog",
+        "messageId": "84960237-eab6-4b90-8a8e-e5213c7d6bca",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R10",
+        "queue": "g6.bulk.from.inventory",
+        "messageId": "0e932550-50d2-4b97-a6a6-ad4778ad4227",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R11",
+        "queue": "g6.catalog.from.inventory",
+        "messageId": "6ee083b0-a2d4-44d5-ad97-e2b4bc5e0113",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R12",
+        "queue": "g6.combos.from.inventory",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R13",
+        "queue": "g6.promotions.from.inventory",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R14",
+        "queue": "g6.bulk.from.pricing",
+        "messageId": "1878f8ca-5036-494f-822e-c32f4edb94db",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R15",
+        "queue": "g6.catalog.from.pricing",
+        "messageId": "5efa37b3-581d-529c-a552-c707cb53bfcd",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R16",
+        "queue": "g6.price-audit.from.pricing",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R17",
+        "queue": "g6.promotions.from.pricing",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "completedBefore": 1
+      },
+      {
+        "flow": "R18",
+        "queue": "g6.catalog.from.taxonomy",
+        "messageId": "e2f76b8b-ca34-4112-8e9d-9ca75eae1c4d",
+        "completedBefore": 1
+      },
+      {
+        "flow": "N01",
+        "queue": "g6.promotions.commands",
+        "messageId": "d35da2c1-c3a4-4e06-b6e8-485f87fb7c34",
+        "completedBefore": 1
+      }
+    ],
+    "before": {
+      "catalog.products": {
+        "count": 2,
+        "digest": "79d9fd162cd42b900b4e0e41d3148f84"
+      },
+      "catalog.variants": {
+        "count": 0,
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "catalog.activation_checks": {
+        "count": 4,
+        "digest": "37822672a3ec1f25ecab09e2509c111e"
+      },
+      "inventory.stock_balance": {
+        "count": 2,
+        "digest": "2fbf4d38e5bf532210933c93b820dc28"
+      },
+      "inventory.kardex": {
+        "count": 3,
+        "digest": "c95ff5361feb3eea646711fd4ba06001"
+      },
+      "inventory.reservations": {
+        "count": 2,
+        "digest": "0dd671f633779b7286d40ae245b9daa5"
+      },
+      "pricing.prices": {
+        "count": 4,
+        "digest": "3f612675e8825d20b63a066802397829"
+      },
+      "pricing.price_validities": {
+        "count": 4,
+        "digest": "4956a3e515bfff2cbc7c0aa635ca0e01"
+      },
+      "combos.component_projection": {
+        "count": 2,
+        "digest": "fe038cd6afd228dcb13443ffad8d1db9"
+      },
+      "price_audit.price_audit_log": {
+        "count": 4,
+        "digest": "635da7b872dd7b18fb7eca57fb5488d0"
+      },
+      "promotions.coupon_uses": {
+        "count": 1,
+        "digest": "4f7e7a57dc5a2b6a0bd2f32861697a8f"
+      },
+      "promotions.catalog_projection": {
+        "count": 2,
+        "digest": "52a96585fca9830e203199c1e60afccd"
+      }
+    },
+    "after": {
+      "catalog.products": {
+        "count": 2,
+        "digest": "79d9fd162cd42b900b4e0e41d3148f84"
+      },
+      "catalog.variants": {
+        "count": 0,
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "catalog.activation_checks": {
+        "count": 4,
+        "digest": "37822672a3ec1f25ecab09e2509c111e"
+      },
+      "inventory.stock_balance": {
+        "count": 2,
+        "digest": "2fbf4d38e5bf532210933c93b820dc28"
+      },
+      "inventory.kardex": {
+        "count": 3,
+        "digest": "c95ff5361feb3eea646711fd4ba06001"
+      },
+      "inventory.reservations": {
+        "count": 2,
+        "digest": "0dd671f633779b7286d40ae245b9daa5"
+      },
+      "pricing.prices": {
+        "count": 4,
+        "digest": "3f612675e8825d20b63a066802397829"
+      },
+      "pricing.price_validities": {
+        "count": 4,
+        "digest": "4956a3e515bfff2cbc7c0aa635ca0e01"
+      },
+      "combos.component_projection": {
+        "count": 2,
+        "digest": "fe038cd6afd228dcb13443ffad8d1db9"
+      },
+      "price_audit.price_audit_log": {
+        "count": 4,
+        "digest": "635da7b872dd7b18fb7eca57fb5488d0"
+      },
+      "promotions.coupon_uses": {
+        "count": 1,
+        "digest": "4f7e7a57dc5a2b6a0bd2f32861697a8f"
+      },
+      "promotions.catalog_projection": {
+        "count": 2,
+        "digest": "52a96585fca9830e203199c1e60afccd"
+      }
+    },
+    "recovery": {
+      "kind": "LAB_RECEIVE_503_NOT_CONSUMER_PROCESS_STOP",
+      "queue": "g6.pricing.from.bulk",
+      "queuedWhileUnavailable": true
+    },
+    "allSettled": true,
+    "unchanged": true
+  },
+  "processRecovery": {
+    "kind": "ACTUAL_LOCAL_PROCESS_KILL_AND_RESTART",
+    "stopped": {
+      "stopped": true,
+      "pid": 33476
+    },
+    "restarted": {
+      "ready": true,
+      "previousPid": 33476,
+      "pid": 28596
+    },
+    "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+    "queuedWhileStopped": true,
+    "settled": true,
+    "businessUnchanged": true,
+    "limitation": "Broker remains HTTP in-memory; this does not prove Azure persistence or lock expiry."
+  },
+  "negativeEvidence": {
+    "messageId": "7f24ce93-725b-43d4-a2db-820b6f67f3d3",
+    "rejected": true,
+    "unchanged": true
+  },
+  "broker": {
+    "transport": "HTTP_IN_MEMORY_NOT_AZURE",
+    "evidence": [
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:31:57.107Z",
+        "messageId": "e2f76b8b-ca34-4112-8e9d-9ca75eae1c4d",
+        "correlationId": "a45859c5-24f1-4518-a717-2a1f7e3d4dba",
+        "subject": "taxonomy.category.updated",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "version": 0,
+            "categoria_id": "d2ac575a-9330-46c5-a167-91bbe8b9f3bd"
+          },
+          "kind": "event",
+          "name": "taxonomy.category.updated",
+          "producer": "taxonomy-svc",
+          "message_id": "e2f76b8b-ca34-4112-8e9d-9ca75eae1c4d",
+          "occurred_at": "2026-11-27T15:31:56.990151+00:00",
+          "correlation_id": "a45859c5-24f1-4518-a717-2a1f7e3d4dba",
+          "schema_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:31:57.115Z",
+        "messageId": "e2f76b8b-ca34-4112-8e9d-9ca75eae1c4d",
+        "correlationId": "a45859c5-24f1-4518-a717-2a1f7e3d4dba",
+        "subject": "taxonomy.category.updated",
+        "contentType": "application/json",
+        "deliveryId": "8af55d09-29f0-43b3-a5fb-0cb8c5b290bb",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:31:57.144Z",
+        "messageId": "e2f76b8b-ca34-4112-8e9d-9ca75eae1c4d",
+        "correlationId": "a45859c5-24f1-4518-a717-2a1f7e3d4dba",
+        "subject": "taxonomy.category.updated",
+        "contentType": "application/json",
+        "deliveryId": "8af55d09-29f0-43b3-a5fb-0cb8c5b290bb"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.catalog.from.bulk",
+        "at": "2026-11-27T15:31:57.877Z",
+        "messageId": "ee3b2650-4267-5c1c-90b3-53936513611d",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "catalog.bulk.upsert.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "mode": "ALTA",
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "content_ref": {
+              "sha256": "5ff4d5eac68e2aad62414b7e3e3b4d52f3d65ae068b55b49f5633db25ada3abe",
+              "content_id": "0fb402cd-0ae5-58cf-864f-c41b63062fd3",
+              "byte_length": 537,
+              "content_type": "application/json"
+            },
+            "template_version": 2,
+            "batch_operation_id": "ddd02928-3ced-5937-8080-44cb7a3930c3"
+          },
+          "kind": "command",
+          "name": "catalog.bulk.upsert.requested",
+          "producer": "bulk-svc",
+          "message_id": "ee3b2650-4267-5c1c-90b3-53936513611d",
+          "occurred_at": "2026-11-27T15:31:57.124Z",
+          "causation_id": null,
+          "operation_id": "ddd02928-3ced-5937-8080-44cb7a3930c3",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 3
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.catalog.from.bulk",
+        "at": "2026-11-27T15:31:57.888Z",
+        "messageId": "ee3b2650-4267-5c1c-90b3-53936513611d",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "catalog.bulk.upsert.requested",
+        "contentType": "application/json",
+        "deliveryId": "3b1ac943-7ef0-47f3-a17e-ccd2e0bf0b83",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.catalog.from.bulk",
+        "at": "2026-11-27T15:31:58.152Z",
+        "messageId": "ee3b2650-4267-5c1c-90b3-53936513611d",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "catalog.bulk.upsert.requested",
+        "contentType": "application/json",
+        "deliveryId": "3b1ac943-7ef0-47f3-a17e-ccd2e0bf0b83"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.bulk.from.catalog",
+        "at": "2026-11-27T15:31:59.888Z",
+        "messageId": "3c7febc4-911c-4997-ba4e-a6431ec93d0b",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "catalog.bulk.upsert.completed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "results": [
+              {
+                "code": null,
+                "status": "COMPLETED",
+                "sku_base": "BULK-MSG-5DB691",
+                "retriable": false,
+                "attempt_id": "0dfc3303-9388-5d84-8a3a-c3c8604ed439",
+                "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+                "row_number": 2,
+                "effect_state": "APPLIED",
+                "attempt_number": 1,
+                "row_operation_id": "a693fa4d-c8f3-55dd-8666-8bca2da4d274"
+              }
+            ],
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "batch_operation_id": "ddd02928-3ced-5937-8080-44cb7a3930c3",
+            "command_attempt_id": null
+          },
+          "kind": "result",
+          "name": "catalog.bulk.upsert.completed",
+          "producer": "catalog-svc",
+          "message_id": "3c7febc4-911c-4997-ba4e-a6431ec93d0b",
+          "occurred_at": "2026-11-27T15:31:58.140Z",
+          "causation_id": "ee3b2650-4267-5c1c-90b3-53936513611d",
+          "operation_id": "ddd02928-3ced-5937-8080-44cb7a3930c3",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 2,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.pricing.from.catalog",
+        "at": "2026-11-27T15:31:59.920Z",
+        "messageId": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.product.initialization.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "moneda": "PEN",
+            "sku_base": "BULK-MSG-5DB691",
+            "channel_id": null,
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "motivo_cambio": "ALTA_PRODUCTO",
+            "precio_regular": 75
+          },
+          "kind": "command",
+          "name": "pricing.product.initialization.requested",
+          "producer": "catalog-svc",
+          "message_id": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+          "occurred_at": "2026-11-27T15:31:58.081Z",
+          "causation_id": null,
+          "operation_id": "b39a1f25-c3e4-4a83-bee7-92c36166d8b0",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.inventory.from.catalog",
+        "at": "2026-11-27T15:31:59.950Z",
+        "messageId": "bfceb33b-1961-47a9-9c9f-6ecc1ec61681",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.sku.initialization.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "variant_id": null,
+            "default_location_id": "00000000-0000-4000-8000-000000000101"
+          },
+          "kind": "command",
+          "name": "inventory.sku.initialization.requested",
+          "producer": "catalog-svc",
+          "message_id": "bfceb33b-1961-47a9-9c9f-6ecc1ec61681",
+          "occurred_at": "2026-11-27T15:31:58.093Z",
+          "causation_id": null,
+          "operation_id": "94bda0e3-64d7-4fbe-9518-f35b32b50314",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.bulk.from.catalog",
+        "at": "2026-11-27T15:31:59.979Z",
+        "messageId": "3c7febc4-911c-4997-ba4e-a6431ec93d0b",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "catalog.bulk.upsert.completed",
+        "contentType": "application/json",
+        "deliveryId": "f31c1648-a72d-4aee-aea0-da7c1ccdd1a2",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.inventory.from.catalog",
+        "at": "2026-11-27T15:31:59.979Z",
+        "messageId": "bfceb33b-1961-47a9-9c9f-6ecc1ec61681",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.sku.initialization.requested",
+        "contentType": "application/json",
+        "deliveryId": "dd951f1c-b50f-401f-80d8-8bf650b5cc61",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.inventory.from.catalog",
+        "at": "2026-11-27T15:32:00.047Z",
+        "messageId": "bfceb33b-1961-47a9-9c9f-6ecc1ec61681",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.sku.initialization.requested",
+        "contentType": "application/json",
+        "deliveryId": "dd951f1c-b50f-401f-80d8-8bf650b5cc61"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.bulk.from.catalog",
+        "at": "2026-11-27T15:32:00.065Z",
+        "messageId": "3c7febc4-911c-4997-ba4e-a6431ec93d0b",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "catalog.bulk.upsert.completed",
+        "contentType": "application/json",
+        "deliveryId": "f31c1648-a72d-4aee-aea0-da7c1ccdd1a2"
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.pricing.from.catalog",
+        "at": "2026-11-27T15:32:00.070Z",
+        "messageId": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.product.initialization.requested",
+        "contentType": "application/json",
+        "deliveryId": "4a03ebfb-8b42-4ef0-96f2-289db7f7c643",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.pricing.from.catalog",
+        "at": "2026-11-27T15:32:00.141Z",
+        "messageId": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.product.initialization.requested",
+        "contentType": "application/json",
+        "deliveryId": "4a03ebfb-8b42-4ef0-96f2-289db7f7c643"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.catalog.from.inventory",
+        "at": "2026-11-27T15:32:00.213Z",
+        "messageId": "6ee083b0-a2d4-44d5-ad97-e2b4bc5e0113",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.sku.initialization.completed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "code": null,
+            "status": "INITIALIZED",
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "variant_id": null,
+            "completed_at": "2026-11-27T15:32:00.021Z"
+          },
+          "kind": "result",
+          "name": "inventory.sku.initialization.completed",
+          "producer": "inventory-svc",
+          "message_id": "6ee083b0-a2d4-44d5-ad97-e2b4bc5e0113",
+          "occurred_at": "2026-11-27T15:32:00.028Z",
+          "causation_id": "bfceb33b-1961-47a9-9c9f-6ecc1ec61681",
+          "operation_id": "94bda0e3-64d7-4fbe-9518-f35b32b50314",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "inventory-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "operation_id": "94bda0e3-64d7-4fbe-9518-f35b32b50314",
+          "causation_id": "bfceb33b-1961-47a9-9c9f-6ecc1ec61681"
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.catalog.from.inventory",
+        "at": "2026-11-27T15:32:00.436Z",
+        "messageId": "6ee083b0-a2d4-44d5-ad97-e2b4bc5e0113",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.sku.initialization.completed",
+        "contentType": "application/json",
+        "deliveryId": "5d016abc-7dd3-4171-bb00-c5cb5b66ecd4",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.catalog.from.inventory",
+        "at": "2026-11-27T15:32:00.474Z",
+        "messageId": "6ee083b0-a2d4-44d5-ad97-e2b4bc5e0113",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.sku.initialization.completed",
+        "contentType": "application/json",
+        "deliveryId": "5d016abc-7dd3-4171-bb00-c5cb5b66ecd4"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.catalog.from.pricing",
+        "at": "2026-11-27T15:32:00.885Z",
+        "messageId": "5efa37b3-581d-529c-a552-c707cb53bfcd",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.product.initialization.completed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "5efa37b3-581d-529c-a552-c707cb53bfcd",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:32:00.122Z",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "causation_id": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+          "operation_id": "b39a1f25-c3e4-4a83-bee7-92c36166d8b0",
+          "producer": "pricing-svc",
+          "kind": "result",
+          "name": "pricing.product.initialization.completed",
+          "data": {
+            "code": null,
+            "status": "READY",
+            "sku_base": "BULK-MSG-5DB691",
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "vigencia_id": "c285dbd7-8cbb-4bea-86f5-598ff6df3dc0",
+            "completed_at": "2026-11-27T15:32:00.122Z",
+            "price_version": 1
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.catalog.from.pricing",
+        "at": "2026-11-27T15:32:00.942Z",
+        "messageId": "5efa37b3-581d-529c-a552-c707cb53bfcd",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.product.initialization.completed",
+        "contentType": "application/json",
+        "deliveryId": "61f6c0af-8f3a-44b4-9d7e-5b2fa99762e6",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.catalog.from.pricing",
+        "at": "2026-11-27T15:32:00.970Z",
+        "messageId": "5efa37b3-581d-529c-a552-c707cb53bfcd",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.product.initialization.completed",
+        "contentType": "application/json",
+        "deliveryId": "61f6c0af-8f3a-44b4-9d7e-5b2fa99762e6"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.inventory.from.bulk",
+        "at": "2026-11-27T15:32:01.901Z",
+        "messageId": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.bulk.stock.adjust.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "reason": "BULK_INITIAL_STOCK",
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "location_id": "00000000-0000-4000-8000-000000000101",
+            "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+            "requested_at": "2026-11-27T15:31:57.124Z",
+            "target_on_hand": 20,
+            "row_operation_id": "a693fa4d-c8f3-55dd-8666-8bca2da4d274",
+            "expected_stock_version": 0
+          },
+          "kind": "command",
+          "name": "inventory.bulk.stock.adjust.requested",
+          "producer": "bulk-svc",
+          "message_id": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20",
+          "occurred_at": "2026-11-27T15:31:57.124Z",
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.pricing.from.bulk",
+        "at": "2026-11-27T15:32:01.907Z",
+        "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "items": [
+              {
+                "sku": "BULK-MSG-5DB691",
+                "currency": "PEN",
+                "channel_id": null,
+                "row_number": 2,
+                "valid_from": null,
+                "valid_until": null,
+                "motivo_cambio": "BULK_PRICE_APPLY",
+                "precio_oferta": null,
+                "precio_regular": "75.00",
+                "row_operation_id": "a693fa4d-c8f3-55dd-8666-8bca2da4d274"
+              }
+            ],
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "batch_operation_id": "b010787c-e560-5354-8e37-b123aba30d52"
+          },
+          "kind": "command",
+          "name": "pricing.bulk.price.apply.requested",
+          "producer": "bulk-svc",
+          "message_id": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+          "occurred_at": "2026-11-27T15:31:57.124Z",
+          "operation_id": "5ff4734f-c97d-5ce6-a893-7ed730b42e91",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:01.922Z",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "900d5886-23f7-5628-a139-aa7661530e57",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:31:58.081Z",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "causation_id": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+          "operation_id": "b39a1f25-c3e4-4a83-bee7-92c36166d8b0",
+          "producer": "pricing-svc",
+          "kind": "event",
+          "name": "pricing.price.changed",
+          "data": {
+            "sku": null,
+            "actor": {
+              "ip": null,
+              "email": null,
+              "user_id": null
+            },
+            "reason": "ALTA_PRODUCTO",
+            "batch_id": null,
+            "currency": "PEN",
+            "new_price": "75.00",
+            "operation": "CREACION",
+            "channel_id": null,
+            "price_type": "REGULAR",
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "valid_from": "2026-11-27T15:31:58.081Z",
+            "target_type": "PRODUCTO",
+            "price_version": 1,
+            "previous_price": null
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:01.990Z",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "b374c6d7-d10b-410e-9440-c04bcf94bd0b",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:02.010Z",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "b374c6d7-d10b-410e-9440-c04bcf94bd0b"
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.inventory.from.bulk",
+        "at": "2026-11-27T15:32:02.022Z",
+        "messageId": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.bulk.stock.adjust.requested",
+        "contentType": "application/json",
+        "deliveryId": "c8a6adfd-d885-42b4-8010-384edf69fbe8",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.inventory.from.bulk",
+        "at": "2026-11-27T15:32:02.074Z",
+        "messageId": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.bulk.stock.adjust.requested",
+        "contentType": "application/json",
+        "deliveryId": "c8a6adfd-d885-42b4-8010-384edf69fbe8"
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.pricing.from.bulk",
+        "at": "2026-11-27T15:32:02.099Z",
+        "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.requested",
+        "contentType": "application/json",
+        "deliveryId": "cc8908c5-7a1c-4dd0-a720-940eb6a72168",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.pricing.from.bulk",
+        "at": "2026-11-27T15:32:02.171Z",
+        "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.requested",
+        "contentType": "application/json",
+        "deliveryId": "cc8908c5-7a1c-4dd0-a720-940eb6a72168"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.bulk.from.inventory",
+        "at": "2026-11-27T15:32:02.253Z",
+        "messageId": "0e932550-50d2-4b97-a6a6-ad4778ad4227",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.bulk.stock.adjust.completed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "location_id": "00000000-0000-4000-8000-000000000101",
+            "completed_at": "2026-11-27T15:32:02.064Z",
+            "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+            "stock_version": 1,
+            "applied_on_hand": 20,
+            "row_operation_id": "a693fa4d-c8f3-55dd-8666-8bca2da4d274"
+          },
+          "kind": "result",
+          "name": "inventory.bulk.stock.adjust.completed",
+          "producer": "inventory-svc",
+          "message_id": "0e932550-50d2-4b97-a6a6-ad4778ad4227",
+          "occurred_at": "2026-11-27T15:32:02.064Z",
+          "causation_id": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20",
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "inventory-svc",
+          "schema_version": 1,
+          "route_version": 1,
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "causation_id": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20"
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.bulk.from.inventory",
+        "at": "2026-11-27T15:32:02.286Z",
+        "messageId": "0e932550-50d2-4b97-a6a6-ad4778ad4227",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.bulk.stock.adjust.completed",
+        "contentType": "application/json",
+        "deliveryId": "cb130f6e-abc0-4ea2-9c14-96cf1b81c9a9",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.bulk.from.inventory",
+        "at": "2026-11-27T15:32:02.348Z",
+        "messageId": "0e932550-50d2-4b97-a6a6-ad4778ad4227",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.bulk.stock.adjust.completed",
+        "contentType": "application/json",
+        "deliveryId": "cb130f6e-abc0-4ea2-9c14-96cf1b81c9a9"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:02.952Z",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "900d5886-23f7-5628-a139-aa7661530e57",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:31:58.081Z",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "causation_id": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+          "operation_id": "b39a1f25-c3e4-4a83-bee7-92c36166d8b0",
+          "producer": "pricing-svc",
+          "kind": "event",
+          "name": "pricing.price.changed",
+          "data": {
+            "sku": null,
+            "actor": {
+              "ip": null,
+              "email": null,
+              "user_id": null
+            },
+            "reason": "ALTA_PRODUCTO",
+            "batch_id": null,
+            "currency": "PEN",
+            "new_price": "75.00",
+            "operation": "CREACION",
+            "channel_id": null,
+            "price_type": "REGULAR",
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "valid_from": "2026-11-27T15:31:58.081Z",
+            "target_type": "PRODUCTO",
+            "price_version": 1,
+            "previous_price": null
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:03.095Z",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "4297b887-95a7-4e95-aa22-8cec65b939f2",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:03.123Z",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "4297b887-95a7-4e95-aa22-8cec65b939f2"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.combos.from.inventory",
+        "at": "2026-11-27T15:32:03.282Z",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "estado": "DISPONIBLE",
+            "blocked": 0,
+            "on_hand": 20,
+            "reserved": 0,
+            "available": 20,
+            "updated_at": "2026-11-27T15:32:02.057Z",
+            "location_id": "00000000-0000-4000-8000-000000000101",
+            "stock_version": 1
+          },
+          "kind": "event",
+          "name": "inventory.stock.changed",
+          "producer": "inventory-svc",
+          "message_id": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+          "occurred_at": "2026-11-27T15:32:02.057Z",
+          "causation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "inventory-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "causation_id": "f372909f-15e3-523c-b030-2a56e4693f80"
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.combos.from.inventory",
+        "at": "2026-11-27T15:32:03.509Z",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "52d3e7b9-5081-48a8-8c18-e5760a9a4019",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.combos.from.inventory",
+        "at": "2026-11-27T15:32:03.530Z",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "52d3e7b9-5081-48a8-8c18-e5760a9a4019"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.bulk.from.pricing",
+        "at": "2026-11-27T15:32:04.012Z",
+        "messageId": "1878f8ca-5036-494f-822e-c32f4edb94db",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.completed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "1878f8ca-5036-494f-822e-c32f4edb94db",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:32:02.156Z",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "causation_id": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+          "operation_id": "5ff4734f-c97d-5ce6-a893-7ed730b42e91",
+          "producer": "pricing-svc",
+          "kind": "result",
+          "name": "pricing.bulk.price.apply.completed",
+          "data": {
+            "results": [
+              {
+                "sku": "BULK-MSG-5DB691",
+                "code": null,
+                "status": "COMPLETED",
+                "row_number": 2,
+                "price_version": 1,
+                "row_operation_id": "a693fa4d-c8f3-55dd-8666-8bca2da4d274"
+              }
+            ],
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "total_count": 1,
+            "applied_count": 1,
+            "batch_operation_id": "b010787c-e560-5354-8e37-b123aba30d52"
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.bulk.from.pricing",
+        "at": "2026-11-27T15:32:04.063Z",
+        "messageId": "1878f8ca-5036-494f-822e-c32f4edb94db",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.completed",
+        "contentType": "application/json",
+        "deliveryId": "0c369876-98ba-432b-bf76-f443e27b3546",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.bulk.from.pricing",
+        "at": "2026-11-27T15:32:04.125Z",
+        "messageId": "1878f8ca-5036-494f-822e-c32f4edb94db",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.completed",
+        "contentType": "application/json",
+        "deliveryId": "0c369876-98ba-432b-bf76-f443e27b3546"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.from.inventory",
+        "at": "2026-11-27T15:32:04.315Z",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "estado": "DISPONIBLE",
+            "blocked": 0,
+            "on_hand": 20,
+            "reserved": 0,
+            "available": 20,
+            "updated_at": "2026-11-27T15:32:02.057Z",
+            "location_id": "00000000-0000-4000-8000-000000000101",
+            "stock_version": 1
+          },
+          "kind": "event",
+          "name": "inventory.stock.changed",
+          "producer": "inventory-svc",
+          "message_id": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+          "occurred_at": "2026-11-27T15:32:02.057Z",
+          "causation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "inventory-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "causation_id": "f372909f-15e3-523c-b030-2a56e4693f80"
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.from.inventory",
+        "at": "2026-11-27T15:32:04.377Z",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "c8b8772a-6ea1-45ce-936e-1e1071137ee9",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.from.inventory",
+        "at": "2026-11-27T15:32:04.396Z",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "c8b8772a-6ea1-45ce-936e-1e1071137ee9"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:05.053Z",
+        "messageId": "40d2f7d1-4c03-4f10-936e-7d387eafae1e",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "40d2f7d1-4c03-4f10-936e-7d387eafae1e",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:32:02.153Z",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "causation_id": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+          "operation_id": "a693fa4d-c8f3-55dd-8666-8bca2da4d274",
+          "producer": "pricing-svc",
+          "kind": "event",
+          "name": "pricing.price.changed",
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "actor": {
+              "ip": null,
+              "email": null,
+              "user_id": null
+            },
+            "reason": "BULK_PRICE_APPLY",
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "currency": "PEN",
+            "new_price": "75.00",
+            "operation": "CREACION",
+            "channel_id": null,
+            "price_type": "REGULAR",
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "valid_from": "2026-11-27T15:32:02.142Z",
+            "target_type": "SKU",
+            "price_version": 1,
+            "previous_price": null
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:05.068Z",
+        "messageId": "40d2f7d1-4c03-4f10-936e-7d387eafae1e",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "75fff862-0689-4769-8c8c-2ae9c45e3c23",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:05.082Z",
+        "messageId": "40d2f7d1-4c03-4f10-936e-7d387eafae1e",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "75fff862-0689-4769-8c8c-2ae9c45e3c23"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.pricing.from.catalog",
+        "at": "2026-11-27T15:32:05.949Z",
+        "messageId": "13b35a55-a3aa-49fb-a830-70a7198307b8",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "pricing.product.initialization.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "moneda": "PEN",
+            "sku_base": "ADM-MSG-82A60B",
+            "channel_id": null,
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "motivo_cambio": "ALTA_PRODUCTO",
+            "precio_regular": 90
+          },
+          "kind": "command",
+          "name": "pricing.product.initialization.requested",
+          "producer": "catalog-svc",
+          "message_id": "13b35a55-a3aa-49fb-a830-70a7198307b8",
+          "occurred_at": "2026-11-27T15:32:04.975Z",
+          "causation_id": null,
+          "operation_id": "d4573675-8415-4da9-9b33-76591b309444",
+          "correlation_id": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.inventory.from.catalog",
+        "at": "2026-11-27T15:32:05.969Z",
+        "messageId": "61ac9190-283d-4f7e-a1d4-9781f1d76a7e",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "inventory.sku.initialization.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "ADM-MSG-82A60B",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "variant_id": null,
+            "default_location_id": "00000000-0000-4000-8000-000000000101"
+          },
+          "kind": "command",
+          "name": "inventory.sku.initialization.requested",
+          "producer": "catalog-svc",
+          "message_id": "61ac9190-283d-4f7e-a1d4-9781f1d76a7e",
+          "occurred_at": "2026-11-27T15:32:04.982Z",
+          "causation_id": null,
+          "operation_id": "65fd279b-15dd-4387-9db8-1d16b2f25ce7",
+          "correlation_id": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:06.095Z",
+        "messageId": "40d2f7d1-4c03-4f10-936e-7d387eafae1e",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "40d2f7d1-4c03-4f10-936e-7d387eafae1e",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:32:02.153Z",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "causation_id": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+          "operation_id": "a693fa4d-c8f3-55dd-8666-8bca2da4d274",
+          "producer": "pricing-svc",
+          "kind": "event",
+          "name": "pricing.price.changed",
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "actor": {
+              "ip": null,
+              "email": null,
+              "user_id": null
+            },
+            "reason": "BULK_PRICE_APPLY",
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "currency": "PEN",
+            "new_price": "75.00",
+            "operation": "CREACION",
+            "channel_id": null,
+            "price_type": "REGULAR",
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "valid_from": "2026-11-27T15:32:02.142Z",
+            "target_type": "SKU",
+            "price_version": 1,
+            "previous_price": null
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.inventory.from.catalog",
+        "at": "2026-11-27T15:32:06.134Z",
+        "messageId": "61ac9190-283d-4f7e-a1d4-9781f1d76a7e",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "inventory.sku.initialization.requested",
+        "contentType": "application/json",
+        "deliveryId": "0337c96b-b979-40cf-bc76-544811e18443",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:06.172Z",
+        "messageId": "40d2f7d1-4c03-4f10-936e-7d387eafae1e",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "adb09964-acd5-42cd-a684-338f2bf408f1",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.inventory.from.catalog",
+        "at": "2026-11-27T15:32:06.172Z",
+        "messageId": "61ac9190-283d-4f7e-a1d4-9781f1d76a7e",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "inventory.sku.initialization.requested",
+        "contentType": "application/json",
+        "deliveryId": "0337c96b-b979-40cf-bc76-544811e18443"
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.pricing.from.catalog",
+        "at": "2026-11-27T15:32:06.187Z",
+        "messageId": "13b35a55-a3aa-49fb-a830-70a7198307b8",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "pricing.product.initialization.requested",
+        "contentType": "application/json",
+        "deliveryId": "9b71079f-9241-46c3-ad2a-a99e127a1840",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:06.191Z",
+        "messageId": "40d2f7d1-4c03-4f10-936e-7d387eafae1e",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "adb09964-acd5-42cd-a684-338f2bf408f1"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.pricing.from.catalog",
+        "at": "2026-11-27T15:32:06.231Z",
+        "messageId": "13b35a55-a3aa-49fb-a830-70a7198307b8",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "pricing.product.initialization.requested",
+        "contentType": "application/json",
+        "deliveryId": "9b71079f-9241-46c3-ad2a-a99e127a1840"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.catalog.from.inventory",
+        "at": "2026-11-27T15:32:06.375Z",
+        "messageId": "33cd0e2f-69e4-48a9-b08c-d56c8b62407b",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "inventory.sku.initialization.completed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "ADM-MSG-82A60B",
+            "code": null,
+            "status": "INITIALIZED",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "variant_id": null,
+            "completed_at": "2026-11-27T15:32:06.156Z"
+          },
+          "kind": "result",
+          "name": "inventory.sku.initialization.completed",
+          "producer": "inventory-svc",
+          "message_id": "33cd0e2f-69e4-48a9-b08c-d56c8b62407b",
+          "occurred_at": "2026-11-27T15:32:06.160Z",
+          "causation_id": "61ac9190-283d-4f7e-a1d4-9781f1d76a7e",
+          "operation_id": "65fd279b-15dd-4387-9db8-1d16b2f25ce7",
+          "correlation_id": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "inventory-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "operation_id": "65fd279b-15dd-4387-9db8-1d16b2f25ce7",
+          "causation_id": "61ac9190-283d-4f7e-a1d4-9781f1d76a7e"
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.catalog.from.inventory",
+        "at": "2026-11-27T15:32:06.572Z",
+        "messageId": "33cd0e2f-69e4-48a9-b08c-d56c8b62407b",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "inventory.sku.initialization.completed",
+        "contentType": "application/json",
+        "deliveryId": "659c35cd-a7c1-49a5-94b8-93f39bd2f01b",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.catalog.from.inventory",
+        "at": "2026-11-27T15:32:06.603Z",
+        "messageId": "33cd0e2f-69e4-48a9-b08c-d56c8b62407b",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "inventory.sku.initialization.completed",
+        "contentType": "application/json",
+        "deliveryId": "659c35cd-a7c1-49a5-94b8-93f39bd2f01b"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.catalog.from.pricing",
+        "at": "2026-11-27T15:32:07.126Z",
+        "messageId": "4606d87f-7af5-5218-aec7-c0e6da07574d",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "pricing.product.initialization.completed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "4606d87f-7af5-5218-aec7-c0e6da07574d",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:32:06.219Z",
+          "correlation_id": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+          "causation_id": "13b35a55-a3aa-49fb-a830-70a7198307b8",
+          "operation_id": "d4573675-8415-4da9-9b33-76591b309444",
+          "producer": "pricing-svc",
+          "kind": "result",
+          "name": "pricing.product.initialization.completed",
+          "data": {
+            "code": null,
+            "status": "READY",
+            "sku_base": "ADM-MSG-82A60B",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "vigencia_id": "c2da6be7-535c-4a1f-9ea7-7ab748196315",
+            "completed_at": "2026-11-27T15:32:06.219Z",
+            "price_version": 1
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.catalog.from.pricing",
+        "at": "2026-11-27T15:32:07.326Z",
+        "messageId": "4606d87f-7af5-5218-aec7-c0e6da07574d",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "pricing.product.initialization.completed",
+        "contentType": "application/json",
+        "deliveryId": "d0d1cc52-be23-468e-9997-1e598eea3cea",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.catalog.from.pricing",
+        "at": "2026-11-27T15:32:07.356Z",
+        "messageId": "4606d87f-7af5-5218-aec7-c0e6da07574d",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "pricing.product.initialization.completed",
+        "contentType": "application/json",
+        "deliveryId": "d0d1cc52-be23-468e-9997-1e598eea3cea"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:08.154Z",
+        "messageId": "52613a89-45d0-5764-a586-ef1f97f93be0",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "52613a89-45d0-5764-a586-ef1f97f93be0",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:32:04.975Z",
+          "correlation_id": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+          "causation_id": "13b35a55-a3aa-49fb-a830-70a7198307b8",
+          "operation_id": "d4573675-8415-4da9-9b33-76591b309444",
+          "producer": "pricing-svc",
+          "kind": "event",
+          "name": "pricing.price.changed",
+          "data": {
+            "sku": null,
+            "actor": {
+              "ip": null,
+              "email": null,
+              "user_id": null
+            },
+            "reason": "ALTA_PRODUCTO",
+            "batch_id": null,
+            "currency": "PEN",
+            "new_price": "90.00",
+            "operation": "CREACION",
+            "channel_id": null,
+            "price_type": "REGULAR",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "valid_from": "2026-11-27T15:32:04.975Z",
+            "target_type": "PRODUCTO",
+            "price_version": 1,
+            "previous_price": null
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:08.399Z",
+        "messageId": "52613a89-45d0-5764-a586-ef1f97f93be0",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "bab561a7-405f-43a3-b980-184c0e42c3ca",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:08.419Z",
+        "messageId": "52613a89-45d0-5764-a586-ef1f97f93be0",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "bab561a7-405f-43a3-b980-184c0e42c3ca"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.combos.from.inventory",
+        "at": "2026-11-27T15:32:08.420Z",
+        "messageId": "d1bab698-b31f-4a81-afe7-3463cd406c55",
+        "correlationId": "bfa4df2d-7f6c-4fc6-b7ac-85b3129bc053",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "ADM-MSG-82A60B",
+            "estado": "DISPONIBLE",
+            "blocked": 0,
+            "on_hand": 20,
+            "reserved": 1,
+            "available": 19,
+            "updated_at": "2026-11-27T15:32:08.285Z",
+            "location_id": "00000000-0000-4000-8000-000000000101",
+            "stock_version": 1
+          },
+          "kind": "event",
+          "name": "inventory.stock.changed",
+          "producer": "inventory-svc",
+          "message_id": "d1bab698-b31f-4a81-afe7-3463cd406c55",
+          "occurred_at": "2026-11-27T15:32:08.285Z",
+          "causation_id": "6f35a5a1-6bc9-4650-8142-9bf05f914c88",
+          "operation_id": "6f35a5a1-6bc9-4650-8142-9bf05f914c88",
+          "correlation_id": "bfa4df2d-7f6c-4fc6-b7ac-85b3129bc053",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "inventory-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "operation_id": "6f35a5a1-6bc9-4650-8142-9bf05f914c88",
+          "causation_id": "6f35a5a1-6bc9-4650-8142-9bf05f914c88"
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:32:08.504Z",
+        "messageId": "c27872c2-184b-40c1-840e-8c991f5f76d1",
+        "correlationId": "7d94b828-fc76-4703-9844-86d4159424ae",
+        "subject": "taxonomy.category.updated",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "version": 0,
+            "categoria_id": "87087d87-935c-485e-9ed6-9622a7ae0db6"
+          },
+          "kind": "event",
+          "name": "taxonomy.category.updated",
+          "producer": "taxonomy-svc",
+          "message_id": "c27872c2-184b-40c1-840e-8c991f5f76d1",
+          "occurred_at": "2026-11-27T15:32:08.438427+00:00",
+          "correlation_id": "7d94b828-fc76-4703-9844-86d4159424ae",
+          "schema_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:32:08.618Z",
+        "messageId": "c27872c2-184b-40c1-840e-8c991f5f76d1",
+        "correlationId": "7d94b828-fc76-4703-9844-86d4159424ae",
+        "subject": "taxonomy.category.updated",
+        "contentType": "application/json",
+        "deliveryId": "98971b64-4e0a-48d4-ae37-134ff17a318b",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.combos.from.inventory",
+        "at": "2026-11-27T15:32:08.618Z",
+        "messageId": "d1bab698-b31f-4a81-afe7-3463cd406c55",
+        "correlationId": "bfa4df2d-7f6c-4fc6-b7ac-85b3129bc053",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "4e8af1ae-257c-4f6b-a241-2f6944dbaee7",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.combos.from.inventory",
+        "at": "2026-11-27T15:32:08.631Z",
+        "messageId": "d1bab698-b31f-4a81-afe7-3463cd406c55",
+        "correlationId": "bfa4df2d-7f6c-4fc6-b7ac-85b3129bc053",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "4e8af1ae-257c-4f6b-a241-2f6944dbaee7"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:32:08.639Z",
+        "messageId": "c27872c2-184b-40c1-840e-8c991f5f76d1",
+        "correlationId": "7d94b828-fc76-4703-9844-86d4159424ae",
+        "subject": "taxonomy.category.updated",
+        "contentType": "application/json",
+        "deliveryId": "98971b64-4e0a-48d4-ae37-134ff17a318b"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:09.191Z",
+        "messageId": "52613a89-45d0-5764-a586-ef1f97f93be0",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "52613a89-45d0-5764-a586-ef1f97f93be0",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:32:04.975Z",
+          "correlation_id": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+          "causation_id": "13b35a55-a3aa-49fb-a830-70a7198307b8",
+          "operation_id": "d4573675-8415-4da9-9b33-76591b309444",
+          "producer": "pricing-svc",
+          "kind": "event",
+          "name": "pricing.price.changed",
+          "data": {
+            "sku": null,
+            "actor": {
+              "ip": null,
+              "email": null,
+              "user_id": null
+            },
+            "reason": "ALTA_PRODUCTO",
+            "batch_id": null,
+            "currency": "PEN",
+            "new_price": "90.00",
+            "operation": "CREACION",
+            "channel_id": null,
+            "price_type": "REGULAR",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "valid_from": "2026-11-27T15:32:04.975Z",
+            "target_type": "PRODUCTO",
+            "price_version": 1,
+            "previous_price": null
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:09.254Z",
+        "messageId": "52613a89-45d0-5764-a586-ef1f97f93be0",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "3f7e8c8a-0cb4-4a9d-8756-ac3fe05fdaa4",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:09.273Z",
+        "messageId": "52613a89-45d0-5764-a586-ef1f97f93be0",
+        "correlationId": "e26523c5-f2b8-4c55-be32-1781f642ea1b",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "3f7e8c8a-0cb4-4a9d-8756-ac3fe05fdaa4"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.from.inventory",
+        "at": "2026-11-27T15:32:09.463Z",
+        "messageId": "d1bab698-b31f-4a81-afe7-3463cd406c55",
+        "correlationId": "bfa4df2d-7f6c-4fc6-b7ac-85b3129bc053",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "ADM-MSG-82A60B",
+            "estado": "DISPONIBLE",
+            "blocked": 0,
+            "on_hand": 20,
+            "reserved": 1,
+            "available": 19,
+            "updated_at": "2026-11-27T15:32:08.285Z",
+            "location_id": "00000000-0000-4000-8000-000000000101",
+            "stock_version": 1
+          },
+          "kind": "event",
+          "name": "inventory.stock.changed",
+          "producer": "inventory-svc",
+          "message_id": "d1bab698-b31f-4a81-afe7-3463cd406c55",
+          "occurred_at": "2026-11-27T15:32:08.285Z",
+          "causation_id": "6f35a5a1-6bc9-4650-8142-9bf05f914c88",
+          "operation_id": "6f35a5a1-6bc9-4650-8142-9bf05f914c88",
+          "correlation_id": "bfa4df2d-7f6c-4fc6-b7ac-85b3129bc053",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "inventory-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "operation_id": "6f35a5a1-6bc9-4650-8142-9bf05f914c88",
+          "causation_id": "6f35a5a1-6bc9-4650-8142-9bf05f914c88"
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.from.inventory",
+        "at": "2026-11-27T15:32:09.509Z",
+        "messageId": "d1bab698-b31f-4a81-afe7-3463cd406c55",
+        "correlationId": "bfa4df2d-7f6c-4fc6-b7ac-85b3129bc053",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "1d8da0dc-021b-441d-80f4-322433d4a594",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.from.inventory",
+        "at": "2026-11-27T15:32:09.533Z",
+        "messageId": "d1bab698-b31f-4a81-afe7-3463cd406c55",
+        "correlationId": "bfa4df2d-7f6c-4fc6-b7ac-85b3129bc053",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "1d8da0dc-021b-441d-80f4-322433d4a594"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:32:09.558Z",
+        "messageId": "2efbb96f-27d4-4b6a-a223-69fa385e1917",
+        "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+        "subject": "taxonomy.master.deactivation.check.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "version": 0,
+            "entity_id": "87087d87-935c-485e-9ed6-9622a7ae0db6",
+            "entity_type": "CATEGORY"
+          },
+          "kind": "command",
+          "name": "taxonomy.master.deactivation.check.requested",
+          "producer": "taxonomy-svc",
+          "message_id": "2efbb96f-27d4-4b6a-a223-69fa385e1917",
+          "occurred_at": "2026-11-27T15:32:08.512023+00:00",
+          "operation_id": "dd97be19-4215-4d1f-9b84-b623a90d6711",
+          "correlation_id": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+          "schema_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:32:09.632Z",
+        "messageId": "2efbb96f-27d4-4b6a-a223-69fa385e1917",
+        "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+        "subject": "taxonomy.master.deactivation.check.requested",
+        "contentType": "application/json",
+        "deliveryId": "1974aaf8-666d-40cf-89c7-81fdc8278012",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:32:09.680Z",
+        "messageId": "2efbb96f-27d4-4b6a-a223-69fa385e1917",
+        "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+        "subject": "taxonomy.master.deactivation.check.requested",
+        "contentType": "application/json",
+        "deliveryId": "1974aaf8-666d-40cf-89c7-81fdc8278012"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.pricing.from.catalog",
+        "at": "2026-11-27T15:32:09.964Z",
+        "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.sku.deactivated",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "ADM-MSG-82A60B",
+            "changed_at": "2026-11-27T15:32:08.321Z",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "sku_version": 2
+          },
+          "kind": "event",
+          "name": "catalog.sku.deactivated",
+          "producer": "catalog-svc",
+          "message_id": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+          "occurred_at": "2026-11-27T15:32:08.359Z",
+          "causation_id": null,
+          "operation_id": "01998d71-1cb5-49ab-acfd-e123fb680ad1",
+          "correlation_id": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.inventory.from.catalog",
+        "at": "2026-11-27T15:32:09.986Z",
+        "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.sku.deactivated",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "ADM-MSG-82A60B",
+            "changed_at": "2026-11-27T15:32:08.321Z",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "sku_version": 2
+          },
+          "kind": "event",
+          "name": "catalog.sku.deactivated",
+          "producer": "catalog-svc",
+          "message_id": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+          "occurred_at": "2026-11-27T15:32:08.359Z",
+          "causation_id": null,
+          "operation_id": "01998d71-1cb5-49ab-acfd-e123fb680ad1",
+          "correlation_id": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.taxonomy.from.catalog",
+        "at": "2026-11-27T15:32:10.009Z",
+        "messageId": "84960237-eab6-4b90-8a8e-e5213c7d6bca",
+        "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+        "subject": "catalog.master.deactivation.checked",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "result": "CLEAR",
+            "version": 0,
+            "entity_id": "87087d87-935c-485e-9ed6-9622a7ae0db6",
+            "entity_type": "CATEGORY"
+          },
+          "kind": "result",
+          "name": "catalog.master.deactivation.checked",
+          "producer": "catalog-svc",
+          "message_id": "84960237-eab6-4b90-8a8e-e5213c7d6bca",
+          "occurred_at": "2026-11-27T15:32:09.661Z",
+          "causation_id": "2efbb96f-27d4-4b6a-a223-69fa385e1917",
+          "operation_id": "dd97be19-4215-4d1f-9b84-b623a90d6711",
+          "correlation_id": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.from.catalog",
+        "at": "2026-11-27T15:32:10.031Z",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "changed_at": "2026-11-27T15:32:08.321Z",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "product_version": 2
+          },
+          "kind": "event",
+          "name": "catalog.product.deactivated",
+          "producer": "catalog-svc",
+          "message_id": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+          "occurred_at": "2026-11-27T15:32:08.367Z",
+          "causation_id": null,
+          "operation_id": "094eec7f-8b42-4c3d-ba78-48b2ac50419e",
+          "correlation_id": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.taxonomy.from.catalog",
+        "at": "2026-11-27T15:32:10.035Z",
+        "messageId": "84960237-eab6-4b90-8a8e-e5213c7d6bca",
+        "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+        "subject": "catalog.master.deactivation.checked",
+        "contentType": "application/json",
+        "deliveryId": "26fa419e-14e2-4b8b-a07b-8018b803eecf",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.pricing.from.catalog",
+        "at": "2026-11-27T15:32:10.035Z",
+        "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.sku.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "9ee64cfa-9c79-43bf-baa4-a656de724a08",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.from.catalog",
+        "at": "2026-11-27T15:32:10.036Z",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "cfb9945c-754d-4c99-b097-85bb74e79af4",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.combos.from.catalog",
+        "at": "2026-11-27T15:32:10.052Z",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "changed_at": "2026-11-27T15:32:08.321Z",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "product_version": 2
+          },
+          "kind": "event",
+          "name": "catalog.product.deactivated",
+          "producer": "catalog-svc",
+          "message_id": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+          "occurred_at": "2026-11-27T15:32:08.367Z",
+          "causation_id": null,
+          "operation_id": "094eec7f-8b42-4c3d-ba78-48b2ac50419e",
+          "correlation_id": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.from.catalog",
+        "at": "2026-11-27T15:32:10.056Z",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "cfb9945c-754d-4c99-b097-85bb74e79af4"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.pricing.from.catalog",
+        "at": "2026-11-27T15:32:10.062Z",
+        "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.sku.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "9ee64cfa-9c79-43bf-baa4-a656de724a08"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.taxonomy.from.catalog",
+        "at": "2026-11-27T15:32:10.071Z",
+        "messageId": "84960237-eab6-4b90-8a8e-e5213c7d6bca",
+        "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+        "subject": "catalog.master.deactivation.checked",
+        "contentType": "application/json",
+        "deliveryId": "26fa419e-14e2-4b8b-a07b-8018b803eecf"
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.combos.from.catalog",
+        "at": "2026-11-27T15:32:10.146Z",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "914aebc2-196d-472d-9abf-1b211e8e742d",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.combos.from.catalog",
+        "at": "2026-11-27T15:32:10.186Z",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "914aebc2-196d-472d-9abf-1b211e8e742d"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:10.221Z",
+        "messageId": "8c7f0b22-9238-4b20-b23b-02aec4544106",
+        "correlationId": "f46078ac-e439-4f2a-ba6b-1c9d031beb29",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "8c7f0b22-9238-4b20-b23b-02aec4544106",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:32:08.124Z",
+          "correlation_id": "f46078ac-e439-4f2a-ba6b-1c9d031beb29",
+          "causation_id": null,
+          "operation_id": "36b949c5-c250-42ba-96da-29f1cdd32c22",
+          "producer": "pricing-svc",
+          "kind": "event",
+          "name": "pricing.price.changed",
+          "data": {
+            "sku": "ADM-MSG-82A60B",
+            "actor": {
+              "ip": null,
+              "email": null,
+              "user_id": "f80249b2-19d0-4d6d-a06d-a4e8fbe8f547"
+            },
+            "reason": "MSG_TEST_R16_R17",
+            "batch_id": null,
+            "currency": "PEN",
+            "new_price": "95.00",
+            "operation": "CREACION",
+            "channel_id": "MARKETPLACE",
+            "price_type": "REGULAR",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "valid_from": "2026-11-27T15:32:08.124Z",
+            "target_type": "SKU",
+            "price_version": 1,
+            "previous_price": null
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.inventory.from.catalog",
+        "at": "2026-11-27T15:32:10.239Z",
+        "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.sku.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "a6e4bcf0-1aa2-47ff-a843-ab321961ceb8",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.inventory.from.catalog",
+        "at": "2026-11-27T15:32:10.262Z",
+        "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.sku.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "a6e4bcf0-1aa2-47ff-a843-ab321961ceb8"
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:10.436Z",
+        "messageId": "8c7f0b22-9238-4b20-b23b-02aec4544106",
+        "correlationId": "f46078ac-e439-4f2a-ba6b-1c9d031beb29",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "eb26a375-7d71-4f30-b72e-f5095f6533ea",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:10.447Z",
+        "messageId": "8c7f0b22-9238-4b20-b23b-02aec4544106",
+        "correlationId": "f46078ac-e439-4f2a-ba6b-1c9d031beb29",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "eb26a375-7d71-4f30-b72e-f5095f6533ea"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.combos.from.inventory",
+        "at": "2026-11-27T15:32:10.495Z",
+        "messageId": "03b70094-fd58-468b-bdfc-4812a7113ec1",
+        "correlationId": "bc407993-bcdf-4414-8e88-3e0b76a43362",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "estado": "DISPONIBLE",
+            "blocked": 0,
+            "on_hand": 20,
+            "reserved": 1,
+            "available": 19,
+            "updated_at": "2026-11-27T15:32:10.373Z",
+            "location_id": "00000000-0000-4000-8000-000000000101",
+            "stock_version": 2
+          },
+          "kind": "event",
+          "name": "inventory.stock.changed",
+          "producer": "inventory-svc",
+          "message_id": "03b70094-fd58-468b-bdfc-4812a7113ec1",
+          "occurred_at": "2026-11-27T15:32:10.373Z",
+          "causation_id": "80685189-e5b9-4e16-b3bb-c2bb39d360d3",
+          "operation_id": "80685189-e5b9-4e16-b3bb-c2bb39d360d3",
+          "correlation_id": "bc407993-bcdf-4414-8e88-3e0b76a43362",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "inventory-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "operation_id": "80685189-e5b9-4e16-b3bb-c2bb39d360d3",
+          "causation_id": "80685189-e5b9-4e16-b3bb-c2bb39d360d3"
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:32:10.603Z",
+        "messageId": "045b2c38-9b16-44c2-869a-d32adb045eb0",
+        "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+        "subject": "taxonomy.master.deactivated",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "version": 0,
+            "entity_id": "87087d87-935c-485e-9ed6-9622a7ae0db6",
+            "entity_type": "CATEGORY"
+          },
+          "kind": "event",
+          "name": "taxonomy.master.deactivated",
+          "producer": "taxonomy-svc",
+          "message_id": "045b2c38-9b16-44c2-869a-d32adb045eb0",
+          "occurred_at": "2026-11-27T15:32:10.062771+00:00",
+          "operation_id": "dd97be19-4215-4d1f-9b84-b623a90d6711",
+          "correlation_id": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+          "schema_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:32:10.667Z",
+        "messageId": "045b2c38-9b16-44c2-869a-d32adb045eb0",
+        "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+        "subject": "taxonomy.master.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "6c0c6680-1583-45e1-9fca-e31aa2eb1149",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.combos.from.inventory",
+        "at": "2026-11-27T15:32:10.667Z",
+        "messageId": "03b70094-fd58-468b-bdfc-4812a7113ec1",
+        "correlationId": "bc407993-bcdf-4414-8e88-3e0b76a43362",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "0fcceabb-84e1-4497-b7f4-a4c943093686",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.combos.from.inventory",
+        "at": "2026-11-27T15:32:10.680Z",
+        "messageId": "03b70094-fd58-468b-bdfc-4812a7113ec1",
+        "correlationId": "bc407993-bcdf-4414-8e88-3e0b76a43362",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "0fcceabb-84e1-4497-b7f4-a4c943093686"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:32:10.696Z",
+        "messageId": "045b2c38-9b16-44c2-869a-d32adb045eb0",
+        "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+        "subject": "taxonomy.master.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "6c0c6680-1583-45e1-9fca-e31aa2eb1149"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:11.265Z",
+        "messageId": "8c7f0b22-9238-4b20-b23b-02aec4544106",
+        "correlationId": "f46078ac-e439-4f2a-ba6b-1c9d031beb29",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "8c7f0b22-9238-4b20-b23b-02aec4544106",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:32:08.124Z",
+          "correlation_id": "f46078ac-e439-4f2a-ba6b-1c9d031beb29",
+          "causation_id": null,
+          "operation_id": "36b949c5-c250-42ba-96da-29f1cdd32c22",
+          "producer": "pricing-svc",
+          "kind": "event",
+          "name": "pricing.price.changed",
+          "data": {
+            "sku": "ADM-MSG-82A60B",
+            "actor": {
+              "ip": null,
+              "email": null,
+              "user_id": "f80249b2-19d0-4d6d-a06d-a4e8fbe8f547"
+            },
+            "reason": "MSG_TEST_R16_R17",
+            "batch_id": null,
+            "currency": "PEN",
+            "new_price": "95.00",
+            "operation": "CREACION",
+            "channel_id": "MARKETPLACE",
+            "price_type": "REGULAR",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "valid_from": "2026-11-27T15:32:08.124Z",
+            "target_type": "SKU",
+            "price_version": 1,
+            "previous_price": null
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:11.311Z",
+        "messageId": "8c7f0b22-9238-4b20-b23b-02aec4544106",
+        "correlationId": "f46078ac-e439-4f2a-ba6b-1c9d031beb29",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "ebe37709-9fa5-4225-90a1-089d17310c71",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:11.341Z",
+        "messageId": "8c7f0b22-9238-4b20-b23b-02aec4544106",
+        "correlationId": "f46078ac-e439-4f2a-ba6b-1c9d031beb29",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "ebe37709-9fa5-4225-90a1-089d17310c71"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.commands",
+        "at": "2026-11-27T15:32:11.356Z",
+        "messageId": "d35da2c1-c3a4-4e06-b6e8-485f87fb7c34",
+        "correlationId": "b41a08ea-251c-4373-bec1-67f5b55e6484",
+        "subject": "promotions.coupon.consumption.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "causation_id": "6ad853a2-8ea7-49b9-9fcc-46a7df27a710",
+          "correlation_id": "b41a08ea-251c-4373-bec1-67f5b55e6484",
+          "data": {
+            "channel_id": "MARKETPLACE",
+            "commercial_snapshot_ref": "d4287099-3ea9-4619-8aa1-2987e738417f",
+            "coupon_code": "CPNM637D3",
+            "customer_ref": "aa7afb14-0fda-4241-a258-7222e0ee0be8",
+            "effective_at": "2026-11-27T15:32:10.389Z",
+            "order_id": "d4287099-3ea9-4619-8aa1-2987e738417f",
+            "reservation_id": "4dd3b1a6-7e65-4e71-b7a7-e07ab23872b9"
+          },
+          "kind": "command",
+          "message_id": "d35da2c1-c3a4-4e06-b6e8-485f87fb7c34",
+          "name": "promotions.coupon.consumption.requested",
+          "occurred_at": "2026-11-27T15:32:10.403Z",
+          "operation_id": "6ad853a2-8ea7-49b9-9fcc-46a7df27a710",
+          "producer": "promotions-svc",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "promotions-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "admitted_client": "modulo-ventas"
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.commands",
+        "at": "2026-11-27T15:32:11.457Z",
+        "messageId": "d35da2c1-c3a4-4e06-b6e8-485f87fb7c34",
+        "correlationId": "b41a08ea-251c-4373-bec1-67f5b55e6484",
+        "subject": "promotions.coupon.consumption.requested",
+        "contentType": "application/json",
+        "deliveryId": "f1fc8970-271c-449d-bd33-aa1296bee668",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.from.inventory",
+        "at": "2026-11-27T15:32:11.531Z",
+        "messageId": "03b70094-fd58-468b-bdfc-4812a7113ec1",
+        "correlationId": "bc407993-bcdf-4414-8e88-3e0b76a43362",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "estado": "DISPONIBLE",
+            "blocked": 0,
+            "on_hand": 20,
+            "reserved": 1,
+            "available": 19,
+            "updated_at": "2026-11-27T15:32:10.373Z",
+            "location_id": "00000000-0000-4000-8000-000000000101",
+            "stock_version": 2
+          },
+          "kind": "event",
+          "name": "inventory.stock.changed",
+          "producer": "inventory-svc",
+          "message_id": "03b70094-fd58-468b-bdfc-4812a7113ec1",
+          "occurred_at": "2026-11-27T15:32:10.373Z",
+          "causation_id": "80685189-e5b9-4e16-b3bb-c2bb39d360d3",
+          "operation_id": "80685189-e5b9-4e16-b3bb-c2bb39d360d3",
+          "correlation_id": "bc407993-bcdf-4414-8e88-3e0b76a43362",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "inventory-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "operation_id": "80685189-e5b9-4e16-b3bb-c2bb39d360d3",
+          "causation_id": "80685189-e5b9-4e16-b3bb-c2bb39d360d3"
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.from.inventory",
+        "at": "2026-11-27T15:32:11.561Z",
+        "messageId": "03b70094-fd58-468b-bdfc-4812a7113ec1",
+        "correlationId": "bc407993-bcdf-4414-8e88-3e0b76a43362",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "12ad14ff-9340-40f4-81c3-cd0512f22ed7",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.from.inventory",
+        "at": "2026-11-27T15:32:11.577Z",
+        "messageId": "03b70094-fd58-468b-bdfc-4812a7113ec1",
+        "correlationId": "bc407993-bcdf-4414-8e88-3e0b76a43362",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "12ad14ff-9340-40f4-81c3-cd0512f22ed7"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.commands",
+        "at": "2026-11-27T15:32:11.634Z",
+        "messageId": "d35da2c1-c3a4-4e06-b6e8-485f87fb7c34",
+        "correlationId": "b41a08ea-251c-4373-bec1-67f5b55e6484",
+        "subject": "promotions.coupon.consumption.requested",
+        "contentType": "application/json",
+        "deliveryId": "f1fc8970-271c-449d-bd33-aa1296bee668"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.from.catalog",
+        "at": "2026-11-27T15:32:11.998Z",
+        "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.sku.deactivated",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "ADM-MSG-82A60B",
+            "changed_at": "2026-11-27T15:32:08.321Z",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "sku_version": 2
+          },
+          "kind": "event",
+          "name": "catalog.sku.deactivated",
+          "producer": "catalog-svc",
+          "message_id": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+          "occurred_at": "2026-11-27T15:32:08.359Z",
+          "causation_id": null,
+          "operation_id": "01998d71-1cb5-49ab-acfd-e123fb680ad1",
+          "correlation_id": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.combos.from.catalog",
+        "at": "2026-11-27T15:32:12.019Z",
+        "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.sku.deactivated",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "ADM-MSG-82A60B",
+            "changed_at": "2026-11-27T15:32:08.321Z",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "sku_version": 2
+          },
+          "kind": "event",
+          "name": "catalog.sku.deactivated",
+          "producer": "catalog-svc",
+          "message_id": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+          "occurred_at": "2026-11-27T15:32:08.359Z",
+          "causation_id": null,
+          "operation_id": "01998d71-1cb5-49ab-acfd-e123fb680ad1",
+          "correlation_id": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.from.catalog",
+        "at": "2026-11-27T15:32:12.075Z",
+        "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.sku.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "812b583a-515f-4a19-b623-2361e01aeaad",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.from.catalog",
+        "at": "2026-11-27T15:32:12.097Z",
+        "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.sku.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "812b583a-515f-4a19-b623-2361e01aeaad"
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.combos.from.catalog",
+        "at": "2026-11-27T15:32:12.202Z",
+        "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.sku.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "1ee09367-a056-4f08-942f-37326f482c87",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.combos.from.catalog",
+        "at": "2026-11-27T15:32:12.218Z",
+        "messageId": "b06ac7d3-7b5a-4d71-9242-bbedf8ef2eee",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.sku.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "1ee09367-a056-4f08-942f-37326f482c87"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.commands",
+        "at": "2026-11-27T15:32:12.629Z",
+        "messageId": "00d2f7a3-d679-46d4-a31c-30f4cbd47a24",
+        "correlationId": "39a70e8a-8dd0-4aa7-80a3-4695072ade31",
+        "subject": "promotions.coupon.restoration.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "causation_id": "57c13f57-c32c-4538-915c-da93ca5b1baa",
+          "correlation_id": "39a70e8a-8dd0-4aa7-80a3-4695072ade31",
+          "data": {
+            "cancellation_reason": "ANULACION",
+            "cancelled_at": "2026-11-27T15:32:11.754Z",
+            "consumption_operation_id": "6ad853a2-8ea7-49b9-9fcc-46a7df27a710",
+            "order_id": "d4287099-3ea9-4619-8aa1-2987e738417f"
+          },
+          "kind": "command",
+          "message_id": "00d2f7a3-d679-46d4-a31c-30f4cbd47a24",
+          "name": "promotions.coupon.restoration.requested",
+          "occurred_at": "2026-11-27T15:32:11.767Z",
+          "operation_id": "57c13f57-c32c-4538-915c-da93ca5b1baa",
+          "producer": "promotions-svc",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "promotions-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "admitted_client": "modulo-ventas"
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.commands",
+        "at": "2026-11-27T15:32:12.746Z",
+        "messageId": "00d2f7a3-d679-46d4-a31c-30f4cbd47a24",
+        "correlationId": "39a70e8a-8dd0-4aa7-80a3-4695072ade31",
+        "subject": "promotions.coupon.restoration.requested",
+        "contentType": "application/json",
+        "deliveryId": "eef1cd90-8e58-4d72-a5c5-1c7974a0eddb",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.commands",
+        "at": "2026-11-27T15:32:12.825Z",
+        "messageId": "00d2f7a3-d679-46d4-a31c-30f4cbd47a24",
+        "correlationId": "39a70e8a-8dd0-4aa7-80a3-4695072ade31",
+        "subject": "promotions.coupon.restoration.requested",
+        "contentType": "application/json",
+        "deliveryId": "eef1cd90-8e58-4d72-a5c5-1c7974a0eddb"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.catalog.from.bulk",
+        "at": "2026-11-27T15:32:20.817Z",
+        "messageId": "ee3b2650-4267-5c1c-90b3-53936513611d",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "catalog.bulk.upsert.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "mode": "ALTA",
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "content_ref": {
+              "sha256": "5ff4d5eac68e2aad62414b7e3e3b4d52f3d65ae068b55b49f5633db25ada3abe",
+              "content_id": "0fb402cd-0ae5-58cf-864f-c41b63062fd3",
+              "byte_length": 537,
+              "content_type": "application/json"
+            },
+            "template_version": 2,
+            "batch_operation_id": "ddd02928-3ced-5937-8080-44cb7a3930c3"
+          },
+          "kind": "command",
+          "name": "catalog.bulk.upsert.requested",
+          "producer": "bulk-svc",
+          "message_id": "ee3b2650-4267-5c1c-90b3-53936513611d",
+          "occurred_at": "2026-11-27T15:31:57.124Z",
+          "causation_id": null,
+          "operation_id": "ddd02928-3ced-5937-8080-44cb7a3930c3",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 3
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.inventory.from.bulk",
+        "at": "2026-11-27T15:32:20.821Z",
+        "messageId": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.bulk.stock.adjust.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "reason": "BULK_INITIAL_STOCK",
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "location_id": "00000000-0000-4000-8000-000000000101",
+            "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+            "requested_at": "2026-11-27T15:31:57.124Z",
+            "target_on_hand": 20,
+            "row_operation_id": "a693fa4d-c8f3-55dd-8666-8bca2da4d274",
+            "expected_stock_version": 0
+          },
+          "kind": "command",
+          "name": "inventory.bulk.stock.adjust.requested",
+          "producer": "bulk-svc",
+          "message_id": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20",
+          "occurred_at": "2026-11-27T15:31:57.124Z",
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.pricing.from.bulk",
+        "at": "2026-11-27T15:32:20.824Z",
+        "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "items": [
+              {
+                "sku": "BULK-MSG-5DB691",
+                "currency": "PEN",
+                "channel_id": null,
+                "row_number": 2,
+                "valid_from": null,
+                "valid_until": null,
+                "motivo_cambio": "BULK_PRICE_APPLY",
+                "precio_oferta": null,
+                "precio_regular": "75.00",
+                "row_operation_id": "a693fa4d-c8f3-55dd-8666-8bca2da4d274"
+              }
+            ],
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "batch_operation_id": "b010787c-e560-5354-8e37-b123aba30d52"
+          },
+          "kind": "command",
+          "name": "pricing.bulk.price.apply.requested",
+          "producer": "bulk-svc",
+          "message_id": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+          "occurred_at": "2026-11-27T15:31:57.124Z",
+          "operation_id": "5ff4734f-c97d-5ce6-a893-7ed730b42e91",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.bulk.from.catalog",
+        "at": "2026-11-27T15:32:20.826Z",
+        "messageId": "3c7febc4-911c-4997-ba4e-a6431ec93d0b",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "catalog.bulk.upsert.completed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "results": [
+              {
+                "code": null,
+                "status": "COMPLETED",
+                "sku_base": "BULK-MSG-5DB691",
+                "retriable": false,
+                "attempt_id": "0dfc3303-9388-5d84-8a3a-c3c8604ed439",
+                "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+                "row_number": 2,
+                "effect_state": "APPLIED",
+                "attempt_number": 1,
+                "row_operation_id": "a693fa4d-c8f3-55dd-8666-8bca2da4d274"
+              }
+            ],
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "batch_operation_id": "ddd02928-3ced-5937-8080-44cb7a3930c3",
+            "command_attempt_id": null
+          },
+          "kind": "result",
+          "name": "catalog.bulk.upsert.completed",
+          "producer": "catalog-svc",
+          "message_id": "3c7febc4-911c-4997-ba4e-a6431ec93d0b",
+          "occurred_at": "2026-11-27T15:31:58.140Z",
+          "causation_id": "ee3b2650-4267-5c1c-90b3-53936513611d",
+          "operation_id": "ddd02928-3ced-5937-8080-44cb7a3930c3",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 2,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.combos.from.catalog",
+        "at": "2026-11-27T15:32:20.828Z",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "changed_at": "2026-11-27T15:32:08.321Z",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "product_version": 2
+          },
+          "kind": "event",
+          "name": "catalog.product.deactivated",
+          "producer": "catalog-svc",
+          "message_id": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+          "occurred_at": "2026-11-27T15:32:08.367Z",
+          "causation_id": null,
+          "operation_id": "094eec7f-8b42-4c3d-ba78-48b2ac50419e",
+          "correlation_id": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.inventory.from.catalog",
+        "at": "2026-11-27T15:32:20.830Z",
+        "messageId": "bfceb33b-1961-47a9-9c9f-6ecc1ec61681",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.sku.initialization.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "variant_id": null,
+            "default_location_id": "00000000-0000-4000-8000-000000000101"
+          },
+          "kind": "command",
+          "name": "inventory.sku.initialization.requested",
+          "producer": "catalog-svc",
+          "message_id": "bfceb33b-1961-47a9-9c9f-6ecc1ec61681",
+          "occurred_at": "2026-11-27T15:31:58.093Z",
+          "causation_id": null,
+          "operation_id": "94bda0e3-64d7-4fbe-9518-f35b32b50314",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.pricing.from.catalog",
+        "at": "2026-11-27T15:32:20.833Z",
+        "messageId": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.product.initialization.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "moneda": "PEN",
+            "sku_base": "BULK-MSG-5DB691",
+            "channel_id": null,
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "motivo_cambio": "ALTA_PRODUCTO",
+            "precio_regular": 75
+          },
+          "kind": "command",
+          "name": "pricing.product.initialization.requested",
+          "producer": "catalog-svc",
+          "message_id": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+          "occurred_at": "2026-11-27T15:31:58.081Z",
+          "causation_id": null,
+          "operation_id": "b39a1f25-c3e4-4a83-bee7-92c36166d8b0",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.from.catalog",
+        "at": "2026-11-27T15:32:20.835Z",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "changed_at": "2026-11-27T15:32:08.321Z",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "product_version": 2
+          },
+          "kind": "event",
+          "name": "catalog.product.deactivated",
+          "producer": "catalog-svc",
+          "message_id": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+          "occurred_at": "2026-11-27T15:32:08.367Z",
+          "causation_id": null,
+          "operation_id": "094eec7f-8b42-4c3d-ba78-48b2ac50419e",
+          "correlation_id": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.taxonomy.from.catalog",
+        "at": "2026-11-27T15:32:20.837Z",
+        "messageId": "84960237-eab6-4b90-8a8e-e5213c7d6bca",
+        "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+        "subject": "catalog.master.deactivation.checked",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "result": "CLEAR",
+            "version": 0,
+            "entity_id": "87087d87-935c-485e-9ed6-9622a7ae0db6",
+            "entity_type": "CATEGORY"
+          },
+          "kind": "result",
+          "name": "catalog.master.deactivation.checked",
+          "producer": "catalog-svc",
+          "message_id": "84960237-eab6-4b90-8a8e-e5213c7d6bca",
+          "occurred_at": "2026-11-27T15:32:09.661Z",
+          "causation_id": "2efbb96f-27d4-4b6a-a223-69fa385e1917",
+          "operation_id": "dd97be19-4215-4d1f-9b84-b623a90d6711",
+          "correlation_id": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "catalog-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.bulk.from.inventory",
+        "at": "2026-11-27T15:32:20.840Z",
+        "messageId": "0e932550-50d2-4b97-a6a6-ad4778ad4227",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.bulk.stock.adjust.completed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "location_id": "00000000-0000-4000-8000-000000000101",
+            "completed_at": "2026-11-27T15:32:02.064Z",
+            "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+            "stock_version": 1,
+            "applied_on_hand": 20,
+            "row_operation_id": "a693fa4d-c8f3-55dd-8666-8bca2da4d274"
+          },
+          "kind": "result",
+          "name": "inventory.bulk.stock.adjust.completed",
+          "producer": "inventory-svc",
+          "message_id": "0e932550-50d2-4b97-a6a6-ad4778ad4227",
+          "occurred_at": "2026-11-27T15:32:02.064Z",
+          "causation_id": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20",
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "inventory-svc",
+          "schema_version": 1,
+          "route_version": 1,
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "causation_id": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20"
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.catalog.from.inventory",
+        "at": "2026-11-27T15:32:20.842Z",
+        "messageId": "6ee083b0-a2d4-44d5-ad97-e2b4bc5e0113",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.sku.initialization.completed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "code": null,
+            "status": "INITIALIZED",
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "variant_id": null,
+            "completed_at": "2026-11-27T15:32:00.021Z"
+          },
+          "kind": "result",
+          "name": "inventory.sku.initialization.completed",
+          "producer": "inventory-svc",
+          "message_id": "6ee083b0-a2d4-44d5-ad97-e2b4bc5e0113",
+          "occurred_at": "2026-11-27T15:32:00.028Z",
+          "causation_id": "bfceb33b-1961-47a9-9c9f-6ecc1ec61681",
+          "operation_id": "94bda0e3-64d7-4fbe-9518-f35b32b50314",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "inventory-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "operation_id": "94bda0e3-64d7-4fbe-9518-f35b32b50314",
+          "causation_id": "bfceb33b-1961-47a9-9c9f-6ecc1ec61681"
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.combos.from.inventory",
+        "at": "2026-11-27T15:32:20.845Z",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "estado": "DISPONIBLE",
+            "blocked": 0,
+            "on_hand": 20,
+            "reserved": 0,
+            "available": 20,
+            "updated_at": "2026-11-27T15:32:02.057Z",
+            "location_id": "00000000-0000-4000-8000-000000000101",
+            "stock_version": 1
+          },
+          "kind": "event",
+          "name": "inventory.stock.changed",
+          "producer": "inventory-svc",
+          "message_id": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+          "occurred_at": "2026-11-27T15:32:02.057Z",
+          "causation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "inventory-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "causation_id": "f372909f-15e3-523c-b030-2a56e4693f80"
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.from.inventory",
+        "at": "2026-11-27T15:32:20.846Z",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "sku": "BULK-MSG-5DB691",
+            "estado": "DISPONIBLE",
+            "blocked": 0,
+            "on_hand": 20,
+            "reserved": 0,
+            "available": 20,
+            "updated_at": "2026-11-27T15:32:02.057Z",
+            "location_id": "00000000-0000-4000-8000-000000000101",
+            "stock_version": 1
+          },
+          "kind": "event",
+          "name": "inventory.stock.changed",
+          "producer": "inventory-svc",
+          "message_id": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+          "occurred_at": "2026-11-27T15:32:02.057Z",
+          "causation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "inventory-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "operation_id": "f372909f-15e3-523c-b030-2a56e4693f80",
+          "causation_id": "f372909f-15e3-523c-b030-2a56e4693f80"
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.bulk.from.pricing",
+        "at": "2026-11-27T15:32:20.848Z",
+        "messageId": "1878f8ca-5036-494f-822e-c32f4edb94db",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.completed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "1878f8ca-5036-494f-822e-c32f4edb94db",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:32:02.156Z",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "causation_id": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+          "operation_id": "5ff4734f-c97d-5ce6-a893-7ed730b42e91",
+          "producer": "pricing-svc",
+          "kind": "result",
+          "name": "pricing.bulk.price.apply.completed",
+          "data": {
+            "results": [
+              {
+                "sku": "BULK-MSG-5DB691",
+                "code": null,
+                "status": "COMPLETED",
+                "row_number": 2,
+                "price_version": 1,
+                "row_operation_id": "a693fa4d-c8f3-55dd-8666-8bca2da4d274"
+              }
+            ],
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "total_count": 1,
+            "applied_count": 1,
+            "batch_operation_id": "b010787c-e560-5354-8e37-b123aba30d52"
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.catalog.from.pricing",
+        "at": "2026-11-27T15:32:20.850Z",
+        "messageId": "5efa37b3-581d-529c-a552-c707cb53bfcd",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.product.initialization.completed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "5efa37b3-581d-529c-a552-c707cb53bfcd",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:32:00.122Z",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "causation_id": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+          "operation_id": "b39a1f25-c3e4-4a83-bee7-92c36166d8b0",
+          "producer": "pricing-svc",
+          "kind": "result",
+          "name": "pricing.product.initialization.completed",
+          "data": {
+            "code": null,
+            "status": "READY",
+            "sku_base": "BULK-MSG-5DB691",
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "vigencia_id": "c285dbd7-8cbb-4bea-86f5-598ff6df3dc0",
+            "completed_at": "2026-11-27T15:32:00.122Z",
+            "price_version": 1
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:20.852Z",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "900d5886-23f7-5628-a139-aa7661530e57",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:31:58.081Z",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "causation_id": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+          "operation_id": "b39a1f25-c3e4-4a83-bee7-92c36166d8b0",
+          "producer": "pricing-svc",
+          "kind": "event",
+          "name": "pricing.price.changed",
+          "data": {
+            "sku": null,
+            "actor": {
+              "ip": null,
+              "email": null,
+              "user_id": null
+            },
+            "reason": "ALTA_PRODUCTO",
+            "batch_id": null,
+            "currency": "PEN",
+            "new_price": "75.00",
+            "operation": "CREACION",
+            "channel_id": null,
+            "price_type": "REGULAR",
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "valid_from": "2026-11-27T15:31:58.081Z",
+            "target_type": "PRODUCTO",
+            "price_version": 1,
+            "previous_price": null
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:20.855Z",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "envelope": {
+          "message_id": "900d5886-23f7-5628-a139-aa7661530e57",
+          "schema_version": 1,
+          "occurred_at": "2026-11-27T15:31:58.081Z",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "causation_id": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+          "operation_id": "b39a1f25-c3e4-4a83-bee7-92c36166d8b0",
+          "producer": "pricing-svc",
+          "kind": "event",
+          "name": "pricing.price.changed",
+          "data": {
+            "sku": null,
+            "actor": {
+              "ip": null,
+              "email": null,
+              "user_id": null
+            },
+            "reason": "ALTA_PRODUCTO",
+            "batch_id": null,
+            "currency": "PEN",
+            "new_price": "75.00",
+            "operation": "CREACION",
+            "channel_id": null,
+            "price_type": "REGULAR",
+            "product_id": "71ee0e0d-9274-425c-b9d0-aad083396048",
+            "valid_from": "2026-11-27T15:31:58.081Z",
+            "target_type": "PRODUCTO",
+            "price_version": 1,
+            "previous_price": null
+          }
+        },
+        "applicationProperties": {
+          "producer": "pricing-svc",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.taxonomy.from.catalog",
+        "at": "2026-11-27T15:32:20.856Z",
+        "messageId": "84960237-eab6-4b90-8a8e-e5213c7d6bca",
+        "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+        "subject": "catalog.master.deactivation.checked",
+        "contentType": "application/json",
+        "deliveryId": "0962c056-b98f-4000-a87a-25f5a0807ce7",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.pricing.from.catalog",
+        "at": "2026-11-27T15:32:20.857Z",
+        "messageId": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.product.initialization.requested",
+        "contentType": "application/json",
+        "deliveryId": "bca388ef-b1b9-4443-a3b5-c035876e7ed6",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:32:20.858Z",
+        "messageId": "e2f76b8b-ca34-4112-8e9d-9ca75eae1c4d",
+        "correlationId": "a45859c5-24f1-4518-a717-2a1f7e3d4dba",
+        "subject": "taxonomy.category.updated",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "version": 0,
+            "categoria_id": "d2ac575a-9330-46c5-a167-91bbe8b9f3bd"
+          },
+          "kind": "event",
+          "name": "taxonomy.category.updated",
+          "producer": "taxonomy-svc",
+          "message_id": "e2f76b8b-ca34-4112-8e9d-9ca75eae1c4d",
+          "occurred_at": "2026-11-27T15:31:56.990151+00:00",
+          "correlation_id": "a45859c5-24f1-4518-a717-2a1f7e3d4dba",
+          "schema_version": 1
+        }
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.commands",
+        "at": "2026-11-27T15:32:20.861Z",
+        "messageId": "d35da2c1-c3a4-4e06-b6e8-485f87fb7c34",
+        "correlationId": "b41a08ea-251c-4373-bec1-67f5b55e6484",
+        "subject": "promotions.coupon.consumption.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "causation_id": "6ad853a2-8ea7-49b9-9fcc-46a7df27a710",
+          "correlation_id": "b41a08ea-251c-4373-bec1-67f5b55e6484",
+          "data": {
+            "channel_id": "MARKETPLACE",
+            "commercial_snapshot_ref": "d4287099-3ea9-4619-8aa1-2987e738417f",
+            "coupon_code": "CPNM637D3",
+            "customer_ref": "aa7afb14-0fda-4241-a258-7222e0ee0be8",
+            "effective_at": "2026-11-27T15:32:10.389Z",
+            "order_id": "d4287099-3ea9-4619-8aa1-2987e738417f",
+            "reservation_id": "4dd3b1a6-7e65-4e71-b7a7-e07ab23872b9"
+          },
+          "kind": "command",
+          "message_id": "d35da2c1-c3a4-4e06-b6e8-485f87fb7c34",
+          "name": "promotions.coupon.consumption.requested",
+          "occurred_at": "2026-11-27T15:32:10.403Z",
+          "operation_id": "6ad853a2-8ea7-49b9-9fcc-46a7df27a710",
+          "producer": "promotions-svc",
+          "schema_version": 2
+        },
+        "applicationProperties": {
+          "producer": "promotions-svc",
+          "schema_version": 2,
+          "route_version": 1,
+          "admitted_client": "modulo-ventas"
+        }
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.pricing.from.catalog",
+        "at": "2026-11-27T15:32:20.870Z",
+        "messageId": "e347777e-cd55-41a8-bc34-952a52ad6c76",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.product.initialization.requested",
+        "contentType": "application/json",
+        "deliveryId": "bca388ef-b1b9-4443-a3b5-c035876e7ed6"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.taxonomy.from.catalog",
+        "at": "2026-11-27T15:32:20.875Z",
+        "messageId": "84960237-eab6-4b90-8a8e-e5213c7d6bca",
+        "correlationId": "e59dc19b-b015-40ae-9f89-01819c1209fb",
+        "subject": "catalog.master.deactivation.checked",
+        "contentType": "application/json",
+        "deliveryId": "0962c056-b98f-4000-a87a-25f5a0807ce7"
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.combos.from.catalog",
+        "at": "2026-11-27T15:32:20.958Z",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "b10971e1-c494-4f75-892c-cf242690132c",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.combos.from.inventory",
+        "at": "2026-11-27T15:32:20.959Z",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "801aa371-a4cd-43a0-a674-e8563d9045c3",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:32:20.959Z",
+        "messageId": "e2f76b8b-ca34-4112-8e9d-9ca75eae1c4d",
+        "correlationId": "a45859c5-24f1-4518-a717-2a1f7e3d4dba",
+        "subject": "taxonomy.category.updated",
+        "contentType": "application/json",
+        "deliveryId": "eb533140-9545-49db-b42d-c119ec64b303",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.catalog.from.bulk",
+        "at": "2026-11-27T15:32:20.959Z",
+        "messageId": "ee3b2650-4267-5c1c-90b3-53936513611d",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "catalog.bulk.upsert.requested",
+        "contentType": "application/json",
+        "deliveryId": "14fb6e59-b9ef-4df0-bcc7-e0636d33bc29",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.catalog.from.pricing",
+        "at": "2026-11-27T15:32:20.959Z",
+        "messageId": "5efa37b3-581d-529c-a552-c707cb53bfcd",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.product.initialization.completed",
+        "contentType": "application/json",
+        "deliveryId": "2948f596-fe43-494a-baa4-644e4b4eee7d",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.catalog.from.inventory",
+        "at": "2026-11-27T15:32:20.959Z",
+        "messageId": "6ee083b0-a2d4-44d5-ad97-e2b4bc5e0113",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.sku.initialization.completed",
+        "contentType": "application/json",
+        "deliveryId": "1be820d3-23cd-43df-b0f3-2bfa9902c809",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.combos.from.catalog",
+        "at": "2026-11-27T15:32:20.968Z",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "b10971e1-c494-4f75-892c-cf242690132c"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.catalog.from.taxonomy",
+        "at": "2026-11-27T15:32:20.986Z",
+        "messageId": "e2f76b8b-ca34-4112-8e9d-9ca75eae1c4d",
+        "correlationId": "a45859c5-24f1-4518-a717-2a1f7e3d4dba",
+        "subject": "taxonomy.category.updated",
+        "contentType": "application/json",
+        "deliveryId": "eb533140-9545-49db-b42d-c119ec64b303"
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:20.989Z",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "0070482e-5344-4122-9017-9d276849cb4d",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.commands",
+        "at": "2026-11-27T15:32:20.989Z",
+        "messageId": "d35da2c1-c3a4-4e06-b6e8-485f87fb7c34",
+        "correlationId": "b41a08ea-251c-4373-bec1-67f5b55e6484",
+        "subject": "promotions.coupon.consumption.requested",
+        "contentType": "application/json",
+        "deliveryId": "fd4d2f90-dde7-452f-bca2-ef8688cd7c0a",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.combos.from.inventory",
+        "at": "2026-11-27T15:32:21.001Z",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "801aa371-a4cd-43a0-a674-e8563d9045c3"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.price-audit.from.pricing",
+        "at": "2026-11-27T15:32:21.005Z",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "0070482e-5344-4122-9017-9d276849cb4d"
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.bulk.from.catalog",
+        "at": "2026-11-27T15:32:21.006Z",
+        "messageId": "3c7febc4-911c-4997-ba4e-a6431ec93d0b",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "catalog.bulk.upsert.completed",
+        "contentType": "application/json",
+        "deliveryId": "bc63df07-e4d8-4623-af5c-480e6606a61d",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.bulk.from.pricing",
+        "at": "2026-11-27T15:32:21.006Z",
+        "messageId": "1878f8ca-5036-494f-822e-c32f4edb94db",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.completed",
+        "contentType": "application/json",
+        "deliveryId": "b87e607a-292f-4d9b-a90f-bbaf106b5d8e",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.bulk.from.inventory",
+        "at": "2026-11-27T15:32:21.007Z",
+        "messageId": "0e932550-50d2-4b97-a6a6-ad4778ad4227",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.bulk.stock.adjust.completed",
+        "contentType": "application/json",
+        "deliveryId": "624ce266-da04-4871-b667-66b183cb115c",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.catalog.from.bulk",
+        "at": "2026-11-27T15:32:21.016Z",
+        "messageId": "ee3b2650-4267-5c1c-90b3-53936513611d",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "catalog.bulk.upsert.requested",
+        "contentType": "application/json",
+        "deliveryId": "14fb6e59-b9ef-4df0-bcc7-e0636d33bc29"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.bulk.from.catalog",
+        "at": "2026-11-27T15:32:21.028Z",
+        "messageId": "3c7febc4-911c-4997-ba4e-a6431ec93d0b",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "catalog.bulk.upsert.completed",
+        "contentType": "application/json",
+        "deliveryId": "bc63df07-e4d8-4623-af5c-480e6606a61d"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.catalog.from.inventory",
+        "at": "2026-11-27T15:32:21.035Z",
+        "messageId": "6ee083b0-a2d4-44d5-ad97-e2b4bc5e0113",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.sku.initialization.completed",
+        "contentType": "application/json",
+        "deliveryId": "1be820d3-23cd-43df-b0f3-2bfa9902c809"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.commands",
+        "at": "2026-11-27T15:32:21.036Z",
+        "messageId": "d35da2c1-c3a4-4e06-b6e8-485f87fb7c34",
+        "correlationId": "b41a08ea-251c-4373-bec1-67f5b55e6484",
+        "subject": "promotions.coupon.consumption.requested",
+        "contentType": "application/json",
+        "deliveryId": "fd4d2f90-dde7-452f-bca2-ef8688cd7c0a"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.bulk.from.pricing",
+        "at": "2026-11-27T15:32:21.046Z",
+        "messageId": "1878f8ca-5036-494f-822e-c32f4edb94db",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.completed",
+        "contentType": "application/json",
+        "deliveryId": "b87e607a-292f-4d9b-a90f-bbaf106b5d8e"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.catalog.from.pricing",
+        "at": "2026-11-27T15:32:21.051Z",
+        "messageId": "5efa37b3-581d-529c-a552-c707cb53bfcd",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.product.initialization.completed",
+        "contentType": "application/json",
+        "deliveryId": "2948f596-fe43-494a-baa4-644e4b4eee7d"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.bulk.from.inventory",
+        "at": "2026-11-27T15:32:21.057Z",
+        "messageId": "0e932550-50d2-4b97-a6a6-ad4778ad4227",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.bulk.stock.adjust.completed",
+        "contentType": "application/json",
+        "deliveryId": "624ce266-da04-4871-b667-66b183cb115c"
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.inventory.from.catalog",
+        "at": "2026-11-27T15:32:21.066Z",
+        "messageId": "bfceb33b-1961-47a9-9c9f-6ecc1ec61681",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.sku.initialization.requested",
+        "contentType": "application/json",
+        "deliveryId": "53e66186-fb17-4550-b728-5e2f9e4bbd7f",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.inventory.from.bulk",
+        "at": "2026-11-27T15:32:21.067Z",
+        "messageId": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.bulk.stock.adjust.requested",
+        "contentType": "application/json",
+        "deliveryId": "07c8a12c-90d5-4867-ab57-474bf2f67e10",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.inventory.from.catalog",
+        "at": "2026-11-27T15:32:21.079Z",
+        "messageId": "bfceb33b-1961-47a9-9c9f-6ecc1ec61681",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.sku.initialization.requested",
+        "contentType": "application/json",
+        "deliveryId": "53e66186-fb17-4550-b728-5e2f9e4bbd7f"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.inventory.from.bulk",
+        "at": "2026-11-27T15:32:21.081Z",
+        "messageId": "6f91c0da-b64d-5bcd-b89e-d7f42fd35e20",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.bulk.stock.adjust.requested",
+        "contentType": "application/json",
+        "deliveryId": "07c8a12c-90d5-4867-ab57-474bf2f67e10"
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.from.catalog",
+        "at": "2026-11-27T15:32:21.081Z",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "71053145-647f-48a8-9e68-4f51cae934dc",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:21.082Z",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "fceae3b8-2a53-4dae-9b5e-703fcce7ce92",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.from.inventory",
+        "at": "2026-11-27T15:32:21.082Z",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "564e1d7a-9a6e-4eb1-a8f4-b7b37534ca8d",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.from.pricing",
+        "at": "2026-11-27T15:32:21.101Z",
+        "messageId": "900d5886-23f7-5628-a139-aa7661530e57",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.price.changed",
+        "contentType": "application/json",
+        "deliveryId": "fceae3b8-2a53-4dae-9b5e-703fcce7ce92"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.from.catalog",
+        "at": "2026-11-27T15:32:21.102Z",
+        "messageId": "555f606c-7063-4b31-bc63-c8e4115ad80b",
+        "correlationId": "cf497183-1141-42d2-97c5-78e56981b2a7",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "71053145-647f-48a8-9e68-4f51cae934dc"
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.promotions.from.inventory",
+        "at": "2026-11-27T15:32:21.128Z",
+        "messageId": "f3e0e986-b4e6-43e7-9b97-257a1fb7f63f",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "inventory.stock.changed",
+        "contentType": "application/json",
+        "deliveryId": "564e1d7a-9a6e-4eb1-a8f4-b7b37534ca8d"
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.pricing.from.bulk",
+        "at": "2026-11-27T15:32:22.390Z",
+        "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.requested",
+        "contentType": "application/json",
+        "deliveryId": "b856195d-9a80-4f0c-b1d0-549a0a7d4299",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.pricing.from.bulk",
+        "at": "2026-11-27T15:32:22.402Z",
+        "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.requested",
+        "contentType": "application/json",
+        "deliveryId": "b856195d-9a80-4f0c-b1d0-549a0a7d4299"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.pricing.from.bulk",
+        "at": "2026-11-27T15:32:23.249Z",
+        "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.requested",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "items": [
+              {
+                "sku": "BULK-MSG-5DB691",
+                "currency": "PEN",
+                "channel_id": null,
+                "row_number": 2,
+                "valid_from": null,
+                "valid_until": null,
+                "motivo_cambio": "BULK_PRICE_APPLY",
+                "precio_oferta": null,
+                "precio_regular": "75.00",
+                "row_operation_id": "a693fa4d-c8f3-55dd-8666-8bca2da4d274"
+              }
+            ],
+            "batch_id": "9a91585e-d880-4351-8d18-82aa1414c611",
+            "batch_operation_id": "b010787c-e560-5354-8e37-b123aba30d52"
+          },
+          "kind": "command",
+          "name": "pricing.bulk.price.apply.requested",
+          "producer": "bulk-svc",
+          "message_id": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+          "occurred_at": "2026-11-27T15:31:57.124Z",
+          "operation_id": "5ff4734f-c97d-5ce6-a893-7ed730b42e91",
+          "correlation_id": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+          "schema_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.pricing.from.bulk",
+        "at": "2026-11-27T15:32:25.789Z",
+        "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.requested",
+        "contentType": "application/json",
+        "deliveryId": "da68601a-4c9a-4b52-9738-63b17df9ca8a",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "COMPLETED",
+        "queue": "g6.pricing.from.bulk",
+        "at": "2026-11-27T15:32:25.809Z",
+        "messageId": "d2e522b7-669b-5f96-9a71-c522e4bf4d95",
+        "correlationId": "3da4a41a-5d7b-4017-98ab-9ae03df44d43",
+        "subject": "pricing.bulk.price.apply.requested",
+        "contentType": "application/json",
+        "deliveryId": "da68601a-4c9a-4b52-9738-63b17df9ca8a"
+      },
+      {
+        "stage": "PUBLISHED",
+        "queue": "g6.promotions.from.catalog",
+        "at": "2026-11-27T15:32:27.127Z",
+        "messageId": "7f24ce93-725b-43d4-a2db-820b6f67f3d3",
+        "correlationId": "50a8cdf0-c880-4edf-a8c8-3352404675ca",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "envelope": {
+          "data": {
+            "changed_at": "2026-11-27T15:32:08.321Z",
+            "product_id": "b2ae8fdd-7fb6-462e-b061-affaa35445bb",
+            "product_version": 2
+          },
+          "kind": "event",
+          "name": "catalog.product.deactivated",
+          "producer": "untrusted-producer",
+          "message_id": "7f24ce93-725b-43d4-a2db-820b6f67f3d3",
+          "occurred_at": "2026-11-27T15:32:08.367Z",
+          "causation_id": null,
+          "operation_id": "094eec7f-8b42-4c3d-ba78-48b2ac50419e",
+          "correlation_id": "cf497183-1141-42d2-97c5-78e56981b2a7",
+          "schema_version": 1
+        },
+        "applicationProperties": {
+          "producer": "untrusted-producer",
+          "schema_version": 1,
+          "route_version": 1
+        }
+      },
+      {
+        "stage": "RECEIVED",
+        "queue": "g6.promotions.from.catalog",
+        "at": "2026-11-27T15:32:27.261Z",
+        "messageId": "7f24ce93-725b-43d4-a2db-820b6f67f3d3",
+        "correlationId": "50a8cdf0-c880-4edf-a8c8-3352404675ca",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "846259e9-fd1e-4c8c-a13b-b8c10334ff3f",
+        "deliveryCount": 1
+      },
+      {
+        "stage": "DEADLETTERED",
+        "queue": "g6.promotions.from.catalog",
+        "at": "2026-11-27T15:32:27.265Z",
+        "messageId": "7f24ce93-725b-43d4-a2db-820b6f67f3d3",
+        "correlationId": "50a8cdf0-c880-4edf-a8c8-3352404675ca",
+        "subject": "catalog.product.deactivated",
+        "contentType": "application/json",
+        "deliveryId": "846259e9-fd1e-4c8c-a13b-b8c10334ff3f",
+        "reason": "INVALID_PROMOTIONS_EVENT"
+      }
+    ],
+    "active": {
+      "g6.pricing.from.catalog": 0,
+      "g6.pricing.from.bulk": 0,
+      "g6.combos.from.catalog": 0,
+      "g6.combos.from.inventory": 0,
+      "g6.price-audit.from.pricing": 0,
+      "g6.promotions.from.catalog": 0,
+      "g6.catalog.from.taxonomy": 0,
+      "g6.catalog.from.bulk": 0,
+      "g6.catalog.from.pricing": 0,
+      "g6.catalog.from.inventory": 0,
+      "g6.promotions.from.pricing": 0,
+      "g6.bulk.from.catalog": 0,
+      "g6.bulk.from.pricing": 0,
+      "g6.promotions.from.inventory": 0,
+      "g6.bulk.from.inventory": 0,
+      "g6.taxonomy.from.catalog": 0,
+      "g6.promotions.commands": 0,
+      "g6.inventory.from.catalog": 0,
+      "g6.inventory.from.bulk": 0
+    },
+    "inflight": 0,
+    "deadletters": {
+      "g6.promotions.from.catalog": 1
+    }
+  }
+}

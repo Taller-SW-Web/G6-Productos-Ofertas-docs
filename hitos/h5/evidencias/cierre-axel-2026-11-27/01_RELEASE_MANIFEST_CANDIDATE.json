@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "1.0.0",
+  "manifestType": "h5_release_candidate_not_deployed",
+  "generatedAtUtc": "2026-11-27T15:54:00Z",
+  "preparedBy": "Axel Cueva",
+  "contractVersion": "0.7.0-rc.3",
+  "deploymentState": "NOT_DEPLOYED",
+  "approvalState": "PENDING_EXPLICIT_APPROVAL_MARCO_CASTILLA",
+  "repositories": {
+    "backend": {
+      "repo": "Taller-SW-Web/G6-Productos-Ofertas-backend",
+      "baseBranch": "master",
+      "baseSha": "097dac1bf4a8dcf5c6e799742d2df340f6d893d5",
+      "candidateBranch": "trabajo/cueva/h5-cierre-integral",
+      "candidatePr": 307,
+      "candidatePrDraft": true,
+      "candidateSha": "16d373aeb63cb2386b0e174c76517d8bf3381fb5",
+      "incorporatedSources": [
+        {
+          "pr": 305,
+          "upToSha": "523033a0c8fea87cffd546f124921578da245ca9",
+          "scope": "autonomous_commits_r02_rollback_r10_migration_apim_base"
+        },
+        {
+          "pr": 306,
+          "sha": "0cd784d575827fd42e91a487f8b68adce5f2220e",
+          "scope": "pr_300_taxonomy_pr_297_inventory_pr_296_promotions"
+        }
+      ],
+      "deferredDeltasPendingCoordination": [
+        {
+          "pr": 305,
+          "commits": [
+            "a26965a0f7aff96eaf1919d2159e90d0ef6d2c67",
+            "8af53c24bab652dae7edbfb096e2553262897bfe"
+          ],
+          "owner": "Marco Castilla",
+          "reason": "APIM operational scripts, two-stage Bicep changes and Chile operational evidence require explicit coordination with APIM owner"
+        }
+      ]
+    },
+    "frontend": {
+      "repo": "Taller-SW-Web/G6-Productos-Ofertas-frontend",
+      "baseBranch": "master",
+      "baseSha": "2c6ad931b8dd48e4a4fe883a18ac899fb48b0c81",
+      "candidateBranch": "trabajo/castilla/h5-cierre-post-r2-frontend",
+      "candidatePr": 102,
+      "candidatePrDraft": true,
+      "candidateSha": "ccfc21ba0e821f33c0debf09389879e55df0539b"
+    },
+    "docs": {
+      "repo": "Taller-SW-Web/G6-Productos-Ofertas-docs",
+      "normativeContractsRef": "origin/master",
+      "normativeContractsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+      "baseEvidencePr": 151,
+      "baseEvidenceSha": "5969a0ed831b43c5ed398c8a925ffbd7bd3340cc",
+      "complementaryEvidenceBranch": "trabajo/cueva/h5-cierre-evidencias-axel"
+    }
+  },
+  "pendingDatabaseMigrations": [
+    {
+      "service": "inventory-svc",
+      "file": "apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.sql",
+      "sha256": "7ac74f99a0d34c500f731d4769a411a1ab315440fe89336f08b840d09b718575",
+      "rollbackFile": "apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.rollback.sql",
+      "rollbackSha256": "22e6a461b166a7fabfdee4236fb024fee8b456e166020af76ea9be630ee402b2",
+      "pg17DisposableStatus": "PASS",
+      "sharedSupabaseStatus": "NOT_APPLIED"
+    },
+    {
+      "service": "taxonomy-svc",
+      "file": "apps/taxonomy-svc/migrations/0006_service_bus_outbox_delivery.sql",
+      "sha256": "ab68c32c188ddbc6b75a07dfe7c5a6a3123d42711ed8bd344277e56b4f3f7f63",
+      "pg17DisposableStatus": "PASS",
+      "sharedSupabaseStatus": "NOT_APPLIED"
+    }
+  ],
+  "liveAzureReadOnlyBaseline20261127": {
+    "subscriptionId": "fef42188-accd-4470-ae88-78f583eb4906",
+    "resourceGroup": "rg-g6-aca-chile",
+    "region": "chilecentral",
+    "serviceBus": {
+      "namespace": "g6-sb-h5-chile-261127",
+      "sku": "Basic",
+      "queuesObserved": 19,
+      "allActive": true,
+      "totalActiveMessages": 0,
+      "totalDeadLetterMessages": 0
+    },
+    "apim": {
+      "name": "apim-g6-productos-chile",
+      "sku": "Developer",
+      "capacity": 1,
+      "vnetType": "External",
+      "publicIp": "57.156.40.55",
+      "apiName": "g6-productos-ofertas",
+      "apiPath": "api/v1",
+      "operationsCount": 145,
+      "internalRoutesExposed": 0,
+      "apiPolicySha256": "aa9b8c125af0c7d29bd514133cefd9fe9f17b71c254a2c8add32d52b3bd99bc3",
+      "listarProductosPolicySha256": "cd17fd1a21f9b46b31bbacda17976c5fb6c314951d9c11e1b4b1ea03e29d3ee0",
+      "operationalFinding": "CORS allowlist in live API policy omits Frontend Vercel origin; api-gateway enforces Modalidad B (403 direct)"
+    },
+    "containerAppsCurrentNotCandidate": [
+      { "name": "api-gateway", "revision": "api-gateway--0000003", "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/api-gateway@sha256:2ab58ef95977588b384f7debfad498e8e944a22399424ebdda0cd67a5e6d028b", "external": true, "modalidadB": true },
+      { "name": "bulk-svc", "revision": "bulk-svc--0000002", "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/bulk-svc@sha256:7567f26f4604ad7dc2f3f4649408d200e355c2a20ce0e37e038b81d55868e862", "external": false },
+      { "name": "catalog-svc", "revision": "catalog-svc--0000004", "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/catalog-svc@sha256:4e023977f17cce955f702a9122d51d17f028bffb66b7f3da4bd4c74b573c8a5f", "external": false },
+      { "name": "combos-svc", "revision": "combos-svc--0000003", "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/combos-svc@sha256:062fa1d0e9abb75eb2d0eb124056ad64f6d423ee7811159b4d8d3ab4037361ca", "external": false },
+      { "name": "inventory-svc", "revision": "inventory-svc--0000002", "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/inventory-svc@sha256:8477c4b3a607e129a50c23c28e6b80a3fc59dd4115226aa03ead8d646689de5e", "external": false },
+      { "name": "price-audit-svc", "revision": "price-audit-svc--0000001", "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/price-audit-svc@sha256:4b6fef2787c310c4d27f9c8db662adb1a925ce13424e669f74672f7225067501", "external": false },
+      { "name": "pricing-svc", "revision": "pricing-svc--0000007", "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/pricing-svc@sha256:fc50f6fb9b437e0bb528d0402ae4a8bae96afa6f06de3bd2f283e062039d88b4", "external": false },
+      { "name": "promotions-svc", "revision": "promotions-svc--0000007", "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/promotions-svc@sha256:d9c8e5ab9bd3109dbeda5f1e286e4c2433225948acf2db93eab959cbb6d7b3f2", "external": false },
+      { "name": "taxonomy-svc", "revision": "taxonomy-svc--0000005", "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/taxonomy-svc@sha256:784d1d85fb2872269cb83ed6650f5a52494f1c5a0e77a8a32d4466b8bb186b51", "external": false }
+    ]
+  },
+  "securityArtifacts": {
+    "backendSbomPath": "artefactos/sbom-backend.cdx.json",
+    "backendSbomSha256": "09f13aae61cae055be276333a8b04d5a029e598e0fcba6e83c01371a03ed8238",
+    "frontendSbomPath": "artefactos/sbom-frontend.cdx.json",
+    "frontendSbomSha256": "2e68ba5fc321a130479af226073dd5f13fd49b4ac04e93a5a9c3c63f49d870ee"
+  }
+}

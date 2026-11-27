@@ -1,0 +1,44 @@
+{
+  "criterion": "H5-01",
+  "caseId": "H5-01-CI-SCA-SBOM-JWT",
+  "scope": "IN_SCOPE",
+  "result": "PASS",
+  "evidenceLevel": "ISOLATED",
+  "verificationState": "VERIFIED_LOCAL_AND_CI_GREEN_GAPS_DOCUMENTED",
+  "deploymentState": "NOT_DEPLOYED",
+  "blocker": "CodeQL y Secret Scanning nativos devuelven 404 en GitHub (requiere habilitacion org admin); Trivy no instalado localmente; Rulesets de master faltantes en Frontend y Docs",
+  "owner": "Axel Cueva",
+  "testedAtUtc": "2026-11-27T15:54:00Z",
+  "subjects": {
+    "backendSha": "16d373aeb63cb2386b0e174c76517d8bf3381fb5",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "azureImageDigest": null,
+    "azureRevision": null
+  },
+  "environment": {
+    "name": "local-windows-isolated + github-actions-readonly",
+    "db": "postgres17-disposable",
+    "serviceBus": "isolated",
+    "apim": "apim-g6-productos-chile (readonly)"
+  },
+  "execution": {
+    "command": "npm audit --audit-level=moderate + CycloneDX SBOM + regex secret scan + certify-158-endpoints + gh workflow run ci.yml/frontend.yml",
+    "exitCode": 0,
+    "runId": "backend:46030550806(success);frontend:46028914883(success)",
+    "artifactPath": "artefactos/sbom-backend.cdx.json;artefactos/sbom-frontend.cdx.json",
+    "artifactSha256": "09f13aae61cae055be276333a8b04d5a029e598e0fcba6e83c01371a03ed8238"
+  },
+  "assertions": {
+    "httpExpected": "401/403/400/404 en negativos JWT y rutas internas",
+    "httpActual": "158/158 auth401+auth403 PASS; 6/6 authChecks PASS; live APIM 401/400/404/403 PASS",
+    "eventId": null,
+    "correlationIdSanitized": "verified-echo-and-400-validation",
+    "inboxState": null,
+    "outboxState": null,
+    "dlqDelta": 0,
+    "idempotent": true
+  },
+  "notes": "0 vulnerabilidades moderate/high/critical en npm audit Backend y Frontend; 0 hallazgos en escaneo de secretos en diffs; SBOM CycloneDX 1.5 generado (444 BE / 282 FE componentes)."
+}

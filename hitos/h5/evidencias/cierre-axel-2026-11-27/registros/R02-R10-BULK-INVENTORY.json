@@ -1,0 +1,44 @@
+{
+  "criterion": "H5-04B",
+  "caseId": "R02->R10",
+  "scope": "IN_SCOPE",
+  "result": "PASS",
+  "evidenceLevel": "ISOLATED",
+  "verificationState": "VERIFIED_L1_PENDING_SUPABASE_MIGRATION_0002",
+  "deploymentState": "NOT_DEPLOYED",
+  "blocker": "ck_inventory_delivery_route en Supabase compartido solo admite 3 destinos; falta aprobar y aplicar 0002_allow_bulk_r10_delivery.sql (SHA256 7ac74f99...)",
+  "owner": "Castilla / Taco / Axel Cueva",
+  "testedAtUtc": "2026-11-27T15:54:00Z",
+  "subjects": {
+    "backendSha": "16d373aeb63cb2386b0e174c76517d8bf3381fb5",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "azureImageDigest": null,
+    "azureRevision": null
+  },
+  "environment": {
+    "name": "local-isolated-pg17-sb",
+    "db": "postgres17-disposable",
+    "serviceBus": "isolated",
+    "apim": null
+  },
+  "execution": {
+    "command": "vitest apps/inventory-svc/test/inventory-h5.postgres.e2e-spec.ts + run-n01-and-r10-pg17.mjs + certify-158-endpoints.mjs + certify-19-messaging-flows.mjs",
+    "exitCode": 0,
+    "runId": null,
+    "artifactPath": "artefactos/158_ENDPOINTS_CERTIFICATION_REPORT.json",
+    "artifactSha256": "88079efb420ffe3b6481c0b317d8e354c4a7af919dd4f80a61df9f530a7d4165"
+  },
+  "assertions": {
+    "httpExpected": "POST import 202 -> Bulk COMPLETED con CATALOGO/PRICING/INVENTARIO aplicados 1 sola vez; rollback 0002 bloqueado con fila Bulk y PASS tras limpieza",
+    "httpActual": "26/26 inventory-h5 PASS + 0002 up x2 / inventory_app / rollback condicionado PASS + #106/#109 COMPLETED + R02/R10 19-flows PASS",
+    "eventId": null,
+    "correlationIdSanitized": "verified",
+    "inboxState": "APPLIED_ONCE",
+    "outboxState": "DELIVERED_TO_g6.bulk.from.inventory",
+    "dlqDelta": 0,
+    "idempotent": true
+  },
+  "notes": "Rollback ante fallo tecnico en R02 verificado junto con entrega terminal R10 a Bulk sin duplicacion de stock."
+}

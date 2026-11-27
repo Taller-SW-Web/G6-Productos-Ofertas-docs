@@ -1,0 +1,44 @@
+{
+  "criterion": "H5-04A",
+  "caseId": "APIM-T01..APIM-T08",
+  "scope": "IN_SCOPE",
+  "result": "INCONCLUSIVE",
+  "evidenceLevel": "LAB_AZURE",
+  "verificationState": "PARTIAL_READONLY_NEGATIVES_AND_L0_STATIC",
+  "deploymentState": "LIVE_PREEXISTING_APIM_NEEDS_CORS_FIX",
+  "blocker": "Positivos T01/T02/T03/T07 bloqueados por falta de token real G7 (BLOCKED_AUTH); T04 falla para origen Vercel en politica live; T05 429 y T08 rollback requieren ventana autorizada por Marco Castilla",
+  "owner": "Marco Castilla / Axel Cueva",
+  "testedAtUtc": "2026-11-27T15:54:00Z",
+  "subjects": {
+    "backendSha": "16d373aeb63cb2386b0e174c76517d8bf3381fb5",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "azureImageDigest": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/api-gateway@sha256:2ab58ef95977588b384f7debfad498e8e944a22399424ebdda0cd67a5e6d028b",
+    "azureRevision": "api-gateway--0000003"
+  },
+  "environment": {
+    "name": "rg-g6-aca-chile (read-only audit)",
+    "db": "none",
+    "serviceBus": "none",
+    "apim": "apim-g6-productos-chile (Developer, api/v1, 145 ops)"
+  },
+  "execution": {
+    "command": "az apim / az containerapp readonly + node probe-apim-readonly.mjs + az bicep build + 29 pytest/unittest + verify-arm-template.py",
+    "exitCode": 0,
+    "runId": null,
+    "artifactPath": "artefactos/azure-aca-readonly-snapshot-2026-11-27.json",
+    "artifactSha256": "56b0ff781ef1226dce6a2822311b0b7f1588c3b04db0923de485daa81a0ab3b2"
+  },
+  "assertions": {
+    "httpExpected": "Direct GW=403, APIM no-auth=401, bad-jwt=401, internal=404, bad-corr=400, evil-CORS=null",
+    "httpActual": "Direct GW=403 (Modalidad B), APIM no-auth=401, bad-jwt=401, 3 internal routes=404, bad-corr=400 VALIDACION, evil-CORS=null; G7 JWKS=200",
+    "eventId": null,
+    "correlationIdSanitized": "echoed-on-401-rejected-on-invalid-400",
+    "inboxState": null,
+    "outboxState": null,
+    "dlqDelta": null,
+    "idempotent": null
+  },
+  "notes": "Escalacion operativa a Castilla: Modalidad B activa bloquea llamadas directas a api-gateway con 403 y politica CORS live omite origen Frontend Vercel."
+}
