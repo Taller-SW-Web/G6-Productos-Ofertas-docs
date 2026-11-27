@@ -1,0 +1,247 @@
+{
+  "capturedAtUtc": "2026-11-27T09:08:56.2898951Z",
+  "subscriptionId": "fef42188-accd-4470-ae88-78f583eb4906",
+  "resourceGroup": "rg-g6-aca-chile",
+  "region": "chilecentral",
+  "backendMasterSha": "097dac1bf4a8dcf5c6e799742d2df340f6d893d5",
+  "apimInstances": 0,
+  "serviceBusNamespace": "g6-sb-h5-chile-261127",
+  "serviceBusQueues": [
+    {
+      "name": "g6.bulk.from.catalog",
+      "status": "Active"
+    },
+    {
+      "name": "g6.bulk.from.inventory",
+      "status": "Active"
+    },
+    {
+      "name": "g6.bulk.from.pricing",
+      "status": "Active"
+    },
+    {
+      "name": "g6.catalog.from.bulk",
+      "status": "Active"
+    },
+    {
+      "name": "g6.catalog.from.inventory",
+      "status": "Active"
+    },
+    {
+      "name": "g6.catalog.from.pricing",
+      "status": "Active"
+    },
+    {
+      "name": "g6.catalog.from.taxonomy",
+      "status": "Active"
+    },
+    {
+      "name": "g6.combos.from.catalog",
+      "status": "Active"
+    },
+    {
+      "name": "g6.combos.from.inventory",
+      "status": "Active"
+    },
+    {
+      "name": "g6.inventory.from.bulk",
+      "status": "Active"
+    },
+    {
+      "name": "g6.inventory.from.catalog",
+      "status": "Active"
+    },
+    {
+      "name": "g6.price-audit.from.pricing",
+      "status": "Active"
+    },
+    {
+      "name": "g6.pricing.from.bulk",
+      "status": "Active"
+    },
+    {
+      "name": "g6.pricing.from.catalog",
+      "status": "Active"
+    },
+    {
+      "name": "g6.promotions.commands",
+      "status": "Active"
+    },
+    {
+      "name": "g6.promotions.from.catalog",
+      "status": "Active"
+    },
+    {
+      "name": "g6.promotions.from.inventory",
+      "status": "Active"
+    },
+    {
+      "name": "g6.promotions.from.pricing",
+      "status": "Active"
+    },
+    {
+      "name": "g6.taxonomy.from.catalog",
+      "status": "Active"
+    }
+  ],
+  "containerApps": [
+    {
+      "external": true,
+      "fqdn": "api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+      "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/api-gateway@sha256:2ab58ef95977588b384f7debfad498e8e944a22399424ebdda0cd67a5e6d028b",
+      "latestReadyRevisionName": "api-gateway--0000003",
+      "latestRevisionName": "api-gateway--0000003",
+      "location": "Chile Central",
+      "name": "api-gateway",
+      "provisioningState": "Succeeded",
+      "targetPort": 8080,
+      "traffic": [
+        {
+          "label": "g5-h5",
+          "revisionName": "api-gateway--0000002",
+          "weight": 0
+        },
+        {
+          "revisionName": "api-gateway--0000003",
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "external": false,
+      "fqdn": "bulk-svc.internal.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+      "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/bulk-svc@sha256:7567f26f4604ad7dc2f3f4649408d200e355c2a20ce0e37e038b81d55868e862",
+      "latestReadyRevisionName": "bulk-svc--0000002",
+      "latestRevisionName": "bulk-svc--0000002",
+      "location": "Chile Central",
+      "name": "bulk-svc",
+      "provisioningState": "Succeeded",
+      "targetPort": 3008,
+      "traffic": [
+        {
+          "latestRevision": true,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "external": false,
+      "fqdn": "catalog-svc.internal.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+      "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/catalog-svc@sha256:4e023977f17cce955f702a9122d51d17f028bffb66b7f3da4bd4c74b573c8a5f",
+      "latestReadyRevisionName": "catalog-svc--0000004",
+      "latestRevisionName": "catalog-svc--0000004",
+      "location": "Chile Central",
+      "name": "catalog-svc",
+      "provisioningState": "Succeeded",
+      "targetPort": 3001,
+      "traffic": [
+        {
+          "latestRevision": true,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "external": false,
+      "fqdn": "combos-svc.internal.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+      "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/combos-svc@sha256:062fa1d0e9abb75eb2d0eb124056ad64f6d423ee7811159b4d8d3ab4037361ca",
+      "latestReadyRevisionName": "combos-svc--0000003",
+      "latestRevisionName": "combos-svc--0000003",
+      "location": "Chile Central",
+      "name": "combos-svc",
+      "provisioningState": "Succeeded",
+      "targetPort": 3007,
+      "traffic": [
+        {
+          "latestRevision": true,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "external": false,
+      "fqdn": "inventory-svc.internal.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+      "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/inventory-svc@sha256:8477c4b3a607e129a50c23c28e6b80a3fc59dd4115226aa03ead8d646689de5e",
+      "latestReadyRevisionName": "inventory-svc--0000002",
+      "latestRevisionName": "inventory-svc--0000002",
+      "location": "Chile Central",
+      "name": "inventory-svc",
+      "provisioningState": "Succeeded",
+      "targetPort": 3005,
+      "traffic": [
+        {
+          "latestRevision": true,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "external": false,
+      "fqdn": "price-audit-svc.internal.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+      "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/price-audit-svc@sha256:4b6fef2787c310c4d27f9c8db662adb1a925ce13424e669f74672f7225067501",
+      "latestReadyRevisionName": "price-audit-svc--0000001",
+      "latestRevisionName": "price-audit-svc--0000001",
+      "location": "Chile Central",
+      "name": "price-audit-svc",
+      "provisioningState": "Succeeded",
+      "targetPort": 3003,
+      "traffic": [
+        {
+          "revisionName": "price-audit-svc--0000001",
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "external": false,
+      "fqdn": "pricing-svc.internal.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+      "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/pricing-svc@sha256:fc50f6fb9b437e0bb528d0402ae4a8bae96afa6f06de3bd2f283e062039d88b4",
+      "latestReadyRevisionName": "pricing-svc--0000007",
+      "latestRevisionName": "pricing-svc--0000007",
+      "location": "Chile Central",
+      "name": "pricing-svc",
+      "provisioningState": "Succeeded",
+      "targetPort": 3002,
+      "traffic": [
+        {
+          "latestRevision": true,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "external": false,
+      "fqdn": "promotions-svc.internal.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+      "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/promotions-svc@sha256:d9c8e5ab9bd3109dbeda5f1e286e4c2433225948acf2db93eab959cbb6d7b3f2",
+      "latestReadyRevisionName": "promotions-svc--0000007",
+      "latestRevisionName": "promotions-svc--0000007",
+      "location": "Chile Central",
+      "name": "promotions-svc",
+      "provisioningState": "Succeeded",
+      "targetPort": 3004,
+      "traffic": [
+        {
+          "latestRevision": true,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "external": false,
+      "fqdn": "taxonomy-svc.internal.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+      "image": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/taxonomy-svc@sha256:784d1d85fb2872269cb83ed6650f5a52494f1c5a0e77a8a32d4466b8bb186b51",
+      "latestReadyRevisionName": "taxonomy-svc--0000005",
+      "latestRevisionName": "taxonomy-svc--0000005",
+      "location": "Chile Central",
+      "name": "taxonomy-svc",
+      "provisioningState": "Succeeded",
+      "targetPort": 3006,
+      "traffic": [
+        {
+          "latestRevision": true,
+          "weight": 100
+        }
+      ]
+    }
+  ]
+}
