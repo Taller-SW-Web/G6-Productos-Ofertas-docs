@@ -4,9 +4,9 @@
   "scope": "IN_SCOPE",
   "result": "PASS",
   "evidenceLevel": "ISOLATED",
-  "verificationState": "VERIFIED_L1_PENDING_SUPABASE_MIGRATION_0002",
+  "verificationState": "L1_PASS_DATABASE_APPLIED_L2_PENDING",
   "deploymentState": "NOT_DEPLOYED",
-  "blocker": "ck_inventory_delivery_route en Supabase compartido solo admite 3 destinos; falta autorizacion escrita de Castilla/Owner BD para aplicar 0002_allow_bulk_r10_delivery.sql (SHA256 7ac74f99...)",
+  "blocker": "Pendiente de despliegue candidato y validación L2 de flujo R02→R10 en Azure. Esquema compartido verificado.",
   "owner": "Castilla / Taco / Axel Cueva",
   "testedAtUtc": "2026-11-27T18:10:53.671Z",
   "subjects": {
@@ -40,5 +40,5 @@
     "dlqDelta": 0,
     "idempotent": true
   },
-  "notes": "README de migrations-candidate/h5 corregido en HEAD 18413ac."
+  "notes": "Evidencia de esquema en artefactos/SUPABASE_R10_Y_CATALOG_PREFLIGHT_2026-11-27.json; la prueba de flujo anterior conserva el nivel L1."
 }

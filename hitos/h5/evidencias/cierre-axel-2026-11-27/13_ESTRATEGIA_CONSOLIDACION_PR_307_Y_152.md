@@ -8,7 +8,7 @@
 | **PR Draft #306** | `trabajo/castilla/h5-integracion-pr-pendientes` | `0cd784d575827fd42e91a487f8b68adce5f2220e` | **100% incluido** por merge `--no-ff` (`73b48ca`) preservando autoría de `#300` (Taxonomy), `#297` (Inventory) y `#296` (Promotions) | **NO fusionar por separado**; cerrar como sustituido por `#307` para evitar reincorporar deltas duplicados |
 | **PR Draft #305 (parte autónoma)** | `trabajo/castilla/h5-cierre-post-r2-backend` | hasta `523033a0c8fea87cffd546f124921578da245ca9` (`fabf2c43` + `523033a0`) | **100% incluido** por merge `--no-ff` (`c204823`) preservando autoría de Marco Castilla (rollback R02, migración candidata R10 `0002`, candidato APIM base) | **NO fusionar por separado** la parte hasta `523033a0` |
 | **PR Draft #305 (delta APIM operativo)** | `trabajo/castilla/h5-cierre-post-r2-backend` | `a26965a0` y `8af53c24` | Incorporado una sola vez a #307 en `7ecee3f`. | Revisar el candidato #307. Resolver #305 como absorbido tras autorización del release. |
-| **PR Draft #307 (candidato único)** | `trabajo/cueva/h5-cierre-integral` | `f3cc10d604050d9346e0d9934cd7867121dbe166` | [CI #46060439353](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46060439353), Trivy 9/9 con cero críticos/altos | Único PR Backend a revisión final. |
+| **PR Draft #307 (candidato único)** | `trabajo/cueva/h5-cierre-integral` | `d7a3bf07880a83727acf83788790241c36adc0b5` | [CI final #46061782995](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46061782995). Trivy 0 críticos/altos acreditado en `f3cc10d`. Deltas posteriores: harness Bulk y README Inventory. | Único PR Backend a revisión final. |
 
 ---
 

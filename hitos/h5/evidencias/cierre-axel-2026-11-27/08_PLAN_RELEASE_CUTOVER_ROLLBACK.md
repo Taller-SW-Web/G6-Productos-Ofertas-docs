@@ -1,6 +1,6 @@
 # Plan Accionable de Release, Cutover y Rollback — G6 Hito 5 (2026-11-27)
 
-> **Estado:** Plan preparado y listo para ejecución bajo **autorización expresa de Marco Castilla** y los owners de cada componente. **La política CORS de APIM ya fue corregida. El despliegue del candidato y la migración R10 siguen pendientes.**
+> **Estado:** CORS de APIM e Inventory R10 aplicados y verificados. El despliegue del candidato y las pruebas L2 siguen pendientes del gate de release.
 
 ## 1. Escalación operativa previa al cutover (hallazgo Azure 2026-11-27)
 
@@ -39,7 +39,7 @@ Antes de desplegar nuevas imágenes o abrir tráfico, **Marco Castilla** debe co
 4. Confirmar que las 19 colas en `g6-sb-h5-chile-261127` están `Active` con `active=0, dlq=0` y que las Managed Identities ACA tienen RBAC mínimo (`Azure Service Bus Data Sender` / `Data Receiver` por cola según matriz).
 
 ### Wave 1 — Migración R10 y verificación de esquemas (flags H5 nuevos en `false`)
-1. **Inventory R10 (`Taco` / Owner BD):** con autorización expresa, respaldo verificable y ventana confirmada, aplicar `apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.sql` (`SHA256 7ac74f99...`) como `po_inventory_owner`. Registrar el artefacto aplicado con su checksum sin modificar las entradas históricas. Verificar `ck_inventory_delivery_route` con cuatro destinos y los permisos de `inventory_app`.
+1. **Inventory R10 (`Taco` / Owner BD):** cambio incremental aplicado como `po_inventory_owner`. Verificar los cuatro destinos y el historial `20261127200858` en [el readback](artefactos/SUPABASE_R10_Y_CATALOG_PREFLIGHT_2026-11-27.json).
 2. **Taxonomy R09/R18 (`López` / Owner BD):** verificar en solo lectura la equivalencia de `outbox_delivery`, función, trigger, eventos y ACL con [la reconciliación de esquema e historiales](05_MIGRACIONES_Y_DIAGNOSTICO_CATALOG_LEGACY.md). Conservar los dos registros H5 globales y el ledger del servicio hasta `0005`. **Queda excluida la ejecución o el registro de `0006` completa.** Ante una desviación funcional demostrada, ensayar un diferencial versionado y reversible en una transacción completa. R18 requiere el despliegue y la corrida L2.
 3. **Pricing (`Vera` / Owner BD):** confirmar vía `SELECT` la entrada global `g6_h5_pricing_0003_service_bus_routes_r2` y los cuatro destinos compatibles. Si aparece una desviación, reconciliarla antes del release.
 4. **Regla inmutable:** NO tocar `catalog.outbox` legacy (`RABBITMQ`) ni alterar filas de `schema_migrations` aplicadas.

@@ -1,0 +1,103 @@
+{
+  "level": "LIVE_DATABASE_SCHEMA_READBACK",
+  "project": "slzglmtiyrzygpkiuthf",
+  "inventoryR10": {
+    "verified_at_utc": "2026-11-27 20:09:24.508044+00",
+    "validated": true,
+    "destinations": [
+      "g6.bulk.from.inventory",
+      "g6.catalog.from.inventory",
+      "g6.combos.from.inventory",
+      "g6.promotions.from.inventory"
+    ],
+    "constraint_definition": "CHECK (((route_version = 1) AND (transport = 'AZURE_SERVICE_BUS'::text) AND (destination = ANY (ARRAY['g6.catalog.from.inventory'::text, 'g6.combos.from.inventory'::text, 'g6.promotions.from.inventory'::text, 'g6.bulk.from.inventory'::text]))))",
+    "inventory_rows": 0,
+    "service_ledger": {
+      "version": "0002_allow_bulk_r10_delivery.sql",
+      "checksum": "7ac74f99a0d34c500f731d4769a411a1ab315440fe89336f08b840d09b718575",
+      "appliedAt": "2026-11-27T20:08:58.031237+00:00"
+    },
+    "global_ledger": {
+      "name": "g6_h5_inventory_r10_allow_bulk_delivery_20261127",
+      "version": "20261127200858",
+      "statements": 1
+    },
+    "leftover_constraints": 0,
+    "app_select": true,
+    "app_insert": true,
+    "app_update": true,
+    "app_delete": false,
+    "taxonomy_0006_in_ledger": 0,
+    "taxonomy_trigger_enabled": 1
+  },
+  "sqlExecutionSha256": "ba9757502c7d99683c822076b748a2108852e60aeeb928959811b36ebc7a3b75",
+  "sourceSqlSha256": "7ac74f99a0d34c500f731d4769a411a1ab315440fe89336f08b840d09b718575",
+  "rollbackScriptSha256": "22e6a461b166a7fabfdee4236fb024fee8b456e166020af76ea9be630ee402b2",
+  "rollbackTestedIn": "postgres17.11-disposable",
+  "backup": {
+    "type": "approved_scoped_logical_backup",
+    "metadataSha256": "291445ba37fa965a3e59ca6b4e4d0a1ce9d57e92cf62836ccbf851ad080c052e",
+    "ddlSha256": "dbba818351a33861d91e632b50ca2da8b1e6c373d831514b09b0d17bb22aff12",
+    "restoreVerified": true,
+    "rows": 0
+  },
+  "catalogLegacy": [
+    {
+      "reference_hash": "fd9a4569bc15",
+      "event_name": "pricing.product.initialization.requested",
+      "occurred_at": "2026-11-12 16:00:24.085+00",
+      "activation_state": [
+        "PENDING"
+      ],
+      "lifecycle_matches": null,
+      "stock_balance_matches": null,
+      "pricing_same_product": 0,
+      "pricing_same_product_and_sku": 0,
+      "inventory_inbox_matches": 0,
+      "pricing_inbox_matches": 0
+    },
+    {
+      "reference_hash": "73979b2696a0",
+      "event_name": "inventory.sku.initialization.requested",
+      "occurred_at": "2026-11-12 16:00:24.213+00",
+      "activation_state": [
+        "PENDING"
+      ],
+      "lifecycle_matches": 1,
+      "stock_balance_matches": 0,
+      "pricing_same_product": null,
+      "pricing_same_product_and_sku": null,
+      "inventory_inbox_matches": 0,
+      "pricing_inbox_matches": 0
+    },
+    {
+      "reference_hash": "f97cbb2b5420",
+      "event_name": "pricing.product.initialization.requested",
+      "occurred_at": "2026-11-15 00:24:51.786+00",
+      "activation_state": [
+        "PENDING"
+      ],
+      "lifecycle_matches": null,
+      "stock_balance_matches": null,
+      "pricing_same_product": 0,
+      "pricing_same_product_and_sku": 0,
+      "inventory_inbox_matches": 0,
+      "pricing_inbox_matches": 0
+    },
+    {
+      "reference_hash": "da5eba165d99",
+      "event_name": "inventory.sku.initialization.requested",
+      "occurred_at": "2026-11-15 00:24:51.908+00",
+      "activation_state": [
+        "PENDING"
+      ],
+      "lifecycle_matches": 1,
+      "stock_balance_matches": 0,
+      "pricing_same_product": null,
+      "pricing_same_product_and_sku": null,
+      "inventory_inbox_matches": 0,
+      "pricing_inbox_matches": 0
+    }
+  ],
+  "azureFlowL2": "PENDING_CANDIDATE_DEPLOYMENT"
+}

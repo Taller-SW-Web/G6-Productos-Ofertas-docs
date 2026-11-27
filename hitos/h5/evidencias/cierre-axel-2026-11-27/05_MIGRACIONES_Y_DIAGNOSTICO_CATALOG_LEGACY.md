@@ -1,12 +1,12 @@
 # Reconciliación PostgreSQL/Supabase, Migraciones PG17 y Diagnóstico Catalog Legacy — 2026-11-27
 
-> **Límite estricto respetado:** **NO** se ejecutó DDL, DML, replay de Outbox heredada ni limpieza de DLQ sobre Supabase compartido (`slzglmtiyrzygpkiuthf`) porque la autorización expresa escrita de Marco Castilla referida por la auditoría no fue adjuntada al encargo. Toda verificación mutante se ejecutó exclusivamente en contenedores `postgres:17` descartables locales. Los ledgers y checksums históricos permanecen intactos.
+> **Actualización del 27/11/2026:** Inventory R10 fue el único cambio de esquema aplicado. Se verificaron el respaldo lógico acotado en PG17 y ambos historiales. Taxonomy conserva los objetos instalados y las cuatro filas Catalog siguen intactas.
 
 ## 1. Comparación de historiales de migraciones (`supabase_migrations` vs ledgers por servicio)
 
 | Dominio | Ledger global (`supabase_migrations.schema_migrations`) | Ledger del servicio (`<schema>.schema_migrations`) | Artefacto versionado en candidato `#307` | Estado real reconciliado |
 |---|---|---|---|---|
-| **Inventory (R02/R10)** | Sin entrada R10 | `inventory.schema_migrations`: `0001_create_inventory.sql`, `0002_order_id_operaciones_disponibilidad.sql` (no alterar) | `apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.sql` (`SHA256 7ac74f99...`) + rollback (`22e6a461...`) | **`PENDIENTE_APLICACION_AUTORIZADA`**: `ck_inventory_delivery_route` en Supabase solo admite 3 destinos (R11/R12/R13); `inventory.outbox_delivery` tiene 0 filas y owner `po_inventory_owner`. Al aplicar bajo aprobación, registrar identificador explícito en `supabase_migrations` (ej. `g6_h5_inventory_allow_bulk_r10_delivery_YYYYMMDD`) sin colisionar con la numeración histórica `0002` de `inventory.schema_migrations` |
+| **Inventory (R02/R10)** | `20261127200858` (`g6_h5_inventory_r10_allow_bulk_delivery_20261127`) | Nueva entrada `0002_allow_bulk_r10_delivery.sql`, checksum conservado. Los dos registros anteriores permanecen | SQL incremental y rollback de #307 | **APLICADO Y VERIFICADO**. Cuatro destinos, cero filas, permisos `inventory_app` preservados. [Comprobante](artefactos/SUPABASE_R10_Y_CATALOG_PREFLIGHT_2026-11-27.json). |
 | **Taxonomy (R09/R18)** | Registra `g6_h5_taxonomy_outbox_delivery_20261125` y `g6_h5_taxonomy_outbox_restrict_runtime_acl_20261125` | `taxonomy.schema_migrations`: llega hasta `0005` | `apps/taxonomy-svc/migrations-candidate/h5/0001_outbox_delivery.sql` (`SHA256 fc838e56...`) vs `apps/taxonomy-svc/migrations/0006_service_bus_outbox_delivery.sql` (`SHA256 ab68c32c...`) | **NO es «0006 no aplicada» — ESQUEMA H5 YA EXISTE Y ES FUNCIONALMENTE EQUIVALENTE** (ver sección 2). **PROHIBIDO ejecutar `0006` íntegra** sobre los objetos existentes (su propio `$guard$` aborta con `Taxonomy H5 has an existing or alternate writer`) |
 | **Pricing (R14–R17)** | Registra `g6_h5_pricing_0003_service_bus_routes_r2` | Verificar vía SELECT en preflight | `apps/pricing-svc/migrations/0003_service_bus_h5_routes_r2.sql` (`SHA256 9a059889...`) | **COMPATIBLE CON CANDIDATO**: amplía `ck_delivery_route` a los 4 destinos (`g6.price-audit.from.pricing`, `g6.promotions.from.pricing`, `g6.catalog.from.pricing`, `g6.bulk.from.pricing`, `route_version=1`, `transport='AZURE_SERVICE_BUS'`). Conservar migración aplicada sin reejecutar |
 
@@ -40,7 +40,7 @@ Reproduciendo `0001_create_taxonomy.sql` + `0002`..`0005` + `0001_outbox_deliver
 - **SHA-256 up:** `7ac74f99a0d34c500f731d4769a411a1ab315440fe89336f08b840d09b718575` (`apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.sql`).
 - **SHA-256 rollback:** `22e6a461b166a7fabfdee4236fb024fee8b456e166020af76ea9be630ee402b2` (`apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.rollback.sql`).
 - **Verificación PG17 descartable (`PASS`):** pre-migración rechaza `g6.bulk.from.inventory`; aplicación ×2 idempotente como `po_inventory_owner`; inserción de los 4 destinos (R10/R11/R12/R13) como rol runtime `inventory_app`; 3 negativos rechazados (`g6.price-audit.from.pricing`, `route_version=2`, `transport='RABBITMQ'`); rollback aborta con exit 3 (`existen entregas Bulk`) si hay fila Bulk y revierte limpio tras limpieza descartable preservando las 3 rutas previas.
-- **Prerrequisito faltante para aplicar en Supabase `slzglmtiyrzygpkiuthf`:** confirmación expresa escrita de Marco Castilla (proyecto/alcance/ventana/PITR/ejecutor `po_inventory_owner`), ya que la auditoría no fue adjuntada al prompt.
+- **Aplicado y verificado en Supabase** con autorización y respaldo lógico acotado restaurado en PG17. La transacción se ensayó con la definición original y el ledger. Supabase registró `20261127200858` y el readback confirmó el constraint validado, los cuatro destinos y los permisos de `inventory_app`. R02→R10 L2 queda pendiente del release.
 
 ---
 
@@ -53,34 +53,25 @@ Reproduciendo `0001_create_taxonomy.sql` + `0002`..`0005` + `0001_outbox_deliver
 - **Aislamiento H5 confirmado:** `relayCatalogDelivery` lee exclusivamente `catalog.outbox_delivery` (alimentada solo bajo `AZURE_SERVICE_BUS`), por lo que las 4 filas heredadas no bloquean ni interfieren con H5.
 - **Límite respetado:** sin borrado, sin replay automático y sin alterar ledgers ni registros originales.
 
-### 4.2 Consulta `READ ONLY` para vincular mensaje, correlación y efecto downstream por fila
+### 4.2 Consultas y resultados de solo lectura
+
+Las cuatro operaciones de activación están `PENDING` y no hay Inbox asociado a sus mensajes originales. `73979b2696a0` y `da5eba165d99` (Inventory) tienen `sku_lifecycle` para producto y SKU, pero cero filas de saldo. `fd9a4569bc15` y `f97cbb2b5420` (Pricing) carecen de registro en `pricing.prices` para el producto. Los IDs se identifican por hash en [el comprobante](artefactos/SUPABASE_R10_Y_CATALOG_PREFLIGHT_2026-11-27.json). La presencia en lifecycle por sí sola deja el efecto del mensaje indeterminado.
 
 ```sql
-BEGIN READ ONLY;
-
-SELECT
-  o.id AS message_id,
-  o.correlation_id,
-  o.event_name,
-  o.aggregate_id,
-  o.delivery_transport,
-  o.created_at,
-  o.payload->>'sku' AS sku,
-  o.payload->>'productId' AS product_id,
-  ac.inventory_ready,
-  ac.pricing_ready,
-  (SELECT count(*) FROM inventory.sku_identity si WHERE si.sku = o.payload->>'sku') AS inv_sku_exists,
-  (SELECT count(*) FROM inventory.inbox ii WHERE ii.message_id = o.id) AS inv_inbox_hits,
-  (SELECT count(*) FROM pricing.prices pr WHERE pr.sku = o.payload->>'sku') AS pricing_rows,
-  (SELECT count(*) FROM pricing.inbox pi WHERE pi.message_id = o.id) AS pricing_inbox_hits
-FROM catalog.outbox o
-LEFT JOIN catalog.activation_checks ac
-  ON ac.product_id::text = coalesce(o.payload->>'productId', o.aggregate_id::text)
-WHERE o.published_at IS NULL
-  AND o.delivery_transport = 'RABBITMQ'
-ORDER BY o.created_at ASC;
-
-COMMIT;
+SET TRANSACTION READ ONLY;
+WITH legacy AS (
+ SELECT o.message_id,o.operation_id,o.event_name,o.occurred_at,o.payload::jsonb AS body
+ FROM catalog.outbox o WHERE o.published_at IS NULL AND o.delivery_transport='RABBITMQ'
+)
+SELECT left(md5(l.message_id::text),12) AS reference_hash, l.event_name,l.occurred_at,
+ (SELECT array_agg(DISTINCT a.state ORDER BY a.state) FROM catalog.activation_checks a WHERE a.operation_id=l.operation_id) AS activation_state,
+ CASE WHEN l.event_name LIKE 'inventory.%' THEN (SELECT count(*) FROM inventory.sku_lifecycle i WHERE i.sku_id=l.body->>'sku' AND i.product_id::text=l.body->>'product_id') END AS lifecycle_matches,
+ CASE WHEN l.event_name LIKE 'inventory.%' THEN (SELECT count(*) FROM inventory.stock_balance s WHERE s.sku_id=l.body->>'sku') END AS stock_balance_matches,
+ CASE WHEN l.event_name LIKE 'pricing.%' THEN (SELECT count(*) FROM pricing.prices p WHERE p.product_id::text=l.body->>'product_id') END AS pricing_same_product,
+ CASE WHEN l.event_name LIKE 'pricing.%' THEN (SELECT count(*) FROM pricing.prices p WHERE p.product_id::text=l.body->>'product_id' AND p.sku=l.body->>'sku_base') END AS pricing_same_product_and_sku,
+ (SELECT count(*) FROM inventory.inbox i WHERE i.message_id=l.message_id) AS inventory_inbox_matches,
+ (SELECT count(*) FROM pricing.inbox p WHERE p.message_id=l.message_id) AS pricing_inbox_matches
+FROM legacy l ORDER BY l.occurred_at,l.message_id;
 ```
 
 ### 4.3 Matriz de decisión propuesta (sujeta a autorización específica tras ejecutar el SELECT)

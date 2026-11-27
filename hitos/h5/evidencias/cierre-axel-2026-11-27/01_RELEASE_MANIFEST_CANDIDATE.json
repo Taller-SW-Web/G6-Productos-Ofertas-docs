@@ -14,8 +14,8 @@
       "candidateBranch": "trabajo/cueva/h5-cierre-integral",
       "candidatePr": 307,
       "candidatePrDraft": true,
-      "candidateSha": "f3cc10d604050d9346e0d9934cd7867121dbe166",
-      "candidateCiRunId": 46060439353,
+      "candidateSha": "d7a3bf07880a83727acf83788790241c36adc0b5",
+      "candidateCiRunId": 46061782995,
       "candidateCiConclusion": "SEE_CI_RUN",
       "incorporatedSources": [
         {
@@ -57,21 +57,11 @@
       "baseEvidencePr": 151,
       "baseEvidenceSha": "5969a0ed831b43c5ed398c8a925ffbd7bd3340cc",
       "complementaryEvidenceBranch": "trabajo/cueva/h5-cierre-evidencias-axel",
-      "lastEvidenceShaWithRecordedCi": "68d2ad38784a34d3ad197cd9cf70ea56ed058267",
-      "lastEvidenceCiRunId": 46057729689
+      "lastEvidenceShaWithRecordedCi": "0381255b23d8f7ae9cb746a1259a100a5ec6382c",
+      "lastEvidenceCiRunId": 46061408317
     }
   },
-  "pendingDatabaseMigrations": [
-    {
-      "service": "inventory-svc",
-      "file": "apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.sql",
-      "sha256": "7ac74f99a0d34c500f731d4769a411a1ab315440fe89336f08b840d09b718575",
-      "rollbackFile": "apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.rollback.sql",
-      "rollbackSha256": "22e6a461b166a7fabfdee4236fb024fee8b456e166020af76ea9be630ee402b2",
-      "pg17DisposableStatus": "PASS",
-      "sharedSupabaseStatus": "NOT_APPLIED"
-    }
-  ],
+  "pendingDatabaseMigrations": [],
   "databaseSchemaReconciliations": [
     {
       "service": "taxonomy-svc",
@@ -182,5 +172,20 @@
   "perf06ThreePairedRunsEvidence": "artefactos/PERF06_3_PARES_2026-11-27.json",
   "trivyBaselineCiRunId": 46058242392,
   "trivyCandidateCiRunId": 46060439353,
-  "securityCiEvidence": "artefactos/SECURIDAD_DRAFT_2026-11-27.json"
+  "securityCiEvidence": "artefactos/SECURIDAD_DRAFT_2026-11-27.json",
+  "appliedDatabaseMigrations": [
+    {
+      "service": "inventory-svc",
+      "file": "apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.sql",
+      "sha256": "7ac74f99a0d34c500f731d4769a411a1ab315440fe89336f08b840d09b718575",
+      "rollbackFile": "apps/inventory-svc/migrations-candidate/h5/0002_allow_bulk_r10_delivery.rollback.sql",
+      "rollbackSha256": "22e6a461b166a7fabfdee4236fb024fee8b456e166020af76ea9be630ee402b2",
+      "pg17DisposableStatus": "PASS",
+      "sharedSupabaseStatus": "APPLIED_VERIFIED",
+      "globalLedgerVersion": "20261127200858",
+      "appliedAtUtc": "2026-11-27T15:08:58.031237-05:00"
+    }
+  ],
+  "databaseVerificationEvidence": "artefactos/SUPABASE_R10_Y_CATALOG_PREFLIGHT_2026-11-27.json",
+  "perf03AndPerf07IsolatedEvidence": "artefactos/PERF03_PERF07_L1_2026-11-27.json"
 }
