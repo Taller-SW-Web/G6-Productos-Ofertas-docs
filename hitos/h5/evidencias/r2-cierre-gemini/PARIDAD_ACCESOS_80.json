@@ -1,0 +1,3609 @@
+{
+  "source": "G6_H5_MATRIZ_ACCESOS_SCOPES_MODULOS_2026-11-26.csv",
+  "actualRows": 80,
+  "claimedRowsInMD": 84,
+  "openApiVersion": "0.7.0-rc.3",
+  "gatewayRoutesIncludingEnabledG5": 151,
+  "contractOperations": 156,
+  "parity": [
+    {
+      "operationId": "listarProductos",
+      "differences": []
+    },
+    {
+      "operationId": "crearProducto",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerProducto",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarProducto",
+      "differences": []
+    },
+    {
+      "operationId": "listarCategorias",
+      "differences": []
+    },
+    {
+      "operationId": "crearCategoria",
+      "differences": []
+    },
+    {
+      "operationId": "listarMarcas",
+      "differences": []
+    },
+    {
+      "operationId": "crearMarca",
+      "differences": []
+    },
+    {
+      "operationId": "consultarPrecios",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerPrecioSku",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarPrecioSku",
+      "differences": []
+    },
+    {
+      "operationId": "listarPromociones",
+      "differences": []
+    },
+    {
+      "operationId": "crearPromocion",
+      "differences": []
+    },
+    {
+      "operationId": "evaluarPromociones",
+      "differences": []
+    },
+    {
+      "operationId": "validarCupon",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerRecomendaciones",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerCombo",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarCombo",
+      "differences": []
+    },
+    {
+      "operationId": "consultarDisponibilidad",
+      "differences": []
+    },
+    {
+      "operationId": "solicitarReserva",
+      "differences": []
+    },
+    {
+      "operationId": "confirmarReserva",
+      "differences": []
+    },
+    {
+      "operationId": "liberarReserva",
+      "differences": []
+    },
+    {
+      "operationId": "consultarDatosFisicos",
+      "differences": []
+    },
+    {
+      "operationId": "resolverSlugCategoriaCreacion",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerSeoPorSlug",
+      "differences": []
+    },
+    {
+      "operationId": "resolverSlugAnterior",
+      "differences": []
+    },
+    {
+      "operationId": "activarProducto",
+      "differences": []
+    },
+    {
+      "operationId": "desactivarProducto",
+      "differences": []
+    },
+    {
+      "operationId": "reactivarProducto",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerProductoPorSlug",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerPreparacionProducto",
+      "differences": []
+    },
+    {
+      "operationId": "reintentarPreparacionProducto",
+      "differences": []
+    },
+    {
+      "operationId": "listarVariantesProducto",
+      "differences": []
+    },
+    {
+      "operationId": "crearVariante",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerVariante",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarVariante",
+      "differences": []
+    },
+    {
+      "operationId": "activarVariante",
+      "differences": []
+    },
+    {
+      "operationId": "desactivarVariante",
+      "differences": []
+    },
+    {
+      "operationId": "reactivarVariante",
+      "differences": []
+    },
+    {
+      "operationId": "reintentarPreparacionVariante",
+      "differences": []
+    },
+    {
+      "operationId": "listarCombosAdmin",
+      "differences": []
+    },
+    {
+      "operationId": "crearCombo",
+      "differences": []
+    },
+    {
+      "operationId": "desactivarCombo",
+      "differences": []
+    },
+    {
+      "operationId": "consultarDisponibilidadCombo",
+      "differences": []
+    },
+    {
+      "operationId": "listarCupones",
+      "differences": []
+    },
+    {
+      "operationId": "crearCupon",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerCuponAdmin",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarCupon",
+      "differences": []
+    },
+    {
+      "operationId": "activarCupon",
+      "differences": []
+    },
+    {
+      "operationId": "desactivarCupon",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerPromocionAdmin",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarPromocion",
+      "differences": []
+    },
+    {
+      "operationId": "activarPromocion",
+      "differences": []
+    },
+    {
+      "operationId": "desactivarPromocion",
+      "differences": []
+    },
+    {
+      "operationId": "listarReglasRecomendacion",
+      "differences": []
+    },
+    {
+      "operationId": "crearReglaRecomendacion",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerReglaRecomendacion",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarReglaRecomendacion",
+      "differences": []
+    },
+    {
+      "operationId": "activarReglaRecomendacion",
+      "differences": []
+    },
+    {
+      "operationId": "desactivarReglaRecomendacion",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerArbolCategoriasAdmin",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerCategoriaAdmin",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarCategoria",
+      "differences": []
+    },
+    {
+      "operationId": "solicitarDesactivacionCategoria",
+      "differences": []
+    },
+    {
+      "operationId": "reactivarCategoria",
+      "differences": []
+    },
+    {
+      "operationId": "listarCaracteristicas",
+      "differences": []
+    },
+    {
+      "operationId": "crearCaracteristica",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerCaracteristica",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarCaracteristica",
+      "differences": []
+    },
+    {
+      "operationId": "listarValoresCaracteristica",
+      "differences": []
+    },
+    {
+      "operationId": "crearValorCaracteristica",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarValorCaracteristica",
+      "differences": []
+    },
+    {
+      "operationId": "solicitarDesactivacionValorCaracteristica",
+      "differences": []
+    },
+    {
+      "operationId": "reactivarValorCaracteristica",
+      "differences": []
+    },
+    {
+      "operationId": "desactivarCaracteristica",
+      "differences": []
+    },
+    {
+      "operationId": "reactivarCaracteristica",
+      "differences": []
+    },
+    {
+      "operationId": "listarTiposProducto",
+      "differences": []
+    },
+    {
+      "operationId": "crearTipoProducto",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerTipoProducto",
+      "differences": []
+    },
+    {
+      "operationId": "solicitarDesactivacionTipoProducto",
+      "differences": []
+    },
+    {
+      "operationId": "reactivarTipoProducto",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerEsquemaTipoProducto",
+      "differences": []
+    },
+    {
+      "operationId": "asociarCaracteristicaTipoProducto",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarAsociacionTipoCaracteristica",
+      "differences": []
+    },
+    {
+      "operationId": "solicitarDesasociacionTipoCaracteristica",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerMarcaAdmin",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarMarca",
+      "differences": []
+    },
+    {
+      "operationId": "solicitarDesactivacionMarca",
+      "differences": []
+    },
+    {
+      "operationId": "reactivarMarca",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerOperacionMaestra",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerSeoCategoriaAdmin",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarSeoCategoria",
+      "differences": []
+    },
+    {
+      "operationId": "listarHistorialSlugCategoria",
+      "differences": []
+    },
+    {
+      "operationId": "listarProgramacionesPrecioSku",
+      "differences": []
+    },
+    {
+      "operationId": "programarPrecioSku",
+      "differences": []
+    },
+    {
+      "operationId": "prevalidarImportacionPrecios",
+      "differences": []
+    },
+    {
+      "operationId": "crearImportacionPrecios",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerImportacionPrecios",
+      "differences": []
+    },
+    {
+      "operationId": "descargarReporteImportacionPrecios",
+      "differences": []
+    },
+    {
+      "operationId": "listarAuditoriaPrecios",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerAuditoriaPrecio",
+      "differences": []
+    },
+    {
+      "operationId": "crearExportacionAuditoriaPrecios",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerExportacionAuditoriaPrecios",
+      "differences": []
+    },
+    {
+      "operationId": "descargarExportacionAuditoriaPrecios",
+      "differences": []
+    },
+    {
+      "operationId": "descargarPlantillaProductos",
+      "differences": []
+    },
+    {
+      "operationId": "crearImportacionGeneralProductos",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerImportacionGeneralProductos",
+      "differences": []
+    },
+    {
+      "operationId": "descargarReporteImportacionGeneral",
+      "differences": []
+    },
+    {
+      "operationId": "reanudarImportacionGeneral",
+      "differences": []
+    },
+    {
+      "operationId": "crearExportacionGeneralProductos",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerExportacionGeneralProductos",
+      "differences": []
+    },
+    {
+      "operationId": "descargarExportacionGeneralProductos",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerUmbralesInventario",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarUmbralGlobal",
+      "differences": []
+    },
+    {
+      "operationId": "establecerUmbralSku",
+      "differences": []
+    },
+    {
+      "operationId": "eliminarUmbralSku",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerDashboardInventario",
+      "differences": []
+    },
+    {
+      "operationId": "listarCategoriasAdmin",
+      "differences": []
+    },
+    {
+      "operationId": "listarMarcasAdmin",
+      "differences": []
+    },
+    {
+      "operationId": "listarPromocionesAdmin",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerPrecioBaseProducto",
+      "differences": []
+    },
+    {
+      "operationId": "actualizarPrecioBaseProducto",
+      "differences": []
+    },
+    {
+      "operationId": "listarProgramacionesPrecioProducto",
+      "differences": []
+    },
+    {
+      "operationId": "programarPrecioBaseProducto",
+      "differences": []
+    },
+    {
+      "operationId": "reportarIncidenciaInventario",
+      "differences": []
+    },
+    {
+      "operationId": "resolverIncidenciaInventario",
+      "differences": []
+    },
+    {
+      "operationId": "reintegrarInventario",
+      "differences": []
+    },
+    {
+      "operationId": "conciliarVentaOffline",
+      "differences": []
+    },
+    {
+      "operationId": "listarTrasladosInventario",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerTrasladoInventario",
+      "differences": []
+    },
+    {
+      "operationId": "registrarRecepcionTrasladoInventario",
+      "differences": []
+    },
+    {
+      "operationId": "resolverCodigoBarras",
+      "differences": []
+    },
+    {
+      "operationId": "consultarDisponibilidadComercial",
+      "differences": []
+    },
+    {
+      "operationId": "consultarOperacionInventario",
+      "differences": []
+    },
+    {
+      "operationId": "verificarCantidadComercial",
+      "differences": []
+    },
+    {
+      "operationId": "listarProductosAdministracion",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerProductoAdministracion",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerDefinicionPrecioProductoAdministracion",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerDefinicionPrecioSkuAdministracion",
+      "differences": []
+    },
+    {
+      "operationId": "listarSaldosFisicosAdministracion",
+      "differences": []
+    },
+    {
+      "operationId": "listarAuditoriaPreciosAdministracion",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerAuditoriaPrecioAdministracion",
+      "differences": []
+    },
+    {
+      "operationId": "crearComboAdministracion",
+      "differences": []
+    },
+    {
+      "operationId": "resolverSkusAdministracion",
+      "differences": []
+    },
+    {
+      "operationId": "conciliarImportacionGeneralPorCorrelacion",
+      "differences": []
+    },
+    {
+      "operationId": "listarAlertasOperativasInventario",
+      "differences": []
+    },
+    {
+      "operationId": "listarUbicacionesInventario",
+      "differences": []
+    },
+    {
+      "operationId": "admitirConsumoCuponH5",
+      "differences": []
+    },
+    {
+      "operationId": "admitirRestauracionCuponH5",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerOperacionCuponH5",
+      "differences": []
+    },
+    {
+      "operationId": "obtenerEstadoReservaH5",
+      "differences": []
+    }
+  ],
+  "rows": [
+    {
+      "sourceRow": 1,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/productos",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "canal=MARKETPLACE",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/productos",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "canal=MARKETPLACE",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 2,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/productos/{productoId}",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/productos/{productoId}",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 3,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/categorias",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/categorias",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 4,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/marcas",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/marcas",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 5,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/precios",
+      "scope_requerido": "precios:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "canal=MARKETPLACE",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/precios",
+        "scope_requerido": "precios:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "canal=MARKETPLACE",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "precios:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 6,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/precios/skus/{sku}",
+      "scope_requerido": "precios:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/precios/skus/{sku}",
+        "scope_requerido": "precios:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "precios:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 7,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/promociones",
+      "scope_requerido": "promociones:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "canal=MARKETPLACE",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/promociones",
+        "scope_requerido": "promociones:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "canal=MARKETPLACE",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "promociones:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 8,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/promociones/evaluar",
+      "scope_requerido": "promociones:evaluar",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/promociones/evaluar",
+        "scope_requerido": "promociones:evaluar",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "promociones:evaluar",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 9,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/cupones/validar",
+      "scope_requerido": "cupones:validar",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/cupones/validar",
+        "scope_requerido": "cupones:validar",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "cupones:validar",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 10,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/recomendaciones",
+      "scope_requerido": "recomendaciones:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/recomendaciones",
+        "scope_requerido": "recomendaciones:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "recomendaciones:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 11,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/productos/por-slug/{slug}",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/productos/por-slug/{slug}",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 12,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/inventario/disponibilidad/comercial",
+      "scope_requerido": "inventario:disponibilidad:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "canal=MARKETPLACE",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/inventario/disponibilidad/comercial",
+        "scope_requerido": "inventario:disponibilidad:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "canal=MARKETPLACE",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:disponibilidad:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 13,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/inventario/disponibilidad/comercial/verificar",
+      "scope_requerido": "inventario:disponibilidad:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/inventario/disponibilidad/comercial/verificar",
+        "scope_requerido": "inventario:disponibilidad:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:disponibilidad:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 14,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/productos",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "canal=CHATBOT",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/productos",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "canal=CHATBOT",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 15,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/productos/{productoId}",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/productos/{productoId}",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 16,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/categorias",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/categorias",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 17,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/marcas",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/marcas",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 18,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/precios",
+      "scope_requerido": "precios:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "canal=CHATBOT",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/precios",
+        "scope_requerido": "precios:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "canal=CHATBOT",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "precios:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 19,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/precios/skus/{sku}",
+      "scope_requerido": "precios:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/precios/skus/{sku}",
+        "scope_requerido": "precios:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "precios:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 20,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/promociones",
+      "scope_requerido": "promociones:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "canal=CHATBOT",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/promociones",
+        "scope_requerido": "promociones:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "canal=CHATBOT",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "promociones:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 21,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/promociones/evaluar",
+      "scope_requerido": "promociones:evaluar",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/promociones/evaluar",
+        "scope_requerido": "promociones:evaluar",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "promociones:evaluar",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 22,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/cupones/validar",
+      "scope_requerido": "cupones:validar",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/cupones/validar",
+        "scope_requerido": "cupones:validar",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "cupones:validar",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 23,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/recomendaciones",
+      "scope_requerido": "recomendaciones:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/recomendaciones",
+        "scope_requerido": "recomendaciones:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "recomendaciones:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 24,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/productos/por-slug/{slug}",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/productos/por-slug/{slug}",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 25,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/inventario/disponibilidad/comercial",
+      "scope_requerido": "inventario:disponibilidad:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "canal=CHATBOT",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/inventario/disponibilidad/comercial",
+        "scope_requerido": "inventario:disponibilidad:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "canal=CHATBOT",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:disponibilidad:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 26,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/inventario/disponibilidad/comercial/verificar",
+      "scope_requerido": "inventario:disponibilidad:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/inventario/disponibilidad/comercial/verificar",
+        "scope_requerido": "inventario:disponibilidad:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:disponibilidad:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 27,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/productos",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "canal=RETAIL",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/productos",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "canal=RETAIL",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 28,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/productos/{productoId}",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/productos/{productoId}",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 29,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/categorias",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/categorias",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 30,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/marcas",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/marcas",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 31,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/precios",
+      "scope_requerido": "precios:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "canal=RETAIL",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/precios",
+        "scope_requerido": "precios:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "canal=RETAIL",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "precios:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 32,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/precios/skus/{sku}",
+      "scope_requerido": "precios:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/precios/skus/{sku}",
+        "scope_requerido": "precios:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "precios:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 33,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/promociones",
+      "scope_requerido": "promociones:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "canal=RETAIL",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/promociones",
+        "scope_requerido": "promociones:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "canal=RETAIL",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "promociones:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 34,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/promociones/evaluar",
+      "scope_requerido": "promociones:evaluar",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/promociones/evaluar",
+        "scope_requerido": "promociones:evaluar",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "promociones:evaluar",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 35,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/cupones/validar",
+      "scope_requerido": "cupones:validar",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/cupones/validar",
+        "scope_requerido": "cupones:validar",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "cupones:validar",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 36,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/recomendaciones",
+      "scope_requerido": "recomendaciones:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/recomendaciones",
+        "scope_requerido": "recomendaciones:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "recomendaciones:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 37,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/productos/por-slug/{slug}",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/productos/por-slug/{slug}",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 38,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/inventario/disponibilidad/comercial",
+      "scope_requerido": "inventario:disponibilidad:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "canal=RETAIL",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/inventario/disponibilidad/comercial",
+        "scope_requerido": "inventario:disponibilidad:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "canal=RETAIL",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:disponibilidad:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 39,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/inventario/disponibilidad/comercial/verificar",
+      "scope_requerido": "inventario:disponibilidad:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/inventario/disponibilidad/comercial/verificar",
+        "scope_requerido": "inventario:disponibilidad:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:disponibilidad:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 40,
+      "modulo": "G2 Despacho",
+      "client_id": "modulo-despacho",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/productos/datos-fisicos/consulta",
+      "scope_requerido": "productos:fisicos:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Lote de 1 a 100 SKU; peso kg y dimensiones cm.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G2 Despacho",
+        "client_id": "modulo-despacho",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/productos/datos-fisicos/consulta",
+        "scope_requerido": "productos:fisicos:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Lote de 1 a 100 SKU; peso kg y dimensiones cm.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "productos:fisicos:leer",
+      "runtime_clients": [
+        "modulo-despacho"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 41,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/productos/codigos-barras/resolver",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Resuelve código de barras a SKU; no devuelve el producto completo.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/productos/codigos-barras/resolver",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Resuelve código de barras a SKU; no devuelve el producto completo.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 42,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/inventario/incidencias",
+      "scope_requerido": "inventario:incidencias:reportar",
+      "estado_grant_g7": "SCOPE_NO_VERSIONADO_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "El scope no figura en el catálogo G7 versionado revisado.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/inventario/incidencias",
+        "scope_requerido": "inventario:incidencias:reportar",
+        "estado_grant_g7": "SCOPE_NO_VERSIONADO_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "El scope no figura en el catálogo G7 versionado revisado.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:incidencias:reportar",
+      "runtime_clients": [
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 43,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/inventario/incidencias/{incidenciaId}/resolver",
+      "scope_requerido": "inventario:incidencias:resolver",
+      "estado_grant_g7": "SCOPE_NO_VERSIONADO_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "El scope no figura en el catálogo G7 versionado revisado.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/inventario/incidencias/{incidenciaId}/resolver",
+        "scope_requerido": "inventario:incidencias:resolver",
+        "estado_grant_g7": "SCOPE_NO_VERSIONADO_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "El scope no figura en el catálogo G7 versionado revisado.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:incidencias:resolver",
+      "runtime_clients": [
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 44,
+      "modulo": "G5 Ventas M1",
+      "client_id": "modulo-ventas",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/inventario/disponibilidad",
+      "scope_requerido": "inventario:disponibilidad:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Grant 25-11-2026.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G5 Ventas M1",
+        "client_id": "modulo-ventas",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/inventario/disponibilidad",
+        "scope_requerido": "inventario:disponibilidad:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Grant 25-11-2026.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:disponibilidad:leer",
+      "runtime_clients": [
+        "modulo-ventas",
+        "modulo-postventa"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 45,
+      "modulo": "G5 Ventas M1",
+      "client_id": "modulo-ventas",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/inventario/reservas",
+      "scope_requerido": "inventario:reservar",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "202=admisión; consultar estado terminal.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G5 Ventas M1",
+        "client_id": "modulo-ventas",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/inventario/reservas",
+        "scope_requerido": "inventario:reservar",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "202=admisión; consultar estado terminal.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:reservar",
+      "runtime_clients": [
+        "modulo-ventas"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 46,
+      "modulo": "G5 Ventas M1",
+      "client_id": "modulo-ventas",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/inventario/reservas/{reservaId}/confirmar",
+      "scope_requerido": "inventario:consumir",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "202=admisión; no equivale a consumo terminado.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G5 Ventas M1",
+        "client_id": "modulo-ventas",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/inventario/reservas/{reservaId}/confirmar",
+        "scope_requerido": "inventario:consumir",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "202=admisión; no equivale a consumo terminado.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:consumir",
+      "runtime_clients": [
+        "modulo-ventas"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 47,
+      "modulo": "G5 Ventas M1",
+      "client_id": "modulo-ventas",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/inventario/reservas/{reservaId}/liberar",
+      "scope_requerido": "inventario:liberar",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "202=admisión; idempotencia obligatoria.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G5 Ventas M1",
+        "client_id": "modulo-ventas",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/inventario/reservas/{reservaId}/liberar",
+        "scope_requerido": "inventario:liberar",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "202=admisión; idempotencia obligatoria.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:liberar",
+      "runtime_clients": [
+        "modulo-ventas"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 48,
+      "modulo": "G5 Ventas M1",
+      "client_id": "modulo-ventas",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/inventario/reintegros",
+      "scope_requerido": "inventario:reintegrar",
+      "estado_grant_g7": "CONDICIONAL_PENDIENTE_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Grant M1 solo si realiza directamente ANULACION_POST_CONSUMO o RETORNO_LOGISTICO.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G5 Ventas M1",
+        "client_id": "modulo-ventas",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/inventario/reintegros",
+        "scope_requerido": "inventario:reintegrar",
+        "estado_grant_g7": "CONDICIONAL_PENDIENTE_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Grant M1 solo si realiza directamente ANULACION_POST_CONSUMO o RETORNO_LOGISTICO.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:reintegrar",
+      "runtime_clients": [
+        "modulo-ventas",
+        "modulo-postventa"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 49,
+      "modulo": "G5 Ventas M1",
+      "client_id": "modulo-ventas",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/inventario/conciliaciones-offline",
+      "scope_requerido": "inventario:conciliar-offline",
+      "estado_grant_g7": "SCOPE_NO_VERSIONADO_G7",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "G4 no debe invocar directamente esta operación; autorizada para modulo-ventas.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G5 Ventas M1",
+        "client_id": "modulo-ventas",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/inventario/conciliaciones-offline",
+        "scope_requerido": "inventario:conciliar-offline",
+        "estado_grant_g7": "SCOPE_NO_VERSIONADO_G7",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "G4 no debe invocar directamente esta operación; autorizada para modulo-ventas.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:conciliar-offline",
+      "runtime_clients": [
+        "modulo-ventas"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 50,
+      "modulo": "G5 Ventas M1",
+      "client_id": "modulo-ventas",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/inventario/operaciones/{operationId}",
+      "scope_requerido": "inventario:operaciones:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Operación de seguimiento de inventario.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G5 Ventas M1",
+        "client_id": "modulo-ventas",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/inventario/operaciones/{operationId}",
+        "scope_requerido": "inventario:operaciones:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Operación de seguimiento de inventario.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:operaciones:leer",
+      "runtime_clients": [
+        "modulo-ventas"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 51,
+      "modulo": "G5 Ventas M1",
+      "client_id": "modulo-ventas",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/cupones/consumos",
+      "scope_requerido": "cupones:consumir",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY_FLAG_G5_H5",
+      "observacion": "Grant 23-11-2026; GATEWAY_G5_H5_ENABLED=true; validación de pedido G5 requerida para éxito comercial.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/g5-h5-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G5 Ventas M1",
+        "client_id": "modulo-ventas",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/cupones/consumos",
+        "scope_requerido": "cupones:consumir",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY_FLAG_G5_H5",
+        "observacion": "Grant 23-11-2026; GATEWAY_G5_H5_ENABLED=true; validación de pedido G5 requerida para éxito comercial.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/g5-h5-routes.ts"
+      },
+      "runtime_scope": "cupones:consumir",
+      "runtime_clients": [
+        "modulo-ventas"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 52,
+      "modulo": "G5 Ventas M1",
+      "client_id": "modulo-ventas",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/cupones/restauraciones",
+      "scope_requerido": "cupones:restaurar",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY_FLAG_G5_H5",
+      "observacion": "Grant 23-11-2026; GATEWAY_G5_H5_ENABLED=true; Idempotency-Key estable.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/g5-h5-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G5 Ventas M1",
+        "client_id": "modulo-ventas",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/cupones/restauraciones",
+        "scope_requerido": "cupones:restaurar",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY_FLAG_G5_H5",
+        "observacion": "Grant 23-11-2026; GATEWAY_G5_H5_ENABLED=true; Idempotency-Key estable.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/g5-h5-routes.ts"
+      },
+      "runtime_scope": "cupones:restaurar",
+      "runtime_clients": [
+        "modulo-ventas"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 53,
+      "modulo": "G5 Ventas M1",
+      "client_id": "modulo-ventas",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/cupones/operaciones/{operationId}",
+      "scope_requerido": "cupones:operaciones:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY_FLAG_G5_H5",
+      "observacion": "Grant 23-11-2026; GATEWAY_G5_H5_ENABLED=true.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/g5-h5-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G5 Ventas M1",
+        "client_id": "modulo-ventas",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/cupones/operaciones/{operationId}",
+        "scope_requerido": "cupones:operaciones:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY_FLAG_G5_H5",
+        "observacion": "Grant 23-11-2026; GATEWAY_G5_H5_ENABLED=true.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/g5-h5-routes.ts"
+      },
+      "runtime_scope": "cupones:operaciones:leer",
+      "runtime_clients": [
+        "modulo-ventas"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 54,
+      "modulo": "G5 Ventas M1",
+      "client_id": "modulo-ventas",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/inventario/reservas/{reservaId}/estado",
+      "scope_requerido": "inventario:reservas:estado:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY_FLAG_G5_H5",
+      "observacion": "Grant 23-11-2026; GATEWAY_G5_H5_ENABLED=true.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/g5-h5-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G5 Ventas M1",
+        "client_id": "modulo-ventas",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/inventario/reservas/{reservaId}/estado",
+        "scope_requerido": "inventario:reservas:estado:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY_FLAG_G5_H5",
+        "observacion": "Grant 23-11-2026; GATEWAY_G5_H5_ENABLED=true.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/g5-h5-routes.ts"
+      },
+      "runtime_scope": "inventario:reservas:estado:leer",
+      "runtime_clients": [
+        "modulo-ventas"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 55,
+      "modulo": "G5 Postventa M2",
+      "client_id": "modulo-postventa",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/inventario/disponibilidad",
+      "scope_requerido": "inventario:disponibilidad:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Disponibilidad para cambios; no reserva stock.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G5 Postventa M2",
+        "client_id": "modulo-postventa",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/inventario/disponibilidad",
+        "scope_requerido": "inventario:disponibilidad:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Disponibilidad para cambios; no reserva stock.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:disponibilidad:leer",
+      "runtime_clients": [
+        "modulo-ventas",
+        "modulo-postventa"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 56,
+      "modulo": "G5 Postventa M2",
+      "client_id": "modulo-postventa",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/api/v1/inventario/reintegros",
+      "scope_requerido": "inventario:reintegrar",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Solo unidades físicamente recibidas y aptas; location_id e idempotencia.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G5 Postventa M2",
+        "client_id": "modulo-postventa",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/api/v1/inventario/reintegros",
+        "scope_requerido": "inventario:reintegrar",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Solo unidades físicamente recibidas y aptas; location_id e idempotencia.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:reintegrar",
+      "runtime_clients": [
+        "modulo-ventas",
+        "modulo-postventa"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 57,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/productos/{productoId}",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/productos/{productoId}",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 58,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/precios",
+      "scope_requerido": "precios:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/precios",
+        "scope_requerido": "precios:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "precios:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 59,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/precios/skus/{sku}",
+      "scope_requerido": "precios:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/precios/skus/{sku}",
+        "scope_requerido": "precios:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "precios:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 60,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/categorias/arbol",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/categorias/arbol",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 61,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/categorias/{categoriaId}",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/categorias/{categoriaId}",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 62,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/tipos-producto",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/tipos-producto",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 63,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/tipos-producto/{tipoProductoId}",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/tipos-producto/{tipoProductoId}",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 64,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/tipos-producto/{tipoProductoId}/caracteristicas",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/tipos-producto/{tipoProductoId}/caracteristicas",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 65,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/marcas/{marcaId}",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/marcas/{marcaId}",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 66,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/categorias/administracion",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/categorias/administracion",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 67,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/marcas/administracion",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/marcas/administracion",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 68,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/inventario/disponibilidad/comercial",
+      "scope_requerido": "inventario:disponibilidad:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "VIGENTE_GATEWAY",
+      "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/inventario/disponibilidad/comercial",
+        "scope_requerido": "inventario:disponibilidad:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "VIGENTE_GATEWAY",
+        "observacion": "Solo operaciones explícitamente permitidas en Gateway para identidad interna.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/master/apps/api-gateway/src/routing/contract-routes.ts"
+      },
+      "runtime_scope": "inventario:disponibilidad:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail",
+        "modulo-productos"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 69,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/productos/skus/{sku}/contexto",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "PRIVADO_NO_GATEWAY",
+      "observacion": "Contexto SKU solo en red privada G6; no publicar por Gateway.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/productos/skus/{sku}/contexto",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "PRIVADO_NO_GATEWAY",
+        "observacion": "Contexto SKU solo en red privada G6; no publicar por Gateway.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml"
+      },
+      "reconciliation": "PRIVATE_ABSENT_FROM_GATEWAY",
+      "contract_scope": "catalogo:leer",
+      "contract_clients": [
+        "modulo-productos"
+      ],
+      "differences": []
+    },
+    {
+      "sourceRow": 70,
+      "modulo": "G6 técnico compartido",
+      "client_id": "modulo-productos",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/productos/skus/contexto/lote",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "PRIVADO_NO_GATEWAY",
+      "observacion": "Contexto SKU solo en red privada G6; no publicar por Gateway.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 técnico compartido",
+        "client_id": "modulo-productos",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/productos/skus/contexto/lote",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "PRIVADO_NO_GATEWAY",
+        "observacion": "Contexto SKU solo en red privada G6; no publicar por Gateway.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml"
+      },
+      "reconciliation": "PRIVATE_ABSENT_FROM_GATEWAY",
+      "contract_scope": "catalogo:leer",
+      "contract_clients": [
+        "modulo-productos"
+      ],
+      "differences": []
+    },
+    {
+      "sourceRow": 71,
+      "modulo": "G6 Promotions",
+      "client_id": "promotions-svc",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/interno/inventario/reservas/{reservaId}/evidencia-cupon",
+      "scope_requerido": "inventario:reservas:estado:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "PRIVADO_NO_GATEWAY",
+      "observacion": "Requiere order_id y validación de titularidad de reserva; grant 25-11-2026.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 Promotions",
+        "client_id": "promotions-svc",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/interno/inventario/reservas/{reservaId}/evidencia-cupon",
+        "scope_requerido": "inventario:reservas:estado:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "PRIVADO_NO_GATEWAY",
+        "observacion": "Requiere order_id y validación de titularidad de reserva; grant 25-11-2026.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml"
+      },
+      "reconciliation": "PRIVATE_ABSENT_FROM_GATEWAY",
+      "contract_scope": "inventario:reservas:estado:leer",
+      "contract_clients": [
+        "promotions-svc"
+      ],
+      "differences": []
+    },
+    {
+      "sourceRow": 72,
+      "modulo": "G6 Promotions",
+      "client_id": "promotions-svc",
+      "api_duena": "G5 Ventas",
+      "audiencia_requerida": "api-ventas",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/integraciones/productos/pedidos/{orderId}/evidencia-cupon",
+      "scope_requerido": "ventas:pedidos:evidencia-cupon:leer",
+      "estado_grant_g7": "PENDIENTE_APROBACION_G5",
+      "estado_acceso": "CONTRATO_EXTERNO_G5_NO_IMPLEMENTADO",
+      "observacion": "Es endpoint proveedor de G5, NO endpoint desplegable por G6; prueba local con proveedor contractual.",
+      "fuente": "https://github.com/Taller-SW-Web/Modulo-de-Seguridad/issues/107",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 Promotions",
+        "client_id": "promotions-svc",
+        "api_duena": "G5 Ventas",
+        "audiencia_requerida": "api-ventas",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/integraciones/productos/pedidos/{orderId}/evidencia-cupon",
+        "scope_requerido": "ventas:pedidos:evidencia-cupon:leer",
+        "estado_grant_g7": "PENDIENTE_APROBACION_G5",
+        "estado_acceso": "CONTRATO_EXTERNO_G5_NO_IMPLEMENTADO",
+        "observacion": "Es endpoint proveedor de G5, NO endpoint desplegable por G6; prueba local con proveedor contractual.",
+        "fuente": "https://github.com/Taller-SW-Web/Modulo-de-Seguridad/issues/107"
+      },
+      "reconciliation": "EXTERNAL_CONTRACT_CONTROLLED_NOT_AUTHORITATIVE"
+    },
+    {
+      "sourceRow": 73,
+      "modulo": "G6 Inventory",
+      "client_id": "inventory-svc",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "POST",
+      "endpoint": "/interno/productos/skus/filtrar",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CLIENTE_Y_GRANT_PENDIENTES_G7",
+      "estado_acceso": "PRIVADO_NO_GATEWAY",
+      "observacion": "Identidad inventory-svc definida en OpenAPI; registro y grant G7 aún no acreditados.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 Inventory",
+        "client_id": "inventory-svc",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "POST",
+        "endpoint": "/interno/productos/skus/filtrar",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CLIENTE_Y_GRANT_PENDIENTES_G7",
+        "estado_acceso": "PRIVADO_NO_GATEWAY",
+        "observacion": "Identidad inventory-svc definida en OpenAPI; registro y grant G7 aún no acreditados.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml"
+      },
+      "reconciliation": "PRIVATE_ABSENT_FROM_GATEWAY",
+      "contract_scope": "catalogo:leer",
+      "contract_clients": [
+        "inventory-svc"
+      ],
+      "differences": []
+    },
+    {
+      "sourceRow": 74,
+      "modulo": "G6 Catalog",
+      "client_id": "catalog-svc",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/interno/carga-masiva/contenidos/{contentId}",
+      "scope_requerido": "POR_DEFINIR",
+      "estado_grant_g7": "PENDIENTE_DEFINICION",
+      "estado_acceso": "PRIVADO_NO_GATEWAY",
+      "observacion": "Claim-check Bulk->Catalog; contrato no termina de definir cliente/grant; autorización necesaria.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml",
+      "grant_verified_now": false,
+      "decision": "DEC-G6-H5-04",
+      "effective_under_approved_decision": {
+        "modulo": "G6 Catalog",
+        "client_id": "catalog-svc",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/interno/carga-masiva/contenidos/{contentId}",
+        "scope_requerido": "carga-masiva:contenidos:leer",
+        "estado_grant_g7": "PENDIENTE_DEFINICION",
+        "estado_acceso": "PRIVADO_NO_GATEWAY",
+        "observacion": "Claim-check Bulk->Catalog; contrato no termina de definir cliente/grant; autorización necesaria.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml"
+      },
+      "reconciliation": "PRIVATE_ABSENT_FROM_GATEWAY",
+      "contract_scope": "carga-masiva:contenidos:leer",
+      "contract_clients": [
+        "catalog-svc"
+      ],
+      "differences": []
+    },
+    {
+      "sourceRow": 75,
+      "modulo": "G6 Combos sin cliente definido",
+      "client_id": "POR_DEFINIR",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/combos/{comboId}",
+      "scope_requerido": "combos:leer",
+      "estado_grant_g7": "SCOPE_NO_VERSIONADO_G7",
+      "estado_acceso": "SERVICE_BEARER_SIN_ALLOWLIST_EXPRESA",
+      "observacion": "GET detalle de combo; no conceder a módulos sin necesidad acordada.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml",
+      "grant_verified_now": false,
+      "decision": "DEC-G6-H5-02",
+      "effective_under_approved_decision": {
+        "modulo": "G6 Combos sin cliente definido",
+        "client_id": "modulo-marketplace;modulo-chatbot;modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/combos/{comboId}",
+        "scope_requerido": "combos:leer",
+        "estado_grant_g7": "SCOPE_NO_VERSIONADO_G7",
+        "estado_acceso": "SERVICE_BEARER_SIN_ALLOWLIST_EXPRESA",
+        "observacion": "GET detalle de combo; no conceder a módulos sin necesidad acordada.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml"
+      },
+      "runtime_scope": "combos:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 76,
+      "modulo": "G6 Combos sin cliente definido",
+      "client_id": "POR_DEFINIR",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer",
+      "metodo": "GET",
+      "endpoint": "/api/v1/combos/{comboId}/disponibilidad",
+      "scope_requerido": "combos:leer",
+      "estado_grant_g7": "SCOPE_NO_VERSIONADO_G7",
+      "estado_acceso": "SERVICE_BEARER_SIN_ALLOWLIST_EXPRESA",
+      "observacion": "GET disponibilidad informativa, no reserva; no conceder a módulos sin necesidad acordada.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml",
+      "grant_verified_now": false,
+      "decision": "DEC-G6-H5-02",
+      "effective_under_approved_decision": {
+        "modulo": "G6 Combos sin cliente definido",
+        "client_id": "modulo-marketplace;modulo-chatbot;modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/combos/{comboId}/disponibilidad",
+        "scope_requerido": "combos:leer",
+        "estado_grant_g7": "SCOPE_NO_VERSIONADO_G7",
+        "estado_acceso": "SERVICE_BEARER_SIN_ALLOWLIST_EXPRESA",
+        "observacion": "GET disponibilidad informativa, no reserva; no conceder a módulos sin necesidad acordada.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml"
+      },
+      "runtime_scope": "combos:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 77,
+      "modulo": "G1 Marketplace",
+      "client_id": "modulo-marketplace",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer PROPUESTO",
+      "metodo": "GET",
+      "endpoint": "/api/v1/productos/{productoId}/variantes",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "PROPUESTO_REQUIERE_CAMBIO_GATEWAY",
+      "observacion": "Actualmente la ruta es userBearer; permitir este cliente y scope solo si se aprueba compatibilidad comercial.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml",
+      "grant_verified_now": false,
+      "decision": "DEC-G6-H5-01",
+      "effective_under_approved_decision": {
+        "modulo": "G1 Marketplace",
+        "client_id": "modulo-marketplace",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/productos/{productoId}/variantes",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "PROPUESTO_REQUIERE_CAMBIO_GATEWAY",
+        "observacion": "Actualmente la ruta es userBearer; permitir este cliente y scope solo si se aprueba compatibilidad comercial.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 78,
+      "modulo": "G3 Chatbot",
+      "client_id": "modulo-chatbot",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer PROPUESTO",
+      "metodo": "GET",
+      "endpoint": "/api/v1/productos/{productoId}/variantes",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+      "estado_acceso": "PROPUESTO_REQUIERE_CAMBIO_GATEWAY",
+      "observacion": "Actualmente la ruta es userBearer; permitir este cliente y scope solo si se aprueba compatibilidad comercial.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml",
+      "grant_verified_now": false,
+      "decision": "DEC-G6-H5-01",
+      "effective_under_approved_decision": {
+        "modulo": "G3 Chatbot",
+        "client_id": "modulo-chatbot",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/productos/{productoId}/variantes",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "CONCEDIDO_DOCUMENTADO",
+        "estado_acceso": "PROPUESTO_REQUIERE_CAMBIO_GATEWAY",
+        "observacion": "Actualmente la ruta es userBearer; permitir este cliente y scope solo si se aprueba compatibilidad comercial.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 79,
+      "modulo": "G4 Retail",
+      "client_id": "modulo-retail",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "serviceBearer PROPUESTO",
+      "metodo": "GET",
+      "endpoint": "/api/v1/productos/{productoId}/variantes",
+      "scope_requerido": "catalogo:leer",
+      "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+      "estado_acceso": "PROPUESTO_REQUIERE_CAMBIO_GATEWAY",
+      "observacion": "Actualmente la ruta es userBearer; permitir este cliente y scope solo si se aprueba compatibilidad comercial.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml",
+      "grant_verified_now": false,
+      "decision": "DEC-G6-H5-01",
+      "effective_under_approved_decision": {
+        "modulo": "G4 Retail",
+        "client_id": "modulo-retail",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "serviceBearer",
+        "metodo": "GET",
+        "endpoint": "/api/v1/productos/{productoId}/variantes",
+        "scope_requerido": "catalogo:leer",
+        "estado_grant_g7": "ASUMIDO_PENDIENTE_G7",
+        "estado_acceso": "PROPUESTO_REQUIERE_CAMBIO_GATEWAY",
+        "observacion": "Actualmente la ruta es userBearer; permitir este cliente y scope solo si se aprueba compatibilidad comercial.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml"
+      },
+      "runtime_scope": "catalogo:leer",
+      "runtime_clients": [
+        "modulo-marketplace",
+        "modulo-chatbot",
+        "modulo-retail"
+      ],
+      "reconciliation": "RUNTIME_MATCH",
+      "differences": []
+    },
+    {
+      "sourceRow": 80,
+      "modulo": "G6 Frontend administrativo",
+      "client_id": "usuario-G7",
+      "api_duena": "G6",
+      "audiencia_requerida": "api-productos",
+      "tipo_jwt": "userBearer",
+      "metodo": "VARIOS",
+      "endpoint": "/api/v1/*",
+      "scope_requerido": "ROL_GESTOR_COMERCIAL_Y_PERMISOS_POR_OPERACION",
+      "estado_grant_g7": "NO_APLICA_GRANT_M2M",
+      "estado_acceso": "OPERACIONES_USER_BEARER",
+      "observacion": "Referencia de familia, NO acceso comodín. Cada ruta administrativa requiere rol/permisos propios; sin secretos M2M en React.",
+      "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml",
+      "grant_verified_now": false,
+      "effective_under_approved_decision": {
+        "modulo": "G6 Frontend administrativo",
+        "client_id": "usuario-G7",
+        "api_duena": "G6",
+        "audiencia_requerida": "api-productos",
+        "tipo_jwt": "userBearer",
+        "metodo": "VARIOS",
+        "endpoint": "/api/v1/*",
+        "scope_requerido": "ROL_GESTOR_COMERCIAL_Y_PERMISOS_POR_OPERACION",
+        "estado_grant_g7": "NO_APLICA_GRANT_M2M",
+        "estado_acceso": "OPERACIONES_USER_BEARER",
+        "observacion": "Referencia de familia, NO acceso comodín. Cada ruta administrativa requiere rol/permisos propios; sin secretos M2M en React.",
+        "fuente": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/blob/master/contratos/http/openapi.yaml"
+      },
+      "reconciliation": "ADMINISTRATIVE_USER_OPERATIONS"
+    }
+  ],
+  "note": "Static code/contract parity; not G7 grant, external homologation, frontend E2E or Azure deployment evidence."
+}

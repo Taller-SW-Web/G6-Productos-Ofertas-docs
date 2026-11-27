@@ -121,18 +121,94 @@ class H5SemifinalContractTests(unittest.TestCase):
                 self.assertEqual(added_codes, expected_codes)
                 response_codes = self.openapi["paths"][path][method]["responses"]["422"]["content"]["application/problem+json"]["schema"]["allOf"][1]["properties"]["code"]["enum"]
                 self.assertEqual(response_codes, expected_codes)
+            elif (path, method) in {
+                ("/combos/{comboId}", "get"),
+                ("/combos/{comboId}/disponibilidad", "get"),
+            }:
+                current = copy.deepcopy(self.openapi["paths"][path][method])
+                self.assertEqual(
+                    current["x-allowed-client-ids"],
+                    ["modulo-marketplace", "modulo-chatbot", "modulo-retail"],
+                )
+                self.assertEqual(current["x-required-scope"], "combos:leer")
+                self.assertEqual(current["x-service-audience"], "api-productos")
+                self.assertEqual(current["security"], [{"userBearer": []}, {"serviceBearer": []}])
+                if "x-allowed-client-ids" in historical_operation:
+                    current["x-allowed-client-ids"] = historical_operation["x-allowed-client-ids"]
+                else:
+                    del current["x-allowed-client-ids"]
+                self.assertEqual(current, historical_operation)
+            elif (path, method) == ("/productos/{productoId}/variantes", "get"):
+                current = copy.deepcopy(self.openapi["paths"][path][method])
+                self.assertEqual(current["security"], [{"userBearer": []}, {"serviceBearer": []}])
+                self.assertEqual(current["x-required-scope"], "catalogo:leer")
+                self.assertEqual(current["x-service-audience"], "api-productos")
+                self.assertEqual(
+                    current["x-allowed-client-ids"],
+                    ["modulo-marketplace", "modulo-chatbot", "modulo-retail"],
+                )
+                for key in ("security", "x-required-scope", "x-service-audience", "x-allowed-client-ids"):
+                    if key in historical_operation:
+                        current[key] = historical_operation[key]
+                    else:
+                        current.pop(key, None)
+                self.assertEqual(current, historical_operation)
+            elif (path, method) in {
+                ("/seo/{slug}", "get"),
+                ("/seo/resoluciones/{slugAnterior}", "get"),
+            }:
+                current = copy.deepcopy(self.openapi["paths"][path][method])
+                self.assertEqual(current["security"], [{"serviceBearer": []}, {"userBearer": []}])
+                self.assertEqual(current["x-required-scope"], "catalogo:leer")
+                self.assertEqual(current["x-service-audience"], "api-productos")
+                self.assertEqual(
+                    current["x-allowed-client-ids"],
+                    ["modulo-marketplace", "modulo-chatbot", "modulo-retail"],
+                )
+                self.assertEqual(current["x-error-codes"].get("401"), ["TOKEN_INVALIDO"])
+                self.assertEqual(current["x-error-codes"].get("403"), ["SCOPE_INSUFICIENTE"])
+                self.assertEqual(current["x-error-codes"].get("503"), ["SERVICIO_NO_DISPONIBLE"])
+                for status in ("401", "403", "503"):
+                    self.assertIn(status, current["responses"])
+                    current["responses"].pop(status, None)
+                    current["x-error-codes"].pop(status, None)
+                for key in ("security", "x-required-scope", "x-service-audience", "x-allowed-client-ids", "x-error-codes"):
+                    if key in historical_operation:
+                        current[key] = historical_operation[key]
+                    else:
+                        current.pop(key, None)
+                self.assertEqual(current, historical_operation)
+            elif (path, method) in {
+                ("/categorias/administracion", "get"),
+                ("/marcas/administracion", "get"),
+                ("/promociones/administracion", "get"),
+            }:
+                current = copy.deepcopy(self.openapi["paths"][path][method])
+                self.assertEqual(current["x-error-codes"].get("400"), ["VALIDACION"])
+                self.assertIn("400", current["responses"])
+                current["responses"].pop("400", None)
+                current["x-error-codes"].pop("400", None)
+                if "x-error-codes" in historical_operation:
+                    current["x-error-codes"] = historical_operation["x-error-codes"]
+                elif not current["x-error-codes"]:
+                    current.pop("x-error-codes", None)
+                self.assertEqual(current, historical_operation)
             elif historical_operation.get("operationId") in GATEWAY_ERROR_METADATA_ONLY_IDS:
-                # The approved Gateway reconciliation adds only its error-code extension.
+                # The approved Gateway reconciliation adds only its error-code extension (and 400 VALIDACION on listarTrasladosInventario).
                 current = copy.deepcopy(self.openapi["paths"][path][method])
                 self.assertIn("x-error-codes", current)
+                if historical_operation.get("operationId") == "listarTrasladosInventario" and "400" not in historical_operation["responses"]:
+                    self.assertEqual(current["x-error-codes"].get("400"), ["VALIDACION"])
+                    self.assertIn("400", current["responses"])
+                    current["responses"].pop("400", None)
                 del current["x-error-codes"]
                 self.assertEqual(current, historical_operation)
             else:
                 self.assertEqual(self.openapi["paths"][path][method], historical_operation, f"H4 operation changed: {method.upper()} {path}")
-        self.assertEqual(len(new_ops), 154)
-        self.assertEqual(len(set(ids)), 154)
+        self.assertEqual(len(new_ops), 156)
+        self.assertEqual(len(set(ids)), 156)
         added = [(p, m) for p, m, op in new_ops if op["operationId"] not in old_ids]
-        self.assertEqual(set(added), {("/carga-masiva/productos/importaciones/por-correlacion/{correlationId}", "get"), ("/cupones/consumos", "post"), ("/cupones/restauraciones", "post"), ("/cupones/operaciones/{operationId}", "get"), ("/inventario/reservas/{reservaId}/estado", "get"), ("/interno/carga-masiva/contenidos/{contentId}", "get"), ("/inventario/administracion/saldos", "get"), ("/inventario/alertas", "get"), ("/inventario/ubicaciones", "get"), ("/interno/productos/skus/filtrar", "post"), ("/interno/inventario/reservas/{reservaId}/evidencia-cupon", "get")})
+        self.assertEqual(set(added), {("/carga-masiva/productos/importaciones/por-correlacion/{correlationId}", "get"), ("/cupones/consumos", "post"), ("/cupones/restauraciones", "post"), ("/cupones/operaciones/{operationId}", "get"), ("/inventario/reservas/{reservaId}/estado", "get"), ("/interno/carga-masiva/contenidos/{contentId}", "get"), ("/inventario/administracion/saldos", "get"), ("/inventario/alertas", "get"), ("/inventario/ubicaciones", "get"), ("/interno/productos/skus/filtrar", "post"), ("/interno/inventario/reservas/{reservaId}/evidencia-cupon", "get"), ("/precios/administracion/productos/{productoId}", "get"), ("/precios/administracion/skus/{sku}", "get")})
         for path in ("/inventario/reservas", "/inventario/reservas/{reservaId}/confirmar", "/inventario/reservas/{reservaId}/liberar", "/inventario/operaciones/{operationId}", "/inventario/disponibilidad", "/inventario/reintegros", "/inventario/conciliaciones-offline", "/cupones/validar"):
             for method in ("get", "post", "put", "patch", "delete"):
                 if method in old["paths"].get(path, {}) and method in self.openapi["paths"].get(path, {}):
@@ -352,15 +428,17 @@ class H5SemifinalContractTests(unittest.TestCase):
         self.assertNotIn("servers", api)
         self.assertNotIn("x-rabbitmq-topology", api)
         self.assertIn("g6.promotions.commands", [channel["address"] for channel in api["channels"].values()])
-        self.assertEqual(set(api["x-blocked-contracts"]), {"pricing.bulk.price.apply.requested"})
+        self.assertEqual(api["x-blocked-contracts"], [])
         self.assertIn("message_id", api["x-delivery-model"]["inbox"]["deduplication_key"])
         self.assertFalse(api["x-delivery-model"]["exactly_once"])
-        for blocked in api["x-blocked-contracts"]:
-            message = next(m for m in api["components"]["messages"].values() if m["name"] == blocked)
-            self.assertEqual(message["x-runtime-status"], "RESERVADO_NO_APLICA_BULK_V2")
-            channel = next(c for c in api["channels"].values() if any(ref["$ref"].endswith("/" + next(k for k, v in api["components"]["messages"].items() if v is message)) for ref in c["messages"].values()))
-            self.assertEqual(channel["x-runtime-status"], "RESERVADO_NO_APLICA_BULK_V2")
-        self.assertEqual(api["components"]["messages"]["InventoryBulkStockAdjustRequested"]["x-runtime-status"], "PENDIENTE_IMPLEMENTACION")
+        for msg_key in (
+            "PricingBulkPriceApplyRequested",
+            "PricingBulkPriceApplyCompleted",
+            "PricingBulkPriceApplyRejected",
+            "InventoryBulkStockAdjustRequested",
+        ):
+            self.assertEqual(api["components"]["messages"][msg_key]["x-runtime-status"], "IMPLEMENTADO_H5_R2")
+        self.assertEqual(api["channels"]["g6_pricing_from_bulk"]["x-runtime-status"], "IMPLEMENTADO_H5_R2")
         self.assertEqual(api["components"]["messages"]["InventoryBulkStockAdjustRequested"]["payload"]["allOf"][1]["properties"]["data"]["$ref"], "#/components/schemas/InventoryBulkStockAdjustRequestedData")
         self.assertEqual(api["x-transport"]["max_complete_message_size_bytes"], 262144)
         bulk = api["components"]["schemas"]["CatalogBulkUpsertRequestedDataV3"]

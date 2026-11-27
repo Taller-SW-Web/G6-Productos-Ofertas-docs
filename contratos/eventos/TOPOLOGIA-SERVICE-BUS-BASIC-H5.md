@@ -28,9 +28,9 @@ Conteo auditado contra AsyncAPI `0.6.0-rc.4`: 18 pares únicos productor→consu
 | Catalog | Inventory | `g6.catalog.from.inventory` | Resultados inicialización SKU |
 | Bulk | Catalog | `g6.bulk.from.catalog` | Resultado importación |
 | Bulk | Inventory | `g6.bulk.from.inventory` | Ajuste stock y resultados masivos candidatos |
-| Bulk | Pricing | `g6.bulk.from.pricing` | Resultados masivos candidatos |
-| Pricing | Catalog | `g6.pricing.from.catalog` | Inicialización y baja SKU |
-| Pricing | Bulk | `g6.pricing.from.bulk` | Aplicación precios masivos candidata |
+| Bulk | Pricing | `g6.bulk.from.pricing` | Resultados masivos `pricing.bulk.price.apply.completed` / `rejected` (R14 obligatoria por decisión del líder R2) |
+| Pricing | Catalog | `g6.pricing.from.catalog` | Inicialización y baja SKU (R07) |
+| Pricing | Bulk | `g6.pricing.from.bulk` | Solicitud masiva `pricing.bulk.price.apply.requested` (R03 obligatoria por decisión del líder R2) |
 | Inventory | Catalog | `g6.inventory.from.catalog` | Inicialización y baja SKU |
 | Inventory | Bulk | `g6.inventory.from.bulk` | Ajuste masivo de stock candidato |
 | Promotions | Catalog | `g6.promotions.from.catalog` | Baja de producto/SKU |

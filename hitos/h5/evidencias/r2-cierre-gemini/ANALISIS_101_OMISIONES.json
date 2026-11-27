@@ -1,0 +1,713 @@
+{
+  "total": 101,
+  "scope": "Analysis only; execution and migration pending",
+  "tests": [
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ rechaza PUBLIC_READ_ONLY, exige JWT G7 en disponibilidad comercial sin filtrar stock ni mutar y protege POST",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ conecta al PostgreSQL local desechable con TLS, CA válida y hostname verificado",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ rechaza certificado firmado por una CA no confiable",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ rechaza certificado confiable presentado para un hostname distinto",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ HTTP real persiste reserva/consumo en PostgreSQL y entrega el resultado por RabbitMQ",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ ejecuta Drizzle y acredita UPDATE RETURNING para cero y una fila",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ hace rollback completo ante falla SQL intermedia tras saldo y outbox",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ rechaza order_id incorrecto en confirmar/liberar sin efectos secundarios",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ confirma o libera concurrentemente una misma reserva solo una vez",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ serializa reservas concurrentes e idempotencia concurrente en PostgreSQL",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ reproduce exactamente el replay concurrente durable al confirmar y liberar",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ expira automáticamente desde el worker Nest sin endpoint ni llamada manual",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ serializa confirmar/liberar y expiración con una sola transición y efectos",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ usa publisher confirm, marca solo mensaje enrutado y deja basic.return como PENDING",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ coordina dos dispatchers y recupera el evento pendiente tras indisponibilidad del broker",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ simula caída tras confirmación antes de UPDATE y reintenta con el mismo message_id",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Consumer real — ACK durable, deduplicación y recuperación (#102/#103) consume, confirma duplicados y rechazos durables sin duplicar saldo ni operación",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Consumer real — ACK durable, deduplicación y recuperación (#102/#103) retiene JSON inválido sin ACK y reanuda solo tras retirar el fixture defectuoso",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Motores nuevos — integración real PostgreSQL/RabbitMQ ajuste absoluto aplica, deduplica, rechaza versiones/targets y serializa concurrencia",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Motores nuevos — integración real PostgreSQL/RabbitMQ procesa evento Catalog posterior a lifecycle inicializado sin perder stock ni reservas",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Motores nuevos — integración real PostgreSQL/RabbitMQ ajuste absoluto revierte stock, operación, Kardex y Outbox ante fallo",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Motores nuevos — integración real PostgreSQL/RabbitMQ conciliación offline protege reservas/bloqueos, aplica parcial y deduplica por venta",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Motores nuevos — integración real PostgreSQL/RabbitMQ conciliación sin saldo informa revisión y rollback integral preserva evidencia durable",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Motores nuevos — integración real PostgreSQL/RabbitMQ evento Catalog tipado versiona lifecycle, no toca stock y preserva reservas previas",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Motores nuevos — integración real PostgreSQL/RabbitMQ serializa reserva contra baja y revierte una entrega cuyo commit de Inbox falla",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Motores nuevos — integración real PostgreSQL/RabbitMQ gate AMQP de baja conserva mensaje sin ACK y reanuda tras habilitación",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ BACK-02 — reconciliación del modelo físico y permisos en PostgreSQL aislado materializa las 17 tablas del modelo solo dentro del schema inventory",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ BACK-02 — reconciliación del modelo físico y permisos en PostgreSQL aislado publica los enums del modelo con sus etiquetas exactas",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ BACK-02 — reconciliación del modelo físico y permisos en PostgreSQL aislado aplica FK, unicidad y deduplicación de las tablas nuevas",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ BACK-02 — reconciliación del modelo físico y permisos en PostgreSQL aislado deduplica incidencias e inbox por sus claves únicas",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ BACK-02 — reconciliación del modelo físico y permisos en PostgreSQL aislado deriva available y protege la PK compuesta de dashboard_projection",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ BACK-02 — reconciliación del modelo físico y permisos en PostgreSQL aislado revierte por completo una transacción sobre las tablas nuevas",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ BACK-02 — reconciliación del modelo físico y permisos en PostgreSQL aislado aplica permisos requeridos y denegados del runtime en el schema aislado",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ agrega dashboard en PostgreSQL real: filtros, umbrales, multiubicación, equivalencia y plan con cardinalidad",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DATA-004 — ejecución E2E de scripts SQL en PostgreSQL desechable (#14) ejecuta proposal-load.sql: carga atómica, verificación de umbrales y preservación de saldos y umbral previo",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DATA-004 — ejecución E2E de scripts SQL en PostgreSQL desechable (#14) ejecuta replay de proposal-load.sql: idempotencia estricta sin duplicados ni errores",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DATA-004 — ejecución E2E de scripts SQL en PostgreSQL desechable (#14) ejecuta proposal-load.sql concurrentemente: pg_advisory_xact_lock serializa sin colisión ni duplicación",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DATA-004 — ejecución E2E de scripts SQL en PostgreSQL desechable (#14) ejecuta proposal-rollback.sql: revierte exclusivamente DATA-004 y preserva datos previos y saldos",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DATA-004 — ejecución E2E de scripts SQL en PostgreSQL desechable (#14) aborta y hace rollback si se violan las precondiciones del baseline",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Azure Service Bus H5 — outbox_delivery y Store con PostgreSQL desechable Outbox y Delivery se confirman o revierten en la misma transacción",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Azure Service Bus H5 — outbox_delivery y Store con PostgreSQL desechable un evento inventory.stock.changed genera exactamente dos entregas: Combos y Promotions",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Azure Service Bus H5 — outbox_delivery y Store con PostgreSQL desechable dos workers concurrentes no pueden reclamar simultáneamente la misma entrega vigente",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Azure Service Bus H5 — outbox_delivery y Store con PostgreSQL desechable un lease vencido permite recuperar la entrega",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Azure Service Bus H5 — outbox_delivery y Store con PostgreSQL desechable un token incorrecto o vencido no puede confirmar el envío",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Azure Service Bus H5 — outbox_delivery y Store con PostgreSQL desechable el fallo de un destino no confirma ni bloquea permanentemente el otro",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Azure Service Bus H5 — outbox_delivery y Store con PostgreSQL desechable un envío no confirmado conserva la entrega pendiente",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Azure Service Bus H5 — outbox_delivery y Store con PostgreSQL desechable una entrega confirmada no vuelve a reclamarse",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Azure Service Bus H5 — outbox_delivery y Store con PostgreSQL desechable una entrega terminal por tamaño excesivo no se reintenta automáticamente",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ Azure Service Bus H5 — outbox_delivery y Store con PostgreSQL desechable una entrega con payload inválido (cadena no interpretable como envelope) se marca terminal y permite procesar entregas válidas posteriores",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable expone H01/H02 por HTTP contra PostgreSQL 17 con autorización y paginación reales",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable clasifica alertas correctamente en PostgreSQL real: normal/disponible (sin alerta), stock bajo, agotado y umbral exacto",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable verifica que PostgreSQL calcula available como columna generada (GREATEST(0, on_hand-reserved-blocked)) y clasifica AGOTADO cuando stock físico es cero",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable no emite alertas para saldos en ubicaciones inactivas (active=false)",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable pagina alertas H01 entre páginas consecutivas sin duplicados y con meta consistente",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable acepta pagina y tamanio como cadenas decimales válidas en alertas H01",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable filtra alertas H01 por AGOTADO y STOCK_BAJO en PostgreSQL real",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable rechaza paginación inválida en alertas H01 con 400 VALIDACION",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable respeta override de umbral por SKU sobre el umbral global en PostgreSQL real",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable devuelve total 0 y lista vacía ante ausencia de registros coincidentes",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable rechaza filtros inválidos en alertas con 400 VALIDACION",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable devuelve ubicaciones autoritativas con paginación consistente (REPEATABLE READ) e incluye ubicaciones sin stock",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable respeta la semántica exacta de soloActivas en PostgreSQL real: true = solo activas, false o ausente = todas",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/inventory-svc/test/inventory.real.integration.spec.ts",
+      "test": "inventory-svc integración real PostgreSQL + RabbitMQ DashboardService — alertas y ubicaciones internas H01/H02 en PostgreSQL 17 descartable rechaza parámetros de consulta inválidos en ubicaciones con 400 VALIDACION",
+      "classification": "H4_BROKER_HISTORICAL_NOT_H5_ACCEPTANCE",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration inserts/query manifests and atomically creates a batch with rows and domain steps",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration deduplicates results by command and row identity without colliding across rows",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration applies per-row Catalog results from one completed command without false successes",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration matches all seven migration table columns, nullability and default presence",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration rolls back manifest, batch, rows and steps when an intermediate row violates uniqueness",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration rolls back all inserts when an official check rejects required domains and rejects repeated row ids",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration rolls back batch creation when writing a domain step fails",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration enforces foreign keys, invalid domains, counter constraints and final-state constraints",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration rejects incompatible file role/format combinations and completes exports atomically",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration retains a PostgreSQL-committed export when the completion response is lost and serves its download",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration retains and later serves an artifact when reconciliation reads before the pending PostgreSQL commit",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration cleans an export artifact only after PostgreSQL confirms the manifest transaction rolled back",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration persists and conditionally advances an export without exposing partial output",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration fences two PostgreSQL workers so only the current claim publishes a manifest",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration renews a long PostgreSQL export lease across worker restart and fences a concurrent reclaim",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration retries a transient PostgreSQL failure during an export claim",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration recovers a stale PROCESSING export after service restart without publishing an artifact",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration maps an actual PostgreSQL repository outage to a safe HTTP 503",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration enforces message and operation idempotency in Outbox and lists pending messages",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration preserves confirmed Outbox publication against delayed failures and out-of-order attempts",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration processes each Inbox handler once and rolls back the receipt if its local mutation fails",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration validates Inbox replay identity structurally and deduplicates concurrent deliveries",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration uses transactional locks to preserve counters for concurrent writes to one batch",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration completes a partially failed batch with reconciliation counters consistent with SPEC",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration rejects requeue without a new domain attempt and preserves the durable failure",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration replays an identical normalized batch intent and conflicts on changed intent",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration looks up an import by the validated actor and canonical correlation only",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration serializes concurrent replay and permits separate intentions over identical bytes",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration waits for each SKU and stock adjustment and deduplicates equivalent operation results durably",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration turns positive initial stock without a default location into a durable functional row failure",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration rejects retry without a new domain protocol and preserves the failed receipt",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration calculates Catalog V3 eligibility from normalized admitted rows and a real attempt receipt",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration keeps a pricing failure open until already-started Inventory work reports its result",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration accepts official Pricing ALTA initialization results and preserves identity on replay",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration rejects completed-step and completed-row regressions and preserves durable applied domains",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration derives reconciliation for partial failure and rolls back an incompatible explicit flag",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration commits workflow and Outbox together and rolls both back on an idempotency conflict",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    },
+    {
+      "file": "apps/bulk-svc/src/persistence/bulk.repository.integration.spec.ts",
+      "test": "BulkPersistenceRepository with PostgreSQL 17 migration checks terminal completion cannot precede required steps and there are no cross-schema foreign keys",
+      "classification": "POSTGRES17_BULK_PENDING",
+      "evidence": "Explicit suite gate; not executed by full unit run",
+      "decision": "Keep historical evidence; isolate current PostgreSQL/H5 cases, do not restore RabbitMQ as H5 transport or claim covered from a different narrow test"
+    }
+  ]
+}

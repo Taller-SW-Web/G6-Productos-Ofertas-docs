@@ -14,7 +14,7 @@ Los R IDs corresponden a relaciones del inventario heredado y la matriz vigente;
 |---|---|---|
 | R01 | Bulk→Catalog `g6.catalog.from.bulk` | Axel transporte; Castilla/Poma dominio. Resuelve contrato, 256 KB, Outbox/Inbox y replay |
 | R02 | Bulk→Inventory `g6.inventory.from.bulk` | Axel; Castilla/Taco. Solo habilitar con contrato y handler durable |
-| R03 | Bulk→Pricing `g6.pricing.from.bulk` | Axel; Castilla/Vera. Verificar contrato, flags e idempotencia |
+| R03 | Bulk→Pricing `g6.pricing.from.bulk` | Implementada (R2: relación interna obligatoria; reserva revocada) |
 | R04 | Catalog→Bulk `g6.bulk.from.catalog` | Axel; Poma/Castilla. Resultado terminal y replay único |
 | R05 | Catalog→Combos `g6.combos.from.catalog` | Axel; Poma/Castilla. Handler, deactivación e idempotencia |
 | R06 | Catalog→Inventory `g6.inventory.from.catalog` | Axel; Poma/Taco. Dos mensajes y settlement después de persistir |
@@ -25,7 +25,7 @@ Los R IDs corresponden a relaciones del inventario heredado y la matriz vigente;
 | R11 | Inventory→Catalog `g6.catalog.from.inventory` | Axel; Taco/Poma. Resultado de inicialización y rechazo |
 | R12 | Inventory→Combos `g6.combos.from.inventory` | Axel; Taco/Castilla. Cambio de stock idempotente |
 | R13 | Inventory→Promotions `g6.promotions.from.inventory` | Axel; Taco/Axel. Semántica comercial/efecto terminal |
-| R14 | Pricing→Bulk `g6.bulk.from.pricing` | Axel; Vera/Castilla. Resultado masivo y causalidad |
+| R14 | Pricing→Bulk `g6.bulk.from.pricing` | Implementada (R2: relación interna obligatoria; reserva revocada) |
 | R15 | Pricing→Catalog `g6.catalog.from.pricing` | Axel; Vera/Poma. Resultado de inicialización por destino |
 | R16 | Pricing→Price Audit `g6.price-audit.from.pricing` | Axel transporte; Vera dominio. Piloto #234 parcial; revalidar SHA/infra/identidad antes de release |
 | R17 | Pricing→Promotions `g6.promotions.from.pricing` | Axel; Vera/Axel. Handler y no doble efecto H4/H5 |

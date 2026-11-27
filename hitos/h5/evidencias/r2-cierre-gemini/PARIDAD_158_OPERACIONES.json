@@ -1,0 +1,1898 @@
+{
+  "contractVersion": "0.7.0-rc.3",
+  "contractOperations": 156,
+  "matrixRows": 158,
+  "gatewayRoutes": 151,
+  "internalOperations": 5,
+  "missingFromMatrix": [],
+  "checks": [
+    {
+      "operationId": "listarProductos",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/productos",
+      "contract": [
+        "/productos",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearProducto",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/productos",
+      "contract": [
+        "/productos",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerProducto",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/productos/{productoId}",
+      "contract": [
+        "/productos/{productoId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarProducto",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/productos/{productoId}",
+      "contract": [
+        "/productos/{productoId}",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarCategorias",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/categorias",
+      "contract": [
+        "/categorias",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearCategoria",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/categorias",
+      "contract": [
+        "/categorias",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarMarcas",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/marcas",
+      "contract": [
+        "/marcas",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearMarca",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/marcas",
+      "contract": [
+        "/marcas",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "consultarPrecios",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/precios",
+      "contract": [
+        "/precios",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerPrecioSku",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/precios/skus/{sku}",
+      "contract": [
+        "/precios/skus/{sku}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarPrecioSku",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/precios/skus/{sku}",
+      "contract": [
+        "/precios/skus/{sku}",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarPromociones",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/promociones",
+      "contract": [
+        "/promociones",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearPromocion",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/promociones",
+      "contract": [
+        "/promociones",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "evaluarPromociones",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/promociones/evaluar",
+      "contract": [
+        "/promociones/evaluar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "validarCupon",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/cupones/validar",
+      "contract": [
+        "/cupones/validar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerRecomendaciones",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/recomendaciones",
+      "contract": [
+        "/recomendaciones",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerCombo",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/combos/{comboId}",
+      "contract": [
+        "/combos/{comboId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarCombo",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/combos/{comboId}",
+      "contract": [
+        "/combos/{comboId}",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "consultarDisponibilidad",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/inventario/disponibilidad",
+      "contract": [
+        "/inventario/disponibilidad",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "solicitarReserva",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/inventario/reservas",
+      "contract": [
+        "/inventario/reservas",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "confirmarReserva",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/inventario/reservas/{reservaId}/confirmar",
+      "contract": [
+        "/inventario/reservas/{reservaId}/confirmar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "liberarReserva",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/inventario/reservas/{reservaId}/liberar",
+      "contract": [
+        "/inventario/reservas/{reservaId}/liberar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "consultarDatosFisicos",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/productos/datos-fisicos/consulta",
+      "contract": [
+        "/productos/datos-fisicos/consulta",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "resolverSlugCategoriaCreacion",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/seo/categorias/slug/resolver",
+      "contract": [
+        "/seo/categorias/slug/resolver",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerSeoPorSlug",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/seo/{slug}",
+      "contract": [
+        "/seo/{slug}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "resolverSlugAnterior",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/seo/resoluciones/{slugAnterior}",
+      "contract": [
+        "/seo/resoluciones/{slugAnterior}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "activarProducto",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/productos/{productoId}/activar",
+      "contract": [
+        "/productos/{productoId}/activar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "desactivarProducto",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/productos/{productoId}/desactivar",
+      "contract": [
+        "/productos/{productoId}/desactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "reactivarProducto",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/productos/{productoId}/reactivar",
+      "contract": [
+        "/productos/{productoId}/reactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerProductoPorSlug",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/productos/por-slug/{slug}",
+      "contract": [
+        "/productos/por-slug/{slug}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerPreparacionProducto",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/productos/{productoId}/preparacion",
+      "contract": [
+        "/productos/{productoId}/preparacion",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "reintentarPreparacionProducto",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/productos/{productoId}/preparacion/reintentar",
+      "contract": [
+        "/productos/{productoId}/preparacion/reintentar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarVariantesProducto",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/productos/{productoId}/variantes",
+      "contract": [
+        "/productos/{productoId}/variantes",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearVariante",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/productos/{productoId}/variantes",
+      "contract": [
+        "/productos/{productoId}/variantes",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerVariante",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/productos/{productoId}/variantes/{variantId}",
+      "contract": [
+        "/productos/{productoId}/variantes/{variantId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarVariante",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/productos/{productoId}/variantes/{variantId}",
+      "contract": [
+        "/productos/{productoId}/variantes/{variantId}",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "activarVariante",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/productos/{productoId}/variantes/{variantId}/activar",
+      "contract": [
+        "/productos/{productoId}/variantes/{variantId}/activar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "desactivarVariante",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/productos/{productoId}/variantes/{variantId}/desactivar",
+      "contract": [
+        "/productos/{productoId}/variantes/{variantId}/desactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "reactivarVariante",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/productos/{productoId}/variantes/{variantId}/reactivar",
+      "contract": [
+        "/productos/{productoId}/variantes/{variantId}/reactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "reintentarPreparacionVariante",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/productos/{productoId}/variantes/{variantId}/preparacion/reintentar",
+      "contract": [
+        "/productos/{productoId}/variantes/{variantId}/preparacion/reintentar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarCombosAdmin",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/combos",
+      "contract": [
+        "/combos",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearCombo",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/combos",
+      "contract": [
+        "/combos",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "desactivarCombo",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/combos/{comboId}/desactivar",
+      "contract": [
+        "/combos/{comboId}/desactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "consultarDisponibilidadCombo",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/combos/{comboId}/disponibilidad",
+      "contract": [
+        "/combos/{comboId}/disponibilidad",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarCupones",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/cupones",
+      "contract": [
+        "/cupones",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearCupon",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/cupones",
+      "contract": [
+        "/cupones",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerCuponAdmin",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/cupones/{cuponId}",
+      "contract": [
+        "/cupones/{cuponId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarCupon",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/cupones/{cuponId}",
+      "contract": [
+        "/cupones/{cuponId}",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "activarCupon",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/cupones/{cuponId}/activar",
+      "contract": [
+        "/cupones/{cuponId}/activar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "desactivarCupon",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/cupones/{cuponId}/desactivar",
+      "contract": [
+        "/cupones/{cuponId}/desactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerPromocionAdmin",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/promociones/{promocionId}",
+      "contract": [
+        "/promociones/{promocionId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarPromocion",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/promociones/{promocionId}",
+      "contract": [
+        "/promociones/{promocionId}",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "activarPromocion",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/promociones/{promocionId}/activar",
+      "contract": [
+        "/promociones/{promocionId}/activar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "desactivarPromocion",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/promociones/{promocionId}/desactivar",
+      "contract": [
+        "/promociones/{promocionId}/desactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarReglasRecomendacion",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/recomendaciones/reglas",
+      "contract": [
+        "/recomendaciones/reglas",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearReglaRecomendacion",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/recomendaciones/reglas",
+      "contract": [
+        "/recomendaciones/reglas",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerReglaRecomendacion",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/recomendaciones/reglas/{reglaId}",
+      "contract": [
+        "/recomendaciones/reglas/{reglaId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarReglaRecomendacion",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/recomendaciones/reglas/{reglaId}",
+      "contract": [
+        "/recomendaciones/reglas/{reglaId}",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "activarReglaRecomendacion",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/recomendaciones/reglas/{reglaId}/activar",
+      "contract": [
+        "/recomendaciones/reglas/{reglaId}/activar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "desactivarReglaRecomendacion",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/recomendaciones/reglas/{reglaId}/desactivar",
+      "contract": [
+        "/recomendaciones/reglas/{reglaId}/desactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerArbolCategoriasAdmin",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/categorias/arbol",
+      "contract": [
+        "/categorias/arbol",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerCategoriaAdmin",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/categorias/{categoriaId}",
+      "contract": [
+        "/categorias/{categoriaId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarCategoria",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/categorias/{categoriaId}",
+      "contract": [
+        "/categorias/{categoriaId}",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "solicitarDesactivacionCategoria",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/categorias/{categoriaId}/desactivar",
+      "contract": [
+        "/categorias/{categoriaId}/desactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "reactivarCategoria",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/categorias/{categoriaId}/reactivar",
+      "contract": [
+        "/categorias/{categoriaId}/reactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarCaracteristicas",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/caracteristicas",
+      "contract": [
+        "/caracteristicas",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearCaracteristica",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/caracteristicas",
+      "contract": [
+        "/caracteristicas",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerCaracteristica",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/caracteristicas/{caracteristicaId}",
+      "contract": [
+        "/caracteristicas/{caracteristicaId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarCaracteristica",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/caracteristicas/{caracteristicaId}",
+      "contract": [
+        "/caracteristicas/{caracteristicaId}",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarValoresCaracteristica",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/caracteristicas/{caracteristicaId}/valores",
+      "contract": [
+        "/caracteristicas/{caracteristicaId}/valores",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearValorCaracteristica",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/caracteristicas/{caracteristicaId}/valores",
+      "contract": [
+        "/caracteristicas/{caracteristicaId}/valores",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarValorCaracteristica",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/caracteristicas/{caracteristicaId}/valores/{valorId}",
+      "contract": [
+        "/caracteristicas/{caracteristicaId}/valores/{valorId}",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "solicitarDesactivacionValorCaracteristica",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/caracteristicas/{caracteristicaId}/valores/{valorId}/desactivar",
+      "contract": [
+        "/caracteristicas/{caracteristicaId}/valores/{valorId}/desactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "reactivarValorCaracteristica",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/caracteristicas/{caracteristicaId}/valores/{valorId}/reactivar",
+      "contract": [
+        "/caracteristicas/{caracteristicaId}/valores/{valorId}/reactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "desactivarCaracteristica",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/caracteristicas/{caracteristicaId}/desactivar",
+      "contract": [
+        "/caracteristicas/{caracteristicaId}/desactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "reactivarCaracteristica",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/caracteristicas/{caracteristicaId}/reactivar",
+      "contract": [
+        "/caracteristicas/{caracteristicaId}/reactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarTiposProducto",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/tipos-producto",
+      "contract": [
+        "/tipos-producto",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearTipoProducto",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/tipos-producto",
+      "contract": [
+        "/tipos-producto",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerTipoProducto",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/tipos-producto/{tipoProductoId}",
+      "contract": [
+        "/tipos-producto/{tipoProductoId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "solicitarDesactivacionTipoProducto",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/tipos-producto/{tipoProductoId}/desactivar",
+      "contract": [
+        "/tipos-producto/{tipoProductoId}/desactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "reactivarTipoProducto",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/tipos-producto/{tipoProductoId}/reactivar",
+      "contract": [
+        "/tipos-producto/{tipoProductoId}/reactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerEsquemaTipoProducto",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/tipos-producto/{tipoProductoId}/caracteristicas",
+      "contract": [
+        "/tipos-producto/{tipoProductoId}/caracteristicas",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "asociarCaracteristicaTipoProducto",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/tipos-producto/{tipoProductoId}/caracteristicas",
+      "contract": [
+        "/tipos-producto/{tipoProductoId}/caracteristicas",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarAsociacionTipoCaracteristica",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/tipos-producto/{tipoProductoId}/caracteristicas/{caracteristicaId}",
+      "contract": [
+        "/tipos-producto/{tipoProductoId}/caracteristicas/{caracteristicaId}",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "solicitarDesasociacionTipoCaracteristica",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/tipos-producto/{tipoProductoId}/caracteristicas/{caracteristicaId}/desasociar",
+      "contract": [
+        "/tipos-producto/{tipoProductoId}/caracteristicas/{caracteristicaId}/desasociar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerMarcaAdmin",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/marcas/{marcaId}",
+      "contract": [
+        "/marcas/{marcaId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarMarca",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/marcas/{marcaId}",
+      "contract": [
+        "/marcas/{marcaId}",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "solicitarDesactivacionMarca",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/marcas/{marcaId}/desactivar",
+      "contract": [
+        "/marcas/{marcaId}/desactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "reactivarMarca",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/marcas/{marcaId}/reactivar",
+      "contract": [
+        "/marcas/{marcaId}/reactivar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerOperacionMaestra",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/taxonomia/operaciones/{operationId}",
+      "contract": [
+        "/taxonomia/operaciones/{operationId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerSeoCategoriaAdmin",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/categorias/{categoriaId}/seo",
+      "contract": [
+        "/categorias/{categoriaId}/seo",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarSeoCategoria",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/categorias/{categoriaId}/seo",
+      "contract": [
+        "/categorias/{categoriaId}/seo",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarHistorialSlugCategoria",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/categorias/{categoriaId}/seo/historial",
+      "contract": [
+        "/categorias/{categoriaId}/seo/historial",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarProgramacionesPrecioSku",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/precios/skus/{sku}/programaciones",
+      "contract": [
+        "/precios/skus/{sku}/programaciones",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "programarPrecioSku",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/precios/skus/{sku}/programaciones",
+      "contract": [
+        "/precios/skus/{sku}/programaciones",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "prevalidarImportacionPrecios",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/precios/importaciones/prevalidar",
+      "contract": [
+        "/precios/importaciones/prevalidar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearImportacionPrecios",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/precios/importaciones",
+      "contract": [
+        "/precios/importaciones",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerImportacionPrecios",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/precios/importaciones/{batchId}",
+      "contract": [
+        "/precios/importaciones/{batchId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "descargarReporteImportacionPrecios",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/precios/importaciones/{batchId}/reporte",
+      "contract": [
+        "/precios/importaciones/{batchId}/reporte",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarAuditoriaPrecios",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/auditoria-precios",
+      "contract": [
+        "/auditoria-precios",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerAuditoriaPrecio",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/auditoria-precios/{auditId}",
+      "contract": [
+        "/auditoria-precios/{auditId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearExportacionAuditoriaPrecios",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/auditoria-precios/exportaciones",
+      "contract": [
+        "/auditoria-precios/exportaciones",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerExportacionAuditoriaPrecios",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/auditoria-precios/exportaciones/{exportId}",
+      "contract": [
+        "/auditoria-precios/exportaciones/{exportId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "descargarExportacionAuditoriaPrecios",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/auditoria-precios/exportaciones/{exportId}/archivo",
+      "contract": [
+        "/auditoria-precios/exportaciones/{exportId}/archivo",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "descargarPlantillaProductos",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/carga-masiva/productos/plantilla",
+      "contract": [
+        "/carga-masiva/productos/plantilla",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearImportacionGeneralProductos",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/carga-masiva/productos/importaciones",
+      "contract": [
+        "/carga-masiva/productos/importaciones",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerImportacionGeneralProductos",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/carga-masiva/productos/importaciones/{batchId}",
+      "contract": [
+        "/carga-masiva/productos/importaciones/{batchId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "descargarReporteImportacionGeneral",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/carga-masiva/productos/importaciones/{batchId}/reporte",
+      "contract": [
+        "/carga-masiva/productos/importaciones/{batchId}/reporte",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "reanudarImportacionGeneral",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/carga-masiva/productos/importaciones/{batchId}/reanudar",
+      "contract": [
+        "/carga-masiva/productos/importaciones/{batchId}/reanudar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearExportacionGeneralProductos",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/carga-masiva/productos/exportaciones",
+      "contract": [
+        "/carga-masiva/productos/exportaciones",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerExportacionGeneralProductos",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/carga-masiva/productos/exportaciones/{exportId}",
+      "contract": [
+        "/carga-masiva/productos/exportaciones/{exportId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "descargarExportacionGeneralProductos",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/carga-masiva/productos/exportaciones/{exportId}/archivo",
+      "contract": [
+        "/carga-masiva/productos/exportaciones/{exportId}/archivo",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerUmbralesInventario",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/inventario/umbrales",
+      "contract": [
+        "/inventario/umbrales",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarUmbralGlobal",
+      "matrixMethod": "PUT",
+      "matrixPath": "/api/v1/inventario/umbrales/global",
+      "contract": [
+        "/inventario/umbrales/global",
+        "PUT",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "establecerUmbralSku",
+      "matrixMethod": "PUT",
+      "matrixPath": "/api/v1/inventario/umbrales/skus/{sku}",
+      "contract": [
+        "/inventario/umbrales/skus/{sku}",
+        "PUT",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "eliminarUmbralSku",
+      "matrixMethod": "DELETE",
+      "matrixPath": "/api/v1/inventario/umbrales/skus/{sku}",
+      "contract": [
+        "/inventario/umbrales/skus/{sku}",
+        "DELETE",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerDashboardInventario",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/inventario/dashboard",
+      "contract": [
+        "/inventario/dashboard",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarCategoriasAdmin",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/categorias/administracion",
+      "contract": [
+        "/categorias/administracion",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarMarcasAdmin",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/marcas/administracion",
+      "contract": [
+        "/marcas/administracion",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarPromocionesAdmin",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/promociones/administracion",
+      "contract": [
+        "/promociones/administracion",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerPrecioBaseProducto",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/precios/productos/{productoId}",
+      "contract": [
+        "/precios/productos/{productoId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "actualizarPrecioBaseProducto",
+      "matrixMethod": "PATCH",
+      "matrixPath": "/api/v1/precios/productos/{productoId}",
+      "contract": [
+        "/precios/productos/{productoId}",
+        "PATCH",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarProgramacionesPrecioProducto",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/precios/productos/{productoId}/programaciones",
+      "contract": [
+        "/precios/productos/{productoId}/programaciones",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "programarPrecioBaseProducto",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/precios/productos/{productoId}/programaciones",
+      "contract": [
+        "/precios/productos/{productoId}/programaciones",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "reportarIncidenciaInventario",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/inventario/incidencias",
+      "contract": [
+        "/inventario/incidencias",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "resolverIncidenciaInventario",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/inventario/incidencias/{incidenciaId}/resolver",
+      "contract": [
+        "/inventario/incidencias/{incidenciaId}/resolver",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "reintegrarInventario",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/inventario/reintegros",
+      "contract": [
+        "/inventario/reintegros",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "conciliarVentaOffline",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/inventario/conciliaciones-offline",
+      "contract": [
+        "/inventario/conciliaciones-offline",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarTrasladosInventario",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/inventario/traslados",
+      "contract": [
+        "/inventario/traslados",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerTrasladoInventario",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/inventario/traslados/{trasladoId}",
+      "contract": [
+        "/inventario/traslados/{trasladoId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "registrarRecepcionTrasladoInventario",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/inventario/traslados/{trasladoId}/recepciones",
+      "contract": [
+        "/inventario/traslados/{trasladoId}/recepciones",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "resolverCodigoBarras",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/productos/codigos-barras/resolver",
+      "contract": [
+        "/productos/codigos-barras/resolver",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "consultarDisponibilidadComercial",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/inventario/disponibilidad/comercial",
+      "contract": [
+        "/inventario/disponibilidad/comercial",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "consultarOperacionInventario",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/inventario/operaciones/{operationId}",
+      "contract": [
+        "/inventario/operaciones/{operationId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "verificarCantidadComercial",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/inventario/disponibilidad/comercial/verificar",
+      "contract": [
+        "/inventario/disponibilidad/comercial/verificar",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarProductosAdministracion",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/productos/administracion",
+      "contract": [
+        "/productos/administracion",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerProductoAdministracion",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/productos/administracion/{productoId}",
+      "contract": [
+        "/productos/administracion/{productoId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerDefinicionPrecioProductoAdministracion",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/precios/administracion/productos/{productoId}",
+      "contract": [
+        "/precios/administracion/productos/{productoId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerDefinicionPrecioSkuAdministracion",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/precios/administracion/skus/{sku}",
+      "contract": [
+        "/precios/administracion/skus/{sku}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarSaldosFisicosAdministracion",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/inventario/administracion/saldos",
+      "contract": [
+        "/inventario/administracion/saldos",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarAuditoriaPreciosAdministracion",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/auditoria-precios/administracion",
+      "contract": [
+        "/auditoria-precios/administracion",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerAuditoriaPrecioAdministracion",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/auditoria-precios/administracion/{auditId}",
+      "contract": [
+        "/auditoria-precios/administracion/{auditId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "crearComboAdministracion",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/combos/administracion",
+      "contract": [
+        "/combos/administracion",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "resolverSkusAdministracion",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/productos/administracion/skus/resolver",
+      "contract": [
+        "/productos/administracion/skus/resolver",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "conciliarImportacionGeneralPorCorrelacion",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/carga-masiva/productos/importaciones/por-correlacion/{correlationId}",
+      "contract": [
+        "/carga-masiva/productos/importaciones/por-correlacion/{correlationId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarAlertasOperativasInventario",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/inventario/alertas",
+      "contract": [
+        "/inventario/alertas",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "listarUbicacionesInventario",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/inventario/ubicaciones",
+      "contract": [
+        "/inventario/ubicaciones",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "admitirConsumoCuponH5",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/cupones/consumos",
+      "contract": [
+        "/cupones/consumos",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "admitirRestauracionCuponH5",
+      "matrixMethod": "POST",
+      "matrixPath": "/api/v1/cupones/restauraciones",
+      "contract": [
+        "/cupones/restauraciones",
+        "POST",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerOperacionCuponH5",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/cupones/operaciones/{operationId}",
+      "contract": [
+        "/cupones/operaciones/{operationId}",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerEstadoReservaH5",
+      "matrixMethod": "GET",
+      "matrixPath": "/api/v1/inventario/reservas/{reservaId}/estado",
+      "contract": [
+        "/inventario/reservas/{reservaId}/estado",
+        "GET",
+        false
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerContextoSku",
+      "matrixMethod": "GET",
+      "matrixPath": "/productos/skus/{sku}/contexto",
+      "contract": [
+        "/productos/skus/{sku}/contexto",
+        "GET",
+        true
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerContextosSkuLote",
+      "matrixMethod": "POST",
+      "matrixPath": "/productos/skus/contexto/lote",
+      "contract": [
+        "/productos/skus/contexto/lote",
+        "POST",
+        true
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "filtrarSkusVendiblesInterno",
+      "matrixMethod": "POST",
+      "matrixPath": "/interno/productos/skus/filtrar",
+      "contract": [
+        "/interno/productos/skus/filtrar",
+        "POST",
+        true
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerEvidenciaReservaCuponInterno",
+      "matrixMethod": "GET",
+      "matrixPath": "/interno/inventario/reservas/{reservaId}/evidencia-cupon",
+      "contract": [
+        "/interno/inventario/reservas/{reservaId}/evidencia-cupon",
+        "GET",
+        true
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "obtenerContenidoCargaMasivaInternoH5",
+      "matrixMethod": "GET",
+      "matrixPath": "/interno/carga-masiva/contenidos/{contentId}",
+      "contract": [
+        "/interno/carga-masiva/contenidos/{contentId}",
+        "GET",
+        true
+      ],
+      "present": true,
+      "methodMatches": true
+    },
+    {
+      "operationId": "gatewayHealth",
+      "matrixMethod": "GET",
+      "matrixPath": "/health",
+      "contract": null,
+      "present": false,
+      "methodMatches": false
+    },
+    {
+      "operationId": "gatewayReadiness",
+      "matrixMethod": "GET",
+      "matrixPath": "/health/ready",
+      "contract": null,
+      "present": false,
+      "methodMatches": false
+    }
+  ]
+}

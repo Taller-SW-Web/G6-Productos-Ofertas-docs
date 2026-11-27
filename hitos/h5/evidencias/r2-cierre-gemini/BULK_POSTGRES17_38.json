@@ -1,0 +1,203 @@
+{
+  "command": "node tests/h5/run-bulk-postgres17.mjs",
+  "image": "postgres:17.11@sha256:ff87138949ad9a46f32ff23bd6852b52ce024a13dffe9b4087be98292cdd3b4f",
+  "environment": "fresh loopback Docker PostgreSQL17; app and admin roles distinct; migrations0001..0009; removed in finally",
+  "backendBaseHead": "de393631a5fd45d2984682fd8fcd7f4d808f734f",
+  "backendDiffSha256": "63290946b8a6f017222242c2954e09e26d3847be2a03f361c487d801495ba9dc",
+  "rawReportSha256": "515294f2ead1f85600b0bba8becf840c4d851e02045a79095f5e6687c9a0a8d8",
+  "passed": 38,
+  "failed": 0,
+  "skipped": 0,
+  "tests": [
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration inserts/query manifests and atomically creates a batch with rows and domain steps",
+      "status": "passed",
+      "durationMs": 123.79320000000007
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration deduplicates results by command and row identity without colliding across rows",
+      "status": "passed",
+      "durationMs": 194.1237999999994
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration applies per-row Catalog results from one completed command without false successes",
+      "status": "passed",
+      "durationMs": 208.69770000000062
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration matches all seven migration table columns, nullability and default presence",
+      "status": "passed",
+      "durationMs": 31.55329999999958
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration rolls back manifest, batch, rows and steps when an intermediate row violates uniqueness",
+      "status": "passed",
+      "durationMs": 22.17200000000048
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration rolls back all inserts when an official check rejects required domains and rejects repeated row ids",
+      "status": "passed",
+      "durationMs": 29.895299999998315
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration rolls back batch creation when writing a domain step fails",
+      "status": "passed",
+      "durationMs": 64.08079999999973
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration enforces foreign keys, invalid domains, counter constraints and final-state constraints",
+      "status": "passed",
+      "durationMs": 144.39749999999913
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration rejects incompatible file role/format combinations and completes exports atomically",
+      "status": "passed",
+      "durationMs": 127.52359999999862
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration retains a PostgreSQL-committed export when the completion response is lost and serves its download",
+      "status": "passed",
+      "durationMs": 83.9413999999997
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration retains and later serves an artifact when reconciliation reads before the pending PostgreSQL commit",
+      "status": "passed",
+      "durationMs": 2115.570100000001
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration cleans an export artifact only after PostgreSQL confirms the manifest transaction rolled back",
+      "status": "passed",
+      "durationMs": 143.90099999999984
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration persists and conditionally advances an export without exposing partial output",
+      "status": "passed",
+      "durationMs": 35.220400000000154
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration fences two PostgreSQL workers so only the current claim publishes a manifest",
+      "status": "passed",
+      "durationMs": 61.65560000000005
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration renews a long PostgreSQL export lease across worker restart and fences a concurrent reclaim",
+      "status": "passed",
+      "durationMs": 61134.8369
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration retries a transient PostgreSQL failure during an export claim",
+      "status": "passed",
+      "durationMs": 807.238599999997
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration recovers a stale PROCESSING export after service restart without publishing an artifact",
+      "status": "passed",
+      "durationMs": 290.612100000013
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration maps an actual PostgreSQL repository outage to a safe HTTP 503",
+      "status": "passed",
+      "durationMs": 423.7982999999949
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration enforces message and operation idempotency in Outbox and lists pending messages",
+      "status": "passed",
+      "durationMs": 140.20909999999276
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration preserves confirmed Outbox publication against delayed failures and out-of-order attempts",
+      "status": "passed",
+      "durationMs": 119.30990000000747
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration processes each Inbox handler once and rolls back the receipt if its local mutation fails",
+      "status": "passed",
+      "durationMs": 278.5717000000004
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration validates Inbox replay identity structurally and deduplicates concurrent deliveries",
+      "status": "passed",
+      "durationMs": 251.3006000000023
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration uses transactional locks to preserve counters for concurrent writes to one batch",
+      "status": "passed",
+      "durationMs": 178.76840000000084
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration completes a partially failed batch with reconciliation counters consistent with SPEC",
+      "status": "passed",
+      "durationMs": 101.39069999998901
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration rejects requeue without a new domain attempt and preserves the durable failure",
+      "status": "passed",
+      "durationMs": 160.931700000001
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration replays an identical normalized batch intent and conflicts on changed intent",
+      "status": "passed",
+      "durationMs": 66.1200000000099
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration looks up an import by the validated actor and canonical correlation only",
+      "status": "passed",
+      "durationMs": 42.156099999992875
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration serializes concurrent replay and permits separate intentions over identical bytes",
+      "status": "passed",
+      "durationMs": 135.39130000000296
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration waits for each SKU and stock adjustment and deduplicates equivalent operation results durably",
+      "status": "passed",
+      "durationMs": 372.61129999998957
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration turns positive initial stock without a default location into a durable functional row failure",
+      "status": "passed",
+      "durationMs": 172.57039999999688
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration rejects retry without a new domain protocol and preserves the failed receipt",
+      "status": "passed",
+      "durationMs": 184.79629999998724
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration calculates Catalog V3 eligibility from normalized admitted rows and a real attempt receipt",
+      "status": "passed",
+      "durationMs": 422.05569999999716
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration keeps a pricing failure open until already-started Inventory work reports its result",
+      "status": "passed",
+      "durationMs": 211.20080000000598
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration accepts official Pricing ALTA initialization results and preserves identity on replay",
+      "status": "passed",
+      "durationMs": 316.55599999999686
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration rejects completed-step and completed-row regressions and preserves durable applied domains",
+      "status": "passed",
+      "durationMs": 98.9082999999955
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration derives reconciliation for partial failure and rolls back an incompatible explicit flag",
+      "status": "passed",
+      "durationMs": 96.64900000000489
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration commits workflow and Outbox together and rolls both back on an idempotency conflict",
+      "status": "passed",
+      "durationMs": 70.48609999999462
+    },
+    {
+      "name": "BulkPersistenceRepository with PostgreSQL 17 migration checks terminal completion cannot precede required steps and there are no cross-schema foreign keys",
+      "status": "passed",
+      "durationMs": 40.47330000001239
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+flujo,cola,productor,consumidor,estado_laboratorio_aislado,evidencia_observada
+R01,g6.catalog.from.bulk,bulk-svc,catalog-svc,OBSERVADO_EN_158,catalog.bulk.upsert.completed observado en certify-stack.log; suite dedicada 19-colas aborto en pgSelect HTTPS
+R02,g6.inventory.from.bulk,bulk-svc,inventory-svc,OBSERVADO_EN_158,inventory.bulk.stock.adjust.completed observado en certify-stack.log
+R03,g6.pricing.from.bulk,bulk-svc,pricing-svc,OBSERVADO_EN_158,pricing.bulk.price.apply.completed observado en certify-stack.log
+R04,g6.bulk.from.catalog,catalog-svc,bulk-svc,OBSERVADO_EN_158,recibido por bulk-result-consumer en certify-stack.log
+R05,g6.combos.from.catalog,catalog-svc,combos-svc,NO_CERTIFICADO,certify-19-messaging-flows aborto en pgSelect (http vs https)
+R06,g6.inventory.from.catalog,catalog-svc,inventory-svc,OBSERVADO_EN_158,saldo inicializado con default_location_id permitiendo R02->R10
+R07,g6.pricing.from.catalog,catalog-svc,pricing-svc,NO_CERTIFICADO,certify-19-messaging-flows aborto en pgSelect (http vs https)
+R08,g6.promotions.from.catalog,catalog-svc,promotions-svc,NO_CERTIFICADO,certify-19-messaging-flows aborto en pgSelect (http vs https)
+R09,g6.taxonomy.from.catalog,catalog-svc,taxonomy-svc,NO_CERTIFICADO,certify-19-messaging-flows aborto en pgSelect (http vs https)
+R10,g6.bulk.from.inventory,inventory-svc,bulk-svc,OBSERVADO_EN_158,inventory.bulk.stock.adjust.completed recibido por bulk-result-consumer
+R11,g6.catalog.from.inventory,inventory-svc,catalog-svc,NO_CERTIFICADO,certify-19-messaging-flows aborto en pgSelect (http vs https)
+R12,g6.combos.from.inventory,inventory-svc,combos-svc,NO_CERTIFICADO,certify-19-messaging-flows aborto en pgSelect (http vs https)
+R13,g6.promotions.from.inventory,inventory-svc,promotions-svc,NO_CERTIFICADO,certify-19-messaging-flows aborto en pgSelect (http vs https)
+R14,g6.bulk.from.pricing,pricing-svc,bulk-svc,OBSERVADO_EN_158,pricing.bulk.price.apply.completed recibido por bulk-result-consumer
+R15,g6.catalog.from.pricing,pricing-svc,catalog-svc,NO_CERTIFICADO,certify-19-messaging-flows aborto en pgSelect (http vs https)
+R16,g6.price-audit.from.pricing,pricing-svc,price-audit-svc,NO_CERTIFICADO,certify-19-messaging-flows aborto en pgSelect (http vs https)
+R17,g6.promotions.from.pricing,pricing-svc,promotions-svc,NO_CERTIFICADO,certify-19-messaging-flows aborto en pgSelect (http vs https)
+R18,g6.catalog.from.taxonomy,taxonomy-svc,catalog-svc,NO_CERTIFICADO,certify-19-messaging-flows aborto en pgSelect (http vs https)
+N01,g6.promotions.commands,promotions-svc(http),promotions-svc(worker),OBSERVADO_EN_158,n01ConsumeStatus=COMPLETED en certify-158-endpoints.mjs

@@ -3934,6 +3934,10 @@ paths:
       - SPEC-002
       x-service-audience: api-productos
       x-required-scope: combos:leer
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
       x-scope-registration-status: pending-security-registration
       security:
       - userBearer: []
@@ -4128,7 +4132,6 @@ paths:
         '500': *id105
         '503': *id106
       x-route-basis: existing-contract
-      x-allowed-client-ids: &id248 []
     patch:
       tags:
       - Combos
@@ -5740,7 +5743,15 @@ paths:
       x-status: stable
       x-source-spec:
       - SPEC-012
-      security: []
+      security:
+      - serviceBearer: []
+      - userBearer: []
+      x-required-scope: catalogo:leer
+      x-service-audience: api-productos
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
       parameters:
       - name: slug
         in: path
@@ -5754,6 +5765,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SeoMetadata'
+        '401':
+          description: Token ausente o inválido
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 401
+                    code:
+                      type: string
+                      enum:
+                      - TOKEN_INVALIDO
+                  required:
+                  - status
+                  - code
+        '403':
+          description: Sin rol, scope o cliente autorizado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 403
+                    code:
+                      type: string
+                      enum:
+                      - SCOPE_INSUFICIENTE
+                  required:
+                  - status
+                  - code
         '404':
           description: Slug no publicado o inexistente
           content:
@@ -5810,9 +5859,34 @@ paths:
                     status: 500
                     code: ERROR_INTERNO
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+        '503':
+          description: Servicio de identidad no disponible
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 503
+                    code:
+                      type: string
+                      enum:
+                      - SERVICIO_NO_DISPONIBLE
+                  required:
+                  - status
+                  - code
       x-error-codes:
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
         '404': *id146
         '500': *id147
+        '503':
+        - SERVICIO_NO_DISPONIBLE
       x-route-basis: existing-contract
   /seo/resoluciones/{slugAnterior}:
     get:
@@ -5823,7 +5897,15 @@ paths:
       x-status: stable
       x-source-spec:
       - SPEC-012
-      security: []
+      security:
+      - serviceBearer: []
+      - userBearer: []
+      x-required-scope: catalogo:leer
+      x-service-audience: api-productos
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
       parameters:
       - name: slugAnterior
         in: path
@@ -5837,6 +5919,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SlugResolution'
+        '401':
+          description: Token ausente o inválido
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 401
+                    code:
+                      type: string
+                      enum:
+                      - TOKEN_INVALIDO
+                  required:
+                  - status
+                  - code
+        '403':
+          description: Sin rol, scope o cliente autorizado
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 403
+                    code:
+                      type: string
+                      enum:
+                      - SCOPE_INSUFICIENTE
+                  required:
+                  - status
+                  - code
         '404':
           description: Slug anterior no reconocido
           content:
@@ -5893,9 +6013,34 @@ paths:
                     status: 500
                     code: ERROR_INTERNO
                     correlationId: 0c0d092e-6192-47c1-8d18-5ed0e2aa4518
+        '503':
+          description: Servicio de identidad no disponible
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 503
+                    code:
+                      type: string
+                      enum:
+                      - SERVICIO_NO_DISPONIBLE
+                  required:
+                  - status
+                  - code
       x-error-codes:
+        '401':
+        - TOKEN_INVALIDO
+        '403':
+        - SCOPE_INSUFICIENTE
         '404': *id148
         '500': *id149
+        '503':
+        - SERVICIO_NO_DISPONIBLE
       x-route-basis: existing-contract
   /productos/{productoId}/activar:
     post:
@@ -6940,8 +7085,15 @@ paths:
       x-source-spec:
       - SPEC-004
       x-route-basis: derived-from-capability
+      x-service-audience: api-productos
+      x-required-scope: catalogo:leer
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
       security:
       - userBearer: []
+      - serviceBearer: []
       parameters:
       - $ref: '#/components/parameters/ProductoId'
       - &id224
@@ -8834,6 +8986,10 @@ paths:
       x-route-basis: derived-from-capability
       x-service-audience: api-productos
       x-required-scope: combos:leer
+      x-allowed-client-ids:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
       x-scope-registration-status: pending-security-registration
       security:
       - userBearer: []
@@ -8949,7 +9105,6 @@ paths:
         '500': *id245
         '503': *id246
         '404': *id247
-      x-allowed-client-ids: *id248
   /cupones:
     get:
       tags:
@@ -19692,6 +19847,22 @@ paths:
       - $ref: '#/components/parameters/EstadoEntidadQuery'
       - $ref: '#/components/parameters/CorrelationId'
       responses:
+        '400':
+          description: Parámetros de consulta inválidos
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      const: VALIDACION
+                  required: [status, code]
         '200':
           description: Listado administrativo
           content:
@@ -19775,6 +19946,7 @@ paths:
                   - status
                   - code
       x-error-codes: &id667
+        '400': [VALIDACION]
         '401': *id663
         '403': *id664
         '500': *id665
@@ -19809,6 +19981,22 @@ paths:
       - $ref: '#/components/parameters/EstadoEntidadQuery'
       - $ref: '#/components/parameters/CorrelationId'
       responses:
+        '400':
+          description: Parámetros de consulta inválidos
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      const: VALIDACION
+                  required: [status, code]
         '200':
           description: Listado administrativo
           content:
@@ -19911,6 +20099,22 @@ paths:
           $ref: '#/components/schemas/ModalidadPromocion'
       - $ref: '#/components/parameters/CorrelationId'
       responses:
+        '400':
+          description: Parámetros de consulta inválidos
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      const: VALIDACION
+                  required: [status, code]
         '200':
           description: Promociones administrativas
           content:
@@ -19994,10 +20198,136 @@ paths:
                   - status
                   - code
       x-error-codes:
+        '400': [VALIDACION]
         '401': *id668
         '403': *id669
         '500': *id670
         '503': *id671
+  /precios/administracion/productos/{productoId}:
+    get:
+      tags:
+      - Precios
+      operationId: obtenerDefinicionPrecioProductoAdministracion
+      summary: Obtener definición administrativa de precio de producto
+      x-status: provisional-internal
+      x-source-spec:
+      - SPEC-013
+      x-route-basis: derived-from-capability
+      security:
+      - userBearer: []
+      parameters:
+      - name: productoId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: channelId
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [MARKETPLACE, CHATBOT, RETAIL, VENTAS]
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Definición administrativa de precio del producto
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: VALIDACION
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: TOKEN_INVALIDO
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: SCOPE_INSUFICIENTE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: PRECIO_NO_ENCONTRADO
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      x-error-codes:
+        '400': [VALIDACION]
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '404': [PRECIO_NO_ENCONTRADO]
+
+  /precios/administracion/skus/{sku}:
+    get:
+      tags:
+      - Precios
+      operationId: obtenerDefinicionPrecioSkuAdministracion
+      summary: Obtener definición administrativa de precio de SKU
+      x-status: provisional-internal
+      x-source-spec:
+      - SPEC-013
+      x-route-basis: derived-from-capability
+      security:
+      - userBearer: []
+      parameters:
+      - name: sku
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: channelId
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [MARKETPLACE, CHATBOT, RETAIL, VENTAS]
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Definición administrativa de precio del SKU
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: VALIDACION
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: TOKEN_INVALIDO
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: SCOPE_INSUFICIENTE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: PRECIO_NO_ENCONTRADO
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      x-error-codes:
+        '400': [VALIDACION]
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '404': [PRECIO_NO_ENCONTRADO]
+
   /precios/productos/{productoId}:
     get:
       tags:
@@ -21191,6 +21521,22 @@ paths:
           maximum: 100
           default: 20
       responses:
+        '400':
+          description: Parámetros de consulta inválidos
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    status:
+                      type: integer
+                      const: 400
+                    code:
+                      type: string
+                      const: VALIDACION
+                  required: [status, code]
         '200':
           description: Traslados visibles para el operador
           content:
@@ -21274,6 +21620,7 @@ paths:
                   - status
                   - code
       x-error-codes:
+        '400': [VALIDACION]
         '401':
         - TOKEN_INVALIDO
         '403':
@@ -27869,7 +28216,10 @@ x-security-contract:
       clients:
       - modulo-chatbot
     combos:leer:
-      clients: *id248
+      clients:
+      - modulo-marketplace
+      - modulo-chatbot
+      - modulo-retail
     inventario:disponibilidad:leer:
       clients:
       - modulo-marketplace
