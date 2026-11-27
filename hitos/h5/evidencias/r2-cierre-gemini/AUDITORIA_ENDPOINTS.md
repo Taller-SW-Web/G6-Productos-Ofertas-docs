@@ -7,3 +7,7 @@ Las negativas adicionales de listarCategoriasAdmin, listarMarcasAdmin, listarPro
 Persistencia Inventory: resolución verificada por incidencia_id/tipo_resolucion/estado RESUELTA; recepción por receipt_id→recepcion_id, cantidad_recibida, disposicion y es_recepcion_final. Las consultas locales preexistentes usaban columnas inexistentes; se corrigieron conforme al esquema.
 
 El generador de rutas sobre el contrato entero rechazó metadatos históricos faltantes de obtenerDefinicionPrecioProductoAdministracion; se preservó su fail-closed y se aplicó cambio puntual a cuatro rutas. No se declaró regeneración global satisfactoria. Pendiente auditar resto de aserciones genéricas, paridad completa de respuestas y matrices canónicas, suite completa y dos regresiones limpias.
+
+## Auditoría de persistencia más estricta posterior
+
+Dos corridas posteriores dieron157/158: se endurecieron producto (campos solicitados), precio (SKU/producto, canal, importe, moneda y versión), programación (programacionId, destino, tipo, importe y estado), importación (job terminal, contadores íntegros y cero fallos) y umbralSKU (valor exacto y ámbito). La importación de precios acepta202 pero no supera aún la nueva comprobación terminal. Evidencia HTTP_158_ASERCIONES_ESTRICTAS_FALLO.json. Consultar versión actual corrigió el fixture de versión fija, pero no resolvió todo el caso; diagnóstico focalizado en curso. El158/158 anterior no debe presentarse como última certificación estricta.

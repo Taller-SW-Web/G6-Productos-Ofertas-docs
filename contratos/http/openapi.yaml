@@ -20260,6 +20260,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+      x-error-codes:
+        '400': [VALIDACION]
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '404': [PRECIO_NO_ENCONTRADO]
+
   /precios/administracion/skus/{sku}:
     get:
       tags:
@@ -20316,6 +20322,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+      x-error-codes:
+        '400': [VALIDACION]
+        '401': [TOKEN_INVALIDO]
+        '403': [SCOPE_INSUFICIENTE]
+        '404': [PRECIO_NO_ENCONTRADO]
+
   /precios/productos/{productoId}:
     get:
       tags:
