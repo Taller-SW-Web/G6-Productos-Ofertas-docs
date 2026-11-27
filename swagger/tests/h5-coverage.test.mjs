@@ -65,5 +65,5 @@ test('AsyncAPI R02 y R10 tipados; R03/R14 reservados para no duplicar importador
   }
   assert.equal(spec.channels.g6_inventory_from_bulk['x-runtime-status'], 'PENDIENTE_IMPLEMENTACION');
   assert.ok(!spec['x-blocked-contracts'].includes('inventory.bulk.stock.adjust.requested'));
-  assert.ok(!spec['x-blocked-contracts'].includes('pricing.bulk.price.apply.requested'));
+  assert.ok(spec['x-blocked-contracts'].includes('pricing.bulk.price.apply.requested'));
 });
