@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.0.0",
+  "runId": "smoke-2026-11-27T00-00-00Z",
+  "timestampUtc": "2026-11-27T00:00:00.000Z",
+  "environment": "azure-aca-chile",
+  "targetOrigin": "https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+  "profile": "smoke",
+  "subjects": {
+    "backendLocalHeadSha": "<40-char-sha-backend>",
+    "frontendLocalHeadSha": "<40-char-sha-frontend>",
+    "docsLocalHeadSha": "<40-char-sha-docs>",
+    "note": "Los SHAs locales corresponden a los working trees inspeccionados y no se atribuyen al despliegue remoto sin verificacion independiente."
+  },
+  "deployedRevision": "NO_VERIFICADO_EN_ESTA_CORRIDA",
+  "collection": {
+    "file": "g6-h5-integration.postman_collection.json",
+    "sha256": "<sha256-collection>"
+  },
+  "runtime": {
+    "nodeVersion": "24.16.0",
+    "newmanVersion": "<exact-newman-version>"
+  },
+  "contract": {
+    "openApiVersion": "0.7.0-rc.3",
+    "path": "contratos/http/openapi.yaml"
+  },
+  "selectedCases": [
+    "PM-001",
+    "PM-001B",
+    "PM-002",
+    "PM-003A",
+    "PM-003B",
+    "PM-003C",
+    "PM-003D",
+    "PM-004",
+    "PM-004B",
+    "PM-005",
+    "PM-006",
+    "PM-007A",
+    "PM-007B",
+    "PM-008"
+  ],
+  "fixtures": {
+    "channel": "MARKETPLACE",
+    "priceMin": 0,
+    "priceMax": 100,
+    "priceMaxNarrow": 60
+  },
+  "evidenceLevel": "LAB_AZURE",
+  "deploymentState": "DESPLEGADO_VERIFICADO_HISTORICO",
+  "blockers": [],
+  "durationMs": 0,
+  "exitCode": 0
+}

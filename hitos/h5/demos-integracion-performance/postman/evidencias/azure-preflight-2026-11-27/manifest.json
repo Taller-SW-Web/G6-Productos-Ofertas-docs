@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "1.0.0",
+  "runId": "azure-preflight-2026-11-27",
+  "timestampUtc": "2026-11-28T03:17:11.271Z",
+  "environment": "azure-aca-chile",
+  "targetOrigin": "https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+  "profile": "folder:00 - Preflight y autenticacion",
+  "subjects": {
+    "backendLocalHeadSha": "36f619da6c44a3c14b93917d1fddf2d09bd569db",
+    "frontendLocalHeadSha": "2c6ad931b8dd48e4a4fe883a18ac899fb48b0c81",
+    "docsLocalHeadSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "note": "Los SHAs locales corresponden a los working trees inspeccionados y no se atribuyen al despliegue remoto sin verificacion independiente."
+  },
+  "deployedRevision": "NO_VERIFICADO_EN_ESTA_CORRIDA",
+  "collection": {
+    "file": "g6-h5-integration.postman_collection.json",
+    "sha256": "4c481d1c998d091e52ef4674260a6a659d8580376cf7942a767d0a35b37859bb"
+  },
+  "runtime": {
+    "nodeVersion": "24.16.0",
+    "newmanVersion": "6.2.3"
+  },
+  "contract": {
+    "openApiVersion": "0.7.0-rc.3",
+    "path": "contratos/http/openapi.yaml"
+  },
+  "selectedCases": [
+    "PM-001",
+    "PM-001B"
+  ],
+  "fixtures": {
+    "channel": "MARKETPLACE",
+    "priceMin": 0,
+    "priceMax": 100,
+    "priceMaxNarrow": 60
+  },
+  "evidenceLevel": "LAB_AZURE",
+  "deploymentState": "DESPLEGADO_VERIFICADO_HISTORICO",
+  "blockers": [
+    "APIM aun no cuenta con instancia operativa desplegada (NOT_RUN_BLOCKED_INFRA); la ejecucion apunta al Gateway ACA autorizado.",
+    "PM-005: No se proporciono G6_RESTRICTED_ACCESS_TOKEN; la validacion 403 requiere una identidad autenticada sin permisos."
+  ],
+  "durationMs": 981,
+  "exitCode": 1
+}

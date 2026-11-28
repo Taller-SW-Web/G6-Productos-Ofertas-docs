@@ -1,0 +1,22 @@
+{
+  "name": "g6-h5-postman-integration",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Suite aislada de pruebas de integracion HTTP con Postman y Newman para G6 Productos y Ofertas (Hito 5)",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "validate": "node scripts/validate-collection.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "preflight": "node scripts/preflight.mjs",
+    "test:smoke": "node scripts/run-newman.mjs --profile smoke",
+    "test:integration": "node scripts/run-newman.mjs --profile integration",
+    "sanitize": "node scripts/sanitize-evidence.mjs",
+    "report": "node scripts/generate-report.mjs"
+  },
+  "devDependencies": {
+    "newman": "6.2.3"
+  }
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="G6 - H5 Integration Suite" tests="2" failures="2" skipped="0" time="0.557">
+  <testsuite name="folder:00 - Preflight y autenticacion" tests="2" failures="2" skipped="0" time="0.557">
+    <testcase classname="INT-07" name="PM-001 - Preflight Gateway Health" time="0.258">
+      <failure message="PM-001: HTTP 200 en /health: expected response to have status code 200 but got 403 | PM-001: Content-Type application/json: expected &apos;text/plain&apos; to include &apos;application/json&apos; | PM-001: Estructura JSON valida sin exposicion de secretos: Unexpected token &apos;R&apos; at 1:1
+RBAC: access denied
+^"/>
+    </testcase>
+    <testcase classname="INT-07" name="PM-001B - Preflight Gateway Readiness" time="0.047">
+      <failure message="PM-001B: HTTP 200 o 503 contractual en /health/ready: expected [ 200, 503 ] to include 403 | PM-001B: Respuesta declara servicio api-gateway y estado: Unexpected token &apos;R&apos; at 1:1
+RBAC: access denied
+^"/>
+    </testcase>
+  </testsuite>
+</testsuites>
