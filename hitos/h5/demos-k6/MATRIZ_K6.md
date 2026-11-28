@@ -1,6 +1,6 @@
 # Matriz de k6 H5
 
-Los comandos y la cobertura ejecutable están en [Backend, `scripts/h5/k6/`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/080fda038ea217e1ed5795b7ea6fc5b62d846564/scripts/h5/k6/README.md). Los responsables y criterios oficiales se mantienen en [H5-03](../03_PRUEBAS_DE_PERFORMANCE.md).
+Los comandos y la cobertura ejecutable están en [Backend, `scripts/h5/k6/`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/58c2a9d2518e157c605cba2e68719659d5ba0bfa/scripts/h5/k6/README.md). Los responsables y criterios oficiales se mantienen en [H5-03](../03_PRUEBAS_DE_PERFORMANCE.md).
 
 | Caso · responsable | Cobertura | Evidencia y límite |
 |---|---|---|
