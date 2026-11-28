@@ -20213,7 +20213,11 @@ paths:
       - Precios
       operationId: obtenerDefinicionPrecioProductoAdministracion
       summary: Obtener definición administrativa de precio de producto
-      x-status: provisional-internal
+      description: Consulta administrativa exacta por canal. Al omitir channelId, consulta la definición global.
+        La definición puede existir sin vigencia actual. Requiere JWT humano con rol GESTOR_COMERCIAL.
+      x-status: implemented-candidate
+      x-gateway-operation: true
+      x-required-role: GESTOR_COMERCIAL
       x-source-spec:
       - SPEC-013
       x-route-basis: derived-from-capability
@@ -20239,7 +20243,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/DefinicionAdministrativaPrecio'
         '400':
           description: VALIDACION
           content:
@@ -20264,11 +20268,25 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+        '500':
+          description: ERROR_INTERNO
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: SERVICIO_NO_DISPONIBLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
       x-error-codes:
         '400': [VALIDACION]
         '401': [TOKEN_INVALIDO]
         '403': [SCOPE_INSUFICIENTE]
         '404': [PRECIO_NO_ENCONTRADO]
+        '500': [ERROR_INTERNO]
+        '503': [SERVICIO_NO_DISPONIBLE]
 
   /precios/administracion/skus/{sku}:
     get:
@@ -20276,7 +20294,11 @@ paths:
       - Precios
       operationId: obtenerDefinicionPrecioSkuAdministracion
       summary: Obtener definición administrativa de precio de SKU
-      x-status: provisional-internal
+      description: Consulta administrativa exacta por canal. Al omitir channelId, consulta la definición global.
+        La definición puede existir sin vigencia actual. Requiere JWT humano con rol GESTOR_COMERCIAL.
+      x-status: implemented-candidate
+      x-gateway-operation: true
+      x-required-role: GESTOR_COMERCIAL
       x-source-spec:
       - SPEC-013
       x-route-basis: derived-from-capability
@@ -20301,7 +20323,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/DefinicionAdministrativaPrecio'
         '400':
           description: VALIDACION
           content:
@@ -20326,11 +20348,25 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+        '500':
+          description: ERROR_INTERNO
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: SERVICIO_NO_DISPONIBLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
       x-error-codes:
         '400': [VALIDACION]
         '401': [TOKEN_INVALIDO]
         '403': [SCOPE_INSUFICIENTE]
         '404': [PRECIO_NO_ENCONTRADO]
+        '500': [ERROR_INTERNO]
+        '503': [SERVICIO_NO_DISPONIBLE]
 
   /precios/productos/{productoId}:
     get:
@@ -23023,6 +23059,42 @@ components:
       schema:
         type: string
   schemas:
+    DefinicionAdministrativaPrecio:
+      type: object
+      required: [productId, sku, channelId, priceVersion, vigenciaActual]
+      properties:
+        productId:
+          type: string
+          format: uuid
+        sku:
+          type: [string, 'null']
+          description: Nulo en la definición a nivel de producto.
+        channelId:
+          type: [string, 'null']
+          enum: [MARKETPLACE, CHATBOT, RETAIL, VENTAS, null]
+        priceVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        vigenciaActual:
+          type: [object, 'null']
+          description: Nulo cuando la definición existe y ninguna vigencia cubre el instante de consulta.
+          required: [precioRegular, precioOferta, currency, validFrom, validUntil]
+          properties:
+            precioRegular:
+              type: number
+            precioOferta:
+              type: [number, 'null']
+            currency:
+              type: string
+              minLength: 3
+              maxLength: 3
+            validFrom:
+              type: string
+              format: date-time
+            validUntil:
+              type: [string, 'null']
+              format: date-time
     ConsultaOperacionInventario:
       type: object
       description: Estado durable por operation_id, sin divulgar existencias físicas.
