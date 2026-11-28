@@ -113,12 +113,13 @@ npm test
 ## 9. Importacion en Postman Desktop
 
 1. Abra Postman Desktop.
-2. Haga clic en **Import** y seleccione:
+2. En **Settings → General**, confirme **Automatically follow redirects = OFF** como defensa en profundidad (adicionalmente, las 38 solicitudes de la coleccion incluyen preventivamente `protocolProfileBehavior.followRedirects = false`).
+3. Haga clic en **Import** y seleccione:
    - `g6-h5-integration.postman_collection.json`
-   - `environments/environment.example.json` (o `environments/local.example.json` para pruebas locales)
-3. Seleccione el entorno importado en la esquina superior derecha.
-4. Configure localmente su `accessToken` en **Current Value**.
-5. Seleccione la carpeta `01 - Catalog y Pricing` o `09 - APIM, Gateway y G7` y ejecute **Run folder** en Collection Runner.
+   - `environments/apim.example.json` (borde autorizado APIM) o `environments/local.example.json`
+4. Seleccione el entorno importado en la esquina superior derecha.
+5. Configure localmente su `accessToken` en **Current Value** (y opcionalmente `sku` si ejecutara carpetas aisladas como `10 - Integraciones externas`).
+6. Seleccione la carpeta `01 - Catalog y Pricing` o `09 - APIM, Gateway y G7` y ejecute **Run folder** en Collection Runner.
 
 ## 10. Ejecucion desde Newman
 
@@ -175,11 +176,12 @@ Cada caso se clasifica estrictamente en uno de los estados oficiales:
 - `OUT_OF_SCOPE`: dimension separada del resultado (por ejemplo, pruebas de entrega asincrona Azure Service Bus que corresponden al harness de Backend).
 
 Codigos de salida del runner:
-- `0`: todas las solicitudes ejecutadas en `PASS` y evidencia saneada generada.
-- `1`: al menos un fallo funcional o de transporte (evidencia saneada igualmente generada).
-- `2`: bloqueo de preflight (host no autorizado, URL insegura, credenciales ausentes o secretos detectados).
+- `0`: **EXCLUSIVAMENTE** cuando `overallVerdict === 'PASS'` (100% de casos planificados ejecutados y aprobados).
+- `1`: al menos un fallo funcional (`FAIL`), error de transporte o estado `INCONCLUSIVE` (evidencia saneada igualmente generada).
+- `2`: bloqueo de preflight (carpeta inexistente, host no autorizado, URL insegura, credenciales ausentes o secretos detectados).
 - `3`: Newman local no instalado (`npm ci` pendiente).
 - `4`: fallo del sanitizador (publicacion de evidencia bloqueada por posible fuga sensible).
+- `5`: ejecucion parcial (`PARTIAL_NOT_COMPLETE`): uno o mas casos planificados quedaron `NOT_RUN` (`BLOCKED_AUTH` o `BLOCKED_FIXTURE`); nunca se reporta como `exitCode=0`.
 
 ## 15. Ubicacion de evidencias
 

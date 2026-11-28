@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "G6 H5 OpenAPI 0.7.0-rc.3 Response Schemas",
+  "sourceContract": "contratos/http/openapi.yaml",
+  "sourceVersion": "0.7.0-rc.3",
+  "$defs": {
+    "Canal": {
+      "type": "string",
+      "enum": ["MARKETPLACE", "CHATBOT", "RETAIL", "VENTAS"]
+    },
+    "EstadoStock": {
+      "type": "string",
+      "enum": ["DISPONIBLE", "STOCK_BAJO", "AGOTADO", "INDETERMINADO"]
+    },
+    "ProductoResumenComercial": {
+      "type": "object",
+      "required": ["product_id", "slug", "name", "categoria_id", "tipo_producto_id", "marca_id", "tiene_variantes"],
+      "properties": {
+        "product_id": { "type": "string", "minLength": 1 },
+        "slug": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": ["string", "null"] },
+        "categoria_id": { "type": "string", "minLength": 1 },
+        "tipo_producto_id": { "type": "string", "minLength": 1 },
+        "marca_id": { "type": "string", "minLength": 1 },
+        "tiene_variantes": { "type": "boolean" },
+        "sku_base": { "type": ["string", "null"] },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "attributes": { "type": "array" }
+      }
+    },
+    "VarianteComercial": {
+      "type": "object",
+      "required": ["variant_id", "sku"],
+      "properties": {
+        "variant_id": { "type": "string", "minLength": 1 },
+        "sku": { "type": "string", "minLength": 1 },
+        "identifying_attributes": { "type": "array" },
+        "non_identifying_attributes": { "type": "array" },
+        "images": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ProductoDetalleComercial": {
+      "type": "object",
+      "required": ["product_id", "slug", "name", "categoria_id", "tipo_producto_id", "marca_id", "tiene_variantes", "marca", "variants"],
+      "properties": {
+        "product_id": { "type": "string", "minLength": 1 },
+        "slug": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "categoria_id": { "type": "string", "minLength": 1 },
+        "tipo_producto_id": { "type": "string", "minLength": 1 },
+        "marca_id": { "type": "string", "minLength": 1 },
+        "tiene_variantes": { "type": "boolean" },
+        "sku_base": { "type": ["string", "null"] },
+        "marca": { "type": "object" },
+        "variants": { "type": "array", "items": { "$ref": "#/$defs/VarianteComercial" } }
+      }
+    },
+    "PaginaProductosComercial": {
+      "type": "object",
+      "required": ["items", "pagina", "tamanio", "total"],
+      "properties": {
+        "items": { "type": "array", "items": { "$ref": "#/$defs/ProductoResumenComercial" } },
+        "pagina": { "type": "integer", "minimum": 1 },
+        "tamanio": { "type": "integer", "minimum": 1 },
+        "total": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Precio": {
+      "type": "object",
+      "required": ["sku", "precio_regular", "currency", "channel_id", "valid_from", "price_version", "vigencia_id", "origen"],
+      "properties": {
+        "sku": { "type": "string", "minLength": 1 },
+        "precio_regular": { "type": "number", "exclusiveMinimum": 0 },
+        "precio_oferta": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "currency": { "type": "string", "minLength": 1 },
+        "channel_id": { "type": ["string", "null"], "enum": ["MARKETPLACE", "CHATBOT", "RETAIL", "VENTAS", null] },
+        "valid_from": { "type": "string", "minLength": 1 },
+        "valid_until": { "type": ["string", "null"] },
+        "price_version": { "type": "integer", "minimum": 0 },
+        "vigencia_id": { "type": "string", "minLength": 1 },
+        "origen": { "type": "string", "enum": ["PRODUCTO", "SKU_OVERRIDE"] }
+      }
+    },
+    "ConsultaPrecios": {
+      "type": "object",
+      "required": ["items"],
+      "properties": {
+        "items": { "type": "array", "items": { "$ref": "#/$defs/Precio" } }
+      }
+    },
+    "DisponibilidadStock": {
+      "type": "object",
+      "required": ["sku", "on_hand", "reserved", "blocked", "available", "status"],
+      "properties": {
+        "sku": { "type": "string", "minLength": 1 },
+        "location_id": { "type": ["string", "null"] },
+        "on_hand": { "type": "integer", "minimum": 0 },
+        "reserved": { "type": "integer", "minimum": 0 },
+        "blocked": { "type": "integer", "minimum": 0 },
+        "available": { "type": "integer", "minimum": 0 },
+        "status": { "$ref": "#/$defs/EstadoStock" },
+        "threshold": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "ConsultaDisponibilidadResponse": {
+      "type": "object",
+      "required": ["items"],
+      "properties": {
+        "items": { "type": "array", "items": { "$ref": "#/$defs/DisponibilidadStock" } }
+      }
+    },
+    "DisponibilidadComercial": {
+      "type": "object",
+      "required": ["sku", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "sku": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/EstadoStock" }
+      }
+    },
+    "ConsultaDisponibilidadComercialResponse": {
+      "type": "object",
+      "required": ["items"],
+      "properties": {
+        "items": { "type": "array", "items": { "$ref": "#/$defs/DisponibilidadComercial" } }
+      }
+    },
+    "Problem": {
+      "type": "object",
+      "required": ["title", "status", "code"],
+      "properties": {
+        "type": { "type": "string" },
+        "title": { "type": "string", "minLength": 1 },
+        "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+        "detail": { "type": "string" },
+        "code": { "type": "string", "minLength": 1 },
+        "correlationId": { "type": "string" }
+      }
+    }
+  }
+}

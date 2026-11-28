@@ -12,8 +12,9 @@ import {
   EVIDENCIAS_DIR,
   POSTMAN_ROOT,
   PROFILES,
+  resolveProfileFolders,
 } from './lib/constants.mjs';
-import { extractRequestsFromItems, runPreflight } from './lib/preflight-core.mjs';
+import { runPreflight } from './lib/preflight-core.mjs';
 import { buildMarkdownReport, buildManifest, resolveGitHead, writeEvidenceBundle } from './lib/report-core.mjs';
 import { buildSanitizedJunitXml, sanitizeNewmanRun } from './lib/sanitizer-core.mjs';
 
@@ -68,12 +69,18 @@ function buildRuntimeEnvironment(envTemplatePath, overrides) {
 }
 
 /**
- * H02 + H04: Planificacion previa de casos seleccionados segun perfil/carpeta y disponibilidad
- * real de credenciales. Ningun caso sin su credencial requerida se ejecuta para aprobar con 401.
+ * H02 + H04 + Punto 4: Planificacion previa de casos seleccionados, validando credenciales
+ * Y dependencias de fixtures (productId, sku) para carpetas individuales.
  */
-export function planExecution(collection, targetFolders, tokens = {}) {
+export function planExecution(collection, targetFolders, tokens = {}, initialFixtures = {}) {
   const selectedFolders = new Set(targetFolders);
   const plannedCases = [];
+  const availableFixtures = new Set();
+  if (initialFixtures.productId) availableFixtures.add('productId');
+  if (initialFixtures.sku) {
+    availableFixtures.add('sku');
+    availableFixtures.add('skusCsv');
+  }
 
   const filteredItems = (collection.item || [])
     .filter((folder) => selectedFolders.has(folder.name))
@@ -101,6 +108,15 @@ export function planExecution(collection, targetFolders, tokens = {}) {
           blockerReason = 'BLOCKED_AUTH: Requiere G6_VENTAS_ACCESS_TOKEN (serviceBearer modulo-ventas).';
         }
 
+        // Punto 4: Verificar dependencias de fixtures cuando se ejecutan carpetas individuales
+        if (executable && Array.isArray(meta.requiresFixtures)) {
+          const missing = meta.requiresFixtures.filter((fx) => !availableFixtures.has(fx));
+          if (missing.length > 0) {
+            executable = false;
+            blockerReason = `BLOCKED_FIXTURE: Requiere fixture(s) [${missing.join(', ')}] (defina G6_SKU/G6_PRODUCT_ID o incluya '01 - Catalog y Pricing').`;
+          }
+        }
+
         const rawUrl = typeof reqItem.request?.url === 'string'
           ? reqItem.request.url
           : reqItem.request?.url?.raw || '';
@@ -118,6 +134,9 @@ export function planExecution(collection, targetFolders, tokens = {}) {
 
         if (executable) {
           keptRequests.push(reqItem);
+          for (const provided of meta.providesFixtures || []) {
+            availableFixtures.add(provided);
+          }
         }
       }
 
@@ -125,16 +144,11 @@ export function planExecution(collection, targetFolders, tokens = {}) {
     })
     .filter((folder) => folder.item.length > 0);
 
-  const filteredCollection = {
-    ...collection,
-    item: filteredItems,
-  };
-
   return {
     plannedCases,
     executableCount: plannedCases.filter((c) => c.executable).length,
     notRunCount: plannedCases.filter((c) => !c.executable).length,
-    filteredCollection,
+    filteredCollection: { ...collection, item: filteredItems },
   };
 }
 
@@ -172,6 +186,9 @@ export async function executeSuite(options = {}) {
   const marketplaceAccessToken = options.marketplaceAccessToken ?? process.env.G6_MARKETPLACE_ACCESS_TOKEN ?? '';
   const ventasAccessToken = options.ventasAccessToken ?? process.env.G6_VENTAS_ACCESS_TOKEN ?? '';
   const extraSecrets = [accessToken, restrictedAccessToken, marketplaceAccessToken, ventasAccessToken].filter(Boolean);
+
+  const initialProductId = options.productId ?? process.env.G6_PRODUCT_ID ?? '';
+  const initialSku = options.sku ?? process.env.G6_SKU ?? '';
 
   const preflight = runPreflight({
     baseUrl,
@@ -220,14 +237,14 @@ export async function executeSuite(options = {}) {
   const rawCollection = JSON.parse(readFileSync(collectionPath, 'utf8'));
   const targetFolders = folder
     ? [folder]
-    : [...(PROFILES[profile]?.folders || PROFILES['apim-edge'].folders)];
+    : resolveProfileFolders(profile, environmentName);
 
-  const plan = planExecution(rawCollection, targetFolders, {
-    accessToken,
-    restrictedAccessToken,
-    marketplaceAccessToken,
-    ventasAccessToken,
-  });
+  const plan = planExecution(
+    rawCollection,
+    targetFolders,
+    { accessToken, restrictedAccessToken, marketplaceAccessToken, ventasAccessToken },
+    { productId: initialProductId, sku: initialSku },
+  );
 
   const privateTmpDir = mkdtempSync(join(tmpdir(), 'g6-h5-newman-'));
   const rawJsonPath = join(privateTmpDir, 'raw-newman.json');
@@ -248,8 +265,9 @@ export async function executeSuite(options = {}) {
     restrictedAccessToken,
     marketplaceAccessToken,
     ventasAccessToken,
-    productId: options.productId || process.env.G6_PRODUCT_ID || '',
-    sku: options.sku || process.env.G6_SKU || '',
+    productId: initialProductId,
+    sku: initialSku,
+    skusCsv: initialSku,
     priceMin: options.priceMin ?? process.env.G6_PRICE_MIN ?? '0',
     priceMax: options.priceMax ?? process.env.G6_PRICE_MAX ?? '100',
     priceMaxNarrow: options.priceMaxNarrow ?? process.env.G6_PRICE_MAX_NARROW ?? '60',
@@ -271,9 +289,7 @@ export async function executeSuite(options = {}) {
             collection: plan.filteredCollection,
             environment: tempEnvPath,
             reporters: ['json'],
-            reporter: {
-              json: { export: rawJsonPath },
-            },
+            reporter: { json: { export: rawJsonPath } },
             timeoutRequest: timeoutRequestMs,
             ignoreRedirects: true,
             bail: false,
@@ -288,8 +304,7 @@ export async function executeSuite(options = {}) {
         );
       });
 
-      const failures = newmanSummary?.run?.failures || [];
-      if (failures.length > 0) {
+      if ((newmanSummary?.run?.failures || []).length > 0) {
         newmanExitCode = 1;
       }
     } catch (err) {
@@ -332,8 +347,12 @@ export async function executeSuite(options = {}) {
       plannedCases: plan.plannedCases,
     });
 
-    // Preserve fail exit code if any case failed or was inconclusive
-    if (sanitizedSummary.totals.fail > 0 || sanitizedSummary.totals.inconclusive > 0) {
+    // Punto 1: exitCode = 0 corresponde EXCLUSIVAMENTE a overallVerdict === 'PASS'
+    if (sanitizedSummary.overallVerdict === 'PASS') {
+      newmanExitCode = 0;
+    } else if (sanitizedSummary.overallVerdict === 'PARTIAL_NOT_COMPLETE') {
+      newmanExitCode = 5;
+    } else {
       newmanExitCode = 1;
     }
 
@@ -347,7 +366,7 @@ export async function executeSuite(options = {}) {
     const notRunList = sanitizedSummary.cases.filter((c) => c.status === 'NOT_RUN');
     if (notRunList.length > 0) {
       blockers.push(
-        `Ejecucion parcial (${sanitizedSummary.overallVerdict}): ${notRunList.length} de ${sanitizedSummary.totals.planned} casos planificados quedaron NOT_RUN por credenciales ausentes.`,
+        `Ejecucion parcial (${sanitizedSummary.overallVerdict}): ${notRunList.length} de ${sanitizedSummary.totals.planned} casos planificados quedaron NOT_RUN.`,
       );
     }
 
@@ -423,6 +442,8 @@ if (isMain) {
     runId: cli['run-id'],
     outDir: cli['out-dir'],
     channel: cli.channel,
+    sku: cli.sku,
+    productId: cli['product-id'],
     timeoutRequestMs: cli.timeout,
     allowNoAuth: cli['allow-no-auth'] === 'true',
     evidenceLevel: cli['evidence-level'],
@@ -430,7 +451,7 @@ if (isMain) {
 
   if (res.stage === 'completed') {
     console.log(`\n=== Resumen de Ejecucion Newman (${res.runId}) ===`);
-    console.log(`  Veredicto   : ${res.overallVerdict}`);
+    console.log(`  Veredicto   : ${res.overallVerdict} (exitCode=${res.exitCode})`);
     console.log(`  Planificados: ${res.totals.planned}`);
     console.log(`  Ejecutados  : ${res.totals.executed}`);
     console.log(`  PASS        : ${res.totals.pass}`);
@@ -441,7 +462,7 @@ if (isMain) {
     console.log(`  Duracion    : ${res.totals.durationMs} ms`);
     console.log(`  Evidencia   : ${res.evidenceDir}`);
   } else {
-    console.error(`\n[RUNNER] Ejecucion detenida en etapa '${res.stage}':`);
+    console.error(`\n[RUNNER] Ejecucion detenida en etapa '${res.stage}' (exitCode=${res.exitCode}):`);
     for (const err of res.errors || []) {
       console.error(`  - ${err}`);
     }

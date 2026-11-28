@@ -10,15 +10,10 @@ export const COLLECTION_PATH = resolve(POSTMAN_ROOT, 'g6-h5-integration.postman_
 export const ENVIRONMENTS_DIR = resolve(POSTMAN_ROOT, 'environments');
 export const EVIDENCIAS_DIR = resolve(POSTMAN_ROOT, 'evidencias');
 export const COVERAGE_CSV_PATH = resolve(POSTMAN_ROOT, 'matrices', 'cobertura-integracion.csv');
+export const SCHEMAS_PATH = resolve(POSTMAN_ROOT, 'schemas', 'openapi-response-schemas.json');
 export const OPENAPI_CONTRACT_PATH = resolve(DOCS_ROOT, 'contratos', 'http', 'openapi.yaml');
 export const OPENAPI_CONTRACT_VERSION = '0.7.0-rc.3';
 
-/**
- * Lista autorizada de hosts derivada de fuentes oficiales del proyecto:
- * - APIM Chile live (corte Axel Cueva PR #152: apim-g6-productos-chile.azure-api.net)
- * - Gateway ACA Chile Central (Frontend vercel.json; protegido por Modalidad B)
- * - Entorno local de desarrollo y harness (loopback)
- */
 export const AUTHORIZED_HOSTS = Object.freeze({
   'azure-apim-chile': Object.freeze([
     'apim-g6-productos-chile.azure-api.net',
@@ -35,10 +30,14 @@ export const ALL_AUTHORIZED_HOSTS = Object.freeze([
   ...AUTHORIZED_HOSTS.local,
 ]);
 
+export const GATEWAY_PRIVATE_FOLDERS = Object.freeze([
+  '00 - Preflight y autenticacion',
+]);
+
 export const PROFILES = Object.freeze({
   'apim-edge': Object.freeze({
     name: 'apim-edge',
-    description: 'Verificacion de borde APIM live (negativos 401/404, correlacion y smoke autorizado sobre /api/v1)',
+    description: 'Verificacion de borde APIM live (Catalog->Pricing y negativos contractuales sobre /api/v1)',
     folders: Object.freeze([
       '01 - Catalog y Pricing',
       '09 - APIM, Gateway y G7',
@@ -46,7 +45,7 @@ export const PROFILES = Object.freeze({
   }),
   smoke: Object.freeze({
     name: 'smoke',
-    description: 'Cadena critica HTTP (Preflight, Catalog->Pricing y negativos contractuales G7/Gateway)',
+    description: 'Cadena critica HTTP (Preflight en local/ACA, Catalog->Pricing y negativos contractuales)',
     folders: Object.freeze([
       '00 - Preflight y autenticacion',
       '01 - Catalog y Pricing',
@@ -71,6 +70,18 @@ export const PROFILES = Object.freeze({
     ]),
   }),
 });
+
+/**
+ * Punto 6: Para entornos APIM (`azure-apim-chile`), excluye carpetas con rutas operativas
+ * privadas de Gateway (/health, /health/ready) que no estan publicadas en las 145 operaciones APIM.
+ */
+export function resolveProfileFolders(profileName, environmentName) {
+  const baseFolders = [...(PROFILES[profileName]?.folders || [])];
+  if (environmentName === 'azure-apim-chile') {
+    return baseFolders.filter((f) => !GATEWAY_PRIVATE_FOLDERS.includes(f));
+  }
+  return baseFolders;
+}
 
 export const SAFE_READ_ONLY_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -104,22 +115,16 @@ export const SENSITIVE_VALUE_PATTERNS = [
 ];
 
 /**
- * Metadatos y requisito de credencial por caso PM.
- * authRequirement:
- *   - 'none': no requiere credencial (o prueba negativa sin token/token invalido)
- *   - 'user': requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)
- *   - 'restricted': requiere G6_RESTRICTED_ACCESS_TOKEN (identidad sin permiso -> 403)
- *   - 'marketplace': requiere G6_MARKETPLACE_ACCESS_TOKEN (serviceBearer modulo-marketplace)
- *   - 'ventas': requiere G6_VENTAS_ACCESS_TOKEN (serviceBearer modulo-ventas)
+ * Metadatos, requisitos de autenticacion y dependencias de fixtures por caso PM (Punto 4).
  */
 export const CASE_METADATA = Object.freeze({
-  'PM-001': { intId: 'INT-07', services: ['api-gateway'], type: 'lectura', scope: 'public-health', authRequirement: 'none', openApiExempt: true },
-  'PM-001B': { intId: 'INT-07', services: ['api-gateway'], type: 'lectura', scope: 'public-health', authRequirement: 'none', openApiExempt: true },
-  'PM-002': { intId: 'INT-01', services: ['api-gateway', 'catalog-svc'], type: 'lectura', scope: 'catalogo:leer / GESTOR_COMERCIAL', authRequirement: 'user' },
-  'PM-003A': { intId: 'INT-01', services: ['api-gateway', 'catalog-svc', 'pricing-svc'], type: 'lectura', scope: 'catalogo:leer / GESTOR_COMERCIAL', authRequirement: 'user' },
+  'PM-001': { intId: 'INT-07', services: ['api-gateway'], type: 'lectura', scope: 'public-health', authRequirement: 'none', openApiExempt: true, apimPublished: false },
+  'PM-001B': { intId: 'INT-07', services: ['api-gateway'], type: 'lectura', scope: 'public-health', authRequirement: 'none', openApiExempt: true, apimPublished: false },
+  'PM-002': { intId: 'INT-01', services: ['api-gateway', 'catalog-svc'], type: 'lectura', scope: 'catalogo:leer / GESTOR_COMERCIAL', authRequirement: 'user', providesFixtures: ['productId', 'categoryId', 'brandId'] },
+  'PM-003A': { intId: 'INT-01', services: ['api-gateway', 'catalog-svc', 'pricing-svc'], type: 'lectura', scope: 'catalogo:leer / GESTOR_COMERCIAL', authRequirement: 'user', providesFixtures: ['productId'] },
   'PM-003B': { intId: 'INT-01', services: ['api-gateway', 'catalog-svc', 'pricing-svc'], type: 'lectura', scope: 'catalogo:leer / GESTOR_COMERCIAL', authRequirement: 'user' },
-  'PM-003C': { intId: 'INT-01', services: ['api-gateway', 'catalog-svc'], type: 'lectura', scope: 'catalogo:leer / GESTOR_COMERCIAL', authRequirement: 'user' },
-  'PM-003D': { intId: 'INT-01', services: ['api-gateway', 'pricing-svc'], type: 'lectura', scope: 'precios:leer / GESTOR_COMERCIAL', authRequirement: 'user' },
+  'PM-003C': { intId: 'INT-01', services: ['api-gateway', 'catalog-svc'], type: 'lectura', scope: 'catalogo:leer / GESTOR_COMERCIAL', authRequirement: 'user', requiresFixtures: ['productId'], providesFixtures: ['sku', 'skusCsv'] },
+  'PM-003D': { intId: 'INT-01', services: ['api-gateway', 'pricing-svc'], type: 'lectura', scope: 'precios:leer / GESTOR_COMERCIAL', authRequirement: 'user', requiresFixtures: ['sku'] },
   'PM-004': { intId: 'INT-07', services: ['api-gateway'], type: 'negativo', scope: 'sin-autenticacion', authRequirement: 'none' },
   'PM-004B': { intId: 'INT-07', services: ['api-gateway'], type: 'negativo', scope: 'token-invalido', authRequirement: 'none' },
   'PM-005': { intId: 'INT-07', services: ['api-gateway', 'price-audit-svc'], type: 'negativo', scope: 'restringido (403)', authRequirement: 'restricted' },
@@ -127,14 +132,14 @@ export const CASE_METADATA = Object.freeze({
   'PM-007A': { intId: 'INT-01', services: ['api-gateway', 'catalog-svc'], type: 'negativo', scope: 'catalogo:leer / GESTOR_COMERCIAL', authRequirement: 'user' },
   'PM-007B': { intId: 'INT-01', services: ['api-gateway', 'catalog-svc'], type: 'negativo', scope: 'catalogo:leer / GESTOR_COMERCIAL', authRequirement: 'user' },
   'PM-008': { intId: 'INT-07', services: ['api-gateway'], type: 'negativo', scope: 'ruta-inexistente', authRequirement: 'none', openApiExempt: true },
-  'PM-010': { intId: 'INT-01', services: ['api-gateway', 'catalog-svc'], type: 'lectura', scope: 'GESTOR_COMERCIAL', authRequirement: 'user' },
-  'PM-011': { intId: 'INT-01', services: ['api-gateway', 'catalog-svc'], type: 'lectura', scope: 'catalogo:leer / GESTOR_COMERCIAL', authRequirement: 'user' },
-  'PM-012': { intId: 'INT-02', services: ['api-gateway', 'inventory-svc'], type: 'lectura', scope: 'inventario:disponibilidad:leer / GESTOR_COMERCIAL', authRequirement: 'user' },
+  'PM-010': { intId: 'INT-01', services: ['api-gateway', 'catalog-svc'], type: 'lectura', scope: 'GESTOR_COMERCIAL', authRequirement: 'user', requiresFixtures: ['productId'] },
+  'PM-011': { intId: 'INT-01', services: ['api-gateway', 'catalog-svc'], type: 'lectura', scope: 'catalogo:leer / GESTOR_COMERCIAL', authRequirement: 'user', requiresFixtures: ['productId'] },
+  'PM-012': { intId: 'INT-02', services: ['api-gateway', 'inventory-svc'], type: 'lectura', scope: 'inventario:disponibilidad:leer / GESTOR_COMERCIAL', authRequirement: 'user', requiresFixtures: ['sku'] },
   'PM-020': { intId: 'INT-01', services: ['api-gateway', 'combos-svc'], type: 'lectura', scope: 'GESTOR_COMERCIAL', authRequirement: 'user' },
   'PM-021': { intId: 'INT-01', services: ['api-gateway', 'combos-svc'], type: 'negativo', scope: 'combos:leer / GESTOR_COMERCIAL', authRequirement: 'user' },
   'PM-030': { intId: 'INT-04', services: ['api-gateway', 'bulk-svc'], type: 'lectura', scope: 'GESTOR_COMERCIAL', authRequirement: 'user' },
   'PM-031': { intId: 'INT-04', services: ['api-gateway', 'bulk-svc'], type: 'negativo', scope: 'GESTOR_COMERCIAL', authRequirement: 'user' },
-  'PM-040': { intId: 'INT-05', services: ['api-gateway', 'pricing-svc'], type: 'lectura', scope: 'precios:leer / GESTOR_COMERCIAL', authRequirement: 'user' },
+  'PM-040': { intId: 'INT-05', services: ['api-gateway', 'pricing-svc'], type: 'lectura', scope: 'precios:leer / GESTOR_COMERCIAL', authRequirement: 'user', requiresFixtures: ['sku'] },
   'PM-041': { intId: 'INT-05', services: ['api-gateway', 'pricing-svc'], type: 'negativo', scope: 'precios:leer / GESTOR_COMERCIAL', authRequirement: 'user' },
   'PM-042': { intId: 'INT-05', services: ['api-gateway', 'price-audit-svc'], type: 'lectura', scope: 'GESTOR_COMERCIAL', authRequirement: 'user' },
   'PM-050': { intId: 'INT-06', services: ['api-gateway', 'taxonomy-svc'], type: 'lectura', scope: 'catalogo:leer / GESTOR_COMERCIAL', authRequirement: 'user' },
@@ -148,7 +153,7 @@ export const CASE_METADATA = Object.freeze({
   'PM-070': { intId: 'INT-02', services: ['api-gateway', 'inventory-svc'], type: 'lectura', scope: 'GESTOR_COMERCIAL', authRequirement: 'user' },
   'PM-071': { intId: 'INT-02', services: ['api-gateway', 'inventory-svc'], type: 'lectura', scope: 'GESTOR_COMERCIAL', authRequirement: 'user' },
   'PM-072': { intId: 'INT-02', services: ['api-gateway', 'inventory-svc'], type: 'lectura', scope: 'GESTOR_COMERCIAL', authRequirement: 'user' },
-  'PM-080': { intId: 'INT-09', services: ['api-gateway', 'catalog-svc'], type: 'lectura', scope: 'serviceBearer:modulo-marketplace:catalogo:leer', authRequirement: 'marketplace' },
-  'PM-081': { intId: 'INT-09', services: ['api-gateway', 'inventory-svc'], type: 'lectura', scope: 'serviceBearer:modulo-marketplace:inventario:disponibilidad:leer', authRequirement: 'marketplace' },
-  'PM-082': { intId: 'INT-09', services: ['api-gateway', 'inventory-svc'], type: 'lectura', scope: 'serviceBearer:modulo-ventas:inventario:disponibilidad:leer', authRequirement: 'ventas' },
+  'PM-080': { intId: 'INT-09', services: ['api-gateway', 'catalog-svc'], type: 'lectura', scope: 'serviceBearer:modulo-marketplace:catalogo:leer', authRequirement: 'marketplace', providesFixtures: ['productId', 'sku'] },
+  'PM-081': { intId: 'INT-09', services: ['api-gateway', 'inventory-svc'], type: 'lectura', scope: 'serviceBearer:modulo-marketplace:inventario:disponibilidad:leer', authRequirement: 'marketplace', requiresFixtures: ['sku'] },
+  'PM-082': { intId: 'INT-09', services: ['api-gateway', 'inventory-svc'], type: 'lectura', scope: 'serviceBearer:modulo-ventas:inventario:disponibilidad:leer', authRequirement: 'ventas', requiresFixtures: ['sku'] },
 });

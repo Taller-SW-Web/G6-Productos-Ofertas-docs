@@ -80,6 +80,7 @@ export function extractRequestsFromItems(items = [], folderPath = []) {
         url: typeof item.request.url === 'string' ? item.request.url : item.request.url?.raw || '',
         request: item.request,
         events: item.event || [],
+        protocolProfileBehavior: item.protocolProfileBehavior || null,
       });
     }
   }
@@ -350,6 +351,13 @@ export function validateCollectionStructure(collectionPath = COLLECTION_PATH) {
     if (!hasTestScript) {
       errors.push(`La solicitud "${req.name}" no tiene script de aserciones (event: test).`);
     }
+
+    // Punto 3: Verificar deshabilitacion preventiva de redirecciones automaticas para Postman Desktop
+    if (req.protocolProfileBehavior?.followRedirects !== false) {
+      errors.push(
+        `La solicitud "${req.name}" debe declarar protocolProfileBehavior.followRedirects = false para bloquear redirecciones preventivamente en Postman Desktop.`,
+      );
+    }
   }
 
   return { ok: errors.length === 0, errors, collection, requests };
@@ -395,6 +403,18 @@ export function runPreflight(options = {}) {
     detail: colCheck.ok ? `${colCheck.requests.length} solicitudes validadas` : colCheck.errors.join('; '),
   });
   if (!colCheck.ok) errors.push(...colCheck.errors);
+
+  // Punto 4: Rechazar carpetas inexistentes en preflight
+  if (folder && colCheck.collection) {
+    const validFolders = (colCheck.collection.item || []).map((f) => f.name);
+    if (!validFolders.includes(folder)) {
+      const msg = `Carpeta inexistente en la coleccion: '${folder}'. Carpetas validas: ${validFolders.join(', ')}.`;
+      checks.push({ id: 'folder_exists', ok: false, detail: msg });
+      errors.push(msg);
+    } else {
+      checks.push({ id: 'folder_exists', ok: true, detail: `Carpeta verificada: ${folder}` });
+    }
+  }
 
   const urlCheck = validateBaseUrl(baseUrl, environmentName);
   checks.push({

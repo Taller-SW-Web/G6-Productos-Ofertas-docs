@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { COLLECTION_PATH, COVERAGE_CSV_PATH, OPENAPI_CONTRACT_PATH, POSTMAN_ROOT } from '../scripts/lib/constants.mjs';
+import { existsSync, readFileSync } from 'node:fs';
+import {
+  COLLECTION_PATH,
+  COVERAGE_CSV_PATH,
+  OPENAPI_CONTRACT_PATH,
+  POSTMAN_ROOT,
+  SCHEMAS_PATH,
+} from '../scripts/lib/constants.mjs';
 import {
   scanFilesForSecrets,
   validateCollectionAgainstOpenApi,
@@ -9,13 +15,20 @@ import {
   validateMatrixParity,
 } from '../scripts/lib/preflight-core.mjs';
 
-test('La coleccion Postman es JSON valido v2.1.0, solo lectura y sin IDs duplicados', () => {
+test('La coleccion Postman es JSON valido v2.1.0, solo lectura, sin IDs duplicados y con followRedirects=false (Punto 3)', () => {
   const result = validateCollectionStructure(COLLECTION_PATH);
   assert.equal(result.ok, true, `Errores de validacion: ${result.errors.join(' | ')}`);
   assert.equal(result.requests.length, 38);
+  for (const req of result.requests) {
+    assert.equal(
+      req.protocolProfileBehavior?.followRedirects,
+      false,
+      `Falta followRedirects=false en ${req.name}`,
+    );
+  }
 });
 
-test('H10: Cada ruta /api/v1 de la coleccion coincide con OpenAPI 0.7.0-rc.3 y la matriz CSV esta 100% conciliada', () => {
+test('H10+Punto 5: Rutas /api/v1 coinciden con OpenAPI 0.7.0-rc.3, matriz CSV conciliada y JSON Schemas presentes', () => {
   const openApi = validateCollectionAgainstOpenApi(COLLECTION_PATH, OPENAPI_CONTRACT_PATH);
   assert.equal(openApi.ok, true, `Errores OpenAPI: ${openApi.errors.join(' | ')}`);
   assert.equal(openApi.openApiOperationCount, 156);
@@ -23,6 +36,12 @@ test('H10: Cada ruta /api/v1 de la coleccion coincide con OpenAPI 0.7.0-rc.3 y l
   const parity = validateMatrixParity(COLLECTION_PATH, COVERAGE_CSV_PATH);
   assert.equal(parity.ok, true, `Errores de paridad CSV: ${parity.errors.join(' | ')}`);
   assert.equal(parity.collectionCount, parity.csvCount);
+
+  assert.equal(existsSync(SCHEMAS_PATH), true, 'Debe existir schemas/openapi-response-schemas.json');
+  const schemas = JSON.parse(readFileSync(SCHEMAS_PATH, 'utf8'));
+  for (const key of ['PaginaProductosComercial', 'ProductoDetalleComercial', 'Precio', 'DisponibilidadStock', 'DisponibilidadComercial', 'Problem']) {
+    assert.ok(schemas.$defs[key], `Falta JSON Schema ${key}`);
+  }
 });
 
 test('H09: La coleccion valida URL final resuelta en prerequest y redirecciones en test global', () => {
@@ -30,15 +49,14 @@ test('H09: La coleccion valida URL final resuelta en prerequest y redirecciones 
   assert.equal(raw.info.name, 'G6 - H5 Integration Suite');
 
   const pre = (raw.event || []).find((e) => e.listen === 'prerequest');
-  assert.ok(pre, 'Debe existir script prerequest a nivel de coleccion');
+  assert.ok(pre);
   const preCode = pre.script.exec.join('\n');
-  assert.ok(preCode.includes('pm.variables.replaceIn(pm.request.url.toString())'), 'Debe validar URL final resuelta');
-  assert.ok(preCode.includes('apim-g6-productos-chile.azure-api.net'), 'Debe incluir origen APIM autorizado');
+  assert.ok(preCode.includes('pm.variables.replaceIn(pm.request.url.toString())'));
+  assert.ok(preCode.includes('apim-g6-productos-chile.azure-api.net'));
 
   const globalTest = (raw.event || []).find((e) => e.listen === 'test');
-  assert.ok(globalTest, 'Debe existir script test global para validar redirecciones');
-  const testCode = globalTest.script.exec.join('\n');
-  assert.ok(testCode.includes('Location'), 'Debe inspeccionar Location en respuestas 3xx');
+  assert.ok(globalTest);
+  assert.ok(globalTest.script.exec.join('\n').includes('Location'));
 });
 
 test('No existen secretos reales en archivos versionados del directorio postman', () => {

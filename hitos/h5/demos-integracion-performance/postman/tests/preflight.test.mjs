@@ -1,25 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { resolveProfileFolders } from '../scripts/lib/constants.mjs';
 import { runPreflight, validateBaseUrl, validateRedirectTarget } from '../scripts/lib/preflight-core.mjs';
 
 test('H05: validateBaseUrl acepta APIM autorizado y Gateway ACA con HTTPS y rechaza HTTP', () => {
-  const apimOk = validateBaseUrl('https://apim-g6-productos-chile.azure-api.net', 'azure-apim-chile');
-  assert.equal(apimOk.ok, true);
+  assert.equal(validateBaseUrl('https://apim-g6-productos-chile.azure-api.net', 'azure-apim-chile').ok, true);
+  assert.equal(validateBaseUrl('http://apim-g6-productos-chile.azure-api.net', 'azure-apim-chile').ok, false);
+  assert.equal(validateBaseUrl('https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io', 'azure-aca-chile').ok, true);
+  assert.equal(validateBaseUrl('https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io', 'azure-apim-chile').ok, false);
+});
 
-  const apimHttp = validateBaseUrl('http://apim-g6-productos-chile.azure-api.net', 'azure-apim-chile');
-  assert.equal(apimHttp.ok, false);
+test('Punto 6: Perfiles APIM (integration y smoke) excluyen carpeta privada 00 - Preflight y autenticacion (/health)', () => {
+  const apimInt = resolveProfileFolders('integration', 'azure-apim-chile');
+  assert.equal(apimInt.includes('00 - Preflight y autenticacion'), false);
+  assert.equal(apimInt.includes('01 - Catalog y Pricing'), true);
+  assert.equal(apimInt.includes('09 - APIM, Gateway y G7'), true);
 
-  const acaOk = validateBaseUrl(
-    'https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io',
-    'azure-aca-chile',
-  );
-  assert.equal(acaOk.ok, true);
+  const apimSmoke = resolveProfileFolders('smoke', 'azure-apim-chile');
+  assert.equal(apimSmoke.includes('00 - Preflight y autenticacion'), false);
 
-  const crossEnv = validateBaseUrl(
-    'https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io',
-    'azure-apim-chile',
-  );
-  assert.equal(crossEnv.ok, false);
+  const localInt = resolveProfileFolders('integration', 'local');
+  assert.equal(localInt.includes('00 - Preflight y autenticacion'), true);
 });
 
 test('validateBaseUrl rechaza hosts no autorizados y credenciales embebidas', () => {
@@ -33,7 +34,17 @@ test('validateRedirectTarget bloquea redirecciones hacia hosts fuera de allowlis
   assert.equal(validateRedirectTarget('https://apim-g6-productos-chile.azure-api.net/api/v1/productos', 'azure-apim-chile').allowed, true);
 });
 
-test('runPreflight rechaza credenciales ausentes, perfiles desconocidos y fixtures invalidos', () => {
+test('Punto 4: runPreflight rechaza carpetas inexistentes, credenciales ausentes, perfiles desconocidos y fixtures invalidos', () => {
+  const badFolder = runPreflight({
+    baseUrl: 'http://127.0.0.1:3000',
+    environmentName: 'local',
+    folder: '99 - Carpeta Inexistente',
+    requireAuth: false,
+    skipSecretScan: true,
+  });
+  assert.equal(badFolder.ok, false);
+  assert.ok(badFolder.errors.some((e) => e.includes('Carpeta inexistente')));
+
   const missingAuth = runPreflight({
     baseUrl: 'http://127.0.0.1:3000',
     environmentName: 'local',
