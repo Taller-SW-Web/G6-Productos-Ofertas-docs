@@ -32,12 +32,14 @@
         "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
       },
       "l2": {
-        "resultado": "NOT_RUN",
-        "revision": null,
+        "resultado": "PARTIAL",
+        "revision": "api-gateway--0000004",
         "digest": null,
-        "httpReal": null,
-        "evidencia": null,
-        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+        "httpReal": 401,
+        "evidencia": "L2_CERTIFICACION_SEGUIMIENTO_2026-11-28.json",
+        "motivo": "401 anónimo verificado. La vista de consultas con sesión no completó la lectura por preflight CORS.",
+        "superficie": "APIM rev=2 y Vercel",
+        "correlacion": "cc97b7ab-d5ab-4ece-a93f-cc388ce929fd"
       }
     },
     {
@@ -1784,12 +1786,13 @@
         "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
       },
       "l2": {
-        "resultado": "NOT_RUN",
+        "resultado": "PARTIAL",
         "revision": null,
         "digest": null,
         "httpReal": null,
-        "evidencia": null,
-        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+        "evidencia": "L2_CERTIFICACION_SEGUIMIENTO_2026-11-28.json",
+        "motivo": "Árbol cargado con 13 categorías en Vercel. Falta capturar HTTP y correlación por operación.",
+        "superficie": "vista autenticada Vercel"
       }
     },
     {
@@ -4632,8 +4635,8 @@
     "sondas": 2
   },
   "resultadosL2": {
-    "NOT_RUN": 144,
-    "PARTIAL": 11,
+    "PARTIAL": 13,
+    "NOT_RUN": 142,
     "BLOCKED_RELEASE": 2,
     "PASS": 1
   }

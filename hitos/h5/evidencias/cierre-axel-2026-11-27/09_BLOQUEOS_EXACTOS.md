@@ -5,8 +5,8 @@
 | APIM G5 | Publicado en rev. 2, 149. | Positivos con modulo-ventas a cargo de G5. |
 | Pricing administrativo | Docs #153 y Backend #309, Ready for Review. | Decisión de Marco sobre merge y 149 → 151. |
 | R02→R10 | R02 aplicado. R10 en DLQ de Bulk. | Admisión HTTP soportada con fixture completo y nuevo ID de correlación. |
-| Promotions R08/R13/R17 | BLOCKED_DB_PRIVILEGE. | Autorizar corrección acotada y revalidar EXECUTE de las funciones de Inbox con el login real. |
-| L2 HTTP y carga | Vista autenticada observada en dos pantallas. | Capturar resultados por operación y métricas en los escenarios autorizados. |
+| Promotions R08/R13/R17 | Permisos corregidos con migración 20261128074718. PASS del consumidor con fixtures. | Completar Outbox→consumidor desde la entrada soportada. Decidir por separado el tratamiento de la DLQ ajena. |
+| L2 HTTP y carga | Vistas y tablas autenticadas observadas. Consultas espera el hotfix #104. | Capturar resultados por operación y métricas en los escenarios autorizados. |
 
 [Diagnóstico y observaciones](artefactos/L2_CERTIFICACION_SEGUIMIENTO_2026-11-28.json). La tabla inferior conserva el historial de preflight.
 

@@ -119,9 +119,14 @@
       "reason": "MaxDeliveryCountExceeded",
       "deliveryCount": 10,
       "subject": "inventory.bulk.stock.adjust.completed",
-      "settled": false
+      "settled": true,
+      "cleanup": {
+        "result": "SETTLED_FIXTURE_ONLY",
+        "matchAbsent": true,
+        "remaining": 0
+      }
     },
-    "blocker": "El fixture carece del recibo bulk.import.admission que el consumidor necesita para resolver el intent de la fila. Se conserva el rechazo para diagnóstico; repetir desde la admisión HTTP soportada."
+    "blocker": "El fixture carece del recibo bulk.import.admission que el consumidor necesita para resolver el intent de la fila. Se archivó la evidencia y se completó solo el mensaje sintético en DLQ. Repetir desde la admisión HTTP soportada."
   },
   "promotions": {
     "revision": "promotions-svc--0000008",
@@ -130,7 +135,7 @@
       "R13",
       "R17"
     ],
-    "status": "BLOCKED_DB_PRIVILEGE",
+    "status": "PASS_SYNTHETIC_FROM_SERVICE_BUS_TO_PERSISTENCE",
     "runtime": {
       "role": "promotions_dev_login",
       "usage": true,
@@ -186,7 +191,214 @@
     "inboxEnvelopeConstraint": [
       "CHECK ((promotions.fn_valid_envelope(envelope) AND ((envelope ->> 'message_id'::text) = message_id)))"
     ],
-    "blocker": "Validar con Marco una corrección acotada: el login realmente usado carece de EXECUTE sobre las dos funciones invocadas por el camino de Inbox. Repetir el runtime contra las tres colas con fixtures nuevos tras autorizar y verificar la corrección."
+    "initialStatus": "BLOCKED_DB_PRIVILEGE",
+    "initialDiagnosis": "Validar con Marco una corrección acotada: el login realmente usado carece de EXECUTE sobre las dos funciones invocadas por el camino de Inbox. Repetir el runtime contra las tres colas con fixtures nuevos tras autorizar y verificar la corrección.",
+    "verifiedRemediation": {
+      "grant": {
+        "functions": [
+          {
+            "acl": "{po_promotions_owner=X/po_promotions_owner,po_promotions_runtime=X/po_promotions_owner,promotions_dev_login=X/po_promotions_owner}",
+            "name": "promotions.fn_valid_envelope(jsonb)",
+            "invoker": true,
+            "public_execute": false
+          },
+          {
+            "acl": "{po_promotions_owner=X/po_promotions_owner,po_promotions_runtime=X/po_promotions_owner,promotions_dev_login=X/po_promotions_owner}",
+            "name": "promotions.fn_begin_inbox(jsonb,text)",
+            "invoker": true,
+            "public_execute": false
+          }
+        ],
+        "migration": {
+          "version": "20261128074718",
+          "name": "h5_promotions_execute_durable_inbox_chile"
+        },
+        "targetCanBegin": true,
+        "targetCanValidate": true,
+        "runtimeMembershipChanged": false
+      },
+      "authorization": "Confirmación expresa de Marco recibida en el chat para estos dos permisos, con verificación y rollback.",
+      "migrationSql": "begin;\nset local role po_promotions_owner;\nset local lock_timeout = '5s';\ndo $preflight$\nbegin\n  if to_regrole('promotions_dev_login') is null or\n     to_regprocedure('promotions.fn_begin_inbox(jsonb,text)') is null or\n     to_regprocedure('promotions.fn_valid_envelope(jsonb)') is null then\n    raise exception 'Unexpected Promotions runtime role or routines';\n  end if;\n  if has_function_privilege('promotions_dev_login','promotions.fn_begin_inbox(jsonb,text)','EXECUTE') or\n     has_function_privilege('promotions_dev_login','promotions.fn_valid_envelope(jsonb)','EXECUTE') then\n    raise exception 'Effective function grants changed since preflight';\n  end if;\nend\n$preflight$;\n\ngrant execute on function promotions.fn_begin_inbox(jsonb,text), promotions.fn_valid_envelope(jsonb)\nto promotions_dev_login;\n\ndo $verify$\nbegin\n  if not has_function_privilege('promotions_dev_login','promotions.fn_begin_inbox(jsonb,text)','EXECUTE') or\n     not has_function_privilege('promotions_dev_login','promotions.fn_valid_envelope(jsonb)','EXECUTE') then\n    raise exception 'Required runtime grants were not applied';\n  end if;\n  if exists (\n    select 1 from pg_proc p cross join lateral aclexplode(p.proacl) a\n    where p.oid in ('promotions.fn_begin_inbox(jsonb,text)'::regprocedure, 'promotions.fn_valid_envelope(jsonb)'::regprocedure)\n      and a.grantee = 0 and a.privilege_type = 'EXECUTE'\n  ) then\n    raise exception 'Unexpected public function grant';\n  end if;\nend\n$verify$;\nreset role;\ncommit;",
+      "rollbackSql": "begin;\nset local role po_promotions_owner;\nrevoke execute on function promotions.fn_begin_inbox(jsonb,text), promotions.fn_valid_envelope(jsonb) from promotions_dev_login;\nreset role;\ncommit;",
+      "rollbackExecuted": false,
+      "beforeAcl": [
+        {
+          "routine": "promotions.fn_begin_inbox(jsonb,text)",
+          "owner": "po_promotions_owner",
+          "security_definer": false,
+          "acl": "{po_promotions_owner=X/po_promotions_owner,po_promotions_runtime=X/po_promotions_owner}",
+          "target_execute": false,
+          "standard_execute": true
+        },
+        {
+          "routine": "promotions.fn_valid_envelope(jsonb)",
+          "owner": "po_promotions_owner",
+          "security_definer": false,
+          "acl": "{po_promotions_owner=X/po_promotions_owner,po_promotions_runtime=X/po_promotions_owner}",
+          "target_execute": false,
+          "standard_execute": true
+        }
+      ],
+      "scope": "Publicación controlada en Service Bus por la identidad administrada de cada productor hasta la persistencia del consumidor desplegado. No cubre el Outbox upstream de estas corridas.",
+      "initialMessages": {
+        "R08": {
+          "published": true,
+          "flow": "R08",
+          "sentAt": "2026-11-28T07:48:55.502Z"
+        },
+        "R13": {
+          "published": true,
+          "flow": "R13",
+          "sentAt": "2026-11-28T07:48:54.985Z"
+        },
+        "R17": {
+          "published": true,
+          "flow": "R17",
+          "sentAt": "2026-11-28T07:48:55.148Z"
+        }
+      },
+      "duplicatePublication": {
+        "R08": {
+          "published": true,
+          "flow": "R08",
+          "sentAt": "2026-11-28T07:50:02.638Z"
+        },
+        "R13": {
+          "published": true,
+          "flow": "R13",
+          "sentAt": "2026-11-28T07:50:03.254Z"
+        },
+        "R17": {
+          "published": true,
+          "flow": "R17",
+          "sentAt": "2026-11-28T07:50:00.294Z"
+        }
+      },
+      "messagesAfterDuplicate": [
+        {
+          "message_id": "7d4d9895-9701-49b3-a2cc-2aaf143da703",
+          "handler": "promotions-assigned-events-v1",
+          "event_name": "catalog.product.deactivated",
+          "correlation_id": "e2ae87a7-478e-449a-ab1e-04c457066a31",
+          "completed_at": "2026-11-28 07:48:56.198988+00",
+          "result": {
+            "handled": true
+          }
+        },
+        {
+          "message_id": "2298573e-e629-4f67-9a63-7ba7201a1029",
+          "handler": "promotions-assigned-events-v1",
+          "event_name": "inventory.stock.changed",
+          "correlation_id": "bcb1c2e0-534f-41c2-a204-0094eb9ea8e8",
+          "completed_at": "2026-11-28 07:48:55.594182+00",
+          "result": {
+            "handled": true,
+            "invalidation": {
+              "domain": "stock",
+              "targetId": "H5-CERT-R02R10-0A0AD6",
+              "locationId": "9129b578-631e-1735-8427-b683fb524380",
+              "targetType": "SKU",
+              "sourceVersion": "2"
+            }
+          }
+        },
+        {
+          "message_id": "f1937044-aacb-4837-96b7-76d19e9957f6",
+          "handler": "promotions-assigned-events-v1",
+          "event_name": "pricing.price.changed",
+          "correlation_id": "099571de-1a01-44e3-a3cc-16848ad6dea0",
+          "completed_at": "2026-11-28 07:48:55.692096+00",
+          "result": {
+            "handled": true,
+            "invalidation": {
+              "domain": "price",
+              "targetId": "H5-CERT-R17-EXECUTE-20261128",
+              "channelId": null,
+              "targetType": "SKU",
+              "sourceVersion": "1"
+            }
+          }
+        }
+      ],
+      "inboxUnchangedAfterDuplicate": true,
+      "productProjection": {
+        "reference_type": "PRODUCTO",
+        "reference_id": "54c3b2af-8cc1-452d-8e41-4e71677cb173",
+        "product_id": "54c3b2af-8cc1-452d-8e41-4e71677cb173",
+        "active": false,
+        "source_version": 1,
+        "source_message_id": "7d4d9895-9701-49b3-a2cc-2aaf143da703",
+        "updated_at": "2026-11-28 07:48:55.891678+00"
+      },
+      "skuCase": {
+        "publication": {
+          "published": true,
+          "envelope": {
+            "message_id": "d7c78a08-8c22-4159-a30a-30a842db3844",
+            "schema_version": 1,
+            "occurred_at": "2026-11-28T07:50:58.124Z",
+            "correlation_id": "f2250439-3dd4-4fe3-ae22-af45020706f0",
+            "producer": "catalog-svc",
+            "kind": "event",
+            "name": "catalog.sku.deactivated",
+            "data": {
+              "product_id": "54c3b2af-8cc1-452d-8e41-4e71677cb173",
+              "sku": "H5-CERT-R08-SKU-20261128",
+              "sku_version": 1,
+              "changed_at": "2026-11-28T07:50:58.124Z"
+            }
+          },
+          "sentAt": "2026-11-28T07:50:59.021Z"
+        },
+        "inbox": [
+          {
+            "result": {
+              "handled": true
+            },
+            "handler": "promotions-assigned-events-v1",
+            "message_id": "d7c78a08-8c22-4159-a30a-30a842db3844",
+            "completed_at": "2026-11-28T07:50:59.680938+00:00",
+            "correlation_id": "f2250439-3dd4-4fe3-ae22-af45020706f0"
+          }
+        ],
+        "projection": [
+          {
+            "id": "H5-CERT-R08-SKU-20261128",
+            "type": "SKU",
+            "active": false,
+            "version": 1,
+            "message_id": "d7c78a08-8c22-4159-a30a-30a842db3844"
+          }
+        ]
+      },
+      "queueReadback": [
+        {
+          "queue": "g6.promotions.from.catalog",
+          "active": 0,
+          "dlq": 0,
+          "brokerDeduplication": false
+        },
+        {
+          "queue": "g6.promotions.from.inventory",
+          "active": 0,
+          "dlq": 2,
+          "brokerDeduplication": false
+        },
+        {
+          "queue": "g6.promotions.from.pricing",
+          "active": 0,
+          "dlq": 1,
+          "brokerDeduplication": false
+        },
+        {
+          "queue": "g6.bulk.from.inventory",
+          "active": 0,
+          "dlq": 0,
+          "brokerDeduplication": false
+        }
+      ],
+      "foreignDlqTouched": false
+    }
   },
   "frontend": {
     "vercelSha": "2c6ad931b8dd48e4a4fe883a18ac899fb48b0c81",
@@ -201,12 +413,121 @@
         "path": "/carga-masiva",
         "observed": "Sesión autenticada y formulario de carga masiva visible",
         "timeUtc": "2026-11-28T07:29:49.228Z"
+      },
+      {
+        "path": "/categorias",
+        "observed": "Sesión autenticada y árbol cargado con 13 categorías visibles"
+      },
+      {
+        "path": "/inventario",
+        "observed": "Sesión autenticada y tabla por SKU y ubicación física cargada"
+      },
+      {
+        "path": "/combos",
+        "observed": "Se observó la tabla en la vista autenticada"
+      },
+      {
+        "path": "/promociones",
+        "observed": "Se observó la vista autenticada en carga"
+      },
+      {
+        "path": "/cupones",
+        "observed": "Se observó la vista autenticada en carga"
+      },
+      {
+        "path": "/precios",
+        "observed": "La carga mostró «No se pudo verificar la selección autoritativa de Catálogo» antes de navegar a Auditoría. Falta atribución HTTP para este fallo."
+      },
+      {
+        "path": "/precios/auditoria",
+        "observed": "Se observó la navegación autenticada. La captura inicial aún mostraba el contenido previo."
+      },
+      {
+        "path": "/consultas",
+        "observed": "Listar productos con filtro sintético devolvió un mensaje de conexión fallida en la UI"
       }
     ],
     "status": "PARTIAL_UI_ONLY",
     "networkCorrelationsRecorded": false,
     "controlledWritesExecuted": false,
-    "statusCodesObserved": false
+    "statusCodesObserved": false,
+    "cors": {
+      "status": "REPRODUCED_AND_FIX_PROPOSED",
+      "oldAcceptUtf8Bytes": 136,
+      "browserObservedMessage": "No se pudo conectar con el backend. Conserva los filtros y vuelve a consultar.",
+      "fetchReference": "https://fetch.spec.whatwg.org/#cors-safelisted-request-header",
+      "anonymousApimPreflights": [
+        {
+          "requested": "authorization,x-correlation-id",
+          "received": [
+            "HTTP/1.1 200 OK",
+            "Access-Control-Allow-Headers: authorization,x-correlation-id",
+            "Access-Control-Allow-Origin: https://g6-productos-ofertas.vercel.app"
+          ],
+          "utc": "2026-11-28T07:40:28.4354469Z"
+        },
+        {
+          "requested": "accept,authorization,x-correlation-id",
+          "received": [
+            "HTTP/1.1 200 OK"
+          ],
+          "utc": "2026-11-28T07:40:28.8097122Z"
+        }
+      ],
+      "otherAnonymousApimChecks": [
+        {
+          "route": "/productos?q=H5-CERT-R02R10-0A0AD6",
+          "sent": "cc97b7ab-d5ab-4ece-a93f-cc388ce929fd",
+          "get": [
+            "HTTP/1.1 401 Unauthorized",
+            "Access-Control-Allow-Origin: https://g6-productos-ofertas.vercel.app",
+            "x-correlation-id: cc97b7ab-d5ab-4ece-a93f-cc388ce929fd"
+          ],
+          "preflight": [
+            "HTTP/1.1 200 OK",
+            "Access-Control-Allow-Headers: authorization,x-correlation-id",
+            "Access-Control-Allow-Methods: GET",
+            "Access-Control-Allow-Origin: https://g6-productos-ofertas.vercel.app"
+          ],
+          "utc": "2026-11-28T07:39:41.4778540Z"
+        },
+        {
+          "route": "/productos/administracion",
+          "sent": "85c7420d-2e01-41dd-999e-d6e78531dbc7",
+          "get": [
+            "HTTP/1.1 401 Unauthorized",
+            "Access-Control-Allow-Origin: https://g6-productos-ofertas.vercel.app",
+            "x-correlation-id: 85c7420d-2e01-41dd-999e-d6e78531dbc7"
+          ],
+          "preflight": [
+            "HTTP/1.1 200 OK",
+            "Access-Control-Allow-Headers: authorization,x-correlation-id",
+            "Access-Control-Allow-Methods: GET",
+            "Access-Control-Allow-Origin: https://g6-productos-ofertas.vercel.app"
+          ],
+          "utc": "2026-11-28T07:39:41.9424566Z"
+        },
+        {
+          "route": "/precios/administracion/skus/H5-CERT-R02R10-0A0AD6",
+          "sent": "7f9dd9b6-0ad3-4640-b8ad-a80cdacaec49",
+          "get": [
+            "HTTP/1.1 404 Resource Not Found",
+            "Access-Control-Allow-Origin: https://g6-productos-ofertas.vercel.app",
+            "x-correlation-id: 2825d3de-7638-4920-9df9-8381d7e843c2"
+          ],
+          "preflight": [
+            "HTTP/1.1 200 OK",
+            "Access-Control-Allow-Headers: authorization,x-correlation-id",
+            "Access-Control-Allow-Methods: GET",
+            "Access-Control-Allow-Origin: https://g6-productos-ofertas.vercel.app"
+          ],
+          "utc": "2026-11-28T07:39:42.3043396Z"
+        }
+      ],
+      "fixPR": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/104",
+      "fixHead": "37b3a93b2b33d534e64f0dd73b7807fa709bf9eb",
+      "verification": "17 pruebas unitarias, TypeScript y ESLint PASS en Node 22.22.3. Falta probar un deploy que incluya el hotfix."
+    }
   },
   "pricing": {
     "docsPR": 153,

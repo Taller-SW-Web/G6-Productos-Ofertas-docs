@@ -1,6 +1,6 @@
 # Seguridad H5-01, CI/CD Multi-Repositorio y Frontend #102 — 2026-11-27
 
-**Corte del 28/11.** Se confirmaron vistas autenticadas de Productos y Carga masiva en Vercel, SHA publicado 2c6ad931. Frontend #102 sigue en Draft sobre ccfc21ba. La observación en navegador carece de captura HTTP y correlación de punta a punta. Se mantiene pendiente la evidencia funcional por operación y la decisión de gobernanza para controles GitHub. [Evidencia](artefactos/L2_CERTIFICACION_SEGUIMIENTO_2026-11-28.json).
+**Corte del 28/11.** Se confirmaron vistas autenticadas de Productos y Carga masiva y carga de tablas en Categorías e Inventario en Vercel, SHA publicado 2c6ad931. Se reprodujo el preflight CORS que impide completar Consultas con un Accept de 136 bytes. El [hotfix independiente #104](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/104) limita Accept a los formatos de la operación. Frontend #102 sigue en Draft sobre ccfc21ba. La observación en navegador carece de captura HTTP y correlación de punta a punta. Se mantiene pendiente la evidencia funcional por operación y la decisión de gobernanza para controles GitHub. [Evidencia](artefactos/L2_CERTIFICACION_SEGUIMIENTO_2026-11-28.json).
 
 ## 1. Corridas de CI en GitHub Actions, sin despliegue ni publicación
 
