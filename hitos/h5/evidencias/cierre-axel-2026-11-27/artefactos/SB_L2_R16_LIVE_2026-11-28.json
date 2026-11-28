@@ -1,0 +1,91 @@
+{
+  "flow": "R16",
+  "queue": "g6.price-audit.from.pricing",
+  "namespace": "g6-sb-h5-chile-261127.servicebus.windows.net",
+  "level": "L2_AZURE_REAL_SERVICE_BUS",
+  "scopeTested": "Outbox (pricing-svc--0000008) -> Azure Service Bus -> Inbox + price_audit_log (price-audit-svc--0000002) -> ACK -> Identical Redelivery Idempotency -> DEC-F-009 Payload Conflict DLQ -> Supervised Selective Settlement",
+  "scopeNote": "Synthetic fixture triggered at pricing.outbox/outbox_delivery boundary via pricing-svc--0000008; HTTP APIM write entry point tracked separately with G7 GESTOR_COMERCIAL session. Revision handover documented from CD receipt 46110607380; any additional rollback CD run requires explicit human approval.",
+  "timestampEndUtc": "2026-11-28T07:06:48Z",
+  "producer": {
+    "service": "pricing-svc",
+    "revision": "pricing-svc--0000008",
+    "digest": "sha256:71c5d4953305ac8bc23c011c57a34b58ad0b0eec64584d349489d4eca207ef83",
+    "managedIdentity": "g6-h5-int-pricing"
+  },
+  "consumer": {
+    "service": "price-audit-svc",
+    "revision": "price-audit-svc--0000002",
+    "digest": "sha256:e7bbdbad042c17f7757787aa42bbc1767e33dd5b02dd8a2d9c998e8b049ebfcf",
+    "managedIdentity": "g6-h5-int-price-audit",
+    "soleActiveR16ConsumerVerified": true,
+    "revisionAuditNote": "price-audit-svc--0000001 Active=False/Replicas=0; legacy weight=0 revisions http-4c40b31b-mwgil3mw and h5-g7-a3f86348 verified with zero Service Bus env vars"
+  },
+  "fixture": {
+    "messageId": "a7819baa-0637-474b-b315-f1d02cc69dde",
+    "correlationIdPrimary": "3eabf63c-a1bd-4c66-a504-687d73a1e69d",
+    "sku": "H5-CERT-R16-20261128"
+  },
+  "stepA_outboxToPersistedAudit": {
+    "outboxDelivery": {
+      "message_id": "a7819baa-0637-474b-b315-f1d02cc69dde",
+      "destination": "g6.price-audit.from.pricing",
+      "transport": "AZURE_SERVICE_BUS",
+      "attempts": 1,
+      "sent_at": "2026-11-28T06:47:25.099Z",
+      "last_error": null
+    },
+    "inboxRow": {
+      "id": "d4e43660-f595-48fe-8054-1648a6da5ae1",
+      "message_id": "a7819baa-0637-474b-b315-f1d02cc69dde",
+      "event_name": "pricing.price.changed",
+      "correlation_id": "3eabf63c-a1bd-4c66-a504-687d73a1e69d",
+      "result": "PROCESSED",
+      "processed_at": "2026-11-28T06:47:25.459Z"
+    },
+    "auditRow": {
+      "id_auditoria": "0aab5e97-9337-423b-904c-e286b9343a73",
+      "inbox_id": "d4e43660-f595-48fe-8054-1648a6da5ae1",
+      "sku": "H5-CERT-R16-20261128",
+      "product_id": "781faa20-1113-4d52-8d44-5a83f216cd28",
+      "precio_nuevo": "149.90",
+      "tipo_operacion": "CREACION",
+      "motivo_cambio": "H5_CERT_R16_SYNTHETIC_20261128",
+      "timestamp": "2026-11-28T06:47:04.000Z"
+    },
+    "endToEndLatencyMs": 360,
+    "result": "PASS"
+  },
+  "stepB_redeliveryIdempotency": {
+    "inboxCount": 1,
+    "auditCount": 1,
+    "duplicateCreated": false,
+    "result": "PASS"
+  },
+  "stepC_decF009ConflictDlqAndSupervisedRecovery": {
+    "queueWithDlq": {
+      "active": 0,
+      "dlq": 1,
+      "status": "Active"
+    },
+    "auditCountAfterConflict": 1,
+    "originalPricePreserved": "149.90",
+    "dlqInspectedAndSettled": [
+      {
+        "messageId": "a7819baa-0637-474b-b315-f1d02cc69dde",
+        "correlationId": "1c1e496f-d069-4deb-a93f-615e05d88c67",
+        "subject": "pricing.price.changed",
+        "reason": "INVALID_PRICING_CONTRACT",
+        "desc": "The persisted audit rejected the Pricing contract.",
+        "deliveryCount": 0,
+        "action": "SETTLED_SYNTHETIC_CONFLICT"
+      }
+    ],
+    "queueFinal": {
+      "active": 0,
+      "dlq": 0,
+      "status": "Active"
+    },
+    "result": "PASS"
+  },
+  "verdict": "PASS"
+}

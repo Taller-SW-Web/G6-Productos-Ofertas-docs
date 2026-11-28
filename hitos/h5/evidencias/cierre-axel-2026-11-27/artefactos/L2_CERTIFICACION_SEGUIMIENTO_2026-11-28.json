@@ -1,0 +1,227 @@
+{
+  "capturedOnUtc": "2026-11-28",
+  "level": "AZURE_L2",
+  "mode": "lecturas por fixture y catálogo, peek Azure Service Bus sin settlement",
+  "cdEnabled": false,
+  "r02r10": {
+    "status": "PARTIAL_R02_R10_DLQ",
+    "scope": "El fixture empezó en la cola R02; la admisión HTTP de Bulk queda fuera de esta prueba.",
+    "messageId": "3ee508b3-c29c-49d7-9400-a2b8b201a4fb",
+    "correlationId": "e1f58b24-d476-4dcd-a327-a35b580681ba",
+    "inventoryRevision": "inventory-svc--0000003",
+    "bulkRevision": "bulk-svc--0000003",
+    "combosRevision": "combos-svc--0000004",
+    "state": {
+      "row": {
+        "row_id": "68568c49-986e-443d-addb-aad4d2b78932",
+        "status": "PROCESSING",
+        "applied_domains": [
+          "CATALOGO"
+        ],
+        "required_domains": [
+          "CATALOGO",
+          "INVENTARIO"
+        ]
+      },
+      "batch": {
+        "status": "PROCESSING",
+        "batch_id": "5afc2a53-5a18-4b86-b57a-69dacdf14abd",
+        "total_rows": 1,
+        "updated_at": "2026-11-28T07:18:10.271148+00:00",
+        "failed_rows": 0,
+        "completed_rows": 0,
+        "needs_reconciliation": false
+      },
+      "stock": [
+        {
+          "sku_id": "H5-CERT-R02R10-0A0AD6",
+          "on_hand": 30,
+          "reserved": 0,
+          "location_id": "9129b578-631e-1735-8427-b683fb524380",
+          "stock_version": 2
+        }
+      ],
+      "bulkInbox": [],
+      "combosInbox": [
+        {
+          "event_name": "inventory.stock.changed",
+          "message_id": "8ab247fd-3f72-41e9-8053-13c1b39b467f",
+          "processed_at": "2026-11-28T07:18:14.984366+00:00",
+          "correlation_id": "e1f58b24-d476-4dcd-a327-a35b580681ba"
+        }
+      ],
+      "inventoryInbox": [
+        {
+          "status": "PROCESSED",
+          "message_id": "3ee508b3-c29c-49d7-9400-a2b8b201a4fb",
+          "message_type": "inventory.bulk.stock.adjust.requested",
+          "processed_at": "2026-11-28T07:18:11.821207+00:00"
+        }
+      ],
+      "inventoryOutbox": [
+        {
+          "sent_at": "2026-11-28T07:18:14.690446+00:00",
+          "attempts": 1,
+          "event_id": "7d466e5d-6135-41a1-94de-6f1426d2d897",
+          "has_error": false,
+          "event_type": "inventory.stock.changed",
+          "destination": "g6.combos.from.inventory",
+          "correlation_id": "e1f58b24-d476-4dcd-a327-a35b580681ba"
+        },
+        {
+          "sent_at": "2026-11-28T07:18:16.17254+00:00",
+          "attempts": 1,
+          "event_id": "7d466e5d-6135-41a1-94de-6f1426d2d897",
+          "has_error": false,
+          "event_type": "inventory.stock.changed",
+          "destination": "g6.promotions.from.inventory",
+          "correlation_id": "e1f58b24-d476-4dcd-a327-a35b580681ba"
+        },
+        {
+          "sent_at": "2026-11-28T07:18:13.208556+00:00",
+          "attempts": 1,
+          "event_id": "34508189-bdb2-4a9e-b6e6-c0c67009f7c6",
+          "has_error": false,
+          "event_type": "inventory.bulk.stock.adjust.completed",
+          "destination": "g6.bulk.from.inventory",
+          "correlation_id": "e1f58b24-d476-4dcd-a327-a35b580681ba"
+        }
+      ]
+    },
+    "bulkFixture": {
+      "steps": [
+        {
+          "domain": "CATALOGO",
+          "status": "COMPLETED"
+        },
+        {
+          "domain": "INVENTARIO",
+          "status": "PROCESSING"
+        }
+      ],
+      "status": "PROCESSING",
+      "admission": false,
+      "has_catalog_step": true
+    },
+    "r10Envelope": {
+      "event_id": "34508189-bdb2-4a9e-b6e6-c0c67009f7c6",
+      "message_id": "26763b0e-37cc-447e-ac4c-35c583b9dcfa",
+      "causation_id": "3ee508b3-c29c-49d7-9400-a2b8b201a4fb",
+      "batch_id": "5afc2a53-5a18-4b86-b57a-69dacdf14abd",
+      "row_operation_id": "68568c49-986e-443d-addb-aad4d2b78932",
+      "operation_id": "cf1bc8df-65b5-49e2-9bcb-2889c37b0dc0",
+      "sku": "H5-CERT-R02R10-0A0AD6"
+    },
+    "inventoryKardexRowsForCorrelation": 1,
+    "bulkInboxRowsForActualR10Message": 0,
+    "bulkDLQ": {
+      "messageId": "26763b0e-37cc-447e-ac4c-35c583b9dcfa",
+      "reason": "MaxDeliveryCountExceeded",
+      "deliveryCount": 10,
+      "subject": "inventory.bulk.stock.adjust.completed",
+      "settled": false
+    },
+    "blocker": "El fixture carece del recibo bulk.import.admission que el consumidor necesita para resolver el intent de la fila. Se conserva el rechazo para diagnóstico; repetir desde la admisión HTTP soportada."
+  },
+  "promotions": {
+    "revision": "promotions-svc--0000008",
+    "flows": [
+      "R08",
+      "R13",
+      "R17"
+    ],
+    "status": "BLOCKED_DB_PRIVILEGE",
+    "runtime": {
+      "role": "promotions_dev_login",
+      "usage": true,
+      "execute": false,
+      "inbox_select": true,
+      "inbox_insert": true,
+      "complete": true,
+      "result": true,
+      "catalog_insert": true,
+      "catalog_update": true
+    },
+    "expectedRole": "po_promotions_runtime",
+    "roleMembership": [
+      {
+        "name": "po_promotions_runtime",
+        "inherit": true,
+        "runtime_usage": true,
+        "runtime_member": true
+      },
+      {
+        "name": "promotions_dev_login",
+        "inherit": true,
+        "runtime_usage": false,
+        "runtime_member": false
+      }
+    ],
+    "functions": [
+      {
+        "args": "p_envelope jsonb, p_handler text",
+        "role": "po_promotions_runtime",
+        "execute": true,
+        "function": "fn_begin_inbox"
+      },
+      {
+        "args": "p_envelope jsonb, p_handler text",
+        "role": "promotions_dev_login",
+        "execute": false,
+        "function": "fn_begin_inbox"
+      },
+      {
+        "args": "value jsonb",
+        "role": "po_promotions_runtime",
+        "execute": true,
+        "function": "fn_valid_envelope"
+      },
+      {
+        "args": "value jsonb",
+        "role": "promotions_dev_login",
+        "execute": false,
+        "function": "fn_valid_envelope"
+      }
+    ],
+    "inboxEnvelopeConstraint": [
+      "CHECK ((promotions.fn_valid_envelope(envelope) AND ((envelope ->> 'message_id'::text) = message_id)))"
+    ],
+    "blocker": "Validar con Marco una corrección acotada: el login realmente usado carece de EXECUTE sobre las dos funciones invocadas por el camino de Inbox. Repetir el runtime contra las tres colas con fixtures nuevos tras autorizar y verificar la corrección."
+  },
+  "frontend": {
+    "vercelSha": "2c6ad931b8dd48e4a4fe883a18ac899fb48b0c81",
+    "draft102Sha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "mode": "sesión G7 en navegador, vista visible",
+    "observations": [
+      {
+        "path": "/productos",
+        "observed": "Sesión autenticada y listado paginado visible"
+      },
+      {
+        "path": "/carga-masiva",
+        "observed": "Sesión autenticada y formulario de carga masiva visible",
+        "timeUtc": "2026-11-28T07:29:49.228Z"
+      }
+    ],
+    "status": "PARTIAL_UI_ONLY",
+    "networkCorrelationsRecorded": false,
+    "controlledWritesExecuted": false,
+    "statusCodesObserved": false
+  },
+  "pricing": {
+    "docsPR": 153,
+    "docsHead": "7e1435386d2a8dca51e586a12524d4d78ceb7738",
+    "backendPR": 309,
+    "backendHead": "0fd3da4b48537ac38b6e61a1d48bec71fc40809a",
+    "state": "READY_FOR_REVIEW",
+    "productionAPIMstatus": "NOT_PUBLISHED"
+  },
+  "apim": {
+    "revision": "2",
+    "previousRevisionOnline": "1",
+    "operationCount": 149,
+    "g5Count": 4,
+    "productionPricingAdministrativeRoutes": 0,
+    "source": "APIM_G5_145_A_149_2026-11-28.json"
+  }
+}

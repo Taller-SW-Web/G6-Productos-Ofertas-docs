@@ -1,5 +1,7 @@
 # Seguridad H5-01, CI/CD Multi-Repositorio y Frontend #102 — 2026-11-27
 
+**Corte del 28/11.** Se confirmaron vistas autenticadas de Productos y Carga masiva en Vercel, SHA publicado 2c6ad931. Frontend #102 sigue en Draft sobre ccfc21ba. La observación en navegador carece de captura HTTP y correlación de punta a punta. Se mantiene pendiente la evidencia funcional por operación y la decisión de gobernanza para controles GitHub. [Evidencia](artefactos/L2_CERTIFICACION_SEGUIMIENTO_2026-11-28.json).
+
 ## 1. Corridas de CI en GitHub Actions, sin despliegue ni publicación
 
 | Repositorio | PR / SHA | Run ID | Veredicto | Jobs clave verificados |

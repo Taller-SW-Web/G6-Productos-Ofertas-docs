@@ -1,0 +1,4640 @@
+{
+  "estado": "SEGUIMIENTO_L2_POST_CD",
+  "total": 158,
+  "reconciliacion": {
+    "EXTERNA_VIGENTE": 145,
+    "PRICING_ADMIN": 2,
+    "G5": 4,
+    "INTERNA_G6": 5,
+    "GATEWAY_HEALTH": 2
+  },
+  "matrizFuente": "hitos/h5/MATRIZ_158_OPERACIONES_H5_R2.csv",
+  "operaciones": [
+    {
+      "operationId": "listarProductos",
+      "metodo": "GET",
+      "ruta": "/api/v1/productos",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-marketplace;modulo-chatbot;modulo-retail",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearProducto",
+      "metodo": "POST",
+      "ruta": "/api/v1/productos",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerProducto",
+      "metodo": "GET",
+      "ruta": "/api/v1/productos/{productoId}",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-marketplace;modulo-chatbot;modulo-retail;modulo-productos",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarProducto",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/productos/{productoId}",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarCategorias",
+      "metodo": "GET",
+      "ruta": "/api/v1/categorias",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-marketplace;modulo-chatbot;modulo-retail",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearCategoria",
+      "metodo": "POST",
+      "ruta": "/api/v1/categorias",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarMarcas",
+      "metodo": "GET",
+      "ruta": "/api/v1/marcas",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-marketplace;modulo-chatbot;modulo-retail",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearMarca",
+      "metodo": "POST",
+      "ruta": "/api/v1/marcas",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "consultarPrecios",
+      "metodo": "GET",
+      "ruta": "/api/v1/precios",
+      "servicio": "pricing-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-marketplace;modulo-chatbot;modulo-retail;modulo-productos",
+      "permiso": "precios:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerPrecioSku",
+      "metodo": "GET",
+      "ruta": "/api/v1/precios/skus/{sku}",
+      "servicio": "pricing-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-marketplace;modulo-chatbot;modulo-retail;modulo-productos",
+      "permiso": "precios:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarPrecioSku",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/precios/skus/{sku}",
+      "servicio": "pricing-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarPromociones",
+      "metodo": "GET",
+      "ruta": "/api/v1/promociones",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-marketplace;modulo-chatbot;modulo-retail",
+      "permiso": "promociones:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearPromocion",
+      "metodo": "POST",
+      "ruta": "/api/v1/promociones",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "evaluarPromociones",
+      "metodo": "POST",
+      "ruta": "/api/v1/promociones/evaluar",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-marketplace;modulo-chatbot;modulo-retail",
+      "permiso": "promociones:evaluar",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "validarCupon",
+      "metodo": "POST",
+      "ruta": "/api/v1/cupones/validar",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-marketplace;modulo-chatbot;modulo-retail",
+      "permiso": "cupones:validar",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerRecomendaciones",
+      "metodo": "GET",
+      "ruta": "/api/v1/recomendaciones",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-marketplace;modulo-chatbot;modulo-retail",
+      "permiso": "recomendaciones:leer",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerCombo",
+      "metodo": "GET",
+      "ruta": "/api/v1/combos/{comboId}",
+      "servicio": "combos-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "userBearer,serviceBearer",
+      "permiso": "combos:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarCombo",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/combos/{comboId}",
+      "servicio": "combos-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "consultarDisponibilidad",
+      "metodo": "GET",
+      "ruta": "/api/v1/inventario/disponibilidad",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-ventas;modulo-postventa",
+      "permiso": "inventario:disponibilidad:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "solicitarReserva",
+      "metodo": "POST",
+      "ruta": "/api/v1/inventario/reservas",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-ventas",
+      "permiso": "inventario:reservar",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "confirmarReserva",
+      "metodo": "POST",
+      "ruta": "/api/v1/inventario/reservas/{reservaId}/confirmar",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-ventas",
+      "permiso": "inventario:consumir",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "liberarReserva",
+      "metodo": "POST",
+      "ruta": "/api/v1/inventario/reservas/{reservaId}/liberar",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-ventas",
+      "permiso": "inventario:liberar",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "consultarDatosFisicos",
+      "metodo": "POST",
+      "ruta": "/api/v1/productos/datos-fisicos/consulta",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-despacho",
+      "permiso": "productos:fisicos:leer",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "resolverSlugCategoriaCreacion",
+      "metodo": "POST",
+      "ruta": "/api/v1/seo/categorias/slug/resolver",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerSeoPorSlug",
+      "metodo": "GET",
+      "ruta": "/api/v1/seo/{slug}",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "serviceBearer,userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "resolverSlugAnterior",
+      "metodo": "GET",
+      "ruta": "/api/v1/seo/resoluciones/{slugAnterior}",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "serviceBearer,userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "activarProducto",
+      "metodo": "POST",
+      "ruta": "/api/v1/productos/{productoId}/activar",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "desactivarProducto",
+      "metodo": "POST",
+      "ruta": "/api/v1/productos/{productoId}/desactivar",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "reactivarProducto",
+      "metodo": "POST",
+      "ruta": "/api/v1/productos/{productoId}/reactivar",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerProductoPorSlug",
+      "metodo": "GET",
+      "ruta": "/api/v1/productos/por-slug/{slug}",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-marketplace;modulo-chatbot;modulo-retail",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerPreparacionProducto",
+      "metodo": "GET",
+      "ruta": "/api/v1/productos/{productoId}/preparacion",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "reintentarPreparacionProducto",
+      "metodo": "POST",
+      "ruta": "/api/v1/productos/{productoId}/preparacion/reintentar",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarVariantesProducto",
+      "metodo": "GET",
+      "ruta": "/api/v1/productos/{productoId}/variantes",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearVariante",
+      "metodo": "POST",
+      "ruta": "/api/v1/productos/{productoId}/variantes",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerVariante",
+      "metodo": "GET",
+      "ruta": "/api/v1/productos/{productoId}/variantes/{variantId}",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarVariante",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/productos/{productoId}/variantes/{variantId}",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "activarVariante",
+      "metodo": "POST",
+      "ruta": "/api/v1/productos/{productoId}/variantes/{variantId}/activar",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "desactivarVariante",
+      "metodo": "POST",
+      "ruta": "/api/v1/productos/{productoId}/variantes/{variantId}/desactivar",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "reactivarVariante",
+      "metodo": "POST",
+      "ruta": "/api/v1/productos/{productoId}/variantes/{variantId}/reactivar",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "reintentarPreparacionVariante",
+      "metodo": "POST",
+      "ruta": "/api/v1/productos/{productoId}/variantes/{variantId}/preparacion/reintentar",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarCombosAdmin",
+      "metodo": "GET",
+      "ruta": "/api/v1/combos",
+      "servicio": "combos-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearCombo",
+      "metodo": "POST",
+      "ruta": "/api/v1/combos",
+      "servicio": "combos-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "desactivarCombo",
+      "metodo": "POST",
+      "ruta": "/api/v1/combos/{comboId}/desactivar",
+      "servicio": "combos-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "consultarDisponibilidadCombo",
+      "metodo": "GET",
+      "ruta": "/api/v1/combos/{comboId}/disponibilidad",
+      "servicio": "combos-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "userBearer,serviceBearer",
+      "permiso": "combos:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarCupones",
+      "metodo": "GET",
+      "ruta": "/api/v1/cupones",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearCupon",
+      "metodo": "POST",
+      "ruta": "/api/v1/cupones",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerCuponAdmin",
+      "metodo": "GET",
+      "ruta": "/api/v1/cupones/{cuponId}",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarCupon",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/cupones/{cuponId}",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "activarCupon",
+      "metodo": "POST",
+      "ruta": "/api/v1/cupones/{cuponId}/activar",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "desactivarCupon",
+      "metodo": "POST",
+      "ruta": "/api/v1/cupones/{cuponId}/desactivar",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerPromocionAdmin",
+      "metodo": "GET",
+      "ruta": "/api/v1/promociones/{promocionId}",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarPromocion",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/promociones/{promocionId}",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "activarPromocion",
+      "metodo": "POST",
+      "ruta": "/api/v1/promociones/{promocionId}/activar",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "desactivarPromocion",
+      "metodo": "POST",
+      "ruta": "/api/v1/promociones/{promocionId}/desactivar",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarReglasRecomendacion",
+      "metodo": "GET",
+      "ruta": "/api/v1/recomendaciones/reglas",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearReglaRecomendacion",
+      "metodo": "POST",
+      "ruta": "/api/v1/recomendaciones/reglas",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerReglaRecomendacion",
+      "metodo": "GET",
+      "ruta": "/api/v1/recomendaciones/reglas/{reglaId}",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarReglaRecomendacion",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/recomendaciones/reglas/{reglaId}",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "activarReglaRecomendacion",
+      "metodo": "POST",
+      "ruta": "/api/v1/recomendaciones/reglas/{reglaId}/activar",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "desactivarReglaRecomendacion",
+      "metodo": "POST",
+      "ruta": "/api/v1/recomendaciones/reglas/{reglaId}/desactivar",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerArbolCategoriasAdmin",
+      "metodo": "GET",
+      "ruta": "/api/v1/categorias/arbol",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-productos",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerCategoriaAdmin",
+      "metodo": "GET",
+      "ruta": "/api/v1/categorias/{categoriaId}",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-productos",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarCategoria",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/categorias/{categoriaId}",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "solicitarDesactivacionCategoria",
+      "metodo": "POST",
+      "ruta": "/api/v1/categorias/{categoriaId}/desactivar",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "reactivarCategoria",
+      "metodo": "POST",
+      "ruta": "/api/v1/categorias/{categoriaId}/reactivar",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarCaracteristicas",
+      "metodo": "GET",
+      "ruta": "/api/v1/caracteristicas",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearCaracteristica",
+      "metodo": "POST",
+      "ruta": "/api/v1/caracteristicas",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerCaracteristica",
+      "metodo": "GET",
+      "ruta": "/api/v1/caracteristicas/{caracteristicaId}",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarCaracteristica",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/caracteristicas/{caracteristicaId}",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarValoresCaracteristica",
+      "metodo": "GET",
+      "ruta": "/api/v1/caracteristicas/{caracteristicaId}/valores",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearValorCaracteristica",
+      "metodo": "POST",
+      "ruta": "/api/v1/caracteristicas/{caracteristicaId}/valores",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarValorCaracteristica",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/caracteristicas/{caracteristicaId}/valores/{valorId}",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "solicitarDesactivacionValorCaracteristica",
+      "metodo": "POST",
+      "ruta": "/api/v1/caracteristicas/{caracteristicaId}/valores/{valorId}/desactivar",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "reactivarValorCaracteristica",
+      "metodo": "POST",
+      "ruta": "/api/v1/caracteristicas/{caracteristicaId}/valores/{valorId}/reactivar",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "desactivarCaracteristica",
+      "metodo": "POST",
+      "ruta": "/api/v1/caracteristicas/{caracteristicaId}/desactivar",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "reactivarCaracteristica",
+      "metodo": "POST",
+      "ruta": "/api/v1/caracteristicas/{caracteristicaId}/reactivar",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarTiposProducto",
+      "metodo": "GET",
+      "ruta": "/api/v1/tipos-producto",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-productos",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearTipoProducto",
+      "metodo": "POST",
+      "ruta": "/api/v1/tipos-producto",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerTipoProducto",
+      "metodo": "GET",
+      "ruta": "/api/v1/tipos-producto/{tipoProductoId}",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-productos",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "solicitarDesactivacionTipoProducto",
+      "metodo": "POST",
+      "ruta": "/api/v1/tipos-producto/{tipoProductoId}/desactivar",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "reactivarTipoProducto",
+      "metodo": "POST",
+      "ruta": "/api/v1/tipos-producto/{tipoProductoId}/reactivar",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerEsquemaTipoProducto",
+      "metodo": "GET",
+      "ruta": "/api/v1/tipos-producto/{tipoProductoId}/caracteristicas",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-productos",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "asociarCaracteristicaTipoProducto",
+      "metodo": "POST",
+      "ruta": "/api/v1/tipos-producto/{tipoProductoId}/caracteristicas",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarAsociacionTipoCaracteristica",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/tipos-producto/{tipoProductoId}/caracteristicas/{caracteristicaId}",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "solicitarDesasociacionTipoCaracteristica",
+      "metodo": "POST",
+      "ruta": "/api/v1/tipos-producto/{tipoProductoId}/caracteristicas/{caracteristicaId}/desasociar",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerMarcaAdmin",
+      "metodo": "GET",
+      "ruta": "/api/v1/marcas/{marcaId}",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-productos",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarMarca",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/marcas/{marcaId}",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "solicitarDesactivacionMarca",
+      "metodo": "POST",
+      "ruta": "/api/v1/marcas/{marcaId}/desactivar",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "reactivarMarca",
+      "metodo": "POST",
+      "ruta": "/api/v1/marcas/{marcaId}/reactivar",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerOperacionMaestra",
+      "metodo": "GET",
+      "ruta": "/api/v1/taxonomia/operaciones/{operationId}",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerSeoCategoriaAdmin",
+      "metodo": "GET",
+      "ruta": "/api/v1/categorias/{categoriaId}/seo",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarSeoCategoria",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/categorias/{categoriaId}/seo",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarHistorialSlugCategoria",
+      "metodo": "GET",
+      "ruta": "/api/v1/categorias/{categoriaId}/seo/historial",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarProgramacionesPrecioSku",
+      "metodo": "GET",
+      "ruta": "/api/v1/precios/skus/{sku}/programaciones",
+      "servicio": "pricing-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "programarPrecioSku",
+      "metodo": "POST",
+      "ruta": "/api/v1/precios/skus/{sku}/programaciones",
+      "servicio": "pricing-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "prevalidarImportacionPrecios",
+      "metodo": "POST",
+      "ruta": "/api/v1/precios/importaciones/prevalidar",
+      "servicio": "pricing-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearImportacionPrecios",
+      "metodo": "POST",
+      "ruta": "/api/v1/precios/importaciones",
+      "servicio": "pricing-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerImportacionPrecios",
+      "metodo": "GET",
+      "ruta": "/api/v1/precios/importaciones/{batchId}",
+      "servicio": "pricing-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "descargarReporteImportacionPrecios",
+      "metodo": "GET",
+      "ruta": "/api/v1/precios/importaciones/{batchId}/reporte",
+      "servicio": "pricing-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarAuditoriaPrecios",
+      "metodo": "GET",
+      "ruta": "/api/v1/auditoria-precios",
+      "servicio": "price-audit-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerAuditoriaPrecio",
+      "metodo": "GET",
+      "ruta": "/api/v1/auditoria-precios/{auditId}",
+      "servicio": "price-audit-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearExportacionAuditoriaPrecios",
+      "metodo": "POST",
+      "ruta": "/api/v1/auditoria-precios/exportaciones",
+      "servicio": "price-audit-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerExportacionAuditoriaPrecios",
+      "metodo": "GET",
+      "ruta": "/api/v1/auditoria-precios/exportaciones/{exportId}",
+      "servicio": "price-audit-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "descargarExportacionAuditoriaPrecios",
+      "metodo": "GET",
+      "ruta": "/api/v1/auditoria-precios/exportaciones/{exportId}/archivo",
+      "servicio": "price-audit-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "descargarPlantillaProductos",
+      "metodo": "GET",
+      "ruta": "/api/v1/carga-masiva/productos/plantilla",
+      "servicio": "bulk-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearImportacionGeneralProductos",
+      "metodo": "POST",
+      "ruta": "/api/v1/carga-masiva/productos/importaciones",
+      "servicio": "bulk-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerImportacionGeneralProductos",
+      "metodo": "GET",
+      "ruta": "/api/v1/carga-masiva/productos/importaciones/{batchId}",
+      "servicio": "bulk-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "descargarReporteImportacionGeneral",
+      "metodo": "GET",
+      "ruta": "/api/v1/carga-masiva/productos/importaciones/{batchId}/reporte",
+      "servicio": "bulk-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "reanudarImportacionGeneral",
+      "metodo": "POST",
+      "ruta": "/api/v1/carga-masiva/productos/importaciones/{batchId}/reanudar",
+      "servicio": "bulk-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearExportacionGeneralProductos",
+      "metodo": "POST",
+      "ruta": "/api/v1/carga-masiva/productos/exportaciones",
+      "servicio": "bulk-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerExportacionGeneralProductos",
+      "metodo": "GET",
+      "ruta": "/api/v1/carga-masiva/productos/exportaciones/{exportId}",
+      "servicio": "bulk-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "descargarExportacionGeneralProductos",
+      "metodo": "GET",
+      "ruta": "/api/v1/carga-masiva/productos/exportaciones/{exportId}/archivo",
+      "servicio": "bulk-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerUmbralesInventario",
+      "metodo": "GET",
+      "ruta": "/api/v1/inventario/umbrales",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarUmbralGlobal",
+      "metodo": "PUT",
+      "ruta": "/api/v1/inventario/umbrales/global",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "establecerUmbralSku",
+      "metodo": "PUT",
+      "ruta": "/api/v1/inventario/umbrales/skus/{sku}",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "eliminarUmbralSku",
+      "metodo": "DELETE",
+      "ruta": "/api/v1/inventario/umbrales/skus/{sku}",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 204,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerDashboardInventario",
+      "metodo": "GET",
+      "ruta": "/api/v1/inventario/dashboard",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarCategoriasAdmin",
+      "metodo": "GET",
+      "ruta": "/api/v1/categorias/administracion",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-productos",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarMarcasAdmin",
+      "metodo": "GET",
+      "ruta": "/api/v1/marcas/administracion",
+      "servicio": "taxonomy-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer",
+        "userBearer"
+      ],
+      "identidad": "modulo-productos",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarPromocionesAdmin",
+      "metodo": "GET",
+      "ruta": "/api/v1/promociones/administracion",
+      "servicio": "promotions-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerPrecioBaseProducto",
+      "metodo": "GET",
+      "ruta": "/api/v1/precios/productos/{productoId}",
+      "servicio": "pricing-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "actualizarPrecioBaseProducto",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/precios/productos/{productoId}",
+      "servicio": "pricing-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarProgramacionesPrecioProducto",
+      "metodo": "GET",
+      "ruta": "/api/v1/precios/productos/{productoId}/programaciones",
+      "servicio": "pricing-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "programarPrecioBaseProducto",
+      "metodo": "POST",
+      "ruta": "/api/v1/precios/productos/{productoId}/programaciones",
+      "servicio": "pricing-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "reportarIncidenciaInventario",
+      "metodo": "POST",
+      "ruta": "/api/v1/inventario/incidencias",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-retail",
+      "permiso": "inventario:incidencias:reportar",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "resolverIncidenciaInventario",
+      "metodo": "POST",
+      "ruta": "/api/v1/inventario/incidencias/{incidenciaId}/resolver",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-retail",
+      "permiso": "inventario:incidencias:resolver",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "reintegrarInventario",
+      "metodo": "POST",
+      "ruta": "/api/v1/inventario/reintegros",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-ventas;modulo-postventa",
+      "permiso": "inventario:reintegrar",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "conciliarVentaOffline",
+      "metodo": "POST",
+      "ruta": "/api/v1/inventario/conciliaciones-offline",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-ventas",
+      "permiso": "inventario:conciliar-offline",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarTrasladosInventario",
+      "metodo": "GET",
+      "ruta": "/api/v1/inventario/traslados",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerTrasladoInventario",
+      "metodo": "GET",
+      "ruta": "/api/v1/inventario/traslados/{trasladoId}",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "registrarRecepcionTrasladoInventario",
+      "metodo": "POST",
+      "ruta": "/api/v1/inventario/traslados/{trasladoId}/recepciones",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "resolverCodigoBarras",
+      "metodo": "POST",
+      "ruta": "/api/v1/productos/codigos-barras/resolver",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-retail",
+      "permiso": "catalogo:leer",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "consultarDisponibilidadComercial",
+      "metodo": "GET",
+      "ruta": "/api/v1/inventario/disponibilidad/comercial",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-marketplace;modulo-chatbot;modulo-retail;modulo-productos",
+      "permiso": "inventario:disponibilidad:leer",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "consultarOperacionInventario",
+      "metodo": "GET",
+      "ruta": "/api/v1/inventario/operaciones/{operationId}",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-ventas",
+      "permiso": "inventario:operaciones:leer",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "verificarCantidadComercial",
+      "metodo": "POST",
+      "ruta": "/api/v1/inventario/disponibilidad/comercial/verificar",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-marketplace;modulo-chatbot;modulo-retail",
+      "permiso": "inventario:disponibilidad:leer",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarProductosAdministracion",
+      "metodo": "GET",
+      "ruta": "/api/v1/productos/administracion",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "PARTIAL",
+        "revision": null,
+        "digest": null,
+        "httpReal": 401,
+        "evidencia": "APIM_GATEWAY_L2_NO_G7_PROBES_POST_CD_2026-11-28.json",
+        "motivo": "Rechazo anónimo acreditado. La vista autenticada de Productos se observó sin capturar HTTP ni correlación exactos.",
+        "superficie": "APIM y vista Vercel",
+        "correlacion": "x-correlation-id: 33333333-3333-4333-8333-333333333306"
+      }
+    },
+    {
+      "operationId": "obtenerProductoAdministracion",
+      "metodo": "GET",
+      "ruta": "/api/v1/productos/administracion/{productoId}",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerDefinicionPrecioProductoAdministracion",
+      "metodo": "GET",
+      "ruta": "/api/v1/precios/administracion/productos/{productoId}",
+      "servicio": "pricing-svc",
+      "clasificacion": "PRICING_ADMIN",
+      "accesoObjetivo": "APIM_CON_CONTRATO_CONCILIADO",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "BLOCKED_RELEASE",
+        "revision": null,
+        "digest": null,
+        "httpReal": 404,
+        "evidencia": "APIM_G5_145_A_149_2026-11-28.json",
+        "motivo": "Excluida de rev=2. Revisión final de #153/#309 y publicación autorizada pendientes.",
+        "superficie": "APIM rev=2"
+      }
+    },
+    {
+      "operationId": "obtenerDefinicionPrecioSkuAdministracion",
+      "metodo": "GET",
+      "ruta": "/api/v1/precios/administracion/skus/{sku}",
+      "servicio": "pricing-svc",
+      "clasificacion": "PRICING_ADMIN",
+      "accesoObjetivo": "APIM_CON_CONTRATO_CONCILIADO",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "BLOCKED_RELEASE",
+        "revision": null,
+        "digest": null,
+        "httpReal": 404,
+        "evidencia": "APIM_G5_145_A_149_2026-11-28.json",
+        "motivo": "Excluida de rev=2. Revisión final de #153/#309 y publicación autorizada pendientes.",
+        "superficie": "APIM rev=2"
+      }
+    },
+    {
+      "operationId": "listarSaldosFisicosAdministracion",
+      "metodo": "GET",
+      "ruta": "/api/v1/inventario/administracion/saldos",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarAuditoriaPreciosAdministracion",
+      "metodo": "GET",
+      "ruta": "/api/v1/auditoria-precios/administracion",
+      "servicio": "price-audit-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "obtenerAuditoriaPrecioAdministracion",
+      "metodo": "GET",
+      "ruta": "/api/v1/auditoria-precios/administracion/{auditId}",
+      "servicio": "price-audit-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "crearComboAdministracion",
+      "metodo": "POST",
+      "ruta": "/api/v1/combos/administracion",
+      "servicio": "combos-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 201,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "resolverSkusAdministracion",
+      "metodo": "POST",
+      "ruta": "/api/v1/productos/administracion/skus/resolver",
+      "servicio": "catalog-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "conciliarImportacionGeneralPorCorrelacion",
+      "metodo": "GET",
+      "ruta": "/api/v1/carga-masiva/productos/importaciones/por-correlacion/{correlationId}",
+      "servicio": "bulk-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarAlertasOperativasInventario",
+      "metodo": "GET",
+      "ruta": "/api/v1/inventario/alertas",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "listarUbicacionesInventario",
+      "metodo": "GET",
+      "ruta": "/api/v1/inventario/ubicaciones",
+      "servicio": "inventory-svc",
+      "clasificacion": "EXTERNA_VIGENTE",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "userBearer"
+      ],
+      "identidad": "userBearer",
+      "permiso": "GESTOR_COMERCIAL",
+      "identidadDePrueba": "GESTOR_COMERCIAL",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "NOT_RUN",
+        "revision": null,
+        "digest": null,
+        "httpReal": null,
+        "evidencia": null,
+        "motivo": "Pendiente evidencia HTTP L2 de esta operación con el acceso autorizado."
+      }
+    },
+    {
+      "operationId": "admitirConsumoCuponH5",
+      "metodo": "POST",
+      "ruta": "/api/v1/cupones/consumos",
+      "servicio": "promotions-svc",
+      "clasificacion": "G5",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-ventas",
+      "permiso": "cupones:consumir",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "PARTIAL",
+        "revision": null,
+        "digest": null,
+        "httpReal": 401,
+        "evidencia": "APIM_G5_145_A_149_2026-11-28.json",
+        "motivo": "Publicada en rev=2. Rechazo sin JWT y JWT inválido. Pendientes 403 humano y positivo con modulo-ventas.",
+        "superficie": "APIM rev=2"
+      }
+    },
+    {
+      "operationId": "admitirRestauracionCuponH5",
+      "metodo": "POST",
+      "ruta": "/api/v1/cupones/restauraciones",
+      "servicio": "promotions-svc",
+      "clasificacion": "G5",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-ventas",
+      "permiso": "cupones:restaurar",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 202,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "PARTIAL",
+        "revision": null,
+        "digest": null,
+        "httpReal": 401,
+        "evidencia": "APIM_G5_145_A_149_2026-11-28.json",
+        "motivo": "Publicada en rev=2. Rechazo sin JWT y JWT inválido. Pendientes 403 humano y positivo con modulo-ventas.",
+        "superficie": "APIM rev=2"
+      }
+    },
+    {
+      "operationId": "obtenerOperacionCuponH5",
+      "metodo": "GET",
+      "ruta": "/api/v1/cupones/operaciones/{operationId}",
+      "servicio": "promotions-svc",
+      "clasificacion": "G5",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-ventas",
+      "permiso": "cupones:operaciones:leer",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "PARTIAL",
+        "revision": null,
+        "digest": null,
+        "httpReal": 401,
+        "evidencia": "APIM_G5_145_A_149_2026-11-28.json",
+        "motivo": "Publicada en rev=2. Rechazo sin JWT y JWT inválido. Pendientes 403 humano y positivo con modulo-ventas.",
+        "superficie": "APIM rev=2"
+      }
+    },
+    {
+      "operationId": "obtenerEstadoReservaH5",
+      "metodo": "GET",
+      "ruta": "/api/v1/inventario/reservas/{reservaId}/estado",
+      "servicio": "inventory-svc",
+      "clasificacion": "G5",
+      "accesoObjetivo": "APIM",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "modulo-ventas",
+      "permiso": "inventario:reservas:estado:leer",
+      "identidadDePrueba": "M2M_NO_DISPONIBLE_EN_G6",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "PARTIAL",
+        "revision": null,
+        "digest": null,
+        "httpReal": 401,
+        "evidencia": "APIM_G5_145_A_149_2026-11-28.json",
+        "motivo": "Publicada en rev=2. Rechazo sin JWT y JWT inválido. Pendientes 403 humano y positivo con modulo-ventas.",
+        "superficie": "APIM rev=2"
+      }
+    },
+    {
+      "operationId": "obtenerContextoSku",
+      "metodo": "GET",
+      "ruta": "/productos/skus/{sku}/contexto",
+      "servicio": "catalog-svc",
+      "clasificacion": "INTERNA_G6",
+      "accesoObjetivo": "RED_INTERNA_G6",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "interno-g6",
+      "permiso": "-",
+      "identidadDePrueba": "CONTEXTO_INTERNO_AUTORIZADO",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "PARTIAL",
+        "revision": null,
+        "digest": null,
+        "httpReal": 404,
+        "evidencia": "APIM_G5_145_A_149_2026-11-28.json",
+        "motivo": "Exclusión en APIM acreditada. Falta verificar el acceso interno autorizado en L2.",
+        "superficie": "APIM rev=2"
+      }
+    },
+    {
+      "operationId": "obtenerContextosSkuLote",
+      "metodo": "POST",
+      "ruta": "/productos/skus/contexto/lote",
+      "servicio": "catalog-svc",
+      "clasificacion": "INTERNA_G6",
+      "accesoObjetivo": "RED_INTERNA_G6",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "interno-g6",
+      "permiso": "-",
+      "identidadDePrueba": "CONTEXTO_INTERNO_AUTORIZADO",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "PARTIAL",
+        "revision": null,
+        "digest": null,
+        "httpReal": 404,
+        "evidencia": "APIM_G5_145_A_149_2026-11-28.json",
+        "motivo": "Exclusión en APIM acreditada. Falta verificar el acceso interno autorizado en L2.",
+        "superficie": "APIM rev=2"
+      }
+    },
+    {
+      "operationId": "filtrarSkusVendiblesInterno",
+      "metodo": "POST",
+      "ruta": "/interno/productos/skus/filtrar",
+      "servicio": "catalog-svc",
+      "clasificacion": "INTERNA_G6",
+      "accesoObjetivo": "RED_INTERNA_G6",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "interno-g6",
+      "permiso": "-",
+      "identidadDePrueba": "CONTEXTO_INTERNO_AUTORIZADO",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "PARTIAL",
+        "revision": null,
+        "digest": null,
+        "httpReal": 404,
+        "evidencia": "APIM_G5_145_A_149_2026-11-28.json",
+        "motivo": "Exclusión en APIM acreditada. Falta verificar el acceso interno autorizado en L2.",
+        "superficie": "APIM rev=2"
+      }
+    },
+    {
+      "operationId": "obtenerEvidenciaReservaCuponInterno",
+      "metodo": "GET",
+      "ruta": "/interno/inventario/reservas/{reservaId}/evidencia-cupon",
+      "servicio": "inventory-svc",
+      "clasificacion": "INTERNA_G6",
+      "accesoObjetivo": "RED_INTERNA_G6",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "interno-g6",
+      "permiso": "-",
+      "identidadDePrueba": "CONTEXTO_INTERNO_AUTORIZADO",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "PARTIAL",
+        "revision": null,
+        "digest": null,
+        "httpReal": 404,
+        "evidencia": "APIM_G5_145_A_149_2026-11-28.json",
+        "motivo": "Exclusión en APIM acreditada. Falta verificar el acceso interno autorizado en L2.",
+        "superficie": "APIM rev=2"
+      }
+    },
+    {
+      "operationId": "obtenerContenidoCargaMasivaInternoH5",
+      "metodo": "GET",
+      "ruta": "/interno/carga-masiva/contenidos/{contentId}",
+      "servicio": "bulk-svc",
+      "clasificacion": "INTERNA_G6",
+      "accesoObjetivo": "RED_INTERNA_G6",
+      "esquemasOpenAPI": [
+        "serviceBearer"
+      ],
+      "identidad": "interno-g6",
+      "permiso": "-",
+      "identidadDePrueba": "CONTEXTO_INTERNO_AUTORIZADO",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "PARTIAL",
+        "revision": null,
+        "digest": null,
+        "httpReal": 404,
+        "evidencia": "APIM_G5_145_A_149_2026-11-28.json",
+        "motivo": "Exclusión en APIM acreditada. Falta verificar el acceso interno autorizado en L2.",
+        "superficie": "APIM rev=2"
+      }
+    },
+    {
+      "operationId": "gatewayHealth",
+      "metodo": "GET",
+      "ruta": "/health",
+      "servicio": "api-gateway",
+      "clasificacion": "GATEWAY_HEALTH",
+      "accesoObjetivo": "SONDA_PRIVADA_GATEWAY",
+      "esquemasOpenAPI": [],
+      "identidad": "N/A_HEALTH",
+      "permiso": "-",
+      "identidadDePrueba": "RUNNER_PRIVADO",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "PASS",
+        "revision": "api-gateway--0000004",
+        "digest": "sha256:50409c86bb51c978d20696d59e59c5a7f30f14a0fa58d31d2790167912760e69",
+        "httpReal": 200,
+        "evidencia": "cd-receipts/api-gateway-46113930829.receipt.json",
+        "motivo": "Smoke interno HTTP 200 y acceso directo 403.",
+        "superficie": "Gateway interno y control público"
+      }
+    },
+    {
+      "operationId": "gatewayReadiness",
+      "metodo": "GET",
+      "ruta": "/health/ready",
+      "servicio": "api-gateway",
+      "clasificacion": "GATEWAY_HEALTH",
+      "accesoObjetivo": "SONDA_PRIVADA_GATEWAY",
+      "esquemasOpenAPI": [],
+      "identidad": "N/A_HEALTH",
+      "permiso": "-",
+      "identidadDePrueba": "RUNNER_PRIVADO",
+      "implementacionEvidenciada": "L1",
+      "l1": {
+        "resultado": "PASS",
+        "http": 200,
+        "sha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+        "evidencia": "158_ENDPOINTS_CERTIFICATION_REPORT.json"
+      },
+      "l2": {
+        "resultado": "PARTIAL",
+        "revision": "api-gateway--0000004",
+        "digest": "sha256:50409c86bb51c978d20696d59e59c5a7f30f14a0fa58d31d2790167912760e69",
+        "httpReal": 403,
+        "evidencia": "APIM_GATEWAY_L2_NO_G7_PROBES_POST_CD_2026-11-28.json",
+        "motivo": "Acceso directo 403. Falta registrar HTTP 200 desde el origen interno para esta sonda exacta.",
+        "superficie": "Acceso público directo"
+      }
+    }
+  ],
+  "actualizadoUtc": "2026-11-28",
+  "reconciliacionAPIM": {
+    "publicadas": 149,
+    "pricingAdminPendientes": 2,
+    "internas": 5,
+    "sondas": 2
+  },
+  "resultadosL2": {
+    "NOT_RUN": 144,
+    "PARTIAL": 11,
+    "BLOCKED_RELEASE": 2,
+    "PASS": 1
+  }
+}

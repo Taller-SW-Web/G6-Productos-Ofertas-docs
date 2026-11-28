@@ -1,5 +1,7 @@
 # Resumen Ejecutivo — Cierre Técnico Integral Hito 5 (Corte Axel Cueva, 2026-11-27)
 
+**Corte funcional del 28/11.** Azure Chile tiene nueve componentes con recibos y smokes registrados. APIM rev. 2 publica 149 operaciones. R16 y el fixture R18→R09 tienen evidencia Azure. R02 aplicó el ajuste una vez y R10 quedó en DLQ con un fixture sin admisión normalizada. R08/R13/R17 esperan corregir permisos de Inbox de Promotions. Se observaron vistas de Productos y Carga masiva con sesión autenticada. Quedan pruebas funcionales HTTP, rendimiento y decisiones de Pricing. [Evidencia de seguimiento](artefactos/L2_CERTIFICACION_SEGUIMIENTO_2026-11-28.json). Los datos siguientes conservan los cortes previos.
+
 > El corte acredita código, pruebas aisladas L1, CI remoto, cambios verificados en APIM y Supabase, y el inventario de ACA y Service Bus. La certificación L2 del candidato y la homologación intergrupo L3 siguen pendientes.
 
 ## 1. Repositorios, PRs y SHAs fijados

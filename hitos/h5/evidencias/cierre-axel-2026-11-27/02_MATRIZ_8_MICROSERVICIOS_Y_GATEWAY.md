@@ -1,5 +1,7 @@
 # Matriz de 8 Microservicios y API Gateway Transversal — Cierre Hito 5 (2026-11-27)
 
+**Corte del 28/11.** El [manifiesto de CD](artefactos/RELEASE_36F619DA_DIGESTS_Y_PREFLIGHT_2026-11-27.json) prevalece para revisiones y digests de los nueve componentes. La tabla conserva el corte histórico del 27/11 para comparar versiones. Para resultados vivos por componente, véanse la [matriz Service Bus](04_MATRIZ_19_FLUJOS_SERVICE_BUS.md), el [inventario HTTP](artefactos/INVENTARIO_158_OPERACIONES_L2_2026-11-28.json) y el [diagnóstico de Bulk y Promotions](artefactos/L2_CERTIFICACION_SEGUIMIENTO_2026-11-28.json).
+
 > **Regla de estados independientes:** código integrado ≠ prueba aislada (L1) ≠ CI remoto ≠ despliegue Azure (L2) ≠ homologación externa (L3). Ningún estado se infiere de otro.
 
 - **Contrato normativo fijado:** OpenAPI `3.1.0` y AsyncAPI `3.0.0` versión `0.7.0-rc.3` (Docs `origin/master` `5f30802129ba4bbc0674dcc5878f10065f443118`).

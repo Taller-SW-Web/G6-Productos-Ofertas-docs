@@ -1,0 +1,119 @@
+{
+  "flows": [
+    "R06",
+    "R11",
+    "R02",
+    "R10"
+  ],
+  "queues": [
+    "g6.inventory.from.catalog",
+    "g6.catalog.from.inventory",
+    "g6.inventory.from.bulk",
+    "g6.bulk.from.inventory"
+  ],
+  "namespace": "g6-sb-h5-chile-261127.servicebus.windows.net",
+  "level": "L2_AZURE_REAL_SERVICE_BUS",
+  "timestampEndUtc": "2026-11-28T07:15:39Z",
+  "services": {
+    "catalog": {
+      "revision": "catalog-svc--0000005",
+      "digest": "sha256:3250d6443be9c5038339c1508c000f7ece6c437b1b2d4536997966de50198159"
+    },
+    "inventory": {
+      "revision": "inventory-svc--0000003",
+      "digest": "sha256:a9658652e04c96048a882ef7d788f663f6b21406e43df5b12608caa69b5d28c4"
+    },
+    "bulk": {
+      "revision": "bulk-svc--0000003",
+      "digest": "sha256:3572edb36bb01946bd6709e741c0a255f0d5e159421aa20c81281fa287c93579"
+    }
+  },
+  "fixture": {
+    "sku": "H5-CERT-R02R10-0A0AD6",
+    "locationId": "9129b578-631e-1735-8427-b683fb524380",
+    "r02MsgId": "1bf65cb9-8f57-4304-a7ac-d3596c71a327",
+    "r02CorrId": "cd45e67a-4118-4663-b576-bc1108292e4e",
+    "batchId": "f11aaf4f-2866-4ea8-acf8-e4d1f4b5170c",
+    "dlqR02MsgId": "530abb1a-0592-49ae-ac71-33be57263785"
+  },
+  "r06_r11": {
+    "r06CatalogPublishedAt": "2026-11-28T07:07:00.003Z",
+    "r06InventoryProcessedAt": "2026-11-28T07:07:00.010Z",
+    "r06InitialStock": {
+      "on_hand": 0,
+      "stock_version": 0
+    },
+    "r11SentAt": "2026-11-28T07:07:01.293Z",
+    "r11CatalogDlqReason": "INVALID_CATALOG_MESSAGE (synthetic product_id not in catalog.products; settled cleanly)",
+    "r06Result": "PASS"
+  },
+  "r02_r10_terminalBatch": {
+    "bulk": {
+      "deliv": {
+        "message_id": "1bf65cb9-8f57-4304-a7ac-d3596c71a327",
+        "destination": "g6.inventory.from.bulk",
+        "attempts": 0,
+        "published_at": "2026-11-28T07:12:49.632Z",
+        "last_error": null
+      },
+      "inbox": [],
+      "job": {
+        "batch_id": "f11aaf4f-2866-4ea8-acf8-e4d1f4b5170c",
+        "status": "PROCESSING",
+        "total_rows": 1,
+        "completed_rows": 0,
+        "failed_rows": 0,
+        "needs_reconciliation": false,
+        "updated_at": "2026-11-28T07:12:48.398Z"
+      },
+      "row": {
+        "row_id": "1bc15eab-61e2-4a68-80a0-7d69726992d3",
+        "status": "PROCESSING",
+        "required_domains": [
+          "INVENTARIO"
+        ],
+        "applied_domains": []
+      }
+    },
+    "inventory": {
+      "err": "column \"quantity_delta\" does not exist"
+    },
+    "queuesFinal": {
+      "R02": {
+        "active": 0,
+        "dlq": 1,
+        "status": "Active"
+      },
+      "R10": {
+        "active": 0,
+        "dlq": 1,
+        "status": "Active"
+      }
+    }
+  },
+  "r12_r13_fanoutObservation": {
+    "g6.combos.from.inventory": [
+      {
+        "messageId": "cf3b529e-bd75-4975-8a85-8f6e7cee1c56",
+        "correlationId": "6fda4bc8-33af-47a7-9bf4-15a856718151",
+        "reason": "INVALID_COMBOS_EVENT",
+        "action": "PRESERVED_UNRELATED"
+      }
+    ],
+    "g6.promotions.from.inventory": [
+      {
+        "messageId": "cf3b529e-bd75-4975-8a85-8f6e7cee1c56",
+        "correlationId": "6fda4bc8-33af-47a7-9bf4-15a856718151",
+        "reason": "MaxDeliveryCountExceeded",
+        "action": "PRESERVED_UNRELATED"
+      },
+      {
+        "messageId": "e783c973-f8b6-4268-b2cb-773bdfdb173a",
+        "correlationId": "cd45e67a-4118-4663-b576-bc1108292e4e",
+        "reason": "MaxDeliveryCountExceeded",
+        "action": "SETTLED_OWN_SYNTHETIC"
+      }
+    ]
+  },
+  "verdict": "CHECK"
+}

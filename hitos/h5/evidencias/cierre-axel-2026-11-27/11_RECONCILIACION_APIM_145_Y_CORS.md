@@ -1,5 +1,7 @@
 # Reconciliación APIM 145 vs OpenAPI 156 vs Matriz 158, RBAC Service Bus y Plan CORS — 2026-11-27
 
+**Estado vigente del 28/11.** Rev. 2 activa con 149 operaciones, cuatro incorporaciones G5 y cero eliminaciones. Rev. 1 permanece online para recuperación. Las cinco rutas internas y las dos lecturas de Pricing siguen excluidas. Los cuatro rechazos anónimos están acreditados y los positivos requieren modulo-ventas. [Comparación, respaldo y resultados](artefactos/APIM_G5_145_A_149_2026-11-28.json).
+
 > **Fuente:** corte inicial de solo lectura. Actualización del 27/11/2026 en la [evidencia del cambio](artefactos/APIM_CORS_POST_CAMBIO_2026-11-27.json).
 
 ## 1. Reconciliación matemática exacta de universos HTTP (`145` vs `156` vs `158`)

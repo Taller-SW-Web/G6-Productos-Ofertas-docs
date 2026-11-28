@@ -1,0 +1,203 @@
+{
+  "flows": [
+    "R18",
+    "R09"
+  ],
+  "queues": [
+    "g6.catalog.from.taxonomy",
+    "g6.taxonomy.from.catalog"
+  ],
+  "namespace": "g6-sb-h5-chile-261127.servicebus.windows.net",
+  "level": "L2_AZURE_REAL_SERVICE_BUS",
+  "scopeTested": "taxonomy.outbox_delivery (taxonomy-svc--0000006) -> R18 Service Bus -> catalog.inbox + catalog.master_barriers + catalog.outbox_delivery (catalog-svc--0000005) -> R09 Service Bus -> taxonomy.inbox (taxonomy-svc--0000006) + R18 redelivery idempotency + R18 DLQ supervised recovery",
+  "scopeNote": "Synthetic isolated BRAND UUID (0 catalog products -> CLEAR) triggered at taxonomy.outbox_delivery boundary; HTTP APIM entry point tracked separately with G7 session.",
+  "timestampStartUtc": "2026-11-28T06:48:54Z",
+  "timestampEndUtc": "2026-11-28T06:51:03Z",
+  "services": {
+    "taxonomy": {
+      "revision": "taxonomy-svc--0000006",
+      "digest": "sha256:9985b160c275137efe427a2e1a6fee8089f17ae011f4f3bc9c1655b3da544ca3",
+      "managedIdentity": "g6-h5-int-taxonomy"
+    },
+    "catalog": {
+      "revision": "catalog-svc--0000005",
+      "digest": "sha256:3250d6443be9c5038339c1508c000f7ece6c437b1b2d4536997966de50198159",
+      "managedIdentity": "g6-h5-int-catalog"
+    }
+  },
+  "fixture": {
+    "messageId": "4b8c9b5b-c04c-4732-ae78-edcd3c46e375",
+    "operationId": "588a9a7a-1dcb-4f7a-a4a3-5a810315a9ec",
+    "correlationId": "e7d2af1c-81f7-44d7-9192-d3bdf12cfbaf",
+    "syntheticBrandId": "bf0447f8-01c8-4e4f-baa1-8a01369793b5",
+    "dlqMessageId": "90f3f1db-093c-48d3-88ae-50fef49433fb",
+    "dlqCorrelationId": "2615e5e0-683c-4e4f-be49-8da4fd845667"
+  },
+  "stepA_r18AndR09RoundTrip": {
+    "taxonomy": {
+      "deliv": {
+        "message_id": "4b8c9b5b-c04c-4732-ae78-edcd3c46e375",
+        "destination": "g6.catalog.from.taxonomy",
+        "attempts": 1,
+        "sent_at": "2026-11-28T06:49:10.092Z",
+        "last_error": null
+      },
+      "taxInboxCount": 1,
+      "taxInbox": [
+        {
+          "id": "9199e2c7-480b-4d6b-84ab-78295e822d2c",
+          "message_id": "b471e16b-5d7d-45ca-8ed7-208616775b09",
+          "event_name": "catalog.master.deactivation.checked",
+          "correlation_id": "e7d2af1c-81f7-44d7-9192-d3bdf12cfbaf",
+          "result": "IGNORED",
+          "processed_at": "2026-11-28T06:49:14.003Z"
+        }
+      ]
+    },
+    "catalog": {
+      "catInboxCount": 1,
+      "catInbox": [
+        {
+          "id": "fdc4fd84-7c73-4452-b5ea-4abe3daf11e4",
+          "message_id": "4b8c9b5b-c04c-4732-ae78-edcd3c46e375",
+          "event_name": "taxonomy.master.deactivation.check.requested",
+          "correlation_id": "e7d2af1c-81f7-44d7-9192-d3bdf12cfbaf",
+          "operation_id": "588a9a7a-1dcb-4f7a-a4a3-5a810315a9ec",
+          "result": "APPLIED",
+          "processed_at": "2026-11-28T06:49:10.300Z"
+        }
+      ],
+      "barriersCount": 1,
+      "barriers": [
+        {
+          "id": "eb6853e7-9452-47e5-86b5-27ffb34ef035",
+          "master_type": "BRAND",
+          "master_id": "bf0447f8-01c8-4e4f-baa1-8a01369793b5",
+          "operation_id": "588a9a7a-1dcb-4f7a-a4a3-5a810315a9ec",
+          "is_blocking": true,
+          "source_version": "1"
+        }
+      ],
+      "catOutbox": [
+        {
+          "message_id": "b471e16b-5d7d-45ca-8ed7-208616775b09",
+          "event_name": "catalog.master.deactivation.checked",
+          "correlation_id": "e7d2af1c-81f7-44d7-9192-d3bdf12cfbaf",
+          "destination": "g6.taxonomy.from.catalog",
+          "attempts": 1,
+          "published_at": "2026-11-28T06:49:13.990Z",
+          "last_error": null
+        }
+      ]
+    },
+    "queuesAfter": {
+      "R18": {
+        "active": 0,
+        "dlq": 0,
+        "status": "Active"
+      },
+      "R09": {
+        "active": 0,
+        "dlq": 0,
+        "status": "Active"
+      }
+    },
+    "result": "PASS"
+  },
+  "stepB_r18RedeliveryIdempotency": {
+    "catalog": {
+      "catInboxCount": 1,
+      "catInbox": [
+        {
+          "id": "fdc4fd84-7c73-4452-b5ea-4abe3daf11e4",
+          "message_id": "4b8c9b5b-c04c-4732-ae78-edcd3c46e375",
+          "event_name": "taxonomy.master.deactivation.check.requested",
+          "correlation_id": "e7d2af1c-81f7-44d7-9192-d3bdf12cfbaf",
+          "operation_id": "588a9a7a-1dcb-4f7a-a4a3-5a810315a9ec",
+          "result": "APPLIED",
+          "processed_at": "2026-11-28T06:49:10.300Z"
+        }
+      ],
+      "barriersCount": 1,
+      "barriers": [
+        {
+          "id": "eb6853e7-9452-47e5-86b5-27ffb34ef035",
+          "master_type": "BRAND",
+          "master_id": "bf0447f8-01c8-4e4f-baa1-8a01369793b5",
+          "operation_id": "588a9a7a-1dcb-4f7a-a4a3-5a810315a9ec",
+          "is_blocking": true,
+          "source_version": "1"
+        }
+      ],
+      "catOutbox": [
+        {
+          "message_id": "b471e16b-5d7d-45ca-8ed7-208616775b09",
+          "event_name": "catalog.master.deactivation.checked",
+          "correlation_id": "e7d2af1c-81f7-44d7-9192-d3bdf12cfbaf",
+          "destination": "g6.taxonomy.from.catalog",
+          "attempts": 1,
+          "published_at": "2026-11-28T06:49:13.990Z",
+          "last_error": null
+        }
+      ]
+    },
+    "taxonomy": {
+      "deliv": {
+        "message_id": "4b8c9b5b-c04c-4732-ae78-edcd3c46e375",
+        "destination": "g6.catalog.from.taxonomy",
+        "attempts": 1,
+        "sent_at": "2026-11-28T06:49:10.092Z",
+        "last_error": null
+      },
+      "taxInboxCount": 1,
+      "taxInbox": [
+        {
+          "id": "9199e2c7-480b-4d6b-84ab-78295e822d2c",
+          "message_id": "b471e16b-5d7d-45ca-8ed7-208616775b09",
+          "event_name": "catalog.master.deactivation.checked",
+          "correlation_id": "e7d2af1c-81f7-44d7-9192-d3bdf12cfbaf",
+          "result": "IGNORED",
+          "processed_at": "2026-11-28T06:49:14.003Z"
+        }
+      ]
+    },
+    "queuesAfter": {
+      "R18": {
+        "active": 0,
+        "dlq": 0,
+        "status": "Active"
+      },
+      "R09": {
+        "active": 0,
+        "dlq": 0,
+        "status": "Active"
+      }
+    },
+    "duplicateCreated": false,
+    "result": "PASS"
+  },
+  "stepC_r18DlqSupervisedRecovery": {
+    "queueWithDlq": {
+      "active": 0,
+      "dlq": 1,
+      "status": "Active"
+    },
+    "dlqInspectedAndSettled": [
+      {
+        "messageId": "90f3f1db-093c-48d3-88ae-50fef49433fb",
+        "correlationId": "2615e5e0-683c-4e4f-be49-8da4fd845667",
+        "subject": "taxonomy.category.updated",
+        "reason": "INVALID_CATALOG_MESSAGE",
+        "desc": "Envelope or routing metadata failed validation.",
+        "action": "SETTLED_SYNTHETIC"
+      }
+    ],
+    "queueFinal": {
+      "active": 0,
+      "dlq": 0,
+      "status": "Active"
+    },
+    "result": "PASS"
+  },
+  "verdict": "PASS"
+}

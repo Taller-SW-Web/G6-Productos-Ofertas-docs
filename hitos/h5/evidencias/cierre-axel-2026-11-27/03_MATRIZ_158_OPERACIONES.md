@@ -1,5 +1,7 @@
 # Certificación Integral de las 158 Operaciones G6 H5 — 2026-11-27
 
+El [inventario de seguimiento L2](artefactos/INVENTARIO_158_OPERACIONES_L2_2026-11-28.json) conserva las 158 filas y los resultados L1. APIM rev. 2 publica 149 operaciones. Dos lecturas de Pricing quedan pendientes de publicación. Las cinco rutas técnicas y dos sondas conservan su vía interna. Los rechazos públicos acreditan el control indicado en cada fila. El [corte original previo al CD](artefactos/INVENTARIO_158_OPERACIONES_PRE_CD.json) se conserva como referencia.
+
 > **Nivel de evidencia:** `ISOLATED` (stack completo G6 + API Gateway + 8 microservicios + PostgreSQL 17 descartable + transporte aislado Service Bus H5 + emisor G7 de prueba). No equivale a corrida L2 sobre Azure/G7 real.
 
 - **Fecha de ejecución UTC:** `2026-11-27T18:00:31.394Z`

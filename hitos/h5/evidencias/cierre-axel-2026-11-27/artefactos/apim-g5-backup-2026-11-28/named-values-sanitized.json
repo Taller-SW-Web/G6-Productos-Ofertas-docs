@@ -1,0 +1,41 @@
+[
+  {
+    "name": "g6-h5-candidate-g7-audience",
+    "displayName": "g6-h5-candidate-g7-audience",
+    "secret": false,
+    "value": "api-productos",
+    "tags": null
+  },
+  {
+    "name": "g6-h5-candidate-g7-issuer",
+    "displayName": "g6-h5-candidate-g7-issuer",
+    "secret": false,
+    "value": "https://g7-auth-service.onrender.com/api/v1/auth",
+    "tags": null
+  },
+  {
+    "name": "g6-h5-candidate-g7-openid-config-url",
+    "displayName": "g6-h5-candidate-g7-openid-config-url",
+    "secret": false,
+    "value": "https://g7-auth-service.onrender.com/api/v1/auth/.well-known/openid-configuration",
+    "tags": null
+  },
+  {
+    "name": "6b0991ab4634611c9c5f8cdf",
+    "displayName": "Logger-Credentials--6b0991ab4634611c9c5f8ce0",
+    "secret": true,
+    "tags": null
+  },
+  {
+    "name": "6b09922e4634611c9c5f8ceb",
+    "displayName": "Logger-Credentials--6b09922e4634611c9c5f8cec",
+    "secret": true,
+    "tags": null
+  },
+  {
+    "name": "6b09926c4634611c9c5f8cf7",
+    "displayName": "Logger-Credentials--6b09926c4634611c9c5f8cf8",
+    "secret": true,
+    "tags": null
+  }
+]

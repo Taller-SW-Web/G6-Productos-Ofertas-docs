@@ -1,5 +1,7 @@
 # Matrices INT-01..10, PERF-01..08, APIM-T01..08 y RL-01..06 — 2026-11-27
 
+**Seguimiento L2 del 28/11.** INT-04 sigue parcial: ajuste Inventory acreditado y R10 en DLQ de Bulk. INT-05 tiene evidencia R16 desde Outbox y mantiene pendiente el caso de reinicio/rollback en Azure. INT-06 tiene el fixture R18→R09 acreditado. INT-08 tiene observación de dos vistas autenticadas, pendiente HTTP por operación. APIM-T03 tiene rechazo anónimo de las cuatro rutas G5. Faltan el caso humano y los positivos de G5. APIM-T06 tiene las cinco exclusiones en rev. 2. APIM-T08 tiene rev. 1 online y respaldo preparado. Las filas siguientes conservan el corte original de la matriz. [Flujos vivos](04_MATRIZ_19_FLUJOS_SERVICE_BUS.md) · [Evidencia APIM](artefactos/APIM_G5_145_A_149_2026-11-28.json) · [Seguimiento L2](artefactos/L2_CERTIFICACION_SEGUIMIENTO_2026-11-28.json).
+
 > **Criterio estricto de clasificación:** solo se registra `PASS` cuando existe corrida real ejecutada en el nivel declarado. No se promueve L1 a L2, ni L0 estático a L2 en vivo, ni `SKIP` a `PASS`.
 
 ## 1. Matriz de Integración `INT-01` a `INT-10` (H5-02)
