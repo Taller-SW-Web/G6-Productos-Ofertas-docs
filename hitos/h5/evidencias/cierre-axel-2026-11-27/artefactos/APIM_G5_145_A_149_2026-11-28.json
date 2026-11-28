@@ -1,0 +1,195 @@
+{
+  "timestampUtc": "2026-11-28T06:30:17Z",
+  "apimName": "apim-g6-productos-chile",
+  "resourceGroup": "rg-g6-aca-chile",
+  "apiName": "g6-productos-ofertas",
+  "path": "api/v1",
+  "serviceUrl": "https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io/api/v1",
+  "sourceBackendMasterSha": "4111a4e47e2eeb8f369421255d59642f068153d9",
+  "gatewayRevision": "api-gateway--0000004",
+  "gatewayDigest": "sha256:50409c86bb51c978d20696d59e59c5a7f30f14a0fa58d31d2790167912760e69",
+  "previousRevision": {
+    "apiRevision": "1",
+    "operationCount": 145,
+    "operationSetSha256": "b9d0238c6067a98422e67b2f2eca8cfaf94790b00570dff7d8f5dee44a8df494",
+    "apiPolicySha256": "6b86d34a718c6d51f670869dbd36038ff72956d03b3120293be43630e6a9bb42",
+    "preservedForRollback": true,
+    "rollbackScript": "artefactos/apim-g5-backup-2026-11-28/rollback-apim-to-rev1.ps1"
+  },
+  "activeRevision": {
+    "apiRevision": "2",
+    "releaseId": "g5-h5-additive-145-to-149-20261128",
+    "operationCount": 149,
+    "operationSetSha256": "72d38e253ccd86c466edc8909d0084d7fbeb60a9d301a25f1b93f631ef4591e1",
+    "apiPolicySha256": "6b86d34a718c6d51f670869dbd36038ff72956d03b3120293be43630e6a9bb42",
+    "apiPolicyUnchanged": true
+  },
+  "deltaAdded": [
+    "admitirconsumocuponh5",
+    "admitirrestauracioncuponh5",
+    "obtenerestadoreservah5",
+    "obteneroperacioncuponh5"
+  ],
+  "deltaRemoved": [],
+  "verifiedG5Policies": [
+    {
+      "apimOperationId": "admitirconsumocuponh5",
+      "hasValidateJwt": true,
+      "hasAudienceApiProductos": true,
+      "hasClientModuloVentas": true,
+      "hasRateLimit": true,
+      "hasQuota": true,
+      "hasConcurrencyLimit": true,
+      "policySha256": "278e53bf62b49c2b53938e275fdcff221ff896b71dfaeb1279b58d2d1adf217c"
+    },
+    {
+      "apimOperationId": "admitirrestauracioncuponh5",
+      "hasValidateJwt": true,
+      "hasAudienceApiProductos": true,
+      "hasClientModuloVentas": true,
+      "hasRateLimit": true,
+      "hasQuota": true,
+      "hasConcurrencyLimit": true,
+      "policySha256": "9a3c38bc54836dc283c94a73120170bbd6b1af7a278bc9d2a42a2cb79f4081eb"
+    },
+    {
+      "apimOperationId": "obtenerestadoreservah5",
+      "hasValidateJwt": true,
+      "hasAudienceApiProductos": true,
+      "hasClientModuloVentas": true,
+      "hasRateLimit": true,
+      "hasQuota": true,
+      "hasConcurrencyLimit": true,
+      "policySha256": "7d79f55611c7de30df763d95dc04f3d695d3514ad54fa17ede371fd1ecd9e2a6"
+    },
+    {
+      "apimOperationId": "obteneroperacioncuponh5",
+      "hasValidateJwt": true,
+      "hasAudienceApiProductos": true,
+      "hasClientModuloVentas": true,
+      "hasRateLimit": true,
+      "hasQuota": true,
+      "hasConcurrencyLimit": true,
+      "policySha256": "5636d20d2506a384a828f9f7536169012c310b6a6890131f777c34c8891313d1"
+    }
+  ],
+  "revisionsAfter": [
+    {
+      "apiRevision": "2",
+      "isCurrent": true,
+      "isOnline": true
+    },
+    {
+      "apiRevision": "1",
+      "isCurrent": false,
+      "isOnline": true
+    }
+  ],
+  "liveApiV1Probes": [
+    {
+      "case": "g5_no_jwt_POST_/cupones/consumos",
+      "status": 401,
+      "corrEcho": true,
+      "body": "{ \"statusCode\": 401, \"message\": \"Unauthorized\" }"
+    },
+    {
+      "case": "g5_invalid_jwt_POST_/cupones/consumos",
+      "status": 401,
+      "corrEcho": true,
+      "body": "{ \"statusCode\": 401, \"message\": \"Unauthorized\" }"
+    },
+    {
+      "case": "g5_no_jwt_POST_/cupones/restauraciones",
+      "status": 401,
+      "corrEcho": true,
+      "body": "{ \"statusCode\": 401, \"message\": \"Unauthorized\" }"
+    },
+    {
+      "case": "g5_invalid_jwt_POST_/cupones/restauraciones",
+      "status": 401,
+      "corrEcho": true,
+      "body": "{ \"statusCode\": 401, \"message\": \"Unauthorized\" }"
+    },
+    {
+      "case": "g5_no_jwt_GET_/cupones/operaciones/00000000-0000-4000-8000-000000000001",
+      "status": 401,
+      "corrEcho": true,
+      "body": "{ \"statusCode\": 401, \"message\": \"Unauthorized\" }"
+    },
+    {
+      "case": "g5_invalid_jwt_GET_/cupones/operaciones/00000000-0000-4000-8000-000000000001",
+      "status": 401,
+      "corrEcho": true,
+      "body": "{ \"statusCode\": 401, \"message\": \"Unauthorized\" }"
+    },
+    {
+      "case": "g5_no_jwt_GET_/inventario/reservas/00000000-0000-4000-8000-000000000001/estado?order_id=ord-test",
+      "status": 401,
+      "corrEcho": true,
+      "body": "{ \"statusCode\": 401, \"message\": \"Unauthorized\" }"
+    },
+    {
+      "case": "g5_invalid_jwt_GET_/inventario/reservas/00000000-0000-4000-8000-000000000001/estado?order_id=ord-test",
+      "status": 401,
+      "corrEcho": true,
+      "body": "{ \"statusCode\": 401, \"message\": \"Unauthorized\" }"
+    },
+    {
+      "case": "private_404_GET_/productos/skus/SKU-1/contexto",
+      "status": 404
+    },
+    {
+      "case": "private_404_POST_/productos/skus/contexto/lote",
+      "status": 404
+    },
+    {
+      "case": "private_404_POST_/interno/productos/skus/filtrar",
+      "status": 404
+    },
+    {
+      "case": "private_404_GET_/interno/inventario/reservas/00000000-0000-4000-8000-000000000001/evidencia-cupon",
+      "status": 404
+    },
+    {
+      "case": "private_404_GET_/interno/carga-masiva/contenidos/00000000-0000-4000-8000-000000000001",
+      "status": 404
+    },
+    {
+      "case": "pricing_admin_excluded_404_/precios/administracion/productos/00000000-0000-4000-8000-000000000001",
+      "status": 404
+    },
+    {
+      "case": "pricing_admin_excluded_404_/precios/administracion/skus/SKU-TEST",
+      "status": 404
+    },
+    {
+      "case": "cors_vercel_allowed",
+      "status": 200,
+      "acao": "https://g6-productos-ofertas.vercel.app",
+      "expose": null
+    },
+    {
+      "case": "cors_evil_blocked",
+      "status": 200,
+      "acao": null
+    },
+    {
+      "case": "bad_correlation_400",
+      "status": 400,
+      "body": "{\r\n  \"type\": \"about:blank\",\r\n  \"title\": \"Datos de entrada inválidos\",\r\n  \"status\": 400,\r\n  \"code\": \"VALIDACION\",\r\n  \"correlationId\": \"efc0921f-59fc-41c2-8535-bfd1bd7c3e04\"\r\n}"
+    },
+    {
+      "case": "direct_gateway_modalidad_b_403",
+      "status": 403
+    }
+  ],
+  "publicationStatus": "PUBLISHED_149_OPS_VERIFIED",
+  "expectedRejectionStatus": "VERIFIED_401_WITHOUT_OR_INVALID_JWT_PENDING_403_HUMAN_TOKEN_TEST",
+  "g5FunctionalPositivesStatus": "PENDING_G5_MODULO_VENTAS_EXECUTION",
+  "g5PendingScenarios": [
+    "POST /api/v1/cupones/consumos con JWT servicio modulo-ventas, aud=api-productos, scope=cupones:consumir (requiere ademas habilitar PROMOTIONS_H5_COUPON_COMMANDS_ENABLED en promotions-svc si se ejecuta admision N01 completa)",
+    "POST /api/v1/cupones/restauraciones con JWT servicio modulo-ventas, aud=api-productos, scope=cupones:restaurar",
+    "GET /api/v1/cupones/operaciones/{operationId} con JWT servicio modulo-ventas, aud=api-productos, scope=cupones:operaciones:leer",
+    "GET /api/v1/inventario/reservas/{reservaId}/estado?order_id=... con JWT servicio modulo-ventas, aud=api-productos, scope=inventario:reservas:estado:leer"
+  ]
+}

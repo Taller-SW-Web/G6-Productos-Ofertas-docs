@@ -1,0 +1,97 @@
+{
+  "case": "Trivy",
+  "images": [
+    {
+      "service": "api-gateway",
+      "imageId": "sha256:0eade0b0a23db20ebd5308082f61a43150e8953187b334c2318b55df93005025",
+      "critical": 0,
+      "high": 0,
+      "hash": "181489d21cd26485d91f62bd4080a67e6d6ae6700bedefd15a1653625af74ce9"
+    },
+    {
+      "service": "bulk-svc",
+      "imageId": "sha256:b265340bd3130078bf901743625ef0430480cbd597ab0f83e0c33d5906d4664d",
+      "critical": 0,
+      "high": 0,
+      "hash": "f3a6e2f7969419578ead15bfe82e92f070d7e1dbcc55e48b45b6954fa6a1d9e0"
+    },
+    {
+      "service": "catalog-svc",
+      "imageId": "sha256:97a1c532de04caa8e4dd2cbf7074e273c286a73718a6256b8f9960940dd7d3f0",
+      "critical": 0,
+      "high": 0,
+      "hash": "d9e261be6ce51b96a0c1aab754217ede8ccaf455cfd64a8d8911c680e6c0876e"
+    },
+    {
+      "service": "combos-svc",
+      "imageId": "sha256:dec0ae1eba93248b4876055d1624d3cce62263755c72de664957f16e910f5f5a",
+      "critical": 0,
+      "high": 0,
+      "hash": "7c67a8212fac8027c49b002bfcbc07da6d31925b7268df3c1aba6877e96a631c"
+    },
+    {
+      "service": "inventory-svc",
+      "imageId": "sha256:1375814107271d3cea38b1afb7f80538e25b094085438f704e618509ad515dfb",
+      "critical": 0,
+      "high": 0,
+      "hash": "c1b25ab79c60464b56395107e92e584948ca7c1a78204d1c51ed07e920c195e7"
+    },
+    {
+      "service": "price-audit-svc",
+      "imageId": "sha256:f321bbbf669b5ce3565636173e6a448082d8140b72943827ebd01e8efbcc75af",
+      "critical": 0,
+      "high": 0,
+      "hash": "edc02a6e69959dda58e807e92893f60bef56e0c5bd7e1b544227813eac3277f6"
+    },
+    {
+      "service": "pricing-svc",
+      "imageId": "sha256:3adec4151f7757159e644fefbaddc022adec86cbd492e6cea13a20c62217b774",
+      "critical": 0,
+      "high": 0,
+      "hash": "ba6885aceaa933090b2954546cca98aabd99d81237ff6e39a74b8569e9774c9e"
+    },
+    {
+      "service": "promotions-svc",
+      "imageId": "sha256:116f2a4ee8b7316367abacd062c6690364e69484391abd2355d49d1960548bcc",
+      "critical": 0,
+      "high": 0,
+      "hash": "56d74c1d87f6d358e3cd962b34e94b45b8532faa20370cc7f3c0df89e7118027"
+    },
+    {
+      "service": "taxonomy-svc",
+      "imageId": "sha256:f0bcb47c0103f3c6ac49ddec756bc9bf138d055e567b801a902b8c1872b9a7bc",
+      "critical": 0,
+      "high": 0,
+      "hash": "095f81eabe162024749aef8dc5e6c1d007c8096beaf900d121f468a049fcb30d"
+    }
+  ],
+  "count": 9,
+  "tool": "Trivy 0.76.2",
+  "backendSha": "f3cc10d604050d9346e0d9934cd7867121dbe166",
+  "workflowRunId": 46060439353,
+  "scope": "Nine local CI images; IDs are CI image IDs, not published GHCR manifest digests.",
+  "baseline": {
+    "sha": "7ecee3fb9c38f5c8d4b3521e1e7f88e8badca337",
+    "workflowRunId": 46058242392,
+    "criticalPerImage": 1,
+    "highPerImage": 18
+  },
+  "sast": {
+    "tool": "Semgrep 1.187.0",
+    "rules": 74,
+    "backend": {
+      "files": 446,
+      "findings": 0,
+      "warnings": 2,
+      "reportSha256": "bb5d871a8bf9230d09d56c3047f1c5fe9ee3b61739d2b1a8a49dbea1ad3dfd9a"
+    },
+    "frontend": {
+      "files": 463,
+      "findings": 0,
+      "warnings": 2,
+      "reportSha256": "48f90209c90ead32ae2f5a7b28e1b1e9a086fa9e42c22090971afa1ed7702ac4"
+    },
+    "acceptedAsFormalReplacement": false,
+    "scope": "Backend apps/ and Frontend src/, application JS/TS; test files excluded"
+  }
+}

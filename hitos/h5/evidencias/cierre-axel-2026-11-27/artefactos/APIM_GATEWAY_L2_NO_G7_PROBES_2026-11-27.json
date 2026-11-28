@@ -1,0 +1,199 @@
+{
+    "generatedAtUtc":  "2026-11-28T01:58:07.1054537Z",
+    "scope":  "L2_NON_G7_APIM_AND_GATEWAY_PROBES",
+    "liveGatewayRevision":  "api-gateway--0000003",
+    "totalChecks":  15,
+    "passedChecks":  15,
+    "checks":  [
+                   {
+                       "id":  "APIM_PRIVATE_1_SKU_CONTEXTO",
+                       "method":  "GET",
+                       "url":  "https://apim-g6-productos-chile.azure-api.net/api/v1/productos/skus/TEST-SKU/contexto",
+                       "expectedStatus":  404,
+                       "actualStatus":  404,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  "x-correlation-id: 35b370d3-7d26-4ca1-8188-d1c2ba030649"
+                   },
+                   {
+                       "id":  "APIM_PRIVATE_2_FILTRAR_SKUS",
+                       "method":  "POST",
+                       "url":  "https://apim-g6-productos-chile.azure-api.net/api/v1/interno/productos/skus/filtrar",
+                       "expectedStatus":  404,
+                       "actualStatus":  404,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  "x-correlation-id: b09bf83c-febe-4372-a1b4-e6ea5d8fd72e"
+                   },
+                   {
+                       "id":  "APIM_PRIVATE_3_BULK_CONTENIDOS",
+                       "method":  "GET",
+                       "url":  "https://apim-g6-productos-chile.azure-api.net/api/v1/interno/carga-masiva/contenidos/00000000-0000-4000-8000-000000000001",
+                       "expectedStatus":  404,
+                       "actualStatus":  404,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  "x-correlation-id: 6076df2d-5536-4937-904c-d6da522d194e"
+                   },
+                   {
+                       "id":  "APIM_PRIVATE_4_INV_DISPONIBILIDAD",
+                       "method":  "GET",
+                       "url":  "https://apim-g6-productos-chile.azure-api.net/api/v1/interno/inventario/skus/TEST-SKU/disponibilidad",
+                       "expectedStatus":  404,
+                       "actualStatus":  404,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  "x-correlation-id: ad7fefeb-decb-4f8c-83e9-10006818a88b"
+                   },
+                   {
+                       "id":  "APIM_PRIVATE_5_CATALOG_ADMIN_INT",
+                       "method":  "GET",
+                       "url":  "https://apim-g6-productos-chile.azure-api.net/internal/catalog/products",
+                       "expectedStatus":  404,
+                       "actualStatus":  404,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  {
+
+                                         }
+                   },
+                   {
+                       "id":  "APIM_UNAUTH_401_UUID",
+                       "method":  "GET",
+                       "url":  "https://apim-g6-productos-chile.azure-api.net/api/v1/productos/administracion",
+                       "expectedStatus":  401,
+                       "actualStatus":  401,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  "x-correlation-id: 22222222-2222-4222-8222-222222222206"
+                   },
+                   {
+                       "id":  "APIM_BAD_JWT_401_UUID",
+                       "method":  "GET",
+                       "url":  "https://apim-g6-productos-chile.azure-api.net/api/v1/productos/administracion",
+                       "expectedStatus":  401,
+                       "actualStatus":  401,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  "x-correlation-id: 22222222-2222-4222-8222-222222222207"
+                   },
+                   {
+                       "id":  "APIM_BAD_UUID_400",
+                       "method":  "GET",
+                       "url":  "https://apim-g6-productos-chile.azure-api.net/api/v1/productos/administracion",
+                       "expectedStatus":  400,
+                       "actualStatus":  400,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  "x-correlation-id: b23c32dd-f1eb-4b00-a532-afae91b6e347"
+                   },
+                   {
+                       "id":  "APIM_CORS_VERCEL_200",
+                       "method":  "OPTIONS",
+                       "url":  "https://apim-g6-productos-chile.azure-api.net/api/v1/productos/administracion",
+                       "expectedStatus":  200,
+                       "actualStatus":  200,
+                       "pass":  true,
+                       "acao":  "Access-Control-Allow-Origin: https://g6-productos-ofertas.vercel.app",
+                       "correlationId":  {
+
+                                         }
+                   },
+                   {
+                       "id":  "APIM_CORS_UNAUTH_ORIGIN",
+                       "method":  "OPTIONS",
+                       "url":  "https://apim-g6-productos-chile.azure-api.net/api/v1/productos/administracion",
+                       "expectedStatus":  200,
+                       "actualStatus":  200,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  {
+
+                                         }
+                   },
+                   {
+                       "id":  "APIM_G5_PRE_PUBLISH_404",
+                       "method":  "POST",
+                       "url":  "https://apim-g6-productos-chile.azure-api.net/api/v1/cupones/consumos",
+                       "expectedStatus":  404,
+                       "actualStatus":  404,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  "x-correlation-id: 9afb82e0-2478-4357-8cd8-0aeabe3b1941"
+                   },
+                   {
+                       "id":  "APIM_PRICING_ADMIN_PRE_404",
+                       "method":  "GET",
+                       "url":  "https://apim-g6-productos-chile.azure-api.net/api/v1/precios/administracion/skus/TEST-SKU",
+                       "expectedStatus":  404,
+                       "actualStatus":  404,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  "x-correlation-id: b38e3e6f-378f-4791-ada2-d35f30f0dbaf"
+                   },
+                   {
+                       "id":  "GW_DIRECT_HEALTH_403",
+                       "method":  "GET",
+                       "url":  "https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io/health",
+                       "expectedStatus":  403,
+                       "actualStatus":  403,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  {
+
+                                         }
+                   },
+                   {
+                       "id":  "GW_DIRECT_READY_403",
+                       "method":  "GET",
+                       "url":  "https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io/health/ready",
+                       "expectedStatus":  403,
+                       "actualStatus":  403,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  {
+
+                                         }
+                   },
+                   {
+                       "id":  "GW_DIRECT_API_403",
+                       "method":  "GET",
+                       "url":  "https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io/api/v1/productos/administracion",
+                       "expectedStatus":  403,
+                       "actualStatus":  403,
+                       "pass":  true,
+                       "acao":  {
+
+                                },
+                       "correlationId":  {
+
+                                         }
+                   }
+               ]
+}

@@ -1,0 +1,44 @@
+{
+  "criterion": "H5-04B",
+  "caseId": "R16-PRICE-AUDIT-CONSUMER-RESTART",
+  "scope": "IN_SCOPE",
+  "result": "PASS",
+  "evidenceLevel": "ISOLATED",
+  "verificationState": "VERIFIED_L1_PROCESS_RESTART_PENDING_AZURE_L2",
+  "deploymentState": "NOT_DEPLOYED",
+  "blocker": "En L2 repetir el reinicio de price-audit-svc solo con ventana autorizada sobre ACA/g6-sb-h5-chile-261127",
+  "owner": "Vera / Axel Cueva",
+  "testedAtUtc": "2026-11-27T18:10:53.671Z",
+  "subjects": {
+    "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "azureImageDigest": null,
+    "azureRevision": null
+  },
+  "environment": {
+    "name": "local-isolated-pg17-http-broker-real-child-process",
+    "db": "postgres17-disposable",
+    "serviceBus": "HTTP_IN_MEMORY_NOT_AZURE",
+    "apim": null
+  },
+  "execution": {
+    "command": "G6_SERVICE_BUS_POSTGRES_TESTS=1 npx vitest run --config ./vitest.config.e2e.ts ops/azure/service-bus/r16-price-audit-restart.postgres.e2e-spec.ts",
+    "exitCode": 0,
+    "runId": null,
+    "artifactPath": "artefactos/R16_PRICE_AUDIT_CONSUMER_RESTART.json",
+    "artifactSha256": "9dab432eda3e2c0b79623e66bced8b639b0958bf3f7f44cd6e0cb9ab547367eb"
+  },
+  "assertions": {
+    "httpExpected": "Detener proceso real price-audit-svc, encolar entrega M2 + redelivery M1, reiniciar nuevo PID y persistir efecto unico (count=1)",
+    "httpActual": "PID 30476 detenido -> queuedWhileStopped=2 -> PID 29712 reiniciado -> M1 (d0998719) y M2 (563af74f) completedCount=2 con auditRowsPersisted=1 cada una, DLQ=0",
+    "eventId": "563af74f-e3cc-41e3-88c7-08711f0d7cff",
+    "correlationIdSanitized": "387cfbcc-7384-47e6-9bfc-1ed08c07dd50",
+    "inboxState": "APPLIED_ONCE_AFTER_RESTART_AND_REDELIVERY",
+    "outboxState": "DELIVERED_TO_g6.price-audit.from.pricing",
+    "dlqDelta": 0,
+    "idempotent": true
+  },
+  "notes": "Evidencia dedicada e independiente del reinicio real del consumidor price-audit-svc para R16."
+}

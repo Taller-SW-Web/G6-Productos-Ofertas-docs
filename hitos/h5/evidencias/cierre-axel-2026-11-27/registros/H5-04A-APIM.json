@@ -1,0 +1,44 @@
+{
+  "criterion": "H5-04A",
+  "caseId": "APIM-T01..APIM-T08",
+  "scope": "IN_SCOPE",
+  "result": "INCONCLUSIVE",
+  "evidenceLevel": "LAB_AZURE",
+  "verificationState": "LIVE_NEGATIVES_AND_CORS_PREFLIGHT_PASS",
+  "deploymentState": "LIVE_APIM_API_POLICY_UPDATED",
+  "blocker": "Faltan positivos con G7 real, alcance de cuotas/RL y ensayo de rollback.",
+  "owner": "Marco Castilla / Axel Cueva",
+  "testedAtUtc": "2026-11-27T18:10:53.671Z",
+  "subjects": {
+    "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "azureImageDigest": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/api-gateway@sha256:2ab58ef95977588b384f7debfad498e8e944a22399424ebdda0cd67a5e6d028b",
+    "azureRevision": "api-gateway--0000003"
+  },
+  "environment": {
+    "name": "Azure G6 integración, política de API existente",
+    "db": "none",
+    "serviceBus": "none",
+    "apim": "apim-g6-productos-chile (Developer, api/v1, 145 ops = 156 OpenAPI - 11 excluidas)"
+  },
+  "execution": {
+    "command": "Azure ARM what-if + PUT de policy con ETag + verificación HTTP",
+    "exitCode": 0,
+    "runId": null,
+    "artifactPath": "artefactos/APIM_CORS_POST_CAMBIO_2026-11-27.json",
+    "artifactSha256": "791851ff023dd47a1576a379a4ffe525858e13b19c4bcc1c12f97dcc771c115f"
+  },
+  "assertions": {
+    "httpExpected": "Direct GW=403, APIM no-auth=401, bad-jwt=401, 5 internal=404, bad-corr=400, Vercel OPTIONS=ACAO",
+    "httpActual": "OPTIONS Vercel 200 con ACAO, otro origen sin ACAO, no JWT 401 con correlación, 5 internas 404, Gateway directo 403.",
+    "eventId": null,
+    "correlationIdSanitized": "echoed-on-401-rejected-on-invalid-400",
+    "inboxState": null,
+    "outboxState": null,
+    "dlqDelta": null,
+    "idempotent": null
+  },
+  "notes": "Respaldo previo por hash y lectura posterior normalizada. Navegador G7 real pendiente."
+}

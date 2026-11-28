@@ -1,0 +1,16 @@
+{
+  "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+  "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+  "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+  "contractVersion": "0.7.0-rc.3",
+  "evidenceLevel": "L1_ISOLATED",
+  "transport": "HTTP_IN_MEMORY_NOT_AZURE",
+  "command": "node tests/h5/certify-19-messaging-flows.mjs",
+  "generatedAtUtc": "2026-11-27T17:57:41.970Z",
+  "exitCode": 0,
+  "total": 19,
+  "passed": 19,
+  "failed": 0,
+  "reportJsonSha256": "13cb3ac2ae7e2900604c2263beb13744b50e8f310547940f1fc6650ad985067d",
+  "reportCsvSha256": "7247219c122835993e86b7061b14861c48203985d9f6f0a223de4f217ca5c5d9"
+}

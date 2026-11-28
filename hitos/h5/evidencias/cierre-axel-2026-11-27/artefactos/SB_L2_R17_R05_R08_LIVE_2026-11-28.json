@@ -1,0 +1,77 @@
+{
+  "flows": [
+    "R17",
+    "R05",
+    "R08"
+  ],
+  "timestampUtc": "2026-11-28T07:10:24.000Z",
+  "level": "L2_AZURE_REAL_SERVICE_BUS",
+  "fixtures": {
+    "r17": {
+      "msgId": "38a6f480-a32c-4323-b119-c5f97dccb758",
+      "corrId": "7d6ce9df-e8d7-4887-8d69-bbe11837f620",
+      "sku": "H5-CERT-R17-20261128"
+    },
+    "r05_r08": {
+      "msgId": "88aef8e4-6ff2-4dbc-822e-25965c6ccf91",
+      "corrId": "fef7e3b0-0ef3-4be1-a6cc-7c8b130620f5",
+      "productId": "cfb74f4a-c791-4bcb-8efb-09a079df0e94"
+    }
+  },
+  "pricingOutbox": [
+    {
+      "message_id": "38a6f480-a32c-4323-b119-c5f97dccb758",
+      "destination": "g6.promotions.from.pricing",
+      "attempts": 1,
+      "sent_at": "2026-11-28T07:10:37.505Z",
+      "last_error": null
+    }
+  ],
+  "catalogOutbox": [
+    {
+      "message_id": "88aef8e4-6ff2-4dbc-822e-25965c6ccf91",
+      "destination": "g6.combos.from.catalog",
+      "attempts": 1,
+      "published_at": "2026-11-28T07:10:50.777Z",
+      "last_error": null
+    },
+    {
+      "message_id": "88aef8e4-6ff2-4dbc-822e-25965c6ccf91",
+      "destination": "g6.promotions.from.catalog",
+      "attempts": 1,
+      "published_at": "2026-11-28T07:10:50.325Z",
+      "last_error": null
+    }
+  ],
+  "promotionsObserved": {
+    "err": "column \"event_name\" does not exist"
+  },
+  "combosObserved": {
+    "inbox": [
+      {
+        "message_id": "88aef8e4-6ff2-4dbc-822e-25965c6ccf91",
+        "event_name": "catalog.product.deactivated",
+        "correlation_id": "fef7e3b0-0ef3-4be1-a6cc-7c8b130620f5",
+        "result": "PROCESSED",
+        "processed_at": "2026-11-28T07:10:53.712Z"
+      }
+    ]
+  },
+  "queuesAfter": {
+    "R17": {
+      "active": 0,
+      "dlq": 1,
+      "status": "Active"
+    },
+    "R05": {
+      "active": 0,
+      "dlq": 0,
+      "status": "Active"
+    },
+    "R08": {
+      "active": 0,
+      "dlq": 1,
+      "status": "Active"
+    }
+  }
+}

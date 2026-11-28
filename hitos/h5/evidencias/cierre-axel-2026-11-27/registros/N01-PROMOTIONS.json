@@ -1,0 +1,44 @@
+{
+  "criterion": "H5-04B",
+  "caseId": "N01",
+  "scope": "IN_SCOPE",
+  "result": "PASS",
+  "evidenceLevel": "ISOLATED",
+  "verificationState": "VERIFIED_L1_PENDING_AZURE_L2_AND_G7_GRANTS",
+  "deploymentState": "NOT_DEPLOYED",
+  "blocker": "ACA live tiene PROMOTIONS_H5_COUPON_COMMANDS_ENABLED=false y PROMOTIONS_COUPON_RUNTIME_ENABLED=false; requiere deploy candidato #296, habilitacion y grants reales G7/G5",
+  "owner": "Axel Cueva",
+  "testedAtUtc": "2026-11-27T18:10:53.671Z",
+  "subjects": {
+    "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "azureImageDigest": null,
+    "azureRevision": null
+  },
+  "environment": {
+    "name": "local-isolated-pg17-sb",
+    "db": "postgres17-disposable",
+    "serviceBus": "HTTP_IN_MEMORY_NOT_AZURE",
+    "apim": null
+  },
+  "execution": {
+    "command": "vitest coupon-h5.postgres + certify-158-endpoints (#148/#149) + certify-19-messaging-flows + playwright.real.config.ts #16",
+    "exitCode": 0,
+    "runId": "46044277201",
+    "artifactPath": "artefactos/158_ENDPOINTS_CERTIFICATION_REPORT.json",
+    "artifactSha256": "2631cd8adb7c7d4195fbc182571e2a5e76e53e15dbc1c83346a88510e23f1933"
+  },
+  "assertions": {
+    "httpExpected": "202 tras commit durable -> GET operacion COMPLETED/RESTORED -> idempotencia sin doble consumo",
+    "httpActual": "12/12 coupon-h5 PASS + #148/#149 PASS + N01 19-flows PASS + FE real-stack #16 PASS",
+    "eventId": null,
+    "correlationIdSanitized": "verified",
+    "inboxState": "APPLIED_ONCE",
+    "outboxState": "ENQUEUED_BEFORE_202",
+    "dlqDelta": 0,
+    "idempotent": true
+  },
+  "notes": "Evidencia historica Azure N01 no se toma como acreditacion del SHA candidato."
+}

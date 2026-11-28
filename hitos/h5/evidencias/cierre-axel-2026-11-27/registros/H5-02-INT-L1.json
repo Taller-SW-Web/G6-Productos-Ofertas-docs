@@ -1,0 +1,44 @@
+{
+  "criterion": "H5-02",
+  "caseId": "INT-01..INT-10-L1",
+  "scope": "IN_SCOPE",
+  "result": "PASS",
+  "evidenceLevel": "ISOLATED",
+  "verificationState": "VERIFIED_L1_PENDING_L2_L3",
+  "deploymentState": "NOT_DEPLOYED",
+  "blocker": "L2 requiere deploy candidato ACA + migracion Inventory 0002 R10 + CORS APIM + tokens G7 reales; L3 requiere homologacion bilateral G5/G1",
+  "owner": "Axel Cueva",
+  "testedAtUtc": "2026-11-27T18:10:53.671Z",
+  "subjects": {
+    "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "azureImageDigest": null,
+    "azureRevision": null
+  },
+  "environment": {
+    "name": "local-isolated-stack",
+    "db": "postgres17-disposable",
+    "serviceBus": "HTTP_IN_MEMORY_NOT_AZURE",
+    "apim": "not-in-l1-loop"
+  },
+  "execution": {
+    "command": "certify-158-endpoints.mjs + certify-19-messaging-flows.mjs + playwright.real.config.ts (16/16) + CI #46044277201",
+    "exitCode": 0,
+    "runId": "46044277201",
+    "artifactPath": "artefactos/158_ENDPOINTS_CERTIFICATION_REPORT.json",
+    "artifactSha256": "2631cd8adb7c7d4195fbc182571e2a5e76e53e15dbc1c83346a88510e23f1933"
+  },
+  "assertions": {
+    "httpExpected": "158/158 PASS + 19/19 PASS + 16/16 FE real-stack PASS + 22/22 Backend CI PASS",
+    "httpActual": "158/158 PASS + 19/19 PASS + 16/16 FE real-stack PASS + 22/22 Backend CI PASS (369+1 skips E2E inventariados)",
+    "eventId": null,
+    "correlationIdSanitized": "verified-end-to-end",
+    "inboxState": "verified-pg17",
+    "outboxState": "verified-pg17",
+    "dlqDelta": 0,
+    "idempotent": true
+  },
+  "notes": "Stubs de G7 declarados como SIMULATED_DEPENDENCY en L1. No sustituye L2 Azure ni L3 intergrupo."
+}

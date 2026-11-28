@@ -1,0 +1,44 @@
+{
+  "criterion": "H5-01",
+  "caseId": "H5-01-CI-SCA-SBOM-JWT",
+  "scope": "IN_SCOPE",
+  "result": "PASS",
+  "evidenceLevel": "ISOLATED",
+  "verificationState": "VERIFIED_LOCAL_AND_CI_GREEN_GAPS_DOCUMENTED",
+  "deploymentState": "NOT_DEPLOYED",
+  "blocker": "CodeQL sin configurar y Secret Scanning deshabilitado en Backend. Las reglas efectivas no devuelven entradas en Frontend y Docs. Aceptación formal del control alternativo pendiente.",
+  "owner": "Axel Cueva",
+  "testedAtUtc": "2026-11-27T18:10:53.671Z",
+  "subjects": {
+    "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "azureImageDigest": null,
+    "azureRevision": null
+  },
+  "environment": {
+    "name": "local-windows-isolated + github-actions-readonly",
+    "db": "postgres17-disposable",
+    "serviceBus": "isolated (38/38 RBAC readonly Azure)",
+    "apim": "apim-g6-productos-chile (readonly)"
+  },
+  "execution": {
+    "command": "npm audit + CycloneDX SBOM + certify-158-endpoints + gh workflow run ci.yml/frontend.yml/swagger-docs.yml",
+    "exitCode": 0,
+    "runId": "backend:46044277201(success);frontend:46028914883(success)",
+    "artifactPath": "artefactos/sbom-backend.cdx.json;artefactos/sbom-frontend.cdx.json",
+    "artifactSha256": "09f13aae61cae055be276333a8b04d5a029e598e0fcba6e83c01371a03ed8238"
+  },
+  "assertions": {
+    "httpExpected": "401/403/400/404 en negativos JWT y rutas internas",
+    "httpActual": "158/158 auth401+auth403 PASS; 6/6 authChecks PASS; 16/16 FE real-stack PASS; live APIM 401/400/5x404/403 PASS; Gitleaks 8.30.1 FE CI PASS",
+    "eventId": null,
+    "correlationIdSanitized": "verified-echo-and-400-validation",
+    "inboxState": null,
+    "outboxState": null,
+    "dlqDelta": 0,
+    "idempotent": true
+  },
+  "notes": "0 vulnerabilidades moderate/high/critical en npm audit Backend y Frontend; SBOM CycloneDX 1.5 (444 BE / 282 FE); 38/38 RBAC mínimo por cola. Resultados posteriores de Trivy y Semgrep documentados en artefactos/SECURIDAD_DRAFT_2026-11-27.json."
+}

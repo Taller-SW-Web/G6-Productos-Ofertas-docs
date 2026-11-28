@@ -1,0 +1,33 @@
+{
+  "service": "api-gateway",
+  "destination": "chile-shared",
+  "github_environment": "azure-h5-chile",
+  "workflow_run_id": "46113930829",
+  "resource_group": "rg-g6-aca-chile",
+  "aca_environment": "env-g6-phase1-chile",
+  "location": "Chile Central",
+  "subscription_id": "fef42188-accd-4470-ae88-78f583eb4906",
+  "app_resource_id": "/subscriptions/fef42188-accd-4470-ae88-78f583eb4906/resourceGroups/rg-g6-aca-chile/providers/Microsoft.App/containerapps/api-gateway",
+  "container": "api-gateway",
+  "previous": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/api-gateway@sha256:2ab58ef95977588b384f7debfad498e8e944a22399424ebdda0cd67a5e6d028b",
+  "target": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/api-gateway@sha256:50409c86bb51c978d20696d59e59c5a7f30f14a0fa58d31d2790167912760e69",
+  "digest_candidate": "sha256:50409c86bb51c978d20696d59e59c5a7f30f14a0fa58d31d2790167912760e69",
+  "origin_https": "https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+  "internal_origin_https": "https://api-gateway.internal.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+  "modalidad_b": true,
+  "preserved_labels": [
+    {
+      "label": "g5-h5",
+      "revisionName": "api-gateway--0000002",
+      "weight": 0
+    }
+  ],
+  "previous_served_revision": "api-gateway--0000003",
+  "config_sha256": "494dceeda26a70cb68bad37ffa48cfbdc90d2cb7a3b8c4494347b90cf79fa3fb",
+  "route_profile": "standard",
+  "marketplace_revision": null,
+  "served_revision": "api-gateway--0000004",
+  "served_digest": "sha256:50409c86bb51c978d20696d59e59c5a7f30f14a0fa58d31d2790167912760e69",
+  "served_health": "Healthy",
+  "traffic_weight": 100
+}

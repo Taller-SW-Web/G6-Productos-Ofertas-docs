@@ -1,0 +1,44 @@
+{
+  "criterion": "H5-03",
+  "caseId": "PERF-06",
+  "scope": "IN_SCOPE",
+  "result": "INCONCLUSIVE",
+  "evidenceLevel": "ISOLATED",
+  "verificationState": "THREE_PAIRED_RUNS_L1_BROWSER_FIXTURES",
+  "deploymentState": "NOT_DEPLOYED",
+  "blocker": "Conteos no equivalentes por familia. Catálogo 1000 filas comparable; el gate transversal sigue inconcluso.",
+  "owner": "Poma / Axel Cueva",
+  "testedAtUtc": null,
+  "subjects": {
+    "backendSha": "18413ac459b24793f4f09ea07104d5281c0be3c7",
+    "frontendSha": "ccfc21ba0e821f33c0debf09389879e55df0539b",
+    "docsSha": "5f30802129ba4bbc0674dcc5878f10065f443118",
+    "contractVersion": "0.7.0-rc.3",
+    "azureImageDigest": null,
+    "azureRevision": null
+  },
+  "environment": {
+    "name": "github-actions-ubuntu-latest-same-runner",
+    "db": "controlled-browser-gateway-fixtures",
+    "serviceBus": "not-applicable",
+    "apim": null
+  },
+  "execution": {
+    "command": "gh workflow run frontend.yml --ref trabajo/castilla/h5-cierre-post-r2-frontend -f performance_harness=true -f baseline_ref=master -f performance_family=all",
+    "exitCode": 0,
+    "runId": "46057273692,46057278283,46057282878",
+    "artifactPath": "artefactos/PERF06_3_PARES_2026-11-27.json",
+    "artifactSha256": "5ccd4850aefc502bee4db3e1a42d870249ff7165ae172693bf527bfea7b3beb5"
+  },
+  "assertions": {
+    "httpExpected": "Comparacion pareada baseline master (2c6ad931) vs candidato #102 (ccfc21ba) en 81 rutas / 14 familias SPA",
+    "httpActual": "81 rutas y 14 familias por versión. Catálogo 1000 filas 4950 a 4874 ms de mediana.",
+    "eventId": null,
+    "correlationIdSanitized": null,
+    "inboxState": null,
+    "outboxState": null,
+    "dlqDelta": null,
+    "idempotent": null
+  },
+  "notes": "Etiquetado L1_FRONTEND_BROWSER; sin latencia de microservicios reales ni datos productivos."
+}
