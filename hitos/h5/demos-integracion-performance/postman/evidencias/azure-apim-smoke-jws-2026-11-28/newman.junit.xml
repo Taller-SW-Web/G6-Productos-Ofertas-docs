@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="G6 - H5 Integration Suite" tests="12" failures="2" skipped="1" time="8.052">
+  <testsuite name="apim-edge" tests="12" failures="2" skipped="1" time="8.052">
+    <testcase classname="INT-01" name="PM-002 - Gateway -&gt; Catalog: Listar productos autorizados" time="1.158">
+    </testcase>
+    <testcase classname="INT-01" name="PM-003A - Catalog -&gt; Pricing: Filtro por rango de precio amplio (con paginacion completa)" time="1.132">
+    </testcase>
+    <testcase classname="INT-01" name="PM-003B - Catalog -&gt; Pricing: Filtro rango acotado y relacion de subconjunto estricta" time="1.111">
+    </testcase>
+    <testcase classname="INT-01" name="PM-003C - Catalog: Detalle comercial y extraccion de todos los SKUs elegibles" time="0.976">
+    </testcase>
+    <testcase classname="INT-01" name="PM-003D - Pricing: Consultar precios efectivos de todos los SKUs elegibles del producto" time="0.531">
+    </testcase>
+    <testcase classname="INT-07" name="PM-004 - Negativo: Solicitud sin autenticacion (401)" time="0.044">
+      <failure message="PM-004: HTTP 401 Problem Details TOKEN_INVALIDO sin fuga: PM-004 requiere title: expected {[BODY_REDACTED]} to have property &apos;title&apos;"/>
+    </testcase>
+    <testcase classname="INT-07" name="PM-004B - Negativo: Token malformado o invalido (401)" time="0.040">
+      <failure message="PM-004B: HTTP 401 Problem Details TOKEN_INVALIDO sin fuga: PM-004B requiere title: expected {[BODY_REDACTED]} to have property &apos;title&apos;"/>
+    </testcase>
+    <testcase classname="INT-07" name="PM-005 - Negativo: Autorizacion insuficiente (403 estricto)" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_RESTRICTED_ACCESS_TOKEN (identidad autenticada sin permiso para validar 403)."/>
+    </testcase>
+    <testcase classname="INT-01" name="PM-006 - Negativo: Recurso inexistente (404)" time="0.297">
+    </testcase>
+    <testcase classname="INT-01" name="PM-007A - Negativo: Rango de precios inconsistente (precioMin &gt; precioMax)" time="0.052">
+    </testcase>
+    <testcase classname="INT-01" name="PM-007B - Negativo: Canal y paginacion invalidos (400)" time="0.309">
+    </testcase>
+    <testcase classname="INT-07" name="PM-008 - Negativo: Ruta desconocida en APIM/Gateway (404)" time="0.037">
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -1,0 +1,18 @@
+{
+  "runId": "azure-apim-integration-jws-2026-11-28",
+  "overallVerdict": "FAIL",
+  "totals": {
+    "planned": 36,
+    "executed": 33,
+    "requests": 36,
+    "pass": 27,
+    "fail": 5,
+    "inconclusive": 0,
+    "notRun": 4,
+    "assertionsTotal": 33,
+    "assertionsPassed": 28,
+    "assertionsFailed": 5,
+    "durationMs": 19101
+  },
+  "generatedAtUtc": "2026-11-28T05:03:29.707Z"
+}

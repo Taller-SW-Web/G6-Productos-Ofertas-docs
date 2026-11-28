@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0.0",
+  "runId": "azure-apim-smoke-jws-2026-11-28",
+  "generatedAtUtc": "2026-11-28T05:03:07.348Z",
+  "note": "evidence-index.json no se incluye en su propio calculo de checksum.",
+  "artifacts": [
+    {
+      "file": "manifest.json",
+      "bytes": 2114,
+      "sha256": "5735f7f5c9a90b760f0b0a152f8ed3dc23c3c823653e02cfe178f957cf812c1c"
+    },
+    {
+      "file": "newman-summary.json",
+      "bytes": 378,
+      "sha256": "2d18beb8f3679bea5210fbb700bf839053921b357fd1e016617ac11a585fd4fc"
+    },
+    {
+      "file": "integration-results.json",
+      "bytes": 12505,
+      "sha256": "8ba17a018bb17be0055f4f8f320b69b4b3426df52b60708b1fccd67adba2f649"
+    },
+    {
+      "file": "newman.junit.xml",
+      "bytes": 2368,
+      "sha256": "063bf1bf452e2eb42ba50f9ea280649e8562b48cc798e1f68008d21a4880e03f"
+    },
+    {
+      "file": "report.md",
+      "bytes": 3977,
+      "sha256": "07b292723e26611fbffde3676f7d4f7f4743b782569c24170ca5d81a1f9c9f86"
+    }
+  ]
+}

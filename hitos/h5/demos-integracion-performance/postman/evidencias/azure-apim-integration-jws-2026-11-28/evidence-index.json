@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0.0",
+  "runId": "azure-apim-integration-jws-2026-11-28",
+  "generatedAtUtc": "2026-11-28T05:03:29.950Z",
+  "note": "evidence-index.json no se incluye en su propio calculo de checksum.",
+  "artifacts": [
+    {
+      "file": "manifest.json",
+      "bytes": 3283,
+      "sha256": "4c886b16ff58ccb76a2f4eedfaf3338c8ec1fcca278faace26c0573086436942"
+    },
+    {
+      "file": "newman-summary.json",
+      "bytes": 386,
+      "sha256": "53a135a0efeb7e7f355684f2cb956691eb1a9fb4064dcff0ecc19c9e033d802a"
+    },
+    {
+      "file": "integration-results.json",
+      "bytes": 35202,
+      "sha256": "4247d1f43a2224fcb1fa28946cdd4881c31099c3064a3c44b89eab89599f87e4"
+    },
+    {
+      "file": "newman.junit.xml",
+      "bytes": 6142,
+      "sha256": "c17803b728cdaefb4c6c19f8946b48cd1221b5db3cd09dddaeb13027347e42f8"
+    },
+    {
+      "file": "report.md",
+      "bytes": 8553,
+      "sha256": "1da2a0487128d843491e1233f0544f98283d0ee4d86d3d199f44151d89ac391f"
+    }
+  ]
+}
