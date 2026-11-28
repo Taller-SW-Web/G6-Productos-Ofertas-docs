@@ -25,6 +25,27 @@ export function redactString(input, extraSecrets = []) {
   return out;
 }
 
+/**
+ * H09: Evita que mensajes de excepcion (como JSON.parse o aserciones Chai) incorporen
+ * cuerpos de respuesta privados en las evidencias publicadas.
+ */
+export function sanitizeErrorMessage(rawMessage, extraSecrets = []) {
+  if (!rawMessage) return null;
+  const text = typeof rawMessage === 'string' ? rawMessage : String(rawMessage);
+  // Keep only the first line so multi-line echoed response bodies are never persisted
+  let firstLine = text.split(/\r?\n/)[0].trim();
+  // Strip JSON object/array payloads that Chai or JSON.parse might embed inline
+  firstLine = firstLine.replace(/\{[^}]{12,}\}/g, '{[BODY_REDACTED]}');
+  firstLine = firstLine.replace(/\[[^\]]{24,}\]/g, '[[BODY_REDACTED]]');
+  // Redact email addresses or private tokens inside error messages
+  firstLine = firstLine.replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[EMAIL_REDACTED]');
+  firstLine = redactString(firstLine, extraSecrets);
+  if (firstLine.length > 220) {
+    firstLine = `${firstLine.slice(0, 217)}...`;
+  }
+  return firstLine;
+}
+
 export function sanitizeUrl(rawUrl, extraSecrets = []) {
   if (!rawUrl || typeof rawUrl !== 'string') return '';
   try {
@@ -73,9 +94,18 @@ function extractPmId(itemName = '') {
   return match ? match[1] : 'PM-UNKNOWN';
 }
 
+export function computeOverallVerdict(totals) {
+  if (totals.fail > 0) return 'FAIL';
+  if (totals.inconclusive > 0) return 'INCONCLUSIVE';
+  if (totals.planned > 0 && totals.notRun > 0) return 'PARTIAL_NOT_COMPLETE';
+  if (totals.planned > 0 && totals.pass === totals.planned) return 'PASS';
+  if (totals.requests > 0 && totals.pass === totals.requests && totals.notRun === 0) return 'PASS';
+  return 'INCONCLUSIVE';
+}
+
 /**
  * Construye el reporte saneado usando exclusivamente una lista explicita de campos permitidos
- * (allowlist), descartando cuerpos de respuesta/solicitud y headers sensibles.
+ * (allowlist), reconciliando casos planificados vs ejecutados (H04) y saneando excepciones (H09).
  */
 export function sanitizeNewmanRun(rawSummary, options = {}) {
   const {
@@ -84,6 +114,7 @@ export function sanitizeNewmanRun(rawSummary, options = {}) {
     profile = 'smoke',
     extraSecrets = [],
     evidenceLevel = 'LAB_AZURE',
+    plannedCases = null, // Array of { pmId, name, method, url, executable, blockerReason }
   } = options;
 
   if (!rawSummary || typeof rawSummary !== 'object' || !rawSummary.run) {
@@ -91,12 +122,18 @@ export function sanitizeNewmanRun(rawSummary, options = {}) {
   }
 
   const executions = Array.isArray(rawSummary.run.executions) ? rawSummary.run.executions : [];
-  const cases = [];
+  const executedById = new Map();
+  const executedList = [];
 
   for (const exec of executions) {
     const itemName = redactString(exec.item?.name || 'Unnamed request', extraSecrets);
     const pmId = extractPmId(itemName);
-    const meta = CASE_METADATA[pmId] || { intId: 'N/A', services: ['api-gateway'], type: 'lectura', scope: 'desconocido' };
+    const meta = CASE_METADATA[pmId] || {
+      intId: 'N/A',
+      services: ['api-gateway'],
+      type: 'lectura',
+      scope: 'desconocido',
+    };
 
     const reqHeaders = exec.request?.header || [];
     const resHeaders = exec.response?.header || [];
@@ -110,13 +147,13 @@ export function sanitizeNewmanRun(rawSummary, options = {}) {
     const assertions = assertionsRaw.map((a) => ({
       name: redactString(a.assertion || '', extraSecrets),
       passed: !a.error,
-      errorMessage: a.error ? redactString(a.error.message || String(a.error), extraSecrets) : null,
+      errorMessage: a.error ? sanitizeErrorMessage(a.error.message || String(a.error), extraSecrets) : null,
     }));
 
     const passedAssertions = assertions.filter((a) => a.passed).length;
     const failedAssertions = assertions.filter((a) => !a.passed).length;
     const requestError = exec.requestError
-      ? redactString(
+      ? sanitizeErrorMessage(
           exec.requestError.message ||
             exec.requestError.code ||
             (typeof exec.requestError === 'object' ? JSON.stringify(exec.requestError) : String(exec.requestError)),
@@ -137,7 +174,6 @@ export function sanitizeNewmanRun(rawSummary, options = {}) {
       blockerReason = 'No se ejecutaron aserciones en la solicitud.';
     }
 
-    // Extract safe URL without query secret leakage
     let rawUrl = '';
     if (typeof exec.request?.url === 'string') {
       rawUrl = exec.request.url;
@@ -153,7 +189,7 @@ export function sanitizeNewmanRun(rawSummary, options = {}) {
       rawUrl = `${proto}${host}${port}${path}${query}`;
     }
 
-    cases.push({
+    const record = {
       pmId,
       intId: meta.intId,
       name: itemName,
@@ -174,33 +210,88 @@ export function sanitizeNewmanRun(rawSummary, options = {}) {
       evidenceLevel,
       status,
       blockerReason,
-    });
+    };
+
+    executedById.set(pmId, record);
+    executedList.push(record);
+  }
+
+  // Reconcile plannedCases vs executedCases (H04)
+  let cases;
+  if (Array.isArray(plannedCases) && plannedCases.length > 0) {
+    cases = [];
+    for (const plan of plannedCases) {
+      const executed = executedById.get(plan.pmId);
+      if (executed) {
+        cases.push(executed);
+      } else {
+        const meta = CASE_METADATA[plan.pmId] || {
+          intId: 'N/A',
+          services: ['api-gateway'],
+          type: 'lectura',
+          scope: 'desconocido',
+        };
+        const isBlockedNotRun = !plan.executable;
+        cases.push({
+          pmId: plan.pmId,
+          intId: meta.intId,
+          name: redactString(plan.name, extraSecrets),
+          services: meta.services,
+          type: meta.type,
+          scope: meta.scope,
+          method: plan.method || 'GET',
+          url: sanitizeUrl(plan.url || '', extraSecrets),
+          httpStatus: null,
+          contentType: '',
+          durationMs: 0,
+          correlationId: '',
+          assertionsTotal: 0,
+          assertionsPassed: 0,
+          assertionsFailed: 0,
+          assertions: [],
+          requestError: null,
+          evidenceLevel,
+          status: isBlockedNotRun ? 'NOT_RUN' : 'INCONCLUSIVE',
+          blockerReason: isBlockedNotRun
+            ? plan.blockerReason || 'Caso no ejecutado por bloqueo previo.'
+            : 'Caso planificado para ejecucion pero ausente en el resultado de Newman (ejecucion incompleta).',
+        });
+      }
+    }
+  } else {
+    cases = executedList;
   }
 
   const timings = rawSummary.run.timings || {};
   const totalDurationMs = timings.completed && timings.started ? timings.completed - timings.started : 0;
+
+  const totals = {
+    planned: Array.isArray(plannedCases) && plannedCases.length > 0 ? plannedCases.length : cases.length,
+    executed: executedList.length,
+    requests: cases.length,
+    pass: cases.filter((c) => c.status === 'PASS').length,
+    fail: cases.filter((c) => c.status === 'FAIL').length,
+    inconclusive: cases.filter((c) => c.status === 'INCONCLUSIVE').length,
+    notRun: cases.filter((c) => c.status === 'NOT_RUN').length,
+    assertionsTotal: cases.reduce((acc, c) => acc + c.assertionsTotal, 0),
+    assertionsPassed: cases.reduce((acc, c) => acc + c.assertionsPassed, 0),
+    assertionsFailed: cases.reduce((acc, c) => acc + c.assertionsFailed, 0),
+    durationMs: totalDurationMs,
+  };
+
+  const overallVerdict = computeOverallVerdict(totals);
 
   const summary = {
     runId,
     environmentName,
     profile,
     evidenceLevel,
+    overallVerdict,
     generatedAtUtc: new Date().toISOString(),
-    totals: {
-      requests: cases.length,
-      pass: cases.filter((c) => c.status === 'PASS').length,
-      fail: cases.filter((c) => c.status === 'FAIL').length,
-      inconclusive: cases.filter((c) => c.status === 'INCONCLUSIVE').length,
-      notRun: cases.filter((c) => c.status === 'NOT_RUN').length,
-      assertionsTotal: cases.reduce((acc, c) => acc + c.assertionsTotal, 0),
-      assertionsPassed: cases.reduce((acc, c) => acc + c.assertionsPassed, 0),
-      assertionsFailed: cases.reduce((acc, c) => acc + c.assertionsFailed, 0),
-      durationMs: totalDurationMs,
-    },
+    totals,
     cases,
   };
 
-  // Fail-closed leak check before returning
   const serialized = JSON.stringify(summary);
   const leakCheck = containsSensitiveLeak(serialized, extraSecrets);
   if (leakCheck.leaked) {

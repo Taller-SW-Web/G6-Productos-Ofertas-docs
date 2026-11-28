@@ -3,8 +3,11 @@ import { join, resolve } from 'node:path';
 import {
   ALL_AUTHORIZED_HOSTS,
   AUTHORIZED_HOSTS,
+  CASE_METADATA,
   COLLECTION_PATH,
+  COVERAGE_CSV_PATH,
   ENVIRONMENTS_DIR,
+  OPENAPI_CONTRACT_PATH,
   PROFILES,
   SAFE_READ_ONLY_METHODS,
   SENSITIVE_VALUE_PATTERNS,
@@ -24,7 +27,7 @@ export function validateBaseUrl(baseUrl, environmentName) {
   try {
     parsed = new URL(baseUrl);
   } catch {
-    return { ok: false, errors: [`baseUrl invalida: no es una URL bien formada.`] };
+    return { ok: false, errors: ['baseUrl invalida: no es una URL bien formada.'] };
   }
 
   if (parsed.username || parsed.password) {
@@ -96,7 +99,6 @@ export function scanFilesForSecrets(rootDir, { ignoreDirs = ['node_modules', '.g
         walk(fullPath);
       } else if (stat.isFile() && stat.size < 2 * 1024 * 1024) {
         if (entry.endsWith('.lock') || entry === 'package-lock.json') continue;
-        // Skip test files that intentionally use synthetic secrets
         if (fullPath.includes(`${join('tests', '')}`) || entry.endsWith('.test.mjs')) continue;
         const content = readFileSync(fullPath, 'utf8');
         for (const pattern of SENSITIVE_VALUE_PATTERNS) {
@@ -114,6 +116,182 @@ export function scanFilesForSecrets(rootDir, { ignoreDirs = ['node_modules', '.g
 
   walk(rootDir);
   return findings;
+}
+
+export function parseOpenApiRoutes(openApiPath = OPENAPI_CONTRACT_PATH) {
+  if (!existsSync(openApiPath)) {
+    return { ok: false, routes: new Set(), pathCount: 0, operationCount: 0 };
+  }
+  const lines = readFileSync(openApiPath, 'utf8').split(/\r?\n/);
+  const routes = new Set();
+  const pathsSet = new Set();
+  let inPaths = false;
+  let currentPath = null;
+
+  for (const line of lines) {
+    if (line === 'paths:') {
+      inPaths = true;
+      continue;
+    }
+    if (inPaths && /^[a-zA-Z]/.test(line)) {
+      break;
+    }
+    if (!inPaths) continue;
+
+    const pathMatch = line.match(/^  (\/[^:\s]+):\s*$/);
+    if (pathMatch) {
+      currentPath = pathMatch[1];
+      pathsSet.add(currentPath);
+      continue;
+    }
+    const methodMatch = line.match(/^    (get|post|put|patch|delete|head|options):\s*$/);
+    if (methodMatch && currentPath) {
+      routes.add(`${methodMatch[1].toUpperCase()} ${currentPath}`);
+    }
+  }
+
+  return { ok: true, routes, pathCount: pathsSet.size, operationCount: routes.size };
+}
+
+function normalizeCollectionPathToOpenApi(rawUrl) {
+  const withoutQuery = String(rawUrl || '').split('?')[0];
+  let pathPart = withoutQuery
+    .replace('{{baseUrl}}', '')
+    .replace('{{apiPrefix}}', '')
+    .replace(/^https?:\/\/[^/]+/i, '');
+  if (pathPart.startsWith('/api/v1')) {
+    pathPart = pathPart.slice('/api/v1'.length);
+  }
+  // Replace Postman {{var}} segments with wildcard regex matcher for OpenAPI {param}
+  return pathPart;
+}
+
+function matchesOpenApiRoute(method, normalizedPath, openApiRoutes) {
+  const segs = normalizedPath.split('/').filter(Boolean);
+  for (const route of openApiRoutes) {
+    const [m, p] = route.split(' ');
+    if (m !== method) continue;
+    const oSegs = p.split('/').filter(Boolean);
+    if (oSegs.length !== segs.length) continue;
+    let match = true;
+    for (let i = 0; i < segs.length; i += 1) {
+      const isParam = oSegs[i].startsWith('{') && oSegs[i].endsWith('}');
+      const isVar = segs[i].startsWith('{{') && segs[i].endsWith('}}');
+      if (isParam) continue;
+      if (isVar || oSegs[i] !== segs[i]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) return route;
+  }
+  return null;
+}
+
+export function validateCollectionAgainstOpenApi(
+  collectionPath = COLLECTION_PATH,
+  openApiPath = OPENAPI_CONTRACT_PATH,
+) {
+  const errors = [];
+  const col = validateCollectionStructure(collectionPath);
+  if (!col.ok) {
+    return { ok: false, errors: col.errors, matchedCount: 0, openApiOperationCount: 0 };
+  }
+
+  const parsed = parseOpenApiRoutes(openApiPath);
+  if (!parsed.ok) {
+    return {
+      ok: false,
+      errors: [`No se pudo leer contrato OpenAPI oficial en ${openApiPath}`],
+      matchedCount: 0,
+      openApiOperationCount: 0,
+    };
+  }
+
+  let matchedCount = 0;
+  for (const req of col.requests) {
+    const pmId = req.name.match(/^(PM-\d+[A-Z]?)\b/)?.[1];
+    const meta = CASE_METADATA[pmId];
+    if (!meta) {
+      errors.push(`Caso '${pmId}' no esta registrado en CASE_METADATA (scripts/lib/constants.mjs).`);
+      continue;
+    }
+    if (meta.openApiExempt) {
+      matchedCount += 1;
+      continue;
+    }
+    const normalizedPath = normalizeCollectionPathToOpenApi(req.url);
+    const matched = matchesOpenApiRoute(req.method, normalizedPath, parsed.routes);
+    if (!matched) {
+      errors.push(
+        `Operacion fuera de OpenAPI oficial (${req.method} ${normalizedPath}) en "${req.name}".`,
+      );
+    } else {
+      matchedCount += 1;
+    }
+  }
+
+  return {
+    ok: errors.length === 0,
+    errors,
+    matchedCount,
+    openApiOperationCount: parsed.operationCount,
+  };
+}
+
+export function validateMatrixParity(
+  collectionPath = COLLECTION_PATH,
+  csvPath = COVERAGE_CSV_PATH,
+) {
+  const errors = [];
+  const col = validateCollectionStructure(collectionPath);
+  if (!col.ok) return { ok: false, errors: col.errors };
+  if (!existsSync(csvPath)) {
+    return { ok: false, errors: [`Matriz CSV no encontrada: ${csvPath}`] };
+  }
+
+  const collectionIds = new Set(
+    col.requests.map((r) => r.name.match(/^(PM-\d+[A-Z]?)\b/)?.[1]).filter(Boolean),
+  );
+  const metaIds = new Set(Object.keys(CASE_METADATA));
+
+  for (const id of collectionIds) {
+    if (!metaIds.has(id)) {
+      errors.push(`ID ${id} existe en la coleccion pero falta en CASE_METADATA.`);
+    }
+  }
+  for (const id of metaIds) {
+    if (!collectionIds.has(id)) {
+      errors.push(`ID ${id} existe en CASE_METADATA pero falta en la coleccion.`);
+    }
+  }
+
+  const csvLines = readFileSync(csvPath, 'utf8').trim().split(/\r?\n/).slice(1);
+  const csvImplementedIds = new Set();
+  for (const line of csvLines) {
+    const id = line.split(',')[0]?.trim();
+    if (id && /^PM-\d+[A-Z]?$/.test(id)) {
+      csvImplementedIds.add(id);
+    }
+  }
+
+  for (const id of collectionIds) {
+    if (!csvImplementedIds.has(id)) {
+      errors.push(`ID ${id} existe en la coleccion pero falta en cobertura-integracion.csv.`);
+    }
+  }
+  for (const id of csvImplementedIds) {
+    if (!collectionIds.has(id)) {
+      errors.push(`ID ${id} existe en cobertura-integracion.csv pero falta en la coleccion.`);
+    }
+  }
+
+  return {
+    ok: errors.length === 0,
+    errors,
+    collectionCount: collectionIds.size,
+    csvCount: csvImplementedIds.size,
+  };
 }
 
 export function validateCollectionStructure(collectionPath = COLLECTION_PATH) {
@@ -180,12 +358,13 @@ export function validateCollectionStructure(collectionPath = COLLECTION_PATH) {
 export function runPreflight(options = {}) {
   const {
     baseUrl,
-    environmentName = 'azure-aca-chile',
-    profile = 'smoke',
+    environmentName = 'azure-apim-chile',
+    profile = 'apim-edge',
     folder = null,
     requireAuth = true,
     accessToken = '',
-    serviceAccessToken = '',
+    marketplaceAccessToken = '',
+    ventasAccessToken = '',
     collectionPath = COLLECTION_PATH,
     scanRoot = resolve(ENVIRONMENTS_DIR, '..'),
     skipSecretScan = false,
@@ -196,13 +375,11 @@ export function runPreflight(options = {}) {
   const errors = [];
   const warnings = [];
 
-  // 1. Node.js version
   const nodeMajor = Number(process.versions.node.split('.')[0]);
   const nodeOk = Number.isFinite(nodeMajor) && nodeMajor >= 20;
   checks.push({ id: 'node_version', ok: nodeOk, detail: `Node.js ${process.versions.node}` });
   if (!nodeOk) errors.push(`Se requiere Node.js >= 20 (actual: ${process.versions.node}).`);
 
-  // 2. Profile / folder selection
   if (profile && !PROFILES[profile] && !folder) {
     const msg = `Perfil desconocido: '${profile}'. Perfiles validos: ${Object.keys(PROFILES).join(', ')}.`;
     checks.push({ id: 'profile', ok: false, detail: msg });
@@ -211,7 +388,6 @@ export function runPreflight(options = {}) {
     checks.push({ id: 'profile', ok: true, detail: folder ? `Carpeta: ${folder}` : `Perfil: ${profile}` });
   }
 
-  // 3. Collection validity
   const colCheck = validateCollectionStructure(collectionPath);
   checks.push({
     id: 'collection',
@@ -220,7 +396,6 @@ export function runPreflight(options = {}) {
   });
   if (!colCheck.ok) errors.push(...colCheck.errors);
 
-  // 4. Base URL & authorized host
   const urlCheck = validateBaseUrl(baseUrl, environmentName);
   checks.push({
     id: 'base_url',
@@ -229,26 +404,25 @@ export function runPreflight(options = {}) {
   });
   if (!urlCheck.ok) errors.push(...urlCheck.errors);
 
-  // 5. Credentials check
-  const hasToken = Boolean(accessToken && accessToken.trim().length > 0);
-  const hasServiceToken = Boolean(serviceAccessToken && serviceAccessToken.trim().length > 0);
-  if (requireAuth && !hasToken && !hasServiceToken) {
-    const msg = 'No se proporciono accessToken (userBearer) ni serviceAccessToken (serviceBearer) para pruebas autenticadas.';
+  const hasAnyToken = Boolean(
+    (accessToken && accessToken.trim()) ||
+    (marketplaceAccessToken && marketplaceAccessToken.trim()) ||
+    (ventasAccessToken && ventasAccessToken.trim()),
+  );
+  if (requireAuth && !hasAnyToken) {
+    const msg = 'No se proporciono G6_ACCESS_TOKEN ni tokens M2M (G6_MARKETPLACE_ACCESS_TOKEN / G6_VENTAS_ACCESS_TOKEN) para pruebas autenticadas.';
     checks.push({ id: 'credentials', ok: false, detail: msg });
     errors.push(msg);
   } else {
     checks.push({
       id: 'credentials',
       ok: true,
-      detail: hasToken
-        ? 'Credencial userBearer presente en memoria (redactada)'
-        : hasServiceToken
-          ? 'Credencial serviceBearer presente en memoria (redactada)'
-          : 'Autenticacion no requerida por configuracion explicita',
+      detail: hasAnyToken
+        ? 'Credenciales presentes en memoria (redactadas); casos sin su token especifico se registraran como NOT_RUN'
+        : 'Modo sin autenticacion explicito (--allow-no-auth): solo se ejecutaran casos publicos/negativos 401/404; el resto quedara NOT_RUN',
     });
   }
 
-  // 6. Fixtures validation (priceMin <= priceMax when provided)
   const priceMin = fixtures.priceMin !== undefined ? Number(fixtures.priceMin) : 0;
   const priceMax = fixtures.priceMax !== undefined ? Number(fixtures.priceMax) : 100;
   const fixturesOk = Number.isFinite(priceMin) && Number.isFinite(priceMax) && priceMin >= 0 && priceMin <= priceMax;
@@ -259,7 +433,6 @@ export function runPreflight(options = {}) {
   });
   if (!fixturesOk) errors.push('Fixtures de rango de precios invalidos: priceMin debe ser >= 0 y <= priceMax.');
 
-  // 7. Secret scan on versioned files
   if (!skipSecretScan) {
     const secretFindings = scanFilesForSecrets(scanRoot);
     const secretsOk = secretFindings.length === 0;
@@ -275,7 +448,7 @@ export function runPreflight(options = {}) {
 
   if (environmentName === 'azure-aca-chile') {
     warnings.push(
-      'APIM aun no cuenta con instancia operativa desplegada (NOT_RUN_BLOCKED_INFRA); la ejecucion apunta al Gateway ACA autorizado.',
+      'Entorno ACA directo protegido por Modalidad B (espera 403 RBAC desde IPs externas). Para pruebas de borde externas utilice azure-apim-chile.',
     );
   }
 

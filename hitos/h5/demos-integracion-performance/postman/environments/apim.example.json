@@ -1,0 +1,32 @@
+{
+  "id": "g6-h5-env-apim-example",
+  "name": "G6 H5 - Azure APIM Chile (Example)",
+  "values": [
+    { "key": "environmentName", "value": "azure-apim-chile", "type": "default", "enabled": true },
+    { "key": "baseUrl", "value": "https://apim-g6-productos-chile.azure-api.net", "type": "default", "enabled": true },
+    { "key": "apiPrefix", "value": "/api/v1", "type": "default", "enabled": true },
+    { "key": "g7BaseUrl", "value": "https://g7-auth-service.onrender.com/api/v1", "type": "default", "enabled": true },
+    { "key": "channel", "value": "MARKETPLACE", "type": "default", "enabled": true },
+    { "key": "accessToken", "value": "", "type": "secret", "enabled": true },
+    { "key": "restrictedAccessToken", "value": "", "type": "secret", "enabled": true },
+    { "key": "marketplaceAccessToken", "value": "", "type": "secret", "enabled": true },
+    { "key": "ventasAccessToken", "value": "", "type": "secret", "enabled": true },
+    { "key": "productId", "value": "", "type": "default", "enabled": true },
+    { "key": "sku", "value": "", "type": "default", "enabled": true },
+    { "key": "categoryId", "value": "", "type": "default", "enabled": true },
+    { "key": "brandId", "value": "", "type": "default", "enabled": true },
+    { "key": "comboId", "value": "", "type": "default", "enabled": true },
+    { "key": "priceMin", "value": "0", "type": "default", "enabled": true },
+    { "key": "priceMax", "value": "100", "type": "default", "enabled": true },
+    { "key": "priceMaxNarrow", "value": "60", "type": "default", "enabled": true },
+    { "key": "nonExistentProductId", "value": "00000000-0000-4000-8000-000000000404", "type": "default", "enabled": true },
+    { "key": "nonExistentSku", "value": "SKU-NO-EXISTE-H5-404", "type": "default", "enabled": true },
+    { "key": "nonExistentBatchId", "value": "00000000-0000-4000-8000-000000000405", "type": "default", "enabled": true },
+    { "key": "nonExistentComboId", "value": "00000000-0000-4000-8000-000000000406", "type": "default", "enabled": true },
+    { "key": "nonExistentCategoryId", "value": "00000000-0000-4000-8000-000000000407", "type": "default", "enabled": true },
+    { "key": "allowedCorsOrigin", "value": "https://g6-productos-ofertas.vercel.app", "type": "default", "enabled": true },
+    { "key": "runId", "value": "manual-apim-run", "type": "default", "enabled": true },
+    { "key": "correlationId", "value": "", "type": "default", "enabled": true }
+  ],
+  "_postman_variable_scope": "environment"
+}

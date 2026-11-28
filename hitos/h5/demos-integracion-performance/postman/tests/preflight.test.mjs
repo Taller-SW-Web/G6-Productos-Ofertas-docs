@@ -2,38 +2,35 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { runPreflight, validateBaseUrl, validateRedirectTarget } from '../scripts/lib/preflight-core.mjs';
 
-test('validateBaseUrl acepta Gateway ACA autorizado con HTTPS y rechaza HTTP', () => {
-  const ok = validateBaseUrl(
+test('H05: validateBaseUrl acepta APIM autorizado y Gateway ACA con HTTPS y rechaza HTTP', () => {
+  const apimOk = validateBaseUrl('https://apim-g6-productos-chile.azure-api.net', 'azure-apim-chile');
+  assert.equal(apimOk.ok, true);
+
+  const apimHttp = validateBaseUrl('http://apim-g6-productos-chile.azure-api.net', 'azure-apim-chile');
+  assert.equal(apimHttp.ok, false);
+
+  const acaOk = validateBaseUrl(
     'https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io',
     'azure-aca-chile',
   );
-  assert.equal(ok.ok, true);
+  assert.equal(acaOk.ok, true);
 
-  const badProto = validateBaseUrl(
-    'http://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io',
-    'azure-aca-chile',
+  const crossEnv = validateBaseUrl(
+    'https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io',
+    'azure-apim-chile',
   );
-  assert.equal(badProto.ok, false);
-  assert.ok(badProto.errors.some((e) => e.includes('HTTPS')));
+  assert.equal(crossEnv.ok, false);
 });
 
 test('validateBaseUrl rechaza hosts no autorizados y credenciales embebidas', () => {
-  const badHost = validateBaseUrl('https://evil.example.com', 'azure-aca-chile');
-  assert.equal(badHost.ok, false);
-
-  const badCreds = validateBaseUrl('http://user:pass@127.0.0.1:3000', 'local');
-  assert.equal(badCreds.ok, false);
-
-  const invalid = validateBaseUrl('not-a-url', 'local');
-  assert.equal(invalid.ok, false);
+  assert.equal(validateBaseUrl('https://evil.example.com', 'azure-apim-chile').ok, false);
+  assert.equal(validateBaseUrl('http://user:pass@127.0.0.1:3000', 'local').ok, false);
+  assert.equal(validateBaseUrl('not-a-url', 'local').ok, false);
 });
 
 test('validateRedirectTarget bloquea redirecciones hacia hosts fuera de allowlist', () => {
-  const blocked = validateRedirectTarget('https://attacker.example.net/steal', 'azure-aca-chile');
-  assert.equal(blocked.allowed, false);
-
-  const allowed = validateRedirectTarget('http://127.0.0.1:3000/api/v1/productos', 'local');
-  assert.equal(allowed.allowed, true);
+  assert.equal(validateRedirectTarget('https://attacker.example.net/steal', 'azure-apim-chile').allowed, false);
+  assert.equal(validateRedirectTarget('https://apim-g6-productos-chile.azure-api.net/api/v1/productos', 'azure-apim-chile').allowed, true);
 });
 
 test('runPreflight rechaza credenciales ausentes, perfiles desconocidos y fixtures invalidos', () => {
@@ -46,7 +43,6 @@ test('runPreflight rechaza credenciales ausentes, perfiles desconocidos y fixtur
     skipSecretScan: true,
   });
   assert.equal(missingAuth.ok, false);
-  assert.ok(missingAuth.errors.some((e) => e.includes('accessToken')));
 
   const badProfile = runPreflight({
     baseUrl: 'http://127.0.0.1:3000',

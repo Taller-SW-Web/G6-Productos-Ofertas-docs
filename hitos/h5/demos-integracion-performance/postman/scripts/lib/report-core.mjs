@@ -26,7 +26,10 @@ export function buildManifest({
   deployedRevision = 'NO_VERIFICADO_EN_ESTA_CORRIDA',
   evidenceLevel = 'LAB_AZURE',
   deploymentState = 'NO_VERIFICADO',
-  selectedCases = [],
+  overallVerdict = 'INCONCLUSIVE',
+  plannedCases = [],
+  executedCases = [],
+  notRunCases = [],
   fixtures = {},
   blockers = [],
   durationMs = 0,
@@ -37,12 +40,13 @@ export function buildManifest({
     : 'UNAVAILABLE';
 
   return {
-    schemaVersion: '1.0.0',
+    schemaVersion: '1.1.0',
     runId,
     timestampUtc: new Date().toISOString(),
     environment: environmentName,
     targetOrigin: baseUrlOrigin,
     profile,
+    overallVerdict,
     subjects: {
       backendLocalHeadSha: backendSha,
       frontendLocalHeadSha: frontendSha,
@@ -62,7 +66,14 @@ export function buildManifest({
       openApiVersion: OPENAPI_CONTRACT_VERSION,
       path: 'contratos/http/openapi.yaml',
     },
-    selectedCases,
+    reconciliation: {
+      plannedCount: plannedCases.length,
+      executedCount: executedCases.length,
+      notRunCount: notRunCases.length,
+      plannedCases,
+      executedCases,
+      notRunCases,
+    },
     fixtures,
     evidenceLevel,
     deploymentState,
@@ -81,6 +92,7 @@ export function buildMarkdownReport(manifest, sanitizedSummary, extraSecrets = [
     `- **Fecha UTC:** \`${manifest.timestampUtc}\``,
     `- **Entorno:** \`${manifest.environment}\` (\`${manifest.targetOrigin}\`)`,
     `- **Perfil:** \`${manifest.profile}\``,
+    `- **Veredicto global:** **\`${sanitizedSummary.overallVerdict}\`**`,
     `- **Nivel de evidencia:** \`${manifest.evidenceLevel}\``,
     `- **Estado de despliegue:** \`${manifest.deploymentState}\``,
     `- **Contrato OpenAPI:** \`${manifest.contract.openApiVersion}\``,
@@ -90,11 +102,12 @@ export function buildMarkdownReport(manifest, sanitizedSummary, extraSecrets = [
     `- **SHA Frontend (local, solo lectura):** \`${manifest.subjects.frontendLocalHeadSha}\``,
     `- **SHA-256 Coleccion:** \`${manifest.collection.sha256}\``,
     '',
-    '## Resumen de ejecucion',
+    '## Resumen y reconciliacion de ejecucion',
     '',
     '| Metrica | Valor |',
     '|---|---:|',
-    `| Solicitudes ejecutadas | ${t.requests} |`,
+    `| Casos planificados | ${t.planned} |`,
+    `| Casos ejecutados en Newman | ${t.executed} |`,
     `| PASS | ${t.pass} |`,
     `| FAIL | ${t.fail} |`,
     `| INCONCLUSIVE | ${t.inconclusive} |`,
@@ -106,13 +119,13 @@ export function buildMarkdownReport(manifest, sanitizedSummary, extraSecrets = [
     '',
     '## Resultados por caso',
     '',
-    '| ID PM | ID INT | Caso | Metodo | HTTP | Aserciones | Duracion (ms) | Correlation ID | Estado |',
-    '|---|---|---|---|---:|---:|---:|---|---|',
+    '| ID PM | ID INT | Caso | Metodo | HTTP | Aserciones | Duracion (ms) | Correlation ID | Estado | Bloqueo / Nota |',
+    '|---|---|---|---|---:|---:|---:|---|---|---|',
   ];
 
   for (const c of sanitizedSummary.cases) {
     lines.push(
-      `| ${c.pmId} | ${c.intId} | ${c.name} | ${c.method} | ${c.httpStatus ?? 'ERR'} | ${c.assertionsPassed}/${c.assertionsTotal} | ${c.durationMs} | \`${c.correlationId || '-'}\` | **${c.status}** |`,
+      `| ${c.pmId} | ${c.intId} | ${c.name} | ${c.method} | ${c.httpStatus ?? '-'} | ${c.assertionsPassed}/${c.assertionsTotal} | ${c.durationMs} | \`${c.correlationId || '-'}\` | **${c.status}** | ${c.blockerReason || '-'} |`,
     );
   }
 
@@ -146,14 +159,22 @@ export function buildMarkdownReport(manifest, sanitizedSummary, extraSecrets = [
   return md;
 }
 
-/**
- * Escribe todos los artefactos saneados en outDir y genera evidence-index.json
- * con los hashes SHA-256 de los bytes efectivamente guardados (sin incluirse a si mismo).
- */
 export function writeEvidenceBundle(outDir, { manifest, sanitizedSummary, junitXml, markdownReport }) {
   const filesToWrite = [
     { name: 'manifest.json', content: `${JSON.stringify(manifest, null, 2)}\n` },
-    { name: 'newman-summary.json', content: `${JSON.stringify({ runId: sanitizedSummary.runId, totals: sanitizedSummary.totals, generatedAtUtc: sanitizedSummary.generatedAtUtc }, null, 2)}\n` },
+    {
+      name: 'newman-summary.json',
+      content: `${JSON.stringify(
+        {
+          runId: sanitizedSummary.runId,
+          overallVerdict: sanitizedSummary.overallVerdict,
+          totals: sanitizedSummary.totals,
+          generatedAtUtc: sanitizedSummary.generatedAtUtc,
+        },
+        null,
+        2,
+      )}\n`,
+    },
     { name: 'integration-results.json', content: `${JSON.stringify(sanitizedSummary, null, 2)}\n` },
     { name: 'newman.junit.xml', content: junitXml },
     { name: 'report.md', content: markdownReport },

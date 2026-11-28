@@ -2,23 +2,19 @@
 .SYNOPSIS
   Runner automatizado y seguro de Postman/Newman para G6 - Hito 5.
 
-.DESCRIPTION
-  Ejecuta preflight, inyecta credenciales desde variables de entorno (nunca por argumentos visibles),
-  corre Newman local, genera evidencia saneada con hashes SHA-256 y preserva el codigo de salida.
+.EXAMPLE
+  .\scripts\run-newman.ps1 -Profile apim-edge -Env azure-apim-chile -PromptToken -TimeoutMs 45000
 
 .EXAMPLE
-  .\scripts\run-newman.ps1 -Profile smoke -Env azure-aca-chile
-
-.EXAMPLE
-  .\scripts\run-newman.ps1 -Profile integration -Env local -BaseUrl http://127.0.0.1:3000 -AllowNoAuth
+  .\scripts\run-newman.ps1 -Profile smoke -Env azure-apim-chile -PromptToken -TimeoutMs 45000
 #>
 [CmdletBinding()]
 param(
-  [ValidateSet('smoke', 'integration')]
-  [string]$Profile = 'smoke',
+  [ValidateSet('apim-edge', 'smoke', 'integration')]
+  [string]$Profile = 'apim-edge',
 
-  [ValidateSet('azure-aca-chile', 'local')]
-  [string]$Env = 'azure-aca-chile',
+  [ValidateSet('azure-apim-chile', 'azure-aca-chile', 'local')]
+  [string]$Env = 'azure-apim-chile',
 
   [string]$BaseUrl = '',
   [string]$Folder = '',

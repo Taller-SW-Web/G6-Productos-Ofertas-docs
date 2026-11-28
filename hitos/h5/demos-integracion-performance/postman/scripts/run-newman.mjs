@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
   AUTHORIZED_HOSTS,
+  CASE_METADATA,
   COLLECTION_PATH,
   DOCS_ROOT,
   ENVIRONMENTS_DIR,
@@ -12,7 +13,7 @@ import {
   POSTMAN_ROOT,
   PROFILES,
 } from './lib/constants.mjs';
-import { runPreflight } from './lib/preflight-core.mjs';
+import { extractRequestsFromItems, runPreflight } from './lib/preflight-core.mjs';
 import { buildMarkdownReport, buildManifest, resolveGitHead, writeEvidenceBundle } from './lib/report-core.mjs';
 import { buildSanitizedJunitXml, sanitizeNewmanRun } from './lib/sanitizer-core.mjs';
 
@@ -66,15 +67,86 @@ function buildRuntimeEnvironment(envTemplatePath, overrides) {
   };
 }
 
+/**
+ * H02 + H04: Planificacion previa de casos seleccionados segun perfil/carpeta y disponibilidad
+ * real de credenciales. Ningun caso sin su credencial requerida se ejecuta para aprobar con 401.
+ */
+export function planExecution(collection, targetFolders, tokens = {}) {
+  const selectedFolders = new Set(targetFolders);
+  const plannedCases = [];
+
+  const filteredItems = (collection.item || [])
+    .filter((folder) => selectedFolders.has(folder.name))
+    .map((folder) => {
+      const keptRequests = [];
+      for (const reqItem of folder.item || []) {
+        const pmId = reqItem.name.match(/^(PM-\d+[A-Z]?)\b/)?.[1] || 'PM-UNKNOWN';
+        const meta = CASE_METADATA[pmId] || { authRequirement: 'user' };
+        const reqAuth = meta.authRequirement || 'user';
+
+        let executable = true;
+        let blockerReason = null;
+
+        if (reqAuth === 'user' && !tokens.accessToken) {
+          executable = false;
+          blockerReason = 'BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL).';
+        } else if (reqAuth === 'restricted' && !tokens.restrictedAccessToken) {
+          executable = false;
+          blockerReason = 'BLOCKED_AUTH: Requiere G6_RESTRICTED_ACCESS_TOKEN (identidad autenticada sin permiso para validar 403).';
+        } else if (reqAuth === 'marketplace' && !tokens.marketplaceAccessToken) {
+          executable = false;
+          blockerReason = 'BLOCKED_AUTH: Requiere G6_MARKETPLACE_ACCESS_TOKEN (serviceBearer modulo-marketplace).';
+        } else if (reqAuth === 'ventas' && !tokens.ventasAccessToken) {
+          executable = false;
+          blockerReason = 'BLOCKED_AUTH: Requiere G6_VENTAS_ACCESS_TOKEN (serviceBearer modulo-ventas).';
+        }
+
+        const rawUrl = typeof reqItem.request?.url === 'string'
+          ? reqItem.request.url
+          : reqItem.request?.url?.raw || '';
+
+        plannedCases.push({
+          pmId,
+          folder: folder.name,
+          name: reqItem.name,
+          method: (reqItem.request?.method || 'GET').toUpperCase(),
+          url: rawUrl,
+          authRequirement: reqAuth,
+          executable,
+          blockerReason,
+        });
+
+        if (executable) {
+          keptRequests.push(reqItem);
+        }
+      }
+
+      return { ...folder, item: keptRequests };
+    })
+    .filter((folder) => folder.item.length > 0);
+
+  const filteredCollection = {
+    ...collection,
+    item: filteredItems,
+  };
+
+  return {
+    plannedCases,
+    executableCount: plannedCases.filter((c) => c.executable).length,
+    notRunCount: plannedCases.filter((c) => !c.executable).length,
+    filteredCollection,
+  };
+}
+
 export async function executeSuite(options = {}) {
-  const environmentName = options.env || process.env.G6_ENV || 'azure-aca-chile';
+  const environmentName = options.env || process.env.G6_ENV || 'azure-apim-chile';
   const defaultBaseUrl =
     environmentName === 'local'
       ? 'http://127.0.0.1:3000'
-      : `https://${AUTHORIZED_HOSTS['azure-aca-chile'][0]}`;
+      : `https://${(AUTHORIZED_HOSTS[environmentName] || AUTHORIZED_HOSTS['azure-apim-chile'])[0]}`;
 
   const baseUrl = options.baseUrl || process.env.G6_BASE_URL || defaultBaseUrl;
-  const profile = options.profile || process.env.G6_PROFILE || 'smoke';
+  const profile = options.profile || process.env.G6_PROFILE || 'apim-edge';
   const folder = options.folder || null;
   const runId =
     options.runId ||
@@ -88,13 +160,18 @@ export async function executeSuite(options = {}) {
     (environmentName === 'local' ? 'ISOLATED' : 'LAB_AZURE');
   const deploymentState =
     options.deploymentState ||
-    (environmentName === 'local' ? 'LOCAL_HARNESS' : 'DESPLEGADO_VERIFICADO_HISTORICO');
+    (environmentName === 'local'
+      ? 'LOCAL_HARNESS'
+      : environmentName === 'azure-apim-chile'
+        ? 'APIM_LIVE_145_OPS'
+        : 'ACA_MODALIDAD_B_RESTRINGIDA');
   const outRoot = options.outDir ? resolve(options.outDir) : EVIDENCIAS_DIR;
 
   const accessToken = options.accessToken ?? process.env.G6_ACCESS_TOKEN ?? '';
-  const serviceAccessToken = options.serviceAccessToken ?? process.env.G6_SERVICE_ACCESS_TOKEN ?? '';
   const restrictedAccessToken = options.restrictedAccessToken ?? process.env.G6_RESTRICTED_ACCESS_TOKEN ?? '';
-  const extraSecrets = [accessToken, serviceAccessToken, restrictedAccessToken].filter(Boolean);
+  const marketplaceAccessToken = options.marketplaceAccessToken ?? process.env.G6_MARKETPLACE_ACCESS_TOKEN ?? '';
+  const ventasAccessToken = options.ventasAccessToken ?? process.env.G6_VENTAS_ACCESS_TOKEN ?? '';
+  const extraSecrets = [accessToken, restrictedAccessToken, marketplaceAccessToken, ventasAccessToken].filter(Boolean);
 
   const preflight = runPreflight({
     baseUrl,
@@ -103,7 +180,8 @@ export async function executeSuite(options = {}) {
     folder,
     requireAuth: !allowNoAuth,
     accessToken,
-    serviceAccessToken,
+    marketplaceAccessToken,
+    ventasAccessToken,
     collectionPath,
     scanRoot: POSTMAN_ROOT,
     skipSecretScan: Boolean(options.skipSecretScan),
@@ -123,7 +201,6 @@ export async function executeSuite(options = {}) {
     };
   }
 
-  // Load local Newman deterministically
   let newman;
   let newmanVersion = 'unknown';
   try {
@@ -140,7 +217,18 @@ export async function executeSuite(options = {}) {
     };
   }
 
-  // Create isolated private temp directory outside the repository
+  const rawCollection = JSON.parse(readFileSync(collectionPath, 'utf8'));
+  const targetFolders = folder
+    ? [folder]
+    : [...(PROFILES[profile]?.folders || PROFILES['apim-edge'].folders)];
+
+  const plan = planExecution(rawCollection, targetFolders, {
+    accessToken,
+    restrictedAccessToken,
+    marketplaceAccessToken,
+    ventasAccessToken,
+  });
+
   const privateTmpDir = mkdtempSync(join(tmpdir(), 'g6-h5-newman-'));
   const rawJsonPath = join(privateTmpDir, 'raw-newman.json');
   const tempEnvPath = join(privateTmpDir, 'runtime-env.json');
@@ -148,15 +236,18 @@ export async function executeSuite(options = {}) {
   const envTemplatePath =
     environmentName === 'local'
       ? join(ENVIRONMENTS_DIR, 'local.example.json')
-      : join(ENVIRONMENTS_DIR, 'environment.example.json');
+      : environmentName === 'azure-apim-chile'
+        ? join(ENVIRONMENTS_DIR, 'apim.example.json')
+        : join(ENVIRONMENTS_DIR, 'environment.example.json');
 
   const runtimeEnv = buildRuntimeEnvironment(envTemplatePath, {
     environmentName,
     baseUrl,
     channel: options.channel || process.env.G6_CHANNEL || 'MARKETPLACE',
     accessToken,
-    serviceAccessToken,
     restrictedAccessToken,
+    marketplaceAccessToken,
+    ventasAccessToken,
     productId: options.productId || process.env.G6_PRODUCT_ID || '',
     sku: options.sku || process.env.G6_SKU || '',
     priceMin: options.priceMin ?? process.env.G6_PRICE_MIN ?? '0',
@@ -167,57 +258,61 @@ export async function executeSuite(options = {}) {
 
   writeFileSync(tempEnvPath, JSON.stringify(runtimeEnv), { mode: 0o600 });
 
-  const targetFolders = folder
-    ? [folder]
-    : [...(PROFILES[profile]?.folders || PROFILES.smoke.folders)];
-
   const startedAt = Date.now();
   let newmanExitCode = 0;
   let newmanSummary = null;
   let newmanError = null;
 
-  try {
-    newmanSummary = await new Promise((resolveRun, rejectRun) => {
-      newman.run(
-        {
-          collection: collectionPath,
-          environment: tempEnvPath,
-          folder: targetFolders,
-          reporters: ['json'],
-          reporter: {
-            json: { export: rawJsonPath },
+  if (plan.executableCount > 0) {
+    try {
+      newmanSummary = await new Promise((resolveRun, rejectRun) => {
+        newman.run(
+          {
+            collection: plan.filteredCollection,
+            environment: tempEnvPath,
+            reporters: ['json'],
+            reporter: {
+              json: { export: rawJsonPath },
+            },
+            timeoutRequest: timeoutRequestMs,
+            ignoreRedirects: true,
+            bail: false,
           },
-          timeoutRequest: timeoutRequestMs,
-          ignoreRedirects: true,
-          bail: false,
-        },
-        (err, summary) => {
-          if (err) {
-            rejectRun(err);
-            return;
-          }
-          resolveRun(summary);
-        },
-      );
-    });
+          (err, summary) => {
+            if (err) {
+              rejectRun(err);
+              return;
+            }
+            resolveRun(summary);
+          },
+        );
+      });
 
-    const failures = newmanSummary?.run?.failures || [];
-    if (failures.length > 0) {
+      const failures = newmanSummary?.run?.failures || [];
+      if (failures.length > 0) {
+        newmanExitCode = 1;
+      }
+    } catch (err) {
+      newmanError = err;
       newmanExitCode = 1;
     }
-  } catch (err) {
-    newmanError = err;
-    newmanExitCode = 1;
+  } else {
+    newmanSummary = {
+      run: {
+        executions: [],
+        failures: [],
+        timings: { started: startedAt, completed: Date.now() },
+      },
+    };
   }
 
   const durationMs = Date.now() - startedAt;
 
-  // Sanitization MUST run even when Newman returns failures
   let sanitizedSummary;
   let junitXml;
   let manifest;
   let markdownReport;
-  let evidenceDir = join(outRoot, runId);
+  const evidenceDir = join(outRoot, runId);
 
   try {
     const rawData = existsSync(rawJsonPath)
@@ -234,7 +329,13 @@ export async function executeSuite(options = {}) {
       profile: folder ? `folder:${folder}` : profile,
       evidenceLevel,
       extraSecrets,
+      plannedCases: plan.plannedCases,
     });
+
+    // Preserve fail exit code if any case failed or was inconclusive
+    if (sanitizedSummary.totals.fail > 0 || sanitizedSummary.totals.inconclusive > 0) {
+      newmanExitCode = 1;
+    }
 
     junitXml = buildSanitizedJunitXml(sanitizedSummary, extraSecrets);
 
@@ -243,11 +344,11 @@ export async function executeSuite(options = {}) {
     const frontendRepo = process.env.G6_FRONTEND_ROOT || join(workspaceParent, 'G6-Productos-Ofertas-frontend-poma-hito-5-pruebas-v2');
 
     const blockers = [...preflight.warnings];
-    if (!restrictedAccessToken) {
-      blockers.push('PM-005: No se proporciono G6_RESTRICTED_ACCESS_TOKEN; la validacion 403 requiere una identidad autenticada sin permisos.');
-    }
-    if (!serviceAccessToken && targetFolders.includes('10 - Integraciones externas')) {
-      blockers.push('Carpeta 10: No se proporciono G6_SERVICE_ACCESS_TOKEN (serviceBearer M2M); los casos de consumidor externo requieren token tecnico autorizado.');
+    const notRunList = sanitizedSummary.cases.filter((c) => c.status === 'NOT_RUN');
+    if (notRunList.length > 0) {
+      blockers.push(
+        `Ejecucion parcial (${sanitizedSummary.overallVerdict}): ${notRunList.length} de ${sanitizedSummary.totals.planned} casos planificados quedaron NOT_RUN por credenciales ausentes.`,
+      );
     }
 
     manifest = buildManifest({
@@ -262,7 +363,10 @@ export async function executeSuite(options = {}) {
       docsSha: resolveGitHead(DOCS_ROOT),
       evidenceLevel,
       deploymentState,
-      selectedCases: sanitizedSummary.cases.map((c) => c.pmId),
+      overallVerdict: sanitizedSummary.overallVerdict,
+      plannedCases: plan.plannedCases.map((c) => c.pmId),
+      executedCases: sanitizedSummary.cases.filter((c) => c.status !== 'NOT_RUN').map((c) => c.pmId),
+      notRunCases: notRunList.map((c) => ({ pmId: c.pmId, reason: c.blockerReason })),
       fixtures: {
         channel: options.channel || process.env.G6_CHANNEL || 'MARKETPLACE',
         priceMin: Number(options.priceMin ?? process.env.G6_PRICE_MIN ?? 0),
@@ -284,7 +388,6 @@ export async function executeSuite(options = {}) {
       markdownReport,
     });
   } catch (sanitizeErr) {
-    // Distinguish sanitizer failure (exit code 4) from functional failure
     return {
       ok: false,
       exitCode: 4,
@@ -294,13 +397,13 @@ export async function executeSuite(options = {}) {
       originalTestExitCode: newmanExitCode,
     };
   } finally {
-    // Always remove temporary private secrets and raw results
     rmSync(privateTmpDir, { recursive: true, force: true });
   }
 
   return {
-    ok: newmanExitCode === 0,
+    ok: newmanExitCode === 0 && sanitizedSummary.overallVerdict === 'PASS',
     exitCode: newmanExitCode,
+    overallVerdict: sanitizedSummary.overallVerdict,
     stage: 'completed',
     runId,
     evidenceDir,
@@ -309,7 +412,6 @@ export async function executeSuite(options = {}) {
   };
 }
 
-// Direct CLI entrypoint
 const isMain = process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'));
 if (isMain) {
   const cli = parseArgs(process.argv.slice(2));
@@ -328,10 +430,13 @@ if (isMain) {
 
   if (res.stage === 'completed') {
     console.log(`\n=== Resumen de Ejecucion Newman (${res.runId}) ===`);
-    console.log(`  Solicitudes : ${res.totals.requests}`);
+    console.log(`  Veredicto   : ${res.overallVerdict}`);
+    console.log(`  Planificados: ${res.totals.planned}`);
+    console.log(`  Ejecutados  : ${res.totals.executed}`);
     console.log(`  PASS        : ${res.totals.pass}`);
     console.log(`  FAIL        : ${res.totals.fail}`);
     console.log(`  INCONCLUSIVE: ${res.totals.inconclusive}`);
+    console.log(`  NOT_RUN     : ${res.totals.notRun}`);
     console.log(`  Aserciones  : ${res.totals.assertionsPassed}/${res.totals.assertionsTotal}`);
     console.log(`  Duracion    : ${res.totals.durationMs} ms`);
     console.log(`  Evidencia   : ${res.evidenceDir}`);

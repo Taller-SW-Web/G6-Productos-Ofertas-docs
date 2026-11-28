@@ -2,25 +2,30 @@
 
 > **Nota normativa:** Esta matriz pertenece exclusivamente al paquete aislado de Postman/Newman y **no modifica** la matriz oficial del Hito 5 (`hitos/h5/07_MATRIZ_TRAZABILIDAD_Y_EVIDENCIAS.md`) ni la matriz de 158 operaciones (`hitos/h5/MATRIZ_158_OPERACIONES_H5_R2.csv`).
 
-## Alcance y denominadores diferenciados
+## Reconciliacion exacta de denominadores HTTP (H10)
 
-- **Operaciones totales del contrato OpenAPI `0.7.0-rc.3`:** 158 operaciones (incluyendo mutaciones `POST`/`PATCH`/`PUT`/`DELETE`, operaciones privadas internas no publicadas por Gateway y operaciones sujetas a feature flags o grants pendientes).
-- **Operaciones de lectura/consulta cubiertas por esta suite Postman:** **38 solicitudes** distribuidas en los **8 microservicios** de G6 + **API Gateway** (25 de lectura segura + 13 casos negativos contractuales y vistas de proveedor externo).
-- **Operaciones mutantes y mensajeria asincrona (Service Bus):** Excluidas intencionalmente del perfil ejecutable por defecto para no alterar datos compartidos de Supabase ni simular entregas asincronas. `INT-05` e `INT-10` requieren el harness especializado de Azure Service Bus en Backend.
-- **Estado de APIM:** No existe instancia operativa de Azure API Management desplegada (`NOT_RUN_BLOCKED_INFRA`); las ejecuciones reales apuntan al **API Gateway ACA autorizado** (`api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io`).
+| Universo | Cantidad | Composicion verificada |
+|---|---:|---|
+| OpenAPI canonico `0.7.0-rc.3` (`contratos/http/openapi.yaml`) | **156** | Operaciones HTTP contractuales (lectura + mutacion + internas) |
+| APIM live (`apim-g6-productos-chile.azure-api.net`, `/api/v1`) | **145** | 156 OpenAPI menos 5 rutas internas G6→G6, 4 rutas G5 pendientes de publicacion en candidato #307 (149) y 2 lecturas admin Pricing excluidas |
+| Matriz certificadora R2 (`MATRIZ_158_OPERACIONES_H5_R2.csv`) | **158** | 156 OpenAPI + 2 probes privados de Gateway (`/health/live`, `/health/ready`) |
+| **Suite Postman/Newman (`G6 - H5 Integration Suite`)** | **38** | **38 solicitudes implementadas** (100% conciliadas con `CASE_METADATA` y [`cobertura-integracion.csv`](cobertura-integracion.csv)): 25 lectura segura + 10 negativos contractuales + 3 vistas de proveedor externo M2M |
 
-## Resumen por microservicio
+- **Operaciones mutantes (`POST`/`PATCH`/`PUT`/`DELETE`) y mensajeria asincrona (Service Bus):** Excluidas intencionalmente del perfil ejecutable por defecto para no alterar datos compartidos de Supabase ni simular entregas asincronas. `INT-05` e `INT-10` requieren el harness especializado de Azure Service Bus en Backend.
 
-| Microservicio | Casos implementados (PM) | Lectura | Negativos | Casos INT vinculados | Limite / Bloqueo principal |
-|---|---:|---:|---:|---|---|
-| API Gateway | 6 (`PM-001`, `001B`, `004`, `004B`, `005`, `008`) | 2 | 4 | INT-07 | `PM-005` requiere token restringido G7; APIM en `NOT_RUN_BLOCKED_INFRA` |
-| Catalog | 9 (`PM-002`, `003A`, `003B`, `003C`, `006`, `007A`, `007B`, `010`, `011`, `080`) | 6 | 3 | INT-01, INT-09 | Requiere JWT G7 valido (`G6_ACCESS_TOKEN` / `G6_SERVICE_ACCESS_TOKEN`); traza downstream Catalog→Pricing requiere telemetria Azure |
-| Pricing | 3 (`PM-003D`, `040`, `041`) + participacion en `PM-003A/B` | 2 | 1 | INT-01, INT-05 | Requiere JWT G7 valido |
-| Inventory | 6 (`PM-012`, `070`, `071`, `072`, `081`, `082`) | 6 | 0 | INT-02, INT-09 | Solo lectura; reservas/confirmaciones excluidas por proteccion de stock |
-| Taxonomy | 5 (`PM-050`, `051`, `052`, `053`, `054`) | 4 | 1 | INT-06 | Parte HTTP de lectura; bajas R18 requieren harness Service Bus |
-| Promotions | 3 (`PM-060`, `061`, `062`) | 3 | 0 | INT-03 | Solo lectura; sin consumo ni restauracion de cupones |
-| Combos | 2 (`PM-020`, `021`) | 1 | 1 | INT-01 | Requiere JWT G7 valido |
-| Bulk | 2 (`PM-030`, `031`) | 1 | 1 | INT-04 | Solo lectura (plantilla CSV v2 y 404); sin iniciar importaciones |
-| Price Audit | 1 (`PM-042`) + `PM-005` | 1 | 0 | INT-05 | Solo lectura historica; no modifica precios ni sustituye prueba Service Bus R16 |
+## Resumen por microservicio (38 casos implementados)
+
+| Microservicio propietario | Casos implementados (PM) | Total | Lectura | Negativos | Casos INT vinculados | Limite / Bloqueo principal |
+|---|---|---:|---:|---:|---|---|
+| API Gateway / APIM | `PM-001`, `PM-001B`, `PM-004`, `PM-004B`, `PM-005`, `PM-008` | 6 | 2 | 4 | INT-07 | `PM-001`/`001B` son probes privados de Gateway (403 en ACA directo Modalidad B); `PM-005` requiere `G6_RESTRICTED_ACCESS_TOKEN` (nunca aprueba con 401) |
+| Catalog | `PM-002`, `PM-003A`, `PM-003B`, `PM-003C`, `PM-006`, `PM-007A`, `PM-007B`, `PM-010`, `PM-011`, `PM-080` | 10 | 7 | 3 | INT-01, INT-09 | Requiere `G6_ACCESS_TOKEN` (`userBearer`) o `G6_MARKETPLACE_ACCESS_TOKEN` (`PM-080`); DTOs estrictos `product_id`/`sku_base`/`variants` |
+| Pricing | `PM-003D`, `PM-040`, `PM-041` (+ participacion en `PM-003A/B`) | 3 | 2 | 1 | INT-01, INT-05 | Requiere `G6_ACCESS_TOKEN`; valida DTO `Precio` (`precio_regular`, `precio_oferta`, `vigencia_id`, `origen`) |
+| Inventory | `PM-012`, `PM-070`, `PM-071`, `PM-072`, `PM-081`, `PM-082` | 6 | 6 | 0 | INT-02, INT-09 | Solo lectura; `PM-081` usa `G6_MARKETPLACE_ACCESS_TOKEN` y `PM-082` usa `G6_VENTAS_ACCESS_TOKEN` |
+| Taxonomy | `PM-050`, `PM-051`, `PM-052`, `PM-053`, `PM-054` | 5 | 4 | 1 | INT-06 | Parte HTTP de lectura; bajas R18 requieren harness Service Bus |
+| Promotions | `PM-060`, `PM-061`, `PM-062` | 3 | 3 | 0 | INT-03 | Solo lectura; sin consumo ni restauracion de cupones |
+| Combos | `PM-020`, `PM-021` | 2 | 1 | 1 | INT-01 | Requiere `G6_ACCESS_TOKEN` |
+| Bulk | `PM-030`, `PM-031` | 2 | 1 | 1 | INT-04 | Solo lectura (plantilla CSV v2 y 404); sin iniciar importaciones |
+| Price Audit | `PM-042` | 1 | 1 | 0 | INT-05 | Solo lectura historica; no modifica precios ni sustituye prueba Service Bus R16 |
+| **Total conciliado** | **38 casos `PM-*`** | **38** | **27** | **11** | — | Validado automaticamente por `npm run validate` |
 
 Para el detalle fila por fila (incluyendo `ID PM`, `ID INT`, endpoint, scope, nivel, estado y bloqueos), consulte [`cobertura-integracion.csv`](cobertura-integracion.csv).

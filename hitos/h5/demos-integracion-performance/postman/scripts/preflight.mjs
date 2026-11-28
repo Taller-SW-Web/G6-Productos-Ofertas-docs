@@ -21,14 +21,14 @@ function parseArgs(argv) {
 }
 
 const cli = parseArgs(process.argv.slice(2));
-const environmentName = cli.env || process.env.G6_ENV || 'azure-aca-chile';
+const environmentName = cli.env || process.env.G6_ENV || 'azure-apim-chile';
 const defaultBaseUrl =
   environmentName === 'local'
     ? 'http://127.0.0.1:3000'
-    : `https://${AUTHORIZED_HOSTS['azure-aca-chile'][0]}`;
+    : `https://${(AUTHORIZED_HOSTS[environmentName] || AUTHORIZED_HOSTS['azure-apim-chile'])[0]}`;
 
 const baseUrl = cli['base-url'] || process.env.G6_BASE_URL || defaultBaseUrl;
-const profile = cli.profile || process.env.G6_PROFILE || 'smoke';
+const profile = cli.profile || process.env.G6_PROFILE || 'apim-edge';
 const folder = cli.folder || null;
 const requireAuth = cli['allow-no-auth'] === 'true' ? false : true;
 
@@ -39,7 +39,8 @@ const result = runPreflight({
   folder,
   requireAuth,
   accessToken: process.env.G6_ACCESS_TOKEN || '',
-  serviceAccessToken: process.env.G6_SERVICE_ACCESS_TOKEN || '',
+  marketplaceAccessToken: process.env.G6_MARKETPLACE_ACCESS_TOKEN || '',
+  ventasAccessToken: process.env.G6_VENTAS_ACCESS_TOKEN || '',
   collectionPath: cli.collection || COLLECTION_PATH,
   scanRoot: POSTMAN_ROOT,
   fixtures: {

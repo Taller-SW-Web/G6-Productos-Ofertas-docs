@@ -79,15 +79,16 @@ npm test
 
 | Variable PowerShell | Variable Postman | Obligatoria | Descripcion |
 |---|---|---|---|
-| `G6_ENV` | `environmentName` | No (`azure-aca-chile`) | Entorno destino: `azure-aca-chile` o `local` |
+| `G6_ENV` | `environmentName` | No (`azure-apim-chile`) | Entorno destino: `azure-apim-chile` (borde autorizado), `azure-aca-chile` (ACA Modalidad B) o `local` |
 | `G6_BASE_URL` | `baseUrl` | No (derivada de `G6_ENV`) | URL base autorizada (HTTPS obligatorio fuera de loopback) |
 | `G6_ACCESS_TOKEN` | `accessToken` | Si (casos `userBearer`) | JWT humano G7 (`GESTOR_COMERCIAL`) |
-| `G6_SERVICE_ACCESS_TOKEN` | `serviceAccessToken` | Condicional (Carpeta 10) | Token tecnico M2M G7 (`modulo-marketplace` / `modulo-ventas`) |
-| `G6_RESTRICTED_ACCESS_TOKEN` | `restrictedAccessToken` | Condicional (`PM-005`) | JWT autenticado sin permisos de auditoria para validar `403` |
+| `G6_RESTRICTED_ACCESS_TOKEN` | `restrictedAccessToken` | Condicional (`PM-005`) | JWT autenticado sin permisos de auditoria para validar `403` estricto (si falta, `PM-005` queda `NOT_RUN`) |
+| `G6_MARKETPLACE_ACCESS_TOKEN` | `marketplaceAccessToken` | Condicional (`PM-080`, `PM-081`) | Token tecnico M2M G7 de `modulo-marketplace` (si falta, quedan `NOT_RUN`) |
+| `G6_VENTAS_ACCESS_TOKEN` | `ventasAccessToken` | Condicional (`PM-082`) | Token tecnico M2M G7 de `modulo-ventas` (si falta, queda `NOT_RUN`) |
 | `G6_CHANNEL` | `channel` | No (`MARKETPLACE`) | Canal comercial (`MARKETPLACE`, `CHATBOT`, `RETAIL`, `VENTAS`) |
 | `G6_PRICE_MIN` / `G6_PRICE_MAX` | `priceMin` / `priceMax` | No (`0` / `100`) | Rango amplio de filtro de precios |
-| `G6_PRICE_MAX_NARROW` | `priceMaxNarrow` | No (`60`) | Rango acotado para validar invariante `narrow <= wide` |
-| `G6_TIMEOUT_MS` | — | No (`20000`) | Timeout por solicitud en milisegundos (usar `45000` en cold start ACA) |
+| `G6_PRICE_MAX_NARROW` | `priceMaxNarrow` | No (`60`) | Rango acotado para validar invariante `narrow <= wide` y subconjunto de `product_id` |
+| `G6_TIMEOUT_MS` | — | No (`20000`) | Timeout por solicitud en milisegundos (usar `45000` en cold start ACA/APIM) |
 
 ## 8. Configuracion segura de autenticacion
 
@@ -131,20 +132,24 @@ npm run preflight -- --env azure-aca-chile
 npm run preflight -- --env azure-aca-chile --allow-no-auth
 ```
 
-## 11. Ejecucion Smoke
+## 11. Ejecucion APIM Edge y Smoke
 
-Ejecuta las carpetas `00 - Preflight y autenticacion`, `01 - Catalog y Pricing` y `09 - APIM, Gateway y G7` (14 solicitudes):
+Ejecuta el borde autorizado APIM (`https://apim-g6-productos-chile.azure-api.net`) con preflight, planificacion previa y reconciliacion de casos `NOT_RUN`:
 
 ```powershell
-.\scripts\run-newman.ps1 -Profile smoke -Env azure-aca-chile -PromptToken -TimeoutMs 45000
+# Perfil APIM Edge (borde autorizado sobre /api/v1)
+.\scripts\run-newman.ps1 -Profile apim-edge -Env azure-apim-chile -PromptToken -TimeoutMs 45000
+
+# Perfil Smoke completo (incluye probes /health en entorno local o red autorizada)
+.\scripts\run-newman.ps1 -Profile smoke -Env azure-apim-chile -PromptToken -TimeoutMs 45000
 ```
 
 ## 12. Ejecucion Integration
 
-Ejecuta las 11 carpetas de lectura segura y negativos contractuales sobre los 8 microservicios y API Gateway (38 solicitudes):
+Ejecuta las 11 carpetas de lectura segura y negativos contractuales sobre los 8 microservicios y API Gateway/APIM (38 solicitudes):
 
 ```powershell
-.\scripts\run-newman.ps1 -Profile integration -Env azure-aca-chile -PromptToken -TimeoutMs 45000
+.\scripts\run-newman.ps1 -Profile integration -Env azure-apim-chile -PromptToken -TimeoutMs 45000
 ```
 
 ## 13. Seleccion de casos o carpetas individuales
@@ -212,10 +217,11 @@ Consulte la trazabilidad completa por caso PM, caso INT, microservicio, endpoint
 
 ## 19. Limitaciones conocidas
 
-- **APIM no desplegado:** `H5-04A` permanece en `NOT_RUN_BLOCKED_INFRA`; las pruebas reales se ejecutan contra el Gateway ACA autorizado.
-- **Traza downstream Catalog -> Pricing:** una respuesta HTTP 200 con filtro coherente valida el comportamiento observable, pero acreditar la llamada interna requiere correlacionar `X-Correlation-Id` en logs/telemetria Azure.
+- **Borde APIM Chile live (`apim-g6-productos-chile.azure-api.net`):** Expone 145 operaciones sobre `/api/v1` (el candidato #307 añade 4 operaciones G5 hasta 149; las 5 rutas internas G6→G6 y 2 lecturas admin Pricing quedan excluidas). El acceso directo a ACA (`api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io`) permanece restringido por Modalidad B (`403 RBAC: access denied`).
+- **Ejecucion parcial (`PARTIAL_NOT_COMPLETE`):** Cuando falta alguna credencial (`G6_ACCESS_TOKEN`, `G6_RESTRICTED_ACCESS_TOKEN`, `G6_MARKETPLACE_ACCESS_TOKEN`, `G6_VENTAS_ACCESS_TOKEN`), los casos dependientes se clasifican como `NOT_RUN` y el runner nunca declara aprobacion integral `PASS`.
+- **Traza downstream Catalog -> Pricing:** Una respuesta HTTP 200 con filtro coherente valida el comportamiento observable, pero acreditar la llamada interna requiere correlacionar `X-Correlation-Id` en logs/telemetria Azure.
 - **Mensajeria asincrona (INT-05, INT-10):** Postman/Newman solo cubre la interfaz HTTP de lectura; las entregas Service Bus Inbox/Outbox/DLQ se validan con el harness especializado del Backend.
-- **Homologacion externa L3 (INT-09):** los casos de la carpeta 10 validan la vista de proveedor G6 con `serviceBearer`, no sustituyen una homologacion bilateral con G1/G5.
+- **Homologacion externa L3 (INT-09):** Los casos de la carpeta 10 validan la vista de proveedor G6 con tokens M2M separados (`marketplaceAccessToken` / `ventasAccessToken`); no sustituyen una homologacion bilateral con G1/G5.
 
 ## 20. Guion de demostracion en vivo (ante el profesor)
 

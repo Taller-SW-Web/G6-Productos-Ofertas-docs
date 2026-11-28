@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "g6-h5-integration-suite-v1",
+    "_postman_id": "g6-h5-integration-suite-v2",
     "name": "G6 - H5 Integration Suite",
-    "description": "Suite profesional de pruebas de integracion HTTP (solo lectura + casos negativos contractuales) para G6 Productos y Ofertas — Hito 5. Alineada con OpenAPI 0.7.0-rc.3 y politica universal G7.",
+    "description": "Suite profesional de pruebas de integracion HTTP (solo lectura + casos negativos contractuales) para G6 Productos y Ofertas — Hito 5. Alineada estrictamente con OpenAPI 0.7.0-rc.3, APIM Chile live y politica universal G7.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "event": [
@@ -11,36 +11,69 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// Proteccion integrada para ejecucion tanto en Newman como en Postman Desktop",
+          "// H09: Proteccion de URL final resuelta y metodos seguros (Newman + Postman Desktop)",
           "const allowedHosts = [",
+          "  \"apim-g6-productos-chile.azure-api.net\",",
           "  \"api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io\",",
           "  \"127.0.0.1\",",
           "  \"localhost\"",
           "];",
-          "const baseUrl = pm.environment.get(\"baseUrl\") || pm.collectionVariables.get(\"baseUrl\") || \"\";",
           "const method = (pm.request.method || \"GET\").toUpperCase();",
           "if (![\"GET\", \"HEAD\", \"OPTIONS\"].includes(method)) {",
           "  throw new Error(\"Bloqueo de seguridad: metodo mutante no permitido en coleccion de lectura (\" + method + \").\");",
           "}",
-          "if (baseUrl) {",
-          "  const match = baseUrl.match(/^(https?):\\/\\/([^\\/:]+)/i);",
-          "  if (!match) {",
-          "    throw new Error(\"Bloqueo de seguridad: baseUrl invalida.\");",
-          "  }",
-          "  const proto = match[1].toLowerCase();",
-          "  const host = match[2].toLowerCase();",
-          "  if (!allowedHosts.includes(host)) {",
-          "    throw new Error(\"Bloqueo de seguridad: host no autorizado (\" + host + \").\");",
-          "  }",
-          "  if (host !== \"127.0.0.1\" && host !== \"localhost\" && proto !== \"https\") {",
-          "    throw new Error(\"Bloqueo de seguridad: entorno remoto requiere HTTPS.\");",
-          "  }",
-          "}",
-          "// Genera X-Correlation-Id unico por solicitud y fixture negativo sintetico",
+          "// Genera X-Correlation-Id UUID v4 unico por solicitud y fixture negativo sintetico",
           "const hex = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);",
           "const corrId = `${hex()}${hex()}-${hex()}-4${hex().substring(1)}-a${hex().substring(1)}-${hex()}${hex()}${hex()}`;",
           "pm.variables.set(\"correlationId\", corrId);",
-          "pm.variables.set(\"invalidTokenFixture\", [\"invalid\", \"jwt\", \"fixture\"].join(\".\"));"
+          "pm.variables.set(\"invalidTokenFixture\", [\"invalid\", \"jwt\", \"fixture\"].join(\".\"));",
+          "// Valida la URL final resuelta despues de sustituir variables",
+          "const resolvedUrl = pm.variables.replaceIn(pm.request.url.toString());",
+          "const match = resolvedUrl.match(/^(https?):\\/\\/([^\\/?#]+)/i);",
+          "if (!match) {",
+          "  throw new Error(\"Bloqueo de seguridad: URL final resuelta invalida.\");",
+          "}",
+          "const proto = match[1].toLowerCase();",
+          "const authority = match[2];",
+          "if (authority.includes(\"@\")) {",
+          "  throw new Error(\"Bloqueo de seguridad: credenciales embebidas prohibidas en la URL.\");",
+          "}",
+          "const host = authority.split(\":\")[0].toLowerCase();",
+          "if (!allowedHosts.includes(host)) {",
+          "  throw new Error(\"Bloqueo de seguridad: host final no autorizado (\" + host + \").\");",
+          "}",
+          "if (host !== \"127.0.0.1\" && host !== \"localhost\" && proto !== \"https\") {",
+          "  throw new Error(\"Bloqueo de seguridad: entorno remoto requiere HTTPS.\");",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// H09: Impide redirecciones hacia hosts no autorizados o downgrade HTTP tambien en Postman Desktop",
+          "const allowedHosts = [",
+          "  \"apim-g6-productos-chile.azure-api.net\",",
+          "  \"api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io\",",
+          "  \"127.0.0.1\",",
+          "  \"localhost\"",
+          "];",
+          "if ([301, 302, 303, 307, 308].includes(pm.response.code)) {",
+          "  pm.test(\"Seguridad H09: Redireccion solo hacia origen autorizado HTTPS\", function () {",
+          "    const loc = pm.response.headers.get(\"Location\") || \"\";",
+          "    const m = loc.match(/^(https?):\\/\\/([^\\/?#:]+)/i);",
+          "    if (m) {",
+          "      const rProto = m[1].toLowerCase();",
+          "      const rHost = m[2].toLowerCase();",
+          "      pm.expect(allowedHosts, \"redirect host autorizado\").to.include(rHost);",
+          "      if (rHost !== \"127.0.0.1\" && rHost !== \"localhost\") {",
+          "        pm.expect(rProto, \"redirect remoto debe usar HTTPS\").to.eql(\"https\");",
+          "      }",
+          "    }",
+          "  });",
+          "}"
         ]
       }
     }
@@ -48,7 +81,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "https://api-gateway.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io"
+      "value": "https://apim-g6-productos-chile.azure-api.net"
     },
     {
       "key": "apiPrefix",
@@ -94,7 +127,7 @@
   "item": [
     {
       "name": "00 - Preflight y autenticacion",
-      "description": "Verificacion de disponibilidad del Gateway autorizado y salud operativa (INT-07).",
+      "description": "Probes privados de Gateway (solo para entorno local o red autorizada; no expuestos en APIM 145).",
       "item": [
         {
           "name": "PM-001 - Preflight Gateway Health",
@@ -108,8 +141,7 @@
                   "  pm.response.to.have.status(200);",
                   "});",
                   "pm.test(\"PM-001: Content-Type application/json\", function () {",
-                  "  const ct = pm.response.headers.get(\"Content-Type\") || \"\";",
-                  "  pm.expect(ct.toLowerCase()).to.include(\"application/json\");",
+                  "  pm.expect((pm.response.headers.get(\"Content-Type\") || \"\").toLowerCase()).to.include(\"application/json\");",
                   "});",
                   "pm.test(\"PM-001: Estructura JSON valida sin exposicion de secretos\", function () {",
                   "  const body = pm.response.json();",
@@ -135,25 +167,31 @@
               }
             ],
             "url": "{{baseUrl}}/health",
-            "description": "Verifica disponibilidad del borde Gateway sin exponer credenciales."
+            "description": "Verifica disponibilidad de /health del Gateway sin exponer credenciales."
           },
           "response": []
         },
         {
-          "name": "PM-001B - Preflight Gateway Readiness",
+          "name": "PM-001B - Preflight Gateway Readiness (disponibilidad operativa)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-001B: HTTP 200 o 503 contractual en /health/ready\", function () {",
-                  "  pm.expect([200, 503]).to.include(pm.response.code);",
-                  "});",
-                  "pm.test(\"PM-001B: Respuesta declara servicio api-gateway y estado\", function () {",
+                  "pm.test(\"PM-001B: Respuesta JSON contractual en /health/ready\", function () {",
+                  "  pm.expect((pm.response.headers.get(\"Content-Type\") || \"\").toLowerCase()).to.include(\"application/json\");",
                   "  const body = pm.response.json();",
                   "  pm.expect(body).to.have.property(\"status\");",
-                  "  pm.expect([\"ready\", \"not_ready\", \"ok\"]).to.include(body.status);",
+                  "  pm.expect([\"ready\", \"not_ready\"]).to.include(body.status);",
+                  "});",
+                  "pm.test(\"PM-001B: Disponibilidad operativa acreditada (HTTP 200 y status=ready)\", function () {",
+                  "  if (pm.response.code === 503) {",
+                  "    pm.expect.fail(\"Gateway respondio 503 contractual (not_ready): no acredita disponibilidad operativa.\");",
+                  "  }",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.status).to.eql(\"ready\");",
                   "});"
                 ]
               }
@@ -172,7 +210,7 @@
               }
             ],
             "url": "{{baseUrl}}/health/ready",
-            "description": "Consulta readiness del Gateway y cobertura de microservicios downstream."
+            "description": "H08: Un 503 puede ser contractualmente valido pero NO acredita disponibilidad operativa."
           },
           "response": []
         }
@@ -180,7 +218,7 @@
     },
     {
       "name": "01 - Catalog y Pricing",
-      "description": "Cadena critica HTTP INT-01: Gateway -> Catalog -> Pricing con filtros de precio y coherencia de SKUs.",
+      "description": "Cadena critica HTTP INT-01 con DTOs estrictos OpenAPI 0.7.0-rc.3 y verificacion de precios efectivos.",
       "item": [
         {
           "name": "PM-002 - Gateway -> Catalog: Listar productos autorizados",
@@ -190,28 +228,36 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-002: HTTP 200 en listarProductos\", function () {",
+                  "pm.test(\"PM-002: HTTP 200 y Content-Type application/json\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-002: Content-Type application/json\", function () {",
                   "  pm.expect((pm.response.headers.get(\"Content-Type\") || \"\").toLowerCase()).to.include(\"application/json\");",
                   "});",
-                  "pm.test(\"PM-002: Estructura paginada contractual (items, pagina, tamanio, total)\", function () {",
+                  "pm.test(\"PM-002: PaginaProductosComercial no vacia y paginacion contractual\", function () {",
                   "  const data = pm.response.json();",
                   "  pm.expect(data).to.be.an(\"object\");",
-                  "  pm.expect(data.items).to.be.an(\"array\");",
-                  "  if (data.pagina !== undefined) pm.expect(data.pagina).to.be.a(\"number\");",
-                  "  if (data.tamanio !== undefined) pm.expect(data.tamanio).to.be.a(\"number\");",
-                  "  if (data.total !== undefined) pm.expect(data.total).to.be.a(\"number\").and.at.least(0);",
-                  "  if (data.items.length > 0) {",
-                  "    const first = data.items[0];",
-                  "    const pid = first.id || first.productoId || first.productId;",
-                  "    const sku = first.sku || first.skuBase || (Array.isArray(first.variantes) && first.variantes[0]?.sku) || \"\";",
-                  "    pm.expect(pid, \"id de producto\").to.be.a(\"string\").and.not.empty;",
-                  "    pm.environment.set(\"productId\", pid);",
-                  "    if (sku) pm.environment.set(\"sku\", sku);",
-                  "    if (first.categoriaId) pm.environment.set(\"categoryId\", first.categoriaId);",
-                  "    if (first.marcaId) pm.environment.set(\"brandId\", first.marcaId);",
+                  "  pm.expect(data.items, \"items\").to.be.an(\"array\").and.not.be.empty;",
+                  "  pm.expect(data.pagina, \"pagina\").to.eql(1);",
+                  "  pm.expect(data.tamanio, \"tamanio\").to.eql(10);",
+                  "  pm.expect(data.total, \"total\").to.be.a(\"number\").and.at.least(data.items.length);",
+                  "});",
+                  "pm.test(\"PM-002: DTO estricto ProductoResumenComercial y captura para encadenamiento\", function () {",
+                  "  const data = pm.response.json();",
+                  "  const first = data.items[0];",
+                  "  pm.expect(first.product_id, \"product_id\").to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(first.slug, \"slug\").to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(first.name, \"name\").to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(first.categoria_id, \"categoria_id\").to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(first.tipo_producto_id, \"tipo_producto_id\").to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(first.marca_id, \"marca_id\").to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(first.tiene_variantes, \"tiene_variantes\").to.be.a(\"boolean\");",
+                  "  pm.environment.set(\"productId\", first.product_id);",
+                  "  pm.environment.set(\"categoryId\", first.categoria_id);",
+                  "  pm.environment.set(\"brandId\", first.marca_id);",
+                  "  if (!first.tiene_variantes) {",
+                  "    pm.expect(first.sku_base, \"sku_base en producto simple\").to.be.a(\"string\").and.not.empty;",
+                  "    pm.environment.set(\"sku\", first.sku_base);",
+                  "  } else {",
+                  "    pm.environment.set(\"sku\", \"\");",
                   "  }",
                   "});"
                 ]
@@ -235,7 +281,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/productos?canal={{channel}}&pagina=1&tamanio=10",
-            "description": "GET /api/v1/productos autorizado. Captura productId y sku para solicitudes encadenadas."
+            "description": "GET /api/v1/productos. Valida PaginaProductosComercial y ProductoResumenComercial."
           },
           "response": []
         },
@@ -247,25 +293,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-003A: HTTP 200 con filtro precioMin/precioMax\", function () {",
+                  "pm.test(\"PM-003A: HTTP 200 y paginacion contractual\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-003A: Respuesta valida y precios dentro del rango cuando se informan\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data.items).to.be.an(\"array\");",
-                  "  const min = Number(pm.variables.get(\"priceMin\"));",
-                  "  const max = Number(pm.variables.get(\"priceMax\"));",
-                  "  const ids = [];",
-                  "  for (const item of data.items) {",
-                  "    const pid = item.id || item.productoId || item.productId;",
-                  "    if (pid) ids.push(pid);",
-                  "    const p = item.precioEfectivo ?? item.precio ?? item.precioVigente;",
-                  "    if (typeof p === \"number\") {",
-                  "      pm.expect(p, \"precio dentro de [priceMin, priceMax]\").to.be.at.least(min).and.at.most(max);",
-                  "    }",
-                  "  }",
-                  "  pm.variables.set(\"wideRangeCount\", String(data.total ?? data.items.length));",
+                  "  pm.expect(data.items, \"items no vacios en rango amplio\").to.be.an(\"array\").and.not.be.empty;",
+                  "  pm.expect(data.pagina).to.eql(1);",
+                  "  pm.expect(data.tamanio).to.eql(20);",
+                  "  pm.expect(data.total).to.be.a(\"number\").and.at.least(data.items.length);",
+                  "});",
+                  "pm.test(\"PM-003A: DTO ProductoResumenComercial y captura de conjunto amplio\", function () {",
+                  "  const data = pm.response.json();",
+                  "  const ids = data.items.map((it) => {",
+                  "    pm.expect(it.product_id, \"product_id\").to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(it.tiene_variantes, \"tiene_variantes\").to.be.a(\"boolean\");",
+                  "    return it.product_id;",
+                  "  });",
+                  "  pm.variables.set(\"wideRangeTotal\", String(data.total));",
                   "  pm.variables.set(\"wideRangeIds\", JSON.stringify(ids));",
+                  "  // Prioriza un producto del rango amplio para verificar su precio efectivo en PM-003C/D",
+                  "  pm.environment.set(\"productId\", ids[0]);",
+                  "  if (!data.items[0].tiene_variantes && data.items[0].sku_base) {",
+                  "    pm.environment.set(\"sku\", data.items[0].sku_base);",
+                  "    pm.variables.set(\"skuFromWideRange\", \"true\");",
+                  "  }",
                   "});"
                 ]
               }
@@ -288,35 +338,36 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/productos?canal={{channel}}&precioMin={{priceMin}}&precioMax={{priceMax}}&pagina=1&tamanio=20",
-            "description": "GET /api/v1/productos con precioMin y precioMax (rango amplio)."
+            "description": "GET /api/v1/productos con precioMin y precioMax. Prohibe aprobacion con lista vacia."
           },
           "response": []
         },
         {
-          "name": "PM-003B - Catalog -> Pricing: Filtro por rango acotado y relacion de subconjunto",
+          "name": "PM-003B - Catalog -> Pricing: Filtro rango acotado y relacion de subconjunto",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-003B: HTTP 200 en rango acotado\", function () {",
+                  "pm.test(\"PM-003B: HTTP 200 y paginacion valida no vacia\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-003B: Invariante de cardinalidad narrow <= wide y limites de rango\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data.items).to.be.an(\"array\");",
-                  "  const wideCount = Number(pm.variables.get(\"wideRangeCount\"));",
-                  "  const narrowCount = Number(data.total ?? data.items.length);",
-                  "  if (Number.isFinite(wideCount)) {",
-                  "    pm.expect(narrowCount, \"total rango acotado <= total rango amplio\").to.be.at.most(wideCount);",
-                  "  }",
-                  "  const min = Number(pm.variables.get(\"priceMin\"));",
-                  "  const maxNarrow = Number(pm.variables.get(\"priceMaxNarrow\"));",
-                  "  for (const item of data.items) {",
-                  "    const p = item.precioEfectivo ?? item.precio ?? item.precioVigente;",
-                  "    if (typeof p === \"number\") {",
-                  "      pm.expect(p).to.be.at.least(min).and.at.most(maxNarrow);",
+                  "  pm.expect(data.items, \"items no vacios en rango acotado\").to.be.an(\"array\").and.not.be.empty;",
+                  "  pm.expect(data.pagina).to.eql(1);",
+                  "  pm.expect(data.tamanio).to.eql(20);",
+                  "  pm.expect(data.total).to.be.a(\"number\").and.at.least(data.items.length);",
+                  "});",
+                  "pm.test(\"PM-003B: Invariante narrowTotal <= wideTotal y subconjunto de product_id\", function () {",
+                  "  const data = pm.response.json();",
+                  "  const wideTotal = Number(pm.variables.get(\"wideRangeTotal\"));",
+                  "  const wideIds = JSON.parse(pm.variables.get(\"wideRangeIds\") || \"[]\");",
+                  "  pm.expect(wideTotal, \"wideRangeTotal capturado en PM-003A\").to.be.a(\"number\").and.above(0);",
+                  "  pm.expect(data.total, \"total rango acotado <= total rango amplio\").to.be.at.most(wideTotal);",
+                  "  if (wideTotal <= 20) {",
+                  "    for (const item of data.items) {",
+                  "      pm.expect(item.product_id, \"product_id\").to.be.a(\"string\").and.not.empty;",
+                  "      pm.expect(wideIds, \"product_id acotado debe pertenecer al conjunto amplio\").to.include(item.product_id);",
                   "    }",
                   "  }",
                   "});"
@@ -341,12 +392,12 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/productos?canal={{channel}}&precioMin={{priceMin}}&precioMax={{priceMaxNarrow}}&pagina=1&tamanio=20",
-            "description": "GET /api/v1/productos con precioMaxNarrow <= precioMax. Verifica cardinalidad acotada."
+            "description": "Verifica narrowTotal <= wideTotal y que cada product_id acotado pertenezca al conjunto amplio."
           },
           "response": []
         },
         {
-          "name": "PM-003C - Catalog: Detalle comercial de producto encadenado",
+          "name": "PM-003C - Catalog: Detalle comercial de producto (simple o con variantes)",
           "event": [
             {
               "listen": "test",
@@ -356,15 +407,25 @@
                   "pm.test(\"PM-003C: HTTP 200 en obtenerProducto\", function () {",
                   "  pm.response.to.have.status(200);",
                   "});",
-                  "pm.test(\"PM-003C: Identidad del producto coincide con productId solicitado\", function () {",
+                  "pm.test(\"PM-003C: DTO estricto ProductoDetalleComercial y resolucion de SKU\", function () {",
                   "  const data = pm.response.json();",
-                  "  const expectedId = pm.variables.get(\"productId\");",
-                  "  const actualId = data.id || data.productoId || data.productId;",
-                  "  pm.expect(actualId).to.eql(expectedId);",
-                  "  const sku = data.sku || data.skuBase || (Array.isArray(data.variantes) && data.variantes[0]?.sku);",
-                  "  if (sku && !pm.environment.get(\"sku\")) {",
-                  "    pm.environment.set(\"sku\", sku);",
+                  "  const expectedId = pm.environment.get(\"productId\") || pm.variables.get(\"productId\");",
+                  "  pm.expect(data.product_id, \"product_id\").to.eql(expectedId);",
+                  "  pm.expect(data.categoria_id, \"categoria_id\").to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(data.marca_id, \"marca_id\").to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(data.marca, \"marca\").to.be.an(\"object\");",
+                  "  pm.expect(data.variants, \"variants\").to.be.an(\"array\");",
+                  "  pm.expect(data.tiene_variantes, \"tiene_variantes\").to.be.a(\"boolean\");",
+                  "  if (!data.tiene_variantes) {",
+                  "    pm.expect(data.sku_base, \"sku_base requerido en producto simple\").to.be.a(\"string\").and.not.empty;",
+                  "    pm.environment.set(\"sku\", data.sku_base);",
+                  "  } else {",
+                  "    pm.expect(data.variants, \"variants no vacio en producto con variantes\").to.not.be.empty;",
+                  "    pm.expect(data.variants[0].variant_id, \"variant_id\").to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(data.variants[0].sku, \"variants[0].sku\").to.be.a(\"string\").and.not.empty;",
+                  "    pm.environment.set(\"sku\", data.variants[0].sku);",
                   "  }",
+                  "  pm.variables.set(\"skuFromWideRange\", \"true\");",
                   "});"
                 ]
               }
@@ -387,12 +448,12 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/productos/{{productId}}?canal={{channel}}",
-            "description": "GET /api/v1/productos/{productoId} usando el producto capturado en PM-002."
+            "description": "GET /api/v1/productos/{product_id}. Extrae sku desde sku_base (simple) o variants[0].sku (variantes)."
           },
           "response": []
         },
         {
-          "name": "PM-003D - Pricing: Consultar precios vigentes para SKU encadenado",
+          "name": "PM-003D - Pricing: Consultar precio efectivo para SKU encadenado",
           "event": [
             {
               "listen": "test",
@@ -402,16 +463,27 @@
                   "pm.test(\"PM-003D: HTTP 200 en consultarPrecios\", function () {",
                   "  pm.response.to.have.status(200);",
                   "});",
-                  "pm.test(\"PM-003D: Respuesta JSON estructurada con correspondencia de SKU\", function () {",
+                  "pm.test(\"PM-003D: Correspondencia exacta de SKU, DTO Precio y precio efectivo dentro de rango\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data).to.be.an(\"object\");",
-                  "  const items = Array.isArray(data) ? data : (data.items || data.precios || data.resultados || []);",
-                  "  pm.expect(items).to.be.an(\"array\");",
-                  "  for (const row of items) {",
-                  "    const val = row.precioEfectivo ?? row.precio ?? row.monto;",
-                  "    if (typeof val === \"number\") {",
-                  "      pm.expect(val).to.be.at.least(0);",
-                  "    }",
+                  "  const expectedSku = pm.environment.get(\"sku\") || pm.variables.get(\"sku\");",
+                  "  pm.expect(expectedSku, \"SKU encadenado\").to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(data.items, \"items no vacios\").to.be.an(\"array\").and.not.be.empty;",
+                  "  const match = data.items.find((row) => row.sku === expectedSku);",
+                  "  pm.expect(match, \"SKU exacto en respuesta de Pricing\").to.be.an(\"object\");",
+                  "  pm.expect(match.precio_regular, \"precio_regular > 0\").to.be.a(\"number\").and.above(0);",
+                  "  if (match.precio_oferta !== null && match.precio_oferta !== undefined) {",
+                  "    pm.expect(match.precio_oferta, \"precio_oferta > 0\").to.be.a(\"number\").and.above(0);",
+                  "  }",
+                  "  pm.expect(match.currency, \"currency\").to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(match.valid_from, \"valid_from\").to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(match.price_version, \"price_version\").to.be.a(\"number\").and.at.least(0);",
+                  "  pm.expect(match.vigencia_id, \"vigencia_id\").to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect([\"PRODUCTO\", \"SKU_OVERRIDE\"], \"origen\").to.include(match.origen);",
+                  "  const effectivePrice = (match.precio_oferta !== null && match.precio_oferta !== undefined) ? match.precio_oferta : match.precio_regular;",
+                  "  if (pm.variables.get(\"skuFromWideRange\") === \"true\") {",
+                  "    const min = Number(pm.variables.get(\"priceMin\"));",
+                  "    const max = Number(pm.variables.get(\"priceMax\"));",
+                  "    pm.expect(effectivePrice, \"precio efectivo dentro de [priceMin, priceMax]\").to.be.at.least(min).and.at.most(max);",
                   "  }",
                   "});"
                 ]
@@ -435,7 +507,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/precios?skus={{sku}}&canal={{channel}}",
-            "description": "GET /api/v1/precios?skus={{sku}}&canal={{channel}}."
+            "description": "GET /api/v1/precios?skus={{sku}}&canal={{channel}}. Valida DTO Precio y rango efectivo."
           },
           "response": []
         }
@@ -443,7 +515,7 @@
     },
     {
       "name": "02 - Preparacion comercial e Inventory",
-      "description": "Verificacion de estado de preparacion tecnica, variantes y disponibilidad de inventario.",
+      "description": "Validacion de ProductoPreparacion, variantes y DisponibilidadStock con invariante de saldo.",
       "item": [
         {
           "name": "PM-010 - Catalog: Estado de preparacion del producto",
@@ -453,12 +525,13 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-010: HTTP 200 en obtenerPreparacionProducto\", function () {",
+                  "pm.test(\"PM-010: HTTP 200 y DTO ProductoPreparacion\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-010: Estructura valida de preparacion comercial\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data).to.be.an(\"object\");",
+                  "  pm.expect(data.product_id).to.eql(pm.environment.get(\"productId\"));",
+                  "  pm.expect(data.tiene_variantes).to.be.a(\"boolean\");",
+                  "  pm.expect(data.pricing).to.be.an(\"object\");",
+                  "  pm.expect(data.variantes).to.be.an(\"array\");",
                   "});"
                 ]
               }
@@ -481,7 +554,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/productos/{{productId}}/preparacion",
-            "description": "GET /api/v1/productos/{productoId}/preparacion."
+            "description": ""
           },
           "response": []
         },
@@ -493,13 +566,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-011: HTTP 200 en listarVariantesProducto\", function () {",
+                  "pm.test(\"PM-011: HTTP 200 y coleccion de variantes valida\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-011: Lista de variantes valida\", function () {",
                   "  const data = pm.response.json();",
                   "  const list = Array.isArray(data) ? data : data.items;",
                   "  pm.expect(list).to.be.an(\"array\");",
+                  "  for (const v of list) {",
+                  "    pm.expect(v.variant_id, \"variant_id\").to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(v.sku, \"sku\").to.be.a(\"string\").and.not.empty;",
+                  "  }",
                   "});"
                 ]
               }
@@ -522,12 +597,12 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/productos/{{productId}}/variantes",
-            "description": "GET /api/v1/productos/{productoId}/variantes."
+            "description": ""
           },
           "response": []
         },
         {
-          "name": "PM-012 - Inventory: Consultar disponibilidad por SKU",
+          "name": "PM-012 - Inventory: Disponibilidad autoritativa por SKU encadenado",
           "event": [
             {
               "listen": "test",
@@ -537,9 +612,17 @@
                   "pm.test(\"PM-012: HTTP 200 en consultarDisponibilidad\", function () {",
                   "  pm.response.to.have.status(200);",
                   "});",
-                  "pm.test(\"PM-012: Respuesta JSON valida sin efectos de reserva\", function () {",
+                  "pm.test(\"PM-012: DTO DisponibilidadStock, SKU exacto e invariante de stock\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data).to.be.an(\"object\");",
+                  "  const expectedSku = pm.environment.get(\"sku\") || pm.variables.get(\"sku\");",
+                  "  pm.expect(data.items, \"items no vacios\").to.be.an(\"array\").and.not.be.empty;",
+                  "  const row = data.items.find((it) => it.sku === expectedSku);",
+                  "  pm.expect(row, \"SKU solicitado presente en inventario\").to.be.an(\"object\");",
+                  "  pm.expect(row.on_hand).to.be.a(\"number\").and.at.least(0);",
+                  "  pm.expect(row.reserved).to.be.a(\"number\").and.at.least(0);",
+                  "  pm.expect(row.blocked).to.be.a(\"number\").and.at.least(0);",
+                  "  pm.expect(row.available).to.eql(Math.max(row.on_hand - row.reserved - row.blocked, 0));",
+                  "  pm.expect([\"DISPONIBLE\", \"STOCK_BAJO\", \"AGOTADO\", \"INDETERMINADO\"]).to.include(row.status);",
                   "});"
                 ]
               }
@@ -562,7 +645,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/inventario/disponibilidad?skus={{sku}}",
-            "description": "GET /api/v1/inventario/disponibilidad?skus={{sku}} (solo lectura, no reserva stock)."
+            "description": "H07: Valida DisponibilidadStock, correspondencia de SKU e invariante available = max(on_hand - reserved - blocked, 0)."
           },
           "response": []
         }
@@ -580,12 +663,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-020: HTTP 200 en listarCombosAdmin\", function () {",
+                  "pm.test(\"PM-020: HTTP 200 y PaginaCombos valida\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-020: Coleccion de combos valida\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data.items || data).to.satisfy((v) => Array.isArray(v));",
+                  "  pm.expect(data.items).to.be.an(\"array\");",
                   "});"
                 ]
               }
@@ -608,7 +689,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/combos?pagina=1&tamanio=10",
-            "description": "GET /api/v1/combos."
+            "description": ""
           },
           "response": []
         },
@@ -620,13 +701,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-021: HTTP 404 para combo inexistente\", function () {",
+                  "pm.test(\"PM-021: HTTP 404 Problem Details contractual\", function () {",
                   "  pm.response.to.have.status(404);",
-                  "});",
-                  "pm.test(\"PM-021: Contrato problem+json sin trazas internas\", function () {",
                   "  const body = pm.response.json();",
                   "  pm.expect(body.status).to.eql(404);",
-                  "  pm.expect(pm.response.text()).to.not.include(\"at Object.\");",
+                  "  pm.expect(body.code).to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(body.title).to.be.a(\"string\").and.not.empty;",
                   "});"
                 ]
               }
@@ -649,7 +729,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/combos/{{nonExistentComboId}}",
-            "description": "GET /api/v1/combos/{nonExistentComboId} debe devolver 404 Problem Details."
+            "description": ""
           },
           "response": []
         }
@@ -667,12 +747,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-030: HTTP 200 al descargar plantilla CSV\", function () {",
+                  "pm.test(\"PM-030: HTTP 200, text/csv y cabeceras presentes\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-030: Content-Type text/csv y cuerpo no vacio\", function () {",
-                  "  const ct = (pm.response.headers.get(\"Content-Type\") || \"\").toLowerCase();",
-                  "  pm.expect(ct).to.include(\"text/csv\");",
+                  "  pm.expect((pm.response.headers.get(\"Content-Type\") || \"\").toLowerCase()).to.include(\"text/csv\");",
                   "  pm.expect(pm.response.text().trim().length).to.be.above(10);",
                   "});"
                 ]
@@ -700,7 +777,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/carga-masiva/productos/plantilla?formato=CSV",
-            "description": "GET /api/v1/carga-masiva/productos/plantilla?formato=CSV."
+            "description": ""
           },
           "response": []
         },
@@ -712,12 +789,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-031: HTTP 404 para batchId inexistente\", function () {",
+                  "pm.test(\"PM-031: HTTP 404 Problem Details contractual\", function () {",
                   "  pm.response.to.have.status(404);",
-                  "});",
-                  "pm.test(\"PM-031: Estructura Problem Details valida\", function () {",
                   "  const body = pm.response.json();",
                   "  pm.expect(body.status).to.eql(404);",
+                  "  pm.expect(body.code).to.be.a(\"string\").and.not.empty;",
                   "});"
                 ]
               }
@@ -740,7 +816,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/carga-masiva/productos/importaciones/{{nonExistentBatchId}}",
-            "description": "GET /api/v1/carga-masiva/productos/importaciones/{nonExistentBatchId}."
+            "description": ""
           },
           "response": []
         }
@@ -758,12 +834,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-040: HTTP 200 o 404 contractual si el SKU no tiene precio\", function () {",
-                  "  pm.expect([200, 404]).to.include(pm.response.code);",
-                  "});",
-                  "pm.test(\"PM-040: Respuesta JSON valida\", function () {",
+                  "pm.test(\"PM-040: HTTP 200 y DTO Precio contractual para SKU encadenado\", function () {",
+                  "  pm.response.to.have.status(200);",
                   "  const body = pm.response.json();",
-                  "  pm.expect(body).to.be.an(\"object\");",
+                  "  const expectedSku = pm.environment.get(\"sku\") || pm.variables.get(\"sku\");",
+                  "  pm.expect(body.sku).to.eql(expectedSku);",
+                  "  pm.expect(body.precio_regular).to.be.a(\"number\").and.above(0);",
+                  "  pm.expect(body.currency).to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(body.vigencia_id).to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect([\"PRODUCTO\", \"SKU_OVERRIDE\"]).to.include(body.origen);",
                   "});"
                 ]
               }
@@ -786,7 +865,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/precios/skus/{{sku}}?canal={{channel}}",
-            "description": "GET /api/v1/precios/skus/{sku}?canal={{channel}}."
+            "description": ""
           },
           "response": []
         },
@@ -798,12 +877,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-041: HTTP 404 para SKU inexistente\", function () {",
+                  "pm.test(\"PM-041: HTTP 404 Problem Details contractual\", function () {",
                   "  pm.response.to.have.status(404);",
-                  "});",
-                  "pm.test(\"PM-041: Problem Details contractual\", function () {",
                   "  const body = pm.response.json();",
                   "  pm.expect(body.status).to.eql(404);",
+                  "  pm.expect(body.code).to.be.a(\"string\").and.not.empty;",
                   "});"
                 ]
               }
@@ -826,7 +904,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/precios/skus/{{nonExistentSku}}?canal={{channel}}",
-            "description": "GET /api/v1/precios/skus/{nonExistentSku}."
+            "description": ""
           },
           "response": []
         },
@@ -838,12 +916,13 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-042: HTTP 200 en listarAuditoriaPrecios\", function () {",
+                  "pm.test(\"PM-042: HTTP 200 y RegistroAuditoriaPrecio valido\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-042: Respuesta paginada valida\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data.items || data).to.satisfy((v) => Array.isArray(v));",
+                  "  pm.expect(data.items).to.be.an(\"array\");",
+                  "  for (const row of data.items) {",
+                  "    pm.expect(row.id_auditoria, \"id_auditoria\").to.be.a(\"string\").and.not.empty;",
+                  "  }",
                   "});"
                 ]
               }
@@ -866,7 +945,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/auditoria-precios?pagina=1&tamanio=10",
-            "description": "GET /api/v1/auditoria-precios (solo lectura, no modifica precios)."
+            "description": ""
           },
           "response": []
         }
@@ -884,12 +963,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-050: HTTP 200 en listarCategoriasAdmin\", function () {",
+                  "pm.test(\"PM-050: HTTP 200 y coleccion de categorias\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-050: Estructura de categorias valida\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data.items || data).to.satisfy((v) => Array.isArray(v));",
+                  "  pm.expect(data.items).to.be.an(\"array\");",
                   "});"
                 ]
               }
@@ -924,12 +1001,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-051: HTTP 200 en listarMarcasAdmin\", function () {",
+                  "pm.test(\"PM-051: HTTP 200 y coleccion de marcas\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-051: Estructura de marcas valida\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data.items || data).to.satisfy((v) => Array.isArray(v));",
+                  "  pm.expect(data.items).to.be.an(\"array\");",
                   "});"
                 ]
               }
@@ -964,10 +1039,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-052: HTTP 200 en obtenerArbolCategoriasAdmin\", function () {",
+                  "pm.test(\"PM-052: HTTP 200 y arbol JSON valido\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-052: Arbol JSON valido\", function () {",
                   "  const data = pm.response.json();",
                   "  pm.expect(data).to.satisfy((v) => Array.isArray(v) || typeof v === \"object\");",
                   "});"
@@ -1004,12 +1077,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-053: HTTP 200 en listarTiposProducto\", function () {",
+                  "pm.test(\"PM-053: HTTP 200 y coleccion de tipos de producto\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-053: Estructura valida\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data.items || data).to.satisfy((v) => Array.isArray(v));",
+                  "  pm.expect(data.items).to.be.an(\"array\");",
                   "});"
                 ]
               }
@@ -1044,12 +1115,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-054: HTTP 404 para categoria inexistente\", function () {",
+                  "pm.test(\"PM-054: HTTP 404 Problem Details contractual\", function () {",
                   "  pm.response.to.have.status(404);",
-                  "});",
-                  "pm.test(\"PM-054: Problem Details contractual\", function () {",
                   "  const body = pm.response.json();",
                   "  pm.expect(body.status).to.eql(404);",
+                  "  pm.expect(body.code).to.be.a(\"string\").and.not.empty;",
                   "});"
                 ]
               }
@@ -1090,10 +1160,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-060: HTTP 200 en listarPromociones\", function () {",
+                  "pm.test(\"PM-060: HTTP 200 y items[]\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-060: Respuesta contiene items[]\", function () {",
                   "  const data = pm.response.json();",
                   "  pm.expect(data.items).to.be.an(\"array\");",
                   "});"
@@ -1130,12 +1198,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-061: HTTP 200 en listarPromocionesAdmin\", function () {",
+                  "pm.test(\"PM-061: HTTP 200 y items[]\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-061: Respuesta estructurada valida\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data.items || data).to.satisfy((v) => Array.isArray(v));",
+                  "  pm.expect(data.items).to.be.an(\"array\");",
                   "});"
                 ]
               }
@@ -1170,12 +1236,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-062: HTTP 200 en listarCupones\", function () {",
+                  "pm.test(\"PM-062: HTTP 200 y items[]\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-062: Respuesta estructurada valida\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data.items || data).to.satisfy((v) => Array.isArray(v));",
+                  "  pm.expect(data.items).to.be.an(\"array\");",
                   "});"
                 ]
               }
@@ -1206,7 +1270,7 @@
     },
     {
       "name": "08 - Inventory",
-      "description": "Consultas de umbrales, dashboard y ubicaciones (sin reservas ni mutaciones de stock).",
+      "description": "Consultas de umbrales, dashboard y ubicaciones con validacion de esquema OpenAPI.",
       "item": [
         {
           "name": "PM-070 - Inventory: Consultar umbrales de inventario",
@@ -1216,12 +1280,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-070: HTTP 200 en obtenerUmbralesInventario\", function () {",
+                  "pm.test(\"PM-070: HTTP 200 y DTO UmbralInventario\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-070: Estructura JSON valida\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data).to.be.an(\"object\");",
+                  "  pm.expect(data.umbralGlobal).to.be.a(\"number\").and.at.least(0);",
+                  "  pm.expect(data.overrides).to.be.an(\"array\");",
                   "});"
                 ]
               }
@@ -1256,12 +1319,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-071: HTTP 200 en obtenerDashboardInventario\", function () {",
+                  "pm.test(\"PM-071: HTTP 200 y DTO DashboardInventario\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-071: Estructura JSON valida\", function () {",
                   "  const data = pm.response.json();",
-                  "  pm.expect(data).to.be.an(\"object\");",
+                  "  pm.expect(data.generatedAt).to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(data.totalSkus).to.be.a(\"number\").and.at.least(0);",
+                  "  pm.expect(data.totalOnHand).to.be.a(\"number\").and.at.least(0);",
+                  "  pm.expect(data.totalReserved).to.be.a(\"number\").and.at.least(0);",
+                  "  pm.expect(data.totalAvailable).to.be.a(\"number\").and.at.least(0);",
+                  "  pm.expect(data.porUbicacion).to.be.an(\"array\");",
                   "});"
                 ]
               }
@@ -1296,10 +1362,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-072: HTTP 200 en listarUbicacionesInventario\", function () {",
+                  "pm.test(\"PM-072: HTTP 200 y listado de ubicaciones\", function () {",
                   "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"PM-072: Lista de ubicaciones valida\", function () {",
                   "  const data = pm.response.json();",
                   "  pm.expect(data.items || data).to.satisfy((v) => Array.isArray(v));",
                   "});"
@@ -1342,15 +1406,13 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-004: HTTP 401 sin token Authorization\", function () {",
+                  "pm.test(\"PM-004: HTTP 401 sin Authorization\", function () {",
                   "  pm.response.to.have.status(401);",
                   "});",
-                  "pm.test(\"PM-004: Contrato application/problem+json y codigo TOKEN_INVALIDO\", function () {",
-                  "  const ct = (pm.response.headers.get(\"Content-Type\") || \"\").toLowerCase();",
-                  "  pm.expect(ct).to.include(\"json\");",
+                  "pm.test(\"PM-004: Problem Details TOKEN_INVALIDO sin fuga de items\", function () {",
                   "  const body = pm.response.json();",
                   "  pm.expect(body.status).to.eql(401);",
-                  "  if (body.code) pm.expect(body.code).to.eql(\"TOKEN_INVALIDO\");",
+                  "  pm.expect(body.code).to.eql(\"TOKEN_INVALIDO\");",
                   "  pm.expect(body).to.not.have.property(\"items\");",
                   "});"
                 ]
@@ -1370,7 +1432,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/productos?canal={{channel}}",
-            "description": "Politica universal G7 (R2): GET /api/v1/productos sin Authorization debe devolver 401 TOKEN_INVALIDO."
+            "description": ""
           },
           "response": []
         },
@@ -1382,12 +1444,13 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-004B: HTTP 401 con token malformado\", function () {",
+                  "pm.test(\"PM-004B: HTTP 401 con JWT invalido\", function () {",
                   "  pm.response.to.have.status(401);",
                   "});",
-                  "pm.test(\"PM-004B: Ausencia de datos protegidos\", function () {",
+                  "pm.test(\"PM-004B: Problem Details TOKEN_INVALIDO sin fuga de datos\", function () {",
                   "  const body = pm.response.json();",
                   "  pm.expect(body.status).to.eql(401);",
+                  "  pm.expect(body.code).to.eql(\"TOKEN_INVALIDO\");",
                   "  pm.expect(body).to.not.have.property(\"items\");",
                   "});"
                 ]
@@ -1411,32 +1474,26 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/productos?canal={{channel}}",
-            "description": "Authorization con JWT invalido debe ser rechazado con 401 TOKEN_INVALIDO."
+            "description": ""
           },
           "response": []
         },
         {
-          "name": "PM-005 - Negativo: Autorizacion insuficiente (403)",
+          "name": "PM-005 - Negativo: Autorizacion insuficiente (403 estricto)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const hasRestricted = Boolean(pm.environment.get(\"restrictedAccessToken\"));",
-                  "pm.test(\"PM-005: Rechazo de autorizacion (403 con token restringido; 401 si ausente)\", function () {",
-                  "  if (hasRestricted) {",
-                  "    pm.response.to.have.status(403);",
-                  "  } else {",
-                  "    pm.expect([401, 403]).to.include(pm.response.code);",
-                  "  }",
+                  "pm.test(\"PM-005: HTTP 403 estricto con identidad autenticada sin permisos\", function () {",
+                  "  pm.response.to.have.status(403);",
                   "});",
-                  "pm.test(\"PM-005: Sin acceso a datos de auditoria\", function () {",
+                  "pm.test(\"PM-005: Problem Details SCOPE_INSUFICIENTE sin fuga de auditoria\", function () {",
                   "  const body = pm.response.json();",
+                  "  pm.expect(body.status).to.eql(403);",
+                  "  pm.expect(body.code).to.eql(\"SCOPE_INSUFICIENTE\");",
                   "  pm.expect(body).to.not.have.property(\"items\");",
-                  "  if (pm.response.code === 403 && body.code) {",
-                  "    pm.expect(body.code).to.eql(\"SCOPE_INSUFICIENTE\");",
-                  "  }",
                   "});"
                 ]
               }
@@ -1459,7 +1516,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/auditoria-precios?pagina=1&tamanio=5",
-            "description": "Requiere restrictedAccessToken (identidad autenticada sin permiso de auditoria). Si no se provee, valida rechazo 401/403 sin fuga."
+            "description": "H02: Requiere restrictedAccessToken autentico. Nunca aprueba con 401."
           },
           "response": []
         },
@@ -1471,14 +1528,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-006: HTTP 404 para producto inexistente\", function () {",
+                  "pm.test(\"PM-006: HTTP 404 PRODUCTO_NO_ENCONTRADO\", function () {",
                   "  pm.response.to.have.status(404);",
-                  "});",
-                  "pm.test(\"PM-006: Problem Details contractual sin stack traces\", function () {",
                   "  const body = pm.response.json();",
                   "  pm.expect(body.status).to.eql(404);",
-                  "  if (body.code) pm.expect(body.code).to.eql(\"PRODUCTO_NO_ENCONTRADO\");",
-                  "  pm.expect(pm.response.text()).to.not.include(\"node_modules\");",
+                  "  pm.expect(body.code).to.eql(\"PRODUCTO_NO_ENCONTRADO\");",
                   "});"
                 ]
               }
@@ -1501,7 +1555,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/productos/{{nonExistentProductId}}?canal={{channel}}",
-            "description": "GET /api/v1/productos/{nonExistentProductId} debe devolver 404 PRODUCTO_NO_ENCONTRADO."
+            "description": ""
           },
           "response": []
         },
@@ -1513,13 +1567,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-007A: HTTP 400 VALIDACION por precioMin > precioMax\", function () {",
+                  "pm.test(\"PM-007A: HTTP 400 VALIDACION\", function () {",
                   "  pm.response.to.have.status(400);",
-                  "});",
-                  "pm.test(\"PM-007A: Codigo de error VALIDACION\", function () {",
                   "  const body = pm.response.json();",
                   "  pm.expect(body.status).to.eql(400);",
-                  "  if (body.code) pm.expect(body.code).to.eql(\"VALIDACION\");",
+                  "  pm.expect(body.code).to.eql(\"VALIDACION\");",
                   "});"
                 ]
               }
@@ -1542,7 +1594,7 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/productos?canal={{channel}}&precioMin=200&precioMax=50",
-            "description": "OpenAPI listarProductos: precioMin > precioMax debe responder 400 VALIDACION."
+            "description": ""
           },
           "response": []
         },
@@ -1554,12 +1606,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"PM-007B: HTTP 400 por canal/pagina invalidos\", function () {",
+                  "pm.test(\"PM-007B: HTTP 400 VALIDACION\", function () {",
                   "  pm.response.to.have.status(400);",
-                  "});",
-                  "pm.test(\"PM-007B: Contrato de error de validacion\", function () {",
                   "  const body = pm.response.json();",
                   "  pm.expect(body.status).to.eql(400);",
+                  "  pm.expect(body.code).to.eql(\"VALIDACION\");",
                   "});"
                 ]
               }
@@ -1582,12 +1633,12 @@
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/productos?canal=CANAL_INVALIDO&pagina=0",
-            "description": "OpenAPI listarProductos: canal invalido y pagina=0 deben responder 400 VALIDACION."
+            "description": ""
           },
           "response": []
         },
         {
-          "name": "PM-008 - Negativo: Ruta desconocida en Gateway (404)",
+          "name": "PM-008 - Negativo: Ruta desconocida en APIM/Gateway (404)",
           "event": [
             {
               "listen": "test",
@@ -1611,14 +1662,10 @@
               {
                 "key": "X-Correlation-Id",
                 "value": "{{correlationId}}"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/ruta-inexistente-h5-probe",
-            "description": "Verifica que rutas no declaradas en el contrato responden 404 sin proxy generico."
+            "description": ""
           },
           "response": []
         }
@@ -1626,23 +1673,21 @@
     },
     {
       "name": "10 - Integraciones externas",
-      "description": "Pruebas de proveedor G6 para consumo M2M (G1 Marketplace, G5 Ventas). No sustituyen homologacion bilateral L3.",
+      "description": "H02 + H07: Pruebas de proveedor G6 con tokens M2M separados (Marketplace vs Ventas). Nunca aprueban con 401.",
       "item": [
         {
-          "name": "PM-080 - Proveedor G6 para G1 Marketplace: Listar productos (serviceBearer)",
+          "name": "PM-080 - Proveedor G6 para G1 Marketplace: Listar productos (modulo-marketplace)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const hasService = Boolean(pm.environment.get(\"serviceAccessToken\"));",
-                  "pm.test(\"PM-080: HTTP 200 con serviceBearer valido (o 401 si no configurado)\", function () {",
-                  "  if (hasService) {",
-                  "    pm.response.to.have.status(200);",
-                  "  } else {",
-                  "    pm.response.to.have.status(401);",
-                  "  }",
+                  "pm.test(\"PM-080: HTTP 200 estricto y PaginaProductosComercial valida\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data.items).to.be.an(\"array\").and.not.be.empty;",
+                  "  pm.expect(data.items[0].product_id).to.be.a(\"string\").and.not.empty;",
                   "});"
                 ]
               }
@@ -1661,29 +1706,31 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{serviceAccessToken}}"
+                "value": "Bearer {{marketplaceAccessToken}}"
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/productos?canal=MARKETPLACE&pagina=1&tamanio=5",
-            "description": "Valida vista de proveedor con serviceAccessToken (modulo-marketplace, scope catalogo:leer)."
+            "description": ""
           },
           "response": []
         },
         {
-          "name": "PM-081 - Proveedor G6 para G1 Marketplace: Disponibilidad comercial (serviceBearer)",
+          "name": "PM-081 - Proveedor G6 para G1 Marketplace: Disponibilidad comercial (modulo-marketplace)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const hasService = Boolean(pm.environment.get(\"serviceAccessToken\"));",
-                  "pm.test(\"PM-081: HTTP 200 con serviceBearer valido (o 401 si no configurado)\", function () {",
-                  "  if (hasService) {",
-                  "    pm.response.to.have.status(200);",
-                  "  } else {",
-                  "    pm.response.to.have.status(401);",
-                  "  }",
+                  "pm.test(\"PM-081: HTTP 200 estricto y DTO DisponibilidadComercial sin campos internos\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const data = pm.response.json();",
+                  "  const expectedSku = pm.environment.get(\"sku\") || pm.variables.get(\"sku\");",
+                  "  pm.expect(data.items).to.be.an(\"array\").and.not.be.empty;",
+                  "  const row = data.items.find((it) => it.sku === expectedSku);",
+                  "  pm.expect(row, \"SKU solicitado\").to.be.an(\"object\");",
+                  "  pm.expect([\"DISPONIBLE\", \"STOCK_BAJO\", \"AGOTADO\", \"INDETERMINADO\"]).to.include(row.status);",
+                  "  pm.expect(Object.keys(row).sort()).to.eql([\"sku\", \"status\"]);",
                   "});"
                 ]
               }
@@ -1702,29 +1749,31 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{serviceAccessToken}}"
+                "value": "Bearer {{marketplaceAccessToken}}"
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/inventario/disponibilidad/comercial?skus={{sku}}&canal=MARKETPLACE",
-            "description": "GET /api/v1/inventario/disponibilidad/comercial con scope inventario:disponibilidad:leer."
+            "description": "Valida DisponibilidadComercial (additionalProperties: false — no filtra on_hand ni reserved)."
           },
           "response": []
         },
         {
-          "name": "PM-082 - Proveedor G6 para G5 Ventas: Disponibilidad autoritativa (serviceBearer)",
+          "name": "PM-082 - Proveedor G6 para G5 Ventas: Disponibilidad autoritativa (modulo-ventas)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const hasService = Boolean(pm.environment.get(\"serviceAccessToken\"));",
-                  "pm.test(\"PM-082: HTTP 200 con serviceBearer valido (o 401 si no configurado)\", function () {",
-                  "  if (hasService) {",
-                  "    pm.response.to.have.status(200);",
-                  "  } else {",
-                  "    pm.response.to.have.status(401);",
-                  "  }",
+                  "pm.test(\"PM-082: HTTP 200 estricto y DTO DisponibilidadStock con invariante\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const data = pm.response.json();",
+                  "  const expectedSku = pm.environment.get(\"sku\") || pm.variables.get(\"sku\");",
+                  "  pm.expect(data.items).to.be.an(\"array\").and.not.be.empty;",
+                  "  const row = data.items.find((it) => it.sku === expectedSku);",
+                  "  pm.expect(row, \"SKU solicitado\").to.be.an(\"object\");",
+                  "  pm.expect(row.available).to.eql(Math.max(row.on_hand - row.reserved - row.blocked, 0));",
+                  "  pm.expect([\"DISPONIBLE\", \"STOCK_BAJO\", \"AGOTADO\", \"INDETERMINADO\"]).to.include(row.status);",
                   "});"
                 ]
               }
@@ -1743,11 +1792,11 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{serviceAccessToken}}"
+                "value": "Bearer {{ventasAccessToken}}"
               }
             ],
             "url": "{{baseUrl}}{{apiPrefix}}/inventario/disponibilidad?skus={{sku}}",
-            "description": "GET /api/v1/inventario/disponibilidad con scope inventario:disponibilidad:leer."
+            "description": ""
           },
           "response": []
         }
