@@ -1,9 +1,5 @@
-# Evidencia local
+# Evidencia de las demostraciones k6
 
-Cada invocación guarda `summary.json`, `summary.sha256` y, si hay métricas, `metrics.csv` bajo `.local/<id>/`. `runtime.json` y `dashboard.html` son artefactos internos de diagnóstico. Revisa el resumen antes de compartir y conserva archivos crudos localmente con acceso restringido. `.local/` está ignorado por Git.
+El ejecutor de Backend genera `summary.json`, `summary.sha256`, `metrics.csv` y el dashboard HTML (si k6 lo soporta) bajo `scripts/h5/k6/.local/<id>/`. Consulta el [esquema y las reglas de comparación del arnés](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/080fda038ea217e1ed5795b7ea6fc5b62d846564/scripts/h5/k6/evidence/README.md).
 
-El resumen contiene caso, operación, alcance, timestamp UTC, perfil, repetición, SHA de Backend/Frontend/Docs y del arnés, hashes de archivos, versión k6, dataset, revisión, digest del sujeto (staging), VU observados, duración configurada y total de proceso k6, iteraciones, códigos HTTP, percentiles de lecturas válidas, RPS sobre el intervalo medido, checks, error inesperado, resultado y código de salida. La negativa HTTP explícita tiene su propio contador. El dashboard puede incluir también preparación y cierre; usa las métricas saneadas de la medición para comparar.
-
-Para P3, guarda en `.local/telemetria/<sha256-del-summary>.json` un registro con `summary_sha256`, `telemetry_sha256` del artefacto de telemetría, `warmup_seconds`, `cpu_peak_pct`, `memory_peak_mb` y `db_connections_peak`. El comparador vincula la referencia con el resumen, verifica la presencia de métricas y exige pausas entre ejecuciones. El responsable del entorno conserva la telemetría original con el hash registrado y valida su cobertura. No publiques hostnames, credenciales ni datos de respuesta.
-
-Estados de ejecución. `PASS`, corrida completa con métricas y gates de ejecución satisfechos. `FAIL`, fallo explícito de k6. `INCONCLUSIVE`, evidencia incompleta o no comparable. `NOT_RUN`/`NO_EJECUTADO`, sin medición. El scope local `L1_FIXTURE_SINTETICO` no se admite como entrada para una comparación formal.
+Los resúmenes identifican el SHA de código, modalidad, operación, versión de k6, dataset y métricas. Conserva reportes crudos fuera de Git y comparte únicamente evidencia saneada. Distingue `L1_FIXTURE_SINTETICO`, `L1_NEST_FIXTURES` y `L2_STAGING_APIM` al presentar resultados.

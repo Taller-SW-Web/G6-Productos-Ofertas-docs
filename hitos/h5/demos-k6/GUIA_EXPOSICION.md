@@ -1,12 +1,14 @@
 # Guion en vivo (6 minutos)
 
+Abre un PowerShell en la raíz de Backend, en la rama de integración de k6. Usa los [comandos de Backend](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/080fda038ea217e1ed5795b7ea6fc5b62d846564/scripts/h5/k6/README.md) para la demo local de Catálogo, con `--dashboard`. Deja el manifiesto privado y el token fuera de pantalla.
+
 | Tiempo | Qué mostrar | Qué decir |
 |---|---|---|
-| 0:00–0:45 | Matriz y caso `PERF-01`. | Medimos una lectura GET de Catálogo con IDs esperados por página. Anuncia el alcance `L1_FIXTURE_SINTETICO` o `L2_STAGING_APIM` según la corrida autorizada. |
-| 0:45–1:30 | PowerShell con el preflight. | Verifica SHA, dataset, ventana, CLI y perfil. `NO_EJECUTADO` indica que todavía no hubo una corrida. Mantén fuera de pantalla secretos y configuración privada. |
-| 1:30–2:45 | Ejecuta 1 VU y abre `http://127.0.0.1:5665`. | Un VU es un usuario virtual que repite la lectura. RPS son solicitudes por segundo; p95 es el tiempo por debajo del cual terminó aproximadamente el 95% de las lecturas medidas. Señala la tasa limitada, la latencia y los checks. |
-| 2:45–3:45 | Cierra la pestaña del dashboard y abre el resumen saneado. | Identifica código de salida, VU medido, checks, p50/p95/p99, RPS y errores. Enseña el 401 negativo separado si usaste el fixture. La exportación HTML queda en `.local/`. |
-| 3:45–4:45 | Evidencia reproducible. | Enseña SHA, hash del dataset, revisión, versión k6 y alcance. Para resultados comparables se necesitan tres repeticiones de cada sujeto y telemetría. |
-| 4:45–6:00 | Pricing, Inventario y permisos pendientes. | Explica qué rutas se prepararon. Muestra los estados esperados del dataset de Inventario. Indica qué pruebas necesitan identidad, staging o acceso privado y qué quedó sin ejecutar. |
+| 0:00–0:45 | Matriz y caso PERF-01. | Medimos una lectura GET de Catálogo con un conjunto de productos conocido. El alcance local es `L1_FIXTURE_SINTETICO`. |
+| 0:45–1:30 | PowerShell con preflight. | Comprueba SHA, dataset, ventana y perfil. `NO_EJECUTADO` identifica un preflight sin medición. |
+| 1:30–2:45 | Demo de 1 VU y dashboard en http://127.0.0.1:5665. | Un VU repite la lectura. RPS son solicitudes por segundo y p95 es el tiempo por debajo del cual se completó aproximadamente el 95% de las lecturas medidas. |
+| 2:45–3:45 | Cierra la pestaña y abre el resumen saneado. | Enseña casos válidos, latencias y errores. El 401 de la prueba negativa aparece separado del throughput. |
+| 3:45–4:45 | Evidencia. | Muestra el SHA del arnés, el hash del dataset, la versión de k6 y el alcance. El HTML exportado permite presentar la corrida después. |
+| 4:45–6:00 | Pricing e Inventario. | Distingue los controladores Nest locales con fixtures del recorrido en Azure. Explica qué hace falta para comparar baseline/candidato y para correr en APIM. |
 
-Ten listo el resumen de una ejecución local previa como respaldo si falla la demo en vivo. Preséntalo con su propia fecha y alcance. Usa el perfil de 5 VU solo con una ventana aprobada separada.
+Ten listo el HTML de una corrida local previa como respaldo. El perfil de 5 VU requiere una ventana autorizada.
