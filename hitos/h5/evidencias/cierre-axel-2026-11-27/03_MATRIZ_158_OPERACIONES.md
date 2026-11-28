@@ -213,3 +213,7 @@
 | 156 | `bulk-svc` | `ENDPOINT_PRIVADO` | `obtenerContenidoCargaMasivaInternoH5` | GET | `/interno/carga-masiva/contenidos/{contentId}` | 200 | ROUTE_SECURITY_PASS | NEGATIVE_CONTRACT_PASS | FUNCTIONAL_PASS | NOT_APPLICABLE | NOT_APPLICABLE | **PASS** |
 | 157 | `api-gateway` | `ENDPOINT_PRIVADO` | `gatewayHealth` | GET | `/health` | 200 | ROUTE_SECURITY_PASS | NOT_APPLICABLE | FUNCTIONAL_PASS | NOT_APPLICABLE | NOT_APPLICABLE | **PASS** |
 | 158 | `api-gateway` | `ENDPOINT_PRIVADO` | `gatewayReadiness` | GET | `/health/ready` | 200 | ROUTE_SECURITY_PASS | NOT_APPLICABLE | FUNCTIONAL_PASS | NOT_APPLICABLE | NOT_APPLICABLE | **PASS** |
+
+## Registro de acceso y evidencia L2
+
+El [inventario pre-CD de 158 operaciones](artefactos/INVENTARIO_158_OPERACIONES_PRE_CD.json) conserva la cobertura L1 por ruta y reserva una entrada para revisión, digest, HTTP real, nivel y evidencia de cada operación. La vía prevista es APIM para 145 vigentes, 4 G5 y 2 Pricing condicionadas al contrato conciliado. Otras 5 operaciones usan la red interna G6 y 2 son sondas privadas de Gateway. Las 158 entradas L2 permanecen NOT_RUN hasta una ejecución real en su vía autorizada.

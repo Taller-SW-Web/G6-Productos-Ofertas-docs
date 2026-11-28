@@ -1,0 +1,247 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAtUtc": "2026-11-28T01:55:00Z",
+  "preparedBy": "Axel Cueva",
+  "stateSeparation": {
+    "codeMergedToMaster": true,
+    "masterPushCiPassed": true,
+    "ghcrImagesPublished": true,
+    "azureChileCandidateDeployed": false,
+    "azureChileL2Certified": false
+  },
+  "masterCandidate": {
+    "repository": "Taller-SW-Web/G6-Productos-Ofertas-backend",
+    "branch": "master",
+    "sha": "36f619da6c44a3c14b93917d1fddf2d09bd569db",
+    "mergedPullRequests": [
+      {
+        "pr": 307,
+        "headSha": "db49a5b7a5e2cfa1e4b8033a65c9d2075ef57d4a",
+        "mergeCommitSha": "892e96bc89293805192cb1efc602941b411ef01b",
+        "pullRequestCiRunId": 46086802435,
+        "pushCiRunId": 46089952966,
+        "pushCiConclusion": "success"
+      },
+      {
+        "pr": 308,
+        "headSha": "6b714d65b2067ed2f3377dae350232a1093233dc",
+        "mergeCommitSha": "36f619da6c44a3c14b93917d1fddf2d09bd569db",
+        "pullRequestCiRunId": 46091026910,
+        "pushCiRunId": 46091856477,
+        "pushCiConclusion": "success"
+      }
+    ],
+    "pushCi": {
+      "runId": 46091856477,
+      "url": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46091856477",
+      "status": "completed",
+      "conclusion": "success",
+      "executedJobsPassed": 22,
+      "optInJobsSkipped": 1
+    }
+  },
+  "publishedImages": [
+    {
+      "service": "taxonomy-svc",
+      "publishRunId": 46093183232,
+      "publishJobId": 140818559378,
+      "publishConclusion": "success",
+      "imageRef": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/taxonomy-svc@sha256:9985b160c275137efe427a2e1a6fee8089f17ae011f4f3bc9c1655b3da544ca3",
+      "digest": "sha256:9985b160c275137efe427a2e1a6fee8089f17ae011f4f3bc9c1655b3da544ca3",
+      "deployedInChile": false,
+      "currentLiveRevision": "taxonomy-svc--0000005",
+      "currentLiveDigest": "sha256:784d1d85fb2872269cb83ed6650f5a52494f1c5a0e77a8a32d4466b8bb186b51",
+      "cdRunId": 46093835743,
+      "cdStatus": "waiting_azure_h5_chile_approval"
+    },
+    {
+      "service": "price-audit-svc",
+      "publishRunId": 46093185787,
+      "publishJobId": 140818566240,
+      "publishConclusion": "success",
+      "imageRef": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/price-audit-svc@sha256:e1d9aa574a143fae52bdcb01b9ae8400fc0094efab76dd16136b0861e1dd9581",
+      "digest": "sha256:e1d9aa574a143fae52bdcb01b9ae8400fc0094efab76dd16136b0861e1dd9581",
+      "deployedInChile": false,
+      "currentLiveRevision": "price-audit-svc--0000001",
+      "currentLiveDigest": "sha256:4b6fef2787c310c4d27f9c8db662adb1a925ce13424e669f74672f7225067501",
+      "cdRunId": null,
+      "cdStatus": "NOT_DISPATCHED"
+    },
+    {
+      "service": "catalog-svc",
+      "publishRunId": 46093188336,
+      "publishJobId": 140818575945,
+      "publishConclusion": "success",
+      "imageRef": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/catalog-svc@sha256:3250d6443be9c5038339c1508c000f7ece6c437b1b2d4536997966de50198159",
+      "digest": "sha256:3250d6443be9c5038339c1508c000f7ece6c437b1b2d4536997966de50198159",
+      "deployedInChile": false,
+      "currentLiveRevision": "catalog-svc--0000004",
+      "currentLiveDigest": "sha256:4e023977f17cce955f702a9122d51d17f028bffb66b7f3da4bd4c74b573c8a5f",
+      "cdRunId": null,
+      "cdStatus": "NOT_DISPATCHED"
+    },
+    {
+      "service": "pricing-svc",
+      "publishRunId": 46093191249,
+      "publishJobId": 140818585759,
+      "publishConclusion": "success",
+      "imageRef": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/pricing-svc@sha256:71c5d4953305ac8bc23c011c57a34b58ad0b0eec64584d349489d4eca207ef83",
+      "digest": "sha256:71c5d4953305ac8bc23c011c57a34b58ad0b0eec64584d349489d4eca207ef83",
+      "deployedInChile": false,
+      "currentLiveRevision": "pricing-svc--0000007",
+      "currentLiveDigest": "sha256:fc50f6fb9b437e0bb528d0402ae4a8bae96afa6f06de3bd2f283e062039d88b4",
+      "cdRunId": null,
+      "cdStatus": "NOT_DISPATCHED"
+    },
+    {
+      "service": "inventory-svc",
+      "publishRunId": 46093195003,
+      "publishJobId": 140818596680,
+      "publishConclusion": "success",
+      "imageRef": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/inventory-svc@sha256:433a40b5c91fefa86f63c7d3ab569554bcb58b2d8e95682ba584261ff28da976",
+      "digest": "sha256:433a40b5c91fefa86f63c7d3ab569554bcb58b2d8e95682ba584261ff28da976",
+      "deployedInChile": false,
+      "currentLiveRevision": "inventory-svc--0000002",
+      "currentLiveDigest": "sha256:8477c4b3a607e129a50c23c28e6b80a3fc59dd4115226aa03ead8d646689de5e",
+      "cdRunId": null,
+      "cdStatus": "NOT_DISPATCHED"
+    },
+    {
+      "service": "combos-svc",
+      "publishRunId": 46093197692,
+      "publishJobId": 140818605749,
+      "publishConclusion": "success",
+      "imageRef": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/combos-svc@sha256:c3cf14cd485ed4fa8fdc912f40133b7a521074403d027755d4c4c051643db052",
+      "digest": "sha256:c3cf14cd485ed4fa8fdc912f40133b7a521074403d027755d4c4c051643db052",
+      "deployedInChile": false,
+      "currentLiveRevision": "combos-svc--0000003",
+      "currentLiveDigest": "sha256:062fa1d0e9abb75eb2d0eb124056ad64f6d423ee7811159b4d8d3ab4037361ca",
+      "cdRunId": null,
+      "cdStatus": "NOT_DISPATCHED"
+    },
+    {
+      "service": "promotions-svc",
+      "publishRunId": 46093199908,
+      "publishJobId": 140818614546,
+      "publishConclusion": "success",
+      "imageRef": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/promotions-svc@sha256:d02ba286ee5e252c8ad0ba7455742b0e448e53ab9fdd89c8773166395add1637",
+      "digest": "sha256:d02ba286ee5e252c8ad0ba7455742b0e448e53ab9fdd89c8773166395add1637",
+      "deployedInChile": false,
+      "currentLiveRevision": "promotions-svc--0000007",
+      "currentLiveDigest": "sha256:d9c8e5ab9bd3109dbeda5f1e286e4c2433225948acf2db93eab959cbb6d7b3f2",
+      "cdRunId": null,
+      "cdStatus": "NOT_DISPATCHED"
+    },
+    {
+      "service": "bulk-svc",
+      "publishRunId": 46093202253,
+      "publishJobId": 140818622051,
+      "publishConclusion": "success",
+      "imageRef": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/bulk-svc@sha256:a209dd5b74d52394f3ee335e373ccf42bac8ab87c28f18b82e8b8b8c1b088cc8",
+      "digest": "sha256:a209dd5b74d52394f3ee335e373ccf42bac8ab87c28f18b82e8b8b8c1b088cc8",
+      "deployedInChile": false,
+      "currentLiveRevision": "bulk-svc--0000002",
+      "currentLiveDigest": "sha256:7567f26f4604ad7dc2f3f4649408d200e355c2a20ce0e37e038b81d55868e862",
+      "cdRunId": null,
+      "cdStatus": "NOT_DISPATCHED"
+    },
+    {
+      "service": "api-gateway",
+      "publishRunId": 46093204616,
+      "publishJobId": 140818631866,
+      "publishConclusion": "success",
+      "imageRef": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/api-gateway@sha256:a90b7f2839e1426beb062e0f9c0a3ed7aa8de3766d98cdb74c0dac0ed2ad7654",
+      "digest": "sha256:a90b7f2839e1426beb062e0f9c0a3ed7aa8de3766d98cdb74c0dac0ed2ad7654",
+      "deployedInChile": false,
+      "currentLiveRevision": "api-gateway--0000003",
+      "currentLiveDigest": "sha256:2ab58ef95977588b384f7debfad498e8e944a22399424ebdda0cd67a5e6d028b",
+      "cdRunId": null,
+      "cdStatus": "NOT_DISPATCHED"
+    }
+  ],
+  "wave1CdRun": {
+    "runId": 46093835743,
+    "url": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46093835743",
+    "displayTitle": "H5 CD chile-shared azure-h5-chile taxonomy-svc 36f619da6c44a3c14b93917d1fddf2d09bd569db pilot=false",
+    "destination": "chile-shared",
+    "environment": "azure-h5-chile",
+    "service": "taxonomy-svc",
+    "sha": "36f619da6c44a3c14b93917d1fddf2d09bd569db",
+    "gatewayRouteProfile": "standard",
+    "pilotSelfReview": false,
+    "status": "waiting",
+    "jobs": {
+      "prepare": "success",
+      "security": "success",
+      "publish": "success",
+      "deploy": "waiting_human_approval",
+      "smoke": "pending_deploy"
+    }
+  },
+  "pricingAdminReconciliationDrafts": {
+    "status": "DRAFT_PENDING_MERGE_DECISION",
+    "docsPr": {
+      "number": 153,
+      "url": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/pull/153",
+      "headSha": "7e1435386d2a8dca51e586a12524d4d78ceb7738",
+      "isDraft": true,
+      "ciRunId": 46090465419,
+      "ciConclusion": "success"
+    },
+    "backendPr": {
+      "number": 309,
+      "url": "https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/309",
+      "branch": "trabajo/cueva/h5-apim-pricing-administrativo",
+      "headSha": "a4545acfa15957ce38e467f40554ee82492e836a",
+      "isDraft": true,
+      "localValidations": {
+        "pricingUnitTests": "PASS (25/25 files, 360/360 tests)",
+        "apimPythonAndCompiledArmTests": "PASS (30/30 tests, includes negative human-role tampering check)",
+        "verifyArmTemplateCandidateG5": "PASS (151 policies; 5 private routes excluded; 4 G5 operations)"
+      }
+    },
+    "operations": [
+      "GET /api/v1/precios/administracion/productos/{productoId}",
+      "GET /api/v1/precios/administracion/skus/{sku}"
+    ],
+    "security": {
+      "scheme": "userBearer",
+      "requiredRole": "GESTOR_COMERCIAL"
+    }
+  },
+  "githubEnvironmentAndVariableAudit": {
+    "environment": "azure-h5-chile",
+    "reviewers": [
+      { "login": "mrcastilla8", "id": 143348512 },
+      { "login": "AXL031", "id": 129343979 }
+    ],
+    "preventSelfReview": false,
+    "canAdminsBypass": false,
+    "deploymentBranchPolicies": ["master"],
+    "azureChileDeployEnabled": {
+      "environmentValue": "false",
+      "repositoryPresence": "ABSENT (repo vars: TS_OIDC_AUDIENCE, TS_OIDC_CLIENT_ID)",
+      "repositoryVisibleOrgVariablesCount": 0,
+      "globalOrganizationAudit": "PENDING_FINE_GRAINED_PAT (Organization Variables: Read; default gh returned HTTP 403 without admin:org)"
+    },
+    "runnerGroupId": 3,
+    "runnerGroupAudit": "PENDING_FINE_GRAINED_PAT (Organization Self-hosted runners: Read and write; default gh returned HTTP 403 without admin:org)"
+  },
+  "azureChileLivePreflight": {
+    "uamiCdRoleAssignmentsCount": 11,
+    "uamiPriceAuditRevisionOperatorVerified": true,
+    "serviceBusNamespace": "g6-sb-h5-chile-261127",
+    "serviceBusQueuesActiveCount": 19,
+    "serviceBusActiveMessages": 0,
+    "serviceBusDeadLetterMessages": 0,
+    "serviceBusQueueRbacCount": 38,
+    "apimLiveOperationsCount": 145,
+    "apimLiveG5OperationsCount": 0,
+    "apimLivePricingAdminReadOperationsCount": 0,
+    "acaSmokeJob": {
+      "name": "azure-h5-smoke-chile",
+      "provisioningState": "Succeeded",
+      "persistentSecretsCount": 0
+    }
+  }
+}

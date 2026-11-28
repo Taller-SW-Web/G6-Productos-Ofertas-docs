@@ -202,8 +202,19 @@
   ],
   "databaseVerificationEvidence": "artefactos/SUPABASE_R10_Y_CATALOG_PREFLIGHT_2026-11-27.json",
   "perf03AndPerf07IsolatedEvidence": "artefactos/PERF03_PERF07_L1_2026-11-27.json",
-  "publicationState": "NOT_PUBLISHED",
-  "certificationL2State": "NOT_RUN_ON_CANDIDATE",
+  "publicationState": "PUBLISHED_9_GHCR_DIGESTS_SHA_36F619DA",
+  "publishedMasterSha": "36f619da6c44a3c14b93917d1fddf2d09bd569db",
+  "publishedMasterPushCiRunId": 46091856477,
+  "publishedDigestsAndPreflightEvidence": "artefactos/RELEASE_36F619DA_DIGESTS_Y_PREFLIGHT_2026-11-27.json",
+  "apimGatewayNoG7ProbesEvidence": "artefactos/APIM_GATEWAY_L2_NO_G7_PROBES_2026-11-27.json",
+  "wave1TaxonomyCdRunId": 46093835743,
+  "wave1TaxonomyCdState": "WAITING_AZURE_H5_CHILE_APPROVAL_FLAG_FALSE",
+  "pricingAdminDrafts": {
+    "docsPr153Sha": "7e1435386d2a8dca51e586a12524d4d78ceb7738",
+    "backendPr309Sha": "a4545acfa15957ce38e467f40554ee82492e836a",
+    "state": "DRAFT_PENDING_MERGE_DECISION"
+  },
+  "certificationL2State": "PARTIAL_NO_G7_PROBES_PASS_CANDIDATE_NOT_DEPLOYED",
   "deploymentPreflight": {
     "scope": "chile-shared",
     "gateway": {
