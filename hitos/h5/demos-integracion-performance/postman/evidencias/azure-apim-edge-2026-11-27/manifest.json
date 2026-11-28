@@ -1,0 +1,103 @@
+{
+  "schemaVersion": "1.1.0",
+  "runId": "azure-apim-edge-2026-11-27",
+  "timestampUtc": "2026-11-28T03:53:23.148Z",
+  "environment": "azure-apim-chile",
+  "targetOrigin": "https://apim-g6-productos-chile.azure-api.net",
+  "profile": "apim-edge",
+  "overallVerdict": "FAIL",
+  "subjects": {
+    "backendLocalHeadSha": "36f619da6c44a3c14b93917d1fddf2d09bd569db",
+    "frontendLocalHeadSha": "2c6ad931b8dd48e4a4fe883a18ac899fb48b0c81",
+    "docsLocalHeadSha": "940c5a26670965265c93bdb77638c69ae553b396",
+    "note": "Los SHAs locales corresponden a los working trees inspeccionados y no se atribuyen al despliegue remoto sin verificacion independiente."
+  },
+  "deployedRevision": "NO_VERIFICADO_EN_ESTA_CORRIDA",
+  "collection": {
+    "file": "g6-h5-integration.postman_collection.json",
+    "sha256": "10f85b8b850189b4f7a9ca27798dc5b82fdf8959dfdf57d08f82139c2d94cec5"
+  },
+  "runtime": {
+    "nodeVersion": "24.16.0",
+    "newmanVersion": "6.2.3"
+  },
+  "contract": {
+    "openApiVersion": "0.7.0-rc.3",
+    "path": "contratos/http/openapi.yaml"
+  },
+  "reconciliation": {
+    "plannedCount": 12,
+    "executedCount": 3,
+    "notRunCount": 9,
+    "plannedCases": [
+      "PM-002",
+      "PM-003A",
+      "PM-003B",
+      "PM-003C",
+      "PM-003D",
+      "PM-004",
+      "PM-004B",
+      "PM-005",
+      "PM-006",
+      "PM-007A",
+      "PM-007B",
+      "PM-008"
+    ],
+    "executedCases": [
+      "PM-004",
+      "PM-004B",
+      "PM-008"
+    ],
+    "notRunCases": [
+      {
+        "pmId": "PM-002",
+        "reason": "BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."
+      },
+      {
+        "pmId": "PM-003A",
+        "reason": "BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."
+      },
+      {
+        "pmId": "PM-003B",
+        "reason": "BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."
+      },
+      {
+        "pmId": "PM-003C",
+        "reason": "BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."
+      },
+      {
+        "pmId": "PM-003D",
+        "reason": "BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."
+      },
+      {
+        "pmId": "PM-005",
+        "reason": "BLOCKED_AUTH: Requiere G6_RESTRICTED_ACCESS_TOKEN (identidad autenticada sin permiso para validar 403)."
+      },
+      {
+        "pmId": "PM-006",
+        "reason": "BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."
+      },
+      {
+        "pmId": "PM-007A",
+        "reason": "BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."
+      },
+      {
+        "pmId": "PM-007B",
+        "reason": "BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."
+      }
+    ]
+  },
+  "fixtures": {
+    "channel": "MARKETPLACE",
+    "priceMin": 0,
+    "priceMax": 100,
+    "priceMaxNarrow": 60
+  },
+  "evidenceLevel": "LAB_AZURE",
+  "deploymentState": "APIM_LIVE_145_OPS",
+  "blockers": [
+    "Ejecucion parcial (FAIL): 9 de 12 casos planificados quedaron NOT_RUN por credenciales ausentes."
+  ],
+  "durationMs": 64480,
+  "exitCode": 1
+}

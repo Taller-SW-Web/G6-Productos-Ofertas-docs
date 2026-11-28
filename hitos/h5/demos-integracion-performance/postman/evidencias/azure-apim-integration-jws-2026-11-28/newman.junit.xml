@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="G6 - H5 Integration Suite" tests="36" failures="5" skipped="4" time="19.101">
+  <testsuite name="integration" tests="36" failures="5" skipped="4" time="19.101">
+    <testcase classname="INT-01" name="PM-002 - Gateway -&gt; Catalog: Listar productos autorizados" time="0.660">
+    </testcase>
+    <testcase classname="INT-01" name="PM-003A - Catalog -&gt; Pricing: Filtro por rango de precio amplio (con paginacion completa)" time="1.109">
+    </testcase>
+    <testcase classname="INT-01" name="PM-003B - Catalog -&gt; Pricing: Filtro rango acotado y relacion de subconjunto estricta" time="0.993">
+    </testcase>
+    <testcase classname="INT-01" name="PM-003C - Catalog: Detalle comercial y extraccion de todos los SKUs elegibles" time="0.754">
+    </testcase>
+    <testcase classname="INT-01" name="PM-003D - Pricing: Consultar precios efectivos de todos los SKUs elegibles del producto" time="0.470">
+    </testcase>
+    <testcase classname="INT-01" name="PM-010 - Catalog: Estado de preparacion del producto" time="0.405">
+    </testcase>
+    <testcase classname="INT-01" name="PM-011 - Catalog: Listar variantes de producto" time="0.657">
+    </testcase>
+    <testcase classname="INT-02" name="PM-012 - Inventory: Disponibilidad autoritativa por SKU encadenado" time="0.170">
+      <failure message="PM-012: HTTP 200, JSON Schema DisponibilidadStock e invariante de stock: expected response to have status code 200 but got 400"/>
+    </testcase>
+    <testcase classname="INT-01" name="PM-020 - Combos: Listar combos administrativos" time="1.244">
+    </testcase>
+    <testcase classname="INT-01" name="PM-021 - Combos: Negativo combo inexistente (404)" time="0.272">
+    </testcase>
+    <testcase classname="INT-04" name="PM-030 - Bulk: Descargar plantilla CSV v2" time="0.254">
+      <failure message="PM-030: HTTP 200, text/csv y cabeceras presentes: expected response to have status code 200 but got 401"/>
+    </testcase>
+    <testcase classname="INT-04" name="PM-031 - Bulk: Negativo lote de importacion inexistente (404)" time="0.046">
+      <failure message="PM-031: HTTP 404 Problem Details: expected response to have status code 404 but got 401"/>
+    </testcase>
+    <testcase classname="INT-05" name="PM-040 - Pricing: Obtener precio vigente por SKU" time="0.783">
+    </testcase>
+    <testcase classname="INT-05" name="PM-041 - Pricing: Negativo SKU inexistente (404)" time="0.242">
+    </testcase>
+    <testcase classname="INT-05" name="PM-042 - Price Audit: Consultar historial de auditoria de precios" time="1.880">
+    </testcase>
+    <testcase classname="INT-06" name="PM-050 - Taxonomy: Listar categorias (administracion)" time="0.402">
+    </testcase>
+    <testcase classname="INT-06" name="PM-051 - Taxonomy: Listar marcas (administracion)" time="0.373">
+    </testcase>
+    <testcase classname="INT-06" name="PM-052 - Taxonomy: Obtener arbol de categorias" time="0.684">
+    </testcase>
+    <testcase classname="INT-06" name="PM-053 - Taxonomy: Listar tipos de producto" time="0.482">
+    </testcase>
+    <testcase classname="INT-06" name="PM-054 - Taxonomy: Negativo categoria inexistente (404)" time="0.376">
+    </testcase>
+    <testcase classname="INT-03" name="PM-060 - Promotions: Listar promociones vigentes por canal" time="0.885">
+    </testcase>
+    <testcase classname="INT-03" name="PM-061 - Promotions: Listar promociones (administracion)" time="0.670">
+    </testcase>
+    <testcase classname="INT-03" name="PM-062 - Promotions: Listar cupones (solo lectura)" time="0.466">
+    </testcase>
+    <testcase classname="INT-02" name="PM-070 - Inventory: Consultar umbrales de inventario" time="0.121">
+    </testcase>
+    <testcase classname="INT-02" name="PM-071 - Inventory: Consultar dashboard operativo" time="0.207">
+    </testcase>
+    <testcase classname="INT-02" name="PM-072 - Inventory: Listar ubicaciones de inventario" time="0.328">
+    </testcase>
+    <testcase classname="INT-07" name="PM-004 - Negativo: Solicitud sin autenticacion (401)" time="0.037">
+      <failure message="PM-004: HTTP 401 Problem Details TOKEN_INVALIDO sin fuga: PM-004 requiere title: expected {[BODY_REDACTED]} to have property &apos;title&apos;"/>
+    </testcase>
+    <testcase classname="INT-07" name="PM-004B - Negativo: Token malformado o invalido (401)" time="0.038">
+      <failure message="PM-004B: HTTP 401 Problem Details TOKEN_INVALIDO sin fuga: PM-004B requiere title: expected {[BODY_REDACTED]} to have property &apos;title&apos;"/>
+    </testcase>
+    <testcase classname="INT-07" name="PM-005 - Negativo: Autorizacion insuficiente (403 estricto)" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_RESTRICTED_ACCESS_TOKEN (identidad autenticada sin permiso para validar 403)."/>
+    </testcase>
+    <testcase classname="INT-01" name="PM-006 - Negativo: Recurso inexistente (404)" time="0.237">
+    </testcase>
+    <testcase classname="INT-01" name="PM-007A - Negativo: Rango de precios inconsistente (precioMin &gt; precioMax)" time="0.044">
+    </testcase>
+    <testcase classname="INT-01" name="PM-007B - Negativo: Canal y paginacion invalidos (400)" time="0.049">
+    </testcase>
+    <testcase classname="INT-07" name="PM-008 - Negativo: Ruta desconocida en APIM/Gateway (404)" time="0.040">
+    </testcase>
+    <testcase classname="INT-09" name="PM-080 - Proveedor G6 para G1 Marketplace: Listar productos (modulo-marketplace)" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_MARKETPLACE_ACCESS_TOKEN (serviceBearer modulo-marketplace)."/>
+    </testcase>
+    <testcase classname="INT-09" name="PM-081 - Proveedor G6 para G1 Marketplace: Disponibilidad comercial (modulo-marketplace)" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_MARKETPLACE_ACCESS_TOKEN (serviceBearer modulo-marketplace)."/>
+    </testcase>
+    <testcase classname="INT-09" name="PM-082 - Proveedor G6 para G5 Ventas: Disponibilidad autoritativa (modulo-ventas)" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_VENTAS_ACCESS_TOKEN (serviceBearer modulo-ventas)."/>
+    </testcase>
+  </testsuite>
+</testsuites>

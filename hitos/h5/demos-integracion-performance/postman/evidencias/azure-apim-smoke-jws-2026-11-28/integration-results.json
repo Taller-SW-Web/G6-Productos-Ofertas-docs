@@ -1,0 +1,393 @@
+{
+  "runId": "azure-apim-smoke-jws-2026-11-28",
+  "environmentName": "azure-apim-chile",
+  "profile": "apim-edge",
+  "evidenceLevel": "LAB_AZURE",
+  "overallVerdict": "FAIL",
+  "generatedAtUtc": "2026-11-28T05:03:07.118Z",
+  "totals": {
+    "planned": 12,
+    "executed": 12,
+    "requests": 12,
+    "pass": 9,
+    "fail": 2,
+    "inconclusive": 0,
+    "notRun": 1,
+    "assertionsTotal": 12,
+    "assertionsPassed": 10,
+    "assertionsFailed": 2,
+    "durationMs": 8052
+  },
+  "cases": [
+    {
+      "pmId": "PM-002",
+      "intId": "INT-01",
+      "name": "PM-002 - Gateway -> Catalog: Listar productos autorizados",
+      "services": [
+        "api-gateway",
+        "catalog-svc"
+      ],
+      "type": "lectura",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "https://apim-g6-productos-chile.azure-api.net/api/v1/productos?canal=MARKETPLACE&pagina=1&tamanio=10",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 1158,
+      "correlationId": "c3b735fa-1dd0-4564-a96c-c8d1e7f8dbfa",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-002: HTTP 200 y PaginaProductosComercial conforme a JSON Schema OpenAPI",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "LAB_AZURE",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-003A",
+      "intId": "INT-01",
+      "name": "PM-003A - Catalog -> Pricing: Filtro por rango de precio amplio (con paginacion completa)",
+      "services": [
+        "api-gateway",
+        "catalog-svc",
+        "pricing-svc"
+      ],
+      "type": "lectura",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "https://apim-g6-productos-chile.azure-api.net/api/v1/productos?canal=MARKETPLACE&precioMin=0&precioMax=100&pagina=2&tamanio=20",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 1132,
+      "correlationId": "37340d3d-9545-435e-ae43-537f7c3421b2",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-003A: HTTP 200 y PaginaProductosComercial no vacia",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "LAB_AZURE",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-003B",
+      "intId": "INT-01",
+      "name": "PM-003B - Catalog -> Pricing: Filtro rango acotado y relacion de subconjunto estricta",
+      "services": [
+        "api-gateway",
+        "catalog-svc",
+        "pricing-svc"
+      ],
+      "type": "lectura",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "https://apim-g6-productos-chile.azure-api.net/api/v1/productos?canal=MARKETPLACE&precioMin=0&precioMax=60&pagina=1&tamanio=20",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 1111,
+      "correlationId": "6817ef69-7ac6-4643-a6a8-3bc49fc49e41",
+      "assertionsTotal": 2,
+      "assertionsPassed": 2,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-003B: HTTP 200 y PaginaProductosComercial no vacia",
+          "passed": true,
+          "errorMessage": null
+        },
+        {
+          "name": "PM-003B: Invariante narrowTotal <= wideTotal y subconjunto completo de product_id",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "LAB_AZURE",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-003C",
+      "intId": "INT-01",
+      "name": "PM-003C - Catalog: Detalle comercial y extraccion de todos los SKUs elegibles",
+      "services": [
+        "api-gateway",
+        "catalog-svc"
+      ],
+      "type": "lectura",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "https://apim-g6-productos-chile.azure-api.net/api/v1/productos/4fa14ac1-5923-5357-954c-317d901cfc5c?canal=MARKETPLACE",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 976,
+      "correlationId": "5fa9f27f-148f-4e41-a707-7feca9dbb9c7",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-003C: HTTP 200 y DTO ProductoDetalleComercial conforme a JSON Schema",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "LAB_AZURE",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-003D",
+      "intId": "INT-01",
+      "name": "PM-003D - Pricing: Consultar precios efectivos de todos los SKUs elegibles del producto",
+      "services": [
+        "api-gateway",
+        "pricing-svc"
+      ],
+      "type": "lectura",
+      "scope": "precios:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "https://apim-g6-productos-chile.azure-api.net/api/v1/precios?skus=ADI-HT5027-NEG-S%2CADI-HT5027-NEG-M%2CADI-HT5027-NEG-L&canal=MARKETPLACE",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 531,
+      "correlationId": "427e894c-af44-4fad-a560-ca11db885faf",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-003D: HTTP 200, JSON Schema Precio y al menos un SKU elegible dentro del rango",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "LAB_AZURE",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-004",
+      "intId": "INT-07",
+      "name": "PM-004 - Negativo: Solicitud sin autenticacion (401)",
+      "services": [
+        "api-gateway"
+      ],
+      "type": "negativo",
+      "scope": "sin-autenticacion",
+      "method": "GET",
+      "url": "https://apim-g6-productos-chile.azure-api.net/api/v1/productos?canal=MARKETPLACE",
+      "httpStatus": 401,
+      "contentType": "application/json",
+      "durationMs": 44,
+      "correlationId": "bbc155e8-724e-4ae6-a2ed-d64c7353ab59",
+      "assertionsTotal": 1,
+      "assertionsPassed": 0,
+      "assertionsFailed": 1,
+      "assertions": [
+        {
+          "name": "PM-004: HTTP 401 Problem Details TOKEN_INVALIDO sin fuga",
+          "passed": false,
+          "errorMessage": "PM-004 requiere title: expected {[BODY_REDACTED]} to have property 'title'"
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "LAB_AZURE",
+      "status": "FAIL",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-004B",
+      "intId": "INT-07",
+      "name": "PM-004B - Negativo: Token malformado o invalido (401)",
+      "services": [
+        "api-gateway"
+      ],
+      "type": "negativo",
+      "scope": "token-invalido",
+      "method": "GET",
+      "url": "https://apim-g6-productos-chile.azure-api.net/api/v1/productos?canal=MARKETPLACE",
+      "httpStatus": 401,
+      "contentType": "application/json",
+      "durationMs": 40,
+      "correlationId": "d9c99d9e-9696-443d-ad50-621438a03c21",
+      "assertionsTotal": 1,
+      "assertionsPassed": 0,
+      "assertionsFailed": 1,
+      "assertions": [
+        {
+          "name": "PM-004B: HTTP 401 Problem Details TOKEN_INVALIDO sin fuga",
+          "passed": false,
+          "errorMessage": "PM-004B requiere title: expected {[BODY_REDACTED]} to have property 'title'"
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "LAB_AZURE",
+      "status": "FAIL",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-005",
+      "intId": "INT-07",
+      "name": "PM-005 - Negativo: Autorizacion insuficiente (403 estricto)",
+      "services": [
+        "api-gateway",
+        "price-audit-svc"
+      ],
+      "type": "negativo",
+      "scope": "restringido (403)",
+      "method": "GET",
+      "url": "{{baseUrl}}{{apiPrefix}}/auditoria-precios?pagina=1&tamanio=5",
+      "httpStatus": null,
+      "contentType": "",
+      "durationMs": 0,
+      "correlationId": "",
+      "assertionsTotal": 0,
+      "assertionsPassed": 0,
+      "assertionsFailed": 0,
+      "assertions": [],
+      "requestError": null,
+      "evidenceLevel": "LAB_AZURE",
+      "status": "NOT_RUN",
+      "blockerReason": "BLOCKED_AUTH: Requiere G6_RESTRICTED_ACCESS_TOKEN (identidad autenticada sin permiso para validar 403)."
+    },
+    {
+      "pmId": "PM-006",
+      "intId": "INT-01",
+      "name": "PM-006 - Negativo: Recurso inexistente (404)",
+      "services": [
+        "api-gateway",
+        "catalog-svc"
+      ],
+      "type": "negativo",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "https://apim-g6-productos-chile.azure-api.net/api/v1/productos/00000000-0000-4000-8000-000000000404?canal=MARKETPLACE",
+      "httpStatus": 404,
+      "contentType": "application/problem+json; charset=utf-8",
+      "durationMs": 297,
+      "correlationId": "7d9084af-049b-41b4-aa75-70f2985923e7",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-006: HTTP 404 PRODUCTO_NO_ENCONTRADO",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "LAB_AZURE",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-007A",
+      "intId": "INT-01",
+      "name": "PM-007A - Negativo: Rango de precios inconsistente (precioMin > precioMax)",
+      "services": [
+        "api-gateway",
+        "catalog-svc"
+      ],
+      "type": "negativo",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "https://apim-g6-productos-chile.azure-api.net/api/v1/productos?canal=MARKETPLACE&precioMin=200&precioMax=50",
+      "httpStatus": 400,
+      "contentType": "application/problem+json; charset=utf-8",
+      "durationMs": 52,
+      "correlationId": "1b271ad9-a8be-4279-ae2f-9ecb3a0fd5ad",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-007A: HTTP 400 VALIDACION",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "LAB_AZURE",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-007B",
+      "intId": "INT-01",
+      "name": "PM-007B - Negativo: Canal y paginacion invalidos (400)",
+      "services": [
+        "api-gateway",
+        "catalog-svc"
+      ],
+      "type": "negativo",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "https://apim-g6-productos-chile.azure-api.net/api/v1/productos?canal=CANAL_INVALIDO&pagina=0",
+      "httpStatus": 400,
+      "contentType": "application/problem+json; charset=utf-8",
+      "durationMs": 309,
+      "correlationId": "17312648-7417-4153-a4a7-b73c38b7e282",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-007B: HTTP 400 VALIDACION",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "LAB_AZURE",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-008",
+      "intId": "INT-07",
+      "name": "PM-008 - Negativo: Ruta desconocida en APIM/Gateway (404)",
+      "services": [
+        "api-gateway"
+      ],
+      "type": "negativo",
+      "scope": "ruta-inexistente",
+      "method": "GET",
+      "url": "https://apim-g6-productos-chile.azure-api.net/api/v1/ruta-inexistente-h5-probe",
+      "httpStatus": 404,
+      "contentType": "application/json",
+      "durationMs": 37,
+      "correlationId": "ad1de12d-ec08-4aa3-89a1-899109b59fcc",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-008: HTTP 404 para ruta fuera de contrato",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "LAB_AZURE",
+      "status": "PASS",
+      "blockerReason": null
+    }
+  ]
+}

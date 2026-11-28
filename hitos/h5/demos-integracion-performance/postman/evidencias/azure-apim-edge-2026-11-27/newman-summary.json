@@ -1,0 +1,18 @@
+{
+  "runId": "azure-apim-edge-2026-11-27",
+  "overallVerdict": "FAIL",
+  "totals": {
+    "planned": 12,
+    "executed": 3,
+    "requests": 12,
+    "pass": 0,
+    "fail": 3,
+    "inconclusive": 0,
+    "notRun": 9,
+    "assertionsTotal": 5,
+    "assertionsPassed": 0,
+    "assertionsFailed": 5,
+    "durationMs": 64236
+  },
+  "generatedAtUtc": "2026-11-28T03:53:22.933Z"
+}

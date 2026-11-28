@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="G6 - H5 Integration Suite" tests="12" failures="3" skipped="9" time="64.236">
+  <testsuite name="apim-edge" tests="12" failures="3" skipped="9" time="64.236">
+    <testcase classname="INT-01" name="PM-002 - Gateway -&gt; Catalog: Listar productos autorizados" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."/>
+    </testcase>
+    <testcase classname="INT-01" name="PM-003A - Catalog -&gt; Pricing: Filtro por rango de precio amplio" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."/>
+    </testcase>
+    <testcase classname="INT-01" name="PM-003B - Catalog -&gt; Pricing: Filtro rango acotado y relacion de subconjunto" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."/>
+    </testcase>
+    <testcase classname="INT-01" name="PM-003C - Catalog: Detalle comercial de producto (simple o con variantes)" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."/>
+    </testcase>
+    <testcase classname="INT-01" name="PM-003D - Pricing: Consultar precio efectivo para SKU encadenado" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."/>
+    </testcase>
+    <testcase classname="INT-07" name="PM-004 - Negativo: Solicitud sin autenticacion (401)" time="0.000">
+      <failure message="RequestError: ETIMEDOUT | PM-004: HTTP 401 sin Authorization: expected PostmanResponse{ …(5) } to have property &apos;code&apos; | PM-004: Problem Details TOKEN_INVALIDO sin fuga de items: &quot;undefined&quot; is not valid JSON"/>
+    </testcase>
+    <testcase classname="INT-07" name="PM-004B - Negativo: Token malformado o invalido (401)" time="0.000">
+      <failure message="RequestError: ETIMEDOUT | PM-004B: HTTP 401 con JWT invalido: expected PostmanResponse{ …(5) } to have property &apos;code&apos; | PM-004B: Problem Details TOKEN_INVALIDO sin fuga de datos: &quot;undefined&quot; is not valid JSON"/>
+    </testcase>
+    <testcase classname="INT-07" name="PM-005 - Negativo: Autorizacion insuficiente (403 estricto)" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_RESTRICTED_ACCESS_TOKEN (identidad autenticada sin permiso para validar 403)."/>
+    </testcase>
+    <testcase classname="INT-01" name="PM-006 - Negativo: Recurso inexistente (404)" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."/>
+    </testcase>
+    <testcase classname="INT-01" name="PM-007A - Negativo: Rango de precios inconsistente (precioMin &gt; precioMax)" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."/>
+    </testcase>
+    <testcase classname="INT-01" name="PM-007B - Negativo: Canal y paginacion invalidos (400)" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_ACCESS_TOKEN (userBearer GESTOR_COMERCIAL)."/>
+    </testcase>
+    <testcase classname="INT-07" name="PM-008 - Negativo: Ruta desconocida en APIM/Gateway (404)" time="0.000">
+      <failure message="RequestError: ETIMEDOUT | PM-008: HTTP 404 para ruta fuera de contrato: expected PostmanResponse{ …(5) } to have property &apos;code&apos;"/>
+    </testcase>
+  </testsuite>
+</testsuites>

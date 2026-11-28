@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0.0",
+  "runId": "h27-real-inv-empty-loc",
+  "generatedAtUtc": "2026-11-28T10:47:18.194Z",
+  "note": "evidence-index.json no se incluye en su propio calculo de checksum.",
+  "artifacts": [
+    {
+      "file": "manifest.json",
+      "bytes": 1915,
+      "sha256": "9ac2fda4083a0116a18436417dd83d3f5cc9a9137bff958ff7820cac636c543d"
+    },
+    {
+      "file": "newman-summary.json",
+      "bytes": 572,
+      "sha256": "1cf71f626eb312f151b4ca7e67da6a8bc21c776afc432432aa80e99a3932473d"
+    },
+    {
+      "file": "integration-results.json",
+      "bytes": 3751,
+      "sha256": "22d7823f2cfa57a323d3a4aebffa036682ed24fd15ca1dce98191c3b06a2c00e"
+    },
+    {
+      "file": "newman.junit.xml",
+      "bytes": 782,
+      "sha256": "d9ff8463b6625207cb042c17974c3d55f1445ff50e037ef05db1bd1bc2e68a3c"
+    },
+    {
+      "file": "report.md",
+      "bytes": 2351,
+      "sha256": "661d9a2b634f773fe14fe096f4334b1aeab630ac2971d899a31e009b68dc1397"
+    }
+  ]
+}

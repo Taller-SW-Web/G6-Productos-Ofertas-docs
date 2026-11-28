@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0.0",
+  "runId": "azure-preflight-2026-11-27",
+  "generatedAtUtc": "2026-11-28T03:17:11.286Z",
+  "note": "evidence-index.json no se incluye en su propio calculo de checksum.",
+  "artifacts": [
+    {
+      "file": "manifest.json",
+      "bytes": 1656,
+      "sha256": "78d3d20808a4c61b59322a56f1276712ccb2ae2addc5dcbee61658d78e4ad25f"
+    },
+    {
+      "file": "newman-summary.json",
+      "bytes": 302,
+      "sha256": "12f32f35ec654d32f6606e2cb8c4d0e4d3445438ebe65d3493936cdc8473f86c"
+    },
+    {
+      "file": "integration-results.json",
+      "bytes": 2863,
+      "sha256": "a8f6f0f9523b96fcb762e49fa82030a9dd10e7272974cf7aa2e1e243a4d2aafc"
+    },
+    {
+      "file": "newman.junit.xml",
+      "bytes": 1063,
+      "sha256": "70b341180325c4a6affa80f9ed25a8e791cb7ceae93fde4c90fb076d81526033"
+    },
+    {
+      "file": "report.md",
+      "bytes": 2548,
+      "sha256": "c5da6508232b4bea1504cd3c4300511fbe5db0e6c31161e5e0f04d193b913b1d"
+    }
+  ]
+}

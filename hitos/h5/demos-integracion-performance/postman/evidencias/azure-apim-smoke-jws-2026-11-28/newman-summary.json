@@ -1,0 +1,18 @@
+{
+  "runId": "azure-apim-smoke-jws-2026-11-28",
+  "overallVerdict": "FAIL",
+  "totals": {
+    "planned": 12,
+    "executed": 12,
+    "requests": 12,
+    "pass": 9,
+    "fail": 2,
+    "inconclusive": 0,
+    "notRun": 1,
+    "assertionsTotal": 12,
+    "assertionsPassed": 10,
+    "assertionsFailed": 2,
+    "durationMs": 8052
+  },
+  "generatedAtUtc": "2026-11-28T05:03:07.118Z"
+}

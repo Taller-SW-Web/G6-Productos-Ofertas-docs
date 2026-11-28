@@ -1,0 +1,15 @@
+{
+  "runId": "azure-preflight-2026-11-27",
+  "totals": {
+    "requests": 2,
+    "pass": 0,
+    "fail": 2,
+    "inconclusive": 0,
+    "notRun": 0,
+    "assertionsTotal": 5,
+    "assertionsPassed": 0,
+    "assertionsFailed": 5,
+    "durationMs": 557
+  },
+  "generatedAtUtc": "2026-11-28T03:17:11.016Z"
+}

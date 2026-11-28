@@ -1,0 +1,241 @@
+{
+  "runId": "h27-real-gateway-negatives",
+  "environmentName": "local",
+  "profile": "folder:09 - APIM, Gateway y G7",
+  "evidenceLevel": "ISOLATED",
+  "overallVerdict": "PARTIAL_NOT_COMPLETE",
+  "generatedAtUtc": "2026-11-28T10:47:25.433Z",
+  "totals": {
+    "plannedPmCases": 7,
+    "executedPmCases": 6,
+    "pmPass": 6,
+    "pmFail": 0,
+    "notRunPmCases": 1,
+    "primaryHttpRequests": 6,
+    "auxiliaryHttpRequests": 0,
+    "auxiliaryContractViolations": 0,
+    "planned": 7,
+    "executed": 6,
+    "notRun": 1,
+    "requests": 7,
+    "pass": 6,
+    "fail": 0,
+    "inconclusive": 0,
+    "assertionsTotal": 6,
+    "assertionsPassed": 6,
+    "assertionsFailed": 0,
+    "durationMs": 722
+  },
+  "cases": [
+    {
+      "pmId": "PM-004",
+      "intId": "INT-07",
+      "name": "PM-004 - Negativo: Solicitud sin autenticacion (401)",
+      "services": [
+        "api-gateway"
+      ],
+      "type": "negativo",
+      "scope": "sin-autenticacion",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/productos?canal=MARKETPLACE",
+      "httpStatus": 401,
+      "contentType": "application/problem+json; charset=utf-8",
+      "durationMs": 5,
+      "correlationId": "e5bde4cf-bb60-4806-a252-8cee69d67284",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-004: HTTP 401 Problem Details TOKEN_INVALIDO sin fuga",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-004B",
+      "intId": "INT-07",
+      "name": "PM-004B - Negativo: Token malformado o invalido (401)",
+      "services": [
+        "api-gateway"
+      ],
+      "type": "negativo",
+      "scope": "token-invalido",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/productos?canal=MARKETPLACE",
+      "httpStatus": 401,
+      "contentType": "application/problem+json; charset=utf-8",
+      "durationMs": 4,
+      "correlationId": "335e86d5-2a66-4bd3-a77a-c9a0ee60aad6",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-004B: HTTP 401 Problem Details TOKEN_INVALIDO sin fuga",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-005",
+      "intId": "INT-07",
+      "name": "PM-005 - Negativo: Autorizacion insuficiente (403 estricto)",
+      "services": [
+        "api-gateway",
+        "price-audit-svc"
+      ],
+      "type": "negativo",
+      "scope": "restringido (403)",
+      "method": "GET",
+      "url": "{{baseUrl}}{{apiPrefix}}/auditoria-precios?pagina=1&tamanio=5",
+      "httpStatus": null,
+      "contentType": "",
+      "durationMs": 0,
+      "correlationId": "",
+      "assertionsTotal": 0,
+      "assertionsPassed": 0,
+      "assertionsFailed": 0,
+      "assertions": [],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "NOT_RUN",
+      "blockerReason": "BLOCKED_AUTH: Requiere G6_RESTRICTED_ACCESS_TOKEN (identidad autenticada sin permiso para validar 403)."
+    },
+    {
+      "pmId": "PM-006",
+      "intId": "INT-01",
+      "name": "PM-006 - Negativo: Recurso inexistente (404)",
+      "services": [
+        "api-gateway",
+        "catalog-svc"
+      ],
+      "type": "negativo",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/productos/00000000-0000-4000-8000-000000000404?canal=MARKETPLACE",
+      "httpStatus": 404,
+      "contentType": "application/problem+json; charset=utf-8",
+      "durationMs": 23,
+      "correlationId": "2e458367-c786-4c25-ae6b-533b6d6accf2",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-006: HTTP 404 PRODUCTO_NO_ENCONTRADO",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-007A",
+      "intId": "INT-01",
+      "name": "PM-007A - Negativo: Rango de precios inconsistente (precioMin > precioMax)",
+      "services": [
+        "api-gateway",
+        "catalog-svc"
+      ],
+      "type": "negativo",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/productos?canal=MARKETPLACE&precioMin=200&precioMax=50",
+      "httpStatus": 400,
+      "contentType": "application/problem+json; charset=utf-8",
+      "durationMs": 9,
+      "correlationId": "3298b691-4019-4c89-a555-1ee557cea4c3",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-007A: HTTP 400 VALIDACION",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-007B",
+      "intId": "INT-01",
+      "name": "PM-007B - Negativo: Canal y paginacion invalidos (400)",
+      "services": [
+        "api-gateway",
+        "catalog-svc"
+      ],
+      "type": "negativo",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/productos?canal=CANAL_INVALIDO&pagina=0",
+      "httpStatus": 400,
+      "contentType": "application/problem+json; charset=utf-8",
+      "durationMs": 7,
+      "correlationId": "27f64ba0-32fc-475f-a96f-174fc358f5af",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-007B: HTTP 400 VALIDACION",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-008",
+      "intId": "INT-07",
+      "name": "PM-008 - Negativo: Ruta desconocida en APIM/Gateway (404)",
+      "services": [
+        "api-gateway"
+      ],
+      "type": "negativo",
+      "scope": "ruta-inexistente",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/ruta-inexistente-h5-probe",
+      "httpStatus": 404,
+      "contentType": "",
+      "durationMs": 4,
+      "correlationId": "5e1a2c7f-5551-4c32-a8a4-3372382a40d7",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-008: HTTP 404 para ruta fuera de contrato",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    }
+  ],
+  "auxiliaryRequests": [],
+  "auxiliaryContractViolations": []
+}

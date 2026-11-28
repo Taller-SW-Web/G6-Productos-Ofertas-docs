@@ -1,0 +1,26 @@
+{
+  "runId": "h27-real-catalog-pricing",
+  "overallVerdict": "PASS",
+  "totals": {
+    "plannedPmCases": 5,
+    "executedPmCases": 5,
+    "pmPass": 5,
+    "pmFail": 0,
+    "notRunPmCases": 0,
+    "primaryHttpRequests": 5,
+    "auxiliaryHttpRequests": 0,
+    "auxiliaryContractViolations": 0,
+    "planned": 5,
+    "executed": 5,
+    "notRun": 0,
+    "requests": 5,
+    "pass": 5,
+    "fail": 0,
+    "inconclusive": 0,
+    "assertionsTotal": 7,
+    "assertionsPassed": 7,
+    "assertionsFailed": 0,
+    "durationMs": 1216
+  },
+  "generatedAtUtc": "2026-11-28T10:47:00.806Z"
+}

@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "1.3.0",
+  "runId": "h27-real-catalog-pricing",
+  "timestampUtc": "2026-11-28T10:47:02.067Z",
+  "environment": "local",
+  "targetOrigin": "http://127.0.0.1:55298",
+  "profile": "folder:01 - Catalog y Pricing",
+  "overallVerdict": "PASS",
+  "subjects": {
+    "backendLocalHeadSha": "6dbbf1ce5b10cdf903a3ea6f659a121f0da6ff4b",
+    "frontendLocalHeadSha": "02ada63217bfd448c7be621fbadfa6e48a325f64",
+    "docsLocalHeadSha": "2ccefce93d7c10f2e9eb39ae0ee77b10ee00324c",
+    "note": "Los SHAs locales corresponden a los working trees inspeccionados y no se atribuyen al despliegue remoto sin verificacion independiente."
+  },
+  "deployedRevision": "NO_VERIFICADO_EN_ESTA_CORRIDA",
+  "collection": {
+    "file": "g6-h5-integration.postman_collection.json",
+    "sha256": "dc0d2356964ffdd981c77535d40dd208fc32d4b3b11825152fc8f3c9878f7a0a"
+  },
+  "runtime": {
+    "nodeVersion": "24.16.0",
+    "newmanVersion": "6.2.3"
+  },
+  "contract": {
+    "openApiVersion": "0.7.0-rc.3",
+    "openApiSha256": "a0021cb567c93b6f38389ce44f6bf487cd83b0067110e098aa73b8611382c9bd",
+    "coverageCsvSha256": "90fcfd89300b8e8547f58db64597d0bdb4dc617a73086a11a270d8e263edb32b",
+    "mode": "STRICT_OFFICIAL",
+    "path": "contratos/http/openapi.yaml"
+  },
+  "reconciliation": {
+    "plannedPmCases": 5,
+    "executedPmCases": 5,
+    "pmPass": 5,
+    "pmFail": 0,
+    "notRunPmCases": 0,
+    "primaryHttpRequests": 5,
+    "auxiliaryHttpRequests": 0,
+    "auxiliaryContractViolations": 0,
+    "plannedCases": [
+      "PM-002",
+      "PM-003A",
+      "PM-003B",
+      "PM-003C",
+      "PM-003D"
+    ],
+    "executedCases": [
+      "PM-002",
+      "PM-003A",
+      "PM-003B",
+      "PM-003C",
+      "PM-003D"
+    ],
+    "notRunCases": []
+  },
+  "fixtures": {
+    "channel": "MARKETPLACE",
+    "priceMin": 0,
+    "priceMax": 100,
+    "priceMaxNarrow": 60
+  },
+  "evidenceLevel": "ISOLATED",
+  "deploymentState": "LOCAL_HARNESS",
+  "blockers": [],
+  "durationMs": 1641,
+  "exitCode": 0
+}

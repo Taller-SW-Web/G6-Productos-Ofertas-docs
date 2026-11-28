@@ -1,0 +1,200 @@
+{
+  "runId": "h27-real-catalog-pricing",
+  "environmentName": "local",
+  "profile": "folder:01 - Catalog y Pricing",
+  "evidenceLevel": "ISOLATED",
+  "overallVerdict": "PASS",
+  "generatedAtUtc": "2026-11-28T10:47:00.806Z",
+  "totals": {
+    "plannedPmCases": 5,
+    "executedPmCases": 5,
+    "pmPass": 5,
+    "pmFail": 0,
+    "notRunPmCases": 0,
+    "primaryHttpRequests": 5,
+    "auxiliaryHttpRequests": 0,
+    "auxiliaryContractViolations": 0,
+    "planned": 5,
+    "executed": 5,
+    "notRun": 0,
+    "requests": 5,
+    "pass": 5,
+    "fail": 0,
+    "inconclusive": 0,
+    "assertionsTotal": 7,
+    "assertionsPassed": 7,
+    "assertionsFailed": 0,
+    "durationMs": 1216
+  },
+  "cases": [
+    {
+      "pmId": "PM-002",
+      "intId": "INT-01",
+      "name": "PM-002 - Gateway -> Catalog: Listar productos autorizados",
+      "services": [
+        "api-gateway",
+        "catalog-svc"
+      ],
+      "type": "lectura",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/productos?canal=MARKETPLACE&pagina=1&tamanio=10",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 287,
+      "correlationId": "0b4329dd-195f-47be-a6b6-a9731f989030",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-002: HTTP 200 y PaginaProductosComercial conforme a JSON Schema OpenAPI",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-003A",
+      "intId": "INT-01",
+      "name": "PM-003A - Catalog -> Pricing: Filtro por rango de precio amplio (con paginacion completa)",
+      "services": [
+        "api-gateway",
+        "catalog-svc",
+        "pricing-svc"
+      ],
+      "type": "lectura",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/productos?canal=MARKETPLACE&precioMin=0&precioMax=100&pagina=1&tamanio=20",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 163,
+      "correlationId": "c1a62800-ee6f-4e97-a6c3-e34beb45e2c3",
+      "assertionsTotal": 2,
+      "assertionsPassed": 2,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-003A: HTTP 200 y PaginaProductosComercial no vacia",
+          "passed": true,
+          "errorMessage": null
+        },
+        {
+          "name": "PM-003A: Pagina unica sin duplicados y cardinalidad exacta",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-003B",
+      "intId": "INT-01",
+      "name": "PM-003B - Catalog -> Pricing: Filtro rango acotado y relacion de subconjunto estricta",
+      "services": [
+        "api-gateway",
+        "catalog-svc",
+        "pricing-svc"
+      ],
+      "type": "lectura",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/productos?canal=MARKETPLACE&precioMin=0&precioMax=60&pagina=1&tamanio=20",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 67,
+      "correlationId": "b76834cd-0f12-4c25-ad14-bc778fb91525",
+      "assertionsTotal": 2,
+      "assertionsPassed": 2,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-003B: HTTP 200 y PaginaProductosComercial no vacia",
+          "passed": true,
+          "errorMessage": null
+        },
+        {
+          "name": "PM-003B: Invariante narrowTotal <= wideTotal y subconjunto completo en ambos rangos (H12)",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-003C",
+      "intId": "INT-01",
+      "name": "PM-003C - Catalog: Detalle comercial y extraccion de todos los SKUs elegibles",
+      "services": [
+        "api-gateway",
+        "catalog-svc"
+      ],
+      "type": "lectura",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/productos/00000000-0000-4000-8000-000000000501?canal=MARKETPLACE",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 27,
+      "correlationId": "f062c03b-5f30-497a-ae5c-0f1b0417f630",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-003C: HTTP 200 y DTO ProductoDetalleComercial conforme a JSON Schema",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-003D",
+      "intId": "INT-01",
+      "name": "PM-003D - Pricing: Consultar precios efectivos de todos los SKUs elegibles del producto",
+      "services": [
+        "api-gateway",
+        "pricing-svc"
+      ],
+      "type": "lectura",
+      "scope": "precios:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/precios?skus=SKU-H27-SIMPLE-001&canal=MARKETPLACE",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 37,
+      "correlationId": "1ec7cf3c-ec51-403d-a7d4-812e9db1977c",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-003D: HTTP 200, JSON Schema Precio y al menos un SKU elegible dentro del rango amplio",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    }
+  ],
+  "auxiliaryRequests": [],
+  "auxiliaryContractViolations": []
+}
