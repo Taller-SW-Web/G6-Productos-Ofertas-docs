@@ -1,0 +1,23 @@
+{
+  "service": "price-audit-svc",
+  "destination": "chile-shared",
+  "github_environment": "azure-h5-chile",
+  "workflow_run_id": "46107198843",
+  "resource_group": "rg-g6-aca-chile",
+  "aca_environment": "env-g6-phase1-chile",
+  "location": "Chile Central",
+  "subscription_id": "fef42188-accd-4470-ae88-78f583eb4906",
+  "app_resource_id": "/subscriptions/fef42188-accd-4470-ae88-78f583eb4906/resourceGroups/rg-g6-aca-chile/providers/Microsoft.App/containerapps/price-audit-svc",
+  "container": "price-audit-svc",
+  "previous": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/price-audit-svc@sha256:4b6fef2787c310c4d27f9c8db662adb1a925ce13424e669f74672f7225067501",
+  "target": "ghcr.io/taller-sw-web/g6-productos-ofertas-backend/price-audit-svc@sha256:e1d9aa574a143fae52bdcb01b9ae8400fc0094efab76dd16136b0861e1dd9581",
+  "digest_candidate": "sha256:e1d9aa574a143fae52bdcb01b9ae8400fc0094efab76dd16136b0861e1dd9581",
+  "origin_https": "https://price-audit-svc.internal.calmgrass-aec0b33c.chilecentral.azurecontainerapps.io",
+  "internal_origin_https": null,
+  "modalidad_b": false,
+  "preserved_labels": [],
+  "previous_served_revision": "price-audit-svc--0000001",
+  "config_sha256": "05e721840cecb0c5f01bef5204dbf387836d1c80ce92265e2ab9b073cfa36d95",
+  "route_profile": "standard",
+  "marketplace_revision": null
+}
