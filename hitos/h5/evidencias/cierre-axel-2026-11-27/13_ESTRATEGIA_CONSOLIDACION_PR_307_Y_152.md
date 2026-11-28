@@ -8,7 +8,7 @@
 | **PR Draft #306** | `trabajo/castilla/h5-integracion-pr-pendientes` | `0cd784d575827fd42e91a487f8b68adce5f2220e` | **100% incluido** por merge `--no-ff` (`73b48ca`) preservando autoría de `#300` (Taxonomy), `#297` (Inventory) y `#296` (Promotions) | **NO fusionar por separado**; cerrar como sustituido por `#307` para evitar reincorporar deltas duplicados |
 | **PR Draft #305 (parte autónoma)** | `trabajo/castilla/h5-cierre-post-r2-backend` | hasta `523033a0c8fea87cffd546f124921578da245ca9` (`fabf2c43` + `523033a0`) | **100% incluido** por merge `--no-ff` (`c204823`) preservando autoría de Marco Castilla (rollback R02, migración candidata R10 `0002`, candidato APIM base) | **NO fusionar por separado** la parte hasta `523033a0` |
 | **PR Draft #305 (delta APIM operativo)** | `trabajo/castilla/h5-cierre-post-r2-backend` | `a26965a0` y `8af53c24` | Incorporado una sola vez a #307 en `7ecee3f`. | Revisar el candidato #307. Resolver #305 como absorbido tras autorización del release. |
-| **PR #307, Ready for Review** | `trabajo/cueva/h5-cierre-integral` | `de4a54ba0615836462901133169c4b0f19c0c9c9` | [CI #46081541712](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46081541712), 22/22 jobs ejecutados. Incluye los cambios `7cc40bd` y `de4a54b` de smoke, traspaso y rollback. | Único PR Backend para aprobación final de merge. |
+| **PR #307, Ready for Review** | `trabajo/cueva/h5-cierre-integral` | `db49a5b7a5e2cfa1e4b8033a65c9d2075ef57d4a` | [CI del candidato](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46086802435). Incorpora las cuatro G5 además de smoke, traspaso y rollback del corte previo. | Revisar el nuevo SHA y fusionar solo #307 tras su aprobación final. |
 
 ---
 

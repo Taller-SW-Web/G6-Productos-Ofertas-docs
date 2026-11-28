@@ -5,7 +5,7 @@
 ## Bloque 1 — Gobernanza, Contratos y CI/CD Multi-Repositorio (`H5-01`, 2 min)
 1. Mostrar contratos normativos `0.7.0-rc.3` en `G6-Productos-Ofertas-docs` (`5f308021`, 156 operaciones OpenAPI, 19 canales AsyncAPI) y corrida verde Docs CI (`#46031816661`).
 2. Mostrar Backend #307 en Ready for Review y los Drafts Frontend #102 y Docs #152, con sus corridas CI.
-   - Backend #307 en Ready for Review, `de4a54ba`. CI de PR con 22 jobs PASS. [CI exacto](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46081541712)
+   - Backend #307 en Ready for Review, `db49a5b7`. [CI del candidato](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46086802435)
    - Frontend Draft `#102` (`ccfc21ba...`) — CI [`#46028914883`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/actions/runs/46028914883): **21/21 jobs PASS** (incl. **Gitleaks 8.30.1** + SCA H5 + build `VITE_DATA_MODE=api` + 4 shards Playwright + Pricing E2E).
    - Evidencias SBOM CycloneDX 1.5 (`artefactos/sbom-backend.cdx.json` y `artefactos/sbom-frontend.cdx.json`) y brechas documentadas de GitHub Advanced Security (CodeQL/Secret Scanning `404`).
 
@@ -25,7 +25,7 @@
    - **R02→R10 (Bulk → Inventory → Bulk).** Migración aplicada en Supabase y verificada en ambos ledgers. El rollback condicionado se ensayó en PG17 descartable. El recorrido Azure espera el despliegue.
 
 ## Bloque 4 — Azure API Management (`H5-04A`) y Performance (`H5-03`, 2–3 min)
-1. Mostrar reconciliación exacta `156 OpenAPI` → `145 APIM live` (11 exclusiones documentadas: 5 internas `404` probadas en vivo, 4 G5 `enableG5=false`, 2 admin pricing).
+1. Mostrar 145 operaciones en APIM live y 149 en el candidato. El delta son las cuatro G5 autorizadas. Las cinco internas y las dos consultas administrativas Pricing siguen excluidas.
 2. Demostrar controles en vivo sobre `apim-g6-productos-chile`: `401` sin token/JWT inválido, `400 VALIDACION` por mala correlación, `404` en las 5 rutas internas y **`403` anti-bypass** al llamar directo a `api-gateway--0000003` (Modalidad B).
 3. Mostrar el preflight en vivo de la política CORS actual. Vercel obtuvo HTTP 200 con el origen exacto y el origen ajeno quedó sin ACAO. [Evidencia](artefactos/APIM_CORS_POST_CAMBIO_2026-11-27.json)
 4. Mostrar los tres pares L1 de PERF-06 y la comparación aislada de Gateway→Inventory y Bulk. Explicar los límites de comparabilidad y los casos que esperan un candidato desplegado. [PERF-06](artefactos/PERF06_3_PARES_2026-11-27.json) [PERF-03 y PERF-07](artefactos/PERF03_PERF07_L1_2026-11-27.json)

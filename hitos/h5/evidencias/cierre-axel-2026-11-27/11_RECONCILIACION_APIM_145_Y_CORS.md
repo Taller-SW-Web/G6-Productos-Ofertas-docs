@@ -5,10 +5,10 @@
 ## 1. Reconciliación matemática exacta de universos HTTP (`145` vs `156` vs `158`)
 
 - **OpenAPI `0.7.0-rc.3` (`docs-master` `5f30802129ba4bbc0674dcc5878f10065f443118`):** **156** operaciones contractuales.
-- **APIM live (`apim-g6-productos-chile`, API `g6-productos-ofertas`, path `/api/v1`):** **145** operaciones — **paridad 100% (`0` diferencias)** respecto a `ops/azure/apim/openapi/operation-security.json` del candidato `#307`.
+- **APIM live (`apim-g6-productos-chile`, API `g6-productos-ofertas`, path `/api/v1`):** **145** operaciones — **paridad del corte anterior** respecto a su manifiesto APIM de 145. El candidato actualizado de #307 añade las cuatro operaciones indicadas más abajo.
 - **Matriz certificadora R2 (`hitos/h5/MATRIZ_158_OPERACIONES_H5_R2.csv`):** **158** operaciones = `156 OpenAPI` + `2 probes privados de Gateway` (`gatewayLiveness GET /health/live`, `gatewayReadiness GET /health/ready`).
 
-### 1.1 Las 11 operaciones de OpenAPI `0.7.0-rc.3` excluidas de la superficie pública APIM (156 − 145 = 11)
+### 1.1 Exclusiones observadas en la revisión live 1, antes del release G5
 
 | # | `operationId` | Método y Ruta OpenAPI | Clasificación de exclusión | Evidencia verificada |
 |---:|---|---|---|---|
@@ -17,10 +17,10 @@
 | 3 | `filtrarSkusVendiblesInterno` | `POST /interno/productos/skus/filtrar` | **Ruta interna G6→G6 (privada)** | Sonda live APIM: **`404`**; L1 superficie interna `catalog-svc`: `200`/`401`/`403` PASS |
 | 4 | `obtenerEvidenciaReservaCuponInterno` | `GET /interno/inventario/reservas/{reservaId}/evidencia-cupon` | **Ruta interna G6→G6 (privada)** | Sonda live APIM: **`404`**; L1 superficie interna `inventory-svc`: `200`/`401`/`403` PASS |
 | 5 | `obtenerContenidoCargaMasivaInternoH5` | `GET /interno/carga-masiva/contenidos/{contentId}` | **Ruta interna G6→G6 (privada)** | Sonda live APIM: **`404`**; L1 superficie interna `bulk-svc`: `200`/`401`/`403` PASS |
-| 6 | `admitirConsumoCuponH5` | `POST /cupones/consumos` | **Ruta G5 H5 (`enableG5=false` por defecto)** | Excluida de APIM hasta opt-in/homologación G5; `api-gateway--0000003` tiene `GATEWAY_G5_H5_ENABLED=true`; L1 #148 PASS |
-| 7 | `admitirRestauracionCuponH5` | `POST /cupones/restauraciones` | **Ruta G5 H5 (`enableG5=false` por defecto)** | Excluida de APIM hasta opt-in/homologación G5; L1 #149 PASS |
-| 8 | `obtenerOperacionCuponH5` | `GET /cupones/operaciones/{operationId}` | **Ruta G5 H5 (`enableG5=false` por defecto)** | Excluida de APIM hasta opt-in/homologación G5; L1 PASS |
-| 9 | `obtenerEstadoReservaH5` | `GET /inventario/reservas/{reservaId}/estado` | **Ruta G5 H5 (`enableG5=false` por defecto)** | Excluida de APIM hasta opt-in/homologación G5; L1 PASS |
+| 6 | `admitirConsumoCuponH5` | `POST /cupones/consumos` | **Ruta G5 H5** | Ausente en la revisión live 1. Autorizada e incluida en el candidato de 149 operaciones. |
+| 7 | `admitirRestauracionCuponH5` | `POST /cupones/restauraciones` | **Ruta G5 H5** | Ausente en la revisión live 1. Autorizada e incluida en el candidato de 149 operaciones. |
+| 8 | `obtenerOperacionCuponH5` | `GET /cupones/operaciones/{operationId}` | **Ruta G5 H5** | Ausente en la revisión live 1. Autorizada e incluida en el candidato de 149 operaciones. |
+| 9 | `obtenerEstadoReservaH5` | `GET /inventario/reservas/{reservaId}/estado` | **Ruta G5 H5** | Ausente en la revisión live 1. Autorizada e incluida en el candidato de 149 operaciones. |
 | 10 | `obtenerDefinicionPrecioProductoAdministracion` | `GET /precios/administracion/productos/{productoId}` | **Registrada en Gateway y excluida expresamente por el filtro APIM** | Validada en L1 158-endpoints; pendiente de conciliación si se requiere exponer por APIM |
 | 11 | `obtenerDefinicionPrecioSkuAdministracion` | `GET /precios/administracion/skus/{sku}` | **Registrada en Gateway y excluida expresamente por el filtro APIM** | Validada en L1 158-endpoints; pendiente de conciliación si se requiere exponer por APIM |
 
@@ -68,7 +68,7 @@ Cambio único en parámetro `corsAllowedOrigins` de `ops/azure/apim/main.bicep` 
 
 El `what-if` confirmó un único cambio a `properties.value` en la política de API. Se conservó respaldo y se aplicó mediante escritura condicional con ETag. El preflight Vercel pasó y el origen alternativo quedó sin ACAO. Se verificaron JWT ausente 401, correlación, cinco internas 404 y Gateway directo 403. El rollback queda preparado, con ensayo pendiente.
 
-Mantener excluidas las cuatro operaciones G5 hasta opt-in, homologación y grants. Las dos consultas Pricing están en Gateway y las utiliza el Frontend para lectura administrativa exacta. Su estado contractual es `provisional-internal`; mantener la exclusión en APIM hasta acordar alcance con Pricing, Docs y Seguridad.
+Marco comunicó la aceptación de G5 para incorporar las cuatro operaciones. Su publicación está autorizada. Las dos consultas Pricing siguen excluidas por su alcance administrativo provisional.
 
 ## 3. Auditoría read-only de Identidades Administradas, Flags ACA y RBAC Service Bus (`38/38`)
 
@@ -89,3 +89,16 @@ Mantener excluidas las cuatro operaciones G5 hasta opt-in, homologación y grant
 ### 3.2 Verificación RBAC mínimo en `g6-sb-h5-chile-261127`
 - **Total de asignaciones sobre colas:** **38/38** exactas (`19` `Azure Service Bus Data Sender` + `19` `Azure Service Bus Data Receiver`), **0** `Data Owner` en microservicios, **0** asignaciones globales de namespace para workloads.
 - Cada una de las 19 colas (`R01`–`R18` + `N01`) tiene exactamente un productor con rol `Data Sender` y un consumidor con rol `Data Receiver` a nivel de cola individual (`/namespaces/g6-sb-h5-chile-261127/queues/<cola>`).
+
+## Actualización del release G5
+
+Backend [`db49a5b7`](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/commit/db49a5b7a5e2cfa1e4b8033a65c9d2075ef57d4a) genera 149 operaciones. Se comprobó que no hay cambios semánticos en las 145 anteriores. La consulta paginada de ARM devolvió 145 operaciones, cero G5 y cero rutas privadas en la revisión live 1. Gateway `api-gateway--0000003` está sano con `GATEWAY_G5_H5_ENABLED=true` en la ruta general. Antes de publicar, comprobar el flag en la revisión del nuevo digest y preservar Modalidad B.
+
+| Método | Ruta relativa a /api/v1 | Scope requerido | Autorización | Resultado actual |
+|---|---|---|---|---|
+| POST | `/cupones/consumos` | `cupones:consumir` | JWT de servicio, audiencia `api-productos`, cliente `modulo-ventas` | Validación estática PASS. Publicación y positivo G5 pendientes. |
+| POST | `/cupones/restauraciones` | `cupones:restaurar` | JWT de servicio, audiencia `api-productos`, cliente `modulo-ventas` | Validación estática PASS. Publicación y positivo G5 pendientes. |
+| GET | `/cupones/operaciones/{operationId}` | `cupones:operaciones:leer` | JWT de servicio, audiencia `api-productos`, cliente `modulo-ventas` | Validación estática PASS. Publicación y positivo G5 pendientes. |
+| GET | `/inventario/reservas/{reservaId}/estado` | `inventario:reservas:estado:leer` | JWT de servicio, audiencia `api-productos`, cliente `modulo-ventas` | Validación estática PASS. Publicación y positivo G5 pendientes. |
+
+[Manifiesto de seguridad candidato](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/db49a5b7a5e2cfa1e4b8033a65c9d2075ef57d4a/ops/azure/apim/openapi/operation-security.json) · [Plan de cutover](08_PLAN_RELEASE_CUTOVER_ROLLBACK.md)

@@ -4,11 +4,11 @@
 
 ## 1. Estado auditado y preflight operativo
 
-- **Backend #307** está Ready for Review en `de4a54ba0615836462901133169c4b0f19c0c9c9`. El CI de PR tuvo 22 jobs aprobados y un benchmark opt-in omitido. La aprobación técnica, la conformidad final de merge y la autorización de cada ejecución CD son hitos independientes. [CI exacto](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46081541712)
+- **Backend #307** está Ready for Review en `db49a5b7a5e2cfa1e4b8033a65c9d2075ef57d4a`. El SHA anterior `de4a54ba` fue aprobado para merge. La incorporación G5 exige nueva conformidad sobre el SHA vigente tras su [CI de PR](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/actions/runs/46086802435).
 - **Gateway, release general.** Usar `gateway_route_profile=standard`. Mantener Modalidad B, las restricciones IP y el destino existente de `g5-h5`. El smoke del CD valida el recibo de revisión y digest, health por origen privado autorizado, rechazo anónimo en APIM con correlación y rechazo directo HTTP 403. La ejecución privada `azure-h5-smoke-chile-8hxsolc` verificó HTTP en las revisiones vigentes. El cambio de tráfico está cubierto con fixtures. La prueba autenticada hasta el Gateway candidato se registra después del despliegue.
 - **G5 específico.** El caso `g5-labelled` queda reservado a una prueba separada. Antes de usarlo, probar el health de la URL etiquetada desde el runner autorizado con Modalidad B y las restricciones IP activas. Si devuelve 403, corregir el método de smoke dentro del acceso autorizado antes de realizar la prueba etiquetada.
 - **Bulk, Combos y Taxonomy.** Las seis variables del Environment quedaron verificadas. La ejecución privada `azure-h5-smoke-chile-8hxsolc` validó DNS, TLS, health y readiness HTTP 200, y rutas protegidas HTTP 401 con las revisiones vigentes.
-- **Price Audit, bloqueo de su oleada.** El principal OIDC de `azure-h5-chile` carece de `Microsoft.App/containerApps/revisions/activate/action` y `Microsoft.App/containerApps/revisions/deactivate/action` sobre `price-audit-svc`. Acreditar ambos permisos antes del CD. El CI cubre corte y rollback con fixtures. La revisión vigente `price-audit-svc--0000001` recibe el 100 % y la app conserva modo Multiple y escala 1/1.
+- **Price Audit.** Azure confirmó las dos acciones de revisión asignadas al principal OIDC existente exclusivamente sobre `price-audit-svc`. También se verificó la asignación individual de operador CD en las nueve aplicaciones. La revisión vigente recibe el 100 % en Multiple y escala 1/1. El corte y el rollback reales siguen pendientes del CD oficial.
 - **APIM.** El delta de #305 está incorporado una vez en `7ecee3f`. CORS permite el origen exacto de Vercel. [Evidencia](artefactos/APIM_CORS_POST_CAMBIO_2026-11-27.json).
 
 ## 2. Checklist de autorizaciones y condiciones
@@ -18,7 +18,7 @@
 | Merge de Backend #307 | Marco Castilla | Conformidad sobre el SHA auditado y check requerido verde. Integrar solo #307. |
 | Publicación de imágenes | Flujo oficial Backend | CI de evento push en el SHA exacto resultante en master. Registrar los nueve digests resultantes. |
 | CD individual de Chile | Marco Castilla, Environment `azure-h5-chile` | Verificar protecciones, permisos y ventana de CD. Compartir enlace y run ID antes de cada aprobación humana. Una ejecución por servicio. |
-| Price Audit | Responsable Azure RBAC / Marco Castilla | Acreditar activación y desactivación de revisiones para el principal en el recurso exacto. Verificar modo, tráfico, escala y reversión antes de la oleada. |
+| Price Audit | Marco Castilla, Environment | Asignación de activación y desactivación confirmada sobre Price Audit. Revalidar permisos, modo, tráfico, escala y reversión antes de la oleada. |
 | Base de datos | Owners de BD y dominios | Verificar los dos historiales de R10 y los objetos equivalentes de Taxonomy en solo lectura. Usar el respaldo lógico acotado ya ensayado como evidencia del cambio R10. |
 | Pruebas en integración | G6 / responsables del entorno | Usar datos sintéticos y carga gradual. Coordinar pruebas que impliquen reinicio, rollback o afectación a consumidores. |
 | Revisión Frontend y Docs | Responsables de #102 y #152 | Incorporar evidencia autenticada de #102 y digests, recibos y certificación en #152 antes de su integración. |
@@ -41,8 +41,8 @@
 
 Tras la aprobación, integrar #307, esperar CI de push en el SHA exacto de master y publicar las nueve imágenes con `publish-only-images.yml`. Usar `cd-services-azure.yml` con `destination=chile-shared`, un servicio por run. La selección `all` queda excluida en Chile. Capturar revisión y digest previos, configuración, reglas de tráfico, baseline de colas, aprobación del Environment, recibo del run y smoke de cada servicio. Conservar flags y el tráfico pactados al desplegar.
 
-1. Desplegar primero los servicios que superen su preflight y cuyas dependencias estén verificadas. La oleada de Price Audit permanece bloqueada hasta acreditar sus dos acciones RBAC. Mantener modo Multiple y escala 1/1. Verificar salud y digest con el tráfico fijado a la revisión previa y comprobar el consumidor único al terminar el corte.
-2. Desplegar Gateway con perfil `standard` y verificar el smoke privado más los controles APIM y anti-bypass. Conservar la etiqueta y Modalidad B.
+1. Desplegar primero los servicios que superen su preflight y cuyas dependencias estén verificadas. El RBAC de la oleada de Price Audit se verificó por asignación. El preflight y la ejecución supervisada siguen pendientes. Mantener modo Multiple y escala 1/1. Verificar salud y digest con el tráfico fijado a la revisión previa y comprobar el consumidor único al terminar el corte.
+2. Desplegar Gateway con perfil `standard` y verificar el smoke privado más los controles APIM y anti-bypass. Conservar la etiqueta y Modalidad B. Confirmar el flag G5 y el digest de la revisión servida. Publicar las cuatro operaciones G5 de forma aditiva, tras comprobar políticas M2M y respaldo de la revisión APIM.
 3. Con el candidato desplegado, validar Frontend #102 desde Vercel por APIM usando la sesión existente con rol `GESTOR_COMERCIAL`. Conservar los resultados Playwright previos como L1 y registrar la revisión y digest del candidato junto con el identificador de correlación de la solicitud autorizada.
 
 ### Wave 3 — Activación Progresiva de Flags Service Bus y Certificación L2 (H5-04B)

@@ -14,9 +14,9 @@
       "candidateBranch": "trabajo/cueva/h5-cierre-integral",
       "candidatePr": 307,
       "candidatePrDraft": false,
-      "candidateSha": "de4a54ba0615836462901133169c4b0f19c0c9c9",
-      "candidateCiRunId": 46081541712,
-      "candidateCiConclusion": "success",
+      "candidateSha": "db49a5b7a5e2cfa1e4b8033a65c9d2075ef57d4a",
+      "candidateCiRunId": 46086802435,
+      "candidateCiConclusion": "SEE_CI_RUN",
       "incorporatedSources": [
         {
           "pr": 305,
@@ -41,15 +41,18 @@
       "lastL1CertifiedSha": "7ecee3fb9c38f5c8d4b3521e1e7f88e8badca337",
       "lastL1CertifiedCiRunId": 46058242392,
       "candidateReview": {
-        "mergeable": true,
-        "humanMergeApproval": "PENDING_EXPLICIT_APPROVAL_MARCO_CASTILLA"
+        "humanMergeApproval": "PENDING_EXPLICIT_APPROVAL_OF_G5_CANDIDATE"
       },
       "candidateCi": {
         "event": "pull_request",
-        "attempt": 2,
-        "passedJobs": 22,
-        "failedJobs": 0,
-        "skippedOptInJobs": 1
+        "scope": "NEW_G5_CANDIDATE",
+        "apimArtifactsAndArm": "PASS",
+        "azureCdExecutorFixtures": "PASS"
+      },
+      "previousAuditedCandidate": {
+        "sha": "de4a54ba0615836462901133169c4b0f19c0c9c9",
+        "ciRunId": 46081541712,
+        "passedJobs": 22
       }
     },
     "frontend": {
@@ -68,8 +71,8 @@
       "baseEvidencePr": 151,
       "baseEvidenceSha": "5969a0ed831b43c5ed398c8a925ffbd7bd3340cc",
       "complementaryEvidenceBranch": "trabajo/cueva/h5-cierre-evidencias-axel",
-      "lastEvidenceShaWithRecordedCi": "e11c02d9c5e89d77d960461a8a15d5249506d312",
-      "lastEvidenceCiRunId": 46062970354
+      "lastEvidenceShaWithRecordedCi": "c70e2687821882bbd6b7f9a32dd37d7005331d69",
+      "lastEvidenceCiRunId": 46084563359
     }
   },
   "pendingDatabaseMigrations": [],
@@ -208,7 +211,9 @@
       "modalidadB": true,
       "preserveG5Label": true,
       "restrictedLabelSmoke": "NOT_RUN",
-      "authenticatedApimToGateway": "NOT_RUN_ON_CANDIDATE"
+      "authenticatedApimToGateway": "NOT_RUN_ON_CANDIDATE",
+      "liveGeneralG5FlagEnabled": true,
+      "liveGeneralRevision": "api-gateway--0000003"
     },
     "privateSmoke": {
       "execution": "azure-h5-smoke-chile-8hxsolc",
@@ -227,15 +232,63 @@
       "githubEnvironment": "azure-h5-chile",
       "revisionMode": "Multiple",
       "baselineRevision": "price-audit-svc--0000001",
-      "deploymentGate": "BLOCKED_RBAC",
-      "observedMissingActions": [
-        "Microsoft.App/containerApps/revisions/activate/action",
-        "Microsoft.App/containerApps/revisions/deactivate/action"
-      ],
+      "deploymentGate": "RBAC_ASSIGNMENT_VERIFIED_PENDING_CD",
       "r16CandidateCutoverAndRollback": "PASS_FIXTURES_CI",
-      "r16AzureCandidateCutoverAndRollback": "NOT_RUN"
+      "r16AzureCandidateCutoverAndRollback": "NOT_RUN",
+      "revisionRoleAssignment": {
+        "principal": "g6-h5-chile-github-cd",
+        "role": "G6 H5 Chile Price Audit Revision Operator",
+        "scopeResource": "price-audit-svc",
+        "actions": [
+          "Microsoft.App/containerApps/revisions/activate/action",
+          "Microsoft.App/containerApps/revisions/deactivate/action"
+        ],
+        "status": "ASSIGNMENT_VERIFIED"
+      }
     },
     "g7RoleAvailable": "GESTOR_COMERCIAL",
-    "otherRolesOrClientsAzureL2": "BLOCKED_AUTH"
+    "otherRolesOrClientsAzureL2": "BLOCKED_AUTH",
+    "individualAppOperatorAssignmentsVerified": 9
+  },
+  "apimG5Release": {
+    "acceptanceForInclusion": "G5_ACCEPTANCE_REPORTED_BY_MARCO_CASTILLA",
+    "publicationAuthorized": true,
+    "candidateOperationCount": 149,
+    "observedLiveOperationCount": 145,
+    "candidateStaticValidation": "PASS_30_PYTHON_3_NODE_ARM_149",
+    "liveG5Operations": 0,
+    "deploymentState": "PENDING_RELEASE",
+    "operations": [
+      {
+        "method": "POST",
+        "path": "/cupones/consumos",
+        "operationId": "admitirConsumoCuponH5",
+        "requiredScope": "cupones:consumir"
+      },
+      {
+        "method": "POST",
+        "path": "/cupones/restauraciones",
+        "operationId": "admitirRestauracionCuponH5",
+        "requiredScope": "cupones:restaurar"
+      },
+      {
+        "method": "GET",
+        "path": "/cupones/operaciones/{operationId}",
+        "operationId": "obtenerOperacionCuponH5",
+        "requiredScope": "cupones:operaciones:leer"
+      },
+      {
+        "method": "GET",
+        "path": "/inventario/reservas/{reservaId}/estado",
+        "operationId": "obtenerEstadoReservaH5",
+        "requiredScope": "inventario:reservas:estado:leer"
+      }
+    ],
+    "audience": "api-productos",
+    "allowedClient": "modulo-ventas",
+    "functionalG5Evidence": "PENDING_G5_EXECUTION",
+    "excludedPrivateOperations": 5,
+    "excludedAdministrativePricingOperations": 2,
+    "effectiveProjectionLocalDryRun": "149_OPERATIONS_4_G5"
   }
 }
