@@ -1,0 +1,19 @@
+{
+  "environment": "STAGING_APIM",
+  "case_id": "PERF-01",
+  "channel": "MARKETPLACE",
+  "profiles": ["demo-smoke"],
+  "max_rps": 2,
+  "window_start_utc": "2000-01-01T00:00:00Z",
+  "window_end_utc": "2000-01-01T01:00:00Z",
+  "approval_ref": "PENDIENTE",
+  "revision": "PENDIENTE",
+  "subject_digest": "",
+  "backend_sha": "",
+  "frontend_sha": "",
+  "docs_sha": "",
+  "dataset_sha256": "",
+  "release_manifest_sha256": "",
+  "comparison_context_sha256": "",
+  "allow_negative_401": false
+}
