@@ -1,6 +1,6 @@
 # Demo de k6 — G6 Hito 5
 
-Esta carpeta conserva la documentación y el guion de la demo. La implementación ejecutable está en el repositorio Backend, en `scripts/h5/k6/`. El [README de Backend](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/58c2a9d2518e157c605cba2e68719659d5ba0bfa/scripts/h5/k6/README.md) contiene los comandos PowerShell, requisitos, perfiles y controles de seguridad.
+Esta carpeta conserva la documentación y el guion de la demo. La implementación ejecutable está en el repositorio Backend, en `scripts/h5/k6/`. El [README de Backend](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/829b51aa69d03201d59b5e99e2e3e08a63810090/scripts/h5/k6/README.md) contiene los comandos PowerShell, requisitos, perfiles y controles de seguridad.
 
 - [Guion de exposición](GUIA_EXPOSICION.md) para mostrar el dashboard nativo y explicar los resultados.
 - [Matriz de casos y estado](MATRIZ_K6.md) para distinguir fixture local, servicios aislados y pruebas pendientes en APIM.

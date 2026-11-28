@@ -1,6 +1,6 @@
 # Guion en vivo (6 minutos)
 
-Abre un PowerShell en la raíz de Backend, en la rama de integración de k6. Usa los [comandos de Backend](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/58c2a9d2518e157c605cba2e68719659d5ba0bfa/scripts/h5/k6/README.md) para la demo local de Catálogo, con `--dashboard`. Deja el manifiesto privado y el token fuera de pantalla.
+Abre un PowerShell en la raíz de Backend, en la rama de integración de k6. Usa los [comandos de Backend](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/blob/829b51aa69d03201d59b5e99e2e3e08a63810090/scripts/h5/k6/README.md) para la demo local de Catálogo, con `--dashboard`. Deja el manifiesto privado y el token fuera de pantalla.
 
 | Tiempo | Qué mostrar | Qué decir |
 |---|---|---|
