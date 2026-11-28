@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="G6 - H5 Integration Suite" tests="5" failures="0" skipped="0" time="1.216">
+  <testsuite name="folder:01 - Catalog y Pricing" tests="5" failures="0" skipped="0" time="1.216">
+    <testcase classname="INT-01" name="PM-002 - Gateway -&gt; Catalog: Listar productos autorizados" time="0.287">
+    </testcase>
+    <testcase classname="INT-01" name="PM-003A - Catalog -&gt; Pricing: Filtro por rango de precio amplio (con paginacion completa)" time="0.163">
+    </testcase>
+    <testcase classname="INT-01" name="PM-003B - Catalog -&gt; Pricing: Filtro rango acotado y relacion de subconjunto estricta" time="0.067">
+    </testcase>
+    <testcase classname="INT-01" name="PM-003C - Catalog: Detalle comercial y extraccion de todos los SKUs elegibles" time="0.027">
+    </testcase>
+    <testcase classname="INT-01" name="PM-003D - Pricing: Consultar precios efectivos de todos los SKUs elegibles del producto" time="0.037">
+    </testcase>
+  </testsuite>
+</testsuites>

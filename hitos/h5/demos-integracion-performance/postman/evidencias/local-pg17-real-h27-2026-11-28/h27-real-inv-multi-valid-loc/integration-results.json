@@ -1,0 +1,126 @@
+{
+  "runId": "h27-real-inv-multi-valid-loc",
+  "environmentName": "local",
+  "profile": "folder:02 - Preparacion comercial e Inventory",
+  "evidenceLevel": "ISOLATED",
+  "overallVerdict": "PASS",
+  "generatedAtUtc": "2026-11-28T10:47:12.536Z",
+  "totals": {
+    "plannedPmCases": 3,
+    "executedPmCases": 3,
+    "pmPass": 3,
+    "pmFail": 0,
+    "notRunPmCases": 0,
+    "primaryHttpRequests": 3,
+    "auxiliaryHttpRequests": 0,
+    "auxiliaryContractViolations": 0,
+    "planned": 3,
+    "executed": 3,
+    "notRun": 0,
+    "requests": 3,
+    "pass": 3,
+    "fail": 0,
+    "inconclusive": 0,
+    "assertionsTotal": 3,
+    "assertionsPassed": 3,
+    "assertionsFailed": 0,
+    "durationMs": 425
+  },
+  "cases": [
+    {
+      "pmId": "PM-010",
+      "intId": "INT-01",
+      "name": "PM-010 - Catalog: Estado de preparacion del producto",
+      "services": [
+        "api-gateway",
+        "catalog-svc"
+      ],
+      "type": "lectura",
+      "scope": "GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/productos/00000000-0000-4000-8000-000000000502/preparacion",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 24,
+      "correlationId": "8c68acb6-0464-4662-add5-3092ae7e1e24",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-010: HTTP 200 y DTO ProductoPreparacion",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-011",
+      "intId": "INT-01",
+      "name": "PM-011 - Catalog: Listar variantes de producto",
+      "services": [
+        "api-gateway",
+        "catalog-svc"
+      ],
+      "type": "lectura",
+      "scope": "catalogo:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/productos/00000000-0000-4000-8000-000000000502/variantes",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 27,
+      "correlationId": "581784c0-a9cb-4157-ab4b-d3d8a80da274",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-011: HTTP 200 y variantes conformes a VarianteComercial",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-012",
+      "intId": "INT-02",
+      "name": "PM-012 - Inventory: Disponibilidad autoritativa por SKU encadenado",
+      "services": [
+        "api-gateway",
+        "inventory-svc"
+      ],
+      "type": "lectura",
+      "scope": "inventario:disponibilidad:leer / GESTOR_COMERCIAL",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/api/v1/inventario/disponibilidad?skus=SKU-H27-VAR-ELIGIBLE&location_id=00000000-0000-4000-8000-000000000101",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 13,
+      "correlationId": "919f8284-cd57-4841-afeb-965e782c89a5",
+      "assertionsTotal": 1,
+      "assertionsPassed": 1,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-012: HTTP 200, JSON Schema DisponibilidadStock e invariante de stock",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    }
+  ],
+  "auxiliaryRequests": [],
+  "auxiliaryContractViolations": []
+}

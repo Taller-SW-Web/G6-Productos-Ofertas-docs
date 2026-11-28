@@ -1,0 +1,103 @@
+{
+  "runId": "h27-real-gateway-preflight",
+  "environmentName": "local",
+  "profile": "folder:00 - Preflight y autenticacion",
+  "evidenceLevel": "ISOLATED",
+  "overallVerdict": "FAIL",
+  "generatedAtUtc": "2026-11-28T10:47:20.852Z",
+  "totals": {
+    "plannedPmCases": 2,
+    "executedPmCases": 2,
+    "pmPass": 1,
+    "pmFail": 1,
+    "notRunPmCases": 0,
+    "primaryHttpRequests": 2,
+    "auxiliaryHttpRequests": 0,
+    "auxiliaryContractViolations": 0,
+    "planned": 2,
+    "executed": 2,
+    "notRun": 0,
+    "requests": 2,
+    "pass": 1,
+    "fail": 1,
+    "inconclusive": 0,
+    "assertionsTotal": 4,
+    "assertionsPassed": 3,
+    "assertionsFailed": 1,
+    "durationMs": 156
+  },
+  "cases": [
+    {
+      "pmId": "PM-001",
+      "intId": "INT-07",
+      "name": "PM-001 - Preflight Gateway Health",
+      "services": [
+        "api-gateway"
+      ],
+      "type": "lectura",
+      "scope": "public-health",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/health",
+      "httpStatus": 200,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 5,
+      "correlationId": "1adaa9f3-f286-40b5-ae5e-ba64d87362ca",
+      "assertionsTotal": 2,
+      "assertionsPassed": 2,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "PM-001: HTTP 200 en /health",
+          "passed": true,
+          "errorMessage": null
+        },
+        {
+          "name": "PM-001: Content-Type application/json y sin secretos",
+          "passed": true,
+          "errorMessage": null
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "PASS",
+      "blockerReason": null
+    },
+    {
+      "pmId": "PM-001B",
+      "intId": "INT-07",
+      "name": "PM-001B - Preflight Gateway Readiness (disponibilidad operativa)",
+      "services": [
+        "api-gateway"
+      ],
+      "type": "lectura",
+      "scope": "public-health",
+      "method": "GET",
+      "url": "http://127.0.0.1:55298/health/ready",
+      "httpStatus": 503,
+      "contentType": "application/json; charset=utf-8",
+      "durationMs": 4,
+      "correlationId": "391e2af0-6049-400f-ad80-e7b1368eaa75",
+      "assertionsTotal": 2,
+      "assertionsPassed": 1,
+      "assertionsFailed": 1,
+      "assertions": [
+        {
+          "name": "PM-001B: Respuesta JSON contractual en /health/ready",
+          "passed": true,
+          "errorMessage": null
+        },
+        {
+          "name": "PM-001B: Disponibilidad operativa acreditada (HTTP 200 y status=ready)",
+          "passed": false,
+          "errorMessage": "Gateway respondio 503 contractual (not_ready): no acredita disponibilidad operativa."
+        }
+      ],
+      "requestError": null,
+      "evidenceLevel": "ISOLATED",
+      "status": "FAIL",
+      "blockerReason": null
+    }
+  ],
+  "auxiliaryRequests": [],
+  "auxiliaryContractViolations": []
+}

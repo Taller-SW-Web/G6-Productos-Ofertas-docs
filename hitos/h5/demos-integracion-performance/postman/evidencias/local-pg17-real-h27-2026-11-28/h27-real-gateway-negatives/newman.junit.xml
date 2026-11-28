@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="G6 - H5 Integration Suite" tests="7" failures="0" skipped="1" time="0.722">
+  <testsuite name="folder:09 - APIM, Gateway y G7" tests="7" failures="0" skipped="1" time="0.722">
+    <testcase classname="INT-07" name="PM-004 - Negativo: Solicitud sin autenticacion (401)" time="0.005">
+    </testcase>
+    <testcase classname="INT-07" name="PM-004B - Negativo: Token malformado o invalido (401)" time="0.004">
+    </testcase>
+    <testcase classname="INT-07" name="PM-005 - Negativo: Autorizacion insuficiente (403 estricto)" time="0.000">
+      <skipped message="BLOCKED_AUTH: Requiere G6_RESTRICTED_ACCESS_TOKEN (identidad autenticada sin permiso para validar 403)."/>
+    </testcase>
+    <testcase classname="INT-01" name="PM-006 - Negativo: Recurso inexistente (404)" time="0.023">
+    </testcase>
+    <testcase classname="INT-01" name="PM-007A - Negativo: Rango de precios inconsistente (precioMin &gt; precioMax)" time="0.009">
+    </testcase>
+    <testcase classname="INT-01" name="PM-007B - Negativo: Canal y paginacion invalidos (400)" time="0.007">
+    </testcase>
+    <testcase classname="INT-07" name="PM-008 - Negativo: Ruta desconocida en APIM/Gateway (404)" time="0.004">
+    </testcase>
+  </testsuite>
+</testsuites>

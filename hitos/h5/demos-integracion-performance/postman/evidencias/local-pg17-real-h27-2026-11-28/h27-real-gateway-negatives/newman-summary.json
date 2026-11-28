@@ -1,0 +1,26 @@
+{
+  "runId": "h27-real-gateway-negatives",
+  "overallVerdict": "PARTIAL_NOT_COMPLETE",
+  "totals": {
+    "plannedPmCases": 7,
+    "executedPmCases": 6,
+    "pmPass": 6,
+    "pmFail": 0,
+    "notRunPmCases": 1,
+    "primaryHttpRequests": 6,
+    "auxiliaryHttpRequests": 0,
+    "auxiliaryContractViolations": 0,
+    "planned": 7,
+    "executed": 6,
+    "notRun": 1,
+    "requests": 7,
+    "pass": 6,
+    "fail": 0,
+    "inconclusive": 0,
+    "assertionsTotal": 6,
+    "assertionsPassed": 6,
+    "assertionsFailed": 0,
+    "durationMs": 722
+  },
+  "generatedAtUtc": "2026-11-28T10:47:25.433Z"
+}

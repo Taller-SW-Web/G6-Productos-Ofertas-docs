@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="G6 - H5 Integration Suite" tests="2" failures="1" skipped="0" time="0.156">
+  <testsuite name="folder:00 - Preflight y autenticacion" tests="2" failures="1" skipped="0" time="0.156">
+    <testcase classname="INT-07" name="PM-001 - Preflight Gateway Health" time="0.005">
+    </testcase>
+    <testcase classname="INT-07" name="PM-001B - Preflight Gateway Readiness (disponibilidad operativa)" time="0.004">
+      <failure message="PM-001B: Disponibilidad operativa acreditada (HTTP 200 y status=ready): Gateway respondio 503 contractual (not_ready): no acredita disponibilidad operativa."/>
+    </testcase>
+  </testsuite>
+</testsuites>

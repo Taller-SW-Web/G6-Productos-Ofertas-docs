@@ -1,64 +1,68 @@
-# Diagnóstico Consolidado de Defectos, Auditoría Frontend y Brechas H5
+# Diagnóstico Consolidado de Defectos, Verificación Frontend y Brechas H5
 
-Este documento mantiene la trazabilidad consolidada de Hito 5 en `G6-Productos-Ofertas-docs`, diferenciando explícitamente los niveles de evidencia: `PASS / MOCK`, `PASS / STATIC`, `PASS / ISOLATED (código productivo)`, `PASS / ISOLATED (PostgreSQL descartable)`, `FAIL / LAB_AZURE histórico`, `NOT_RUN` y `STANDBY`.
+Este documento consolida la trazabilidad de Hito 5 en `G6-Productos-Ofertas-docs`, diferenciando explícitamente los niveles de evidencia (`PASS / MOCK`, `PASS / STATIC`, `PASS / ISOLATED (código productivo)`, `PASS / ISOLATED (PostgreSQL descartable)`, `FAIL / LAB_AZURE histórico`, `NOT_RUN` y `STANDBY`) y manteniendo separados los resultados Vitest de los casos individuales de Newman.
 
-## 1. Distribución de PRs (todos en Draft, cero colisión con `#310` y `#103`)
+## 1. Estado definitivo de PRs y ramas
 
-- **Docs [#154](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/pull/154)** (`poma-hito-5-pruebas-v2`): Evidencias históricas intactas, traza ACA de Axel, matrices y trazabilidad consolidada.
-- **Backend [#313](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/313)** (`poma-hito-5-pruebas-v2`): Harness ejecutable Postman/Newman (`tests/h5/postman/`, `H11`–`H25`), helper seguro PG17 (`H26`), suite complementaria Catalog consolidada respecto a `#310` e integración local real `Gateway -> Catalog -> Pricing -> Inventory` (`H27`).
-- **Backend [#314](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/314)** (`trabajo/poma/h5-apim-errores-autenticacion`, SHA `6a5da558`): Corrección independiente de **Defecto A** (`H28`, APIM 401 RFC 7807 exclusivo para `validate-jwt`).
-- **Backend [#315](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/315)** (`trabajo/poma/h5-bulk-autenticacion`, SHA `2a484ba0`): Corrección independiente de **Defecto C** (`H29`, `BulkUserBearerGuard` coherente con JWT humano G7).
-- **Frontend (`G6-Productos-Ofertas-frontend`, SHA `2c6ad931b8dd48e4a4fe883a18ac899fb48b0c81`):** Sin PR (verificación funcional completa sin defectos; evidencia reproducible en §4).
-
----
-
-## 2. Estado diferenciado de defectos, validaciones y brechas
-
-| Tema | Causa raíz / Alcance | Reproducción y verificación local | Nivel de evidencia actual |
-|---|---|---|---|
-| **Defecto A** (`PM-004`/`004B` APIM 401, `H28`) | `<validate-jwt>` en `operation-secured.xml` sin `<on-error>` RFC 7807 en `api.xml`. | Parche en `api.xml` + prueba de políticas efectivas heredadas (`<on-error><base /></on-error>`), `correlationId` idéntico en header/body y preservación de `403`/`429` en `test_apim_artifacts.py`: **`27/27 PASS`** — **PR #314** (`6a5da558`). | `PASS / STATIC` (histórico: `FAIL / LAB_AZURE histórico`; revalidación live: `STANDBY`). |
-| **Defecto B** (`PM-012` Inventory 400, `H18`/`H27`) | `disponibilidad.service.ts` exige `location_id` UUID con `>1` ubicación. | Reproducidos los 4 escenarios tanto en harness mock (`runner.test.mjs`) como contra **`inventory-svc` productivo real + PG17** (`catalog-h5-newman-real.postgres.e2e-spec.ts`) — **PR #313**. | `PASS / MOCK` + `PASS / ISOLATED (PostgreSQL descartable)` (revalidación live: `STANDBY`). |
-| **Defecto C** (`PM-030`/`031` Bulk 401, `H29`) | `BulkUserBearerGuard` exigía `aud === 'api-productos'` en JWT humano `tipo === 'acceso'` (G7 no emite `aud` en perfil humano). | Corregido en `bulk-user-bearer.guard.ts` + test `nbf` futuro corregido (`13/13 PASS`) + regresiones HTTP e2e reales de `PM-030` (`200 text/csv`) y `PM-031` (`404 LOTE_NO_ENCONTRADO`) + `401`/`403` (`4/4 PASS`) — **PR #315** (`2a484ba0`). | `PASS / ISOLATED (código productivo)` (histórico: `FAIL / LAB_AZURE histórico`; revalidación live: `STANDBY`). |
-| **Contrato OpenAPI/Ajv (`H24` + `H25`)** | Resolución automática por `(método, ruta, status, Content-Type)` sobre OpenAPI `0.7.0-rc.3` (156 operaciones), validación recursiva y preflight obligatorio en `run-newman.mjs`. | `npm run validate` OK (`STRICT_OFFICIAL`, OpenAPI SHA-256 `a0021cb567c9...`) + **`32/32 PASS`** (`tests/h5/postman`) — **PR #313**. | `PASS / MOCK`. |
-| **Equivalencias Catalog H5 (`#310` canónica + `#313` complemento)** | **Backend #310** (`6dd66036`) es la base canónica para los 6 escenarios históricos (`BLOCK-A2`, `BULK-JOINT`, `BULK-CONSUMER-v2`, `TAXONOMY-UPDATES`). | `apps/catalog-svc/test/h5/catalog-h5-equivalence.postgres.e2e-spec.ts` conserva **solo** garantías complementarias no duplicadas (`C1` activación real `BORRADOR -> ACTIVO` tras Pricing+Inventory + fallo ambiguo relay; `C2` rechazo de correlación falsificada + `STALE`; `C3` conflicto de payload en Inbox + bloqueo de destinos deshabilitados): **`3/3 PASS`** con helper seguro `H26` — **PR #313**. | `PASS / ISOLATED (PostgreSQL descartable)`. |
-| **Integración local real `Gateway -> Catalog -> Pricing -> Inventory` (`H27`)** | Servicios productivos reales (`api-gateway`, `catalog-svc`, `pricing-svc`, `inventory-svc`) sobre PostgreSQL 17 descartable + JWKS RS256 sintético (`catalog-h5-newman-real.postgres.e2e-spec.ts`). | **Vitest: `3/3 PASS`**. Resultados individuales Newman: **Carpeta 01** (`PM-002`, `PM-003A`, `PM-003B`, `PM-003C`, `PM-003D`): **`5/5 PASS`** (`exitCode=0`); **Carpeta 02** (4 escenarios reales `inventory-svc`): 1 ubicación sin `location_id` **`3/3 PASS`**, multi-ubicación sin `location_id` **`2 PASS / 1 FAIL (400 VALIDACION)`**, multi-ubicación con `location_id` UUID **`3/3 PASS`**, ubicación sin saldo **`2 PASS / 1 FAIL (200 items=[])`**; **Carpeta 00**: `PM-001` **`200 PASS`**, `PM-001B` **`503 FAIL`** preservado honestamente; **Carpeta 09**: `PM-004`, `PM-004B`, `PM-006`, `PM-007A`, `PM-007B`, `PM-008` **`6/6 PASS`**, `PM-005` **`NOT_RUN`** (`PARTIAL_NOT_COMPLETE`, `exitCode=5`). | `PASS / ISOLATED (PostgreSQL descartable)` (casos fuera de estos 4 servicios permanecen `NOT_RUN` / `STANDBY`). |
+| PR / Repo | Rama | SHA | Estado | Alcance y checks CI |
+|---|---|---|---|---|
+| **[Backend #310](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/310)** | `trabajo/castilla/h5-modernizacion-integral-ci` | Merge `bed0511` (técnico `6dd6603` / `a5329ff`) | **MERGED** | Base canónica del CI modernizado y de las 6 equivalencias históricas H5. |
+| **[Frontend #103](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-frontend/pull/103)** | `trabajo/castilla/h5-modernizacion-integral-ci` | Merge `02ada63` | **MERGED** | Modernización de CI y E2E Frontend. |
+| **[Backend #314](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/314)** | `trabajo/poma/h5-apim-errores-autenticacion` | `b2f53cc` | **Ready for Review** | **Defecto A (`H28`):** APIM 401 RFC 7807 exclusivo `validate-jwt`. **100% CI verde** (`apim_h5_estatico`, `validate`, `Lint, Typecheck, Test, Build & Smoke Test`, `Gitleaks`, `CodeQL` — runs `46134971759` / `46135899842`). |
+| **[Backend #315](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/315)** | `trabajo/poma/h5-bulk-autenticacion` | `e7547f3` | **Ready for Review** | **Defecto C (`H29`):** `BulkUserBearerGuard` admite JWT humano `tipo === 'acceso'` sin `aud` + regresiones HTTP `200`/`404`/`401`/`403`. **100% CI verde** (`Ejecutar pruebas unitarias`, `Comprobar formato del código`, `Probar Bulk R03 y R14`, `bulk_integral_e2e`, `validate`, `Gitleaks`, `CodeQL` — run `46135245432`). |
+| **[Backend #313](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-backend/pull/313)** | `poma-hito-5-pruebas-v2` | `6dbbf1ce` | **Draft** | Harness Postman/Newman (`H11`–`H35`), resolución Gitleaks `H30`, conciliación auxiliar `H31`, procedencia/precompilación `H32`, runner PG17 automatizado con roles runtime `H33`, aserciones específicas Inventory `H34`, integración al CI (`newman_h5_integracion`) y conservación de evidencias `H35`. |
+| **[Docs #154](https://github.com/Taller-SW-Web/G6-Productos-Ofertas-docs/pull/154)** | `poma-hito-5-pruebas-v2` | HEAD de esta rama | **Draft** | Evidencias históricas intactas, evidencias sanitizadas `H35` (`evidencias/local-pg17-real-h27-2026-11-28/`), matrices y diagnóstico consolidado. |
+| **Frontend** (sin PR) | `poma-hito-5-pruebas-v2` | `02ada63` | Sin cambios | Verificación acotada de descarga CSV con Bulk `#315` y suites unitarias/Playwright sin defectos (§4). |
 
 ---
 
-## 3. Consolidación de cobertura Catalog H5 (`Backend #310` vs `Backend #313`)
+## 2. Estado diferenciado de defectos y cierres (`H24`–`H35`)
 
-| Escenario | Base canónica en `Backend #310` (`6dd66036`) | Valor complementario en `Backend #313` |
+| Tema | Implementación y verificación | Nivel de evidencia actual |
+|---|---|---|
+| **H30 (Gitleaks `#313`)** | Artefacto `gitleaks-84dfdda04e9c99b287086223b3b8a35c83b53e24` (run `46128359846`) identificado como JWT sintético de prueba en `tests/h5/postman/tests/sanitizer.test.mjs:10` (regla `jwt`, fingerprint `:jwt:15656`, sin credencial real); sustituido por generación dinámica en runtime sin desactivar Gitleaks ni añadir allowlists. | `PASS / ISOLATED (código productivo)` |
+| **Defecto A (`H28`, `#314`)** | Parche en `ops/azure/apim/policies/api.xml` + `27/27` estáticas + job CI `apim_h5_estatico` (compilación Bicep → ARM + verificación ARM completa) en verde. | `PASS / STATIC` (live: `STANDBY`) |
+| **Defecto B (`H18`/`H27`/`H34`, `#313`)** | 4 escenarios reales contra `inventory-svc` con rol runtime `inventory_app` sobre PG17 descartable, verificando `PM-010`, `PM-011` y `PM-012` individualmente (HTTP 200 single-loc, HTTP 400 `VALIDACION` multi-loc sin `location_id`, HTTP 200 con UUID explícito, HTTP 200 `items=[]` sin saldo). | `PASS / MOCK` + `PASS / ISOLATED (PostgreSQL descartable)` (live: `STANDBY`) |
+| **Defecto C (`H29`, `#315`)** | `BulkUserBearerGuard` corregido + `bulk-svc.http.spec.ts` alineado + `13/13` unit + `4/4` HTTP e2e + CI completo verde. | `PASS / ISOLATED (código productivo)` (live: `STANDBY`) |
+| **H24 + H25 + H31 + H32 (`#313`)** | Resolución automática OpenAPI `0.7.0-rc.3` (Ajv), contadores separados para violaciones contractuales auxiliares (`auxiliaryContractViolations`, `pmPass`, `pmFail`) conciliados en JSON/JUnit/MD/manifest, procedencia Git HEAD estricta en `STRICT_OFFICIAL` y compilación previa de esquemas antes de enviar solicitudes HTTP: **`34/34 PASS`** y `[VALIDATE] OK [STRICT_OFFICIAL]`. | `PASS / MOCK` |
+| **H33 + H27 + H35 (`#313` + `#154`)** | Runner automatizado `tests/h5/run-catalog-h5-newman-postgres.mjs` (imagen PG17 fijada de master, roles runtime `catalog_app`/`pricing_app`/`inventory_app`, 5 regresiones negativas del helper en `disposable-pg17.helper.spec.ts`, verificación anti-omisión `6/6 PASS / 0 skipped`, limpieza en `finally`). Evidencias sanitizadas conservadas en [`evidencias/local-pg17-real-h27-2026-11-28/`](./evidencias/local-pg17-real-h27-2026-11-28/README.md). | `PASS / ISOLATED (PostgreSQL descartable)` |
+
+### Resultados exactos `H27` (Vitest vs Newman — sin sumar corridas como casos únicos)
+
+- **Vitest:** **`6/6 PASS`** (`3/3` complemento Catalog H5 + `3/3` bloques `H27`/`H34`).
+- **Newman (7 corridas locales sobre `Gateway -> Catalog -> Pricing -> Inventory`):** **22 casos `PASS`**, **3 `FAIL` controlados** (`PM-012` multi-ubicación sin `location_id`, `PM-012` ubicación sin saldo, `PM-001B` readiness `503` por servicios fuera de alcance) y **1 `NOT_RUN`** (`PM-005`). Los perfiles completos `smoke` e `integration` sobre los 8 microservicios permanecen pendientes hasta contar con entorno autorizado (`STANDBY`).
+
+---
+
+## 3. Consolidación Catalog H5 (`Backend #310` MERGED vs `Backend #313`)
+
+| Escenario | Base canónica en `Backend #310` (MERGED `bed0511`) | Valor complementario conservado en `Backend #313` |
 |---|---|---|
 | `BLOCK-A2` | `tests/h5/catalog-bulk-inventory.postgres.e2e-spec.ts` + `apps/inventory-svc/test/inventory.real.integration.spec.ts` | Sin duplicación. |
 | `BULK-JOINT` / `BULK-CONSUMER-v2` | `tests/h5/catalog-bulk-inventory.postgres.e2e-spec.ts` | `C3`: Bloqueo preventivo ante destino `g6.bulk.from.catalog` deshabilitado. |
-| `TAXONOMY-UPDATES` | `tests/h5/taxonomy-service-bus.postgres.e2e-spec.ts` | `C3`: Conflicto de payload en Inbox (mismo `message_id`, payload distinto) y bloqueo de destino `g6.taxonomy.from.catalog` deshabilitado. |
-| `JOINT-01` / `JOINT-01-REGRESSION` | Cobertura parcial en `#310`. | `C1` + `C2`: Activación real `BORRADOR -> ACTIVO` tras Pricing + Inventory, fallo ambiguo en relay, rechazo de `correlation_id` falsificado y estado `TERMINAL` / `STALE`. |
+| `TAXONOMY-UPDATES` | `tests/h5/taxonomy-service-bus.postgres.e2e-spec.ts` | `C3`: Conflicto de payload en Inbox (mismo `message_id`, payload distinto) y bloqueo de destino deshabilitado. |
+| `JOINT-01` / `JOINT-01-REGRESSION` | Cobertura parcial en `#310`. | `C1` + `C2`: Activación real `BORRADOR -> ACTIVO` tras Pricing + Inventory, fallo ambiguo en relay, rechazo de `correlation_id` falsificado y estados `TERMINAL` / `STALE`. |
 
 ---
 
-## 4. Evidencia reproducible de auditoría Frontend (sin PR en Frontend)
+## 4. Verificación acotada de Frontend (`master` `02ada63`, sin PR en Frontend)
 
-- **Repositorio y commit exacto:** `Taller-SW-Web/G6-Productos-Ofertas-frontend`, rama `poma-hito-5-pruebas-v2`, **SHA `2c6ad931b8dd48e4a4fe883a18ac899fb48b0c81`** (árbol limpio, sin modificaciones).
-- **Comando ejecutado:**
-  ```powershell
-  npm test -- --run
-  ```
-- **Totales exactos por suite (`0` fallos, `0` skipped):**
-  - `test:unit:combos` (incluye autenticación y clientes HTTP): **16 archivos, 239 passed** (`auth.test.ts` 55, `readOnlyClient.test.ts` 17, `authenticatedGatewayClient.test.ts` 9, `publicReads.test.ts` 8, `g7OnlyTransport.spec.ts` 4, `catalogHttpRepository.test.ts` 5, restantes 141).
-  - `test:unit:bulk`: **1 archivo, 98 passed** (`tests/bulk.unit.test.ts`).
-  - `test:unit:inventory`: **5 archivos, 132 passed**.
-  - `test:unit:pricing`: **4 archivos, 166 passed**.
-  - `test:unit:taxonomy`: **12 archivos, 111 passed**.
-  - `test:release:policy`: **35 passed**.
-  - **Total verificado:** **781 pruebas ejecutadas, 781 passed, 0 failed** (`PASS / ISOLATED (código productivo)`).
-- **Comportamiento verificado en `src/app/config/authenticatedGatewayClient.ts` y `src/features/catalog/adapters/authenticatedCatalogTransport.ts`:**
-  - Ante `401` (`TOKEN_INVALIDO`) en lecturas `GET` (incluyendo descargas de plantilla CSV), el cliente intenta **1 refresco automático** (`refreshAccessToken`) y reintenta una sola vez antes de invalidar sesión.
-  - Ante `403` (`SCOPE_INSUFICIENTE`) y `500`/`503`, **preserva la sesión activa** y propaga el error controlado a la UI sin cerrar sesión ni reintentar escrituras mutadoras.
-  - **Conclusión:** No existe defecto funcional en Frontend; por ello no se abre un PR vacío en el repositorio Frontend.
+Se actualizó el checkout local de `G6-Productos-Ofertas-frontend` al `master` actualizado (`02ada63217bfd448c7be621fbadfa6e48a325f64`, `#103` fusionado) y se verificó específicamente:
+
+- **Navegador real (Playwright Chromium) contra `BulkSvcModule` real de `#315` (`e7547f3`):**
+  - Descarga de plantilla CSV (`GET /api/v1/carga-masiva/productos/plantilla?formato=CSV`) con JWT humano RS256 **sin `aud`** → HTTP `200 text/csv`, archivo descargado con cabecera `sku_base`, sesión permanece `ACTIVE`.
+  - Respuesta `403` por rol insuficiente (`CONSULTA`) → sesión permanece `ACTIVE`.
+  - Fallo de servidor `500` → gestionado sin expulsar al usuario (`ACTIVE`).
+  - Expiración legítima (`401 TOKEN_INVALIDO` por JWT expirado) → sesión marcada `EXPIRED`.
+- **Suites de Frontend ejecutadas en `02ada63`:**
+  - `npx playwright test tests/bulk-http.spec.ts`: **`7/7 PASS`** (`45.1s`).
+  - `npm run test:unit:bulk -- --run`: **`98/98 PASS`**.
+  - `npm run test:unit:combos -- --run` (incluye `auth.test.ts` 55, `authenticatedGatewayClient.test.ts` 9, `readOnlyClient.test.ts` 17, `publicReads.test.ts` 8, `g7OnlyTransport.spec.ts` 4): **`239/239 PASS`** (`16` archivos).
+- **Alcance declarado:** Esta verificación acredita específicamente el flujo de descarga de plantilla CSV, el manejo de sesión en `401`/`403`/`500` y las suites indicadas; no se afirma que todo el repositorio Frontend esté libre de defectos fuera de este alcance. Al no detectarse defectos funcionales en este flujo, no se abre PR en Frontend.
 
 ---
 
-## 5. Nota histórica `H11` y validaciones reales en `STANDBY`
+## 5. `STANDBY` de infraestructura real y Caché APIM
 
-- Las evidencias históricas del `2026-11-27` y `2026-11-28` en `evidencias/` se preservan **sin modificación** (sus SHA-256 permanecen intactos).
-- **Validaciones reales en `STANDBY`:** Re-ejecución de `smoke`/`integration` contra APIM Chile tras despliegue de PRs `#314` y `#315`, ejecución live de `PM-005` (`403`) y `PM-080`/`PM-081`/`PM-082` (tokens M2M reales).
+- **Standby vigente:** Cero ejecuciones contra Azure APIM, ACA, Service Bus, G7 real, Supabase compartido o Marketplace/Ventas reales. Evidencias históricas en `evidencias/azure-*` preservadas sin alteración.
+- **Caché APIM:** Permanece desacoplado de `#314` (sin política desplegada ni pruebas MISS/HIT reales).

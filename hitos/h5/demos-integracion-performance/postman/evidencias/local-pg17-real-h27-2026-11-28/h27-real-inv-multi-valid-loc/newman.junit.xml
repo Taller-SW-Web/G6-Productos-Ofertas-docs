@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="G6 - H5 Integration Suite" tests="3" failures="0" skipped="0" time="0.425">
+  <testsuite name="folder:02 - Preparacion comercial e Inventory" tests="3" failures="0" skipped="0" time="0.425">
+    <testcase classname="INT-01" name="PM-010 - Catalog: Estado de preparacion del producto" time="0.024">
+    </testcase>
+    <testcase classname="INT-01" name="PM-011 - Catalog: Listar variantes de producto" time="0.027">
+    </testcase>
+    <testcase classname="INT-02" name="PM-012 - Inventory: Disponibilidad autoritativa por SKU encadenado" time="0.013">
+    </testcase>
+  </testsuite>
+</testsuites>

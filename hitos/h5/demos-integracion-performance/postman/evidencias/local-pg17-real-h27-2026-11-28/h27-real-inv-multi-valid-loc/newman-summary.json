@@ -1,0 +1,26 @@
+{
+  "runId": "h27-real-inv-multi-valid-loc",
+  "overallVerdict": "PASS",
+  "totals": {
+    "plannedPmCases": 3,
+    "executedPmCases": 3,
+    "pmPass": 3,
+    "pmFail": 0,
+    "notRunPmCases": 0,
+    "primaryHttpRequests": 3,
+    "auxiliaryHttpRequests": 0,
+    "auxiliaryContractViolations": 0,
+    "planned": 3,
+    "executed": 3,
+    "notRun": 0,
+    "requests": 3,
+    "pass": 3,
+    "fail": 0,
+    "inconclusive": 0,
+    "assertionsTotal": 3,
+    "assertionsPassed": 3,
+    "assertionsFailed": 0,
+    "durationMs": 425
+  },
+  "generatedAtUtc": "2026-11-28T10:47:12.536Z"
+}

@@ -1,0 +1,26 @@
+{
+  "runId": "h27-real-inv-empty-loc",
+  "overallVerdict": "FAIL",
+  "totals": {
+    "plannedPmCases": 3,
+    "executedPmCases": 3,
+    "pmPass": 2,
+    "pmFail": 1,
+    "notRunPmCases": 0,
+    "primaryHttpRequests": 3,
+    "auxiliaryHttpRequests": 0,
+    "auxiliaryContractViolations": 0,
+    "planned": 3,
+    "executed": 3,
+    "notRun": 0,
+    "requests": 3,
+    "pass": 2,
+    "fail": 1,
+    "inconclusive": 0,
+    "assertionsTotal": 3,
+    "assertionsPassed": 2,
+    "assertionsFailed": 1,
+    "durationMs": 422
+  },
+  "generatedAtUtc": "2026-11-28T10:47:16.925Z"
+}
